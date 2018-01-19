@@ -1,8 +1,14 @@
 import itertools
 from itertools import zip_longest
 import unittest
+from collections import OrderedDict
+from io import StringIO
+from io import BytesIO
+
+
 import pandas as pd
 import numpy as np
+
 
 # assuming located in the same directory
 from static_frame import Index
@@ -10,6 +16,8 @@ from static_frame import IndexGrowOnly
 from static_frame import Series
 from static_frame import Frame
 from static_frame import TypeBlocks
+from static_frame import Display
+from static_frame import mloc
 
 nan = np.nan
 
@@ -69,7 +77,6 @@ class TestUnit(unittest.TestCase):
         # showing that slices keep the same memory location
         # self.assertTrue((tb1[0:2].mloc == tb1.mloc[:2]).all())
         # self.assertTrue((tb1.mloc[:2] == tb1.iloc[0:2, 0:2].mloc).all())
-
 
     def test_contiguous_pairs(self):
 
@@ -813,7 +820,6 @@ class TestUnit(unittest.TestCase):
         with self.assertRaises(Exception):
             s1.index = ('b','c','d')
 
-
     def test_series_slice_a(self):
         # create a series from a single value
         # s0 = Series(3, index=('a',))
@@ -981,7 +987,7 @@ class TestUnit(unittest.TestCase):
                 [('a', True), ('b', True), ('c', True), ('d', True)])
 
 
-    def test_dropna(self):
+    def test_series_dropna(self):
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
         s2 = Series((234.3, None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
@@ -995,7 +1001,7 @@ class TestUnit(unittest.TestCase):
                 [('a', 234.3), ('c', 6.4)])
 
 
-    def test_fillna_a(self):
+    def test_series_fillna_a(self):
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
         s2 = Series((234.3, None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
@@ -1026,6 +1032,252 @@ class TestUnit(unittest.TestCase):
         post = s7.fillna(None)
         self.assertEqual(post.dtype, int)
 
+    def test_display_a(self):
+
+        d = Display.from_values(np.array([[1, 2], [3, 4]]), 'header')
+
+        self.assertEqual(list(d),
+            [['header '], ['1 2    '], ['3 4    '], ['int64  ']])
+
+
+    def test_type_blocks_display_a(self):
+
+        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
+
+        disp = tb.display()
+        self.assertEqual(len(disp), 5)
+        self.assertEqual(list(disp),
+            [['<TypeBlocks> ', '                  ', '          '],
+            ['1 2 3        ', 'False False  True ', "'a' 'b'   "],
+            ['4 5 6        ', ' True False  True ', "'c' 'd'   "],
+            ['0 0 1        ', ' True False  True ', "'oe' 'od' "],
+            ['int64        ', 'bool              ', '<U2       ']])
+
+
+    def test_type_blocks_axis_values_a(self):
+        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
+
+        self.assertEqual(
+            list(a.tolist() for a in tb.axis_values(0)),
+            [[1, 2, 3, False, False, True, 'a', 'b'], [4, 5, 6, True, False, True, 'c', 'd'], [0, 0, 1, True, False, True, 'oe', 'od']]
+            )
+
+        self.assertEqual(list(a.tolist() for a in tb.axis_values(1)),
+            [[1, 4, 0], [2, 5, 0], [3, 6, 1], [False, True, True], [False, False, False], [True, True, True], ['a', 'c', 'oe'], ['b', 'd', 'od']]
+            )
+
+        # we are iterating over slices so we get views of columns without copying
+        self.assertEqual(tb.mloc[0], mloc(next(tb.axis_values(1))))
+
+    def test_frame_init_a(self):
+
+        frame = Frame(dict(a=[3,4,5], b=[6,3,2]))
+        self.assertEqual(list(frame.display()),
+            [['<Frame>         ', '      ', '      ', '    '],
+            ['<IndexGrowOnly> ', 'a     ', 'b     ', '<U1 '],
+            ['<Index>         ', '      ', '      ', '    '],
+            ['0               ', '3     ', '6     ', '    '],
+            ['1               ', '4     ', '3     ', '    '],
+            ['2               ', '5     ', '2     ', '    '],
+            ['int64           ', 'int64 ', 'int64 ', '    ']]
+            )
+
+        frame = Frame(OrderedDict((('b', [6,3,2]), ('a', [3,4,5]))))
+        self.assertEqual(list(frame.display()),
+            [['<Frame>         ', '      ', '      ', '    '],
+            ['<IndexGrowOnly> ', 'b     ', 'a     ', '<U1 '],
+            ['<Index>         ', '      ', '      ', '    '],
+            ['0               ', '6     ', '3     ', '    '],
+            ['1               ', '3     ', '4     ', '    '],
+            ['2               ', '2     ', '5     ', '    '],
+            ['int64           ', 'int64 ', 'int64 ', '    ']]
+            )
+
+
+    def test_frame_getitem_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        # # show that block hav ebeen consolidated
+        # self.assertEqual(len(f1._blocks._blocks), 3)
+
+        # s1 = f1['s']
+        # self.assertTrue((s1.index == f1.index).all())
+
+        # # we have not copied the index array
+        # self.assertEqual(mloc(f1.index.values), mloc(s1.index.values))
+
+        f2 = f1['r':]
+        self.assertEqual(f2.columns.values.tolist(), ['r', 's', 't'])
+        self.assertTrue((f2.index == f1.index).all())
+        self.assertEqual(mloc(f2.index.values), mloc(f1.index.values))
+
+
+
+
+    def test_frame_from_csv_a(self):
+        filelike = BytesIO(b'''count,number,weight,scalar,color,active
+0,4,234.5,5.3,'red',False
+30,50,9.234,5.434,'blue',True''')
+        f1 = Frame.from_csv(filelike)
+
+        self.assertEqual(f1.columns.values.tolist(),
+                ['count', 'number', 'weight', 'scalar', 'color', 'active'])
+
+
+    def test_series_mask_a(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(
+                s1.mask.loc[['b', 'd']].assign(3000).values.tolist(),
+                [0, 3000, 2, 3000])
+
+
+
+    def test_frame_length_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        self.assertEqual(len(f1), 2)
+
+
+
+    def test_frame_iloc_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        self.assertEqual((f1.iloc[0].values == f1.loc['x'].values).all(), True)
+        self.assertEqual((f1.iloc[1].values == f1.loc['y'].values).all(), True)
+
+
+
+    def test_frame_iter_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        self.assertEqual((f1.keys() == f1.columns).all(), True)
+        self.assertEqual([x for x in f1.columns], ['p', 'q', 'r', 's', 't'])
+        self.assertEqual([x for x in f1], ['p', 'q', 'r', 's', 't'])
+
+
+    def test_index_contains_a(self):
+
+        index = Index(('a', 'b', 'c'))
+        self.assertTrue('a' in index)
+        self.assertTrue('d' not in index)
+
+
+    def test_index_grow_only_a(self):
+
+        index = IndexGrowOnly(('a', 'b', 'c'))
+        index.append('d')
+        self.assertEqual(index.loc_to_iloc('d'), 3)
+        # import ipdb; ipdb.set_trace()
+
+        index.extend(('e', 'f'))
+        self.assertEqual(index.loc_to_iloc('e'), 4)
+        self.assertEqual(index.loc_to_iloc('f'), 5)
+
+
+    def test_seies_loc_extract_a(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        # TODO: raaise exectin when doing a loc that Pandas reindexes
+
+
+
+    def test_frame_setitem_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        f1['a'] = (False, True)
+        self.assertEqual(f1['a'].values.tolist(), [False, True])
+
+        # test index alginment
+        f1['b'] = Series((3,2,5), index=('y', 'x', 'g'))
+        self.assertEqual(f1['b'].values.tolist(), [2, 3])
+
+        f1['c'] = Series((300,200,500), index=('y', 'j', 'k'))
+        self.assertAlmostEqualItems(f1['c'].items(), [('x', nan), ('y', 300)])
+
+    def test_frame_extend_columns_a(self):
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        columns = OrderedDict(
+            (('c', np.array([0, -1])), ('d', np.array([3, 5]))))
+
+        f1.extend_columns(columns.keys(), columns.values())
+
+        self.assertEqual(f1.columns.values.tolist(),
+                ['p', 'q', 'r', 's', 't', 'c', 'd'])
+
+        self.assertTypeBlocksArrayEqual(f1._blocks,
+                [[1, 2, 'a', False, True, 0, 3],
+                [30, 50, 'b', True, False, -1, 5]],
+                match_dtype=object)
+
+    def test_frame_extend_blocks_a(self):
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        blocks = ([[50, 40], [30, 20]], [[50, 40], [30, 20]])
+        columns = ('a', 'b', 'c', 'd')
+        f1.extend_blocks(columns, blocks)
+
+        self.assertEqual(f1.columns.values.tolist(),
+                ['p', 'q', 'r', 's', 't', 'a', 'b', 'c', 'd'])
+
+        self.assertEqual(f1.values.tolist(),
+                [[1, 2, 'a', False, True, 50, 40, 50, 40],
+                [30, 50, 'b', True, False, 30, 20, 30, 20]]
+                )
+
 if __name__ == '__main__':
     unittest.main()
-
+    # t = TestUnit()
+    # t.test_frame_iloc_a()
