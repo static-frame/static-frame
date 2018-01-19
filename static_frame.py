@@ -1,3 +1,4 @@
+from types import GeneratorType
 import typing as tp
 
 from itertools import chain
@@ -9,6 +10,7 @@ from functools import wraps
 import operator as operator_mod
 
 import numpy as np
+from numpy.ma import MaskedArray
 import pandas as pd
 
 
@@ -94,10 +96,19 @@ class MetaOperatorDelegate(type):
 
         return type.__new__(mcs, name, bases, attrs)
 
+#-------------------------------------------------------------------------------
+# utility
 
 # for getitem / loc selection
 _KEY_ITERABLE_TYPES = (tuple, list, np.ndarray) # TODO: remove tuple
-GetItemKeyType = tp.Union[int, slice, tp.Iterable[int]] # how can I use the constant above?
+GetItemKeyType = tp.Union[int, slice, tp.Iterable[int]]
+
+
+def mloc(array: np.ndarray) -> int:
+    '''Return the memory location of an array.
+    '''
+    return array.__array_interface__['data'][0]
+
 
 class GetItem:
     __slots__ = ('callback',)
@@ -107,6 +118,102 @@ class GetItem:
 
     def __getitem__(self, key: GetItemKeyType):
         return self.callback(key)
+
+
+class MaskInterface:
+    __slots__ = ('iloc', 'loc')
+
+    def __init__(self, *, iloc, loc):
+        self.iloc = iloc
+        self.loc = loc
+
+
+
+
+class Display:
+    '''
+    A Display is a string representation of a table, encoded as a list of lists, where list components are equal width strings, keyed by row index
+    '''
+    __slots__ = ('_rows',)
+
+    CHAR_MARGIN = 1
+
+    @classmethod
+    def from_values(cls,
+            values: np.ndarray,
+            header: str) -> tp.Dict[int, tp.Iterable[str]]:
+        '''
+        Given a 1 or 2D ndarray, return a Display instance
+        '''
+        # return a list of losts, where each contained list represents multiple columns
+        display = [[header]]
+
+        if isinstance(values, np.ndarray) and values.ndim == 2:
+            np_rows = np.array_str(values).split('\n')
+            last_idx = len(np_rows) - 1
+            for idx, row in enumerate(np_rows):
+                # trim brackets
+                end_slice_len = 2 if idx == last_idx else 1
+                row = row[2: len(row) - end_slice_len]
+                display.append([row])
+        else:
+            for v in values:
+                display.append([str(v)])
+
+        # add the typeas the last row
+        if isinstance(values, np.ndarray):
+            display.append([str(values.dtype)])
+        else: # this is an object
+            display.append([''])
+
+        return cls(display)
+
+    def _ljust(self):
+        max_cols = max(len(row) for row in self._rows)
+        for row_idx in range(len(self._rows)):
+            while len(self._rows[row_idx]) < max_cols:
+                self._rows[row_idx].append('')
+
+        for col_idx in range(max_cols):
+            max_width = 0
+            for row_idx in range(len(self._rows)):
+                max_width = max(max_width, len(self._rows[row_idx][col_idx].rstrip()))
+            max_width = max_width + self.CHAR_MARGIN
+            for row_idx in range(len(self._rows)):
+                raw = self._rows[row_idx][col_idx].rstrip()
+                self._rows[row_idx][col_idx] = raw.ljust(max_width)
+
+    def __init__(self, rows: tp.List):
+        self._rows = rows
+        self._ljust()
+
+    def __repr__(self):
+        return '\n'.join(''.join(row) for row in self._rows)
+
+    def __iter__(self):
+        return self._rows.__iter__()
+
+    def __len__(self):
+        return len(self._rows)
+
+    def append(self, display) -> None:
+        '''
+        Mutate this display by appending the passed display.
+        '''
+        for row_idx, row in enumerate(display):
+            self._rows[row_idx].extend(row)
+
+    def insert_rows(self, *args):
+        # each arg is a list, to be a new row
+        # assume each row in display becomes a column
+        new_rows = []
+        for arg in args:
+            # these were row lists but now we treat them as columns
+            new_rows.append(list(''.join(row) for row in arg))
+        # slow for now: make rows a dict to make faster
+        new_rows.extend(self._rows)
+        self._rows = new_rows
+        self._ljust()
 
 
 #-------------------------------------------------------------------------------
@@ -156,12 +263,13 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     # constructor
 
     @classmethod
-    def from_blocks(cls, raw_blocks) -> 'TypeBlocks':
+    def from_blocks(cls,
+            raw_blocks: tp.Iterable[np.ndarray]) -> 'TypeBlocks':
         '''
         The order of the blocks defines the order of the columns contained.
 
         Args:
-            raw_blocks: can be a Generator
+            raw_blocks: iterable (generator compatible) of NDArrays.
         '''
         blocks = [] # ordered blocks
         index = [] # columns position to blocks key
@@ -179,8 +287,11 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         else: # an iterable of blocks
             row_count = None
             column_count = 0
+            raw_blocks = list(raw_blocks)
             for block in raw_blocks:
                 assert isinstance(block, np.ndarray), 'found non array block: %s' % block
+                if block.ndim > 2:
+                    raise Exception('cannot include array with more than 2 dimensions')
 
                 r, c = cls.shape_filter(block)
                 # check number of rows is the same for all blocks
@@ -261,7 +372,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''Return an ndarray of NP array memory location integers.
         '''
         a = np.fromiter(
-                (b.__array_interface__['data'][0] for b in self._blocks),
+                (mloc(b) for b in self._blocks),
                 count=len(self._blocks),
                 dtype=int)
         a.flags.writeable = False
@@ -309,7 +420,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         else: # get ndim 2 shape array
             array = np.empty(self._shape, dtype=self._row_dtype)
 
-        # can we use a np.concatenate to do this
+        # can we use a np.concatenate to do this? Need to handle 1D arrrays; need to converty type before concatenate
 
         pos = 0
         for block in self._blocks:
@@ -329,6 +440,40 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         array.flags.writeable = False
         return array
+
+
+    # can bundle all axis functions under common heading
+
+    def axis_values(self, axis=0) -> tp.Generator[np.ndarray, None, None]:
+        '''Generator of arrays produced along an axis
+        '''
+        if axis == 0:
+            unified = self.unified
+            # iterate over rows; might be faster to create entire values
+            for i in range(self._shape[0]):
+                if unified:
+                    yield self._blocks[0][i]
+                else:
+                    # cannot use a generator w/ np concat
+                    # use == for type comparisons
+                    yield np.concatenate(
+                            [(b[i] if b.dtype == self._row_dtype
+                            else b[i].astype(self._row_dtype))
+                            for b in self._blocks])
+
+        elif axis == 1: # iterate over columns
+            for b in self._blocks:
+                if b.ndim == 1:
+                    yield b
+                else:
+                    for j in range(b.shape[1]):
+                        yield b[:, j]
+        else:
+            raise NotImplementedError()
+
+
+    def axis_apply(self, func, axis=0):
+        pass
 
     #---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
@@ -358,40 +503,47 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]):
         return np.concatenate([cls.single_column_filter(x) for x in group], axis=1)
 
-    def _reblock(self) -> tp.Generator[np.ndarray, None, None]:
-        '''Generator of new block that consolidate adjacent types that are the same.
+    @classmethod
+    def consolidate_blocks(cls,
+            raw_blocks: tp.Iterable[np.ndarray]) -> tp.Generator[np.ndarray, None, None]:
+        '''
+        Generator consumer, generator producer of np.ndarray, consolidating if types match.
         '''
         group_dtype = None # store type found along contiguous blocks
         group = []
 
-        if len(self._blocks) == 1:
-            yield self._blocks[0]
-        else:
-            for block in self._blocks:
-                if group_dtype is None: # first block of a type
-                    # TODO: can we use can_cast here to determine what we can concatenate? NP will concatenate a single character string with an Boolean, for example, and that is not what we want
-                    group_dtype = block.dtype
-                    group.append(block)
-                    continue
+        for block in raw_blocks:
+            if group_dtype is None: # first block of a type
+                # TODO: can we use can_cast here to determine what we can concatenate? NP will concatenate a single character string with an Boolean, for example, and that is not what we want
+                group_dtype = block.dtype
+                group.append(block)
+                continue
 
-                if block.dtype != group_dtype:
-                    # new group found, return stored
-                    if len(group) == 1: # return reference without copy
-                        yield group[0]
-                    else: # combine groups
-                        # could pre allocating and assing as necessary for large groups
-                        yield self._concatenate_blocks(group)
-                    group_dtype = block.dtype
-                    group = [block]
-                else: # new block has same group dtype
-                    group.append(block)
-
-            # get anything leftover
-            if group:
-                if len(group) == 1:
+            if block.dtype != group_dtype:
+                # new group found, return stored
+                if len(group) == 1: # return reference without copy
                     yield group[0]
-                else:
-                    yield self._concatenate_blocks(group)
+                else: # combine groups
+                    # could pre allocating and assing as necessary for large groups
+                    yield cls._concatenate_blocks(group)
+                group_dtype = block.dtype
+                group = [block]
+            else: # new block has same group dtype
+                group.append(block)
+
+        # get anything leftover
+        if group:
+            if len(group) == 1:
+                yield group[0]
+            else:
+                yield cls._concatenate_blocks(group)
+
+
+
+    def _reblock(self) -> tp.Generator[np.ndarray, None, None]:
+        '''Generator of new block that consolidate adjacent types that are the same.
+        '''
+        yield from self.consolidate_blocks(raw_blocks=self._blocks)
 
 
     def consolidate(self) -> 'TypeBlocks':
@@ -412,30 +564,22 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     #     '''
     #     return hash(tuple(hash(b) for b in self._blocks))
 
-    def __repr__(self) -> str:
 
-        parts = defaultdict(list)
-        block_width = []
-        for block in self._blocks:
-            w = 0
-            # configure array_str as needed
+    def display(self) -> Display:
+        h = '<' + self.__class__.__name__ + '>'
+        d = None
+        for idx, block in enumerate(self._blocks):
             block = self.single_column_filter(block)
-            #if block.ndim == 1:
-                #block = np.reshape(block, (block.shape[0], 1))
-            line_parts = chain(np.array_str(block).split('\n'), (str(block.dtype),))
+            header = '' if idx > 0 else h
+            display = Display.from_values(block, header)
+            if not d:
+                d = display
+            else:
+                d.append(display)
+        return d
 
-            for row, line in enumerate(line_parts):
-                w = w if len(line) < w else len(line)
-                parts[row].append(line)
-
-            block_width.append(w + 1) # padding of 1
-
-        # order here does not matter
-        just = {k: ''.join(
-                (part.ljust(block_width[pos]) for pos, part in enumerate(v)))
-                for k, v in parts.items()}
-        h = '<' + self.__class__.__name__ + '>\n'
-        return h + '\n'.join(just[x] for x in range(len(parts)))
+    def __repr__(self) -> str:
+        return repr(self. display())
 
 
     #---------------------------------------------------------------------------
@@ -538,15 +682,21 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if len(range(*row_key.indices(self._shape[0]))) == 1:
                 single_row = True
 
-        #print('_slice_blocks: row_key', row_key, 'column_key', column_key, 'single_row', single_row)
+        # print('_slice_blocks: row_key', row_key, 'column_key', column_key, 'single_row', single_row)
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
         for block_idx, slc in self._key_to_block_slices(column_key):
             b = self._blocks[block_idx]
             if b.ndim == 1: # given 1D array, our row key is all we need
-                block_sliced = b[row_key]
+                if row_key is None:
+                    block_sliced = b
+                else:
+                    block_sliced = b[row_key]
             else: # given 2D, use row key and column slice
-                block_sliced = b[row_key, slc]
+                if row_key is None:
+                    block_sliced = b[:, slc]
+                else:
+                    block_sliced = b[row_key, slc]
 
             # optionally, apply additoinal selection, reshaping, or adjustments to what we got out of the block
             if isinstance(block_sliced, np.ndarray):
@@ -566,14 +716,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def _extract(self, row_key=None, column_key=None) -> 'TypeBlocks': # but sometimes an element
         '''
-        Return a TypeBlocks after performing row and column selection using iloc-style selection.
+        Return a TypeBlocks after performing row and column selection using iloc selection.
 
         Row and column keys can be:
             integer: single row/column selection
             slices: one or more contiguous selections
             iterable of integers: one or more non-contiguous and/or repeated selections
 
-        Note: Boolean-based selection is not (yet?) implemented here, but instead will be implemented at the `loc` level. This might imply that Boolean selection is only available with `loc`. This avoids the stra
+        Note: Boolean-based selection is not (yet?) implemented here, but instead will be implemented at the `loc` level. This might imply that Boolean selection is only available with `loc`.
 
         Returns:
             TypeBlocks, or single elemtn if both are coordinats
@@ -619,15 +769,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # NOTE: if key is a tuple it means that multiple indices are being provided; this should probably raise an error
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
-        return self._extract(row_key=slice(None), column_key=key)
-
-
-    #---------------------------------------------------------------------------
-    # slice replace permits defining a slice and new values for that slice, and returnina new TypeBlocks
-
-    def slice_replace(self, row_key=None, column_key=None, value=None):
-        print('slice replace', row_key, column_key, value)
-
+        return self._extract(row_key=None, column_key=key)
 
 
     #---------------------------------------------------------------------------
@@ -667,11 +809,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def extend(self, other: 'TypeBlocks'):
         '''Extend this TypeBlock with the contents of another.
         '''
-        # accept iterables of np.arrays?
-        assert isinstance(other, TypeBlocks)
+
+        if isinstance(other, TypeBlocks):
+            assert self._shape[0] == other._shape[0]
+            blocks = other._blocks
+        else: # accept iterables of np.arrays
+            blocks = other
         # row count must be the same
-        assert self._shape[0] == other._shape[0]
-        for block in other._blocks:
+        for block in blocks:
             self.append(block)
 
     #---------------------------------------------------------------------------
@@ -730,31 +875,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                     )
                 )
 
-
-
-class Display:
-
-    @staticmethod
-    def from_values(values: np.ndarray, header: str) -> tp.Dict[int, tp.Iterable[str]]:
-        display_rows = len(values) + 2  # first is header, last for types
-        display = OrderedDict((k, list()) for k in range(display_rows))
-
-        # lables per row
-        labels = [header]
-        for v in values:
-            labels.append(str(v))
-
-        if isinstance(values, np.ndarray):
-            labels.append(str(values.dtype))
-        else:
-            labels.append('')
-
-        width = max(len(x) for x in labels) + 1
-
-        for row, value in enumerate(labels):
-            display[row].append(str(value).ljust(width))
-
-        return display
 
 
 
@@ -818,13 +938,18 @@ class Index(metaclass=MetaOperatorDelegate):
             '_map',
             '_labels',
             '_positions',
+            '_recache',
             '_loc_is_iloc',
             'loc',
             'iloc',
             )
 
-    @staticmethod
-    def _extract_labels(mapping, labels) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
+    #---------------------------------------------------------------------------
+    # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
+
+    def _extract_labels(self,
+            mapping,
+            labels) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -847,8 +972,9 @@ class Index(metaclass=MetaOperatorDelegate):
 
         return labels
 
-    @staticmethod
-    def _extract_positions(mapping, positions):
+    def _extract_positions(self,
+            mapping,
+            positions):
         # positions is either None or an ndarray
         if isinstance(positions, np.ndarray): # if an np array can handle directly
             return TypeBlocks.immutable_filter(positions)
@@ -857,37 +983,39 @@ class Index(metaclass=MetaOperatorDelegate):
         return positions
 
 
-    # @staticmethod
-    # def _compare_labels_positions(labels, positions) -> bool:
-    #     if isinstance(labels, np.ndarray) and isinstance(positions, np.ndarray):
-    #         if labels.dtype == int:
-    #             return (labels == positions).all()
-    #     return False
+    def _update_array_cache(self):
+        '''Derived classes can use this to set stored arrays, self._labels and self._positions.
+        '''
+        pass
 
+    #---------------------------------------------------------------------------
 
     def __init__(self, labels: tp.Generator[tp.Hashable, None, None]):
         '''
         Args:
             labels: the ordered keys to use as the index; can be a generator
         '''
+        self._recache = False
+
         positions = None
 
-        if isinstance(labels, Index):
+        if issubclass(labels.__class__, Index):
             # get a reference to the immutable arrays
+            # even if this is an IndexGrowOnly index, we can take the cached arrays, assuming they are up to date
+            labels._update_array_cache()
             positions = labels._positions
             labels = labels._labels
-
-        elif isinstance(labels, IndexGrowOnly):
-            raise Exception('cannot construct an IndexGrowOnly from an IndexGrowOnly yet')
 
         # map provided values to integer positions; do only one iteration of labels to support generators
         # collections.abs.sized
         if hasattr(labels, '__len__'):
-            # NOTE: dict() function shown to be faster then gen expression
-            self._map = dict(zip(labels, range(len(labels))))
-            #self._map = {k: v for k, v in zip(labels, range(len(labels)))}
-        else:
-            # NOTE: dict() function shown slower in this case
+            # dict() function shown to be faster then gen expression
+            if positions is not None:
+                self._map = dict(zip(labels, positions))
+            else:
+                self._map = dict(zip(labels, range(len(labels))))
+        else: # handle generators
+            # dict() function shown slower in this case
             # self._map = dict((v, k) for k, v in enumerate(labels))
             self._map = {v: k for k, v in enumerate(labels)}
 
@@ -895,7 +1023,8 @@ class Index(metaclass=MetaOperatorDelegate):
         self._labels = self._extract_labels(self._map, labels)
         self._positions = self._extract_positions(self._map, positions)
 
-        self._loc_is_iloc = False #self._compare_labels_positions(labels, positions)
+        # TODO: optimization to bypass mapping if labels and positions are the same
+        self._loc_is_iloc = False
 
         if len(self._map) != len(self._labels):
             raise KeyError('labels have non-unique values')
@@ -904,13 +1033,14 @@ class Index(metaclass=MetaOperatorDelegate):
         self.iloc = GetItem(self._extract_iloc)
 
 
-    def display(self) -> tp.Dict[int, tp.Iterable[str]]:
-        '''Return a list of lists of strings for creating a complete display
-        '''
-        return Display.from_values(self._labels, '<' + self.__class__.__name__ + '>')
+    def display(self) -> Display:
+        # if grow-only, we create a new array with every call
+        if self._recache:
+            self._update_array_cache()
+        return Display.from_values(self.values, '<' + self.__class__.__name__ + '>')
 
-    def __repr__(self):
-        return '\n'.join(''.join(row) for row in self.display().values())
+    def __repr__(self) -> str:
+        return repr(self.display())
 
 
     def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
@@ -918,33 +1048,64 @@ class Index(metaclass=MetaOperatorDelegate):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
+        if isinstance(key, Series):
+            key = key.values
         if self._loc_is_iloc:
             return key
+
+        if self._recache:
+            self._update_array_cache()
+
         return LocMap.loc_to_iloc(self._map, self._positions, key)
 
     def __len__(self):
+        if self._recache:
+            self._update_array_cache()
         return len(self._labels)
+
+
+    def __iter__(self):
+        '''We iterate over labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels.__iter__()
+
+    def __contains__(self, value):
+        '''Return True if value in the labels.
+        '''
+        return self._map.__contains__(value)
+
 
     @property
     def values(self) -> np.ndarray:
         '''Return the immutable labels array
         '''
+        if self._recache:
+            self._update_array_cache()
         return self._labels
 
     @property
     def mloc(self):
         '''Memory location
         '''
-        return self._labels.__array_interface__['data'][0]
+        if self._recache:
+            self._update_array_cache()
+        return mloc(self._labels)
 
     def copy(self) -> 'Index':
-        # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created)
+        # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGrowOnly, we will pass the cached, immutable NP array
+        if self._recache:
+            self._update_array_cache()
         return self.__class__(labels=self._labels)
 
     #---------------------------------------------------------------------------
     # set operations
 
     def intersection(self, other) -> 'Index':
+        if self._recache:
+            self._update_array_cache()
+
         if isinstance(other, np.ndarray):
             opperand = other
         else: # assume we can get it from a .values attribute
@@ -953,6 +1114,9 @@ class Index(metaclass=MetaOperatorDelegate):
         return self.__class__(labels=np.intersect1d(self._labels, opperand))
 
     def union(self, other) -> 'Index':
+        if self._recache:
+            self._update_array_cache()
+
         if isinstance(other, np.ndarray):
             opperand = other
         else: # assume we can get it from a .values attribute
@@ -966,6 +1130,9 @@ class Index(metaclass=MetaOperatorDelegate):
     def _extract_iloc(self, key) -> 'Index':
         '''Extract a new index given an iloc key
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if isinstance(key, slice):
             # if labels is an np array, this will be a view; if a list, a copy
             labels = self._labels[key]
@@ -973,6 +1140,8 @@ class Index(metaclass=MetaOperatorDelegate):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
+        elif key is None:
+            labels = self._labels
         else: # select a single label value
             labels = (self._labels[key],)
         return self.__class__(labels=labels)
@@ -991,6 +1160,9 @@ class Index(metaclass=MetaOperatorDelegate):
     def _unary_operator(self, operator: tp.Callable) -> np.ndarray:
         '''Always return an NP array. Deviates form Pandas.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         array = operator(self._labels)
         array.flags.writeable = False
         return array
@@ -999,7 +1171,10 @@ class Index(metaclass=MetaOperatorDelegate):
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other opertations result in a np.array (using == on two Index).
         '''
-        if isinstance(other, Index):
+        if self._recache:
+            self._update_array_cache()
+
+        if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
         array = operator(self._labels, other)
         array.flags.writeable = False
@@ -1007,39 +1182,39 @@ class Index(metaclass=MetaOperatorDelegate):
 
 
 class IndexGrowOnly(Index):
+
     __slots__ = (
             '_map',
+            '_labels_mutable',
+            '_positions_mutable_count',
             '_labels',
+            '_positions',
+            '_recache',
             'iloc',
             )
 
-    @staticmethod
-    def _extract_labels(mapping, labels) -> tp.Iterable[tp.Any]:
-        '''For a mutable Index, labels is stored as a list.
+    def _extract_labels(self, mapping, labels) -> tp.Iterable[tp.Any]:
+        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''
-        if isinstance(labels, np.ndarray):
-            return labels.tolist()
-        if hasattr(labels, '__len__'):
-            return list(labels)
-        return list(mapping.keys())
-
-    @property
-    def values(self) -> np.ndarray:
-        '''Convert the mutable labels to an immutable array for consistency
-        '''
-        labels = np.array(self._labels)
-        labels.flags.writeable = False
+        labels = super(IndexGrowOnly, self)._extract_labels(mapping, labels)
+        self._labels_mutable = labels.tolist()
         return labels
 
-    @property
-    def mloc(self):
-        '''Memory location is None when a mutable index.
+    def _extract_positions(self, mapping, positions) -> tp.Iterable[tp.Any]:
+        '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
-        return None
+        positions = super(IndexGrowOnly, self)._extract_positions(mapping, positions)
+        self._positions_mutable_count = len(positions)
+        return positions
 
-    def copy(self) -> 'Index':
-        # keys is ordered; using generator creation
-        return self.__class__(labels=self._map.keys())
+
+    def _update_array_cache(self):
+        # this might fail if a sequence is given as a label
+        self._labels = np.array(self._labels_mutable)
+        self._labels.flags.writeable = False
+        self._positions = np.arange(self._positions_mutable_count)
+        self._positions.flags.writeable = False
+        self._recache = False
 
     #---------------------------------------------------------------------------
     # grow only mutation
@@ -1049,9 +1224,12 @@ class IndexGrowOnly(Index):
         '''
         if value in self._map:
             raise KeyError('duplicate key append attempted', value)
-        position = len(self._map) + 1
-        self._map[value] = position
-        self._labels.append(value)
+        # the new value is the count
+        self._map[value] = self._positions_mutable_count
+        self._labels_mutable.append(value)
+        self._positions_mutable_count += 1
+        self._recache = True
+
 
     def extend(self, values: _KEY_ITERABLE_TYPES):
         '''Add multiple values
@@ -1064,20 +1242,6 @@ class IndexGrowOnly(Index):
             # might bet better performance by calling extend() on _positions and _labels
             self.append(value)
 
-
-    #---------------------------------------------------------------------------
-    # operators
-    # might be faster to do element wise operations in a generator, but would have to handle differenet dimensional other args; for now, let NP hanle
-
-    def _unary_operator(self, operator: tp.Callable) -> np.ndarray:
-        array = operator(np.array(self._labels))
-        array.flags.writeable = False
-        return array
-
-    def _binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
-        array = operator(np.array(self._labels), other)
-        array.flags.writeable = False
-        return array
 
 
 #-------------------------------------------------------------------------------
@@ -1093,6 +1257,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '_index',
         'iloc',
         'loc',
+        'mask',
         )
 
     def __init__(self, values, *, index=None, dtype=None):
@@ -1124,7 +1289,7 @@ class Series(metaclass=MetaOperatorDelegate):
             # do not make a copy of it is an immutable index
             self._index = index
         elif isinstance(index, IndexGrowOnly):
-            # if a grow only index need to make a copy; perhaps pass a parameter when we pass a newly-created index that can be held by the Series
+            # if a grow only index need to make a copy; this uses the already-cached immutable arrays
             self._index = index.copy()
         else: # let index handle instantiation
             self._index = Index(index)
@@ -1145,6 +1310,10 @@ class Series(metaclass=MetaOperatorDelegate):
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
+        self.mask = MaskInterface(
+                iloc=GetItem(self._extract_iloc_mask),
+                loc=GetItem(self._extract_loc_mask))
+
     #---------------------------------------------------------------------------
     # index manipulation
 
@@ -1161,14 +1330,14 @@ class Series(metaclass=MetaOperatorDelegate):
         index = Index(index)
 
         # manually do intersection for best performance
-        common_labels = np.intersect1d(self._index._labels, index._labels)
+        common_labels = np.intersect1d(self._index.values, index.values)
 
         # if we are just reordering or selecting a subset
         if len(common_labels) == len(index):
-            # same as calling .loc, which creates a new index, but cannot resuse self's labels array
+            # same as calling .loc, which creates a new index, but cannot reuse self's labels array
             # this approach uses the labels created above
             values = self.values[self._index.loc_to_iloc(index.values)]
-            # values already be immutable
+            # values will be immutable
             return self.__class__(values, index=index)
 
         try:
@@ -1299,18 +1468,18 @@ class Series(metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     def __len__(self):
-        return len(self.values)
+        # return the length of the values array
+        return self.values.__len__()
 
-    def display(self) -> tp.Dict[int, tp.Iterable[str]]:
+    def display(self) -> Display:
         d = self._index.display()
-        dv = Display.from_values(self.values, '<' + self.__class__.__name__ + '>')
-        for row_idx, row in dv.items():
-            #print('\n', row_idx, row)
-            d[row_idx].extend(row)
+        d.append(Display.from_values(
+                self.values,
+                '<' + self.__class__.__name__ + '>'))
         return d
 
     def __repr__(self):
-        return '\n'.join(''.join(row) for row in self.display().values())
+        return repr(self.display())
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
@@ -1319,7 +1488,7 @@ class Series(metaclass=MetaOperatorDelegate):
     def mloc(self):
         '''Memory location
         '''
-        return self.values.__array_interface__['data'][0]
+        return mloc(self.values)
 
     #---------------------------------------------------------------------------
     # extraction
@@ -1331,8 +1500,10 @@ class Series(metaclass=MetaOperatorDelegate):
                 index=self._index.iloc[key])
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Series':
-        if isinstance(key, Series):
-            key = key.values
+        '''
+        Compatibility:
+            Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
+        '''
         iloc_key = self._index.loc_to_iloc(key)
         values = self.values[iloc_key]
 
@@ -1349,8 +1520,25 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self._extract_loc(key)
 
+    def _extract_iloc_mask(self, key: GetItemKeyType) -> 'SeriesMask':
+        '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
+        '''
+        mask = np.full(self.shape, False, dtype=bool)
+        mask[key] = True
+        mask.flags.writeable = False
+        # can pass self here as it is immutable (assuming index cannot change)
+        return SeriesMask(data=self, mask=self.__class__(mask, index=self._index))
 
-    # TODO: special setter for .index that converts raw values into Index objects
+    def _extract_loc_mask(self, key: GetItemKeyType) -> 'SeriesMask':
+        '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
+        '''
+        iloc_key = self._index.loc_to_iloc(key)
+        mask = np.full(self.shape, False, dtype=bool)
+        mask[iloc_key] = True
+        mask.flags.writeable = False
+        # can pass self here as it is immutable (assuming index cannot change)
+        return SeriesMask(data=self, mask=self.__class__(mask, index=self._index))
+
 
     @property
     def index(self):
@@ -1372,19 +1560,363 @@ class Series(metaclass=MetaOperatorDelegate):
 
 
 
+class SeriesMask:
+    __slots__ = ('data', 'mask')
+
+    def __init__(self, *,
+            data: Series,
+            mask: Series
+            ):
+        # data and mask can be Series or Frame?
+        # what if a Frame and the Frame grows?; need to pass a copy to constructor
+        self.data = data
+        self.mask = mask
+
+    def ma(self) -> MaskedArray:
+        return MaskedArray(data=self.data.values, mask=self.mask.values)
+
+    def assign(self, value) -> Series:
+        # we are not checking if the references have chagned; let NP fail
+        # if not (self.data.index == self.mask.index).all():
+        #     raise Exception('mask and data indices no longer unified')
+
+        array = self.data.values.copy()
+        array[self.mask.values] = value
+        array.flags.writeable = False
+        return Series(array, index=self.data.index)
 
 
-class Frame:
-    '''
-    Store columns in uniform typed chunks?
-    '''
+#-------------------------------------------------------------------------------
 
-    def __init__(self, ):
-        pass
+class StaticFrame:
+
+    __slots__ = (
+        # 'values', # these become properties
+        # 'shape',
+        # 'ndim',
+        # 'size',
+        # 'bytes',
+        '_blocks',
+        '_columns',
+        '_index',
+        'iloc',
+        'loc',
+        )
+
+    _COLUMN_CONSTRUCTOR = Index
+
+    @classmethod
+    def from_records(cls,
+            records,
+            *,
+            index,
+            columns):
+        '''
+        Args:
+            recrods: iterable of tuples
+        '''
+        derive_columns = False
+        if not columns:
+            derive_columns = True
+            columns = []
+
+        # if records is np; we can just pass it to constructor, as is alrady a consolidate type
+        if isinstance(records, np.ndarray):
+            return cls(records, index=index, columns=columns)
+
+        def blocks():
+            rows = list(records)
+            # derive types form first rows, but cannot do strings
+            # string type requires size, so cannot use np.fromiter
+            types = [(type(x) if type(x) != str else None) for x in rows[0]]
+            row_count = len(rows)
+            for idx in range(len(rows[0])):
+                column_type = types[idx]
+                if column_type is None:
+                    yield np.array([row[idx] for row in rows])
+                else:
+                    yield np.fromiter(
+                            (row[idx] for row in rows),
+                            count=row_count,
+                            dtype=column_type)
+
+        return cls(TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks())),
+                index=index,
+                columns=columns)
+
+    @classmethod
+    def from_structured_array(cls,
+            array,
+            *,
+            index_col=None) -> 'Frame':
+
+        names = array.dtype.names
+        def blocks():
+            for name in names:
+                # TODO: pull out index if not defined
+                yield array[name]
+
+        return cls(TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks())),
+                columns=array.dtype.names)
+
+
+    @classmethod
+    def from_csv(cls,
+            fp,
+            *,
+            sep=',',
+            index_col=None,
+            names=True,
+            dtype=None,
+            **kwargs) -> 'Frame':
+        '''
+        Args:
+            dtype: set to None by default to permit discovery
+        '''
+        # not available with older NPs
+        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
+        # array1 = np.loadtext(fp, delimiter=sep, **kwargs)
+
+        # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
+        array = np.genfromtxt(fp,
+                delimiter=sep,
+                names=names,
+                dtype=dtype,
+                **kwargs)
+        return cls.from_structured_array(array, index_col=index_col)
+
+    #-----------------------------------------------------------------------------------------
+
+    def __init__(self,
+            data,
+            *,
+            index=None,
+            columns=None):
+
+        derive_columns = False # get from data
+        if not columns:
+            derive_columns = True
+            columns = []
+
+        if isinstance(data, TypeBlocks):
+            # assume we need to create a new TB instance
+            self._blocks = TypeBlocks.from_blocks(data._blocks)
+        else:
+            def blocks():
+                # need to identify Series-like things and handle as single column
+                if hasattr(data, 'ndim') and data.ndim == 1:
+                    if derive_columns:
+                        if hasattr(data, 'name') and data.name:
+                            columns.append(data.name)
+                    if hasattr('values'):
+                        yield data.values
+                    else:
+                        yield data
+
+                elif hasattr(data, 'items'):
+                    # distinguish ordered from unordered mappings
+                    if isinstance(data, OrderedDict) or hasattr(data, 'index'):
+                        sorter = lambda x: x
+                    else:
+                        sorter = sorted
+                    for k, v in sorter(data.items()):
+                        if derive_columns:
+                            columns.append(k) # side effet of generator!
+                        if hasattr(v, 'values'): # its could be Series or Frame
+                            values = v.values
+                            assert isinstance(values, np.ndarray)
+                            yield values
+                        if isinstance(v, np.ndarray):
+                            yield v
+                        else:
+                            yield np.array(v)
+                    # can be a dictionary of blocks, Series, or ndarray, or lists
+                elif isinstance(data, np.ndarray):
+                    yield data
+                else: # try to make it into array
+                    yield np.array(data)
+            # this call populates columns
+            self._blocks = TypeBlocks.from_blocks(blocks())
+
+        row_count, col_count = self._blocks.shape
+
+        # TODO: make column constructor a class attribute
+        if columns:
+            if len(columns) != col_count:
+                raise Exception('columns provided do not have correct size')
+            self._columns = self._COLUMN_CONSTRUCTOR(columns)
+        else:
+            self._columns = self._COLUMN_CONSTRUCTOR(range(col_count))
+
+        if index:
+            if len(index) != row_count:
+                raise Exception('index provided do not have correct size')
+            self._index = Index(index)
+        else:
+            self._index = Index(range(row_count))
+
+
+
+        self.loc = GetItem(self._extract_loc)
+        self.iloc = GetItem(self._extract_iloc)
+
+        # self.mask = MaskInterface(
+        #         iloc=GetItem(self._extract_iloc_mask),
+        #         loc=GetItem(self._extract_loc_mask))
+
+
+    def __len__(self):
+        '''Return number of rows.
+        '''
+        return self._blocks.shape[0]
 
     @property
     def values(self):
+        return self._blocks.values
+
+    def display(self) -> Display:
+        d = self._index.display()
+        # for c in self._columns:
+        for idx, column in enumerate(self._blocks.axis_values(axis=1)): # columns
+            d.append(Display.from_values(column, header=''))
+
+        cls_display = Display.from_values((),
+                header='<' + self.__class__.__name__ + '>')
+        d.insert_rows(cls_display,
+                self._columns.display())
+        return d
+
+    def __repr__(self) -> str:
+        return repr(self.display())
+
+
+
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def columns(self):
+        return self._columns
+
+    #---------------------------------------------------------------------------
+    def _extract(self, row_key=None, column_key=None) -> 'Frame':
         '''
-        Pandas returns an np array as a list of rows
-        np.matrix similarly is a list of rows; getting an array returns the same results
+        Extract based on iloc selection.
         '''
+        blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
+        if row_key is not None: # have to accept 9!
+            index = self._index[row_key]
+        else:
+            index = self._index
+
+        if blocks.shape[1] == 1: # if one column
+            # return a Series; fastest way to get values?
+            return Series(blocks.values, index=index)
+
+        columns = self._columns[column_key]
+        return self.__class__(blocks, index=index, columns=columns)
+
+
+    def _extract_iloc(self, key) -> 'Frame':
+        if isinstance(key, tuple):
+            return self._extract(*key)
+        return self._extract(row_key=key)
+
+    def _extract_loc(self, key) -> 'Frame':
+        if isinstance(key, tuple):
+            loc_row_key, loc_column_key = key
+            iloc_column_key = self._columns.loc_to_iloc(loc_column_key)
+        else:
+            loc_row_key = key
+            iloc_column_key = None
+
+        iloc_row_key = self._index.loc_to_iloc(loc_row_key)
+
+        return self._extract(row_key=iloc_row_key,
+                column_key=iloc_column_key)
+
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            raise KeyError('__getitem__ does not support multiple indexers')
+
+        iloc_key = self._columns.loc_to_iloc(key)
+        return self._extract(row_key=None, column_key=iloc_key)
+
+
+
+    #---------------------------------------------------------------------------
+    # dictionsry-like interface
+
+    def keys(self):
+        '''Return an iterator of columns.
+        '''
+        return self._columns
+
+    def __iter__(self):
+        return self._columns.__iter__()
+
+
+
+
+
+class Frame(StaticFrame):
+    '''Fully immutable Frame, with fixed sized index and columns.
+    '''
+    __slots__ = (
+        '_blocks',
+        '_columns',
+        '_index',
+        'iloc',
+        'loc',
+        )
+
+    _COLUMN_CONSTRUCTOR = IndexGrowOnly
+
+
+    def __setitem__(self, key, value):
+        '''For adding a single column, one column at a time.
+        '''
+        # this might fail if key is a sequence
+        self._columns.append(key)
+
+        if isinstance(value, Series):
+            # TODO: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
+            # select only the values matching our index
+            self._blocks.append(value.reindex(self.index).values)
+        else: # unindexed array
+            if not isinstance(value, np.ndarray):
+                if isinstance(value, GeneratorType):
+                    value = np.array(list(value))
+                else:
+                # for now, we assume all values make sense to covnert to NP array
+                    value = np.array(value)
+                value.flags.writeable = False
+            if value.ndim != 1 or len(value) != self._blocks.shape[0]:
+                raise Exception('incorrectly sized, unindexed value')
+            self._blocks.append(value)
+
+    def extend_columns(self,
+            keys: tp.Iterable,
+            values: tp.Iterable):
+        '''Extend the Frame (add more columns) by providing two iterables, one for column names and antoher for appropriately sized iterables.
+        '''
+        for k, v in zip_longest(keys, values):
+            self.__setitem__(k, v)
+
+    def extend_blocks(self,
+            keys: tp.Iterable,
+            values: tp.Iterable[np.ndarray]):
+        '''Extend the Frame (add more columns) by providing two iterables, one of needed column names (not nested), and an iterable of blocks (definting one or more columns in an ndarray).
+        '''
+        self._columns.extend(keys)
+        # TypeBlocks only accepts ndarrays; can try to convert here if lists or tuples given
+        for value in values:
+            if not isinstance(value, np.ndarray):
+                value = np.array(value)
+                value.flags.writeable = False
+            self._blocks.append(value)
+
+        if len(self._columns) != self._blocks.shape[1]:
+            raise Exception('incompatible keys and values')
