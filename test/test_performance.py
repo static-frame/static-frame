@@ -4,6 +4,7 @@ import pstats
 import io
 import collections
 import typing as tp
+import itertools as it
 import argparse
 import string
 import hashlib
@@ -14,6 +15,8 @@ import numpy as np
 
 import static_frame as sf
 
+
+#-------------------------------------------------------------------------------
 
 def get_sample_series_float(size=10000):
     a1 = np.arange(size) * .001
@@ -36,7 +39,6 @@ def get_sample_series_string_index_float_values(size=10000):
     return pds, sfs, a1
 
 pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
-
 
 
 
@@ -64,17 +66,34 @@ def get_sample_series_objstr(size=10000):
 pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
 
 
+#-------------------------------------------------------------------------------
+# frame generators
 
+
+def get_sample_frame_float_string_index(size=10000, columns=100):
+    a1 = (np.arange(size * columns)).reshape((size, columns)) * .001
+    # insert random nan in very other columns
+    for col in range(0, 100, 2):
+        a1[:100, col] = np.nan
+    index = [hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(size)]
+    columns = [hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(columns)]
+    sfs = sf.Frame(a1, index=index, columns=columns)
+    pds = pd.DataFrame(a1, index=index, columns=columns)
+    return pds, sfs, a1
+
+pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
 
 
 class PerfTest:
     PD_NAME = 'pd'
     SF_NAME = 'sf'
     FUNCTION_NAMES = ('np', PD_NAME, SF_NAME)
-    NUMBER = 2000
+    NUMBER = 500
 
 
 
+#-------------------------------------------------------------------------------
+# series tests
 
 class SeriesIntFloat_isnull(PerfTest):
     @staticmethod
@@ -87,7 +106,7 @@ class SeriesIntFloat_isnull(PerfTest):
 
     @staticmethod
     def sf():
-        post = sfs_int_float_10k.isnull()
+        post = sfs_int_float_10k.isna()
 
 
 class SeriesIntFloat_dropna(PerfTest):
@@ -132,7 +151,7 @@ class SeriesStrFloat_isnull(PerfTest):
 
     @staticmethod
     def sf():
-        post = sfs_str_float_10k.isnull()
+        post = sfs_str_float_10k.isna()
 
 
 class SeriesStrFloat_dropna(PerfTest):
@@ -168,7 +187,7 @@ class SeriesIntObj_isnull(PerfTest):
 
     @staticmethod
     def sf():
-        post = sfs_obj_10k.isnull()
+        post = sfs_obj_10k.isna()
 
 
 class SeriesIntObj_dropna(PerfTest):
@@ -203,7 +222,7 @@ class SeriesIntObjStr_isnull(PerfTest):
 
     @staticmethod
     def sf():
-        post = sfs_objstr_10k.isnull()
+        post = sfs_objstr_10k.isna()
 
 
 class SeriesIntObjStr_dropna(PerfTest):
@@ -225,6 +244,152 @@ class SeriesIntObjStr_fillna(PerfTest):
     @staticmethod
     def sf():
         post = sfs_obj_10k.fillna('wrong')
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# frame tests
+
+class FrameFloat_sum_skipna_axis0(PerfTest):
+    @staticmethod
+    def np():
+        post = np.nansum(npf_float_10k, axis=0)
+        assert post.shape == (100,)
+
+    @staticmethod
+    def pd():
+        post = pdf_float_10k.sum(axis=0, skipna=True)
+        assert post.shape == (100,)
+
+    @staticmethod
+    def sf():
+        post = sff_float_10k.sum(axis=0, skipna=True)
+        assert post.shape == (100,)
+
+
+class FrameFloat_sum_skipna_axis1(PerfTest):
+    @staticmethod
+    def np():
+        post = np.nansum(npf_float_10k, axis=1)
+        assert post.shape == (10000,)
+
+    @staticmethod
+    def pd():
+        post = pdf_float_10k.sum(axis=1, skipna=True)
+        assert post.shape == (10000,)
+
+    @staticmethod
+    def sf():
+        post = sff_float_10k.sum(axis=1, skipna=True)
+        assert post.shape == (10000,)
+
+
+
+
+class FrameFloat_dropna_any_axis0(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = pdf_float_10k.dropna(axis=0, how='any')
+        assert post.shape == (9900, 100)
+
+    @staticmethod
+    def sf():
+        post = sff_float_10k.dropna(axis=0, condition=np.any)
+        assert post.shape == (9900, 100)
+
+
+class FrameFloat_dropna_any_axis1(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = pdf_float_10k.dropna(axis=1, how='any')
+        assert post.shape == (10000, 50)
+
+    @staticmethod
+    def sf():
+        post = sff_float_10k.dropna(axis=1, condition=np.any)
+        assert post.shape == (10000, 50)
+
+
+class FrameFloat_isna(PerfTest):
+
+    @staticmethod
+    def np():
+        post = np.isnan(npf_float_10k)
+
+    @staticmethod
+    def pd():
+        post = pdf_float_10k.isnull()
+
+    @staticmethod
+    def sf():
+        post = sff_float_10k.isna()
+
+
+
+
+
+class FrameFloat_apply_axis0(PerfTest):
+
+    @staticmethod
+    def pd():
+        func = lambda a: np.nanmean(a ** 2)
+        post = pdf_float_10k.apply(func, axis=0) # apply to columns
+        assert post.shape == (100,)
+        assert post.sum() > 33501616.16668333
+
+    @staticmethod
+    def sf():
+        func = lambda a: np.nanmean(a ** 2)
+        post = sff_float_10k.iter_array(0).apply(func) # apply to columns
+        assert post.shape == (100,)
+        assert post.sum() > 33501616.16668333
+
+
+class FrameFloat_apply_axis1(PerfTest):
+    NUMBER = 10
+
+    @staticmethod
+    def pd():
+        func = lambda a: np.nanmean(a ** 2)
+        post = pdf_float_10k.apply(func, axis=1) # apply to rows
+        assert post.shape == (10000,)
+        assert post.sum() > 3333328333.8349
+
+    @staticmethod
+    def sf():
+        func = lambda a: np.nanmean(a ** 2)
+        post = sff_float_10k.iter_array(1).apply(func)
+        assert post.shape == (10000,)
+        assert post.sum() > 3333328333.8349
+
+#-------------------------------------------------------------------------------
+# frame creation and growth
+
+
+class FrameFloat_add_series_partial(PerfTest):
+
+    # 325 two character strings
+    _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
+
+    @classmethod
+    def pd(cls):
+        f1 = pd.DataFrame(index=cls._index)
+        for col in range(100):
+            s = pd.Series(col * .1, index=cls._index[col: col+20])
+            f1[col] = s
+        assert f1.sum().sum() == 9900.0
+
+    @classmethod
+    def sf(cls):
+        f1 = sf.FrameGO(index=cls._index)
+        for col in range(100):
+            s = sf.Series(col * .1, index=cls._index[col: col+20])
+            f1[col] = s
+        assert f1.sum().sum() == 9900.0
 
 
 
@@ -328,68 +493,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-
-#                  name        np        pd         sf
-# 0            PerfTest       NaN       NaN        NaN
-# 1  SeriesFloat_dropna       NaN  0.433320  11.352377
-# 2  SeriesFloat_isnull  0.034229  0.144864   0.059468
-# %
-
-#dropped ordered dict
-
-#                  name        np        pd         sf
-# 0  SeriesFloat_dropna  0.104048  0.432315  12.350630
-# 1  SeriesFloat_isnull  0.034371  0.146767   0.060482
-
-# stored positions array, alternate dict comp for non generators
-
-
-# % python3 RALib/test/unit_test/test_static_frame_perf.py
-#                  name        np        pd        sf
-# 0  SeriesFloat_dropna  0.098362  0.431975  3.215246
-# 1  SeriesFloat_isnull  0.034171  0.148821  0.059623
-
-
-# % python3 RALib/test/unit_test/test_static_frame_perf.py
-#                  name        np        pd        sf
-# 0  SeriesFloat_dropna  0.104799  0.448937  3.668478
-# 1  SeriesFloat_isnull  0.034877  0.158095  0.060943
-# 2    SeriesObj_dropna       NaN  1.477193  9.369060
-# 3    SeriesObj_isnull       NaN  0.926872  5.997276
-
-
-# updated nan discovery in object types to use astype conversion
-
-# % python3 RALib/test/unit_test/test_static_frame_perf.py
-#                  name       np        pd        sf
-# 0  SeriesFloat_dropna  0.10071  0.437749  3.617273
-# 1  SeriesFloat_isnull  0.03505  0.150843  0.060352
-# 2    SeriesObj_dropna      NaN  1.484937  4.759194
-# 3    SeriesObj_isnull      NaN  0.937147  1.049971
-
-
-# replaced dictionary comprehension with dictionary function
-
-# % python3 RALib/test/unit_test/test_static_frame_perf.py
-#                  name        np        pd        sf
-# 0  SeriesFloat_dropna  0.096741  0.428629  3.133134
-# 1  SeriesFloat_isnull  0.034854  0.145981  0.059680
-# 2    SeriesObj_dropna       NaN  1.473483  4.400348
-# 3    SeriesObj_isnull       NaN  0.934011  1.02889
-
-
-
-
-#                       name        np        pd        sf      sf/pd
-# 0    SeriesIntFloat_dropna  0.040793  0.169650  1.390540   8.196537
-# 1    SeriesIntFloat_fillna  0.051688  0.131705  0.073481   0.557924
-# 2    SeriesIntFloat_isnull  0.015110  0.063173  0.023108   0.365792
-# 3   SeriesIntObjStr_dropna       NaN  0.706906  5.830331   8.247676
-# 4   SeriesIntObjStr_fillna       NaN  0.781177  0.506214   0.648014
-# 5   SeriesIntObjStr_isnull       NaN  0.364144  3.979732  10.929006
-# 6      SeriesIntObj_dropna       NaN  0.578961  1.647710   2.845976
-# 7      SeriesIntObj_fillna       NaN  1.728827  0.496637   0.287268
-# 8      SeriesIntObj_isnull       NaN  0.365337  0.412665   1.129545
-# 9    SeriesStrFloat_dropna       NaN  0.227070  4.779123  21.046928
-# 10   SeriesStrFloat_fillna       NaN  0.168498  0.071351   0.423456
-# 11   SeriesStrFloat_isnull       NaN  0.061955  0.021504   0.347098
