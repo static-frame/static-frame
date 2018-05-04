@@ -17,9 +17,6 @@ import os
 import datetime
 import io
 
-from deploy import inventory
-from deploy.core.dependency_graph import filters
-from deploy.core.dependency_graph import drawing
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
