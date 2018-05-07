@@ -33,10 +33,10 @@ _module = sys.modules[__name__]
 # handle nan in object blocks with skipna processing on ufuncs
 # allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
-# test and complete Frame.from_csv, to_csv
 
 
 # future features
+# drop on TypeBlocks (if needed, update set_index to use); drop on Frame, Series
 # Series in from_concat
 # roll() on TypeBlocks (can be used in duplicate discovery on blocks)
 # shift as non-wrapping roll
@@ -4969,6 +4969,40 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self.__class__(self.values[:, keep],
                 index=self._index,
                 columns=self._columns[keep])
+
+
+    def set_index(self, column: tp.Optional[tp.Union[int, str]],
+            drop: bool=False):
+        '''
+        Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
+        '''
+        if isinstance(column, int):
+            column_iloc = column
+        else:
+            column_iloc = self._columns.loc_to_iloc(column)
+
+        if drop:
+            # NOTE: not sure if there is a faster way; perhaps with a drop interface on TypeBlocks
+            selection = np.fromiter(
+                    (x != column_iloc for x in range(self._blocks.shape[1])),
+                    count=self._blocks.shape[1],
+                    dtype=bool)
+            blocks = self._blocks[selection]
+            own_data = True
+            columns = self._columns.values[selection]
+        else:
+            blocks = self._blocks
+            own_data = False
+            columns = self._columns
+
+        index = self._blocks._extract_array(column_key=column_iloc)
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                own_data=own_data)
+
+
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

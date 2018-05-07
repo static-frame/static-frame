@@ -4250,6 +4250,31 @@ class TestUnit(unittest.TestCase):
                 )
 
 
+
+    def test_frame_set_index_a(self):
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y'))
+
+        self.assertEqual(f1.set_index('r').to_pairs(0),
+                (('p', (('a', 2), ('b', 30))), ('q', (('a', 2), ('b', 34))), ('r', (('a', 'a'), ('b', 'b'))), ('s', (('a', False), ('b', True))), ('t', (('a', False), ('b', False)))))
+
+        self.assertEqual(f1.set_index('r', drop=True).to_pairs(0),
+                (('p', (('a', 2), ('b', 30))), ('q', (('a', 2), ('b', 34))), ('s', (('a', False), ('b', True))), ('t', (('a', False), ('b', False)
+                ))))
+
+        f2 = f1.set_index('r', drop=True)
+
+        # in extracting the index, we leave unconnected blocks unchanged.
+        self.assertTrue(f1.mloc[[0, 2]].tolist() == f2.mloc.tolist())
+
+
+
 if __name__ == '__main__':
     unittest.main()
     t = TestUnit()

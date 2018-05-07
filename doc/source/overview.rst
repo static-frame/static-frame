@@ -317,7 +317,6 @@ Function Application to Iterators
 
 
 
-
 Assignment
 ===============================
 
@@ -329,9 +328,15 @@ Series
 
 .. py:method:: Series.assign[key](value)
 
+    Given a key, replace the values specified by the key with value.
+
 .. py:method:: Series.assign.loc[key](value)
 
+    Given a loc key, replace the values specified by the key with value.
+
 .. py:method:: Series.assign.iloc[key](value)
+
+    Given a iloc key, replace the values specified by the key with value.
 
 
 Frame
@@ -339,9 +344,15 @@ Frame
 
 .. py:method:: Frame.assign[key](value)
 
+    Given a key, replace the values specified by the key with value.
+
 .. py:method:: Frame.assign.loc[key](value)
 
+    Given a loc key, replace the values specified by the key with value.
+
 .. py:method:: Frame.assign.iloc[key](value)
+
+    Given a iloc key, replace the values specified by the key with value.
 
 
 
@@ -456,6 +467,9 @@ Frame
 
 .. automethod:: static_frame.Frame.drop_duplicated
 
+.. automethod:: static_frame.Frame.set_index
+
+
 
 .. admonition:: Deviations from Pandas
     :class: Warning
@@ -485,6 +499,9 @@ Frame
 
 .. automethod:: static_frame.Frame.to_pandas
 
+.. automethod:: static_frame.Frame.to_csv
+
+.. automethod:: static_frame.Frame.to_tsv
 
 
 
