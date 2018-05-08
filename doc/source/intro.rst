@@ -6,6 +6,15 @@ Introduction
 The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axis. StaticFrame extends NumPy, relying on NumPy entirely for all vector processing and retaining the full range of NumPy data types. While borrowing core approches to data extraction and manipulation from Pandas, StaticFrame offers a light-weight implementation, consistent interfaces, and flexible approaches to function application with easy parallelization, all without the undesirable complexity of in-place mutation.
 
 
+.. admonition:: Alpha Release
+    :class: Warning
+
+    The current release of StaticFrame is an alpha release, meaning that interfaces may change, functionality may be incomplete, and there may be significant flaws. Please assist in development by reporting any bugs or request any missing features.
+
+    https://github.com/InvestmentSystems/static-frame/issues
+
+
+
 What StaticFrame Is and Is Not
 =================================
 
@@ -28,33 +37,20 @@ Immutability
 
 The :py:class:`Series` and :py:class:`Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
-.. code-block:: pycon
+.. literalinclude:: intro.py
+   :language: python
+   :start-after: start_immutability
+   :end-before: end_immutability
 
-    >>> import static_frame as sf
-    >>> s = sf.Series.from_items(zip(('a', 'b', 'c'), (10, 20, 30)))
-    >>> s
-    <Index> <Series>
-    a       10
-    b       20
-    c       30
-    <U1     int64
 
-    >>> s['b'] = 21
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    TypeError: 'Series' object does not support item assignment
+To mutate values in a :py:class:`Series` or :py:class:`Frame`, a copy must be made. Convenient functional interfaces to assign to a copy are provided, using conventions familiar to NumPy and Pandas users.
 
-    >>> s.iloc[1] = 21
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    TypeError: 'GetItem' object does not support item assignment
 
-    >>> s.values[1] = 21
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-    ValueError: assignment destination is read-only
+.. literalinclude:: intro.py
+   :language: python
+   :start-after: start_assign
+   :end-before: end_assign
 
-To mutate values in a :py:class:`Series` or :py:class:`Frame`, a copy must be made. Convenient interfaces to assign to a copy are provided, using conventions very familiar to NumPy and Pandas users.
 
 Immutable data has the overwhelming benefit of providing the confidence that a client of a :py:class:`Series` or :py:class:`Frame` cannot mutate its data. This removes the need for many unneccesary copies, and forces clients to only make copies when absolutely necessary.
 
@@ -65,7 +61,7 @@ There is no guarantee that using immutable data will produce correct code or mor
 History of StaticFrame
 ============================
 
-The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
+The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
 
 
 Contributors

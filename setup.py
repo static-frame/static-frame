@@ -11,17 +11,24 @@ from os import path
 # python setup.py bdist_wheel
 # twine upload dist/*
 
-here = path.abspath(path.dirname(__file__))
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
+root_dir_fp = path.abspath(path.dirname(__file__))
+
+def get_long_description():
+    with open(path.join(root_dir_fp, 'README.rst'), encoding='utf-8') as f:
+        return f.read()
+
+def get_version():
+    with open(path.join(root_dir_fp, 'static_frame.py'), encoding='utf-8') as f:
+        for l in f:
+            if l.startswith('__version__'):
+                return l.split('=')[-1].strip()[1:-1]
 
 setup(
     name='static-frame',
-    version='0.1.0',
-
+    version=get_version(),
     description='Immutable structures for one- and two-dimensional calculations with labelled axis',
-    long_description=long_description,
-
+    long_description=get_long_description(),
+    install_requires=['numpy>=1.14.2'],
     url='https://github.com/InvestmentSystems/static-frame',
     author='Christopher Ariza',
     license='MIT',

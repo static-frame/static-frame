@@ -74,6 +74,13 @@ Frame
 
 .. automethod:: static_frame.Frame.from_records
 
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_from_records_a
+   :end-before: end_from_records_a
+
+
 .. automethod:: static_frame.Frame.from_concat
 
 .. automethod:: static_frame.Frame.from_csv
@@ -469,6 +476,9 @@ Frame
 
 .. automethod:: static_frame.Frame.set_index
 
+.. automethod:: static_frame.Frame.head
+
+.. automethod:: static_frame.Frame.tail
 
 
 .. admonition:: Deviations from Pandas

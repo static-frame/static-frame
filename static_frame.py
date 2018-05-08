@@ -26,6 +26,9 @@ import operator as operator_mod
 import numpy as np
 from numpy.ma import MaskedArray
 
+
+__version__ = '0.1.1'
+
 _module = sys.modules[__name__]
 
 # target features for 0.1a1 release
@@ -57,15 +60,10 @@ _module = sys.modules[__name__]
 #     U 	Unicode
 #     V 	void
 
-__version__ = '0.1.0'
-
 _DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
-
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
-
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
-
 
 _UFUNC_UNARY_OPERATORS = (
         '__pos__',
@@ -3030,6 +3028,14 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # index manipulation
 
+    def _reindex_other_like_iloc(self,
+            value: 'Series',
+            iloc_key: GetItemKeyType) -> 'Series':
+        '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
+        '''
+        return value.reindex(self._index._extract_iloc(iloc_key))
+
+
     def reindex(self,
             index: tp.Union[Index, tp.Sequence[tp.Any]],
             fill_value=np.nan) -> 'Series':
@@ -3480,10 +3486,11 @@ class SeriesAssign:
 
     def __call__(self, value):
         array = self.data.values.copy()
+        if isinstance(value, Series):
+            value = self.data._reindex_other_like_iloc(value, self.iloc_key).values
         array[self.iloc_key] = value
         array.flags.writeable = False
         return Series(array, index=self.data.index)
-
 
 
 #-------------------------------------------------------------------------------
@@ -4970,9 +4977,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=self._index,
                 columns=self._columns[keep])
 
-
     def set_index(self, column: tp.Optional[tp.Union[int, str]],
-            drop: bool=False):
+            drop: bool=False) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
@@ -5002,6 +5008,18 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=index,
                 own_data=own_data)
 
+    #---------------------------------------------------------------------------
+    # transformations resulting in reduced dimensionality
+
+    def head(self, count: int=5) -> 'Frame':
+        '''Return a Frame consisting only of the top rows as specified by ``count``.
+        '''
+        return self.iloc[:count]
+
+    def tail(self, count: int=5) -> 'Frame':
+        '''Return a Frame consisting only of the bottom rows as specified by ``count``.
+        '''
+        return self.iloc[-count:]
 
 
     #---------------------------------------------------------------------------

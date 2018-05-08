@@ -2268,7 +2268,7 @@ class TestUnit(unittest.TestCase):
                 [0, 300, 300, 300])
 
 
-    def test_series_assign_a(self):
+    def test_series_assign_b(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
         self.assertEqual(list(s1.isin([2]).items()),
@@ -2280,6 +2280,20 @@ class TestUnit(unittest.TestCase):
         self.assertEqual(list(s1.isin(range(2, 4)).items()),
                 [('a', False), ('b', False), ('c', True), ('d', True)])
 
+
+    def test_series_assign_c(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s1.assign.loc['c':](0).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 0), ('d', 0))
+                )
+        self.assertEqual(s1.assign.loc['c':]((20, 30)).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 20), ('d', 30)))
+
+        self.assertEqual(s1.assign['c':](s1['c':] * 10).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 20), ('d', 30)))
+
+        self.assertEqual(s1.assign['c':](Series({'d':40, 'c':60})).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 60), ('d', 40)))
 
 
     def test_series_loc_extract_a(self):
@@ -4272,6 +4286,19 @@ class TestUnit(unittest.TestCase):
 
         # in extracting the index, we leave unconnected blocks unchanged.
         self.assertTrue(f1.mloc[[0, 2]].tolist() == f2.mloc.tolist())
+
+
+    def test_frame_head_tail_a(self):
+
+        # thest of multi threaded apply
+
+        f1 = Frame.from_items(
+                zip(range(10), (np.random.rand(1000) for _ in range(10)))
+                )
+        self.assertEqual(f1.head(3).index.values.tolist(),
+                [0, 1, 2])
+        self.assertEqual(f1.tail(3).index.values.tolist(),
+                [997, 998, 999])
 
 
 
