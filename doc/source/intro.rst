@@ -26,8 +26,6 @@ StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency)
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structure.
 
-At this stage, StaticFrame favors simplicity and a pure Python / NumPy implementations over performance.
-
 StaticFrame does not implement its own types or numeric computation routines, relying entirely on NumPy. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays.
 
 
