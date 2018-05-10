@@ -149,19 +149,110 @@ Operators
 
 :py:class:`Series`, :py:class:`Frame`, and :py:class:`Index`, as well as their derived classes, provide support for the full range of operators available with NumPy. In addition, :py:class:`Series` and  :py:class:`Frame` feature index-alignment and automatic index expansion when both opperands are StaticFrame objects.
 
+
+Index
+---------
+
+Index operators operate on the labels.
+
+Unary Operators
+..................
+
+
+.. jinja:: ctx
+
+    {% for func, doc in index_operator_unary %}
+
+    .. py:method:: Index.{{ func }}
+
+        {{ doc }}
+
+    {% endfor %}
+
+
+Binary Operators
+..................
+
+.. jinja:: ctx
+
+    {% for func, doc in index_operator_binary %}
+
+    .. py:method:: Index.{{ func }}(other)
+
+        {{ doc }}
+
+    {% endfor %}
+
+
+
 Series
 ---------
 
-.. py:method:: Series.__add__(other)
+Series operators operate on the Series values.
 
-.. py:method:: Series.__sub__(other)
+
+Unary Operators
+.................
+
+.. jinja:: ctx
+
+    {% for func, doc in series_operator_unary %}
+
+    .. py:method:: Series.{{ func }}
+
+        {{ doc }}
+
+    {% endfor %}
+
+
+Binary Operators
+..................
+
+.. jinja:: ctx
+
+    {% for func, doc in series_operator_binary %}
+
+    .. py:method:: Series.{{ func }}(other)
+
+        {{ doc }}
+
+    {% endfor %}
+
 
 Frame
 ---------
 
-.. py:method:: Frame.__add__(other)
+Frame operators operate on the Frame values.
 
-.. py:method:: Frame.__sub__(other)
+
+Unary Operators
+..................
+
+.. jinja:: ctx
+
+    {% for func, doc in frame_operator_unary %}
+
+    .. py:method:: Frame.{{ func }}
+
+        {{ doc }}
+
+    {% endfor %}
+
+
+Binary Operators
+..................
+
+.. jinja:: ctx
+
+    {% for func, doc in frame_operator_binary %}
+
+    .. py:method:: Frame.{{ func }}(other)
+
+        {{ doc }}
+
+    {% endfor %}
+
+
 
 
 

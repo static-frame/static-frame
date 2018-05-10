@@ -24,6 +24,35 @@ import static_frame as sf
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
+
+
+def get_jinja_contexts():
+
+    def get_func_doc(cls, func_iter):
+        return [(f, getattr(cls, f).__doc__) for f in sorted(func_iter)]
+
+    post = {}
+    post['index_operator_unary'] = get_func_doc(sf.Index,
+            sf._UFUNC_UNARY_OPERATORS)
+    post['index_operator_binary'] = get_func_doc(sf.Index,
+            sf._UFUNC_BINARY_OPERATORS)
+
+    post['series_operator_unary'] = get_func_doc(sf.Series,
+            sf._UFUNC_UNARY_OPERATORS)
+    post['series_operator_binary'] = get_func_doc(sf.Series,
+            sf._UFUNC_BINARY_OPERATORS)
+
+    post['frame_operator_unary'] = get_func_doc(sf.Frame,
+            sf._UFUNC_UNARY_OPERATORS)
+    post['frame_operator_binary'] = get_func_doc(sf.Frame,
+            sf._UFUNC_BINARY_OPERATORS)
+
+
+    return post
+
+jinja_contexts = {'ctx': get_jinja_contexts()}
+
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -35,7 +64,8 @@ extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.viewcode',
         'sphinx.ext.graphviz',
-        'sphinxcontrib.napoleon'
+        'sphinxcontrib.napoleon',
+        'sphinxcontrib.jinja',
         ]
 
 
