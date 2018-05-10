@@ -2,4 +2,4 @@ numpy==1.14.2
 Pygments==2.2.0
 sphinx-jinja==0.3.0
 sphinxcontrib-napoleon==0.6.1
-sphinx_rtd_theme==0.2.4
+sphinx_rtd_theme>=0.3.1
