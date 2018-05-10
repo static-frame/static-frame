@@ -43,14 +43,13 @@ def get_jinja_contexts():
         post[label + '_operator_binary'] = get_func_doc(cls,
                 sf._UFUNC_BINARY_OPERATORS)
 
-
-
     def get_ufunc_doc(cls, func_map):
         # doc here is a complex string, just take the first line
         post = []
         for label, funcs in sorted(func_map.items()):
             doc_str = funcs[0].__doc__.strip().split('\n')[0]
-            post.append((label, doc_str))
+            return_type = funcs[2] if funcs[2] is not None else float
+            post.append((label, doc_str, return_type))
         return post
 
     for label, cls in (

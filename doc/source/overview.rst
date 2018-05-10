@@ -271,9 +271,9 @@ Index
 
 .. jinja:: ctx
 
-    {% for func, doc in index_ufunc_axis %}
+    {% for func, doc, return_type in index_ufunc_axis %}
 
-    .. py:method:: Index.{{ func }}(axis=0, skipna=True)
+    .. py:method:: Index.{{ func }}(axis=0, skipna=True) -> {{ return_type }}
 
     {{ doc }}
 
@@ -286,9 +286,9 @@ Series
 
 .. jinja:: ctx
 
-    {% for func, doc in series_ufunc_axis %}
+    {% for func, doc, return_type in series_ufunc_axis %}
 
-    .. py:method:: Series.{{ func }}(axis=0, skipna=True)
+    .. py:method:: Series.{{ func }}(axis=0, skipna=True) -> {{ return_type }}
 
     {{ doc }}
 
@@ -301,9 +301,9 @@ Frame
 
 .. jinja:: ctx
 
-    {% for func, doc in frame_ufunc_axis %}
+    {% for func, doc, return_type in frame_ufunc_axis %}
 
-    .. py:method:: Frame.{{ func }}(axis=0, skipna=True)
+    .. py:method:: Frame.{{ func }}(axis=0, skipna=True) -> Series
 
     {{ doc }}
 

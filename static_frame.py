@@ -163,7 +163,6 @@ def _any(array, axis=0, out=None):
 
 _any.__doc__ = np.any.__doc__
 
-
 def _nanall(array, axis=0, out=None):
     return _ufunc_logical_skipna(array, ufunc=np.all, skipna=True, axis=axis, out=out)
 
