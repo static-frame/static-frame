@@ -24,7 +24,7 @@ StaticFrame requires modern Python (3.5+) and modern NumPy (1.14.1+). There are 
 
 StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency). The entire library is less than 6,000 lines of code, less than 3% the size of the Pandas code base [#]_.
 
-StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structure.
+StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures.
 
 StaticFrame does not implement its own types or numeric computation routines, relying entirely on NumPy. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays.
 

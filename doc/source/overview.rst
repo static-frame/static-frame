@@ -20,9 +20,26 @@ The primary components of the StaticFrame library are the 1D :py:class:`Series` 
 
 .. autoclass:: static_frame.Series
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_a
+   :end-before: end_series_a
+
+
 .. autoclass:: static_frame.Frame
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_a
+   :end-before: end_frame_a
+
+
 .. autoclass:: static_frame.FrameGO
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_framego_a
+   :end-before: end_framego_a
 
 
 Index Mappings
@@ -33,7 +50,18 @@ Index mapping classes are used to map labels to ordinal positions on the :py:cla
 
 .. autoclass:: static_frame.Index
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_index_a
+   :end-before: end_index_a
+
+
 .. autoclass:: static_frame.IndexGO
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_indexgo_a
+   :end-before: end_indexgo_a
 
 
 .. admonition:: Deviations from Pandas
@@ -45,6 +73,8 @@ Index mapping classes are used to map labels to ordinal positions on the :py:cla
 
 Utility Objects
 ---------------------
+
+The following objects are generally only created by internal clients, and thus are not fully documented here.
 
 .. autoclass:: static_frame.TypeBlocks
 
@@ -58,7 +88,7 @@ Utility Objects
 Container Import and Creation
 ===============================
 
-Both :py:class:`Series` and :py:class:`Frame` have ``from_items`` constructors that consume key\value pairs, such as returned by ``dict.items()`` and similar functions.
+Both :py:class:`Series` and :py:class:`Frame` have ``from_items`` constructors that consume key/value pairs, such as returned by ``dict.items()`` and similar functions.
 
 
 Series
@@ -66,22 +96,40 @@ Series
 
 .. automethod:: static_frame.Series.from_items
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_from_items_a
+   :end-before: end_series_from_items_a
+
 
 Frame
 ---------
 
 .. automethod:: static_frame.Frame.from_items
 
-.. automethod:: static_frame.Frame.from_records
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_from_items_a
+   :end-before: end_frame_from_items_a
 
+
+.. automethod:: static_frame.Frame.from_records
 
 .. literalinclude:: overview.py
    :language: python
-   :start-after: start_from_records_a
-   :end-before: end_from_records_a
+   :start-after: start_frame_from_records_a
+   :end-before: end_frame_from_records_a
 
+
+.. automethod:: static_frame.Frame.from_structured_array
 
 .. automethod:: static_frame.Frame.from_concat
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_from_concat_a
+   :end-before: end_frame_from_concat_a
+
 
 .. automethod:: static_frame.Frame.from_csv
 
@@ -217,6 +265,16 @@ Binary Operators
         {{ doc }}
 
     {% endfor %}
+
+
+Examples
+..................
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_operators_a
+   :end-before: end_series_operators_a
+
 
 
 Frame

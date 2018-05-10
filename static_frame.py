@@ -271,6 +271,24 @@ GetItemKeyTypeCompound = tp.Union[tuple, int, slice, list, None]
 CallableOrMapping = tp.Union[tp.Callable, tp.Mapping]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
+DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+
+IndexSpecifier = tp.Union[int, str]
+IndexInitializer = tp.Union[
+        tp.Iterable[tp.Hashable],
+        tp.Generator[tp.Hashable, None, None]]
+
+SeriesInitializer = tp.Union[
+        tp.Iterable[tp.Any],
+        np.ndarray,
+        tp.Mapping[tp.Hashable, tp.Any],
+        int, float, str, bool]
+
+FrameInitializer = tp.Union[
+        tp.Iterable[tp.Iterable[tp.Any]],
+        np.ndarray,
+        tp.Mapping[tp.Hashable, tp.Iterable[tp.Any]]
+        ]
 
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
@@ -2111,7 +2129,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def _extract_array(self,
             row_key=None,
             column_key=None) -> np.ndarray:
-        '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used for internal clients that want to process row/column with an array
+        '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that want to process row/column with an array.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, int):
@@ -2494,8 +2512,9 @@ class Index(metaclass=MetaOperatorDelegate):
     '''A mapping of labels to positions, immutable and of fixed size. Used in :py:class:`Series` and as index and columns in :py:class:`Frame`.
 
     Args:
-        labels: the ordered keys to use as the index; can be a generator
-        loc_is_iloc: optimization for when a contiguous integer idnex is provided as labels.
+        labels: Iterable of values to be used as the index.
+        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
+        dtype: Optional dytpe to be used for labels.
     '''
 
     __slots__ = (
@@ -2513,7 +2532,8 @@ class Index(metaclass=MetaOperatorDelegate):
     @staticmethod
     def _extract_labels(
             mapping,
-            labels) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
+            labels,
+            dtype=None) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -2527,13 +2547,14 @@ class Index(metaclass=MetaOperatorDelegate):
         if isinstance(labels, np.ndarray): # if an np array can handle directly
             labels = TypeBlocks.immutable_filter(labels)
         elif hasattr(labels, '__len__'): # not a generator, not an array
-            labels = np.array(labels)
+            labels = np.array(labels, dtype)
             labels.flags.writeable = False
         else: # labels may be an expired generator
             # until all Python dictionaries are ordered, we cannot just take keys()
             # labels = np.array(tuple(mapping.keys()))
             # assume object type so as to not create a temporary list
-            labels = np.empty(len(mapping), dtype=object)
+            labels = np.empty(len(mapping),
+                    dtype=dtype if dtype else object)
             for k, v in mapping.items():
                 labels[v] = k
             labels.flags.writeable = False
@@ -2558,10 +2579,10 @@ class Index(metaclass=MetaOperatorDelegate):
         pass
 
     #---------------------------------------------------------------------------
-
     def __init__(self,
-            labels: tp.Generator[tp.Hashable, None, None],
-            loc_is_iloc: bool=False):
+            labels: IndexInitializer,
+            loc_is_iloc: bool=False,
+            dtype: DtypeSpecifier=None):
 
         self._recache = False
 
@@ -2573,6 +2594,7 @@ class Index(metaclass=MetaOperatorDelegate):
             if labels._recache:
                 labels._update_array_cache()
             positions = labels._positions
+            loc_is_iloc = labels._loc_is_iloc
             labels = labels._labels
 
         # map provided values to integer positions; do only one iteration of labels to support generators
@@ -2589,17 +2611,11 @@ class Index(metaclass=MetaOperatorDelegate):
             self._map = {v: k for k, v in enumerate(labels)}
 
         # this might be NP array, or a list, depending on if static or grow only
-        self._labels = self._extract_labels(self._map, labels)
+        self._labels = self._extract_labels(self._map, labels, dtype)
         self._positions = self._extract_positions(self._map, positions)
 
+        # NOTE:  automatic discovery is possible but not sure that the cost of a
         self._loc_is_iloc = loc_is_iloc
-
-        # NOTE:  automatic discovery is possible but not sure that the cost of a big comparison is worth it
-        # if (self._labels.dtype == int
-        #         and self._labels[0] == 0
-        #         and self._labels[-1] == self._positions[-1]
-        #         and (self._labels == self._positions).all()):
-        #     self._loc_is_iloc = True
 
         if len(self._map) != len(self._labels):
             raise KeyError('labels have non-unique values')
@@ -2812,7 +2828,7 @@ class Index(metaclass=MetaOperatorDelegate):
 
 class IndexGO(Index):
     '''
-    A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`.
+    A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
     '''
 
     __slots__ = (
@@ -2825,10 +2841,13 @@ class IndexGO(Index):
             'iloc',
             )
 
-    def _extract_labels(self, mapping, labels) -> tp.Iterable[tp.Any]:
+    def _extract_labels(self,
+            mapping,
+            labels,
+            dtype) -> tp.Iterable[tp.Any]:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''
-        labels = super(IndexGO, self)._extract_labels(mapping, labels)
+        labels = super(IndexGO, self)._extract_labels(mapping, labels, dtype)
         self._labels_mutable = labels.tolist()
         return labels
 
@@ -2888,6 +2907,11 @@ class IndexGO(Index):
 class Series(metaclass=MetaOperatorDelegate):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
+
+    Args:
+        values: An iterable of values, or a single object, to be aligned with the supplied (or automatically generated) index. Alternatively, a dictionary of index / value pairs can be provided.
+        index: Option index initializer. If provided, lenght must be equal to length of values.
+        own_index: Flag index as ownable by Series; primarily for internal clients.
     '''
 
     __slots__ = (
@@ -2905,8 +2929,14 @@ class Series(metaclass=MetaOperatorDelegate):
         )
 
     @classmethod
-    def from_items(cls, pairs, dtype=None) -> 'Series':
-        '''Series constructor from an iterator or generator of pairs, where the first value is the index and the second value is the value.
+    def from_items(cls,
+            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
+            dtype: DtypeSpecifier=None) -> 'Series':
+        '''Series construction from an iterator or generator of pairs, where the first value is the index and the second value is the value.
+
+        Args:
+            pairs: Iterable of pairs of index, value.
+            dtype: dtype or valid dtype specifier.
         '''
         index = []
         def values():
@@ -2919,11 +2949,11 @@ class Series(metaclass=MetaOperatorDelegate):
 
 
     def __init__(self,
-            values,
+            values: SeriesInitializer,
             *,
-            index=None,
-            dtype=None,
-            own_index=False
+            index: IndexInitializer=None,
+            dtype: DtypeSpecifier=None,
+            own_index: bool=False
             ):
         #-----------------------------------------------------------------------
         # values assignment
@@ -3673,30 +3703,6 @@ class IterNode:
         self._yield_type = yield_type
         self._apply_type = apply_type
 
-        # if function_type is IterNodeType.VALUES:
-        #     self._func_values = function
-
-        #     def func_items(*args, **kwargs):
-        #         if not kwargs and len(args) == 1:
-        #             axis = args[0]
-        #         else:
-        #             axis = kwargs['axis']
-
-        #         keys = self._container._index if axis == 1 else self._container._columns
-        #         yield from zip(keys, function(*args, **kwargs))
-
-        #     self._func_items = func_items
-
-        # elif function_type is IterNodeType.ITEMS:
-        #     self._func_items = function
-
-        #     def func_values(*args, **kwargs):
-        #         yield from (v for _, v in function(*args, **kwargs))
-
-        #     self._func_values = func_values
-        # else:
-        #     raise NotImplementedError()
-
     def __call__(self, *args, **kwargs):
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
@@ -3724,6 +3730,15 @@ class IterNode:
 class Frame(metaclass=MetaOperatorDelegate):
     '''
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
+
+    Args:
+        data: An iterable of row iterables, a 2D numpy array, or dictionary mapping column names to column values.
+        index: Iterable of index labels, equal in length to the number of records.
+        columns: Iterable of column labels, equal in length to the length of each row.
+        own_data: Flag data as ownable by Frame; primarily for internal clients.
+        own_index: Flag index as ownable by Frame; primarily for internal clients.
+        own_columns: Flag columns as ownable by Frame; primarily for internal clients.
+
     '''
 
     __slots__ = (
@@ -3754,15 +3769,18 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_concat(cls,
             frames: tp.Iterable['Frame'],
             axis: int=0,
-            union=True,
-            index=None,
-            columns=None):
+            union: bool=True,
+            index: IndexInitializer=None,
+            columns: IndexInitializer=None):
         '''
         Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will have those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
 
         Args:
             frames: Iterable of Frames.
-            axis: 0 stacks vertically, 1 stacks horizontally
+            axis: Integer specifying 0 to concatenate vertically, 1 to concatenate horizontally.
+            union: If True, the union of the aligned indices is used; if False, the intersection is used.
+            index: Optionally specify a new index.
+            columns: Optionally specify new columns.
         '''
         # TODO: should this upport Series?
 
@@ -3860,16 +3878,16 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_records(cls,
-            records,
+            records: tp.Iterable[tp.Any],
             *,
-            index,
-            columns):
+            index: IndexInitializer,
+            columns: IndexInitializer):
         '''Frame constructor from an iterable of rows.
 
         Args:
             records: Iterable of row values.
             index: Iterable of index labels, equal in length to the number of records.
-            columns: Iterable of column labels, equal in length to the length of each row.s
+            columns: Iterable of column labels, equal in length to the length of each row.
         '''
         # derive_columns = False
         if columns is None:
@@ -3906,10 +3924,14 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_items(cls,
-            pairs,
+            pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
-            index=None):
+            index: IndexInitializer=None):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
+
+        Args:
+            pairs: Iterable of pairs of column name, column values.
+            index: Iterable of values to create an Index.
         '''
         columns = []
         def blocks():
@@ -3934,14 +3956,15 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_structured_array(cls,
-            array,
+            array: np.ndarray,
             *,
-            index_column: tp.Optional[tp.Union[int, str]]=None) -> 'Frame':
+            index_column: tp.Optional[IndexSpecifier]=None) -> 'Frame':
         '''
-        Convert a NumPy structed array into Frame.
+        Convert a NumPy structed array into a Frame.
 
         Args:
-            index_column: optionally provide the name or position offset of the column to use as the index.
+            array: Structured numpy array.
+            index_column: Optionally provide the name or position offset of the column to use as the index.
         '''
 
         names = array.dtype.names
@@ -4024,12 +4047,19 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_header: int=0,
             skip_footer: int=0,
             header_is_columns: bool=True,
-            dtype=None,
+            dtype: DtypeSpecifier=None,
             encoding: tp.Optional[str]=None
             ) -> 'Frame':
         '''
+        From a file path or a file-like object defining a delimited data file, create a Frame.
+
         Args:
-            header_is_columns: if True, field names are read from the first line after the first skip_header lines
+            fp: A file path or a file-like object.
+            sep: The character used to seperate row elements.
+            index_column: Optionally specify a column, by position or name, to become the index.
+            skip_header: Number of leading lines to skip.
+            skip_footer: Numver of trailing lines to skip.
+            header_is_columns: If True, columns names are read from the first line after the first skip_header lines.
             dtype: set to None by default to permit discovery
         '''
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
@@ -4056,10 +4086,10 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def __init__(self,
-            data=None,
+            data: FrameInitializer=None,
             *,
-            index=None,
-            columns=None,
+            index: IndexInitializer=None,
+            columns: IndexInitializer=None,
             own_data: bool=False,
             own_index: bool=False,
             own_columns: bool=False
@@ -5121,7 +5151,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
 class FrameGO(Frame):
-    '''A two-dimensional ordered, labelled collection, immutable with grow-only columns.
+    '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.
     '''
 
     __slots__ = (
