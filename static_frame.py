@@ -27,7 +27,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 _module = sys.modules[__name__]
 
