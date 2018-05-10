@@ -253,14 +253,61 @@ Binary Operators
     {% endfor %}
 
 
-
-
-
 .. admonition:: Deviations from Pandas
     :class: Warning
 
     For consistency in operator application and to insure index alignment, all operators return an union index when both opperrands are StaticFrame containers. This deviates from Pandas, where in some versions equality operators did not align on a union index, and behaved differently than other operators.
 
+
+
+
+Mathematical / Logical / Statistical Utilities
+====================================================
+
+:py:class:`Series`, :py:class:`Frame`, and :py:class:`Index`, as well as their derived classes, provide support for common mathematical and statisticasl operations with NumPy.
+
+Index
+---------
+
+.. jinja:: ctx
+
+    {% for func, doc in index_ufunc_axis %}
+
+    .. py:method:: Index.{{ func }}(axis=0, skipna=True)
+
+    {{ doc }}
+
+    {% endfor %}
+
+
+
+Series
+---------
+
+.. jinja:: ctx
+
+    {% for func, doc in series_ufunc_axis %}
+
+    .. py:method:: Series.{{ func }}(axis=0, skipna=True)
+
+    {{ doc }}
+
+    {% endfor %}
+
+
+
+Frame
+---------
+
+.. jinja:: ctx
+
+    {% for func, doc in frame_ufunc_axis %}
+
+    .. py:method:: Frame.{{ func }}(axis=0, skipna=True)
+
+    {{ doc }}
+
+    {% endfor %}
 
 
 
