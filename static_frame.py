@@ -156,8 +156,13 @@ def _ufunc_logical_skipna(array: np.ndarray,
 def _all(array, axis=0, out=None):
     return _ufunc_logical_skipna(array, ufunc=np.all, skipna=False, axis=axis, out=out)
 
+_all.__doc__ = np.all.__doc__
+
 def _any(array, axis=0, out=None):
     return _ufunc_logical_skipna(array, ufunc=np.any, skipna=False, axis=axis, out=out)
+
+_any.__doc__ = np.any.__doc__
+
 
 def _nanall(array, axis=0, out=None):
     return _ufunc_logical_skipna(array, ufunc=np.all, skipna=True, axis=axis, out=out)
@@ -175,7 +180,7 @@ _UFUNC_AXIS_SKIPNA = {
         'max': (np.max, np.nanmax, None),
         'mean': (np.mean, np.nanmean, None),
         'std': (np.std, np.nanstd, None),
-        'var': (np.std, np.nanvar, None),
+        'var': (np.var, np.nanvar, None),
         'prod': (np.prod, np.nanprod, None),
         'cumsum': (np.cumsum, np.nancumsum, None),
         'cumprod': (np.cumprod, np.nancumprod, None)
