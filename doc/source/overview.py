@@ -4,6 +4,7 @@
 
 '''
 #start_series_a
+>>> import numpy as np
 >>> import static_frame as sf
 
 >>> sf.Series(dict(Mercury=167, Neptune=-200)) #doctest: +NORMALIZE_WHITESPACE
@@ -137,7 +138,7 @@ Saturn  120536   568.0
 #start_frame_from_concat_a
 >>> f1 = sf.Frame(dict(diameter=(12756, 142984), mass=(5.97, 1898)), index=('Earth', 'Jupiter'))
 >>> f2 = sf.Frame(dict(mass=(0.642, 102), moons=(2, 14)), index=('Mars', 'Neptune'))
->>> sf.Frame.from_concat((f1, f2))
+>>> sf.Frame.from_concat((f1, f2)) #doctest: +NORMALIZE_WHITESPACE
 <Frame>
 <Index> diameter  mass      moons     <<U8>
 <Index>
@@ -146,7 +147,7 @@ Jupiter 142984.0  1898.0    nan
 Mars    nan       0.642     2.0
 Neptune nan       102.0     14.0
 <<U7>   <float64> <float64> <float64>
->>> sf.Frame.from_concat((f1, f2), union=False)
+>>> sf.Frame.from_concat((f1, f2), union=False) #doctest: +NORMALIZE_WHITESPACE
 <Frame>
 <Index> mass      <<U8>
 <Index>
@@ -160,14 +161,51 @@ Neptune 102.0
 
 
 
+#start_frame_from_structured_array_a
+>>> a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)], dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
+>>> sf.Frame.from_structured_array(a, index_column='name') #doctest: +NORMALIZE_WHITESPACE
+<Frame>
+<Index>  mass      temperature <<U11>
+<Index>
+Venus    4.87      464
+Neptune  102.0     -200
+<object> <float32> <int32>
+
+#end_frame_from_structured_array_a
 
 
 
+#start_series_dict_like_a
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s #doctest: +NORMALIZE_WHITESPACE
+<Index> <Series>
+Earth   1
+Mars    2
+Jupiter 67
+Saturn  62
+Uranus  27
+Neptune 14
+<<U7>   <int64>
+>>> len(s)
+6
+>>> [k for k, v in s.items() if v > 60]
+['Jupiter', 'Saturn']
+>>> [s.get(k, None) for k in ('Mercury', 'Neptune', 'Pluto')]
+[None, 14, None]
+>>> 'Pluto' in s
+False
+>>> s.values
+array([ 1,  2, 67, 62, 27, 14])
+>>> s.values.flags
+  C_CONTIGUOUS : True
+  F_CONTIGUOUS : True
+  OWNDATA : True
+  WRITEABLE : False
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+  UPDATEIFCOPY : False
 
-
-
-
-
+#end_series_dict_like_a
 
 
 
@@ -204,6 +242,15 @@ Saturn  9.582219251336898
 <<U6>   <float64>
 
 #end_series_operators_a
+
+
+
+
+
+
+
+
+
 '''
 
 

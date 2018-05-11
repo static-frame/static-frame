@@ -123,6 +123,12 @@ Frame
 
 .. automethod:: static_frame.Frame.from_structured_array
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_from_structured_array_a
+   :end-before: end_frame_from_structured_array_a
+
+
 .. automethod:: static_frame.Frame.from_concat
 
 .. literalinclude:: overview.py
@@ -165,6 +171,15 @@ Series
 .. automethod:: static_frame.Series.get
 
 
+Examples:
+................
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_dict_like_a
+   :end-before: end_series_dict_like_a
+
+
 Frame
 ---------
 
@@ -201,11 +216,10 @@ Operators
 Index
 ---------
 
-Index operators operate on the labels.
+Index operators operate on the Index labels. In all cases, an immutable NumPy array is returned rather than a new Index instance.
 
 Unary Operators
 ..................
-
 
 .. jinja:: ctx
 
@@ -236,8 +250,7 @@ Binary Operators
 Series
 ---------
 
-Series operators operate on the Series values.
-
+Series operators operate on the Series values. In all cases, a new Series is returned. Operations on two Series always return a new Series with a union Index.
 
 Unary Operators
 .................
@@ -280,7 +293,7 @@ Examples
 Frame
 ---------
 
-Frame operators operate on the Frame values.
+Frame operators operate on the Frame values. In all cases, a new Frame is returned.
 
 
 Unary Operators
