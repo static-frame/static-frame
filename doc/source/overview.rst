@@ -139,6 +139,12 @@ Frame
 
 .. automethod:: static_frame.Frame.from_csv
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_from_csv_a
+   :end-before: end_frame_from_csv_a
+
+
 .. automethod:: static_frame.Frame.from_tsv
 
 
@@ -148,7 +154,7 @@ Dictionary-Like Interface
 
 :py:class:`Series` and :py:class:`Frame` provide dictionary-like interfaces.
 
-For more flexible iteration of rows or columns, see Iterators below.
+For more flexible iteration of rows or columns, see Iterators, below.
 
 
 Series
@@ -198,6 +204,15 @@ Frame
 .. automethod:: static_frame.Frame.__len__
 
 .. automethod:: static_frame.Frame.get
+
+
+Examples:
+................
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_dict_like_a
+   :end-before: end_frame_dict_like_a
 
 
 .. admonition:: Deviations from Pandas

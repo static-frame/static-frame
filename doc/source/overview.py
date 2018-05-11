@@ -175,6 +175,20 @@ Neptune  102.0     -200
 
 
 
+#start_frame_from_csv_a
+>>> from io import StringIO
+>>> filelike = StringIO('name,mass,temperature\\nVenus,4.87,464\\nNeptune,102,-200')
+>>> sf.Frame.from_csv(filelike, index_column='name') #doctest: +NORMALIZE_WHITESPACE
+<Frame>
+<Index> mass      temperature <<U11>
+<Index>
+Venus   4.87      464
+Neptune 102.0     -200
+<<U7>   <float64> <int64>
+
+#end_frame_from_csv_a
+
+
 #start_series_dict_like_a
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> s #doctest: +NORMALIZE_WHITESPACE
@@ -206,6 +220,52 @@ array([ 1,  2, 67, 62, 27, 14])
   UPDATEIFCOPY : False
 
 #end_series_dict_like_a
+
+
+
+
+#start_frame_dict_like_a
+>>> f = sf.Frame(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f #doctest: +NORMALIZE_WHITESPACE
+<Frame>
+<Index> diameter temperature <<U11>
+<Index>
+Earth   12756    15
+Jupiter 142984   -110
+Saturn  120536   -140
+<<U7>   <int64>  <int64>
+>>> len(f)
+3
+>>> [k for k, v in f.items() if (v < 0).any()]
+['temperature']
+>>> f.get('diameter') #doctest: +NORMALIZE_WHITESPACE
+<Index> <Series>
+Earth   12756
+Jupiter 142984
+Saturn  120536
+<<U7>   <int64>
+>>> f.get('mass', np.nan)
+nan
+>>> 'temperature' in f
+True
+>>> f.values
+array([[ 12756,     15],
+       [142984,   -110],
+       [120536,   -140]])
+>>> f.values.flags
+  C_CONTIGUOUS : True
+  F_CONTIGUOUS : False
+  OWNDATA : True
+  WRITEABLE : False
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+  UPDATEIFCOPY : False
+
+#end_frame_dict_like_a
+
+
+
+
 
 
 

@@ -27,7 +27,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 _module = sys.modules[__name__]
 
@@ -4042,7 +4042,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_csv(cls,
             fp: FilePathOrFileLike,
             *,
-            sep: str=',',
+            delimiter: str=',',
             index_column: tp.Optional[tp.Union[int, str]]=None,
             skip_header: int=0,
             skip_footer: int=0,
@@ -4051,11 +4051,11 @@ class Frame(metaclass=MetaOperatorDelegate):
             encoding: tp.Optional[str]=None
             ) -> 'Frame':
         '''
-        From a file path or a file-like object defining a delimited data file, create a Frame.
+        Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
 
         Args:
             fp: A file path or a file-like object.
-            sep: The character used to seperate row elements.
+            delimiter: The character used to seperate row elements.
             index_column: Optionally specify a column, by position or name, to become the index.
             skip_header: Number of leading lines to skip.
             skip_footer: Numver of trailing lines to skip.
@@ -4066,12 +4066,13 @@ class Frame(metaclass=MetaOperatorDelegate):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
         array = np.genfromtxt(fp,
-                delimiter=sep,
+                delimiter=delimiter,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 names=header_is_columns,
                 dtype=dtype,
-                encoding=encoding
+                encoding=encoding,
+                invalid_raise=True
                 )
         # can own this array so set it as immutable
         array.flags.writeable = False
@@ -4081,7 +4082,10 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_tsv(cls, fp, **kwargs):
-        return cls.from_csv(fp, sep='\t', **kwargs)
+        '''
+        Specialized version of :py:meth:`Frame.from_csv` for TSV files.
+        '''
+        return cls.from_csv(fp, delimiter='\t', **kwargs)
 
     #---------------------------------------------------------------------------
 
