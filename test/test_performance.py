@@ -10,7 +10,6 @@ import string
 import hashlib
 import fnmatch
 
-import pandas as pd
 import numpy as np
 
 import static_frame as sf
@@ -19,6 +18,7 @@ import static_frame as sf
 #-------------------------------------------------------------------------------
 
 def get_sample_series_float(size=10000):
+    import pandas as pd
     a1 = np.arange(size) * .001
     a1[size // 2:] = np.nan
     pds = pd.Series(a1)
@@ -30,6 +30,7 @@ pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_floa
 
 
 def get_sample_series_string_index_float_values(size=10000):
+    import pandas as pd
     a1 = np.arange(size) * .001
     a1[size // 2:] = np.nan
     # create hsa indices
@@ -43,6 +44,8 @@ pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_v
 
 
 def get_sample_series_obj(size=10000):
+    import pandas as pd
+
     sample = [None, 3, 0.123, np.nan]
     a1 = np.array(sample * int(size / len(sample)))
 
@@ -55,6 +58,8 @@ pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
 
 
 def get_sample_series_objstr(size=10000):
+    import pandas as pd
+
     sample = [None, 3, 0.123, np.nan, 'str']
     a1 = np.array(sample * int(size / len(sample)))
 
@@ -71,6 +76,8 @@ pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
 
 
 def get_sample_frame_float_string_index(size=10000, columns=100):
+    import pandas as pd
+
     a1 = (np.arange(size * columns)).reshape((size, columns)) * .001
     # insert random nan in very other columns
     for col in range(0, 100, 2):
