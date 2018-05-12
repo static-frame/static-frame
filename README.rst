@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
+    :target: https://travis-ci.org/InvestmentSystems/static-frame
+
 static-frame
 =============
 
