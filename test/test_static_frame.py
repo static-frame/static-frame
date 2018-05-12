@@ -8,10 +8,7 @@ from io import BytesIO
 import string
 import hashlib
 
-
-import pandas as pd
 import numpy as np
-
 
 import static_frame as sf
 # assuming located in the same directory
@@ -717,10 +714,6 @@ class TestUnit(unittest.TestCase):
         a1 = np.array([[1,2,3], [4,5,6]])
         # shape is given as rows, columns
         self.assertEqual(a1.shape, (2, 3))
-        # which is the same as pandsa
-        self.assertEqual(pd.DataFrame(a1).shape, (2, 3))
-        self.assertEqual(len(pd.DataFrame(a1).columns), 3)
-
 
         a2 = np.array([[.2, .5, .4], [.8, .6, .5]])
         a3 = np.array([['a', 'b'], ['c', 'd']])
