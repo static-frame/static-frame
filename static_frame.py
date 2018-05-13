@@ -865,85 +865,6 @@ class Display:
                     indices[-half_count:]))
         return indices
 
-    # @classmethod
-    # def _to_rows(cls, display: 'Display', config: DisplayConfig=None) -> tp.Iterable[str]:
-    #     '''
-    #     Given already defined rows, align them to left or right.
-    #     '''
-    #     config = config or DisplayActive.get()
-
-    #     # find max columns for all defined rows
-    #     col_count_src = max(len(row) for row in display._rows)
-    #     col_last_src = col_count_src - 1
-    #     col_indices_src = tuple(range(col_count_src))
-    #     col_indices = cls._truncate_indices(config.display_columns, col_indices_src)
-
-    #     row_count_src = len(display._rows)
-    #     row_indices_src = tuple(range(row_count_src))
-    #     row_indices = cls._truncate_indices(config.display_rows, row_indices_src)
-
-    #     rows = [[] for _ in row_indices]
-
-    #     for col_idx_dst, col_idx_src in enumerate(col_indices):
-    #         # for each column, get the max width
-    #         if col_idx_src is None:
-    #             max_width = len(cls.ELLIPSIS)
-    #         else:
-    #             max_width = 0
-    #             for row_idx_src in row_indices:
-    #                 # get existing max width, up to the max
-    #                 if row_idx_src is not None:
-    #                     row = display._rows[row_idx_src]
-    #                     if col_idx_src >= len(row): # this row does not have this column
-    #                         continue
-    #                     cell = row[col_idx_src]
-
-    #                     max_width = max(max_width, cell[1])
-    #                 else:
-    #                     max_width = max(max_width, len(cls.ELLIPSIS))
-    #                 # if we have already exceeded max width, can stop iterating
-    #                 if max_width >= config.cell_max_width:
-    #                     break
-    #             max_width = min(max_width, config.cell_max_width)
-
-    #         if ((config.cell_align_left is True and col_idx_src == col_last_src) or
-    #                 (config.cell_align_left is False and col_idx_src == 0)):
-    #             pad_width = max_width
-    #         else:
-    #             pad_width = max_width + cls.CHAR_MARGIN
-
-    #         for row_idx_dst, row_idx_src in enumerate(row_indices):
-    #             if row_idx_src is None or col_idx_src is None:
-    #                 cell = cls.CELL_ELLIPSIS
-    #             else:
-    #                 row = display._rows[row_idx_src]
-    #                 if col_idx_src >= len(row):
-    #                     cell = cls.CELL_EMPTY
-    #                 else:
-    #                     cell = row[col_idx_src]
-    #             # msg may have been ljusted before, so we strip again here
-    #             # cannot use ljust here, as the cell might have more characters for coloring
-    #             if cell[1] > max_width:
-    #                 cell_content = cell[0].strip()[:max_width - 3] + cls.ELLIPSIS
-    #                 cell_fill_width = cls.CHAR_MARGIN # should only be margin left
-    #             else:
-    #                 cell_content = cell[0].strip()
-    #                 cell_fill_width = pad_width - cell[1] # this includes margin
-
-    #             # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
-    #             if config.cell_align_left:
-    #                 # must manually add space as color chars make ljust not
-    #                 msg = cell_content + ' ' * cell_fill_width
-    #             else:
-    #                 msg =  ' ' * cell_fill_width + cell_content
-
-    #             rows[row_idx_dst].append(msg)
-
-    #     return [''.join(row) for row in rows]
-
-
-
-
     @classmethod
     def _to_rows(cls, display: 'Display', config: DisplayConfig=None) -> tp.Iterable[str]:
         '''
@@ -1009,9 +930,8 @@ class Display:
 
                 rows[row_idx_src].append(msg)
 
-        return [''.join(row) for row in rows]
-
-
+        # rstrip to remove extra white space on last column
+        return [''.join(row).rstrip() for row in rows]
 
 
     def __init__(self,

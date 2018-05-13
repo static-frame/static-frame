@@ -303,6 +303,10 @@ Examples
    :start-after: start_series_operators_a
    :end-before: end_series_operators_a
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_operators_b
+   :end-before: end_series_operators_b
 
 
 Frame
@@ -345,6 +349,15 @@ Binary Operators
     For consistency in operator application and to insure index alignment, all operators return an union index when both opperrands are StaticFrame containers. This deviates from Pandas, where in some versions equality operators did not align on a union index, and behaved differently than other operators.
 
 
+Examples
+..................
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_operators_a
+   :end-before: end_frame_operators_a
+
+
 
 
 Mathematical / Logical / Statistical Utilities
@@ -355,6 +368,8 @@ Mathematical / Logical / Statistical Utilities
 Index
 ---------
 
+Mathematical and statistical operations, when applied on an Index, apply to the index labels.
+
 .. jinja:: ctx
 
     {% for func, doc, return_type in index_ufunc_axis %}
@@ -364,7 +379,6 @@ Index
     {{ doc }}
 
     {% endfor %}
-
 
 
 Series
@@ -381,7 +395,6 @@ Series
     {% endfor %}
 
 
-
 Frame
 ---------
 
@@ -396,6 +409,14 @@ Frame
     {% endfor %}
 
 
+Examples
+..................
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_math_logic_a
+   :end-before: end_frame_math_logic_a
+
 
 
 Index Manipulation
@@ -407,13 +428,29 @@ Index
 
 .. automethod:: static_frame.Index.relabel
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_index_relabel_a
+   :end-before: end_index_relabel_a
+
 
 Series
 ---------
 
 .. automethod:: static_frame.Series.relabel
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_relabel_a
+   :end-before: end_series_relabel_a
+
+
 .. automethod:: static_frame.Series.reindex
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_reindex_a
+   :end-before: end_series_reindex_a
 
 
 Frame
@@ -421,14 +458,24 @@ Frame
 
 .. automethod:: static_frame.Frame.relabel
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_relabel_a
+   :end-before: end_frame_relabel_a
+
+
 .. automethod:: static_frame.Frame.reindex
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_reindex_a
+   :end-before: end_frame_reindex_a
 
 
 .. admonition:: Deviations from Pandas
     :class: Warning
 
-    The Pandas ``pd.DataFrame.rename()``
-
+    The functionality of the Pandas ``pd.DataFrame.rename()`` and ``pd.Series.rename()`` is available with :py:meth:`Frame.relabel` and :py:meth:`Series.relabel`, respectively.
 
 
 
@@ -457,8 +504,7 @@ Series
 .. admonition:: Deviations from Pandas
     :class: Warning
 
-    The functionality of Pandas ``pd.Series.map()`` and ``pd.Series.apply()`` can both be obtained with ``Series.iter_element().apply()``.  When given a mapping, ``Series.iter_element().apply()`` will pass original values unchanged if they are not found in the mapping. This deviates from ``pd.Series.map()``, which fills unmapped values with NaN.
-
+    The functionality of Pandas ``pd.Series.map()`` and ``pd.Series.apply()`` can both be obtained with ``Series.iter_element().apply()``. When given a mapping, ``Series.iter_element().apply()`` will pass original values unchanged if they are not found in the mapping. This deviates from ``pd.Series.map()``, which fills unmapped values with NaN.
 
 
 Frame
@@ -474,8 +520,6 @@ Frame
     :class: Warning
 
     The functionality of Pandas ``pd.DataFrame.applymap()`` can be obtained with ``Frame.iter_element().apply()``, though the latter accepts both callables and mapping objects.
-
-
 
 
 Axis Iterators

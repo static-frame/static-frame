@@ -388,7 +388,7 @@ class TestUnit(unittest.TestCase):
         config = DisplayConfig.from_default(type_color=False)
         d = Display.from_values(np.array([[1, 2], [3, 4]]), 'header', config=config)
         self.assertEqual(d.to_rows(),
-                ['header ', '1 2    ', '3 4    ', '<int64>'])
+                ['header', '1 2', '3 4', '<int64>'])
 
 
     def test_display_config_b(self):
@@ -416,7 +416,7 @@ class TestUnit(unittest.TestCase):
         index = Index((x for x in 'abc'))
 
         self.assertEqual(index.display(config=config_left).to_rows(),
-                ['<Index> ', 'a       ', 'b       ', 'c       ', '<object>'])
+                ['<Index>', 'a', 'b', 'c', '<object>'])
 
         self.assertEqual(
                 index.display(config=config_right).to_rows(),
@@ -440,10 +440,10 @@ class TestUnit(unittest.TestCase):
 
         self.assertEqual(s.display(config_left).to_rows(),
                 ['<Index> <Series>',
-                'a       0       ',
-                'b       1       ',
-                'c       2       ',
-                '<<U1>   <int64> '])
+                'a       0',
+                'b       1',
+                'c       2',
+                '<<U1>   <int64>'])
 
 
         records = (
@@ -457,22 +457,22 @@ class TestUnit(unittest.TestCase):
                 index=('w', 'x', 'y'))
 
         self.assertEqual(f1.display(config_left).to_rows(),
-                ['<Frame>                                          ',
+                ['<Frame>',
                 '<Index> p       q       r     s      t      <<U1>',
-                '<Index>                                          ',
-                'w       2       2       a     False  False       ',
-                'x       30      34      b     True   False       ',
-                'y       2       95      c     False  False       ',
-                '<<U1>   <int64> <int64> <<U1> <bool> <bool>      '])
+                '<Index>',
+                'w       2       2       a     False  False',
+                'x       30      34      b     True   False',
+                'y       2       95      c     False  False',
+                '<<U1>   <int64> <int64> <<U1> <bool> <bool>'])
 
         self.assertEqual(f1.display(config_right).to_rows(),
-                ['<Frame>                                          ',
+                ['<Frame>',
                 '<Index>       p       q     r      s      t <<U1>',
-                '<Index>                                          ',
-                '      w       2       2     a  False  False      ',
-                '      x      30      34     b   True  False      ',
-                '      y       2      95     c  False  False      ',
-                '  <<U1> <int64> <int64> <<U1> <bool> <bool>      '])
+                '<Index>',
+                '      w       2       2     a  False  False',
+                '      x      30      34     b   True  False',
+                '      y       2      95     c  False  False',
+                '  <<U1> <int64> <int64> <<U1> <bool> <bool>'])
 
 
     def test_display_type_show_a(self):
@@ -490,22 +490,22 @@ class TestUnit(unittest.TestCase):
                 index=('w', 'x', 'y'))
 
         self.assertEqual(f1.display(config_type_show_false).to_rows(),
-                ['<Frame>                     ',
-                '<Index> p  q  r s     t     ',
-                '<Index>                     ',
-                'w       2  2  a False False ',
-                'x       30 34 b True  False ',
-                'y       2  95 c False False ',
-                '                            '])
+                ['<Frame>',
+                '<Index> p  q  r s     t',
+                '<Index>',
+                'w       2  2  a False False',
+                'x       30 34 b True  False',
+                'y       2  95 c False False',
+                ''])
 
         self.assertEqual(f1.display(config_type_show_true).to_rows(),
-                ['<Frame>                                          ',
+                ['<Frame>',
                 '<Index> p       q       r     s      t      <<U1>',
-                '<Index>                                          ',
-                'w       2       2       a     False  False       ',
-                'x       30      34      b     True   False       ',
-                'y       2       95      c     False  False       ',
-                '<<U1>   <int64> <int64> <<U1> <bool> <bool>      '])
+                '<Index>',
+                'w       2       2       a     False  False',
+                'x       30      34      b     True   False',
+                'y       2       95      c     False  False',
+                '<<U1>   <int64> <int64> <<U1> <bool> <bool>'])
 
 
 
@@ -524,17 +524,17 @@ class TestUnit(unittest.TestCase):
 
 
         self.assertEqual(s.display(config=config_width_12).to_rows(),
-                ['<Index> <Series>    ',
-                'a       Lorem ips... ',
-                'b       t amet, c... ',
-                'c       adipiscin... ',
-                '<<U1>   <<U20>      '])
+                ['<Index> <Series>',
+                'a       Lorem ips...',
+                'b       t amet, c...',
+                'c       adipiscin...',
+                '<<U1>   <<U20>'])
 
         self.assertEqual(s.display(config=config_width_6).to_rows(),
-                ['<In... <Se... ',
-                'a      Lor... ',
-                'b      t a... ',
-                'c      adi... ',
+                ['<In... <Se...',
+                'a      Lor...',
+                'b      t a...',
+                'c      adi...',
                 '<<U1>  <<U20>']
 )
 
@@ -547,20 +547,20 @@ class TestUnit(unittest.TestCase):
             f[i] = s
 
         self.assertEqual(f.display().to_rows(),
-                ['<FrameGO>                                                    ',
+                ['<FrameGO>',
                 '<IndexGO> 0          1          2          3          <int64>',
-                '<Index>                                                      ',
-                'a         Lorem ipsu Lorem ipsu Lorem ipsu Lorem ipsu        ',
-                'b         m dolor si m dolor si m dolor si m dolor si        ',
-                '<<U1>     <<U10>     <<U10>     <<U10>     <<U10>            '])
+                '<Index>',
+                'a         Lorem ipsu Lorem ipsu Lorem ipsu Lorem ipsu',
+                'b         m dolor si m dolor si m dolor si m dolor si',
+                '<<U1>     <<U10>     <<U10>     <<U10>     <<U10>'])
 
         self.assertEqual(f.display(config=config_width_6).to_rows(),
-                ['<Fr...                                   ',
-                '<In... 0      1      2      3      <in... ',
-                '<In...                                   ',
-                'a      Lor... Lor... Lor... Lor...       ',
-                'b      m d... m d... m d... m d...       ',
-                '<<U1>  <<U10> <<U10> <<U10> <<U10>       ']
+                ['<Fr...',
+                '<In... 0      1      2      3      <in...',
+                '<In...',
+                'a      Lor... Lor... Lor... Lor...',
+                'b      m d... m d... m d... m d...',
+                '<<U1>  <<U10> <<U10> <<U10> <<U10>']
                 )
 
 
@@ -574,25 +574,25 @@ class TestUnit(unittest.TestCase):
 
         self.assertEqual(s.display(config_rows_12).to_rows(),
                 ['<Index> <Series>',
-                'ab      0       ',
-                'ac      1       ',
-                'ad      2       ',
-                'ae      3       ',
-                '...     ...     ',
-                'wz      321     ',
-                'xy      322     ',
-                'xz      323     ',
-                'yz      324     ',
-                '<<U2>   <int64> '])
+                'ab      0',
+                'ac      1',
+                'ad      2',
+                'ae      3',
+                '...     ...',
+                'wz      321',
+                'xy      322',
+                'xz      323',
+                'yz      324',
+                '<<U2>   <int64>'])
 
         self.assertEqual(s.display(config_rows_7).to_rows(),
                 ['<Index> <Series>',
-                'ab      0       ',
-                'ac      1       ',
-                '...     ...     ',
-                'xz      323     ',
-                'yz      324     ',
-                '<<U2>   <int64> '])
+                'ab      0',
+                'ac      1',
+                '...     ...',
+                'xz      323',
+                'yz      324',
+                '<<U2>   <int64>'])
 
 
 
@@ -608,26 +608,26 @@ class TestUnit(unittest.TestCase):
 
         self.assertEqual(
                 f.display(config_columns_8).to_rows(),
-                ['<FrameGO>                                          ',
+                ['<FrameGO>',
                 '<IndexGO> ab      ac      ... xz      yz      <<U2>',
-                '<Index>                   ...                      ',
-                '0         0       1       ... 323     324          ',
-                '1         0       1       ... 323     324          ',
-                '2         0       1       ... 323     324          ',
-                '3         0       1       ... 323     324          ',
-                '<int64>   <int64> <int64> ... <int64> <int64>      ']
+                '<Index>                   ...',
+                '0         0       1       ... 323     324',
+                '1         0       1       ... 323     324',
+                '2         0       1       ... 323     324',
+                '3         0       1       ... 323     324',
+                '<int64>   <int64> <int64> ... <int64> <int64>']
                 )
 
         self.assertEqual(
                 f.display(config_columns_5).to_rows(),
-                ['<FrameGO>                          ',
+                ['<FrameGO>',
                 '<IndexGO> ab      ... yz      <<U2>',
-                '<Index>           ...              ',
-                '0         0       ... 324          ',
-                '1         0       ... 324          ',
-                '2         0       ... 324          ',
-                '3         0       ... 324          ',
-                '<int64>   <int64> ... <int64>      '])
+                '<Index>           ...',
+                '0         0       ... 324',
+                '1         0       ... 324',
+                '2         0       ... 324',
+                '3         0       ... 324',
+                '<int64>   <int64> ... <int64>'])
 
 
 
