@@ -482,6 +482,79 @@ Mercury nan       nan
 
 
 
+#start_series_iter_element_a
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> [x for x in s.iter_element()]
+[1, 2, 67, 62, 27, 14]
+>>> s.iter_element().apply(lambda v: v > 20)
+<Index> <Series>
+Earth   False
+Mars    False
+Jupiter True
+Saturn  True
+Uranus  True
+Neptune False
+<<U7>   <bool>
+>>> [x for x in s.iter_element().apply_iter(lambda v: v > 20)]
+[False, False, True, True, True, False]
+
+#end_series_iter_element_a
+
+
+#start_series_iter_element_items_a
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> [x for x in s.iter_element_items()]
+[('Earth', 1), ('Mars', 2), ('Jupiter', 67), ('Saturn', 62), ('Uranus', 27), ('Neptune', 14)]
+>>> s.iter_element_items().apply(lambda k, v: v if 'u' in k else None)
+<Index> <Series>
+Earth   None
+Mars    None
+Jupiter 67
+Saturn  62
+Uranus  27
+Neptune 14
+<<U7>   <object>
+>>> [x for x in s.iter_element_items().apply_iter_items(lambda k, v: k.upper() if v > 20 else None)]
+[('Earth', None), ('Mars', None), ('Jupiter', 'JUPITER'), ('Saturn', 'SATURN'), ('Uranus', 'URANUS'), ('Neptune', None)]
+
+#end_series_iter_element_items_a
+
+
+
+
+#start_frame_iter_element_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> [x for x in f.iter_element()]
+[12756, 5.97, 6792, 0.642, 142984, 1898.0]
+>>> f.iter_element().apply(lambda x: x ** 2)
+<Frame>
+<Index> diameter    mass                <<U8>
+<Index>
+Earth   162715536   35.640899999999995
+Mars    46131264    0.41216400000000003
+Jupiter 20444424256 3602404.0
+<<U7>   <object>    <object>
+
+#end_frame_iter_element_a
+
+
+
+#start_frame_iter_element_items_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> [x for x in f.iter_element_items()]
+[(('Earth', 'diameter'), 12756), (('Earth', 'mass'), 5.97), (('Mars', 'diameter'), 6792), (('Mars', 'mass'), 0.642), (('Jupiter', 'diameter'), 142984), (('Jupiter', 'mass'), 1898.0)]
+>>> f.iter_element_items().apply(lambda k, v: v ** 2 if k[0] == 'Mars' else None)
+<Frame>
+<Index> diameter mass                <<U8>
+<Index>
+Earth   None     None
+Mars    46131264 0.41216400000000003
+Jupiter None     None
+<<U7>   <object> <object>
+
+#end_frame_iter_element_items_a
+
+
 
 
 '''

@@ -607,7 +607,7 @@ def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
 class GetItem:
     __slots__ = ('callback',)
 
-    def __init__(self, callback):
+    def __init__(self, callback) -> None:
         self.callback = callback
 
     def __getitem__(self, key: GetItemKeyType):
@@ -622,7 +622,7 @@ class ExtractInterface:
     def __init__(self, *,
             iloc: GetItem,
             loc: GetItem,
-            getitem: tp.Callable):
+            getitem: tp.Callable) -> None:
         self.iloc = iloc
         self.loc = loc
         self.getitem = getitem
@@ -648,7 +648,7 @@ class DisplayConfig:
         )
 
     @classmethod
-    def from_json(cls, str) -> 'DisplaysConfig':
+    def from_json(cls, str) -> 'DisplayConfig':
         args = json.loads(str.strip())
         return cls(**args)
 
@@ -675,7 +675,7 @@ class DisplayConfig:
             display_rows: tp.Optional[int]=36,
             cell_max_width: int=20,
             cell_align_left: bool=True
-            ):
+            ) -> None:
         self.type_show = type_show
         self.type_color = type_color
         self.type_delimiter = type_delimiter
@@ -936,7 +936,7 @@ class Display:
 
     def __init__(self,
             rows: tp.List[tp.List[tp.Tuple[str, int]]],
-            config: DisplayConfig=None):
+            config: DisplayConfig=None) -> None:
         '''Define rows as a list of strings; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
         '''
         config = config or DisplayActive.get()
@@ -1091,7 +1091,7 @@ class IndexCorrespondence:
             is_subset: bool,
             iloc_src: tp.Iterable[int],
             iloc_dst: tp.Iterable[int],
-            size: int):
+            size: int) -> None:
         '''
         Args:
             iloc_pairs: generate corresponding pairs of iloc postions between src and dst; may be empty or have less constituents than index.
@@ -1233,7 +1233,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             dtypes: tp.Iterable[np.dtype],
             index: tp.Iterable[tp.Tuple[int, int]],
             shape: tp.Tuple[int, int] # could be derived
-            ):
+            ) -> None:
         '''
         Args:
             blocks: A list of one or two-dimensional NumPy arrays
@@ -2502,7 +2502,7 @@ class Index(metaclass=MetaOperatorDelegate):
     def __init__(self,
             labels: IndexInitializer,
             loc_is_iloc: bool=False,
-            dtype: DtypeSpecifier=None):
+            dtype: DtypeSpecifier=None) -> None:
 
         self._recache = False
 
@@ -2874,7 +2874,7 @@ class Series(metaclass=MetaOperatorDelegate):
             index: IndexInitializer=None,
             dtype: DtypeSpecifier=None,
             own_index: bool=False
-            ):
+            ) -> None:
         #-----------------------------------------------------------------------
         # values assignment
         # expose .values directly as it is immutable
@@ -3434,7 +3434,7 @@ class SeriesAssign:
     def __init__(self, *,
             data: Series,
             iloc_key: GetItemKeyType
-            ):
+            ) -> None:
         self.data = data
         self.iloc_key = iloc_key
 
@@ -3476,7 +3476,7 @@ class IterNodeDelegate:
             func_values,
             func_items,
             yield_type: IterNodeType,
-            apply_constructor):
+            apply_constructor) -> None:
         '''
         Args:
             apply_constructor: Callable (generally a class) used to construct the object returned from apply(); must take an iterator of items.
@@ -3616,7 +3616,7 @@ class IterNode:
             function_items,
             yield_type: IterNodeType,
             apply_type: IterNodeApplyType=IterNodeApplyType.SERIES_ITEMS
-            ):
+            ) -> None:
         self._container = container
         self._func_values = function_values
         self._func_items = function_items
@@ -4017,7 +4017,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             own_data: bool=False,
             own_index: bool=False,
             own_columns: bool=False
-            ):
+            ) -> None:
         '''
         Args:
             own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
@@ -5155,7 +5155,7 @@ class FrameAssign:
     def __init__(self, *,
             data: Frame,
             iloc_key: GetItemKeyTypeCompound
-            ):
+            ) -> None:
         self.data = data
         self.iloc_key = iloc_key
 

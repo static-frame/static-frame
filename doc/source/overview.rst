@@ -483,10 +483,10 @@ Frame
 Iterators
 ===============================
 
-Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated.
+Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated. In all cases, alternate "items" versions of iterators are provided that return pairs of (index, value).
 
 
-.. NOTE: these methods are are callable instances of IterNode and thus are manually documented as functions
+.. NOTE: this functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`IterNodeDelegate` instances.
 
 
 Element Iterators
@@ -498,7 +498,23 @@ Series
 
 .. py:method:: Series.iter_element()
 
+    Iterate over the values of the Series, or expose :py:class:`IterNodeDelegate` for function application.
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_iter_element_a
+   :end-before: end_series_iter_element_a
+
+
 .. py:method:: Series.iter_element_items()
+
+    Iterate over pairs of index and values of the Series, or expose :py:class:`IterNodeDelegate` for function application.
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_series_iter_element_items_a
+   :end-before: end_series_iter_element_items_a
+
 
 
 .. admonition:: Deviations from Pandas
@@ -512,8 +528,18 @@ Frame
 
 .. py:method:: Frame.iter_element()
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_iter_element_a
+   :end-before: end_frame_iter_element_a
+
+
 .. py:method:: Frame.iter_element_items()
 
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_iter_element_items_a
+   :end-before: end_frame_iter_element_items_a
 
 
 .. admonition:: Deviations from Pandas
@@ -526,6 +552,7 @@ Axis Iterators
 -----------------
 
 .. py:method:: Frame.iter_array()
+
 
 .. py:method:: Frame.iter_array_items()
 
