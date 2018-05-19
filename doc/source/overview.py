@@ -252,6 +252,7 @@ True
 array([[ 12756,     15],
        [142984,   -110],
        [120536,   -140]])
+
 >>> f.values.flags
   C_CONTIGUOUS : True
   F_CONTIGUOUS : False
@@ -313,6 +314,7 @@ Earth   nan
 Mars    4
 Mercury nan
 <<U7>   <object>
+
 >>> s1 == s2
 <Index> <Series>
 Earth   False
@@ -336,6 +338,7 @@ Earth   12756    5.97
 Mars    6792     0.642
 Jupiter 142984   1898.0
 <<U7>   <int64>  <float64>
+
 >>> f / f.loc['Earth']
 <Frame>
 <Index> diameter           mass                <<U8>
@@ -360,6 +363,7 @@ Earth   12756    5.97
 Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
+
 >>> f.max()
 <Index>  <Series>
 diameter 142984.0
@@ -397,6 +401,7 @@ Mars
 Saturn
 Neptune
 <object>
+
 >>> index = sf.Index(('Venus', 'Saturn', 'Neptune'))
 >>> index.relabel({'Neptune': 'Uranus'})
 <Index>
@@ -404,6 +409,7 @@ Venus
 Saturn
 Uranus
 <object>
+
 >>> index.relabel(lambda x: x[:2].upper())
 <Index>
 VE
@@ -416,6 +422,7 @@ NE
 
 #start_series_relabel_a
 >>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'))
+
 >>> s.relabel({'Venus': 'Mercury'})
 <Index>  <Series>
 Mercury  0
@@ -433,6 +440,7 @@ NE       13
 
 #start_series_reindex_a
 >>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'))
+
 >>> s.reindex(('Venus', 'Earth', 'Mars', 'Neptune'))
 <Index> <Series>
 Venus   0
@@ -447,6 +455,7 @@ Neptune 13
 
 #start_frame_relabel_a
 >>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
 >>> f.relabel(index=lambda x: x[:2].upper(), columns={'mass': 'mass(1e24kg)'})
 <Frame>
 <Index>  diameter mass(1e24kg) <object>
@@ -469,6 +478,7 @@ Earth   12756    5.97
 Mars    6792     0.642
 Jupiter 142984   1898.0
 <<U7>   <int64>  <float64>
+
 >>> f.reindex(index=('Jupiter', 'Mars', 'Mercury'), columns=('density', 'mass'))
 <Frame>
 <Index> density   mass      <<U7>
@@ -486,6 +496,7 @@ Mercury nan       nan
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> [x for x in s.iter_element()]
 [1, 2, 67, 62, 27, 14]
+
 >>> s.iter_element().apply(lambda v: v > 20)
 <Index> <Series>
 Earth   False
@@ -503,8 +514,10 @@ Neptune False
 
 #start_series_iter_element_items_a
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+
 >>> [x for x in s.iter_element_items()]
 [('Earth', 1), ('Mars', 2), ('Jupiter', 67), ('Saturn', 62), ('Uranus', 27), ('Neptune', 14)]
+
 >>> s.iter_element_items().apply(lambda k, v: v if 'u' in k else None)
 <Index> <Series>
 Earth   None
@@ -514,6 +527,7 @@ Saturn  62
 Uranus  27
 Neptune 14
 <<U7>   <object>
+
 >>> [x for x in s.iter_element_items().apply_iter_items(lambda k, v: k.upper() if v > 20 else None)]
 [('Earth', None), ('Mars', None), ('Jupiter', 'JUPITER'), ('Saturn', 'SATURN'), ('Uranus', 'URANUS'), ('Neptune', None)]
 
@@ -524,8 +538,10 @@ Neptune 14
 
 #start_frame_iter_element_a
 >>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
 >>> [x for x in f.iter_element()]
 [12756, 5.97, 6792, 0.642, 142984, 1898.0]
+
 >>> f.iter_element().apply(lambda x: x ** 2)
 <Frame>
 <Index> diameter    mass                <<U8>
@@ -541,8 +557,10 @@ Jupiter 20444424256 3602404.0
 
 #start_frame_iter_element_items_a
 >>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
 >>> [x for x in f.iter_element_items()]
 [(('Earth', 'diameter'), 12756), (('Earth', 'mass'), 5.97), (('Mars', 'diameter'), 6792), (('Mars', 'mass'), 0.642), (('Jupiter', 'diameter'), 142984), (('Jupiter', 'mass'), 1898.0)]
+
 >>> f.iter_element_items().apply(lambda k, v: v ** 2 if k[0] == 'Mars' else None)
 <Frame>
 <Index> diameter mass                <<U8>
@@ -565,10 +583,13 @@ Earth   12756    5.97
 Mars    6792     0.642
 Jupiter 142984   1898.0
 <<U7>   <int64>  <float64>
+
 >>> [x for x in f.iter_array(axis=0)]
 [array([ 12756,   6792, 142984]), array([5.970e+00, 6.420e-01, 1.898e+03])]
 >>> [x for x in f.iter_array(axis=1)]
+
 [array([1.2756e+04, 5.9700e+00]), array([6.792e+03, 6.420e-01]), array([142984.,   1898.])]
+
 >>> f.iter_array(axis=0).apply(np.sum)
 <Index>  <Series>
 diameter 162532.0
@@ -580,10 +601,13 @@ mass     1904.612
 
 #start_frame_iter_array_items_a
 >>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
 >>> [x for x in f.iter_array_items(axis=0)]
 [('diameter', array([ 12756,   6792, 142984])), ('mass', array([5.970e+00, 6.420e-01, 1.898e+03]))]
+
 >>> [x for x in f.iter_array_items(axis=1)]
 [('Earth', array([1.2756e+04, 5.9700e+00])), ('Mars', array([6.792e+03, 6.420e-01])), ('Jupiter', array([142984.,   1898.]))]
+
 >>> f.iter_array_items(axis=1).apply(lambda k, v: v.sum() if k == 'Earth' else 0)
 <Index> <Series>
 Earth   12761.97
