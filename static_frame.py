@@ -36,6 +36,7 @@ _module = sys.modules[__name__]
 # handle nan in object blocks with skipna processing on ufuncs
 # allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
+# read_csv needs nan types; empty strings might need to be loaded as nans
 
 
 # future features
@@ -3439,9 +3440,20 @@ class SeriesAssign:
         self.iloc_key = iloc_key
 
     def __call__(self, value):
-        array = self.data.values.copy()
         if isinstance(value, Series):
             value = self.data._reindex_other_like_iloc(value, self.iloc_key).values
+
+        if isinstance(value, np.ndarray):
+            value_dtype = value.dtype
+        else:
+            value_dtype = np.array(value).dtype
+        dtype = _resolve_dtype(self.data.dtype, value_dtype)
+
+        if dtype == self.data.dtype:
+            array = self.data.values.copy()
+        else:
+            array = self.data.values.astype(dtype)
+
         array[self.iloc_key] = value
         array.flags.writeable = False
         return Series(array, index=self.data.index)

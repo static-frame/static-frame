@@ -2289,6 +2289,15 @@ class TestUnit(unittest.TestCase):
                 (('a', 0), ('b', 1), ('c', 60), ('d', 40)))
 
 
+    def test_series_assign_d(self):
+        s1 = Series(tuple('pqrs'), index=('a', 'b', 'c', 'd'))
+        s2 = s1.assign['b'](None)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 'p'), ('b', None), ('c', 'r'), ('d', 's')))
+        self.assertEqual(s1.assign['b':](None).to_pairs(),
+                (('a', 'p'), ('b', None), ('c', None), ('d', None)))
+
+
     def test_series_loc_extract_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         # TODO: raaise exectin when doing a loc that Pandas reindexes
@@ -2975,6 +2984,21 @@ class TestUnit(unittest.TestCase):
         f2 = f1.assign.loc[['x', 'y'], ['s', 't']](value1)
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', 20), ('y', 23))), ('t', (('x', 21), ('y', 24)))))
+
+
+
+    def test_frame_assign_coercion_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+        f2 = f1.assign.loc['x', 'r'](None)
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', None), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False)))))
 
 
     def test_frame_mask_loc_a(self):

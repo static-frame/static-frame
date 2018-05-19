@@ -555,6 +555,43 @@ Jupiter None     None
 #end_frame_iter_element_items_a
 
 
+#start_frame_iter_array_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    5.97
+Mars    6792     0.642
+Jupiter 142984   1898.0
+<<U7>   <int64>  <float64>
+>>> [x for x in f.iter_array(axis=0)]
+[array([ 12756,   6792, 142984]), array([5.970e+00, 6.420e-01, 1.898e+03])]
+>>> [x for x in f.iter_array(axis=1)]
+[array([1.2756e+04, 5.9700e+00]), array([6.792e+03, 6.420e-01]), array([142984.,   1898.])]
+>>> f.iter_array(axis=0).apply(np.sum)
+<Index>  <Series>
+diameter 162532.0
+mass     1904.612
+<<U8>    <float64>
+
+#end_frame_iter_array_a
+
+
+#start_frame_iter_array_items_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> [x for x in f.iter_array_items(axis=0)]
+[('diameter', array([ 12756,   6792, 142984])), ('mass', array([5.970e+00, 6.420e-01, 1.898e+03]))]
+>>> [x for x in f.iter_array_items(axis=1)]
+[('Earth', array([1.2756e+04, 5.9700e+00])), ('Mars', array([6.792e+03, 6.420e-01])), ('Jupiter', array([142984.,   1898.]))]
+>>> f.iter_array_items(axis=1).apply(lambda k, v: v.sum() if k == 'Earth' else 0)
+<Index> <Series>
+Earth   12761.97
+Mars    0.0
+Jupiter 0.0
+<<U7>   <float64>
+
+#end_frame_iter_array_items_a
 
 
 '''

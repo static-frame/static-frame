@@ -154,7 +154,7 @@ Dictionary-Like Interface
 
 :py:class:`Series` and :py:class:`Frame` provide dictionary-like interfaces.
 
-For more flexible iteration of rows or columns, see Iterators, below.
+For more flexible iteration of keys and values, see Iterators, below.
 
 
 Series
@@ -486,7 +486,7 @@ Iterators
 Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated. In all cases, alternate "items" versions of iterators are provided that return pairs of (index, value).
 
 
-.. NOTE: this functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`IterNodeDelegate` instances.
+.. NOTE: Iterator functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`IterNodeDelegate` instances. See below for documentation of :py:class:`IterNodeDelegate` functions for function application on iterables.
 
 
 Element Iterators
@@ -528,6 +528,8 @@ Frame
 
 .. py:method:: Frame.iter_element()
 
+    Iterate over the values of the Frame, or expose :py:class:`IterNodeDelegate` for function application.
+
 .. literalinclude:: overview.py
    :language: python
    :start-after: start_frame_iter_element_a
@@ -535,6 +537,8 @@ Frame
 
 
 .. py:method:: Frame.iter_element_items()
+
+    Iterate over pairs of index / column coordinates and values of the Frame, or expose :py:class:`IterNodeDelegate` for function application.
 
 .. literalinclude:: overview.py
    :language: python
@@ -551,10 +555,28 @@ Frame
 Axis Iterators
 -----------------
 
+Axis iterators are available on :py:class:`Frame` to support iterating on rows or columns as NumPy arrays, named tuples, or :py:class:`Series`. Alternative items functions are also available to pair values with the appropriate axis label (either columns or index).
+
+
 .. py:method:: Frame.iter_array()
+
+    Iterate over NumPy arrays of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_iter_array_a
+   :end-before: end_frame_iter_array_a
 
 
 .. py:method:: Frame.iter_array_items()
+
+    Iterate over pairs of label, NumPy array, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+
+.. literalinclude:: overview.py
+   :language: python
+   :start-after: start_frame_iter_array_items_a
+   :end-before: end_frame_iter_array_items_a
+
 
 .. py:method:: Frame.iter_tuple()
 
