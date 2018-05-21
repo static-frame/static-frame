@@ -384,7 +384,7 @@ class TestUnit(unittest.TestCase):
     #---------------------------------------------------------------------------
     # display tests
 
-    def test_display_confif_a(self):
+    def test_display_config_a(self):
         config = DisplayConfig.from_default(type_color=False)
         d = Display.from_values(np.array([[1, 2], [3, 4]]), 'header', config=config)
         self.assertEqual(d.to_rows(),
@@ -629,6 +629,45 @@ class TestUnit(unittest.TestCase):
                 '3         0       ... 324',
                 '<int64>   <int64> ... <int64>'])
 
+
+
+
+    def test_display_display_columns_b(self):
+
+        config_columns_4 = sf.DisplayConfig.from_default(display_columns=4)
+        config_columns_5 = sf.DisplayConfig.from_default(display_columns=5)
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                )
+
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y'))
+
+        self.assertEqual(
+                f.display(config_columns_4).to_rows(),
+                ['<Frame>',
+                '<Index> p       ... t      <<U1>',
+                '<Index>         ...',
+                'w       2       ... False',
+                'x       30      ... False',
+                'y       2       ... False',
+                '<<U1>   <int64> ... <bool>'])
+
+        # at one point the columns woiuld be truncated shorter than the frame when the max xolumns was the same
+        self.assertEqual(
+                f.display(config_columns_5).to_rows(),
+                ['<Frame>',
+                '<Index> p       q       r     s      t      <<U1>',
+                '<Index>',
+                'w       2       2       a     False  False',
+                'x       30      34      b     True   False',
+                'y       2       95      c     False  False',
+                '<<U1>   <int64> <int64> <<U1> <bool> <bool>']
+                )
 
 
     def test_display_truncate_a(self):
@@ -3909,7 +3948,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_frame_from_csv_b(self):
-        filelike = BytesIO(b'''count,number,weight,scalar,color,active
+        filelike = StringIO('''count,number,weight,scalar,color,active
 0,4,234.5,5.3,'red',False
 30,50,9.234,5.434,'blue',True''')
         f1 = Frame.from_csv(filelike)
@@ -4321,5 +4360,5 @@ class TestUnit(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    t = TestUnit()
-    t.test_series_init_c()
+#     t = TestUnit()
+#     t.test_display_display_columns_b()

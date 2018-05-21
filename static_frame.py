@@ -3,6 +3,8 @@ import typing as tp
 import sys
 import json
 import os
+import csv
+
 
 from collections import OrderedDict
 from collections import namedtuple
@@ -298,14 +300,15 @@ def mloc(array: np.ndarray) -> int:
 
 
 def _gen_skip_middle(
-        forward_iter,
-        forward_count,
-        reverse_iter,
-        reverse_count,
-        center_sentinel):
+        forward_iter: tp.Iterable[tp.Any],
+        forward_count: int,
+        reverse_iter: tp.Iterable[tp.Any],
+        reverse_count: int,
+        center_sentinel: tp.Any):
     '''
     Provide a generator to yield the count values from each side.
     '''
+    assert forward_count > 0 and reverse_count > 0
     # for the forward gen, we take one more column to serve as the center column ellipsis; thus, we start enumeration at 0
     for idx, value in enumerate(forward_iter(), start=1):
         yield value
@@ -810,7 +813,8 @@ class Display:
                 rows.append([cls.to_cell(row, config=config)])
         else:
             count_max = config.display_rows - cls.DATA_MARGINS
-            if len(values) > count_max:
+            # print('comparing values to count_max', len(values), count_max)
+            if len(values) > config.display_rows:
                 data_half_count = Display.truncate_half_count(count_max)
                 value_gen = partial(_gen_skip_middle,
                         forward_iter=values.__iter__,
@@ -838,8 +842,11 @@ class Display:
 
 
     @staticmethod
-    def truncate_half_count(count_target):
-        # the total number returned will always be odd
+    def truncate_half_count(count_target: int) -> int:
+        '''Given a target number of rows or columns, return the count of half as found in presentation where one column is used for the elipsis. The number returned will always be odd. For example, given a target of 5 we allocate 2 per half (plus 1 reserved for middle).
+        '''
+        if count_target <= 4:
+            return 1 # practical floor for all values of 4 or less
         return (count_target - 1) // 2
 
     @classmethod
@@ -3979,6 +3986,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_header: int=0,
             skip_footer: int=0,
             header_is_columns: bool=True,
+            quote_char: str='"',
             dtype: DtypeSpecifier=None,
             encoding: tp.Optional[str]=None
             ) -> 'Frame':
@@ -3997,14 +4005,34 @@ class Frame(metaclass=MetaOperatorDelegate):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        array = np.genfromtxt(fp,
-                delimiter=delimiter,
+        delimiter_native = '\t'
+
+        if delimiter != delimiter_native:
+            # this is necessary if there are quoted cells that include the delimiter
+            def to_tsv():
+                if isinstance(fp, str):
+                    with open(fp, 'r') as f:
+                        for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
+                            yield delimiter_native.join(row)
+                else:
+                    # handling file like object works for stringio but not for bytesio
+                    for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
+                        yield delimiter_native.join(row)
+
+            file_like = to_tsv()
+        else:
+            file_like = fp
+
+
+        array = np.genfromtxt(file_like,
+                delimiter=delimiter_native,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 names=header_is_columns,
                 dtype=dtype,
                 encoding=encoding,
-                invalid_raise=True
+                invalid_raise=False,
+                missing_values={''},
                 )
         # can own this array so set it as immutable
         array.flags.writeable = False
@@ -4350,6 +4378,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         d = self._index.display(config=config)
 
+        # print('comparing blocks to display columns', self._blocks.shape[1], config.display_columns)
         if self._blocks.shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
             # get target column count in the absence of meta data, subtracting 2

@@ -586,8 +586,8 @@ Jupiter 142984   1898.0
 
 >>> [x for x in f.iter_array(axis=0)]
 [array([ 12756,   6792, 142984]), array([5.970e+00, 6.420e-01, 1.898e+03])]
->>> [x for x in f.iter_array(axis=1)]
 
+>>> [x for x in f.iter_array(axis=1)]
 [array([1.2756e+04, 5.9700e+00]), array([6.792e+03, 6.420e-01]), array([142984.,   1898.])]
 
 >>> f.iter_array(axis=0).apply(np.sum)
