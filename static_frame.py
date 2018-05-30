@@ -98,6 +98,7 @@ _UFUNC_BINARY_OPERATORS = (
         )
 
 # all reverse are binary
+# should be RIGHT, not REVERSE
 _REVERSE_OPERATOR_MAP = {
         '__radd__': '__add__',
         '__rsub__': '__sub__',
@@ -2194,30 +2195,30 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if isinstance(other, TypeBlocks):
             if self.block_compatible(other):
                 # this means that the blocks are the same size; we do not check types
-                self_opperands = self._blocks
-                other_opperands = other._blocks
+                self_operands = self._blocks
+                other_operands = other._blocks
             elif self._shape == other._shape:
-                # if the result of reblock does not result in compatible shapes, we have to use .values as opperands; the dtypes can be different so we only have to check that they columns sizes, the second element of the signature, all match.
+                # if the result of reblock does not result in compatible shapes, we have to use .values as operands; the dtypes can be different so we only have to check that they columns sizes, the second element of the signature, all match.
                 if not self.reblock_compatible(other):
-                    self_opperands = (self.values,)
-                    other_opperands = (other.values,)
+                    self_operands = (self.values,)
+                    other_operands = (other.values,)
                 else:
-                    self_opperands = self._reblock()
-                    other_opperands = other._reblock()
+                    self_operands = self._reblock()
+                    other_operands = other._reblock()
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
 
             def operation():
                 for a, b in zip_longest(
-                        (self.single_column_filter(op) for op in self_opperands),
-                        (self.single_column_filter(op) for op in other_opperands)
+                        (self.single_column_filter(op) for op in self_operands),
+                        (self.single_column_filter(op) for op in other_operands)
                         ):
                     result = operator(a, b)
                     result.flags.writeable = False # own the data
                     yield result
         else:
             # process other as an array
-            self_opperands = self._blocks
+            self_operands = self._blocks
             if not isinstance(other, np.ndarray):
                 # this maybe expensive for a single scalar
                 other = np.array(other) # this will work with a single scalar too
@@ -2225,16 +2226,16 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             # handle dimensions
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
-                other_opperands = (other for _ in range(len(self._blocks)))
+                other_operands = (other for _ in range(len(self._blocks)))
             elif other.ndim == 1 and len(other) == self._shape[1]:
                 # if given a 1d array
                 # one dimensional array of same size: chop to block width
-                other_opperands = (other[s] for s in self._block_shape_slices())
+                other_operands = (other[s] for s in self._block_shape_slices())
             else:
                 raise NotImplementedError('cannot apply binary operators to arbitrary np arrays.')
 
             def operation():
-                for a, b in zip_longest(self_opperands, other_opperands):
+                for a, b in zip_longest(self_operands, other_operands):
                     result = operator(a, b)
                     result.flags.writeable = False # own the data
                     yield result
@@ -2386,20 +2387,22 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 #-------------------------------------------------------------------------------
 class LocMap:
 
-    @staticmethod
-    def map_slice_args(label_to_pos, key: slice):
+    SLICE_STOP_ATTR = 'stop'
+    SLICE_ATTRS = ('start', SLICE_STOP_ATTR, 'step')
+
+    @classmethod
+    def map_slice_args(cls, label_to_pos, key: slice):
         '''Given a slice and a label to position mapping, yield each argument necessary to create a new slice.
 
         Args:
             label_to_pos: mapping, no order dependency
         '''
-        # TODO: just iter over (key.start) etc.
-        for field in ('start', 'stop', 'step'):
+        for field in cls.SLICE_ATTRS:
             attr = getattr(key, field)
             if attr is None:
                 yield None
             else:
-                if field == 'stop':
+                if field == cls.SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
                     yield label_to_pos[attr] + 1
                 else:
@@ -2412,7 +2415,7 @@ class LocMap:
             key: GetItemKeyType) -> GetItemKeyType:
         '''
         Returns:
-            A integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
+            An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
 
         if isinstance(key, slice):
@@ -2571,11 +2574,11 @@ class Index(metaclass=MetaOperatorDelegate):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
-        if isinstance(key, Series):
-            key = key.values
         if self._recache:
             self._update_array_cache()
 
+        if isinstance(key, Series):
+            key = key.values
         if self._loc_is_iloc:
             return key
 
@@ -2586,9 +2589,8 @@ class Index(metaclass=MetaOperatorDelegate):
             self._update_array_cache()
         return len(self._labels)
 
-
     def __iter__(self):
-        '''We iterate over labels.
+        '''Iterate over labels.
         '''
         if self._recache:
             self._update_array_cache()
@@ -2617,10 +2619,14 @@ class Index(metaclass=MetaOperatorDelegate):
         return mloc(self._labels)
 
     def copy(self) -> 'Index':
+        '''
+        Return a new Index.
+        '''
         # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
         if self._recache:
             self._update_array_cache()
-        return self.__class__(labels=self._labels)
+        # return self.__class__(labels=self._labels)
+        return self.__class__(labels=self)
 
 
     def relabel(self, mapper: CallableOrMapping) -> 'Index':

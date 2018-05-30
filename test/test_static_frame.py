@@ -1863,7 +1863,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_index_binary_operators_b(self):
-        '''Both opperands are Index instances
+        '''Both operands are Index instances
         '''
         idx1 = Index((20, 30, 40, 50))
         idx2 = Index((20, 3, 4, 5))
