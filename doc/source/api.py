@@ -618,6 +618,92 @@ Jupiter 0.0
 #end_frame_iter_array_items_a
 
 
+
+#start_frame_iter_tuple_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
+>>> [x for x in f.iter_tuple(axis=0)]
+[Axis(Earth=12756, Mars=6792, Jupiter=142984), Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0)]
+
+>>> [x for x in f.iter_tuple(axis=1)]
+[Axis(diameter=12756.0, mass=5.97), Axis(diameter=6792.0, mass=0.642), Axis(diameter=142984.0, mass=1898.0)]
+
+>>> f.iter_tuple(1).apply(lambda nt: nt.mass / (4 / 3 * np.pi * (nt.diameter * 0.5) ** 3))
+<Index> <Series>
+Earth   5.493285577295119...
+Mars    3.913302082789825...
+Jupiter 1.240038755875004...
+<<U7>   <float64>
+
+#end_frame_iter_tuple_a
+
+
+
+#start_frame_iter_tuple_items_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
+>>> [x for x in f.iter_tuple_items(axis=0)]
+[('diameter', Axis(Earth=12756, Mars=6792, Jupiter=142984)), ('mass', Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0))]
+
+>>> [x for x in f.iter_tuple_items(axis=1)]
+[('Earth', Axis(diameter=12756.0, mass=5.97)), ('Mars', Axis(diameter=6792.0, mass=0.642)), ('Jupiter', Axis(diameter=142984.0, mass=1898.0))]
+
+>>> f.iter_tuple_items(axis=1).apply(lambda k, v: v.diameter if k == 'Earth' else 0)
+<Index> <Series>
+Earth   12756.0
+Mars    0.0
+Jupiter 0.0
+<<U7>   <float64>
+
+#end_frame_iter_tuple_items_a
+
+
+
+
+#start_frame_iter_series_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
+>>> next(iter(f.iter_series(axis=0)))
+<Index> <Series>
+Earth   12756
+Mars    6792
+Jupiter 142984
+<<U7>   <int64>
+
+>>> next(iter(f.iter_series(axis=1)))
+<Index>  <Series>
+diameter 12756.0
+mass     5.97
+<<U8>    <float64>
+
+>>> f.iter_series(0).apply(lambda s: s.mean())
+<Index>  <Series>
+diameter 54177.333333333336
+mass     634.8706666666667
+<<U8>    <float64>
+
+#end_frame_iter_series_a
+
+
+
+#start_frame_iter_series_items_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+
+>>> {k: v.mean() for k, v in f.iter_series_items(0)}
+{'diameter': 54177.333333333336, 'mass': 634.8706666666667}
+
+>>> {k: v.max() for k, v in f.iter_series_items(1)}
+{'Mars': 6792.0, 'Earth': 12756.0, 'Jupiter': 142984.0}
+
+>>> f.iter_series_items(0).apply(lambda k, v: v.mean() if k == 'diameter' else v.sum())
+<Index>  <Series>
+diameter 54177.333333333336
+mass     1904.612
+<<U8>    <float64>
+
+#end_frame_iter_series_items_a
+
+
 '''
 
 

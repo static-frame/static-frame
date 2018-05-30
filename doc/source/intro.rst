@@ -1,6 +1,6 @@
 
 
-Introduction
+About StaticFrame
 *******************
 
 The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axis. StaticFrame offers an alternative to Pandas. While many interfaces for data extraction and manipulation are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices must be unique; all vector processing uses NumPy, and the full range of NumPy data types is preserved; the implementation is concise and lightweight; consistent naming and interfaces are used throughout; and flexible approaches to iteration and function application, with built-in options for parallelization, are provided.
@@ -16,7 +16,8 @@ The StaticFrame library consists of the Series and Frame, immutable data structu
 
 
 What StaticFrame Is and Is Not
-=================================
+***********************************
+
 
 StaticFrame is not a drop-in replacment for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due the immutable data model) or by choice (to offer more uniform, less redundant, and more explicit interfaces). Further, as StaticFrame does not support in-place mutation, approaches used in Pandas will have to be refactored for StaticFrame. Certain conveniences in Pandas are not supported for the sake of having "one ... obvious way to do it" [#]_ or to achieve greater consistency.
 
@@ -31,7 +32,7 @@ StaticFrame does not implement its own types or numeric computation routines, re
 
 
 Immutability
-===============================
+***********************************
 
 The :py:class:`Series` and :py:class:`Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
@@ -57,13 +58,13 @@ There is no guarantee that using immutable data will produce correct code or mor
 
 
 History of StaticFrame
-============================
+***********************************
 
 The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
 
 
 Contributors
-============================
+***********************************
 
 These members of the Investment Systems team have contributed greatly to the design of StaticFrame:
 
