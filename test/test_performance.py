@@ -77,11 +77,52 @@ def get_sample_frame_float_string_index(size=10000, columns=100):
         a1[:100, col] = np.nan
     index = [hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(size)]
     columns = [hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(columns)]
-    sfs = sf.Frame(a1, index=index, columns=columns)
-    pds = pd.DataFrame(a1, index=index, columns=columns)
-    return pds, sfs, a1
+    sff = sf.Frame(a1, index=index, columns=columns)
+    pdf = pd.DataFrame(a1, index=index, columns=columns)
+    return pdf, sff, a1
 
 pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
+
+
+_mixed_types = ('foo', 'bar', True, None, 234.34, 90)
+
+def _typed_array(dtype, size, shift=0):
+    if dtype == float:
+        return np.roll(np.arange(size) * .001, shift)
+    if dtype == int:
+        return np.roll(np.arange(size), shift)
+    if dtype == bool:
+        return np.roll(np.isin(np.arange(size) % 5, (1, 4)), shift)
+    if dtype == object:
+        return np.roll(np.array([_mixed_types[x % len(_mixed_types)] for x in range(size)]), shift)
+    raise NotImplementedError()
+
+def get_sample_frame_mixed_string_index(size=10000, columns=100):
+    '''Get frames with mixed types.
+    '''
+    # produces 14950 strings
+    source_ids = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+    assert size <= len(source_ids)
+
+    index = source_ids[:size]
+    columns = source_ids[:columns]
+
+    dtypes = (float, int, object, bool)
+
+    sff = sf.FrameGO(index=index)
+    for idx, col in enumerate(columns):
+        s = sf.Series(_typed_array(dtypes[idx % 4], size=size, shift=idx), index=index)
+        sff[col] = s
+
+    pdf = pd.DataFrame(index=index)
+    for idx, col in enumerate(columns):
+        s = pd.Series(_typed_array(dtypes[idx % 4], size=size, shift=idx), index=index)
+        pdf[col] = s
+
+    return pdf, sff
+
+pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
+
 
 
 class PerfTest:
@@ -366,11 +407,146 @@ class FrameFloat_apply_axis1(PerfTest):
         assert post.shape == (10000,)
         assert post.sum() > 3333328333.8349
 
+
+#-------------------------------------------------------------------------------
+# frame loc float
+
+
+class FrameFloat_slice_loc_indices(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 10000, 1000):
+            start = pdf_float_10k.index[i]
+            pdf_float_10k.loc[start:]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 10000, 1000):
+            start = sff_float_10k.index.values[i]
+            sff_float_10k.loc[start:]
+
+
+class FrameFloat_slice_loc_index(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 10000, 1000):
+            start = pdf_float_10k.index[i]
+            pdf_float_10k.loc[start]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 10000, 1000):
+            start = sff_float_10k.index.values[i]
+            sff_float_10k.loc[start]
+
+
+
+class FrameFloat_slice_loc_columns(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 100, 10):
+            start = pdf_float_10k.index[i]
+            pdf_float_10k.loc[:, start:]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 100, 10):
+            start = sff_float_10k.index.values[i]
+            sff_float_10k.loc[:, start:]
+
+
+
+class FrameFloat_slice_loc_column(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 100, 10):
+            start = pdf_float_10k.index[i]
+            pdf_float_10k.loc[:, start]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 100, 10):
+            start = sff_float_10k.index.values[i]
+            sff_float_10k.loc[:, start]
+
+
+#-------------------------------------------------------------------------------
+# frame loc mixed
+
+
+class FrameMixed_slice_loc_indices(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 10000, 1000):
+            start = pdf_mixed_10k.index[i]
+            pdf_mixed_10k.loc[start:]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 10000, 1000):
+            start = sff_mixed_10k.index.values[i]
+            sff_mixed_10k.loc[start:]
+
+
+class FrameMixed_slice_loc_index(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 10000, 1000):
+            start = pdf_mixed_10k.index[i]
+            pdf_mixed_10k.loc[start]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 10000, 1000):
+            start = sff_mixed_10k.index.values[i]
+            sff_mixed_10k.loc[start]
+
+
+
+class FrameMixed_slice_loc_columns(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 100, 10):
+            start = pdf_mixed_10k.index[i]
+            pdf_mixed_10k.loc[:, start:]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 100, 10):
+            start = sff_mixed_10k.index.values[i]
+            sff_mixed_10k.loc[:, start:]
+
+
+
+class FrameMixed_slice_loc_column(PerfTest):
+
+    @staticmethod
+    def pd():
+        for i in range(0, 100, 10):
+            start = pdf_mixed_10k.index[i]
+            pdf_mixed_10k.loc[:, start]
+
+    @staticmethod
+    def sf():
+        for i in range(0, 100, 10):
+            start = sff_mixed_10k.index.values[i]
+            sff_mixed_10k.loc[:, start]
+
+
+
 #-------------------------------------------------------------------------------
 # frame creation and growth
 
-
 class FrameFloat_add_series_partial(PerfTest):
+    '''Adding series that only partially match the index
+    '''
 
     # 325 two character strings
     _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))

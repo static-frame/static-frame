@@ -1921,6 +1921,13 @@ class TestUnit(unittest.TestCase):
         self.assertEqual(len(index2), 6)
         self.assertEqual(len(index), 7)
 
+        index3 = index[2:]
+        index3.append('i')
+
+        self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i'])
+        self.assertEqual(index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'h'])
+
+
 
     def test_index_sort(self):
 
@@ -2901,6 +2908,22 @@ class TestUnit(unittest.TestCase):
 
         self.assertEqual(f1.loc['x', 's'], False)
         self.assertEqual(f1.loc['y', 'p'], 30)
+
+
+    def test_frame_loc_c(self):
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        post = f1.loc['x':]
+        # import ipdb; ipdb.set_trace()
 
 
     def test_frame_attrs_a(self):
@@ -4360,5 +4383,5 @@ class TestUnit(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-#     t = TestUnit()
-#     t.test_display_display_columns_b()
+    t = TestUnit()
+    t.test_frame_loc_c()

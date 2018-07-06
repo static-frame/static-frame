@@ -33,8 +33,8 @@ __version__ = '0.1.4'
 
 _module = sys.modules[__name__]
 
-# target features for 0.1a1 release
 
+# min/max fail on object arrays
 # handle nan in object blocks with skipna processing on ufuncs
 # allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
@@ -67,6 +67,8 @@ _DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+
+_NULL_SLICE = slice(None)
 
 _UFUNC_UNARY_OPERATORS = (
         '__pos__',
@@ -174,7 +176,8 @@ def _nanany(array, axis=0, out=None):
     return _ufunc_logical_skipna(array, ufunc=np.any, skipna=True, axis=axis, out=out)
 
 
-# TODO: specify the out dtype of these functions for bool
+
+
 _UFUNC_AXIS_SKIPNA = {
         'all': (_all, _nanall, bool),
         'any': (_any, _nanany, bool),
@@ -259,6 +262,8 @@ class MetaOperatorDelegate(type):
 
 #-------------------------------------------------------------------------------
 # utility
+
+_INT_TYPES = (int, np.int_)
 
 # for getitem / loc selection
 _KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -1187,7 +1192,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             for i in range(column_count):
                 index.append((block_count, i))
                 dtypes.append(raw_blocks.dtype)
-
         else: # an iterable of blocks
             row_count = 0
             column_count = 0
@@ -1794,7 +1798,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             return slice(start_idx, start_idx + 1)
 
         stop_idx = indices[-1]
-        if stop_idx > start_idx:            # ascending indices
+        if stop_idx > start_idx: # ascending indices
             return slice(start_idx, stop_idx + 1)
 
         if stop_idx == 0:
@@ -1805,7 +1809,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def _indices_to_contiguous_pairs(cls, indices) -> tp.Generator:
-        '''Indices are pairs of (block_idx, value); convert these to pairs of (block_idx, slice) when we identify contiguous indices.
+        '''Indices are pairs of (block_idx, value); convert these to pairs of (block_idx, slice) when we identify contiguous indices within a block (these are block slices)
 
         Args:
             indices: can be a generator
@@ -1834,6 +1838,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
+    def _all_block_slices(self):
+        '''
+        Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
+        '''
+        for idx, b in enumerate(self._blocks):
+            if b.ndim == 1:
+                yield (idx, slice(0, 1)) # cannot give an integer here instead of a slice
+            else:
+                yield (idx, slice(0, b.shape[1]))
 
     def _key_to_block_slices(self, key) -> tp.Generator[
                 tp.Tuple[int, tp.Union[slice, int]], None, None]:
@@ -1843,27 +1856,29 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
         '''
-
-        # do type checking on slice v others, as with others we need to sort once iterable of keys
-        if isinstance(key, (int, np.int_)):
-            # the index has the pair block, column integer
-            yield self._index[key]
+        if key is None or (isinstance(key, slice) and slice == _NULL_SLICE):
+            yield from self._all_block_slices()
         else:
-            if isinstance(key, slice):
-                indices = self._index[key] # slice the index
-                # already sorted
-            elif isinstance(key, np.ndarray) and key.dtype == bool:
-                indices = (self._index[idx]
-                        for idx, v in enumerate(key) if v == True)
-
-            elif isinstance(key, _KEY_ITERABLE_TYPES):
-                # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator anyways so probably this is as fast as it can be.
-                indices = (self._index[x] for x in key)
-            elif key is None: # get all
-                indices = self._index
+            # do type checking on slice v others, as with others we need to sort once iterable of keys
+            if isinstance(key, _INT_TYPES):
+                # the index has the pair block, column integer
+                yield self._index[key]
             else:
-                raise NotImplementedError('got key', key)
-            yield from self._indices_to_contiguous_pairs(indices)
+                if isinstance(key, slice):
+                    # we have already handled the null slice
+                    indices = self._index[key] # slice the index
+                    # already sorted
+                elif isinstance(key, np.ndarray) and key.dtype == bool:
+                    indices = (self._index[idx]
+                            for idx, v in enumerate(key) if v == True)
+                elif isinstance(key, _KEY_ITERABLE_TYPES):
+                    # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator anyways so probably this is as fast as it can be.
+                    indices = (self._index[x] for x in key)
+                elif key is None: # get all
+                    indices = self._index
+                else:
+                    raise NotImplementedError('got key', key)
+                yield from self._indices_to_contiguous_pairs(indices)
 
 
     def _mask_blocks(self,
@@ -2008,10 +2023,17 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             column_key=None) -> tp.Generator[np.ndarray, None, None]:
         '''
         Generator of sliced blocks, given row and column key selectors.
-        The result is suitable for pass to TypeBlocks constructor.
+        The result is suitable for passing to TypeBlocks constructor.
         '''
+        row_key_null = (row_key is None or
+                (isinstance(row_key, slice) and row_key == _NULL_SLICE))
+
         single_row = False
-        if isinstance(row_key, int):
+        if row_key_null:
+            if self._shape[0] == 1:
+                # this codition used to only hold if the arg is a null slice; now if None too and shape has one row
+                single_row = True
+        elif isinstance(row_key, int):
             single_row = True
         elif isinstance(row_key, _KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -2029,12 +2051,12 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         for block_idx, slc in self._key_to_block_slices(column_key):
             b = self._blocks[block_idx]
             if b.ndim == 1: # given 1D array, our row key is all we need
-                if row_key is None:
+                if row_key_null:
                     block_sliced = b
                 else:
                     block_sliced = b[row_key]
             else: # given 2D, use row key and column slice
-                if row_key is None:
+                if row_key_null:
                     block_sliced = b[:, slc]
                 else:
                     block_sliced = b[row_key, slc]
@@ -2116,14 +2138,16 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if isinstance(column_key, int):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
+            row_key_null = (row_key is None or
+                    (isinstance(row_key, slice) and row_key == _NULL_SLICE))
             if b.ndim == 1:
-                if row_key is None: # return a column
+                if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)
                 elif isinstance(row_key, int):
                     return b[row_key] # return single item
                 return TypeBlocks.from_blocks(b[row_key])
 
-            if row_key is None: # return a column
+            if row_key_null:
                 return TypeBlocks.from_blocks(b[:, column])
             elif isinstance(row_key, int):
                 return b[row_key, column] # return single item
@@ -2447,6 +2471,7 @@ class Index(metaclass=MetaOperatorDelegate):
         loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
         dtype: Optional dytpe to be used for labels.
     '''
+    STATIC = True
 
     __slots__ = (
             '_map',
@@ -2503,49 +2528,54 @@ class Index(metaclass=MetaOperatorDelegate):
         positions.flags.writeable = False
         return positions
 
-
-    def _update_array_cache(self):
-        '''Derived classes can use this to set stored arrays, self._labels and self._positions.
+    @staticmethod
+    def _get_map(labels, positions=None) -> tp.Dict[tp.Any, int]:
         '''
-        pass
+        Return a dictionary mapping index labels to integer positions.
+
+        NOTE: this function is critical to Index performance.
+        '''
+        if positions is not None:
+            return dict(zip(labels, positions))
+        if hasattr(labels, '__len__'):
+            return dict(zip(labels, range(len(labels))))
+        # support labels as a generator
+        return {v: k for k, v in enumerate(labels)}
+
 
     #---------------------------------------------------------------------------
     def __init__(self,
             labels: IndexInitializer,
             loc_is_iloc: bool=False,
-            dtype: DtypeSpecifier=None) -> None:
+            dtype: DtypeSpecifier=None
+            ) -> None:
 
         self._recache = False
+        self._map = None
 
         positions = None
-
         if issubclass(labels.__class__, Index):
             # get a reference to the immutable arrays
             # even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
+            if labels.STATIC:
+                # can take the map
+                self._map = labels._map
+
             if labels._recache:
                 labels._update_array_cache()
+
             positions = labels._positions
             loc_is_iloc = labels._loc_is_iloc
             labels = labels._labels
 
-        # map provided values to integer positions; do only one iteration of labels to support generators
-        # collections.abs.sized
-        if hasattr(labels, '__len__'):
-            # dict() function shown to be faster then gen expression
-            if positions is not None:
-                self._map = dict(zip(labels, positions))
-            else:
-                self._map = dict(zip(labels, range(len(labels))))
-        else: # handle generators
-            # dict() function shown slower in this case
-            # self._map = dict((v, k) for k, v in enumerate(labels))
-            self._map = {v: k for k, v in enumerate(labels)}
+        if self._map is None:
+            self._map = self._get_map(labels, positions)
 
         # this might be NP array, or a list, depending on if static or grow only
         self._labels = self._extract_labels(self._map, labels, dtype)
         self._positions = self._extract_positions(self._map, positions)
 
-        # NOTE:  automatic discovery is possible but not sure that the cost of a
+        # NOTE:  automatic discovery is possible
         self._loc_is_iloc = loc_is_iloc
 
         if len(self._map) != len(self._labels):
@@ -2554,6 +2584,11 @@ class Index(metaclass=MetaOperatorDelegate):
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
+
+    def _update_array_cache(self):
+        '''Derived classes can use this to set stored arrays, self._labels and self._positions.
+        '''
+        pass
 
     def display(self, config: DisplayConfig=None) -> Display:
         config = config or DisplayActive.get()
@@ -2579,6 +2614,7 @@ class Index(metaclass=MetaOperatorDelegate):
 
         if isinstance(key, Series):
             key = key.values
+
         if self._loc_is_iloc:
             return key
 
@@ -2674,15 +2710,18 @@ class Index(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
 
-        if isinstance(key, slice):
-            # if labels is an np array, this will be a view; if a list, a copy
-            labels = self._labels[key]
+        if key is None:
+            labels = self._labels
+        elif isinstance(key, slice):
+            if key == _NULL_SLICE:
+                labels = self._labels
+            else:
+                # if labels is an np array, this will be a view; if a list, a copy
+                labels = self._labels[key]
         elif isinstance(key, _KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
-        elif key is None:
-            labels = self._labels
         else: # select a single label value
             labels = (self._labels[key],)
         return self.__class__(labels=labels)
@@ -2691,7 +2730,7 @@ class Index(metaclass=MetaOperatorDelegate):
         return self._extract_iloc(self.loc_to_iloc(key))
 
     def __getitem__(self, key: GetItemKeyType) -> 'Index':
-        '''Extract a new index given an iloc key (this is the same as Pandas).
+        '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
 
@@ -2764,6 +2803,7 @@ class IndexGO(Index):
     '''
     A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
     '''
+    STATIC = False
 
     __slots__ = (
             '_map',
@@ -3230,7 +3270,7 @@ class Series(metaclass=MetaOperatorDelegate):
     def _extract_iloc_mask(self, key: GetItemKeyType) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
-        mask = np.full(self.shape, False, dtype=bool)
+        mask = np.full(self.values.shape, False, dtype=bool)
         mask[key] = True
         mask.flags.writeable = False
         # can pass self here as it is immutable (assuming index cannot change)
@@ -3683,7 +3723,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         own_data: Flag data as ownable by Frame; primarily for internal clients.
         own_index: Flag index as ownable by Frame; primarily for internal clients.
         own_columns: Flag columns as ownable by Frame; primarily for internal clients.
-
     '''
 
     __slots__ = (
@@ -4029,7 +4068,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             file_like = fp
 
-
         array = np.genfromtxt(file_like,
                 delimiter=delimiter_native,
                 skip_header=skip_header,
@@ -4067,18 +4105,24 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         Args:
             own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
+            own_index: if True, the index is taken as is and is not passed to an Index initializer.
         '''
+        # TODO: support construction from Series?
+
         if isinstance(data, TypeBlocks):
             if own_data:
                 self._blocks = data
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
+        elif isinstance(data, np.ndarray):
+            if own_data:
+                data.flags.writeable = False
+            self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
             if columns is not None:
                 raise Exception('cannot create Frame from dictionary when columns is defined')
-
             columns = []
             def blocks():
                 for k, v in _dict_to_sorted_items(data):
@@ -4092,31 +4136,15 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._blocks = TypeBlocks.from_blocks(blocks())
 
         elif data is not None:
-            def blocks():
-                # need to identify Series-like things and handle as single column
-                if hasattr(data, 'ndim') and data.ndim == 1:
-                    # if derive_columns:
-                    #     if hasattr(data, 'name') and data.name:
-                    #         columns.append(data.name)
-                    if hasattr('values'):
-                        yield data.values
-                    else:
-                        yield data
-                elif isinstance(data, np.ndarray):
-                    if own_data:
-                        data.flags.writeable = False
-                    yield data
-                else: # try to make it into array
-                    a = np.array(data)
-                    a.flags.writeable = False
-                    yield a
+            a = np.array(data)
+            a.flags.writeable = False
+            self._blocks = TypeBlocks.from_blocks(a)
 
-            self._blocks = TypeBlocks.from_blocks(blocks())
         else:
             # will have shape of 0,0
             self._blocks = TypeBlocks.from_none()
 
-        row_count, col_count = self._blocks.shape
+        row_count, col_count = self._blocks._shape
 
         # columns could be an np array, or an Index instance
         if own_columns:
@@ -4377,15 +4405,14 @@ class Frame(metaclass=MetaOperatorDelegate):
     def __len__(self) -> int:
         '''Length of rows in values.
         '''
-        return self._blocks.shape[0]
+        return self._blocks._shape[0]
 
     def display(self, config: DisplayConfig=None) -> Display:
         config = config or DisplayActive.get()
 
         d = self._index.display(config=config)
 
-        # print('comparing blocks to display columns', self._blocks.shape[1], config.display_columns)
-        if self._blocks.shape[1] > config.display_columns:
+        if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
             # get target column count in the absence of meta data, subtracting 2
             data_half_count = Display.truncate_half_count(
@@ -4434,21 +4461,9 @@ class Frame(metaclass=MetaOperatorDelegate):
     def index(self):
         return self._index
 
-    # @index.setter
-    # def index(self, value):
-    #     if len(value) != len(self._index):
-    #         raise Exception('new index must match length of old index')
-    #     self._index = Index(value)
-
     @property
     def columns(self):
         return self._columns
-
-    # @columns.setter
-    # def columns(self, value):
-    #     if len(value) != len(self._columns):
-    #         raise Exception('new columns must match length of old index')
-    #     self._columns = self._COLUMN_CONSTRUCTOR(value)
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
@@ -4469,7 +4484,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @property
     def shape(self) -> tp.Tuple[int, int]:
-        return self._blocks.shape
+        return self._blocks._shape
 
     @property
     def ndim(self) -> int:
@@ -4502,22 +4517,31 @@ class Frame(metaclass=MetaOperatorDelegate):
             row_key: GetItemKeyType=None,
             column_key: GetItemKeyType=None) -> tp.Union['Frame', Series]:
         '''
-        Extract based on iloc selection.
+        Extract based on iloc selection (indices have already mapped)
         '''
         blocks = self._blocks._extract(row_key=row_key, column_key=column_key)
 
         if not isinstance(blocks, TypeBlocks):
             return blocks # reduced to element
 
-        if row_key is not None: # have to accept 9!
-            index = self._index[row_key]
-        else:
+        own_index = True # the extracted Frame can always own this index
+        if row_key is None:
             index = self._index
-
-        if column_key is not None:
-            columns = self._columns[column_key]
+        elif isinstance(row_key, slice) and row_key == _NULL_SLICE:
+            index = self._index
         else:
+            index = self._index._extract_iloc(row_key)
+
+        # can only own columns if _COLUMN_CONSTRUCTOR is static
+        if column_key is None:
             columns = self._columns
+            own_columns = self._COLUMN_CONSTRUCTOR.STATIC
+        elif isinstance(column_key, slice) and column_key == _NULL_SLICE:
+            columns = self._columns
+            own_columns = self._COLUMN_CONSTRUCTOR.STATIC
+        else:
+            columns = self._columns._extract_iloc(column_key)
+            own_columns = True
 
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
 
@@ -4540,7 +4564,13 @@ class Frame(metaclass=MetaOperatorDelegate):
             if axis_nm[1]: # if column key is not multi
                 return Series(blocks.values, index=index)
 
-        return self.__class__(blocks, index=index, columns=columns)
+        return self.__class__(blocks,
+                index=index,
+                columns=columns,
+                own_data=True, # always get new TypeBlock instance above
+                own_index=own_index,
+                own_columns=own_columns
+                )
 
 
     def _extract_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
@@ -4995,8 +5025,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         if drop:
             # NOTE: not sure if there is a faster way; perhaps with a drop interface on TypeBlocks
             selection = np.fromiter(
-                    (x != column_iloc for x in range(self._blocks.shape[1])),
-                    count=self._blocks.shape[1],
+                    (x != column_iloc for x in range(self._blocks._shape[1])),
+                    count=self._blocks._shape[1],
                     dtype=bool)
             blocks = self._blocks[selection]
             own_data = True
@@ -5094,7 +5124,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 f.write(sep.join(to_str(x) for x in self._columns))
                 f.write(line_terminator)
 
-            col_idx_last = self.shape[1] - 1
+            col_idx_last = self._blocks._shape[1] - 1
             # avoid row creation to avoid joining types; avoide creating a list for each row
             row_current_idx = None
             for (row_idx, col_idx), element in self._iter_element_iloc_items():
@@ -5151,13 +5181,13 @@ class FrameGO(Frame):
                 if isinstance(value, GeneratorType):
                     value = np.array(list(value))
                 elif not hasattr(value, '__len__') or isinstance(value, str):
-                    value = np.full(self._blocks.shape[0], value)
+                    value = np.full(self._blocks._shape[0], value)
                 else:
                     # for now, we assume all values make sense to covnert to NP array
                     value = np.array(value)
                 value.flags.writeable = False
 
-            if value.ndim != 1 or len(value) != self._blocks.shape[0]:
+            if value.ndim != 1 or len(value) != self._blocks._shape[0]:
                 raise Exception('incorrectly sized, unindexed value')
             self._blocks.append(value)
 
@@ -5186,7 +5216,7 @@ class FrameGO(Frame):
                 value.flags.writeable = False
             self._blocks.append(value)
 
-        if len(self._columns) != self._blocks.shape[1]:
+        if len(self._columns) != self._blocks._shape[1]:
             raise Exception('incompatible keys and values')
 
 
