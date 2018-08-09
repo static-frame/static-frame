@@ -1,6 +1,9 @@
 .. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
     :target: https://travis-ci.org/InvestmentSystems/static-frame
 
+.. image:: https://badge.fury.io/py/static-frame.svg
+    :target: https://badge.fury.io/py/static-frame
+
 static-frame
 =============
 
