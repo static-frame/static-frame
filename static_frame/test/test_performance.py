@@ -25,10 +25,6 @@ def get_sample_series_float(size=10000):
     sfs = sf.Series(a1)
     return pds, sfs, a1
 
-# pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_float(10000)
-
-
-
 def get_sample_series_string_index_float_values(size=10000):
     a1 = np.arange(size) * .001
     a1[size // 2:] = np.nan
@@ -37,10 +33,6 @@ def get_sample_series_string_index_float_values(size=10000):
     pds = pd.Series(a1, index=index)
     sfs = sf.Series(a1, index=index)
     return pds, sfs, a1
-
-# pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
-
-
 
 def get_sample_series_obj(size=10000):
     sample = [None, 3, 0.123, np.nan]
@@ -51,9 +43,6 @@ def get_sample_series_obj(size=10000):
 
     return pds, sfs, a1
 
-# pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
-
-
 def get_sample_series_objstr(size=10000):
     sample = [None, 3, 0.123, np.nan, 'str']
     a1 = np.array(sample * int(size / len(sample)))
@@ -62,10 +51,6 @@ def get_sample_series_objstr(size=10000):
     sfs = sf.Series(a1)
 
     return pds, sfs, a1
-
-# pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -82,8 +67,6 @@ def get_sample_frame_float_string_index(size=10000, columns=100):
     sff = sf.Frame(a1, index=index, columns=columns)
     pdf = pd.DataFrame(a1, index=index, columns=columns)
     return pdf, sff, a1
-
-# pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
 
 
 _mixed_types = ('foo', 'bar', True, None, 234.34, 90)
@@ -122,8 +105,6 @@ def get_sample_frame_mixed_string_index(size=10000, columns=100):
         pdf[col] = s
 
     return pdf, sff
-
-# pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
 
 
 
