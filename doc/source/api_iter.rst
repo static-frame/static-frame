@@ -155,11 +155,23 @@ Series
 
 .. py:method:: Series.iter_group()
 
-    Iterator of groups of unique values (in Series).
+    Iterator of Series formed from groups of unique values in a Series.
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_series_iter_group_a
+   :end-before: end_series_iter_group_a
+
 
 .. py:method:: Series.iter_group_items()
 
-    Iterator of pairs of group and grouped values (in a Series).
+    Iterator of pairs of group value and the Series formed from groups of unique values in a Series.
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_series_iter_group_items_a
+   :end-before: end_series_iter_group_items_a
+
 
 
 Frame
@@ -167,13 +179,21 @@ Frame
 
 .. py:method:: Frame.iter_group(key, axis=0)
 
-    Iterate over groups (in Frames) based on unique values selected with key. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
+    Iterate over groups (as Frames) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_frame_iter_group_a
+   :end-before: end_frame_iter_group_a
 
 .. py:method:: Frame.iter_group_items(key, axis=0)
 
-    Iterator of pairs of group and grouped values (in a Frame).
+    Iterator of pairs of group value and groups (as Frames) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
 
-
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_frame_iter_group_items_a
+   :end-before: end_frame_iter_group_items_a
 
 
 

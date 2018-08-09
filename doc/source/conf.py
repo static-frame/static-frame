@@ -19,6 +19,10 @@ import io
 
 import static_frame as sf
 
+from static_frame.core.operator_delegate import _UFUNC_UNARY_OPERATORS
+from static_frame.core.operator_delegate import _UFUNC_BINARY_OPERATORS
+from static_frame.core.operator_delegate import _UFUNC_AXIS_SKIPNA
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -39,9 +43,9 @@ def get_jinja_contexts():
             ('frame', sf.Frame),
             ):
         post[label + '_operator_unary'] = get_func_doc(cls,
-                sf._UFUNC_UNARY_OPERATORS)
+                _UFUNC_UNARY_OPERATORS)
         post[label + '_operator_binary'] = get_func_doc(cls,
-                sf._UFUNC_BINARY_OPERATORS)
+                _UFUNC_BINARY_OPERATORS)
 
     def get_ufunc_doc(cls, func_map):
         # doc here is a complex string, just take the first line
@@ -58,7 +62,7 @@ def get_jinja_contexts():
             ('frame', sf.Frame),
             ):
         post[label + '_ufunc_axis'] = get_ufunc_doc(cls,
-                sf._UFUNC_AXIS_SKIPNA)
+                _UFUNC_AXIS_SKIPNA)
 
     return post
 

@@ -689,11 +689,11 @@ mass     634.8706666666667
 #start_frame_iter_series_items_a
 >>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
->>> {k: v.mean() for k, v in f.iter_series_items(0)}
-{'diameter': 54177.333333333336, 'mass': 634.8706666666667}
+>>> [(k, v.mean()) for k, v in f.iter_series_items(0)]
+[('diameter', 54177.333333333336), ('mass', 634.8706666666667)]
 
->>> {k: v.max() for k, v in f.iter_series_items(1)}
-{'Mars': 6792.0, 'Earth': 12756.0, 'Jupiter': 142984.0}
+>>> [(k, v.max()) for k, v in f.iter_series_items(1)]
+[('Earth', 12756.0), ('Mars', 6792.0), ('Jupiter', 142984.0)]
 
 >>> f.iter_series_items(0).apply(lambda k, v: v.mean() if k == 'diameter' else v.sum())
 <Index>  <Series>
@@ -702,6 +702,52 @@ mass     1904.612
 <<U8>    <float64>
 
 #end_frame_iter_series_items_a
+
+
+#start_series_iter_group_a
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> next(iter(s.iter_group()))
+<Index> <Series>
+Mercury 0
+Venus   0
+<<U7>   <int64>
+>>> [x.values for x in s.iter_group()]
+[array([0, 0]), array([1]), array([2])]
+
+#end_series_iter_group_a
+
+
+#start_series_iter_group_items_a
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> [(k, v.index.values.tolist()) for k, v in iter(s.iter_group_items()) if k > 0]
+[(1, ['Earth']), (2, ['Mars'])]
+
+#end_series_iter_group_items_a
+
+
+#start_frame_iter_group_a
+>>> f = sf.Frame(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> next(iter(f.iter_group('moons')))
+<Frame>
+<Index> mass      moons   <<U5>
+<Index>
+Mercury 0.33      0
+Venus   4.87      0
+<<U7>   <float64> <int64>
+>>> [x.shape for x in f.iter_group('moons')]
+[(2, 2), (1, 2), (1, 2)]
+
+#end_frame_iter_group_a
+
+
+#start_frame_iter_group_items_a
+>>> f = sf.Frame(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> [(k, v.index.values.tolist(), v['mass'].mean()) for k, v in f.iter_group_items('moons')]
+[(0, ['Mercury', 'Venus'], 2.6), (1, ['Earth'], 5.97), (2, ['Mars'], 0.642)]
+
+#end_frame_iter_group_items_a
+
+
 
 
 '''

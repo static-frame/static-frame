@@ -18,7 +18,7 @@ def get_long_description():
         return f.read()
 
 def get_version():
-    with open(path.join(root_dir_fp, 'static_frame.py'), encoding='utf-8') as f:
+    with open(path.join(root_dir_fp, 'static_frame', '__init__.py'), encoding='utf-8') as f:
         for l in f:
             if l.startswith('__version__'):
                 return l.split('=')[-1].strip()[1:-1]
@@ -35,15 +35,17 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Topic :: Software Development',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        ],
+            'Development Status :: 3 - Alpha',
+            'Intended Audience :: Developers',
+            'Topic :: Software Development',
+            'License :: OSI Approved :: MIT License',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
+            ],
 
     keywords='staticframe pandas numpy immutable array',
-    py_modules=['static_frame'], # no .py!
-
+    packages=[
+            'static_frame',
+            'static_frame.core'],
 )
