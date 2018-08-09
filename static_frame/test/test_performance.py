@@ -25,7 +25,7 @@ def get_sample_series_float(size=10000):
     sfs = sf.Series(a1)
     return pds, sfs, a1
 
-pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_float(10000)
+# pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_float(10000)
 
 
 
@@ -38,7 +38,7 @@ def get_sample_series_string_index_float_values(size=10000):
     sfs = sf.Series(a1, index=index)
     return pds, sfs, a1
 
-pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
+# pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
 
 
 
@@ -51,7 +51,7 @@ def get_sample_series_obj(size=10000):
 
     return pds, sfs, a1
 
-pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
+# pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
 
 
 def get_sample_series_objstr(size=10000):
@@ -63,7 +63,9 @@ def get_sample_series_objstr(size=10000):
 
     return pds, sfs, a1
 
-pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
+# pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
+
+
 
 
 #-------------------------------------------------------------------------------
@@ -81,7 +83,7 @@ def get_sample_frame_float_string_index(size=10000, columns=100):
     pdf = pd.DataFrame(a1, index=index, columns=columns)
     return pdf, sff, a1
 
-pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
+# pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
 
 
 _mixed_types = ('foo', 'bar', True, None, 234.34, 90)
@@ -121,9 +123,34 @@ def get_sample_frame_mixed_string_index(size=10000, columns=100):
 
     return pdf, sff
 
-pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
+# pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
 
 
+
+
+
+
+class SampleData:
+
+    _store = {}
+
+    @classmethod
+    def create(cls):
+        pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_float(10000)
+        pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
+        pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
+        pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
+        pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
+        pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
+
+        for k, v in locals().items():
+            if k == 'cls' or k.startswith('__'):
+                continue
+            cls._store[k] = v
+
+    @classmethod
+    def get(cls, key):
+        return cls._store[key]
 
 class PerfTest:
     PD_NAME = 'pd'
@@ -139,45 +166,45 @@ class PerfTest:
 class SeriesIntFloat_isnull(PerfTest):
     @staticmethod
     def np():
-        post = np.isnan(npa_int_float_10k)
+        post = np.isnan(SampleData.get('npa_int_float_10k'))
 
     @staticmethod
     def pd():
-        post = pds_int_float_10k.isnull()
+        post = SampleData.get('pds_int_float_10k').isnull()
 
     @staticmethod
     def sf():
-        post = sfs_int_float_10k.isna()
+        post = SampleData.get('sfs_int_float_10k').isna()
 
 
 class SeriesIntFloat_dropna(PerfTest):
     @staticmethod
     def np():
-        post = npa_int_float_10k[np.isnan(npa_int_float_10k)]
+        post = SampleData.get('npa_int_float_10k')[np.isnan(SampleData.get('npa_int_float_10k'))]
 
     @staticmethod
     def pd():
-        post = pds_int_float_10k.dropna()
+        post = SampleData.get('pds_int_float_10k').dropna()
 
     @staticmethod
     def sf():
-        post = sfs_int_float_10k.dropna()
+        post = SampleData.get('sfs_int_float_10k').dropna()
 
 
 class SeriesIntFloat_fillna(PerfTest):
     @staticmethod
     def np():
-        sel = np.isnan(npa_int_float_10k)
-        post = npa_int_float_10k.copy()
+        sel = np.isnan(SampleData.get('npa_int_float_10k'))
+        post = SampleData.get('npa_int_float_10k').copy()
         post[sel] = 0.0
 
     @staticmethod
     def pd():
-        post = pds_int_float_10k.fillna(0.0)
+        post = SampleData.get('pds_int_float_10k').fillna(0.0)
 
     @staticmethod
     def sf():
-        post = sfs_int_float_10k.fillna(0.0)
+        post = SampleData.get('sfs_int_float_10k').fillna(0.0)
 
 
 
@@ -188,33 +215,33 @@ class SeriesStrFloat_isnull(PerfTest):
 
     @staticmethod
     def pd():
-        post = pds_str_float_10k.isnull()
+        post = SampleData.get('pds_str_float_10k').isnull()
 
     @staticmethod
     def sf():
-        post = sfs_str_float_10k.isna()
+        post = SampleData.get('sfs_str_float_10k').isna()
 
 
 class SeriesStrFloat_dropna(PerfTest):
 
     @staticmethod
     def pd():
-        post = pds_str_float_10k.dropna()
+        post = SampleData.get('pds_str_float_10k').dropna()
 
     @staticmethod
     def sf():
-        post = sfs_str_float_10k.dropna()
+        post = SampleData.get('sfs_str_float_10k').dropna()
 
 
 class SeriesStrFloat_fillna(PerfTest):
 
     @staticmethod
     def pd():
-        post = pds_str_float_10k.fillna(0.0)
+        post = SampleData.get('pds_str_float_10k').fillna(0.0)
 
     @staticmethod
     def sf():
-        post = sfs_str_float_10k.fillna(0.0)
+        post = SampleData.get('sfs_str_float_10k').fillna(0.0)
 
 
 
@@ -224,32 +251,32 @@ class SeriesStrFloat_fillna(PerfTest):
 class SeriesIntObj_isnull(PerfTest):
     @staticmethod
     def pd():
-        post = pds_obj_10k.isnull()
+        post = SampleData.get('pds_obj_10k').isnull()
 
     @staticmethod
     def sf():
-        post = sfs_obj_10k.isna()
+        post = SampleData.get('sfs_obj_10k').isna()
 
 
 class SeriesIntObj_dropna(PerfTest):
     @staticmethod
     def pd():
-        post = pds_obj_10k.dropna()
+        post = SampleData.get('pds_obj_10k').dropna()
 
     @staticmethod
     def sf():
-        post = sfs_obj_10k.dropna()
+        post = SampleData.get('sfs_obj_10k').dropna()
 
 
 class SeriesIntObj_fillna(PerfTest):
 
     @staticmethod
     def pd():
-        post = pds_obj_10k.fillna(0.0)
+        post = SampleData.get('pds_obj_10k').fillna(0.0)
 
     @staticmethod
     def sf():
-        post = sfs_obj_10k.fillna(0.0)
+        post = SampleData.get('sfs_obj_10k').fillna(0.0)
 
 
 
@@ -259,32 +286,32 @@ class SeriesIntObj_fillna(PerfTest):
 class SeriesIntObjStr_isnull(PerfTest):
     @staticmethod
     def pd():
-        post = pds_objstr_10k.isnull()
+        post = SampleData.get('pds_objstr_10k').isnull()
 
     @staticmethod
     def sf():
-        post = sfs_objstr_10k.isna()
+        post = SampleData.get('sfs_objstr_10k').isna()
 
 
 class SeriesIntObjStr_dropna(PerfTest):
     @staticmethod
     def pd():
-        post = pds_objstr_10k.dropna()
+        post = SampleData.get('pds_objstr_10k').dropna()
 
     @staticmethod
     def sf():
-        post = sfs_objstr_10k.dropna()
+        post = SampleData.get('sfs_objstr_10k').dropna()
 
 
 class SeriesIntObjStr_fillna(PerfTest):
 
     @staticmethod
     def pd():
-        post = pds_obj_10k.fillna('wrong')
+        post = SampleData.get('pds_obj_10k').fillna('wrong')
 
     @staticmethod
     def sf():
-        post = sfs_obj_10k.fillna('wrong')
+        post = SampleData.get('sfs_obj_10k').fillna('wrong')
 
 
 
@@ -296,34 +323,34 @@ class SeriesIntObjStr_fillna(PerfTest):
 class FrameFloat_sum_skipna_axis0(PerfTest):
     @staticmethod
     def np():
-        post = np.nansum(npf_float_10k, axis=0)
+        post = np.nansum(SampleData.get('npf_float_10k'), axis=0)
         assert post.shape == (100,)
 
     @staticmethod
     def pd():
-        post = pdf_float_10k.sum(axis=0, skipna=True)
+        post = SampleData.get('pdf_float_10k').sum(axis=0, skipna=True)
         assert post.shape == (100,)
 
     @staticmethod
     def sf():
-        post = sff_float_10k.sum(axis=0, skipna=True)
+        post = SampleData.get('sff_float_10k').sum(axis=0, skipna=True)
         assert post.shape == (100,)
 
 
 class FrameFloat_sum_skipna_axis1(PerfTest):
     @staticmethod
     def np():
-        post = np.nansum(npf_float_10k, axis=1)
+        post = np.nansum(SampleData.get('npf_float_10k'), axis=1)
         assert post.shape == (10000,)
 
     @staticmethod
     def pd():
-        post = pdf_float_10k.sum(axis=1, skipna=True)
+        post = SampleData.get('pdf_float_10k').sum(axis=1, skipna=True)
         assert post.shape == (10000,)
 
     @staticmethod
     def sf():
-        post = sff_float_10k.sum(axis=1, skipna=True)
+        post = SampleData.get('sff_float_10k').sum(axis=1, skipna=True)
         assert post.shape == (10000,)
 
 
@@ -333,12 +360,12 @@ class FrameFloat_dropna_any_axis0(PerfTest):
 
     @staticmethod
     def pd():
-        post = pdf_float_10k.dropna(axis=0, how='any')
+        post = SampleData.get('pdf_float_10k').dropna(axis=0, how='any')
         assert post.shape == (9900, 100)
 
     @staticmethod
     def sf():
-        post = sff_float_10k.dropna(axis=0, condition=np.any)
+        post = SampleData.get('sff_float_10k').dropna(axis=0, condition=np.any)
         assert post.shape == (9900, 100)
 
 
@@ -346,12 +373,12 @@ class FrameFloat_dropna_any_axis1(PerfTest):
 
     @staticmethod
     def pd():
-        post = pdf_float_10k.dropna(axis=1, how='any')
+        post = SampleData.get('pdf_float_10k').dropna(axis=1, how='any')
         assert post.shape == (10000, 50)
 
     @staticmethod
     def sf():
-        post = sff_float_10k.dropna(axis=1, condition=np.any)
+        post = SampleData.get('sff_float_10k').dropna(axis=1, condition=np.any)
         assert post.shape == (10000, 50)
 
 
@@ -359,15 +386,15 @@ class FrameFloat_isna(PerfTest):
 
     @staticmethod
     def np():
-        post = np.isnan(npf_float_10k)
+        post = np.isnan(SampleData.get('npf_float_10k'))
 
     @staticmethod
     def pd():
-        post = pdf_float_10k.isnull()
+        post = SampleData.get('pdf_float_10k').isnull()
 
     @staticmethod
     def sf():
-        post = sff_float_10k.isna()
+        post = SampleData.get('sff_float_10k').isna()
 
 
 
@@ -378,14 +405,14 @@ class FrameFloat_apply_axis0(PerfTest):
     @staticmethod
     def pd():
         func = lambda a: np.nanmean(a ** 2)
-        post = pdf_float_10k.apply(func, axis=0) # apply to columns
+        post = SampleData.get('pdf_float_10k').apply(func, axis=0) # apply to columns
         assert post.shape == (100,)
         assert post.sum() > 33501616.16668333
 
     @staticmethod
     def sf():
         func = lambda a: np.nanmean(a ** 2)
-        post = sff_float_10k.iter_array(0).apply(func) # apply to columns
+        post = SampleData.get('sff_float_10k').iter_array(0).apply(func) # apply to columns
         assert post.shape == (100,)
         assert post.sum() > 33501616.16668333
 
@@ -396,14 +423,14 @@ class FrameFloat_apply_axis1(PerfTest):
     @staticmethod
     def pd():
         func = lambda a: np.nanmean(a ** 2)
-        post = pdf_float_10k.apply(func, axis=1) # apply to rows
+        post = SampleData.get('pdf_float_10k').apply(func, axis=1) # apply to rows
         assert post.shape == (10000,)
         assert post.sum() > 3333328333.8349
 
     @staticmethod
     def sf():
         func = lambda a: np.nanmean(a ** 2)
-        post = sff_float_10k.iter_array(1).apply(func)
+        post = SampleData.get('sff_float_10k').iter_array(1).apply(func)
         assert post.shape == (10000,)
         assert post.sum() > 3333328333.8349
 
@@ -417,14 +444,14 @@ class FrameFloat_slice_loc_indices(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 10000, 1000):
-            start = pdf_float_10k.index[i]
-            pdf_float_10k.loc[start:]
+            start = SampleData.get('pdf_float_10k').index[i]
+            SampleData.get('pdf_float_10k').loc[start:]
 
     @staticmethod
     def sf():
         for i in range(0, 10000, 1000):
-            start = sff_float_10k.index.values[i]
-            sff_float_10k.loc[start:]
+            start = SampleData.get('sff_float_10k').index.values[i]
+            SampleData.get('sff_float_10k').loc[start:]
 
 
 class FrameFloat_slice_loc_index(PerfTest):
@@ -432,14 +459,14 @@ class FrameFloat_slice_loc_index(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 10000, 1000):
-            start = pdf_float_10k.index[i]
-            pdf_float_10k.loc[start]
+            start = SampleData.get('pdf_float_10k').index[i]
+            SampleData.get('pdf_float_10k').loc[start]
 
     @staticmethod
     def sf():
         for i in range(0, 10000, 1000):
-            start = sff_float_10k.index.values[i]
-            sff_float_10k.loc[start]
+            start = SampleData.get('sff_float_10k').index.values[i]
+            SampleData.get('sff_float_10k').loc[start]
 
 
 
@@ -448,14 +475,14 @@ class FrameFloat_slice_loc_columns(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 100, 10):
-            start = pdf_float_10k.index[i]
-            pdf_float_10k.loc[:, start:]
+            start = SampleData.get('pdf_float_10k').index[i]
+            SampleData.get('pdf_float_10k').loc[:, start:]
 
     @staticmethod
     def sf():
         for i in range(0, 100, 10):
-            start = sff_float_10k.index.values[i]
-            sff_float_10k.loc[:, start:]
+            start = SampleData.get('sff_float_10k').index.values[i]
+            SampleData.get('sff_float_10k').loc[:, start:]
 
 
 
@@ -464,14 +491,14 @@ class FrameFloat_slice_loc_column(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 100, 10):
-            start = pdf_float_10k.index[i]
-            pdf_float_10k.loc[:, start]
+            start = SampleData.get('pdf_float_10k').index[i]
+            SampleData.get('pdf_float_10k').loc[:, start]
 
     @staticmethod
     def sf():
         for i in range(0, 100, 10):
-            start = sff_float_10k.index.values[i]
-            sff_float_10k.loc[:, start]
+            start = SampleData.get('sff_float_10k').index.values[i]
+            SampleData.get('sff_float_10k').loc[:, start]
 
 
 #-------------------------------------------------------------------------------
@@ -483,14 +510,14 @@ class FrameMixed_slice_loc_indices(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 10000, 1000):
-            start = pdf_mixed_10k.index[i]
-            pdf_mixed_10k.loc[start:]
+            start = SampleData.get('pdf_mixed_10k').index[i]
+            SampleData.get('pdf_mixed_10k').loc[start:]
 
     @staticmethod
     def sf():
         for i in range(0, 10000, 1000):
-            start = sff_mixed_10k.index.values[i]
-            sff_mixed_10k.loc[start:]
+            start = SampleData.get('sff_mixed_10k').index.values[i]
+            SampleData.get('sff_mixed_10k').loc[start:]
 
 
 class FrameMixed_slice_loc_index(PerfTest):
@@ -498,14 +525,14 @@ class FrameMixed_slice_loc_index(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 10000, 1000):
-            start = pdf_mixed_10k.index[i]
-            pdf_mixed_10k.loc[start]
+            start = SampleData.get('pdf_mixed_10k').index[i]
+            SampleData.get('pdf_mixed_10k').loc[start]
 
     @staticmethod
     def sf():
         for i in range(0, 10000, 1000):
-            start = sff_mixed_10k.index.values[i]
-            sff_mixed_10k.loc[start]
+            start = SampleData.get('sff_mixed_10k').index.values[i]
+            SampleData.get('sff_mixed_10k').loc[start]
 
 
 
@@ -514,14 +541,14 @@ class FrameMixed_slice_loc_columns(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 100, 10):
-            start = pdf_mixed_10k.index[i]
-            pdf_mixed_10k.loc[:, start:]
+            start = SampleData.get('pdf_mixed_10k').index[i]
+            SampleData.get('pdf_mixed_10k').loc[:, start:]
 
     @staticmethod
     def sf():
         for i in range(0, 100, 10):
-            start = sff_mixed_10k.index.values[i]
-            sff_mixed_10k.loc[:, start:]
+            start = SampleData.get('sff_mixed_10k').index.values[i]
+            SampleData.get('sff_mixed_10k').loc[:, start:]
 
 
 
@@ -530,14 +557,14 @@ class FrameMixed_slice_loc_column(PerfTest):
     @staticmethod
     def pd():
         for i in range(0, 100, 10):
-            start = pdf_mixed_10k.index[i]
-            pdf_mixed_10k.loc[:, start]
+            start = SampleData.get('pdf_mixed_10k').index[i]
+            SampleData.get('pdf_mixed_10k').loc[:, start]
 
     @staticmethod
     def sf():
         for i in range(0, 100, 10):
-            start = sff_mixed_10k.index.values[i]
-            sff_mixed_10k.loc[:, start]
+            start = SampleData.get('sff_mixed_10k').index.values[i]
+            SampleData.get('sff_mixed_10k').loc[:, start]
 
 
 
@@ -646,6 +673,8 @@ def performance(cls) -> tp.Tuple[str, float, float, float]:
 
 
 def main():
+
+    SampleData.create()
 
     options = get_arg_parser().parse_args()
     records = []

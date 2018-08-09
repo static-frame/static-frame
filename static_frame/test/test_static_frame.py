@@ -1,10 +1,8 @@
-import itertools
 from itertools import zip_longest
 from itertools import combinations
 import unittest
 from collections import OrderedDict
 from io import StringIO
-from io import BytesIO
 import string
 import hashlib
 
@@ -22,13 +20,26 @@ from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 
-from static_frame import _isna
-from static_frame import _resolve_dtype
-from static_frame import _resolve_dtype_iter
-from static_frame import _ufunc_logical_skipna
-from static_frame import _array_to_duplicated
-from static_frame import _array_set_ufunc_many
+from static_frame.core.util import _isna
+from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import _resolve_dtype_iter
+from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import _array_set_ufunc_many
 
+from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import _full_for_fill
+from static_frame.core.util import _dtype_to_na
+from static_frame.core.util import _ufunc_skipna_1d
+from static_frame.core.util import _iterable_to_array
+from static_frame.core.util import _dict_to_sorted_items
+from static_frame.core.util import _array_to_groups_and_locations
+from static_frame.core.util import IndexCorrespondence
+
+from static_frame.core.operator_delegate import _ufunc_logical_skipna
+from static_frame.core.operator_delegate import _all
+from static_frame.core.operator_delegate import _any
+from static_frame.core.operator_delegate import _nanall
+from static_frame.core.operator_delegate import _nanany
 
 nan = np.nan
 
@@ -84,20 +95,20 @@ class TestUnit(unittest.TestCase):
 
         value1 = Series((100, 200, 300), index=('s', 'u', 't'))
 
-        value2 = Frame.from_records(((20, 21, 22),(23, 24, 25)),
+        value2 = Frame.from_records(((20, 21, 22), (23, 24, 25)),
                 index=('x', 'y'),
                 columns=('s', 't', 'w'))
 
         f2 = FrameGO([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
-                [0 ,1, 2, 3]],
+                [0, 1, 2, 3]],
                 columns=list('ABCD'))
 
         f3 = FrameGO([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
-                [0 ,1, 2, 3]],
+                [0, 1, 2, 3]],
                 columns=list('EFGH'))
 
     #---------------------------------------------------------------------------
@@ -105,7 +116,7 @@ class TestUnit(unittest.TestCase):
 
     def test_resolve_dtype_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         a4 = np.array([2.3, 3.2])
@@ -126,7 +137,7 @@ class TestUnit(unittest.TestCase):
 
     def test_resolve_dtype_iter_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         a4 = np.array([2.3, 3.2])
@@ -368,7 +379,7 @@ class TestUnit(unittest.TestCase):
         post = _array_set_ufunc_many((a1, a2, a3, a4), ufunc=np.union1d)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-    def test_array_set_ufunc_many_a(self):
+    def test_array_set_ufunc_many_b(self):
         a1 = np.array([3, 2, 1])
         a2 = np.array([3, 2])
         a3 = np.array([5, 3, 2, 1])
@@ -702,12 +713,12 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([10,50,30])
         a3 = np.array([1345,2234,3345])
         a4 = np.array([False, True, False])
@@ -717,7 +728,7 @@ class TestUnit(unittest.TestCase):
 
         # can show that with tb2, a6 remains unchanged
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb3 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -750,7 +761,7 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_b(self):
 
         # given naturally of a list of rows; this corresponds to what we get with iloc, where we select a row first, then a column
-        a1 = np.array([[1,2,3], [4,5,6]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6]])
         # shape is given as rows, columns
         self.assertEqual(a1.shape, (2, 3))
 
@@ -799,13 +810,13 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_c(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         a4 = np.array(['gd', 'cd', 'dd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -829,7 +840,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_d(self):
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
 
@@ -844,7 +855,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_indices_to_contiguous_pairs(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
 
@@ -871,13 +882,13 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_extract_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         a4 = np.array(['gd', 'cd', 'dd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -977,7 +988,7 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_extract_c(self):
         # test negative slices
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1023,7 +1034,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_extract_array_a(self):
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1048,7 +1059,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_static_frame(self):
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1058,12 +1069,12 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_attributes(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1076,12 +1087,12 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_block_pointers(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1091,7 +1102,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_append(self):
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         tb1 = TypeBlocks.from_blocks((a1, a2))
         self.assertTrue(tb1.shape, (3, 2))
@@ -1122,7 +1133,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_unary_operator_b(self):
 
-        a1 = np.array([[1,2,3], [-4,5,6], [0,0,-1]])
+        a1 = np.array([[1, 2, 3], [-4, 5, 6], [0,0,-1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1145,12 +1156,12 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_block_compatible_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1170,12 +1181,12 @@ class TestUnit(unittest.TestCase):
     #@unittest.skip('to fix')
     def test_type_blocks_block_compatible_b(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1187,7 +1198,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_consolidate_a(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([10,50,30])
         a3 = np.array([1345,2234,3345])
 
@@ -1211,7 +1222,7 @@ class TestUnit(unittest.TestCase):
 
 
         a1 = np.array([
-            [1,2,3],
+            [1, 2, 3],
             [10,50,30],
             [1345,2234,3345]])
 
@@ -1253,12 +1264,12 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_binary_operator_b(self):
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']], dtype=object)
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1288,12 +1299,12 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_binary_operator_c(self):
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']], dtype=object)
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1322,7 +1333,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_binary_operator_d(self):
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[1.5,2.6], [4.2,5.5], [0.2,0.1]])
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
@@ -1335,12 +1346,12 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_extend_a(self):
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'], dtype=object)
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']], dtype=object)
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1360,7 +1371,7 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_mask_blocks_a(self):
         # test negative slices
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1376,7 +1387,7 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_assign_blocks_a(self):
         # test negative slices
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1394,10 +1405,10 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_group_a(self):
 
         a1 = np.array([
-                [1,2,3,4],
+                [1, 2, 3,4],
                 [4,2,6,3],
-                [0,0,1,2],
-                [0,0,1,1]
+                [0, 0, 1,2],
+                [0, 0, 1,1]
                 ])
         a2 = np.array([[False, False, True],
                 [False, False, True],
@@ -1427,10 +1438,10 @@ class TestUnit(unittest.TestCase):
     def test_type_blocks_group_b(self):
 
         a1 = np.array([
-                [1,2,3,4],
+                [1, 2, 3,4],
                 [4,2,6,3],
-                [0,0,1,2],
-                [0,0,1,1]
+                [0, 0, 1,2],
+                [0, 0, 1,1]
                 ])
         a2 = np.array([[False, False, True],
                 [False, False, True],
@@ -1460,7 +1471,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_transpose_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1477,7 +1488,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_display_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1493,7 +1504,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_axis_values_a(self):
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1512,7 +1523,7 @@ class TestUnit(unittest.TestCase):
 
 
     def test_type_blocks_axis_values_b(self):
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1526,7 +1537,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_extract_iloc_mask_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1548,7 +1559,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_extract_iloc_assign_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1582,7 +1593,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_elements_items_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1600,7 +1611,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_reblock_signature_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1611,7 +1622,7 @@ class TestUnit(unittest.TestCase):
                 list(tb._reblock_signature()),
                 [(dtype('int64'), 3), (dtype('bool'), 3), (dtype('O'), 1), (dtype('<U2'), 2)])
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1626,7 +1637,7 @@ class TestUnit(unittest.TestCase):
 #     @unittest.skip('implement operators for same sized but differently typed blocks')
     def test_type_blocks_binary_operator_e(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1644,14 +1655,14 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_copy_a(self):
 
-        a1 = np.array([[1,2,3], [4,5,6], [0,0,1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
         tb1 = TypeBlocks.from_blocks((a1, a2, a4, a3))
 
         tb2 = tb1.copy()
-        tb1.append(np.array((1,2,3)))
+        tb1.append(np.array((1, 2, 3)))
 
         self.assertEqual(tb2.shape, (3, 9))
         self.assertEqual(tb1.shape, (3, 10))
@@ -1667,7 +1678,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_isna_a(self):
 
-        a1 = np.array([[1,2,3], [4, np.nan, 6], [0,0,1]], dtype=object)
+        a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1736,7 +1747,7 @@ class TestUnit(unittest.TestCase):
 
     def test_type_blocks_from_none_a(self):
 
-        a1 = np.array([[1,2,3], [4, np.nan, 6], [0,0,1]], dtype=object)
+        a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -3889,7 +3900,7 @@ class TestUnit(unittest.TestCase):
         f1 = FrameGO([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
-                [0 ,1, 2, 3]],
+                [0, 1, 2, 3]],
                 columns=list('ABCD'))
 
         self.assertEqual(f1.dropna(axis=0, condition=np.any).to_pairs(0),
@@ -3905,7 +3916,7 @@ class TestUnit(unittest.TestCase):
         f1 = FrameGO([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
-                [0 ,1, 2, 3]],
+                [0, 1, 2, 3]],
                 columns=list('ABCD'))
 
         f2 = f1.fillna(0)
@@ -4053,7 +4064,7 @@ class TestUnit(unittest.TestCase):
         f2 = FrameGO([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
-                [0 ,1, 2, 3]],
+                [0, 1, 2, 3]],
                 columns=list('ABCD'))
 
         self.assertEqual(f1.all(axis=0).to_pairs(),
@@ -4289,7 +4300,7 @@ class TestUnit(unittest.TestCase):
     def test_frame_from_concat_f(self):
         # force a reblock before concatenating
 
-        a1 = np.array([1,2,3])
+        a1 = np.array([1, 2, 3])
         a2 = np.array([10,50,30])
         a3 = np.array([1345,2234,3345])
         a4 = np.array([False, True, False])
