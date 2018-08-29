@@ -24,6 +24,7 @@ from static_frame.core.util import _isna
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence
+from static_frame.core.util import immutable_filter
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -46,16 +47,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             '_row_dtype',
             'iloc',
             )
-
-    @staticmethod
-    def immutable_filter(src_array: np.ndarray) -> np.ndarray:
-        '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
-        '''
-        if src_array.flags.writeable:
-            dst_array = src_array.copy()
-            dst_array.flags.writeable = False
-            return dst_array
-        return src_array # keep it as is
 
     @staticmethod
     def single_column_filter(array: np.ndarray) -> np.ndarray:
@@ -97,7 +88,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
             row_count, column_count = cls.shape_filter(raw_blocks)
-            blocks.append(cls.immutable_filter(raw_blocks))
+            blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
                 index.append((block_count, i))
                 dtypes.append(raw_blocks.dtype)
@@ -116,7 +107,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 else: # assign on first
                     row_count = r
 
-                blocks.append(cls.immutable_filter(block))
+                blocks.append(immutable_filter(block))
 
                 # store position to key of block, block columns
                 for i in range(c):
@@ -1293,7 +1284,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             self._dtypes.append(block.dtype)
 
         # make immutable copy if necessary before appending
-        self._blocks.append(self.immutable_filter(block))
+        self._blocks.append(immutable_filter(block))
 
         # if already aligned, nothing to do
         if not self._row_dtype: # if never set as shape is empty

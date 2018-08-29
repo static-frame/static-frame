@@ -6,6 +6,7 @@ from collections import OrderedDict
 from collections import abc
 from io import StringIO
 from io import BytesIO
+import datetime
 
 
 import numpy as np
@@ -47,6 +48,9 @@ _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 
 _NULL_SLICE = slice(None)
+SLICE_STOP_ATTR = 'stop'
+SLICE_STEP_ATTR = 'step'
+SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 
 #-------------------------------------------------------------------------------
 # utility
@@ -70,6 +74,8 @@ KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
+
 IndexSpecifier = tp.Union[int, str]
 IndexInitializer = tp.Union[
         tp.Iterable[tp.Hashable],
@@ -87,16 +93,30 @@ FrameInitializer = tp.Union[
         tp.Mapping[tp.Hashable, tp.Iterable[tp.Any]]
         ]
 
+DateInitializer = tp.Union[str, datetime.date, np.datetime64]
+YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
+YearInitializer = tp.Union[str, datetime.date, np.datetime64]
+
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
     '''
     return array.__array_interface__['data'][0]
 
 
+def immutable_filter(src_array: np.ndarray) -> np.ndarray:
+    '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
+    '''
+    if src_array.flags.writeable:
+        dst_array = src_array.copy()
+        dst_array.flags.writeable = False
+        return dst_array
+    return src_array # keep it as is
+
+
 def _gen_skip_middle(
-        forward_iter: tp.Iterable[tp.Any],
+        forward_iter: CallableToIterType,
         forward_count: int,
-        reverse_iter: tp.Iterable[tp.Any],
+        reverse_iter: CallableToIterType,
         reverse_count: int,
         center_sentinel: tp.Any):
     '''
@@ -177,7 +197,6 @@ def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
             return dt_resolve
     return dt_resolve
 
-
 def _dtype_to_na(dtype):
     '''Given a dtype, return an appropriate and compatible null value.
     '''
@@ -197,6 +216,7 @@ def _dtype_to_na(dtype):
         return ''
     raise NotImplementedError('no support for this dtype', dtype.kind)
 
+
 def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
     '''
@@ -208,8 +228,12 @@ def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
         v = array[np.not_equal(array, None)]
         if len(v) == 0: # all values were None
             return np.nan
+    elif array.dtype.kind == 'M':
+        # dates do not support skipna functions
+        return ufunc(array)
     else:
         v = array
+
     if skipna:
         return ufunc_skipna(v)
     return ufunc(v)
@@ -252,6 +276,49 @@ def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
 
     return v, assume_unique
 
+
+def _slice_to_datetime_slice_args(key):
+    for attr in SLICE_ATTRS:
+        value = getattr(key, attr)
+        if value is None:
+            yield None
+        else:
+            yield np.datetime64(value)
+
+def _key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
+    '''
+    Given an get item key for a Date index, convert it to np.datetime64 representation.
+    '''
+    if isinstance(key, slice):
+        return slice(*_slice_to_datetime_slice_args(key))
+
+    if isinstance(key, np.datetime64):
+        return key
+
+    if isinstance(key, str):
+        # not using self._DTYPE to coerce type further
+        return np.datetime64(key)
+
+    if isinstance(key, np.ndarray):
+        if key.dtype.kind == 'b':
+            # return Boolean unaltered
+            return key
+        elif key.dtype.kind == 'M':
+            return key
+        else:
+            return key.astype(np.datetime64)
+
+    if hasattr(key, '__iter__') and hasattr(key, '__len__'):
+        return np.fromiter(key, dtype=np.datetime64, count=len(key))
+
+    if hasattr(key, '__len__'):
+        return np.array(key, dtype=np.datetime64)
+
+    if hasattr(key, '__next__'): # a generator-like
+        return np.array(tuple(key), dtype=np.datetime64)
+
+    # for now, return key unaltered
+    return key
 
 def _dict_to_sorted_items(
             mapping: tp.Dict) -> tp.Generator[

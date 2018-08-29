@@ -211,8 +211,9 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_records(cls,
             records: tp.Iterable[tp.Any],
             *,
-            index: IndexInitializer,
-            columns: IndexInitializer):
+            index: tp.Optional[IndexInitializer]=None,
+            columns: tp.Optional[IndexInitializer]=None
+            ):
         '''Frame constructor from an iterable of rows.
 
         Args:
@@ -231,13 +232,15 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         def blocks():
             rows = list(records)
-            # derive types form first rows, but cannot do strings
-            # string type requires size, so cannot use np.fromiter
-            types = [(type(x) if not isinstance(x, str) else None) for x in rows[0]]
+            # derive types form first rows
+            # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
+            types = [(type(x) if not isinstance(x, (str, np.datetime64)) else None)
+                    for x in rows[0]]
+
             row_count = len(rows)
             for idx in range(len(rows[0])):
                 column_type = types[idx]
-                if column_type is None:
+                if column_type is None: # let array constructor determine type
                     values = np.array([row[idx] for row in rows])
                 else:
                     values = np.fromiter(
@@ -489,22 +492,26 @@ class Frame(metaclass=MetaOperatorDelegate):
         row_count, col_count = self._blocks._shape
 
         # columns could be an np array, or an Index instance
-        if own_columns:
-            self._columns = columns
-        elif columns is not None:
-            self._columns = self._COLUMN_CONSTRUCTOR(columns)
-        else:
-            self._columns = self._COLUMN_CONSTRUCTOR(range(col_count),
+        if columns is None:
+            self._columns = self._COLUMN_CONSTRUCTOR(
+                    range(col_count),
                     loc_is_iloc=True)
+        elif own_columns or (hasattr(columns, 'STATIC') and columns.STATIC):
+            self._columns = columns
+        else:
+            self._columns = self._COLUMN_CONSTRUCTOR(columns)
+
+        # TODO: need to support creation of an empty Frame, by which this will fail
         if len(self._columns) != col_count:
             raise Exception('columns provided do not have correct size')
 
-        if own_index:
-            self._index = index
-        elif index is not None:
-            self._index = Index(index)
-        else:
+        if index is None:
             self._index = Index(range(row_count), loc_is_iloc=True)
+        elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
+            self._index = index
+        else:
+            self._index = Index(index)
+
         # permit bypassing this check if the row_count is zero
         if row_count and len(self._index) != row_count:
             raise Exception('index provided do not have correct size')

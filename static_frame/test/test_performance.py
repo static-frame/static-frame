@@ -107,9 +107,40 @@ def get_sample_frame_mixed_string_index(size=10000, columns=100):
     return pdf, sff
 
 
+def get_series_float_h2d_str_index(size=1000):
+    '''
+    Get a hierarchical index with
+    '''
+    labels = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+    labels0 = labels[:int(size / 10)]
+    labels1 = labels[:size]
+    values = np.arange(len(labels0) * len(labels1)) * .001
+
+    ih = sf.IndexHierarchy.from_product(labels0, labels1)
+    sfs = sf.Series(values, index=ih)
+
+    mi = pd.MultiIndex.from_product((labels0, labels1))
+    pds = pd.Series(values, index=mi)
+    return pds, sfs
 
 
+def get_series_float_h3d_str_index(size=1000):
+    '''
+    Get a hierarchical index with
+    '''
+    labels = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+    labels0 = labels[:int(size / 100)]
+    labels1 = labels[:int(size / 10)]
+    labels2 = labels[:size]
 
+    values = np.arange(len(labels0) * len(labels1) * len(labels2)) * .001
+
+    ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
+    sfs = sf.Series(values, index=ih)
+
+    mi = pd.MultiIndex.from_product((labels0, labels1, labels2))
+    pds = pd.Series(values, index=mi)
+    return pds, sfs
 
 class SampleData:
 
@@ -124,10 +155,20 @@ class SampleData:
         pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
         pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
 
+        pds_float_h2d_str_index, sfs_float_h2d_str_index = get_series_float_h2d_str_index()
+        pds_float_h3d_str_index, sfs_float_h3d_str_index = get_series_float_h3d_str_index()
+
+
         for k, v in locals().items():
             if k == 'cls' or k.startswith('__'):
                 continue
             cls._store[k] = v
+
+
+        # additional resources
+        cls._store['label_str'] = list(
+                ''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+
 
     @classmethod
     def get(cls, key):
@@ -137,8 +178,33 @@ class PerfTest:
     PD_NAME = 'pd'
     SF_NAME = 'sf'
     FUNCTION_NAMES = ('np', PD_NAME, SF_NAME)
-    NUMBER = 500
+    NUMBER = 400
 
+
+
+#-------------------------------------------------------------------------------
+# index Tests
+
+class IndexHierarchy2d_from_product(PerfTest):
+
+    NUMBER = 100
+
+    _size0 = 100
+    _size1 = 1000
+
+    @classmethod
+    def pd(cls):
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        ih = pd.MultiIndex.from_product((labels0, labels1))
+        assert len(ih) == cls._size0 * cls._size1
+
+    @classmethod
+    def sf(cls):
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        ih = sf.IndexHierarchy.from_product(labels0, labels1)
+        assert len(ih) == cls._size0 * cls._size1
 
 
 #-------------------------------------------------------------------------------
@@ -298,6 +364,58 @@ class SeriesIntObjStr_fillna(PerfTest):
 
 
 
+class SeriesFloatH2DString_loc_target(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_float_h2d_str_index').loc[('abgu', 'abcf')]
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_float_h2d_str_index').loc[('abgu', 'abcf')]
+
+
+class SeriesFloatH2DString_loc_slice(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_float_h2d_str_index').loc[pd.IndexSlice[:, 'abcf']]
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_float_h2d_str_index').loc[sf.HLoc[:, 'abcf']]
+
+
+
+
+class SeriesFloatH3DString_loc_target(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_float_h3d_str_index').loc[('abce', 'abgu', 'afgx')]
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_float_h3d_str_index').loc[('abce', 'abgu', 'afgx')]
+
+
+class SeriesFloatH3DString_loc_slice(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_float_h3d_str_index').loc[
+                pd.IndexSlice[:, 'abcf', 'abcl':'abco']]
+        assert len(post) == 40
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_float_h3d_str_index').loc[
+                sf.HLoc[:, 'abcf', 'abcl':'abco']]
+        assert len(post) == 40
+
+
+
+
 #-------------------------------------------------------------------------------
 # frame tests
 
@@ -383,6 +501,8 @@ class FrameFloat_isna(PerfTest):
 
 class FrameFloat_apply_axis0(PerfTest):
 
+    NUMBER = 100
+
     @staticmethod
     def pd():
         func = lambda a: np.nanmean(a ** 2)
@@ -452,6 +572,8 @@ class FrameFloat_slice_loc_index(PerfTest):
 
 
 class FrameFloat_slice_loc_columns(PerfTest):
+
+    NUMBER = 100
 
     @staticmethod
     def pd():
@@ -556,6 +678,8 @@ class FrameFloat_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
 
+    NUMBER = 100
+
     # 325 two character strings
     _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
 
@@ -648,9 +772,7 @@ def performance(cls) -> tp.Tuple[str, float, float, float]:
             row[f] = result
         else:
             row[f] = np.nan
-    row['sf/pd'] = row[PerfTest.SF_NAME] / row[PerfTest.PD_NAME]
     return row
-    return tuple(row.values())
 
 
 def main():
@@ -668,7 +790,14 @@ def main():
                 profile(cls)
     if records:
         df = pd.DataFrame.from_records(records)
+
+        df['sf/pd'] = df[PerfTest.SF_NAME] / df[PerfTest.PD_NAME]
+        df.set_index('name', inplace=True)
+
+        pd.set_option('display.width', None)
         print(df)
+        print('mean: {}'.format(df['sf/pd'].mean()))
+        print('wins: {}/{}'.format((df['sf/pd'] < 1.05).sum(), len(df)))
 
 
 

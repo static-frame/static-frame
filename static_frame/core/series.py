@@ -13,6 +13,7 @@ from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _full_for_fill
 from static_frame.core.util import mloc
+from static_frame.core.util import immutable_filter
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
 
@@ -36,9 +37,9 @@ from static_frame.core.display import Display
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
 
-from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index_hierarchy import IndexHierarchy
 
 
 
@@ -128,7 +129,7 @@ class Series(metaclass=MetaOperatorDelegate):
         else: # is numpy
             if dtype is not None and dtype != values.dtype:
                 raise Exception('type requested is not the type given') # what to do here?
-            self.values = TypeBlocks.immutable_filter(values)
+            self.values = immutable_filter(values)
 
         #-----------------------------------------------------------------------
         # index assignment
@@ -136,14 +137,14 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if index is None: # create an integer index
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
-        elif own_index:
+        # elif isinstance(index, (Index, IndexHierarchy)):
+        #     # do not make a copy of it is an immutable index
+        #     self._index = index
+        elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        elif isinstance(index, IndexGO):
-            # if a grow only index need to make immutable
-            self._index = Index(index)
-        elif isinstance(index, Index):
-            # do not make a copy of it is an immutable index
-            self._index = index
+        # elif isinstance(index, IndexGO):
+        #     # if a grow only index need to make immutable
+        #     self._index = Index(index)
         else: # let index handle instantiation
             self._index = Index(index)
 

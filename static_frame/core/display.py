@@ -71,8 +71,10 @@ class DisplayConfig:
                 '{k}={v}'.format(k=k, v=getattr(self, k))
                 for k in self.__slots__) + '>'
 
-    def to_dict(self) -> dict:
-        return {k: getattr(self, k) for k in self.__slots__}
+    def to_dict(self, **kwargs) -> dict:
+        # overrides with passed in kwargs if provided
+        return {k: kwargs.get(k, getattr(self, k))
+                for k in self.__slots__}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
@@ -252,9 +254,11 @@ class Display:
         return indices
 
     @classmethod
-    def _to_rows(cls, display: 'Display', config: DisplayConfig=None) -> tp.Iterable[str]:
+    def _to_rows(cls,
+            display: 'Display',
+            config: DisplayConfig=None) -> tp.Iterable[str]:
         '''
-        Given already defined rows, align them to left or right.
+        Given already defined rows, align them to left or right and return one joined string per row.
         '''
         config = config or DisplayActive.get()
 
@@ -323,7 +327,7 @@ class Display:
     def __init__(self,
             rows: tp.List[tp.List[tp.Tuple[str, int]]],
             config: DisplayConfig=None) -> None:
-        '''Define rows as a list of strings; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
+        '''Define rows as a list of lists, for each row; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
         '''
         config = config or DisplayActive.get()
         self._rows = rows
