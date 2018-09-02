@@ -1,6 +1,7 @@
 
 import typing as tp
 from collections import OrderedDict
+from collections import deque
 from itertools import chain
 
 import numpy as np
@@ -33,6 +34,8 @@ class HLocMeta(type):
         return self(key)
 
 class HLoc(metaclass=HLocMeta):
+    '''A container of hiearchical keys, that implements NULL slices or all lower dimensions that are not defined by construction.
+    '''
 
     __slots__ = (
             'key',
@@ -83,10 +86,29 @@ class IndexLevel:
         self.offset = offset
 
     def __len__(self):
-        return _sum_length(self)
+        '''
+        The length is the sum of all leaves
+        '''
+        count = 0
+        levels = [self]
+        while levels:
+            level = levels.pop()
+            if level.targets is None: # terminus
+                count += level.index.__len__()
+            else:
+                levels.extend(level.targets)
+        return count
 
-    def depths(self):
-        return _yield_depths(self)
+    def depths(self) -> tp.Generator[int, None, None]:
+        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the leaves
+        levels = [(self, 0)]
+        while levels:
+            level, depth = levels.pop()
+            if level.targets is None: # terminus
+                yield depth + 1
+            else:
+                next_depth = depth + 1
+                levels.extend([(lvl, next_depth) for lvl in level.targets])
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
@@ -101,6 +123,8 @@ class IndexLevel:
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
 
+
+
     def leaf_loc_to_iloc(self, key: tp.Iterable[tp.Hashable]) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
         '''
@@ -114,9 +138,22 @@ class IndexLevel:
                 # assume that k returns an integert
                 return pos + node.index.loc_to_iloc(k)
 
+    # def leaf_iloc_to_label(self, key: tp.Iterable[int]) -> tp.Hashable:
+    #     '''
+    #     Given leaf iloc key, return the terminal label
+    #     '''
+    #     node = self
+    #     pos = 0
+    #     for k in key:
+    #         if node.targets is not None:
+    #             node = node.targets[k]
+    #             pos += node.offset
+    #         else: # targets is None, meaning we are done
+    #             # assume that k returns an integert
+    #             return node.index.values[k - pos]
 
     def loc_to_iloc(self, key) -> GetItemKeyType:
-
+        # TODO: should this be a generator?
         # NOTE: this is similar to Index.loc_to_iloc
 
         if isinstance(key, slice):
@@ -140,60 +177,251 @@ class IndexLevel:
                 return key # keep as Boolean?
             return [self.leaf_loc_to_iloc(x) for x in key]
 
-        raise NotImplementedError()
+        if not isinstance(key, HLoc):
+            # assume it is a leaf loc tuple
+            return self.leaf_loc_to_iloc(key)
+
+        # collect all ilocs for all leaf indices matching HLoc patterns
+        ilocs = []
+        levels = deque() # order matters
+        levels.append((self, 0, 0))
+        while levels:
+            level, depth, offset = levels.popleft()
+            depth_key = key[depth]
+            next_offset = offset + level.offset
+
+            if level.targets is None:
+                try:
+                    ilocs.append(level.index.loc_to_iloc(depth_key, offset=next_offset))
+                except KeyError:
+                    pass
+            else: # target is iterable np.ndaarray
+                try:
+                    iloc = level.index.loc_to_iloc(depth_key) # no offset
+                except KeyError:
+                    pass
+                else:
+                    level_targets = level.targets[iloc] # get one or more IndexLevel objects
+                    next_depth = depth + 1
+                    # if not an ndarray, iloc has extracted a single IndexLevel
+                    if isinstance(level_targets, IndexLevel):
+                        levels.append((level_targets, next_depth, next_offset))
+                    else:
+                        levels.extend([(lvl, next_depth, next_offset)
+                                for lvl in level_targets])
+        if len(ilocs) == 1:
+            return ilocs[0]
+
+        # TODO: might be able to combine contiguous ilocs into a single slice
+        iloc = [] # combine into one flat iloc
+        length = self.__len__()
+        for part in ilocs:
+            if isinstance(part, slice):
+                iloc.extend(range(*part.indices(length)))
+            # just look for ints
+            elif isinstance(part, int):
+                iloc.append(part)
+            else: # assume it is an iterable
+                iloc.extend(part)
+        return iloc
+
+
+    # def yield_depth(self, depth_target):
+    #     '''
+    #     Yield values for a single depth.
+    #     '''
+
+    #     levels = deque() # order matters
+    #     levels.append((self, 0, None))
+    #     while levels:
+    #         level, depth, value_target = levels.popleft()
+
+    #         if level.targets is None:
+    #             for label in level.index.values:
+    #                 if depth_target == depth:
+    #                     yield label
+    #                 else:
+    #                     yield value_target
+
+    #         else: # target is iterable np.ndaarray
+    #             for label, level_target in zip(level.index.values, level.targets):
+    #                 if depth_target == depth:
+    #                     value_target = label
+    #                 levels.append((level_target, depth+1, value_target))
+
+
+    def get_labels_in_place(self):
+        depth_count = next(self.depths())
+        shape = self.__len__(), depth_count
+        labels = np.empty(shape, dtype=object)
+        row_count = 0
+
+        levels = deque() # order matters
+        levels.append((self, 0, None))
+
+        while levels:
+            level, depth, row_previous = levels.popleft()
+
+            if level.targets is None:
+                for label in level.index.values:
+                    labels[row_count, :] = row_previous
+                    labels[row_count, depth] = label
+                    row_count += 1
+
+            else: # target is iterable np.ndaarray
+                depth_next = depth + 1
+                for label, level_target in zip(level.index.values, level.targets):
+                    if row_previous is None:
+                        # shown to be faster to allocate entire row width
+                        row = np.empty(depth_count, object)
+                    else:
+                        row = row_previous.copy()
+                    row[depth] = label
+                    levels.append((level_target, depth_next, row))
+
+        return labels
+
+
+    def get_labels_tuple_concat(self):
+
+        depth_count = next(self.depths())
+        shape = self.__len__(), depth_count
+        labels = np.empty(shape, dtype=object)
+        for idx, row in enumerate(_yield_tuples(self)):
+            labels[idx, :] = row
+        labels.flags.writeable = False
+        return labels
+
+
+    get_labels = get_labels_in_place
+    # get_labels = get_labels_tuple_concat
+
+        # # store template of a row
+
+        # row_template = np.empty(depth_count, object)
+        # # store next iloc for each depth
+        # d_target_idx = np.empty(depth_count, int)
+        # d_level = np.empty(depth_count, object)
+
+
+        # # load initial values
+        # level = self
+        # for depth in range(depth_count):
+        #     d_target_idx[depth] = 0
+        #     d_level[depth] = level
+        #     if level.targets is not None:
+        #         level = level.targets[0]
+
+        # for row_count in range(shape[0]):
+
+        #     for depth in range(depth_count - 1, -1, -1):
+        #         print(row_count, depth)
+
+        #         if d_target_idx[depth] == len(d_level[depth].index.values):
+        #             # need to go to parent to get the next target
+        #             d_target_idx[depth] = 0
+
+        #             # TODO: need to walk up depths from depth to 0
+        #             # need to get next index at this level
+        #             depth_parent = depth - 1
+        #             if depth_parent < 0: #
+        #                 import ipdb; ipdb.set_trace()
+        #             level_parent = d_level[depth_parent]
+        #             d_target_idx[depth_parent] = d_target_idx[depth_parent] + 1
+        #             d_level[depth] = level_parent.targets[d_target_idx[depth_parent]]
+        #             print('updating level', depth)
+
+        #         # update row_template
+        #         print('d_level', d_level)
+        #         print('d_target_idx', d_target_idx)
+
+        #         # for each depth, update row_template as necessary
+        #         row_template[depth] = d_level[depth].index.values[d_target_idx[depth]]
+        #         # update d index values and idx
+
+
+        #         if d_level[depth].targets is None:
+        #             # terminus, need to update epth
+        #             d_target_idx[depth] += 1
+
+        #     print('row_template', row_template)
+        #     labels[row_count, :] = row_template
+
+
+
+        # levels = deque() # order matters
+        # levels.append((self, 0))
+        # while levels:
+        #     level, depth = levels.popleft()
+        #     print(level, depth, row_count, row_template)
+
+        #     if level.targets is None:
+        #         # at at a termins, we right one row for each index label
+        #         for label in level.index.values:
+        #             row_template[depth] = label
+        #             print(row_template)
+        #             labels[row_count, :] = row_template
+        #             row_count += 1
+        #     else:
+        #         for label, level_target in zip(level.index.values, level.targets):
+        #             row_template[depth] = label
+        #             levels.append((level_target, depth + 1))
+
+
+
 
 #-------------------------------------------------------------------------------
 # recursive functions for processing IndexLevels
 
-def _sum_length(level: IndexLevel, count=0):
-    if level.targets is None:
-        return count + level.index.__len__()
-    else:
-        for level in level.targets:
-            count += _sum_length(level)
-        return count
+# def _sum_length(level: IndexLevel, count=0):
+#     if level.targets is None:
+#         return count + level.index.__len__()
+#     else:
+#         for level in level.targets:
+#             count += _sum_length(level)
+#         return count
 
-def _yield_depths(level: IndexLevel, depth=0):
-    if level.targets is None:
-        yield depth + 1
-    else:
-        for level in level.targets:
-            yield from _yield_depths(level, depth + 1)
+# def _yield_depths(level: IndexLevel, depth=0):
+#     if level.targets is None:
+#         yield depth + 1
+#     else:
+#         for level in level.targets:
+#             yield from _yield_depths(level, depth + 1)
 
-def _yield_iloc(level: IndexLevel,
-        keys: HLoc,
-        depth: int,
-        offset: int):
-    '''
-    Generate iloc values given index level and iterator of keys.
-    '''
-    key = keys[depth]
-    if level.targets is None:
-        try:
-            yield level.index.loc_to_iloc(key, offset=offset + level.offset)
-        except KeyError:
-            pass
-    else:
-        # key may not be in this index; need to continue generator
-        try:
-            iloc = level.index.loc_to_iloc(key) # no offset
-        except KeyError:
-            iloc = None
-        # else: # can use else
-        if iloc is not None:
-            level_targets = level.targets[iloc] # get one or more IndexLevel objects
-            if not isinstance(level_targets, np.ndarray):
-                # if not an ndarray, iloc has extracted as single IndexLevel
-                yield from _yield_iloc(level_targets,
-                        keys,
-                        depth + 1,
-                        offset=offset + level.offset)
-            else: # target is iterable np.ndaarray
-                for level_target in level_targets:
-                    yield from _yield_iloc(level_target,
-                            keys,
-                            depth + 1,
-                            offset=offset + level.offset)
+# def _yield_iloc(level: IndexLevel,
+#         keys: HLoc,
+#         depth: int,
+#         offset: int):
+#     '''
+#     Generate iloc values given index level and iterator of keys.
+#     '''
+#     key = keys[depth]
+#     if level.targets is None:
+#         try:
+#             yield level.index.loc_to_iloc(key, offset=offset + level.offset)
+#         except KeyError:
+#             pass
+#     else:
+#         # key may not be in this index; need to continue generator
+#         try:
+#             iloc = level.index.loc_to_iloc(key) # no offset
+#         except KeyError:
+#             iloc = None
+#         # else: # can use else
+#         if iloc is not None:
+#             level_targets = level.targets[iloc] # get one or more IndexLevel objects
+#             if not isinstance(level_targets, np.ndarray):
+#                 # if not an ndarray, iloc has extracted as single IndexLevel
+#                 yield from _yield_iloc(level_targets,
+#                         keys,
+#                         depth + 1,
+#                         offset=offset + level.offset)
+#             else: # target is iterable np.ndaarray
+#                 for level_target in level_targets:
+#                     yield from _yield_iloc(level_target,
+#                             keys,
+#                             depth + 1,
+#                             offset=offset + level.offset)
 
 def _yield_tuples(
         level: IndexLevel,
@@ -362,15 +590,12 @@ class IndexHierarchy:
         self._depth = depths.pop()
         self._length = self._levels.__len__()
 
-        labels_shape = (self._length, self._depth)
 
         if labels is None:
-            labels = np.empty(labels_shape, dtype='object')
-            for idx, row in enumerate(_yield_tuples(self._levels)):
-                labels[idx, :] = row
-            labels.flags.writeable = False
+            # TODO: defer label construction until needed
+            labels = self._levels.get_labels()
         else:
-            assert labels.shape == labels_shape
+            assert labels.shape == (self._length, self._depth)
             # can keep without copying if already immutable
             labels = immutable_filter(labels)
 
@@ -414,7 +639,7 @@ class IndexHierarchy:
         return repr(self.display())
 
     def __len__(self) -> int:
-        return self._labels.__len__()
+        return self._length
 
     def __iter__(self):
         return self._labels.__iter__()
@@ -446,30 +671,8 @@ class IndexHierarchy:
         Given iterable of GetItemKeyTypes, apply to each level of levels.
 
         '''
-        if isinstance(key, slice):
-            return self._levels.loc_to_iloc(key)
-        elif isinstance(key, _KEY_ITERABLE_TYPES):
-            return self._levels.loc_to_iloc(key)
+        return self._levels.loc_to_iloc(key)
 
-        iloc_sources = []
-        for part in _yield_iloc(self._levels, key, 0, 0):
-            iloc_sources.append(part)
-
-        # if only one slice is obtained, best to return that
-        if len(iloc_sources) == 1:
-            return iloc_sources[0]
-
-        iloc = []
-        for part in iloc_sources:
-            if isinstance(part, slice):
-                iloc.extend(range(*part.indices(self.__len__())))
-            # shuould just look for ints
-            elif isinstance(part, int):
-                iloc.append(part)
-            else:
-                # assume it is an iterable
-                iloc.extend(part)
-        return iloc
 
     def _extract_iloc(self, key) -> 'IndexHierarchy':
         '''Extract a new index given an iloc key

@@ -90,24 +90,24 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(ih), 24)
 
-        post = ih.loc_to_iloc((
+        post = ih.loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
-                ['x', 'y']))
+                ['x', 'y']])
         # this will break if we recognize this can be a slice
         self.assertEqual(post, list(range(len(ih))))
 
-        post = ih.loc_to_iloc((
+        post = ih.loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
                 slice('2018-01-01', '2018-01-04'),
-                'x'))
+                'x'])
 
         self.assertEqual(post, list(range(0, len(ih), 2)))
 
-        post = ih.loc_to_iloc((
+        post = ih.loc_to_iloc(HLoc[
                 'C',
                 '2018-01-03',
-                'y'))
+                'y'])
 
         self.assertEqual(post, 21)
 
@@ -219,38 +219,38 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_tree(tree)
 
-        post = ih.loc_to_iloc(('I', 'B', 1))
+        post = ih.loc_to_iloc(HLoc['I', 'B', 1])
         self.assertEqual(post, 2)
 
-        post = ih.loc_to_iloc(('I', 'B', 3))
+        post = ih.loc_to_iloc(HLoc['I', 'B', 3])
         self.assertEqual(post, 4)
 
-        post = ih.loc_to_iloc(('II', 'A', 3))
+        post = ih.loc_to_iloc(HLoc['II', 'A', 3])
         self.assertEqual(post, 9)
 
-        post = ih.loc_to_iloc(('II', 'A', slice(None)))
+        post = ih.loc_to_iloc(HLoc['II', 'A'])
         self.assertEqual(post, slice(7, 10))
 
-        post = ih.loc_to_iloc(('I', 'C', slice(None)))
+        post = ih.loc_to_iloc(HLoc['I', 'C'])
         self.assertEqual(post, slice(5, 7))
 
 
-        post = ih.loc_to_iloc(('I', ['A', 'C'], slice(None)))
+        post = ih.loc_to_iloc(HLoc['I', ['A', 'C']])
         self.assertEqual(post, [0, 1, 5, 6])
 
 
-        post = ih.loc_to_iloc((slice(None), 'A', slice(None)))
+        post = ih.loc_to_iloc(HLoc[:, 'A', :])
         self.assertEqual(post, [0, 1, 7, 8, 9])
 
 
-        post = ih.loc_to_iloc((slice(None), 'C', 3))
+        post = ih.loc_to_iloc(HLoc[:, 'C', 3])
         self.assertEqual(post, 6)
 
 
-        post = ih.loc_to_iloc((slice(None), slice(None), 3))
+        post = ih.loc_to_iloc(HLoc[:, :, 3])
         self.assertEqual(post, [4, 6, 9])
 
-        post = ih.loc_to_iloc((slice(None), slice(None), 1))
+        post = ih.loc_to_iloc(HLoc[:, :, 1])
         self.assertEqual(post, [0, 2, 7, 10])
 
         # TODO: not sure what to do when a multiple selection, [1, 2], is a superset of the leaf index; we do not match with a normal loc

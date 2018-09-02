@@ -164,11 +164,14 @@ class SampleData:
                 continue
             cls._store[k] = v
 
-
         # additional resources
         cls._store['label_str'] = list(
                 ''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
 
+        cls._store['label_tuple2_int_10000'] = [(int(x / 10), x)
+                for x in range(10000)]
+        cls._store['label_tuple3_int_100000'] = [(int(x / 100), int(x / 10), x)
+                for x in range(100000)]
 
     @classmethod
     def get(cls, key):
@@ -205,6 +208,56 @@ class IndexHierarchy2d_from_product(PerfTest):
         labels1 = SampleData.get('label_str')[:cls._size1]
         ih = sf.IndexHierarchy.from_product(labels0, labels1)
         assert len(ih) == cls._size0 * cls._size1
+
+class IndexHierarchy3d_from_product(PerfTest):
+
+    NUMBER = 10
+
+    _size0 = 10
+    _size1 = 100
+    _size2 = 1000
+
+    @classmethod
+    def pd(cls):
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        labels2 = SampleData.get('label_str')[:cls._size2]
+        ih = pd.MultiIndex.from_product((labels0, labels1, labels2))
+        assert len(ih) == cls._size0 * cls._size1 * cls._size2
+
+    @classmethod
+    def sf(cls):
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        labels2 = SampleData.get('label_str')[:cls._size2]
+        ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
+        assert len(ih) == cls._size0 * cls._size1 * cls._size2
+
+
+class IndexHierarchy2d_from_labels(PerfTest):
+
+    NUMBER = 100
+
+    @classmethod
+    def pd(cls):
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple2_int_10000'))
+
+    @classmethod
+    def sf(cls):
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple2_int_10000'))
+
+
+class IndexHierarchy3d_from_labels(PerfTest):
+
+    NUMBER = 10
+
+    @classmethod
+    def pd(cls):
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple3_int_100000'))
+
+    @classmethod
+    def sf(cls):
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple3_int_100000'))
 
 
 #-------------------------------------------------------------------------------
