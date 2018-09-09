@@ -468,6 +468,10 @@ def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
             return result
     return result
 
+def _array2d_to_tuples(array: np.ndarray):
+    for row in array: # assuming 2d
+        yield tuple(row)
+
 #-------------------------------------------------------------------------------
 
 class GetItem:

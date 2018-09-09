@@ -36,6 +36,7 @@ from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _array_set_ufunc_many
+from static_frame.core.util import _array2d_to_tuples
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import ExtractInterface
@@ -53,9 +54,13 @@ from static_frame.core.display import Display
 
 
 from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.series import Series
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.series import Series
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
+
+from static_frame.core.index import Index
 
 
 
@@ -94,7 +99,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     _COLUMN_CONSTRUCTOR = Index
-
+    _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchy.from_any
 
     @classmethod
     def from_concat(cls,
@@ -454,6 +459,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         # TODO: support construction from Series?
 
+        blocks_constructor = None
+
         if isinstance(data, TypeBlocks):
             if own_data:
                 self._blocks = data
@@ -480,41 +487,75 @@ class Frame(metaclass=MetaOperatorDelegate):
                         yield values
             self._blocks = TypeBlocks.from_blocks(blocks())
 
-        elif data is not None:
+        elif data is None and columns is None:
+            # will have shape of 0,0
+            self._blocks = TypeBlocks.from_none()
+
+        elif not hasattr(data, '__len__') and not isinstance(data, str):
+            # data is not None, single element to scale to size of index and columns
+            def blocks_constructor(shape):
+                a = np.full(shape, data)
+                a.flags.writeable = False
+                self._blocks = TypeBlocks.from_blocks(a)
+
+        else:
+            # could be list of lists to be made into an array
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
 
-        else:
-            # will have shape of 0,0
-            self._blocks = TypeBlocks.from_none()
 
-        row_count, col_count = self._blocks._shape
+        # counts can be zero (not None) if _block was created but is empty
+        row_count, col_count = self._blocks._shape if not blocks_constructor else (None, None)
+
+        #-----------------------------------------------------------------------
+        # index assignment
 
         # columns could be an np array, or an Index instance
         if columns is None:
+            if col_count is None:
+                raise Exception('cannot create columns when no data given')
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
                     loc_is_iloc=True)
         elif own_columns or (hasattr(columns, 'STATIC') and columns.STATIC):
+            # if it is a STATIC index we can assign directly
             self._columns = columns
+        elif IndexHierarchy.is_constructable(columns):
+            self._columns = self._COLUMN_HIERARCHY_CONSTRUCTOR(columns)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
 
-        # TODO: need to support creation of an empty Frame, by which this will fail
-        if len(self._columns) != col_count:
-            raise Exception('columns provided do not have correct size')
 
         if index is None:
+            if row_count is None:
+                raise Exception('cannot create rows when no data given')
             self._index = Index(range(row_count), loc_is_iloc=True)
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
+        elif IndexHierarchy.is_constructable(columns):
+            # always immutable
+            self._index = IndexHierarchy.from_any(index)
         else:
             self._index = Index(index)
 
-        # permit bypassing this check if the row_count is zero
+        # permit bypassing this check if the
+
+        if blocks_constructor:
+            row_count = self._index.__len__()
+            col_count = self._columns.__len__()
+            blocks_constructor((row_count, col_count))
+
         if row_count and len(self._index) != row_count:
+            # row count might be 0 for an empty DF
             raise Exception('index provided do not have correct size')
+        if len(self._columns) != col_count:
+            import ipdb; ipdb.set_trace()
+            raise Exception('columns provided do not have correct size')
+
+
+        #-----------------------------------------------------------------------
+        # attributes
 
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
@@ -1423,12 +1464,23 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
         '''
 
+
+        if isinstance(self._index, IndexHierarchy):
+            index_values = list(_array2d_to_tuples(self._index.values))
+        else:
+            index_values = self._index.values
+
+        if isinstance(self._columns, IndexHierarchy):
+            columns_values = list(_array2d_to_tuples(self._columns.values))
+        else:
+            columns_values = self._columns.values
+
         if axis == 1:
-            major = self._index.values
-            minor = self._columns.values
+            major = index_values
+            minor = columns_values
         elif axis == 0:
-            major = self._columns.values
-            minor = self._index.values
+            major = columns_values
+            minor = index_values
         else:
             raise NotImplementedError()
 
@@ -1512,6 +1564,7 @@ class FrameGO(Frame):
         )
 
     _COLUMN_CONSTRUCTOR = IndexGO
+    _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO.from_any
 
 
     def __setitem__(self, key, value):
@@ -1535,7 +1588,10 @@ class FrameGO(Frame):
                     value = np.array(value)
                 value.flags.writeable = False
 
-            if value.ndim != 1 or len(value) != self._blocks._shape[0]:
+            if value.ndim != 1 or (
+                    self._blocks._shape[0] > 0 and
+                    len(value) != self._blocks._shape[0]):
+                # block may have zero shape if created without columns
                 raise Exception('incorrectly sized, unindexed value')
             self._blocks.append(value)
 

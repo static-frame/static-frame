@@ -35,8 +35,10 @@ from static_frame.core.index import IndexYearMonth
 from static_frame.core.index import IndexYear
 
 
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexLevel
+from static_frame.core.index_hierarchy import IndexLevelGO
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import HLoc
 
 from static_frame.core.series import Series

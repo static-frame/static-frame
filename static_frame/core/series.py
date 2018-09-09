@@ -16,6 +16,7 @@ from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
+from static_frame.core.util import _array2d_to_tuples
 
 
 from static_frame.core.util import CallableOrMapping
@@ -98,6 +99,9 @@ class Series(metaclass=MetaOperatorDelegate):
             ) -> None:
         #-----------------------------------------------------------------------
         # values assignment
+
+        values_constructor = None # if deferred
+
         # expose .values directly as it is immutable
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
@@ -117,15 +121,20 @@ class Series(metaclass=MetaOperatorDelegate):
                     and hasattr(values, '__iter__')
                     and hasattr(values, '__len__')):
                 self.values = np.fromiter(values, dtype=dtype, count=len(values))
+                self.values.flags.writeable = False
             elif hasattr(values, '__len__'):
                 self.values = np.array(values, dtype=dtype)
+                self.values.flags.writeable = False
             elif hasattr(values, '__next__'): # a generator-like
                 self.values = np.array(tuple(values), dtype=dtype)
+                self.values.flags.writeable = False
             else: # it must be a single item
                 if not hasattr(index, '__len__'):
                     raise Exception('cannot create a Series from a single item if passed index has no length.')
-                self.values = np.full(len(index), values, dtype=dtype)
-            self.values.flags.writeable = False
+                # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
+                def values_constructor(shape):
+                    self.values = np.full(shape, values, dtype=dtype)
+                    self.values.flags.writeable = False
         else: # is numpy
             if dtype is not None and dtype != values.dtype:
                 raise Exception('type requested is not the type given') # what to do here?
@@ -137,18 +146,19 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if index is None: # create an integer index
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
-        # elif isinstance(index, (Index, IndexHierarchy)):
-        #     # do not make a copy of it is an immutable index
-        #     self._index = index
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        # elif isinstance(index, IndexGO):
-        #     # if a grow only index need to make immutable
-        #     self._index = Index(index)
+        elif IndexHierarchy.is_constructable(index):
+            self._index = IndexHierarchy.from_any(index)
         else: # let index handle instantiation
             self._index = Index(index)
 
-        if len(self.values) != len(self._index):
+        shape = self._index.__len__()
+
+        if values_constructor:
+            values_constructor(shape) # updates self.values
+
+        if len(self.values) != shape:
             raise Exception('values and index do not match length')
 
         #-----------------------------------------------------------------------
@@ -637,7 +647,12 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a tuple of tuples of index label, value.
         '''
-        return tuple(zip(self._index._labels, self.values))
+        if isinstance(self._index, IndexHierarchy):
+            index_values = list(_array2d_to_tuples(self._index.values))
+        else:
+            index_values = self._index.values
+
+        return tuple(zip(index_values, self.values))
 
     def to_pandas(self):
         '''

@@ -13,12 +13,45 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYear
 
 from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
+from static_frame import IndexLevelGO
 from static_frame import HLoc
 
 from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
+
+
+    def test_index_level_a(self):
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+        targets = np.array(
+                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
+
+        level0 = IndexLevelGO(index=groups, targets=targets)
+        level1 = level0.to_index_level()
+
+        groups = IndexGO(('C', 'D'))
+        observations = IndexGO(('x', 'y', 'z'))
+        targets = np.array(
+                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=3)))
+
+        level2 = IndexLevelGO(index=groups, targets=targets)
+
+        level0.extend(level2)
+
+        self.assertEqual(len(level0.get_labels()), 10)
+        self.assertEqual(len(level1.get_labels()), 4)
+        self.assertEqual(len(level2.get_labels()), 6)
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual([lvl.offset for lvl in level0.targets], [0, 2, 4, 7])
+
+        # import ipdb; ipdb.set_trace()
+
+
+
 
 
 
@@ -47,6 +80,58 @@ class TestUnit(TestCase):
 
         self.assertEqual(lvl0.leaf_loc_to_iloc(('B', '2018-01-04', 'y'),), 15)
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
+
+
+    def test_level_append_a(self):
+
+        category = IndexGO(('I', 'II'))
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+
+        lvl2a = IndexLevelGO(index=observations)
+        lvl2b = IndexLevelGO(index=observations, offset=2)
+        lvl2_targets = np.array((lvl2a, lvl2b))
+        # must defensively copy index
+        assert id(lvl2a.index) != id(lvl2b.index)
+
+        lvl1a = IndexLevelGO(index=groups,
+                targets=lvl2_targets,
+                offset=0)
+
+
+        # must create new index levels for each lower node
+        lvl2c = IndexLevelGO(index=observations)
+        lvl2d = IndexLevelGO(index=observations, offset=2)
+        lvl2_targets = np.array((lvl2c, lvl2d))
+        # must defensively copy index
+        assert id(lvl2c.index) != id(lvl2d.index)
+
+        lvl1b = IndexLevelGO(index=groups,
+                targets=lvl2_targets,
+                offset=len(lvl1a))
+
+        # we need as many targets as len(index)
+        lvl0 = IndexLevelGO(index=category,
+                targets=np.array((lvl1a, lvl1b)))
+
+
+        lvl0.append(('II', 'B', 'z')) # depth not found is 2
+        self.assertEqual(
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                list(range(9)))
+
+        lvl0.append(('II', 'C', 'a')) # depth not found is 1
+        self.assertEqual(
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                list(range(10)))
+
+        lvl0.append(('III', 'A', 'a')) # 0
+        self.assertEqual(
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                list(range(11)))
+
+
+
 
     def test_hierarchy_loc_to_iloc_a(self):
 
@@ -337,27 +422,86 @@ class TestUnit(TestCase):
                 s.loc[HLoc[:, 'A']].values.tolist(),
                 [0, 1, 4, 5])
 
+    def test_hierarchy_series_a(self):
+        s1 = Series(23, index=dict(a=(1,2,3)))
+        self.assertEqual(s1.values.tolist(), [23, 23, 23])
+
+        s2 = Series(3, index=[Index(('a', 'b')), Index((1,2))])
+        self.assertEqual(s2.to_pairs(),
+                ((('a', 1), 3), (('a', 2), 3), (('b', 1), 3), (('b', 2), 3)))
+
+
     def test_hierarchy_frame_a(self):
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
-                        ('A', (1, 2)), ('B', (1, 2))
+                        ('A', (1,)), ('B', (1, 2))
                         ])
                 ),
                 ('II', OD([
-                        ('A', (1, 2)), ('B', (1, 2))
+                        ('A', (1,)), ('B', (1, 2))
                         ])
                 ),
                 ])
 
         ih = IndexHierarchy.from_tree(tree)
 
-        data = np.arange(8*8).reshape(8, 8)
-        f = Frame(data, index=ih, columns=ih)
-        self.assertEqual(len(f.to_pairs(0)), 8)
+        data = np.arange(6*6).reshape(6, 6)
+        f1 = Frame(data, index=ih, columns=ih)
+        # self.assertEqual(len(f.to_pairs(0)), 8)
 
 
+        f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200)
 
+        post = f2.to_pairs(0)
+        self.assertEqual(post,
+                ((('I', 'A', 1), ((('I', 'A', 1), 0), (('I', 'B', 1), 6), (('I', 'B', 2), 12), (('II', 'A', 1), 18), (('II', 'B', 1), 24), (('II', 'B', 2), 30))), (('I', 'B', 1), ((('I', 'A', 1), 1), (('I', 'B', 1), 7), (('I', 'B', 2), 13), (('II', 'A', 1), 19), (('II', 'B', 1), 25), (('II', 'B', 2), 31))), (('I', 'B', 2), ((('I', 'A', 1), 2), (('I', 'B', 1), 8), (('I', 'B', 2), 14), (('II', 'A', 1), 20), (('II', 'B', 1), 26), (('II', 'B', 2), 32))), (('II', 'A', 1), ((('I', 'A', 1), 3), (('I', 'B', 1), 9), (('I', 'B', 2), 200), (('II', 'A', 1), 21), (('II', 'B', 1), 27), (('II', 'B', 2), 33))), (('II', 'B', 1), ((('I', 'A', 1), 4), (('I', 'B', 1), 10), (('I', 'B', 2), 16), (('II', 'A', 1), 22), (('II', 'B', 1), 28), (('II', 'B', 2), 34))), (('II', 'B', 2), ((('I', 'A', 1), 5), (('I', 'B', 1), 11), (('I', 'B', 2), 17), (('II', 'A', 1), 23), (('II', 'B', 1), 29), (('II', 'B', 2), 35))))
+        )
+
+
+        f3 = f1.assign.loc[('I', 'B', 2):, HLoc[:, :, 2]](200)
+
+        self.assertEqual(f3.to_pairs(0),
+                ((('I', 'A', 1), ((('I', 'A', 1), 0), (('I', 'B', 1), 6), (('I', 'B', 2), 12), (('II', 'A', 1), 18), (('II', 'B', 1), 24), (('II', 'B', 2), 30))), (('I', 'B', 1), ((('I', 'A', 1), 1), (('I', 'B', 1), 7), (('I', 'B', 2), 13), (('II', 'A', 1), 19), (('II', 'B', 1), 25), (('II', 'B', 2), 31))), (('I', 'B', 2), ((('I', 'A', 1), 2), (('I', 'B', 1), 8), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))), (('II', 'A', 1), ((('I', 'A', 1), 3), (('I', 'B', 1), 9), (('I', 'B', 2), 15), (('II', 'A', 1), 21), (('II', 'B', 1), 27), (('II', 'B', 2), 33))), (('II', 'B', 1), ((('I', 'A', 1), 4), (('I', 'B', 1), 10), (('I', 'B', 2), 16), (('II', 'A', 1), 22), (('II', 'B', 1), 28), (('II', 'B', 2), 34))), (('II', 'B', 2), ((('I', 'A', 1), 5), (('I', 'B', 1), 11), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))))
+        )
+
+
+    def test_hierarchy_index_go_a(self):
+
+        OD = OrderedDict
+        tree1 = OD([
+                ('I', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ])
+        ih1 = IndexHierarchyGO.from_tree(tree1)
+
+        tree2 = OD([
+                ('III', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ('IV', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ])
+        ih2 = IndexHierarchyGO.from_tree(tree2)
+
+        ih1.extend(ih2)
+
+        # self.assertEqual(ih1.loc_to_iloc(('IV', 'B', 2)), 11)
+        self.assertEqual(len(ih2), 6)
+
+        # need tuple here to distinguish from iterable type selection
+        self.assertEqual([ih1.loc_to_iloc(tuple(v)) for v in ih1.values],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+                )
 
 if __name__ == '__main__':
     unittest.main()

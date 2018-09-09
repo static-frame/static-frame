@@ -46,6 +46,37 @@ class TestUnit(TestCase):
                 (('b', (('x', 3), ('y', 4))), ('a', (('x', 1), ('y', 2)))))
 
 
+    def test_frame_init_b(self):
+        # test unusual instantiation cases
+
+        # create a frame with a single value
+        f1 = Frame(1, index=(1,2), columns=(3,4,5))
+        self.assertEqual(f1.to_pairs(0),
+                ((3, ((1, 1), (2, 1))), (4, ((1, 1), (2, 1))), (5, ((1, 1), (2, 1))))
+                )
+
+        # with columns not defined, we create a DF with just an index
+        f2 = FrameGO(None, index=(1,2))
+        f2['a'] = (-1, -1)
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((1, -1), (2, -1))),)
+                )
+
+        # with columns and index defined, we fill the value even if None
+        f3 = Frame(None, index=(1,2), columns=(3,4,5))
+        self.assertEqual(f3.to_pairs(0),
+                ((3, ((1, None), (2, None))), (4, ((1, None), (2, None))), (5, ((1, None), (2, None)))))
+
+        # auto populated index/columns based on shape
+        f4 = Frame([[1,2], [3,4], [5,6]])
+        self.assertEqual(f4.to_pairs(0),
+                ((0, ((0, 1), (1, 3), (2, 5))), (1, ((0, 2), (1, 4), (2, 6))))
+                )
+        self.assertTrue(f4._index._loc_is_iloc)
+        self.assertTrue(f4._columns._loc_is_iloc)
+
+
+
     def test_frame_from_pairs_a(self):
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))

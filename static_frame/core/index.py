@@ -112,8 +112,6 @@ class LocMap:
             return label_to_pos[key] + offset
         return label_to_pos[key]
 
-
-
 #-------------------------------------------------------------------------------
 
 class Index(metaclass=MetaOperatorDelegate):
@@ -302,7 +300,6 @@ class Index(metaclass=MetaOperatorDelegate):
         # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
         if self._recache:
             self._update_array_cache()
-        # return self.__class__(labels=self._labels)
         return self.__class__(labels=self)
 
 
@@ -513,7 +510,7 @@ class IndexGO(Index):
     # grow only mutation
 
     def append(self, value):
-        '''Add a value
+        '''append a value
         '''
         if value in self._map:
             raise KeyError('duplicate key append attempted', value)
@@ -533,7 +530,7 @@ class IndexGO(Index):
 
 
     def extend(self, values: _KEY_ITERABLE_TYPES):
-        '''Add multiple values
+        '''Append multiple values
         Args:
             values: can be a generator.
         '''
