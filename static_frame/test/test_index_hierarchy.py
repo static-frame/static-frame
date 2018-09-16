@@ -53,7 +53,36 @@ class TestUnit(TestCase):
 
 
 
+    def test_index_level_dtypes_a(self):
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+        targets = np.array(
+                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
 
+        level0 = IndexLevelGO(index=groups, targets=targets)
+        self.assertEqual([d.kind for d in level0.dtypes()], ['U', 'U', 'U'])
+
+
+
+    def test_index_level_get_labels_a(self):
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+        targets = np.array(
+                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
+
+        level0 = IndexLevelGO(index=groups, targets=targets)
+
+        self.assertEqual(level0.get_labels().tolist(),
+                [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y']])
+
+        self.assertEqual(level0.get_labels().dtype.kind, 'U')
+
+        groups = IndexGO((1, 2))
+        observations = IndexGO((10, 20))
+        targets = np.array(
+                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
+        level1 = IndexLevelGO(index=groups, targets=targets)
+        self.assertEqual(level1.get_labels().dtype.kind, 'i')
 
 
     def test_level_leaf_loc_to_iloc_a(self):
@@ -127,10 +156,14 @@ class TestUnit(TestCase):
                 list(range(10)))
 
         lvl0.append(('III', 'A', 'a')) # 0
+
         self.assertEqual(
                 [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
                 list(range(11)))
 
+        self.assertEqual(
+                lvl0.get_labels().tolist(),
+                [['I', 'A', 'x'], ['I', 'A', 'y'], ['I', 'B', 'x'], ['I', 'B', 'y'], ['II', 'A', 'x'], ['II', 'A', 'y'], ['II', 'B', 'x'], ['II', 'B', 'y'], ['II', 'B', 'z'], ['II', 'C', 'a'], ['III', 'A', 'a']])
 
 
 
@@ -600,6 +633,26 @@ class TestUnit(TestCase):
         post = ih1.union(ih2)
         self.assertEqual(post.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
+
+
+
+    def test_hierarchy_operators_a(self):
+
+        labels = (
+                (1, 1),
+                (1, 2),
+                (2, 1),
+                (2, 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual((ih1*2).tolist(),
+                [[2, 2], [2, 4], [4, 2], [4, 4]])
+
+        self.assertEqual((-ih1).tolist(),
+                [[-1, -1], [-1, -2], [-2, -1], [-2, -2]])
+
+
 
 if __name__ == '__main__':
     unittest.main()

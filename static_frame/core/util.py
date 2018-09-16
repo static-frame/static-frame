@@ -490,10 +490,17 @@ def _ufunc2d(func, array, other):
         return np.array(sorted(result)) # set dtype?
     else:
         assert array.shape[1] == other.shape[1]
+        # this does will work if dyptes are differently sized strings, such as U2 and U3
+        dtype = _resolve_dtype(array.dtype, other.dtype)
+        if array.dtype != dtype:
+            array = array.astype(dtype)
+        if other.dtype != dtype:
+            other = other.astype(dtype)
+
         width = array.shape[1]
         array_view = array.view([('', array.dtype)] * width)
         other_view = other.view([('', other.dtype)] * width)
-        return func(array_view, other_view).view(array.dtype).reshape(-1, width)
+        return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 
 def _intersect2d(array, other) -> np.ndarray:

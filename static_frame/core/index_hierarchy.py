@@ -13,11 +13,15 @@ from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import _INT_TYPES
 from static_frame.core.util import _intersect2d
 from static_frame.core.util import _union2d
+from static_frame.core.util import _resolve_dtype_iter
+
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import CallableOrMapping
+
+from static_frame.core.operator_delegate import MetaOperatorDelegate
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -131,7 +135,7 @@ class IndexLevel:
         return count
 
     def depths(self) -> tp.Generator[int, None, None]:
-        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves, but this is faster than using a deque
+        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         levels = [(self, 0)]
         while levels:
             level, depth = levels.pop()
@@ -140,6 +144,16 @@ class IndexLevel:
             else:
                 next_depth = depth + 1
                 levels.extend([(lvl, next_depth) for lvl in level.targets])
+
+    def dtypes(self) -> tp.Generator[int, None, None]:
+        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
+        levels = [self]
+        while levels:
+            level = levels.pop()
+            # use pulbic interface, as this might be an IndexGO
+            yield level.index.values.dtype
+            if level.targets is not None: # not terminus
+                levels.extend(level.targets)
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
@@ -248,11 +262,11 @@ class IndexLevel:
         '''
         Return an immutable NumPy 2D array of all labels found in this IndexLevels instance.
         '''
+        # assume uniform depths
         depth_count = next(self.depths())
         shape = self.__len__(), depth_count
-
-        # TODO: avoid using object dtype if possible; get dtype from analysis of contained indices?
-        labels = np.empty(shape, dtype=object)
+        dtype = _resolve_dtype_iter(self.dtypes())
+        labels = np.empty(shape, dtype=dtype)
         row_count = 0
 
         levels = deque() # order matters
@@ -273,7 +287,7 @@ class IndexLevel:
                 for label, level_target in zip(level.index.values, level.targets):
                     if row_previous is None:
                         # shown to be faster to allocate entire row width
-                        row = np.empty(depth_count, object)
+                        row = np.empty(depth_count, dtype=dtype)
                     else:
                         row = row_previous.copy()
                     row[depth] = label
@@ -397,7 +411,7 @@ class IndexLevelGO(IndexLevel):
 
 
 #-------------------------------------------------------------------------------
-class IndexHierarchy:
+class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
     __slots__ = (
             '_levels', # IndexLevel
@@ -712,6 +726,45 @@ class IndexHierarchy:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
+
+    #---------------------------------------------------------------------------
+    # operators
+
+    def _ufunc_unary_operator(self, operator: tp.Callable) -> np.ndarray:
+        '''Always return an NP array.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        array = operator(self._labels)
+        array.flags.writeable = False
+        return array
+
+    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
+        '''
+        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if issubclass(other.__class__, Index):
+            other = other.values # operate on labels to labels
+        array = operator(self._labels, other)
+        array.flags.writeable = False
+        return array
+
+
+    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
+        '''Axis argument is required but is irrelevant.
+
+        Args:
+            dtype: Not used in 1D application, but collected here to provide a uniform signature.
+        '''
+        return _ufunc_skipna_1d(
+                array=self._labels,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna)
 
     #---------------------------------------------------------------------------
     # export
