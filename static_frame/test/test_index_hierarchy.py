@@ -9,6 +9,7 @@ from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import Series
 from static_frame import Frame
+from static_frame import FrameGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
 
@@ -423,10 +424,12 @@ class TestUnit(TestCase):
                 [0, 1, 4, 5])
 
     def test_hierarchy_series_a(self):
-        s1 = Series(23, index=dict(a=(1,2,3)))
+        f = IndexHierarchy.from_tree
+        s1 = Series(23, index=f(dict(a=(1,2,3))))
         self.assertEqual(s1.values.tolist(), [23, 23, 23])
 
-        s2 = Series(3, index=[Index(('a', 'b')), Index((1,2))])
+        f = IndexHierarchy.from_product
+        s2 = Series(3, index=f(Index(('a', 'b')), Index((1,2))))
         self.assertEqual(s2.to_pairs(),
                 ((('a', 1), 3), (('a', 2), 3), (('b', 1), 3), (('b', 2), 3)))
 
@@ -466,6 +469,42 @@ class TestUnit(TestCase):
         )
 
 
+
+    def test_hierarchy_frame_b(self):
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1,)), ('B', (1, 2))
+                        ])
+                ),
+                ])
+
+        ih = IndexHierarchyGO.from_tree(tree)
+        data = np.arange(6*6).reshape(6, 6)
+        # TODO: this only works if own_columns is True for now
+        f1 = FrameGO(data, index=range(6), columns=ih, own_columns=True)
+        f1[('II', 'B', 3)] = 0
+
+        f2 = f1[HLoc[:, 'B']]
+        self.assertEqual(f2.shape, (6, 5))
+        self.assertEqual(f2.to_pairs(0),
+                ((('I', 'B', 1), ((0, 1), (1, 7), (2, 13), (3, 19), (4, 25), (5, 31))), (('I', 'B', 2), ((0, 2), (1, 8), (2, 14), (3, 20), (4, 26), (5, 32))), (('II', 'B', 1), ((0, 4), (1, 10), (2, 16), (3, 22), (4, 28), (5, 34))), (('II', 'B', 2), ((0, 5), (1, 11), (2, 17), (3, 23), (4, 29), (5, 35))), (('II', 'B', 3), ((0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0))))
+                )
+
+        f3 = f1[HLoc[:, :, 1]]
+        self.assertEqual(f3.to_pairs(0), ((('I', 'A', 1), ((0, 0), (1, 6), (2, 12), (3, 18), (4, 24), (5, 30))), (('I', 'B', 1), ((0, 1), (1, 7), (2, 13), (3, 19), (4, 25), (5, 31))), (('II', 'A', 1), ((0, 3), (1, 9), (2, 15), (3, 21), (4, 27), (5, 33))), (('II', 'B', 1), ((0, 4), (1, 10), (2, 16), (3, 22), (4, 28), (5, 34)))))
+
+
+        f4 = f1.loc[[2, 5], HLoc[:, 'A']]
+        self.assertEqual(f4.to_pairs(0),
+                ((('I', 'A', 1), ((2, 12), (5, 30))), (('II', 'A', 1), ((2, 15), (5, 33)))))
+
+
+
     def test_hierarchy_index_go_a(self):
 
         OD = OrderedDict
@@ -502,6 +541,65 @@ class TestUnit(TestCase):
         self.assertEqual([ih1.loc_to_iloc(tuple(v)) for v in ih1.values],
                 [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
                 )
+
+
+
+    def test_hierarchy_relabel_a(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+
+        ih.relabel({('I', 'B'): ('I', 'C')})
+
+        ih2 = ih.relabel({('I', 'B'): ('I', 'C')})
+
+        self.assertEqual(ih2.values.tolist(),
+                [['I', 'A'], ['I', 'C'], ['II', 'A'], ['II', 'B']])
+
+        with self.assertRaises(Exception):
+            ih3 = ih.relabel({('I', 'B'): ('I', 'C', 1)})
+
+        ih3 = ih.relabel(lambda x: tuple(e.lower() for e in x))
+
+        self.assertEqual(
+                ih3.values.tolist(),
+                [['i', 'a'], ['i', 'b'], ['ii', 'a'], ['ii', 'b']])
+
+
+
+    def test_hierarchy_intersection_a(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                ('II', 'A'),
+                ('II', 'B'),
+                ('III', 'A'),
+                ('III', 'B'),
+                )
+
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        post = ih1.intersection(ih2)
+        self.assertEqual(post.values.tolist(),
+                [['II', 'A'], ['II', 'B']])
+
+        post = ih1.union(ih2)
+        self.assertEqual(post.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
 
 if __name__ == '__main__':
     unittest.main()

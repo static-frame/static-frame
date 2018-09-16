@@ -99,7 +99,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     _COLUMN_CONSTRUCTOR = Index
-    _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchy.from_any
+    # _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchy.from_any
 
     @classmethod
     def from_concat(cls,
@@ -521,8 +521,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif own_columns or (hasattr(columns, 'STATIC') and columns.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
-        elif IndexHierarchy.is_constructable(columns):
-            self._columns = self._COLUMN_HIERARCHY_CONSTRUCTOR(columns)
+        # elif IndexHierarchy.is_constructable(columns):
+        #     self._columns = self._COLUMN_HIERARCHY_CONSTRUCTOR(columns)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
 
@@ -533,9 +533,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._index = Index(range(row_count), loc_is_iloc=True)
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        elif IndexHierarchy.is_constructable(columns):
-            # always immutable
-            self._index = IndexHierarchy.from_any(index)
+        # elif IndexHierarchy.is_constructable(columns):
+        #     # always immutable
+        #     self._index = IndexHierarchy.from_any(index)
         else:
             self._index = Index(index)
 
@@ -1463,8 +1463,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
         '''
-
-
         if isinstance(self._index, IndexHierarchy):
             index_values = list(_array2d_to_tuples(self._index.values))
         else:
@@ -1564,7 +1562,7 @@ class FrameGO(Frame):
         )
 
     _COLUMN_CONSTRUCTOR = IndexGO
-    _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO.from_any
+    # _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO.from_any
 
 
     def __setitem__(self, key, value):
@@ -1646,9 +1644,10 @@ class FrameAssign:
 
         blocks = self.data._blocks.extract_iloc_assign(self.iloc_key, value)
         # can own the newly created block given by extract
+        # pass Index objects unchanged, so as to let types be handled elsewhere
         return self.data.__class__(
                 data=blocks,
-                columns=self.data.columns.values,
+                columns=self.data.columns,
                 index=self.data.index,
                 own_data=True)
 

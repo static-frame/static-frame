@@ -10,11 +10,14 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import _NULL_SLICE
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_STOP_ATTR
+from static_frame.core.util import _INT_TYPES
+from static_frame.core.util import _intersect2d
+from static_frame.core.util import _union2d
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
 from static_frame.core.util import immutable_filter
-
+from static_frame.core.util import CallableOrMapping
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -235,7 +238,7 @@ class IndexLevel:
             if isinstance(part, slice):
                 iloc.extend(range(*part.indices(length)))
             # just look for ints
-            elif isinstance(part, int):
+            elif isinstance(part, _INT_TYPES):
                 iloc.append(part)
             else: # assume it is an iterable
                 iloc.extend(part)
@@ -247,6 +250,8 @@ class IndexLevel:
         '''
         depth_count = next(self.depths())
         shape = self.__len__(), depth_count
+
+        # TODO: avoid using object dtype if possible; get dtype from analysis of contained indices?
         labels = np.empty(shape, dtype=object)
         row_count = 0
 
@@ -350,9 +355,7 @@ class IndexLevelGO(IndexLevel):
                 node = node.targets[-1]
 
         assert depth_not_found != -1
-
         level_previous = None
-        # print('depth_not_found', depth_not_found)
 
         for depth in range(depth_count - 1, depth_not_found - 1, -1):
             node = edge_nodes[depth]
@@ -362,10 +365,8 @@ class IndexLevelGO(IndexLevel):
             if depth == depth_not_found:
                 # when at the the depth not found, we always update the index
                 node.index.append(k)
-
                 # if we have targets, must update them
                 if node.targets is not None:
-
                     # TODO: possibly defer target appending
                     target_count = len(node.targets)
                     targets = np.empty(target_count + 1, dtype=object)
@@ -509,7 +510,6 @@ class IndexHierarchy:
         depth_pre_max = len(first) - 2
 
         tree = OrderedDict()
-
         # but first back in front
         for label in chain((first,), labels_iter):
             current = tree
@@ -521,46 +521,21 @@ class IndexHierarchy:
                     current = current[v]
                 elif d < depth_max:
                     if v not in current:
+                        # TODO: can be key-only OD
                         current[v] = list()
                     current = current[v]
-                else: # at depth max
+                elif d == depth_max: # at depth max
+                    # TODO: not checking that v not in current
                     current.append(v)
-                # TODO: catch cases where depth is not matched!
+                else:
+                    raise Exception('label exceeded expected depth', label)
 
         return cls.from_tree(tree)
-
-    @classmethod
-    def is_constructable(cls, values) -> tp.Optional[tp.Callable]:
-        '''
-        Determine if the passed in values are constructable; if not, None is returned.
-        '''
-        if isinstance(values, np.ndarray) and values.ndim == 2:
-            return cls.from_labels
-        elif isinstance(values, dict):
-            return cls.from_tree
-        elif (hasattr(values, '__len__') and len(values) > 0
-                and not isinstance(values, Index)
-                and isinstance(values[0], Index)):
-            # an iterable of indices
-            return lambda args: cls.from_product(*args)
-        return None # falsy
-
-    @classmethod
-    def from_any(cls, values):
-        '''
-        Handle all three of the primary types of instantiation through this method.
-        '''
-        constructor = cls.is_constructable(values)
-        if constructor:
-            return constructor(values)
-        raise Exception('cannot constuct with values', values)
 
 
     #---------------------------------------------------------------------------
     def __init__(self,
             levels: IndexLevel
-            # *,
-            # labels: tp.Optional[np.ndarray]=None
             ):
         '''
         Args:
@@ -568,19 +543,6 @@ class IndexHierarchy:
         '''
 
         self._levels = levels
-
-        # depths = set(self._levels.depths())
-        # assert len(depths) == 1
-        # self._depth = depths.pop()
-        # self._length = self._levels.__len__()
-
-        # if labels is None:
-        #     # possibly defer label construction until needed
-        #     labels = self._levels.get_labels()
-        # else:
-        #     assert labels.shape == (self._length, self._depth)
-        #     # can keep without copying if already immutable
-        #     labels = immutable_filter(labels)
 
         # vlaues derived from levels are deferred
         self._labels = None
@@ -665,9 +627,51 @@ class IndexHierarchy:
 
     def copy(self) -> 'IndexHierarchy':
         '''
-        Return a new IndexHierarchy.
+        Return a new IndexHierarchy. This is not a deep copy.
         '''
         return self.__class__(levels=self._levels)
+
+
+    def relabel(self, mapper: CallableOrMapping) -> 'IndexHierarchy':
+        '''
+        Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if not callable(mapper):
+            # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable, and self._labels is an np.ndarray, need to convert lookups to tuples
+            getitem = getattr(mapper, '__getitem__')
+            labels = (tuple(x) for x in self._labels)
+            return self.__class__.from_labels(getitem(x) if x in mapper else x for x in labels)
+
+        return self.__class__.from_labels(mapper(x) for x in self._labels)
+
+
+    #---------------------------------------------------------------------------
+    # set operations
+
+    def intersection(self, other) -> 'IndexHierarchy':
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(other, np.ndarray):
+            opperand = other
+        else: # assume we can get it from a .values attribute
+            opperand = other.values
+
+        return self.__class__.from_labels(_intersect2d(self._labels, opperand))
+
+    def union(self, other) -> 'IndexHierarchy':
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(other, np.ndarray):
+            opperand = other
+        else: # assume we can get it from a .values attribute
+            opperand = other.values
+
+        return self.__class__.from_labels(_union2d(self._labels, opperand))
 
     #---------------------------------------------------------------------------
 
@@ -735,6 +739,14 @@ class IndexHierarchyGO(IndexHierarchy):
             'loc',
             'iloc',
             )
+
+    def append(self, value: tuple):
+        '''
+        Append a single label to this index.
+        '''
+        self._levels.append(value)
+        self._recache = True
+
 
     def extend(self, other: IndexHierarchy):
         '''

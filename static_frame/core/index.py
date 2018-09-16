@@ -209,10 +209,8 @@ class Index(metaclass=MetaOperatorDelegate):
         if issubclass(labels.__class__, Index):
             # get a reference to the immutable arrays
             # even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
-            if labels.STATIC:
-                # can take the map
+            if labels.STATIC: # can take the map
                 self._map = labels._map
-
             if labels._recache:
                 labels._update_array_cache()
 
@@ -232,7 +230,6 @@ class Index(metaclass=MetaOperatorDelegate):
                     self._labels.dtype, self._DTYPE)
         if len(self._map) != len(self._labels):
             raise KeyError('labels have non-unique values')
-
 
         # NOTE:  automatic discovery is possible
         self._loc_is_iloc = loc_is_iloc

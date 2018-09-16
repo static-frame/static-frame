@@ -148,8 +148,8 @@ class Series(metaclass=MetaOperatorDelegate):
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        elif IndexHierarchy.is_constructable(index):
-            self._index = IndexHierarchy.from_any(index)
+        # elif IndexHierarchy.is_constructable(index):
+        #     self._index = IndexHierarchy.from_any(index)
         else: # let index handle instantiation
             self._index = Index(index)
 

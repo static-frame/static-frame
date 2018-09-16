@@ -468,9 +468,41 @@ def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
             return result
     return result
 
-def _array2d_to_tuples(array: np.ndarray):
+def _array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
     for row in array: # assuming 2d
         yield tuple(row)
+
+
+def _ufunc2d(func, array, other):
+    '''
+    Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
+    '''
+    if array.dtype.kind == 'O' or other.dtype.kind == 'O':
+        array_set = set(tuple(row) for row in array)
+        other_set = set(tuple(row) for row in other)
+        if func is np.union1d:
+            result = array_set | other_set
+        elif func is np.intersect1d:
+            result = array_set & other_set
+        else:
+            raise Exception('unexpected func', func)
+        # sort so as to duplicate results from NP functions
+        return np.array(sorted(result)) # set dtype?
+    else:
+        assert array.shape[1] == other.shape[1]
+        width = array.shape[1]
+        array_view = array.view([('', array.dtype)] * width)
+        other_view = other.view([('', other.dtype)] * width)
+        return func(array_view, other_view).view(array.dtype).reshape(-1, width)
+
+
+def _intersect2d(array, other) -> np.ndarray:
+    return _ufunc2d(np.intersect1d, array, other)
+
+def _union2d(array, other) -> np.ndarray:
+    return _ufunc2d(np.union1d, array, other)
+
+
 
 #-------------------------------------------------------------------------------
 

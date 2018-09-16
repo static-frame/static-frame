@@ -10,6 +10,9 @@ from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _array_set_ufunc_many
 
+from static_frame.core.util import _intersect2d
+from static_frame.core.util import _union2d
+
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
@@ -333,8 +336,26 @@ class TestUnit(TestCase):
 
 
 
+    def test_intersect2d_a(self):
+        a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
+        b = np.array([('a', 'g'), ('c', 'd'), ('e', 'f')])
 
+        post = _intersect2d(a, b)
+        self.assertEqual(post.tolist(),
+                [['c', 'd'], ['e', 'f']])
 
+        post = _intersect2d(a.astype(object), b.astype(object))
+        self.assertEqual(post.tolist(),
+                [['c', 'd'], ['e', 'f']])
+
+        post = _union2d(a, b)
+        self.assertEqual(post.tolist(),
+                [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
+                )
+        post = _union2d(a.astype(object), b.astype(object))
+        self.assertEqual(post.tolist(),
+                [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
+                )
 
 
 if __name__ == '__main__':
