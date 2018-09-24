@@ -267,6 +267,10 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_hierarchy_from_tree_b(self):
+
+        OD = OrderedDict
+
         tree = OD([
                 ('I', OD([
                         ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
@@ -298,7 +302,10 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_labels(labels)
         self.assertEqual(len(ih), 8)
-        self.assertEqual(ih._depth, 3)
+        self.assertEqual(ih.depth, 3)
+
+        self.assertEqual([ih.loc_to_iloc(x) for x in labels],
+                [0, 1, 2, 3, 4, 5, 6, 7])
 
 
         labels = (('I', 'A', 1),
@@ -309,7 +316,9 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_labels(labels)
         self.assertEqual(len(ih), 4)
-        self.assertEqual(ih._depth, 3)
+        self.assertEqual(ih.depth, 3)
+
+        self.assertEqual([ih.loc_to_iloc(x) for x in labels], [0, 1, 2, 3])
 
 
     def test_hierarchy_from_labels_b(self):

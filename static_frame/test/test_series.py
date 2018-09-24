@@ -22,6 +22,8 @@ from static_frame import TypeBlocks
 from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -206,6 +208,44 @@ class TestUnit(TestCase):
         s5 = s1.reindex(['b', 'q', 'g', 'a'])
         self.assertAlmostEqualItems(list(s5.items()),
                 [('b', 1), ('q', nan), ('g', nan), ('a', 0)])
+
+
+    def test_series_reindex_b(self):
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), ('x', 'y')))
+        s2 = Series(range(4), index=IndexHierarchy.from_product(('b', 'c'), ('x', 'y')))
+
+        s3 = s1.reindex(s2.index, fill_value=None)
+
+        self.assertEqual(s3.to_pairs(),
+                ((('b', 'x'), 2), (('b', 'y'), 3), (('c', 'x'), None), (('c', 'y'), None)))
+
+        # can reindex with a different dimensionality if no matches
+        self.assertEqual(
+                s1.reindex((3,4,5,6), fill_value=None).to_pairs(),
+                ((3, None), (4, None), (5, None), (6, None)))
+
+        self.assertEqual(
+                s1.reindex((('b', 'x'),4,5,('a', 'y')), fill_value=None).to_pairs(),
+                ((('b', 'x'), 2), (4, None), (5, None), (('a', 'y'), 1)))
+
+
+
+    def test_series_reindex_c(self):
+        s1 = Series(('a', 'b', 'c', 'd'), index=((0, x) for x in range(4)))
+        self.assertEqual(s1.loc[(0, 2)], 'c')
+
+        self.assertEqual(
+                s1.reindex(((0, 1), (0, 3), (4,5)), fill_value=None).to_pairs(),
+                (((0, 1), 'b'), ((0, 3), 'd'), ((4, 5), None)))
+
+
+        # s2 = s1.reindex(('c', 'd', 'a'))
+        # self.assertEqual(list(s2.items()), [('c', 2), ('d', 3), ('a', 0)])
+
+        # s3 = s1.reindex(['a','b'])
+        # self.assertEqual(list(s3.items()), [('a', 0), ('b', 1)])
+
+
 
 
     def test_series_isnull_a(self):

@@ -52,6 +52,10 @@ SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
 SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 
+# defaults to float64
+_EMPTY_ARRAY = np.array((), dtype=None)
+_EMPTY_ARRAY.flags.writeable = False
+
 #-------------------------------------------------------------------------------
 # utility
 
@@ -478,8 +482,16 @@ def _ufunc2d(func, array, other):
     Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
     '''
     if array.dtype.kind == 'O' or other.dtype.kind == 'O':
-        array_set = set(tuple(row) for row in array)
-        other_set = set(tuple(row) for row in other)
+        # TODO: support !D object arrays here:
+        if array.ndim == 1:
+            array_set = set(array)
+        else:
+            array_set = set(tuple(row) for row in array)
+        if other.ndim == 1:
+            other_set = set(other)
+        else:
+            other_set = set(tuple(row) for row in other)
+
         if func is np.union1d:
             result = array_set | other_set
         elif func is np.intersect1d:
@@ -557,10 +569,43 @@ class IndexCorrespondence:
             )
 
     @classmethod
-    def from_correspondence(cls, src_index, dst_index) -> 'IndexCorrespondence':
-        # sorts results
-        common_labels = np.intersect1d(src_index.values, dst_index.values)
-        has_common = len(common_labels) > 0
+    def from_correspondence(cls,
+            src_index: 'Index',
+            dst_index: 'Index') -> 'IndexCorrespondence':
+        '''
+        Return an IndexCorrespondence instance from the correspondence of two Index or IndexHierarchy objects.
+        '''
+
+
+        mixed_depth = False
+        if src_index.depth == dst_index.depth:
+            depth = src_index.depth
+        else:
+            # if dimensions are mixed, the only way there can be a match is if the 1D index is of object type (so it can hold a tuple); otherwise, there can be no matches;
+            if src_index.depth == 1 and src_index.values.dtype.kind == 'O':
+                depth = dst_index.depth
+                mixed_depth = True
+            elif dst_index.depth == 1 and dst_index.values.dtype.kind == 'O':
+                depth = src_index.depth
+                mixed_depth = True
+            else:
+                depth = 0
+
+        # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
+        if depth == 1:
+            common_labels = np.intersect1d(src_index.values, dst_index.values)
+            has_common = len(common_labels) > 0
+            assert not mixed_depth
+        elif depth > 1:
+            # if either values arrays are object, we have to covert all values to tuples
+            common_labels = _intersect2d(src_index.values, dst_index.values)
+            if mixed_depth:
+                # when mixed, on the 1D index we have to use loc_to_iloc with tuples
+                common_labels = list(_array2d_to_tuples(common_labels))
+            has_common = len(common_labels) > 0
+        else:
+            has_common = False
+
         size = len(dst_index.values)
 
         # either a reordering or a subsetfrom_index

@@ -31,7 +31,6 @@ from static_frame import Index
 from static_frame import IndexGO
 
 
-
 class HLocMeta(type):
 
     def __getitem__(self,
@@ -85,12 +84,9 @@ class IndexLevel:
             offset: integer offset for this level.
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
         '''
-        if targets is not None:
-            assert isinstance(targets, np.ndarray)
-            try:
-                assert len(targets) == len(index)
-            except:
-                raise Exception('targets must equal length of index')
+        # if targets is not None:
+        #     assert isinstance(targets, np.ndarray)
+        #     assert len(targets) == len(index)
 
         self.index = index
         self.targets = targets
@@ -101,7 +97,8 @@ class IndexLevel:
             cls: tp.Type['IndexLevel']=None,
             ) -> 'IndexLevel':
         '''
-        Not a copy, but a clone, made with a different offset and possibly a different class.
+        Not a deepcopy with optional adjustments, such as a different offset and possibly a different class.
+
         Args:
             offset: optionally provide a new offset for the copy. This is not applied recursively
         '''
@@ -124,6 +121,9 @@ class IndexLevel:
         '''
         The length is the sum of all leaves
         '''
+        if self.targets is None:
+            return self.index.__len__()
+
         count = 0
         levels = [self]
         while levels:
@@ -136,24 +136,30 @@ class IndexLevel:
 
     def depths(self) -> tp.Generator[int, None, None]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
-        levels = [(self, 0)]
-        while levels:
-            level, depth = levels.pop()
-            if level.targets is None: # terminus
-                yield depth + 1
-            else:
-                next_depth = depth + 1
-                levels.extend([(lvl, next_depth) for lvl in level.targets])
+        if self.targets is None:
+            yield 1
+        else:
+            levels = [(self, 0)]
+            while levels:
+                level, depth = levels.pop()
+                if level.targets is None: # terminus
+                    yield depth + 1
+                else:
+                    next_depth = depth + 1
+                    levels.extend([(lvl, next_depth) for lvl in level.targets])
 
     def dtypes(self) -> tp.Generator[int, None, None]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
-        levels = [self]
-        while levels:
-            level = levels.pop()
-            # use pulbic interface, as this might be an IndexGO
-            yield level.index.values.dtype
-            if level.targets is not None: # not terminus
-                levels.extend(level.targets)
+        if self.targets is None:
+            yield self.index.values.dtype
+        else:
+            levels = [self]
+            while levels:
+                level = levels.pop()
+                # use pulbic interface, as this might be an IndexGO
+                yield level.index.values.dtype
+                if level.targets is not None: # not terminus
+                    levels.extend(level.targets)
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
@@ -183,7 +189,6 @@ class IndexLevel:
 
 
     def loc_to_iloc(self, key) -> GetItemKeyType:
-        # NOTE: this is similar to Index.loc_to_iloc
 
         if isinstance(key, slice):
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
@@ -213,8 +218,8 @@ class IndexLevel:
 
         # collect all ilocs for all leaf indices matching HLoc patterns
         ilocs = []
-        levels = deque() # order matters
-        levels.append((self, 0, 0))
+        levels = deque(((self, 0, 0),)) # order matters
+
         while levels:
             level, depth, offset = levels.popleft()
             depth_key = key[depth]
@@ -240,9 +245,10 @@ class IndexLevel:
                         levels.extend([(lvl, next_depth, next_offset)
                                 for lvl in level_targets])
 
-        if len(ilocs) == 0:
+        iloc_count = len(ilocs)
+        if iloc_count == 0:
             raise KeyError('no matching keys')
-        elif len(ilocs) == 1:
+        elif iloc_count == 1:
             return ilocs[0]
 
         # TODO: might be able to combine contiguous ilocs into a single slice
@@ -269,8 +275,7 @@ class IndexLevel:
         labels = np.empty(shape, dtype=dtype)
         row_count = 0
 
-        levels = deque() # order matters
-        levels.append((self, 0, None))
+        levels = deque(((self, 0, None),)) # order matters
 
         while levels:
             level, depth, row_previous = levels.popleft()
@@ -312,7 +317,7 @@ class IndexLevelGO(IndexLevel):
             offset: int=0
             ):
         assert isinstance(index, IndexGO)
-        # assume that we must copy this index as it is mutable; possibly add an own_index obtion if hthis can be optimized
+        # assume that we must copy this index as it is mutable; possibly add an own_index option if this can be optimized
         index = index.copy()
         IndexLevel.__init__(self, index=index, targets=targets, offset=offset)
 
@@ -469,17 +474,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         return cls(level)
 
     @classmethod
-    def from_tree(cls,
-            tree
-            # *,
-            # labels: tp.Optional[np.ndarray]=None
-            ) -> 'IndexHierarchy':
-        '''
-        Convert a dictionary of either iterables or dictionaries into a IndexHierarchy.
-
-        Args:
-            labels: a client can optionally provide the labels used to construct the tree, as an optional optimization in forming the IndexHierarchy.
-        '''
+    def _tree_to_index_level(cls, tree) -> IndexLevel:
         # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
 
         def get_level(level_data, offset=0):
@@ -487,24 +482,31 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             if isinstance(level_data, dict):
                 level_labels = []
                 targets = np.empty(len(level_data), dtype=object)
-
                 offset_local = 0
-
                 for idx, (k, v) in enumerate(level_data.items()):
                     level_labels.append(k)
                     level = get_level(v, offset=offset_local)
                     targets[idx] = level
                     offset_local += len(level)
-
                 index = cls._INDEX_CONSTRUCTOR(level_labels)
-
             else: # an iterable, terminal node, no offsets needed
                 targets = None
                 index = cls._INDEX_CONSTRUCTOR(level_data)
 
             return cls._LEVEL_CONSTRUCTOR(index=index, offset=offset, targets=targets)
 
-        return cls(get_level(tree))
+        return get_level(tree)
+
+
+    @classmethod
+    def from_tree(cls,
+            tree
+            ) -> 'IndexHierarchy':
+        '''
+        Convert a dictionary of either iterables or dictionaries into a IndexHierarchy.
+        '''
+        return cls(cls._tree_to_index_level(tree))
+
 
     @classmethod
     def from_labels(cls,
@@ -535,7 +537,6 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                     current = current[v]
                 elif d < depth_max:
                     if v not in current:
-                        # TODO: can be key-only OD
                         current[v] = list()
                     current = current[v]
                 elif d == depth_max: # at depth max
@@ -544,25 +545,136 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                 else:
                     raise Exception('label exceeded expected depth', label)
 
-        return cls.from_tree(tree)
+        return cls(levels=cls._tree_to_index_level(tree))
+
+
+
+    # @classmethod
+    # def from_labels(cls,
+    #         labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':
+    #     '''
+    #     From an iterable of labels, each constituting the components of each label, construct an index hierarcy.
+
+    #     Args:
+    #         labels: an iterator or generator of tuples.
+    #     '''
+    #     labels_iter = iter(labels)
+    #     first = next(labels_iter)
+
+    #     # minimum permitted depth is 2
+    #     depth = len(first)
+    #     assert depth >= 2
+    #     depth_max = depth - 1
+
+    #     pending_labels = [[] for _ in range(depth)]
+    #     pending_targets = [[] for _ in range(depth)]
+    #     previous_label = [None] * depth
+    #     previous_level_length = [0] * depth
+
+    #     active_position = [-1] * depth
+    #     change = [False] * depth
+
+    #     # but first back in front
+    #     for offset, label in enumerate(chain((first,), labels_iter)):
+    #         depth_label_pairs = list(enumerate(label))
+
+    #         # iterate once through label to build change record; we do this here as, when iterating inner to outer below, we need to observe parent change
+    #         for d, v in depth_label_pairs:
+    #             assert v is not None # none is used as initial sentinalhs
+    #             change[d] = previous_label[d] != v
+    #             previous_label[d] = v
+
+    #         # iterate again in reverse order, max depth first
+    #         for d, v in reversed(depth_label_pairs):
+    #             depth_parent = d - 1
+    #             # from 0 to parent_depth, inclusive, gets all levels higher than this one
+    #             if depth_parent >= 0:
+    #                 is_change_parent = any(change[d_sub] for d_sub in range(depth_parent + 1))
+    #             else:
+    #                 is_change_parent = False
+
+    #             if is_change_parent:
+    #                 if offset > 0:
+    #                     index = cls._INDEX_CONSTRUCTOR(pending_labels[d])
+    #                     pending_labels[d] = [] #.clear()
+
+    #                     if d == depth_max:
+    #                         targets = None
+    #                     else:
+    #                         targets = np.array(pending_targets[d])
+    #                         pending_targets[d] = [] #.clear()
+
+    #                     level = cls._LEVEL_CONSTRUCTOR(
+    #                             index=index,
+    #                             targets=targets,
+    #                             offset=previous_level_length[d])
+
+    #                     previous_level_length[d] = len(level)
+    #                     # after setting an upper level, all lower levels go to zero
+    #                     for d_sub in range(d + 1, depth):
+    #                         previous_level_length[d_sub] = 0
+
+    #                     pending_targets[depth_parent].append(level)
+    #                     # print('adding to pending targets', level, offset, len(level))
+
+    #             if change[d] or is_change_parent:
+    #                 # only update if changed, or parnet hc
+    #                 pending_labels[d].append(v)
+
+    #         # print(offset, label, change)
+
+    #     # always one left to handle for all depths
+    #     for d, v in reversed(depth_label_pairs):
+    #         depth_parent = d - 1
+
+    #         index = cls._INDEX_CONSTRUCTOR(pending_labels[d])
+    #         if d == depth_max:
+    #             targets = None
+    #         else:
+    #             targets = np.array(pending_targets[d])
+    #             # pending_targets[d] = [] #.clear()
+
+    #         level = cls._LEVEL_CONSTRUCTOR(
+    #                 index=index,
+    #                 targets=targets,
+    #                 offset=previous_level_length[d])
+    #         # assign it to pending unless we are at the top-most
+    #         if depth_parent >= 0:
+    #             pending_targets[depth_parent].append(level)
+
+    #     # import ipdb; ipdb.set_trace()
+    #     return cls(levels=level)
 
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            levels: IndexLevel
+            levels: tp.Union[IndexLevel, 'IndexHierarchy'],
             ):
         '''
         Args:
-            labels: optional reference to np.ndarray to be used as labels, instead of generating from passed IndexLevel objects.
+            levels: IndexLevels instance, or, optionally, an IndexHierarchy to be used to construct a new IndexHierarchy.
+            labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
         '''
 
-        self._levels = levels
+        if issubclass(levels.__class__, IndexHierarchy):
+            if levels.STATIC:
+                self._levels = levels._levels
+            else: # must deepcopy labels if not static
+                self._levels = levels._levels.to_index_level()
 
-        # vlaues derived from levels are deferred
-        self._labels = None
-        self._depth = None
-        self._length = None
-        self._recache = True
+            self._labels = levels.values
+            self._depth = levels.depth
+            self._length = self._labels.__len__() #levels.__len__()
+            self._recache = False
+        elif isinstance(levels, IndexLevel):
+            self._levels = levels
+            # vlaues derived from levels are deferred
+            self._labels = None
+            self._depth = None
+            self._length = None
+            self._recache = True
+        else:
+            raise NotImplementedError()
 
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
@@ -570,11 +682,13 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
     def _update_array_cache(self):
         # extract all features from self._levels
-        depths = set(self._levels.depths())
-        assert len(depths) == 1
-        self._depth = depths.pop()
-        self._length = self._levels.__len__()
+        # depths = set(self._levels.depths())
+        # assert len(depths) == 1
+        # self._depth = depths.pop()
+        self._depth = next(self._levels.depths())
         self._labels = self._levels.get_labels()
+        # if we get labels, faster to get that length
+        self._length = len(self._labels) #self._levels.__len__()
         self._recache = False
 
 
@@ -613,7 +727,8 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
     def __len__(self) -> int:
         if self._recache:
-            self._update_array_cache()
+            # faster to just get from levels
+            return self._levels.__len__()
         return self._length
 
     def __iter__(self):
@@ -638,6 +753,13 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
         return mloc(self._labels)
+
+    @property
+    def depth(self):
+        if self._recache:
+            return next(self._levels.depths())
+            # self._update_array_cache()
+        return self._depth
 
     def copy(self) -> 'IndexHierarchy':
         '''

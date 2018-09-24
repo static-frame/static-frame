@@ -358,6 +358,24 @@ class TestUnit(TestCase):
                 slice(41, 55, None))
 
 
+    def test_index_tuples_a(self):
+
+        index = Index([('a','b'), ('b','c'), ('c','d')])
+        s1 = Series(range(3), index=index)
+
+        self.assertEqual(s1[('b', 'c'):].values.tolist(), [1, 2])
+
+        self.assertEqual(s1[[('b', 'c'), ('a', 'b')]].values.tolist(), [1, 0])
+
+        self.assertEqual(s1[('b', 'c')], 1)
+        self.assertEqual(s1[('c', 'd')], 2)
+
+        s2 = Series(range(10), index=((1, x) for x in range(10)))
+        self.assertEqual(s2[(1, 5):].values.tolist(),
+                [5, 6, 7, 8, 9])
+
+        self.assertEqual(s2[[(1, 7), (1, 5), (1, 0)]].values.tolist(),
+                [7, 5, 0])
 
 
 if __name__ == '__main__':

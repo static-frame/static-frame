@@ -232,8 +232,11 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         # TODO: implement `method` argument with bfill, ffill options
 
-        # always use the Index constructor for safe aliasing when possible
-        index = Index(index)
+        if isinstance(index, (Index, IndexHierarchy)):
+            # always use the Index constructor for safe reuse when possible
+            index = index.__class__(index)
+        else: # create the Index if not already an index, assume 1D
+            index = Index(index)
 
         ic = IndexCorrespondence.from_correspondence(self.index, index)
 

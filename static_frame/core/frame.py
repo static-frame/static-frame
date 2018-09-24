@@ -693,6 +693,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')
 
+        # TODO: add handling for hierarchical indices
+
         if index is not None:
             index = Index(index)
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)

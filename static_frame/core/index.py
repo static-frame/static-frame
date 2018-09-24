@@ -10,6 +10,7 @@ from static_frame.core.util import SLICE_STEP_ATTR
 
 from static_frame.core.util import _KEY_ITERABLE_TYPES
 from static_frame.core.util import _DTYPE_STR_KIND
+from static_frame.core.util import _EMPTY_ARRAY
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import CallableOrMapping
@@ -125,6 +126,9 @@ class Index(metaclass=MetaOperatorDelegate):
     STATIC = True
     _DTYPE = None # for specialized indices requiring a typed labels
 
+    # for compatability with IndexHierarchy, where this is implemented as a property method
+    depth = 1
+
     __slots__ = (
             '_map',
             '_labels',
@@ -153,20 +157,26 @@ class Index(metaclass=MetaOperatorDelegate):
         '''
         # pre-fetching labels for faster get_item construction
         if isinstance(labels, np.ndarray): # if an np array can handle directly
-            labels = immutable_filter(labels)
+            return immutable_filter(labels)
         elif hasattr(labels, '__len__'): # not a generator, not an array
-            labels = np.array(labels, dtype)
-            labels.flags.writeable = False
+            if not len(labels):
+                return _EMPTY_ARRAY # already immutable
+            elif isinstance(labels[0], tuple):
+                assert dtype is None or dtype == object
+                array = np.empty(len(labels), object)
+                array[:] = labels
+                labels = array # rename
+            else:
+                labels = np.array(labels, dtype)
         else: # labels may be an expired generator
             # until all Python dictionaries are ordered, we cannot just take keys()
             # labels = np.array(tuple(mapping.keys()))
             # assume object type so as to not create a temporary list
-            labels = np.empty(len(mapping),
-                    dtype=dtype if dtype else object)
+            labels = np.empty(len(mapping), dtype=dtype if dtype else object)
             for k, v in mapping.items():
                 labels[v] = k
-            labels.flags.writeable = False
 
+        labels.flags.writeable = False
         return labels
 
     @staticmethod
@@ -181,7 +191,7 @@ class Index(metaclass=MetaOperatorDelegate):
         return positions
 
     @staticmethod
-    def _get_map(labels, positions=None) -> tp.Dict[tp.Any, int]:
+    def _get_map(labels, positions=None) -> tp.Dict[tp.Hashable, int]:
         '''
         Return a dictionary mapping index labels to integer positions.
 
@@ -190,10 +200,10 @@ class Index(metaclass=MetaOperatorDelegate):
         if positions is not None:
             return dict(zip(labels, positions))
         if hasattr(labels, '__len__'):
+            # if this is a 2D numpy array, we will get unhashable NP arrays in the map
             return dict(zip(labels, range(len(labels))))
         # support labels as a generator
         return {v: k for k, v in enumerate(labels)}
-
 
     #---------------------------------------------------------------------------
     def __init__(self,

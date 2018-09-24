@@ -442,7 +442,9 @@ class SeriesFloatH2DString_loc_slice(PerfTest):
 
 
 class SeriesFloatH3DString_loc_target(PerfTest):
-
+    '''
+    Selecting single value from 3-level hierarchy.
+    '''
     @staticmethod
     def pd():
         post = SampleData.get('pds_float_h3d_str_index').loc[('abce', 'abgu', 'afgx')]
@@ -452,7 +454,7 @@ class SeriesFloatH3DString_loc_target(PerfTest):
         post = SampleData.get('sfs_float_h3d_str_index').loc[('abce', 'abgu', 'afgx')]
 
 
-class SeriesFloatH3DString_loc_slice(PerfTest):
+class SeriesFloatH3DString_loc_slice_target_slice(PerfTest):
 
     @staticmethod
     def pd():
@@ -466,6 +468,20 @@ class SeriesFloatH3DString_loc_slice(PerfTest):
                 sf.HLoc[:, 'abcf', 'abcl':'abco']]
         assert len(post) == 40
 
+
+class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_float_h3d_str_index').loc[
+                pd.IndexSlice[:, :, 'abcl']]
+        assert len(post) == 1000
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_float_h3d_str_index').loc[
+                sf.HLoc[:, :, 'abcl']]
+        assert len(post) == 1000
 
 
 
