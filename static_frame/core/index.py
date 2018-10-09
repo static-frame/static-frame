@@ -471,6 +471,14 @@ class Index(metaclass=MetaOperatorDelegate):
         return np.in1d(self._labels, v, assume_unique=assume_unique)
 
 
+    #---------------------------------------------------------------------------
+    def add_level(self, level: tp.Hashable) -> 'IndexHierarhcy':
+        '''Return an IndexHierarhcy with an added root level.
+        '''
+        from static_frame import IndexHierarchy
+        return IndexHierarchy.from_tree({level: self.values})
+
+
 class IndexGO(Index):
     '''
     A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
@@ -493,14 +501,14 @@ class IndexGO(Index):
             dtype) -> tp.Iterable[tp.Any]:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
         '''
-        labels = super(IndexGO, self)._extract_labels(mapping, labels, dtype)
+        labels = Index._extract_labels(mapping, labels, dtype)
         self._labels_mutable = labels.tolist()
         return labels
 
     def _extract_positions(self, mapping, positions) -> tp.Iterable[tp.Any]:
         '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
-        positions = super(IndexGO, self)._extract_positions(mapping, positions)
+        positions = Index._extract_positions(mapping, positions)
         self._positions_mutable_count = len(positions)
         return positions
 

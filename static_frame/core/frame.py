@@ -5,7 +5,7 @@ from types import GeneratorType
 import typing as tp
 
 import csv
-
+import json
 
 from collections import namedtuple
 
@@ -37,6 +37,8 @@ from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _array_set_ufunc_many
 from static_frame.core.util import _array2d_to_tuples
+
+from static_frame.core.util import _read_url
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import ExtractInterface
@@ -99,7 +101,6 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     _COLUMN_CONSTRUCTOR = Index
-    # _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchy.from_any
 
     @classmethod
     def from_concat(cls,
@@ -124,6 +125,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             ufunc = np.union1d
         else:
             ufunc = np.intersect1d
+
+        # TODO: expand to handle hierarchical indices
 
         if axis == 1:
             # index can be the same, columns must be redefined if not unique
@@ -222,34 +225,60 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''Frame constructor from an iterable of rows.
 
         Args:
-            records: Iterable of row values.
+            records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
             index: Iterable of index labels, equal in length to the number of records.
             columns: Iterable of column labels, equal in length to the length of each row.
         '''
-        # derive_columns = False
+        derive_columns = False
         if columns is None:
-            # derive_columns = True
-            columns = [] # TODO: not sure if this works
+            derive_columns = True
+            # leave columns list in outer scope for blocks() to use
+            columns = []
 
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
             return cls(records, index=index, columns=columns)
 
         def blocks():
-            rows = list(records)
-            # derive types form first rows
-            # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
-            types = [(type(x) if not isinstance(x, (str, np.datetime64)) else None)
-                    for x in rows[0]]
 
+            if not hasattr(records, '__len__'):
+                rows = list(records)
+            else:
+                rows = records
+
+            row_reference = rows[0]
             row_count = len(rows)
-            for idx in range(len(rows[0])):
-                column_type = types[idx]
+            col_count = len(row_reference)
+
+            column_getter = None
+            if isinstance(row_reference, dict):
+                col_idx_iter = (k for k, _ in _dict_to_sorted_items(row_reference))
+                if derive_columns:
+                    # just pass the key back
+                    column_getter = lambda key: key
+            else:
+                # all other iterables
+                col_idx_iter = range(col_count)
+                if hasattr(row_reference, '_fields'):
+                    if derive_columns:
+                        column_getter = row_reference._fields.__getitem__
+
+            # derive types from first rows
+            # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
+            for col_idx in col_idx_iter:
+                if column_getter:
+                    # side effect of generator!
+                    columns.append(column_getter(col_idx))
+
+                field_ref = row_reference[col_idx]
+                column_type = (type(field_ref)
+                        if not isinstance(field_ref, (str, np.datetime64))
+                        else None)
                 if column_type is None: # let array constructor determine type
-                    values = np.array([row[idx] for row in rows])
+                    values = np.array([row[col_idx] for row in rows])
                 else:
                     values = np.fromiter(
-                            (row[idx] for row in rows),
+                            (row[col_idx] for row in rows),
                             count=row_count,
                             dtype=column_type)
                 values.flags.writeable = False
@@ -259,6 +288,20 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=index,
                 columns=columns,
                 own_data=True)
+
+    @classmethod
+    def from_json(cls, json_data):
+        '''Frame constructor from json, either stored or obtained via URL.
+        '''
+        data = json.loads(json_data)
+        return cls.from_records(data)
+
+    @classmethod
+    def from_json_url(cls, url):
+        '''Frame constructor from json provided via a url.
+        '''
+        return cls.from_json(_read_url(url))
+
 
 
     @classmethod
@@ -413,7 +456,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                     # handling file like object works for stringio but not for bytesio
                     for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
                         yield delimiter_native.join(row)
-
             file_like = to_tsv()
         else:
             file_like = fp
@@ -473,6 +515,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
+            # if a dictionary is given, it is treated as a dictionary of columns
             if columns is not None:
                 raise Exception('cannot create Frame from dictionary when columns is defined')
             columns = []
@@ -511,8 +554,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         #-----------------------------------------------------------------------
         # index assignment
 
-        # columns could be an np array, or an Index instance
-        if columns is None:
+        # columns could be an np array, or an Index instance, thus cannot be truthy
+        if columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
             if col_count is None:
                 raise Exception('cannot create columns when no data given')
             self._columns = self._COLUMN_CONSTRUCTOR(
@@ -521,21 +564,16 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif own_columns or (hasattr(columns, 'STATIC') and columns.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
-        # elif IndexHierarchy.is_constructable(columns):
-        #     self._columns = self._COLUMN_HIERARCHY_CONSTRUCTOR(columns)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
 
 
-        if index is None:
+        if index is None or (hasattr(index, '__len__') and len(index) == 0):
             if row_count is None:
                 raise Exception('cannot create rows when no data given')
             self._index = Index(range(row_count), loc_is_iloc=True)
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        # elif IndexHierarchy.is_constructable(columns):
-        #     # always immutable
-        #     self._index = IndexHierarchy.from_any(index)
         else:
             self._index = Index(index)
 
@@ -693,17 +731,27 @@ class Frame(metaclass=MetaOperatorDelegate):
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')
 
-        # TODO: add handling for hierarchical indices
 
         if index is not None:
-            index = Index(index)
+            if isinstance(index, (Index, IndexHierarchy)):
+                # always use the Index constructor for safe reuse when possible
+                index = index.__class__(index)
+            else: # create the Index if not already an index, assume 1D
+                index = Index(index)
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)
         else:
             index = self._index
             index_ic = None
 
+
         if columns is not None:
-            columns = self._COLUMN_CONSTRUCTOR(columns)
+            if isinstance(columns, (Index, IndexHierarchy)):
+                # always use the Index constructor for safe reuse when possible
+                if columns.STATIC != self._COLUMN_CONSTRUCTOR.STATIC:
+                    raise Exception('static status of index does not match expected column static status')
+                columns = columns.__class__(columns)
+            else: # create the Index if not already an columns, assume 1D
+                columns = self._COLUMN_CONSTRUCTOR(columns)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
         else:
             columns = self._columns
@@ -723,19 +771,76 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: CallableOrMapping=None,
             columns: CallableOrMapping=None) -> 'Frame':
         '''
-        Return a new Series based on a mapping (or callable) from old to new index values.
+        Return a new Frame based on a mapping (or callable) from old to new index values.
         '''
         # create new index objects in both cases so as to call with own*
         index = self._index.relabel(index) if index else self._index.copy()
         columns = self._columns.relabel(columns) if columns else self._columns.copy()
 
         return self.__class__(
-                self._blocks.copy(),
+                self._blocks.copy(), # does not copy arrays
                 index=index,
                 columns=columns,
                 own_data=True,
                 own_index=True,
                 own_columns=True)
+
+
+
+    def reindex_flat(self,
+            index: bool=False,
+            columns: bool=False) -> 'Frame':
+        '''
+        Return a new Frame, where a hierarhical index or column (if deifined) is replaced with a flat, one-dimension index of tuples.
+        '''
+
+        index = self._index.flat() if index else self._index.copy()
+        columns = self._columns.flat() if columns else self._columns.copy()
+
+        return self.__class__(
+                self._blocks.copy(), # does not copy arrays
+                index=index,
+                columns=columns,
+                own_data=True,
+                own_index=True,
+                own_columns=True)
+
+    def reindex_add_level(self,
+            index: tp.Hashable=None,
+            columns: tp.Hashable=None) -> 'Frame':
+        '''
+        Return a new Frame, adding a new root level to the index and/or columns.
+        '''
+
+        index = self._index.add_level(index) if index else self._index.copy()
+        columns = self._columns.add_level(columns) if columns else self._columns.copy()
+
+        return self.__class__(
+                self._blocks.copy(), # does not copy arrays
+                index=index,
+                columns=columns,
+                own_data=True,
+                own_index=True,
+                own_columns=True)
+
+    def reindex_drop_level(self,
+            index: int=0,
+            columns: int=0) -> 'Frmae':
+        '''
+        Return a new Frame, dropping one or more leaf levels from the index and/or columns.
+        '''
+
+        index = self._index.drop_level(index) if index else self._index.copy()
+        columns = self._columns.drop_level(columns) if columns else self._columns.copy()
+
+        return self.__class__(
+                self._blocks.copy(), # does not copy arrays
+                index=index,
+                columns=columns,
+                own_data=True,
+                own_index=True,
+                own_columns=True)
+
 
 
     #---------------------------------------------------------------------------

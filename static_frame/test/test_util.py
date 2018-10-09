@@ -17,6 +17,10 @@ from static_frame.core.util import _union2d
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
 
+from static_frame.core.util import _read_url
+
+
+
 # TODO test
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _iterable_to_array
@@ -357,6 +361,10 @@ class TestUnit(TestCase):
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
 
+    @unittest.skip('requires network')
+    def test_read_url(self):
+        url = 'https://jsonplaceholder.typicode.com/todos'
+        post = _read_url(url)
 
 if __name__ == '__main__':
     unittest.main()

@@ -144,12 +144,11 @@ class Series(metaclass=MetaOperatorDelegate):
         # index assignment
         # NOTE: this generally must be done after values assignment, as from_items needs a values generator to be exhausted before looking to values
 
-        if index is None: # create an integer index
+        if index is None or (hasattr(index, '__len__') and len(index) == 0):
+            # create an integer index
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
         elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
             self._index = index
-        # elif IndexHierarchy.is_constructable(index):
-        #     self._index = IndexHierarchy.from_any(index)
         else: # let index handle instantiation
             self._index = Index(index)
 
@@ -264,6 +263,27 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.__class__(self.values,
                 index=self._index.relabel(mapper),
                 own_index=True)
+
+
+    def reindex_flat(self):
+        '''
+        Return a new Series, where a hierarhical index (if deifined) is replaced with a flat, one-dimension index of tuples.
+        '''
+        return self.__class__(self.values, index=self._index.flat())
+
+    def reindex_add_level(self, level: tp.Hashable):
+        '''
+        Return a new Series, adding a new root level to the index.
+        '''
+        return self.__class__(self.values, index=self._index.add_level(level))
+
+    def reindex_drop_level(self, count: int=1):
+        '''
+        Return a new Series, dropping one or more leaf levels from the index.
+        '''
+        return self.__class__(self.values, index=self._index.drop_level(count))
+
+
 
     #---------------------------------------------------------------------------
     # na handling
@@ -664,7 +684,6 @@ class Series(metaclass=MetaOperatorDelegate):
         import pandas
         return pandas.Series(self.values.copy(),
                 index=self._index.values.copy())
-
 
 
 class SeriesAssign:

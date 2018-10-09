@@ -743,11 +743,11 @@ class FrameMixed_slice_loc_column(PerfTest):
 #-------------------------------------------------------------------------------
 # frame creation and growth
 
-class FrameFloat_add_series_partial(PerfTest):
+class FrameFloat_H1D_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
 
-    NUMBER = 100
+    NUMBER = 50
 
     # 325 two character strings
     _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
@@ -769,6 +769,31 @@ class FrameFloat_add_series_partial(PerfTest):
         assert f1.sum().sum() == 9900.0
 
 
+class FrameFloat_H2D_add_series_partial(PerfTest):
+    '''Adding series that only partially match the index
+    '''
+    NUMBER = 50
+    _index_leaves = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
+
+    @classmethod
+    def sf(cls):
+        index = sf.IndexHierarchy.from_product(list(string.ascii_lowercase),
+                list(string.ascii_lowercase))
+        f1 = sf.FrameGO(index=index)
+        for col in range(100):
+            s = sf.Series(col * .1, index=index[col: col+6])
+            f1[col] = s
+        assert f1.sum().sum() == 2970.0
+
+    @classmethod
+    def pd(cls):
+        index = pd.MultiIndex.from_product((list(string.ascii_lowercase),
+                list(string.ascii_lowercase)))
+        f1 = pd.DataFrame(index=index)
+        for col in range(100):
+            s = pd.Series(col * .1, index=index[col: col+6])
+            f1[col] = s
+        assert f1.sum().sum() == 2970.0
 
 
 #-------------------------------------------------------------------------------

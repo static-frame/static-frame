@@ -14,7 +14,7 @@ from static_frame.core.util import _INT_TYPES
 from static_frame.core.util import _intersect2d
 from static_frame.core.util import _union2d
 from static_frame.core.util import _resolve_dtype_iter
-
+from static_frame.core.util import _array2d_to_tuples
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
@@ -22,6 +22,7 @@ from static_frame.core.util import immutable_filter
 from static_frame.core.util import CallableOrMapping
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
+from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -67,7 +68,6 @@ class IndexLevel:
     '''
     A nestable representation of an Index, where labels in that index optionally point to other Index objects.
     '''
-
     __slots__ = (
             'index',
             'targets',
@@ -76,7 +76,7 @@ class IndexLevel:
 
     def __init__(self,
             index: Index,
-            targets: tp.Optional[np.ndarray]=None, # np.ndarray[IndexLevel]
+            targets: tp.Optional[ArrayGO]=None, # np.ndarray[IndexLevel]
             offset: int=0
             ):
         '''
@@ -85,8 +85,8 @@ class IndexLevel:
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
         '''
         # if targets is not None:
-        #     assert isinstance(targets, np.ndarray)
         #     assert len(targets) == len(index)
+        #     assert isinstance(targets, ArrayGO)
 
         self.index = index
         self.targets = targets
@@ -97,7 +97,7 @@ class IndexLevel:
             cls: tp.Type['IndexLevel']=None,
             ) -> 'IndexLevel':
         '''
-        Not a deepcopy with optional adjustments, such as a different offset and possibly a different class.
+        A deepcopy with optional adjustments, such as a different offset and possibly a different class.
 
         Args:
             offset: optionally provide a new offset for the copy. This is not applied recursively
@@ -105,10 +105,13 @@ class IndexLevel:
         index = self.index.copy()
 
         if self.targets is not None:
-            targets = np.empty(len(self.targets), dtype=object)
-            for idx, t in enumerate(self.targets):
-                # offset of None retains existing offset
-                targets[idx] = t.to_index_level(offset=None, cls=cls)
+            # targets = np.empty(len(self.targets), dtype=object)
+            # for idx, t in enumerate(self.targets):
+            #     # offset of None retains existing offset
+            #     targets[idx] = t.to_index_level(offset=None, cls=cls)
+            targets = ArrayGO(
+                [t.to_index_level(offset=None, cls=cls) for t in self.targets],
+                own_iterable=True)
         else:
             targets = None
 
@@ -251,7 +254,7 @@ class IndexLevel:
         elif iloc_count == 1:
             return ilocs[0]
 
-        # TODO: might be able to combine contiguous ilocs into a single slice
+        # NOTE: might be able to combine contiguous ilocs into a single slice
         iloc = [] # combine into one flat iloc
         length = self.__len__()
         for part in ilocs:
@@ -304,7 +307,6 @@ class IndexLevel:
 class IndexLevelGO(IndexLevel):
     '''Grow only variant of IndexLevel
     '''
-
     __slots__ = (
             'index',
             'targets',
@@ -325,7 +327,6 @@ class IndexLevelGO(IndexLevel):
     # grow only mutation
 
     def extend(self, level: IndexLevel):
-
         # assert isinstance(level, IndexLevelGO)
 
         depth = next(self.depths())
@@ -334,23 +335,33 @@ class IndexLevelGO(IndexLevel):
 
         # this will raise for duplicates
         self.index.extend(level.index.values)
-        offset_prior = self.__len__()
-        count_prior = len(self.targets)
 
-        # allocate new targets array
-        targets = np.empty(count_prior + len(level.targets), dtype=object)
-        # can assign these in without copying, as they are owned by this instance
-        targets[:count_prior] = self.targets
+        def target_gen():
+            offset_prior = self.__len__()
+            for t in level.targets:
+                # only need to update offsets at this level, as lower levels are relative to this
+                target = t.to_index_level(offset_prior, cls=self.__class__)
+                offset_prior += len(target)
+                yield target
 
-        # targets are other IndexLevel instances that may be GO or not
-        for idx, t in enumerate(level.targets, start=count_prior):
-            # only need to update offsets at this level, as lower levels are relative to this
-            target = t.to_index_level(offset_prior, cls=self.__class__)
-            targets[idx] = target
-            offset_prior += len(target)
+        self.targets.extend(target_gen())
 
-        # TODO: handle validation of incomplete depths, duplicate values
-        self.targets = targets
+        # count_prior = len(self.targets)
+
+        # # allocate new targets array
+        # targets = np.empty(count_prior + len(level.targets), dtype=object)
+        # # can assign these in without copying, as they are owned by this instance
+        # targets[:count_prior] = self.targets
+
+        # # targets are other IndexLevel instances that may be GO or not
+        # for idx, t in enumerate(level.targets, start=count_prior):
+        #     # only need to update offsets at this level, as lower levels are relative to this
+        #     target = t.to_index_level(offset_prior, cls=self.__class__)
+        #     targets[idx] = target
+        #     offset_prior += len(target)
+
+        # # TODO: handle validation of incomplete depths, duplicate values
+        # self.targets = targets
 
 
     def append(self, key: tuple):
@@ -384,16 +395,20 @@ class IndexLevelGO(IndexLevel):
             if depth == depth_not_found:
                 # when at the the depth not found, we always update the index
                 node.index.append(k)
+
                 # if we have targets, must update them
                 if node.targets is not None:
-                    # TODO: possibly defer target appending
-                    target_count = len(node.targets)
-                    targets = np.empty(target_count + 1, dtype=object)
-                    targets[:target_count] = node.targets
-
                     level_previous.offset = node.__len__()
-                    targets[target_count] = level_previous
-                    node.targets = targets
+                    node.targets.append(level_previous)
+
+                    # # TODO: possibly defer target appending
+                    # target_count = len(node.targets)
+                    # targets = np.empty(target_count + 1, dtype=object)
+                    # targets[:target_count] = node.targets
+
+                    # level_previous.offset = node.__len__()
+                    # targets[target_count] = level_previous
+                    # node.targets = targets
 
             else: # depth not found is higher up
                 if node.targets is None:
@@ -404,15 +419,13 @@ class IndexLevelGO(IndexLevel):
                             targets=None
                             )
                 else:
-                    targets = np.empty(1, dtype=object)
-                    targets[0] = level_previous
+                    # targets = np.empty(1, dtype=object)
+                    targets = ArrayGO([level_previous,], own_iterable=True)
                     level_previous = IndexLevelGO(
                             index=IndexGO((k,)),
                             offset=0,
                             targets=targets
                             )
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -462,12 +475,10 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                 level = cls._LEVEL_CONSTRUCTOR(index=index,
                         offset=offset,
                         targets=targets_previous)
-                # print(level, index.values, offset, targets_previous)
 
                 targets[idx] = level
                 offset += len(level)
-
-            targets_previous = targets
+            targets_previous = ArrayGO(targets, own_iterable=True)
             depth -= 1
 
         level = cls._LEVEL_CONSTRUCTOR(index=index_up, targets=targets_previous)
@@ -489,6 +500,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                     targets[idx] = level
                     offset_local += len(level)
                 index = cls._INDEX_CONSTRUCTOR(level_labels)
+                targets = ArrayGO(targets, own_iterable=True)
             else: # an iterable, terminal node, no offsets needed
                 targets = None
                 index = cls._INDEX_CONSTRUCTOR(level_data)
@@ -548,7 +560,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         return cls(levels=cls._tree_to_index_level(tree))
 
 
-
+# NOTE: this alternative implementation works, but is shown to be slowe than the implementation used above
     # @classmethod
     # def from_labels(cls,
     #         labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':
@@ -682,15 +694,11 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
     def _update_array_cache(self):
         # extract all features from self._levels
-        # depths = set(self._levels.depths())
-        # assert len(depths) == 1
-        # self._depth = depths.pop()
         self._depth = next(self._levels.depths())
         self._labels = self._levels.get_labels()
         # if we get labels, faster to get that length
         self._length = len(self._labels) #self._levels.__len__()
         self._recache = False
-
 
     def display(self, config: DisplayConfig=None) -> Display:
         config = config or DisplayActive.get()
@@ -892,12 +900,56 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
     # export
 
     def to_frame(self):
+        '''
+        Return the index as a Frame.
+        '''
         from static_frame import Frame
         return Frame.from_records(self.__iter__(),
                 columns=range(self._depth),
                 index=None)
 
+    def flat(self):
+        '''Return a flat, one-dimensional index of tuples for each level.
+        '''
+        return self._INDEX_CONSTRUCTOR(_array2d_to_tuples(self.__iter__()))
 
+    def add_level(self, level: tp.Hashable):
+        '''Return an IndexHierarchy with a new root level added.
+        '''
+        if self.STATIC: # can reuse levels
+            levels_src = self._levels
+        else:
+            levels_src = self._levels.to_index_level()
+        levels = self._LEVEL_CONSTRUCTOR(
+                index=self._INDEX_CONSTRUCTOR((level,)),
+                targets=ArrayGO([levels_src], own_iterable=True),
+                offset=0
+                )
+        return self.__class__(levels)
+
+
+    def drop_level(self, count: int=1) -> tp.Union[Index, 'IndexHieararchy']:
+        '''Return an IndexHierarhcy with one or more leaf levels removed.
+        '''
+        # probably need a deep copy
+        levels = self._levels.to_index_level()
+
+        for _ in range(count):
+            levels_stack = [levels]
+            while levels_stack:
+                level = levels_stack.pop()
+                # check to see if children of this target are leaves
+                if level.targets[0].targets is None:
+                    level.targets = None
+                else:
+                    levels_stack.extend(level.targets)
+            if levels.targets is None:
+                # if our root level has no targets, we are at the root
+                break
+        if levels.targets is None:
+            # fall back to 1D index
+            return levels.index
+        return self.__class__(levels)
 
 class IndexHierarchyGO(IndexHierarchy):
 

@@ -382,6 +382,7 @@ class Display:
             value_gen = iterable.__iter__
 
         # start at 1 as 0 is header
+        idx = 0 # store in case value gen is empty
         for idx, value in enumerate(value_gen(), start=1):
             if value is self.ELLIPSIS_CENTER_SENTINEL:
                 self._rows[idx].append(self.CELL_ELLIPSIS)

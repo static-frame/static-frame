@@ -172,7 +172,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def copy(self) -> 'TypeBlocks':
         '''
-        Return a new TypeBlocks. Underlying arrays do not need to be copied.
+        Return a new TypeBlocks. Underlying arrays are not copied.
         '''
         return self.__class__(
                 blocks=[b for b in self._blocks],

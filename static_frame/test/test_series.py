@@ -662,5 +662,28 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_reindex_add_level(self):
+        s1 = Series(['a', 'b', 'c'])
+
+        s2 = s1.reindex_add_level('I')
+        self.assertEqual(s2.index.depth, 2)
+        self.assertEqual(s2.to_pairs(),
+                ((('I', 0), 'a'), (('I', 1), 'b'), (('I', 2), 'c')))
+
+        s3 = s2.reindex_flat()
+        self.assertEqual(s3.index.depth, 1)
+        self.assertEqual(s3.to_pairs(),
+                ((('I', 0), 'a'), (('I', 1), 'b'), (('I', 2), 'c')))
+
+
+    def test_series_drop_level_a(self):
+        s1 = Series(['a', 'b', 'c'],
+                index=IndexHierarchy.from_labels([('A', 1), ('B', 1), ('C', 1)]))
+        s2 = s1.reindex_drop_level()
+        self.assertEqual(s2.to_pairs(),
+                (('A', 'a'), ('B', 'b'), ('C', 'c'))
+                )
+
+
 if __name__ == '__main__':
     unittest.main()

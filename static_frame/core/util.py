@@ -1,4 +1,4 @@
-
+import sys
 import typing as tp
 
 
@@ -7,6 +7,7 @@ from collections import abc
 from io import StringIO
 from io import BytesIO
 import datetime
+from urllib import request
 
 
 import numpy as np
@@ -55,6 +56,8 @@ SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 # defaults to float64
 _EMPTY_ARRAY = np.array((), dtype=None)
 _EMPTY_ARRAY.flags.writeable = False
+
+_DICT_STABLE = sys.version_info >= (3, 6)
 
 #-------------------------------------------------------------------------------
 # utility
@@ -326,11 +329,11 @@ def _key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
 
 def _dict_to_sorted_items(
             mapping: tp.Dict) -> tp.Generator[
-            tp.Tuple[tp.Any, tp.Any], None, None]:
+            tp.Tuple[tp.Hashable, tp.Any], None, None]:
     '''
     Convert a dict into two arrays. Note that sorting is only necessary in Python 3.5, and should not be done if an ordered dict
     '''
-    if isinstance(mapping, OrderedDict):
+    if isinstance(mapping, OrderedDict) or _DICT_STABLE:
         # cannot use fromiter as do not know type
         keys = mapping.keys()
     else:
@@ -461,6 +464,7 @@ def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
     '''
     Iteratively apply a set operation unfunc to a arrays; if all are equal, no operation is performed and order is retained.
     '''
+    # TODO: this needs to handle 2D arrays for hierarchical indices
     arrays = iter(arrays)
     result = next(arrays)
     for array in arrays:
@@ -499,7 +503,7 @@ def _ufunc2d(func, array, other):
         else:
             raise Exception('unexpected func', func)
         # sort so as to duplicate results from NP functions
-        return np.array(sorted(result)) # set dtype?
+        return np.array(sorted(result), dtype=object)
     else:
         assert array.shape[1] == other.shape[1]
         # this does will work if dyptes are differently sized strings, such as U2 and U3
@@ -521,6 +525,17 @@ def _intersect2d(array, other) -> np.ndarray:
 def _union2d(array, other) -> np.ndarray:
     return _ufunc2d(np.union1d, array, other)
 
+
+#-------------------------------------------------------------------------------
+# URL handling, file downloading
+
+# def _is_url(fp: str) -> bool:
+#     # mathc http, https
+#     return str.startswith('http')
+
+def _read_url(fp: str):
+    with request.urlopen(fp) as response:
+        return response.read().decode('utf-8')
 
 
 #-------------------------------------------------------------------------------
@@ -575,8 +590,6 @@ class IndexCorrespondence:
         '''
         Return an IndexCorrespondence instance from the correspondence of two Index or IndexHierarchy objects.
         '''
-
-
         mixed_depth = False
         if src_index.depth == dst_index.depth:
             depth = src_index.depth

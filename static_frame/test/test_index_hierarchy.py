@@ -18,6 +18,7 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexLevelGO
 from static_frame import HLoc
+from static_frame.core.array_go import ArrayGO
 
 from static_frame.test.test_case import TestCase
 
@@ -30,7 +31,7 @@ class TestUnit(TestCase):
         targets = np.array(
                 (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
 
-        level0 = IndexLevelGO(index=groups, targets=targets)
+        level0 = IndexLevelGO(index=groups, targets=ArrayGO(targets))
         level1 = level0.to_index_level()
 
         groups = IndexGO(('C', 'D'))
@@ -38,7 +39,7 @@ class TestUnit(TestCase):
         targets = np.array(
                 (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=3)))
 
-        level2 = IndexLevelGO(index=groups, targets=targets)
+        level2 = IndexLevelGO(index=groups, targets=ArrayGO(targets))
 
         level0.extend(level2)
 
@@ -56,8 +57,9 @@ class TestUnit(TestCase):
     def test_index_level_dtypes_a(self):
         groups = IndexGO(('A', 'B'))
         observations = IndexGO(('x', 'y'))
-        targets = np.array(
-                (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
+        targets = ArrayGO(
+                (IndexLevelGO(index=observations),
+                IndexLevelGO(observations, offset=2)))
 
         level0 = IndexLevelGO(index=groups, targets=targets)
         self.assertEqual([d.kind for d in level0.dtypes()], ['U', 'U', 'U'])
@@ -67,7 +69,7 @@ class TestUnit(TestCase):
     def test_index_level_get_labels_a(self):
         groups = IndexGO(('A', 'B'))
         observations = IndexGO(('x', 'y'))
-        targets = np.array(
+        targets = ArrayGO(
                 (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
 
         level0 = IndexLevelGO(index=groups, targets=targets)
@@ -79,7 +81,7 @@ class TestUnit(TestCase):
 
         groups = IndexGO((1, 2))
         observations = IndexGO((10, 20))
-        targets = np.array(
+        targets = ArrayGO(
                 (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
         level1 = IndexLevelGO(index=groups, targets=targets)
         self.assertEqual(level1.get_labels().dtype.kind, 'i')
@@ -95,7 +97,8 @@ class TestUnit(TestCase):
         lvl2b = IndexLevel(index=observations, offset=2)
         lvl2c = IndexLevel(index=observations, offset=4)
         lvl2d = IndexLevel(index=observations, offset=6)
-        lvl2_targets = np.array((lvl2a, lvl2b, lvl2c, lvl2d))
+
+        lvl2_targets = ArrayGO((lvl2a, lvl2b, lvl2c, lvl2d))
 
         lvl1a = IndexLevel(index=dates,
                 targets=lvl2_targets, offset=0)
@@ -106,7 +109,7 @@ class TestUnit(TestCase):
 
         # we need as many targets as len(index)
         lvl0 = IndexLevel(index=groups,
-                targets=np.array((lvl1a, lvl1b, lvl1c)))
+                targets=ArrayGO((lvl1a, lvl1b, lvl1c)))
 
         self.assertEqual(lvl0.leaf_loc_to_iloc(('B', '2018-01-04', 'y'),), 15)
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
@@ -120,7 +123,7 @@ class TestUnit(TestCase):
 
         lvl2a = IndexLevelGO(index=observations)
         lvl2b = IndexLevelGO(index=observations, offset=2)
-        lvl2_targets = np.array((lvl2a, lvl2b))
+        lvl2_targets = ArrayGO((lvl2a, lvl2b))
         # must defensively copy index
         assert id(lvl2a.index) != id(lvl2b.index)
 
@@ -132,7 +135,7 @@ class TestUnit(TestCase):
         # must create new index levels for each lower node
         lvl2c = IndexLevelGO(index=observations)
         lvl2d = IndexLevelGO(index=observations, offset=2)
-        lvl2_targets = np.array((lvl2c, lvl2d))
+        lvl2_targets = ArrayGO((lvl2c, lvl2d))
         # must defensively copy index
         assert id(lvl2c.index) != id(lvl2d.index)
 
@@ -142,7 +145,7 @@ class TestUnit(TestCase):
 
         # we need as many targets as len(index)
         lvl0 = IndexLevelGO(index=category,
-                targets=np.array((lvl1a, lvl1b)))
+                targets=ArrayGO((lvl1a, lvl1b)))
 
 
         lvl0.append(('II', 'B', 'z')) # depth not found is 2
@@ -179,7 +182,7 @@ class TestUnit(TestCase):
         lvl2b = IndexLevel(index=observations, offset=2)
         lvl2c = IndexLevel(index=observations, offset=4)
         lvl2d = IndexLevel(index=observations, offset=6)
-        lvl2_targets = np.array((lvl2a, lvl2b, lvl2c, lvl2d))
+        lvl2_targets = ArrayGO((lvl2a, lvl2b, lvl2c, lvl2d))
 
 
         lvl1a = IndexLevel(index=dates,
@@ -191,7 +194,7 @@ class TestUnit(TestCase):
 
         # we need as many targets as len(index)
         lvl0 = IndexLevel(index=groups,
-                targets=np.array((lvl1a, lvl1b, lvl1c)))
+                targets=ArrayGO((lvl1a, lvl1b, lvl1c)))
 
 
         self.assertEqual(len(lvl2a), 2)
@@ -662,6 +665,53 @@ class TestUnit(TestCase):
                 [[-1, -1], [-1, -2], [-2, -1], [-2, -2]])
 
 
+    def test_hierarchy_flat_a(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        self.assertEqual(ih.flat().values.tolist(),
+                [('I', 'A'), ('I', 'B'), ('II', 'A'), ('II', 'B')]
+                )
+
+    def test_hierarchy_add_level_a(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        ih2 = ih.add_level('b')
+
+        self.assertEqual(ih2.values.tolist(),
+                [['b', 'I', 'A'], ['b', 'I', 'B'], ['b', 'II', 'A'], ['b', 'II', 'B']])
+        self.assertEqual([ih2.loc_to_iloc(tuple(x)) for x in ih2.values],
+                [0, 1, 2, 3])
+
+
+
+    def test_hierarchy_drop_level_a(self):
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        #TODO: add tests!
+
+        # ih2 = ih.add_level('b')
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

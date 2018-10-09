@@ -2,9 +2,11 @@ from itertools import zip_longest
 from itertools import combinations
 import unittest
 from collections import OrderedDict
+from collections import namedtuple
 from io import StringIO
 import string
 import hashlib
+
 
 import numpy as np
 
@@ -12,6 +14,8 @@ import static_frame as sf
 # assuming located in the same directory
 from static_frame import Index
 from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -684,6 +688,7 @@ class TestUnit(TestCase):
                 (('p', (('z', 65), ('b', None), ('w', 1))), ('q', (('z', 73), ('b', None), ('w', 2))), ('r', (('z', 'd'), ('b', None), ('w', 'a'))), ('s', (('z', True), ('b', None), ('w', False))), ('t', (('z', True), ('b', None), ('w', True)))))
 
 
+
     def test_frame_axis_flat_a(self):
 
         records = (
@@ -778,6 +783,63 @@ class TestUnit(TestCase):
                 (('q', (('y', 95), ('x', 34), ('q', None))),))
 
 
+    def test_frame_reindex_d(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+
+        columns = IndexHierarchy.from_labels((('a', 1), ('a', 2), ('b', 1), ('b', 2), ('b', 3)))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=('x', 'y', 'z'))
+
+        # NOTE: must use HLoc on getting a single columns as otherwise looks like a multiple axis selection
+        self.assertEqual(f1[sf.HLoc['a', 1]].to_pairs(),
+                (('x', 1), ('y', 30), ('z', 54))
+                )
+
+        self.assertEqual(f1[sf.HLoc['b', 1]:].to_pairs(0),
+                ((('b', 1), (('x', 'a'), ('y', 'b'), ('z', 'c'))), (('b', 2), (('x', False), ('y', True), ('z', False))), (('b', 3), (('x', True), ('y', False), ('z', False)))))
+
+        # reindexing with no column matches results in NaN for all values
+        self.assertTrue(
+                f1.iloc[:, 1:].reindex(columns=IndexHierarchy.from_product(('b', 'a'), (10, 20))).isna().all().all())
+
+        columns = IndexHierarchy.from_product(('b', 'a'), (3, 2))
+        f2 = f1.reindex(columns=columns, fill_value=None)
+        self.assertEqual(f2.to_pairs(0),
+                ((('b', 3), (('x', True), ('y', False), ('z', False))), (('b', 2), (('x', False), ('y', True), ('z', False))), (('a', 3), (('x', None), ('y', None), ('z', None))), (('a', 2), (('x', 2), ('y', 34), ('z', 95)))))
+
+
+    def test_frame_reindex_e(self):
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        self.assertEqual(f1.loc[(200, True):, ('b',1):].to_pairs(0),
+                ((('b', 1), (((200, True), 'c'), ((200, False), 'd'))), (('b', 2), (((200, True), False), ((200, False), True)))))
+
+        # reindex from IndexHierarchy to Index with tuples
+        f2 = f1.reindex(
+                index=IndexHierarchy.from_product((200, 300), (False, True)),
+                columns=[('b',1),('a',1)],
+                fill_value=None)
+        self.assertEqual(f2.to_pairs(0),
+                ((('b', 1), (((200, False), 'd'), ((200, True), 'c'), ((300, False), None), ((300, True), None))), (('a', 1), (((200, False), 65), ((200, True), 54), ((300, False), None), ((300, True), None)))))
 
     def test_frame_axis_interface_a(self):
         # reindex both axis
@@ -1915,6 +1977,107 @@ class TestUnit(TestCase):
 
         self.assertEqual(list(f1._blocks._reblock_signature()),
                 [(dtype('<M8[D]'), 2), (dtype('<U1'), 1), (dtype('bool'), 2)])
+
+
+    def test_frame_from_records_a(self):
+
+        NT = namedtuple('Sample', ('a', 'b', 'c'))
+        records = [NT(x, x, x) for x in range(4)]
+        f1 = Frame.from_records(records)
+        self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
+        self.assertEqual(f1.sum().to_pairs(),
+                (('a', 6), ('b', 6), ('c', 6)))
+
+    def test_frame_from_records_b(self):
+
+        records = [{'a':x, 'b':x, 'c':x} for x in range(4)]
+        f1 = Frame.from_records(records)
+        self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
+        self.assertEqual(f1.sum().to_pairs(),
+                (('a', 6), ('b', 6), ('c', 6)))
+
+
+
+    def test_frame_from_json_a(self):
+
+        msg = """[
+        {
+        "userId": 1,
+        "id": 1,
+        "title": "delectus aut autem",
+        "completed": false
+        },
+        {
+        "userId": 1,
+        "id": 2,
+        "title": "quis ut nam facilis et officia qui",
+        "completed": false
+        },
+        {
+        "userId": 1,
+        "id": 3,
+        "title": "fugiat veniam minus",
+        "completed": false
+        },
+        {
+        "userId": 1,
+        "id": 4,
+        "title": "et porro tempora",
+        "completed": true
+        }]"""
+
+        f1 = Frame.from_json(msg)
+        self.assertEqual(f1.columns.values.tolist(),
+                ['completed', 'id', 'title', 'userId'])
+        self.assertEqual(f1['id'].sum(), 10)
+
+    @unittest.skip('requires network')
+    def test_frame_from_json_b(self):
+        url = 'https://jsonplaceholder.typicode.com/todos'
+        f1 = Frame.from_json_url(url)
+        self.assertEqual(f1.columns.values.tolist(),
+                ['completed', 'id', 'title', 'userId'])
+
+
+    def test_frame_reindex_flat_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+
+        columns = IndexHierarchy.from_labels(
+                (('a', 1), ('a', 2), ('b', 1), ('b', 2), ('b', 3)))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=('x', 'y', 'z'))
+
+        f2 = f1.reindex_flat(columns=True)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('a', 1), (('x', 1), ('y', 30), ('z', 54))), (('a', 2), (('x', 2), ('y', 34), ('z', 95))), (('b', 1), (('x', 'a'), ('y', 'b'), ('z', 'c'))), (('b', 2), (('x', False), ('y', True), ('z', False))), (('b', 3), (('x', True), ('y', False), ('z', False)))))
+
+
+    def test_frame_add_level_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+
+
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = f1.reindex_add_level(index='I', columns='II')
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('II', 'a'), ((('I', 'x'), 1), (('I', 'y'), 30), (('I', 'z'), 54))), (('II', 'b'), ((('I', 'x'), 2), (('I', 'y'), 34), (('I', 'z'), 95))), (('II', 'c'), ((('I', 'x'), 'a'), (('I', 'y'), 'b'), (('I', 'z'), 'c'))), (('II', 'd'), ((('I', 'x'), False), (('I', 'y'), True), (('I', 'z'), False))), (('II', 'e'), ((('I', 'x'), True), (('I', 'y'), False), (('I', 'z'), False))))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
