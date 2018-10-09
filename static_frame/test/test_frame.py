@@ -2027,8 +2027,8 @@ class TestUnit(TestCase):
         }]"""
 
         f1 = Frame.from_json(msg)
-        self.assertEqual(f1.columns.values.tolist(),
-                ['completed', 'id', 'title', 'userId'])
+        self.assertEqual(sorted(f1.columns.values.tolist()),
+                sorted(['completed', 'id', 'title', 'userId']))
         self.assertEqual(f1['id'].sum(), 10)
 
     @unittest.skip('requires network')
