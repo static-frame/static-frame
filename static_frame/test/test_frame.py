@@ -35,12 +35,7 @@ class TestUnit(TestCase):
 
     def test_frame_init_a(self):
 
-        f = Frame(dict(a=(1,2), b=(3,4)), index=('x', 'y'))
-        self.assertEqual(f.to_pairs(0),
-                (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
-                )
-
-        f = Frame(dict(b=(3,4), a=(1,2)), index=('x', 'y'))
+        f = Frame(OrderedDict([('a', (1,2)), ('b', (3,4))]), index=('x', 'y'))
         self.assertEqual(f.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
                 )
