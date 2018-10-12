@@ -2,6 +2,7 @@ from itertools import zip_longest
 from itertools import combinations
 import unittest
 from collections import OrderedDict
+import itertools as it
 from collections import namedtuple
 from io import StringIO
 import string
@@ -75,6 +76,11 @@ class TestUnit(TestCase):
         self.assertTrue(f4._columns._loc_is_iloc)
 
 
+    def test_frame_init_c(self):
+        f = sf.FrameGO(dict(color=('black',)))
+        s = f['color']
+        self.assertEqual(s.to_pairs(),
+                ((0, 'black'),))
 
     def test_frame_from_pairs_a(self):
 
@@ -1915,6 +1921,21 @@ class TestUnit(TestCase):
                 (('p', (('x', 2), ('a', 30))), ('q', (('x', 2), ('a', 34))), ('t', (('x', False), ('a', False))), ('r', (('x', 'c'), ('a', 'd'))), ('s', (('x', False), ('a', True))))
                 )
 
+
+    def test_frame_from_concat_h(self):
+
+        index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 3))
+        columns = list(''.join(x) for x in it.combinations(string.ascii_uppercase, 2))
+        data = np.random.rand(len(index), len(columns))
+        f1 = Frame(data, index=index, columns=columns)
+
+        f2 = f1[[c for c in f1.columns if c.startswith('D')]]
+        f3 = f1[[c for c in f1.columns if c.startswith('G')]]
+        post = sf.Frame.from_concat((f2, f3), axis=1)
+
+        # this form of concatenation has no copy
+        assert post.mloc.tolist() == [f2.mloc[0], f3.mloc[0]]
+        self.assertEqual(post.shape, (2600, 41))
 
 
     def test_frame_set_index_a(self):

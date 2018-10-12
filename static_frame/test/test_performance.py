@@ -188,6 +188,19 @@ class PerfTest:
 #-------------------------------------------------------------------------------
 # index Tests
 
+class IndexStr_init(PerfTest):
+    '''Index construction for string labels.
+    '''
+
+    @classmethod
+    def pd(cls):
+        pd.Index(SampleData.get('label_str'))
+
+    @classmethod
+    def sf(cls):
+        sf.Index(SampleData.get('label_str'))
+
+
 class IndexHierarchy2d_from_product(PerfTest):
 
     NUMBER = 100
@@ -262,6 +275,30 @@ class IndexHierarchy3d_from_labels(PerfTest):
 
 #-------------------------------------------------------------------------------
 # series tests
+
+class SeriesIntFloat_init(PerfTest):
+    @staticmethod
+    def pd():
+        post = pd.Series(SampleData.get('npa_int_float_10k'))
+
+    @staticmethod
+    def sf():
+        post = pd.Series(SampleData.get('npa_int_float_10k'))
+
+
+class SeriesStrObj_init(PerfTest):
+    @staticmethod
+    def pd():
+        a = SampleData.get('npa_obj_10k')
+        post = pd.Series(a, index=SampleData.get('label_str')[:len(a)])
+
+    @staticmethod
+    def sf():
+        a = SampleData.get('npa_obj_10k')
+        post = sf.Series(a, index=SampleData.get('label_str')[:len(a)])
+
+
+
 
 class SeriesIntFloat_isnull(PerfTest):
     @staticmethod
@@ -487,6 +524,30 @@ class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
 
 #-------------------------------------------------------------------------------
 # frame tests
+
+class FrameFloat_init(PerfTest):
+    @staticmethod
+    def pd():
+        post = pd.DataFrame(SampleData.get('npf_float_10k'))
+
+    @staticmethod
+    def sf():
+        post = pd.DataFrame(SampleData.get('npf_float_10k'))
+
+class FrameStrFloat_init(PerfTest):
+    @staticmethod
+    def pd():
+        data = SampleData.get('npf_float_10k')
+        labels = SampleData.get('label_str')
+        post = pd.DataFrame(data, index=labels[:data.shape[0]], columns=labels[:data.shape[1]])
+
+    @staticmethod
+    def sf():
+        data = SampleData.get('npf_float_10k')
+        labels = SampleData.get('label_str')
+        post = sf.Frame(data, index=labels[:data.shape[0]], columns=labels[:data.shape[1]])
+
+
 
 class FrameFloat_sum_skipna_axis0(PerfTest):
     @staticmethod

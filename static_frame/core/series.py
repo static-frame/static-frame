@@ -122,23 +122,29 @@ class Series(metaclass=MetaOperatorDelegate):
                     and hasattr(values, '__len__')):
                 self.values = np.fromiter(values, dtype=dtype, count=len(values))
                 self.values.flags.writeable = False
-            elif hasattr(values, '__len__'):
+            elif hasattr(values, '__len__') and not isinstance(values, str):
                 self.values = np.array(values, dtype=dtype)
                 self.values.flags.writeable = False
             elif hasattr(values, '__next__'): # a generator-like
                 self.values = np.array(tuple(values), dtype=dtype)
                 self.values.flags.writeable = False
             else: # it must be a single item
-                if not hasattr(index, '__len__'):
-                    raise Exception('cannot create a Series from a single item if passed index has no length.')
+                # if not hasattr(index, '__len__'):
+                #     raise Exception('cannot create a Series from a single item if passed index has no length.')
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape):
                     self.values = np.full(shape, values, dtype=dtype)
                     self.values.flags.writeable = False
         else: # is numpy
             if dtype is not None and dtype != values.dtype:
-                raise Exception('type requested is not the type given') # what to do here?
-            self.values = immutable_filter(values)
+                # what to do here?
+                raise Exception('type requested is not the type given')
+            if values.shape == (): # handle special case of NP element
+                def values_constructor(shape):
+                    self.values = np.repeat(values, shape)
+                    self.values.flags.writeable = False
+            else:
+                self.values = immutable_filter(values)
 
         #-----------------------------------------------------------------------
         # index assignment

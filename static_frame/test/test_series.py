@@ -88,6 +88,22 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(),
                 (('b', 4), ('a', 1)))
 
+    def test_series_init_d(self):
+        # single element, when the element is a string
+        s1 = Series('abc', index=range(4))
+        self.assertEqual(s1.to_pairs(),
+                ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
+
+        # this is an array with shape == (), or a single element
+        s2 = Series(np.array('abc'), index=range(4))
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
+
+        # single element, generator index
+        s3 = Series(None, index=(x * 10 for x in (1,2,3)))
+        self.assertEqual(s3.to_pairs(),
+                ((10, None), (20, None), (30, None))
+                )
 
 
     def test_series_slice_a(self):
