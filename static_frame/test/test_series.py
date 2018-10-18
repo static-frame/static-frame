@@ -717,5 +717,24 @@ class TestUnit(TestCase):
                 )
 
 
+    @unittest.skip('non required dependency')
+    def test_series_from_pandas_a(self):
+        import pandas as pd
+
+        pds = pd.Series([3,4,5], index=list('abc'))
+        sfs = Series.from_pandas(pds)
+        self.assertEqual(list(pds.items()), list(sfs.items()))
+
+        # mutate Pandas
+        pds['c'] = 50
+        self.assertNotEqual(pds['c'], sfs['c'])
+
+        # owning data
+        pds = pd.Series([3,4,5], index=list('abc'))
+        sfs = Series.from_pandas(pds, own_data=True, own_index=True)
+        self.assertEqual(list(pds.items()), list(sfs.items()))
+
+        # NOTE: some operations in Pandas can refresh the values attribute
+
 if __name__ == '__main__':
     unittest.main()

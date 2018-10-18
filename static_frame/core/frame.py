@@ -30,6 +30,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import FrameInitializer
+from static_frame.core.util import immutable_filter
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _iterable_to_array
@@ -291,14 +292,14 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_json(cls, json_data):
-        '''Frame constructor from json, either stored or obtained via URL.
+        '''Frame constructor from an in-memory JSON document.
         '''
         data = json.loads(json_data)
         return cls.from_records(data)
 
     @classmethod
     def from_json_url(cls, url):
-        '''Frame constructor from json provided via a url.
+        '''Frame constructor from a JSON document provided via a URLL.
         '''
         return cls.from_json(_read_url(url))
 
@@ -482,6 +483,67 @@ class Frame(metaclass=MetaOperatorDelegate):
         Specialized version of :py:meth:`Frame.from_csv` for TSV files.
         '''
         return cls.from_csv(fp, delimiter='\t', **kwargs)
+
+
+    @classmethod
+    def from_pandas(cls,
+            value,
+            *,
+            own_data: bool=False,
+            own_index: bool=False,
+            own_columns: bool=False) -> 'Frame':
+        '''Given a Pandas DataFrame, return a Frame.
+
+        Args:
+            value: Pandas DataFrame.
+            own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
+            own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+            own_columns: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+        '''
+        if own_index:
+            index = value.index.values
+            index.flags.writeable = False
+        else:
+            index = immutable_filter(value.index.values)
+
+        if own_columns:
+            columns = value.columns.values
+            columns.flags.writeable = False
+        else:
+            columns = immutable_filter(value.columns.values)
+
+        # create generator of contiguous typed data
+        # calling .values will force type unification accross all columns
+        def blocks():
+            pairs = value.dtypes.items()
+            column_start, dtype_current = next(pairs)
+            column_last = None
+            for column, dtype in pairs:
+
+                if dtype != dtype_current:
+                    # use loc to select before calling .values
+                    array = value.loc[_NULL_SLICE, slice(column_start, column_last)].values
+                    if own_data:
+                        array.flags.writeable = False
+                    yield array
+                    column_start = column
+                    dtype_current = dtype
+
+                column_last = column
+
+            # always have left over
+            array = value.loc[_NULL_SLICE, slice(column_start, None)].values
+            if own_data:
+                array.flags.writeable = False
+            yield array
+
+        blocks = TypeBlocks.from_blocks(blocks())
+        return cls(blocks,
+                index=index,
+                columns=columns,
+                own_data=True)
+
+
 
     #---------------------------------------------------------------------------
 

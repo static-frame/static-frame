@@ -15,6 +15,8 @@ Series
    :start-after: start_series_from_items_a
    :end-before: end_series_from_items_a
 
+.. automethod:: static_frame.Series.from_pandas
+
 
 Frame
 ---------
@@ -62,3 +64,10 @@ Frame
 .. automethod:: static_frame.Frame.from_tsv
 
 
+.. automethod:: static_frame.Frame.from_json
+
+
+.. automethod:: static_frame.Frame.from_json_url
+
+
+.. automethod:: static_frame.Frame.from_pandas

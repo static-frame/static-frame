@@ -89,6 +89,32 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return cls(values(), index=index, dtype=dtype)
 
+    @classmethod
+    def from_pandas(cls,
+            value,
+            *,
+            own_data: bool=False,
+            own_index: bool=False) -> 'Series':
+        '''Given a Pandas Series, return a Series.
+
+        Args:
+            own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
+            own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+        '''
+        if own_data:
+            data = value.values
+            data.flags.writeable = False
+        else:
+            data = immutable_filter(value.values)
+
+        if own_index:
+            index = value.index.values
+            index.flags.writeable = False
+        else:
+            index = immutable_filter(value.index.values)
+
+        # index is already managed, can own
+        return cls(data, index=index)
 
     def __init__(self,
             values: SeriesInitializer,
@@ -116,7 +142,7 @@ class Series(metaclass=MetaOperatorDelegate):
                         yield v
                 self.values = np.fromiter(values_gen(), dtype=dtype, count=len(values))
 
-            # TODO: not sure if we need to check __iter__ here
+            # NOTE: not sure if we need to check __iter__ here
             elif (dtype and dtype != object and dtype != str
                     and hasattr(values, '__iter__')
                     and hasattr(values, '__len__')):
@@ -129,8 +155,6 @@ class Series(metaclass=MetaOperatorDelegate):
                 self.values = np.array(tuple(values), dtype=dtype)
                 self.values.flags.writeable = False
             else: # it must be a single item
-                # if not hasattr(index, '__len__'):
-                #     raise Exception('cannot create a Series from a single item if passed index has no length.')
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape):
                     self.values = np.full(shape, values, dtype=dtype)
@@ -536,12 +560,6 @@ class Series(metaclass=MetaOperatorDelegate):
     def index(self):
         return self._index
 
-    # @index.setter
-    # def index(self, value):
-    #     if len(value) != len(self._index):
-    #         raise Exception('new index must match length of old index')
-    #     self._index = Index(value)
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -674,7 +692,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def to_pairs(self) -> tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]:
         '''
-        Return a tuple of tuples of index label, value.
+        Return a tuple of tuples, where each inner tuple is a pair of index label, value.
         '''
         if isinstance(self._index, IndexHierarchy):
             index_values = list(_array2d_to_tuples(self._index.values))
@@ -690,6 +708,8 @@ class Series(metaclass=MetaOperatorDelegate):
         import pandas
         return pandas.Series(self.values.copy(),
                 index=self._index.values.copy())
+
+
 
 
 class SeriesAssign:

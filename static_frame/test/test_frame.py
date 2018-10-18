@@ -2098,5 +2098,22 @@ class TestUnit(TestCase):
                 )
 
 
+    @unittest.skip('non required dependency')
+    def test_from_from_pandas_a(self):
+        import pandas as pd
+
+        pdf = pd.DataFrame(
+                dict(a=(False, True, False),
+                b=(False, False,False),
+                c=(1,2,3),
+                d=(4,5,6),
+                e=(None, None, None)))
+
+        sff = Frame.from_pandas(pdf)
+        self.assertTrue((pdf.dtypes.values == sff.dtypes.values).all())
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
