@@ -49,6 +49,6 @@ from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameAssign
 
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 
 

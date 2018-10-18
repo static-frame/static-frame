@@ -2,7 +2,7 @@
 Iterators
 ===============================
 
-Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated. In all cases, alternate "items" versions of iterators are provided that return pairs of (index, value).
+Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated. In all cases, alternate "items" versions of iterators are provided; these methods return pairs of (index, value).
 
 
 .. NOTE: Iterator functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`IterNodeDelegate` instances. See below for documentation of :py:class:`IterNodeDelegate` functions for function application on iterables.
@@ -197,15 +197,16 @@ Frame
 
 
 
-
 Function Application to Iterators
 =============================================
 
-:py:class:`Frame` and :py:class:`Series` return :py:class:`IterNodeDelegate` instances when called. These instances are prepared for iteation via :py:meth:`IterNodeDelegate.__iter__`, and in addition, have a number of methods for function application.
+:py:class:`Frame` and :py:class:`Series` :py:class:`IterNode` attributes return, when called,  :py:class:`IterNodeDelegate` instances. These instances are prepared for iteation via :py:meth:`IterNodeDelegate.__iter__`, and expose a number of methods for function application.
 
 .. automethod:: static_frame.IterNodeDelegate.__iter__
 
 .. automethod:: static_frame.IterNodeDelegate.apply
+
+.. automethod:: static_frame.IterNodeDelegate.apply_pool
 
 .. automethod:: static_frame.IterNodeDelegate.apply_iter
 

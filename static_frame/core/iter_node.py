@@ -56,7 +56,40 @@ class IterNodeDelegate:
         self._apply_constructor = apply_constructor
 
     #---------------------------------------------------------------------------
-    # core methods are apply_iter_items, yielding pairs of key, value
+
+    def _apply_iter_items_parallel(self,
+            func: CallableOrMapping,
+            max_workers=None,
+            chunksize=1,
+            use_threads=False,
+            ) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
+
+        pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
+
+        if not callable(func):
+            func = getattr(func, '__getitem__')
+
+        # use side effect list population to create keys when iterating over values
+        func_keys = []
+        if self._yield_type is IterNodeType.VALUES:
+            def arg_gen():
+                for k, v in self._func_items():
+                    func_keys.append(k)
+                    yield v
+        else:
+            def arg_gen():
+                for k, v in self._func_items():
+                    func_keys.append(k)
+                    yield k, v
+
+        with pool_executor(max_workers=max_workers) as executor:
+            yield from zip(func_keys,
+                    executor.map(func, arg_gen(), chunksize=chunksize)
+                    )
+
+    #---------------------------------------------------------------------------
+    # public interface
+
 
     def apply_iter_items(self,
             func: CallableOrMapping) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
@@ -87,73 +120,57 @@ class IterNodeDelegate:
                     yield k, func(k, v)
 
 
-    def apply_iter_items_parallel(self,
-            func: CallableOrMapping,
-            max_workers=4,
-            chunksize=20,
-            use_threads=False,
-            ) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
-
-        '''
-        Args:
-            func: A function or a mapping object that defines __getitem__. If a mapping is given all values must be found in the mapping (this deviates from Pandas Series.map, which inserts NaNs)
-        '''
-        pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
-        if not callable(func):
-            func = getattr(func, '__getitem__')
-
-        # use side effect list population to create keys when iterating over values
-        func_keys = []
-        if self._yield_type is IterNodeType.VALUES:
-            def arg_gen():
-                for k, v in self._func_items():
-                    func_keys.append(k)
-                    yield v
-        else:
-            def arg_gen():
-                for k, v in self._func_items():
-                    func_keys.append(k)
-                    yield k, v
-
-        with pool_executor(max_workers=max_workers) as executor:
-            yield from zip(func_keys,
-                    executor.map(func, arg_gen(), chunksize=chunksize)
-                    )
-
-    #---------------------------------------------------------------------------
-    # utility interfaces
-
     def apply_iter(self,
-            func: CallableOrMapping,
-            dtype=None) -> tp.Generator[tp.Any, None, None]:
+            func: CallableOrMapping
+            ) -> tp.Generator[tp.Any, None, None]:
         '''
         Generator that applies the passed function to each element iterated and yields the result.
+
+        Args:
+            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
         '''
         yield from (v for _, v in self.apply_iter_items(func=func))
 
 
     def apply(self,
             func: CallableOrMapping,
-            dtype=None,
-            max_workers=None,
-            chunksize=20,
-            use_threads=False,
+            dtype=None
             ) -> tp.Union['static_frame.Series', 'static_frame.Frame']:
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance.
-        '''
-        if max_workers:
-            return self._apply_constructor(
-                    self.apply_iter_items_parallel(
-                            func=func,
-                            max_workers=max_workers,
-                            chunksize=chunksize,
-                            use_threads=use_threads),
-                    dtype=dtype)
 
+        Args:
+            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
+            dtype: Type used to create the returned array.
+        '''
         return self._apply_constructor(
                 self.apply_iter_items(func=func),
+                dtype=dtype)
+
+
+    def apply_pool(self,
+            func: CallableOrMapping,
+            dtype=None,
+            max_workers: tp.Optional[int]=None,
+            chunksize: int=1,
+            use_threads: bool=False
+            ) -> tp.Union['static_frame.Series', 'static_frame.Frame']:
+        '''
+        Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
+
+        Args:
+            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
+            dtype: Type used to create the returned array.
+            max_workers: Passed to the pool_executor, where None defaults to the max number of machine processes.
+            chunksize: Passed to the pool executor.
+            use_thread: When True, the ThreadPoolExecutor will be used rather than the default ProcessPoolExecutor.
+        '''
+        return self._apply_constructor(
+                self._apply_iter_items_parallel(
+                        func=func,
+                        max_workers=max_workers,
+                        chunksize=chunksize,
+                        use_threads=use_threads),
                 dtype=dtype)
 
     def __iter__(self):

@@ -216,16 +216,19 @@ class TestUnit(TestCase):
 
     def test_frame_iter_array_b(self):
 
-        # thest of multi threaded apply
-
+        arrays = list(np.random.rand(1000) for _ in range(100))
         f1 = Frame.from_items(
-                zip(range(100), (np.random.rand(1000) for _ in range(100)))
+                zip(range(100), arrays)
                 )
+
         # iter columns
-        post = f1.iter_array(0).apply(np.sum, max_workers=4, use_threads=True)
+        post = f1.iter_array(0).apply_pool(np.sum, max_workers=4, use_threads=True)
         self.assertEqual(post.shape, (100,))
+        self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
-
+        post = f1.iter_array(0).apply_pool(np.sum, max_workers=4, use_threads=False)
+        self.assertEqual(post.shape, (100,))
+        self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
 
     def test_frame_setitem_a(self):

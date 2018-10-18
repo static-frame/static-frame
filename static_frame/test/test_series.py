@@ -192,8 +192,6 @@ class TestUnit(TestCase):
                 [('a', 0), ('b', 2), ('c', 8), ('d', 18)])
 
 
-
-
     def test_series_binary_operator_c(self):
         '''Test binary operators with Series of different index
         '''
@@ -203,6 +201,23 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(list((s1 * s2).items()),
                 [('a', nan), ('b', nan), ('c', 0), ('d', 6), ('e', nan), ('f', nan)]
                 )
+
+
+    def test_series_binary_operator_d(self):
+        s1 = Series(range(4), index=list('abcd'))
+        s2 = Series(range(3), index=list('abc'))
+        s3 = s1 + s2
+
+        self.assertEqual(s3.fillna(None).to_pairs(),
+                (('a', 0), ('b', 2), ('c', 4), ('d', None))
+                )
+
+        s1 = Series((False, True, False, True), index=list('abcd'))
+        s2 = Series([True] * 3, index=list('abc'))
+
+        # NOTE: for now, we cannot resolve this case, as after reindexing we get an object array that is not compatible with Boolean array for the NaN4
+        with self.assertRaises(TypeError):
+            s3 = s1 | s2
 
 
     def test_series_reindex_a(self):

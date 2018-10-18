@@ -359,13 +359,13 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if isinstance(other, Series):
             # if indices are the same, we can simply set other to values and fallback on NP
-            if (self.index == other.index).all(): # this is an array
-                other = other.values
-            else:
+            if len(self.index) != len(other.index) or (self.index != other.index).any():
                 index = self.index.union(other.index)
                 # now need to reindex the Series
                 values = self.reindex(index).values
                 other = other.reindex(index).values
+            else:
+                other = other.values
 
         # if its an np array, we simply fall back on np behavior
         elif isinstance(other, np.ndarray):
