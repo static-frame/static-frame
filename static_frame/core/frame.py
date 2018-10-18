@@ -299,7 +299,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_json_url(cls, url):
-        '''Frame constructor from a JSON document provided via a URLL.
+        '''Frame constructor from a JSON document provided via a URL.
         '''
         return cls.from_json(_read_url(url))
 
