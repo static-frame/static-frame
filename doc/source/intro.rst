@@ -72,6 +72,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - John Hawk
 - Adam Kay
 - Mark LeMoine
+- Myrl Marmarelis
 - Tom Rutherford
 - Yu Tomita
 - Quang Vu

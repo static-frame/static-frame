@@ -1,6 +1,4 @@
 
-
-
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping
@@ -12,7 +10,6 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import mloc
-
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import ExtractInterface
@@ -34,7 +31,6 @@ from static_frame.core.index import IndexDate
 from static_frame.core.index import IndexYearMonth
 from static_frame.core.index import IndexYear
 
-
 from static_frame.core.index_hierarchy import IndexLevel
 from static_frame.core.index_hierarchy import IndexLevelGO
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -48,7 +44,6 @@ from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameAssign
 
-
-__version__ = '0.1.8'
+__version__ = '0.1.9.dev'
 
 

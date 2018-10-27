@@ -1,20 +1,17 @@
-import timeit
-import cProfile
-import pstats
+
 import io
 import collections
 import typing as tp
 import itertools as it
-import argparse
 import string
 import hashlib
-import fnmatch
 
 import pandas as pd
 import numpy as np
 
 import static_frame as sf
 
+from static_frame.performance.perf_test import PerfTest
 
 #-------------------------------------------------------------------------------
 
@@ -176,12 +173,6 @@ class SampleData:
     @classmethod
     def get(cls, key):
         return cls._store[key]
-
-class PerfTest:
-    PD_NAME = 'pd'
-    SF_NAME = 'sf'
-    FUNCTION_NAMES = ('np', PD_NAME, SF_NAME)
-    NUMBER = 400
 
 
 
@@ -855,111 +846,4 @@ class FrameFloat_H2D_add_series_partial(PerfTest):
             s = pd.Series(col * .1, index=index[col: col+6])
             f1[col] = s
         assert f1.sum().sum() == 2970.0
-
-
-#-------------------------------------------------------------------------------
-
-def get_arg_parser():
-    p = argparse.ArgumentParser(
-            description='Performance testing and profiling',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog='''Example:
-
-Performance comparison of all dropna tests:
-
-python3 test_performance.py '*dropna' --performance
-
-Profiling outpout for static-frame dropna:
-
-python3 test_performance.py SeriesIntFloat_dropna --profile
-            '''
-            )
-    p.add_argument('patterns',
-            help='Names of classes to match using fn_match syntax',
-            nargs='+',
-            )
-    p.add_argument('--profile',
-            help='Turn on profiling',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--performance',
-            help='Turn on performance measurements',
-            action='store_true',
-            default=False,
-            )
-    return p
-
-
-def yield_classes(pattern: str):
-    # this will not find children of children
-    for cls in PerfTest.__subclasses__():
-        if fnmatch.fnmatch(cls.__name__.lower(), pattern.lower()):
-            yield cls
-
-def profile(cls, function='sf'):
-    '''
-    Profile the `sf` function from the supplied class.
-    '''
-
-    f = getattr(cls, function)
-
-    pr = cProfile.Profile()
-    pr.enable()
-    for _ in range(cls.NUMBER):
-        f()
-    pr.disable()
-
-    s = io.StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
-    ps.print_stats()
-    print(s.getvalue())
-
-def performance(cls) -> tp.Tuple[str, float, float, float]:
-    #row = []
-    row = collections.OrderedDict()
-    row['name'] = cls.__name__
-    for f in PerfTest.FUNCTION_NAMES:
-        if hasattr(cls, f):
-            result = timeit.timeit(cls.__name__ + '.' + f + '()',
-                    globals=globals(),
-                    number=cls.NUMBER)
-            row[f] = result
-        else:
-            row[f] = np.nan
-    return row
-
-
-def main():
-
-    SampleData.create()
-
-    options = get_arg_parser().parse_args()
-    records = []
-    for pattern in options.patterns:
-        for cls in sorted(yield_classes(pattern), key=lambda c: c.__name__):
-            print(cls.__name__)
-            if options.performance:
-                records.append(performance(cls))
-            if options.profile:
-                profile(cls)
-    if records:
-        df = pd.DataFrame.from_records(records)
-
-        df['sf/pd'] = df[PerfTest.SF_NAME] / df[PerfTest.PD_NAME]
-        df.set_index('name', inplace=True)
-
-        pd.set_option('display.width', None)
-        print(df)
-        print('mean: {}'.format(df['sf/pd'].mean()))
-        print('wins: {}/{}'.format((df['sf/pd'] < 1.05).sum(), len(df)))
-
-
-
-    # df = pd.DataFrame.from_records(records, columns=('name',) + PerfTest.FUNCTION_NAMES)
-    # print(df)
-
-
-if __name__ == '__main__':
-    main()
 

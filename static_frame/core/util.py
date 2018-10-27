@@ -367,29 +367,31 @@ def _array_to_groups_and_locations(
 def _isna(array: np.ndarray) -> np.ndarray:
     '''Utility function that, given an np.ndarray, returns a bolean arrea setting True nulls. Note: the returned array is not made immutable
     '''
-    # TODO: this function is a bottleneck: perhaps use numba?
-    # moatches all floating point types
+    # matches all floating point types
     if array.dtype.kind == 'f':
         return np.isnan(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif array.dtype.kind != 'O':
         return np.full(array.shape, False, dtype=bool)
     # only check for None if we have an object type
-    # astype: None gets converted to nan if possible
-    try: # this will only work for arrays that do not have strings
-        # cannot use can_cast to reliabily identify arrays with non-float-castable elements
-        return np.isnan(array.astype(float))
-    except ValueError:
-        # this means there was a character or something not castable to float; have to prceed slowly
-        # TODO: this is a big perforamnce hit; problem is cannot find np.nan in numpy object array
-        if array.ndim == 1:
-            return np.fromiter((x is None or x is np.nan for x in array),
-                    count=array.size,
-                    dtype=bool)
+    # identify nans by them being the only thing not equal to itself
+    return np.not_equal(array, array) | np.equal(array, None)
 
-        return np.fromiter((x is None or x is np.nan for x in array.flat),
-                count=array.size,
-                dtype=bool).reshape(array.shape)
+    # try: # this will only work for arrays that do not have strings
+    #     # astype: None gets converted to nan if possible
+    #     # cannot use can_cast to reliabily identify arrays with non-float-castable elements
+    #     return np.isnan(array.astype(float))
+    # except ValueError:
+    #     # this Exception means there was a character or something not castable to float
+    #     # this is a big perforamnce hit; problem is cannot find np.nan in numpy object array
+    #     if array.ndim == 1:
+    #         return np.fromiter((x is None or x is np.nan for x in array),
+    #                 count=array.size,
+    #                 dtype=bool)
+
+    #     return np.fromiter((x is None or x is np.nan for x in array.flat),
+    #             count=array.size,
+    #             dtype=bool).reshape(array.shape)
 
 
 def _array_to_duplicated(

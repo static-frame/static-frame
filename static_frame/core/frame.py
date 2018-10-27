@@ -309,12 +309,14 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
-            index: IndexInitializer=None):
+            index: IndexInitializer=None,
+            consolidate_blocks: bool=True):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
             index: Iterable of values to create an Index.
+            consoidate_blocks: If True, same typed adjacent columns will be consolidated into a contiguous array.
         '''
         columns = []
         def blocks():
@@ -327,7 +329,10 @@ class Frame(metaclass=MetaOperatorDelegate):
                     values.flags.writeable = False
                     yield values
 
-        return cls(TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks())),
+        blocks = (TypeBlocks.consolidate_blocks(blocks())
+                if consolidate_blocks else blocks())
+
+        return cls(TypeBlocks.from_blocks(blocks),
                 index=index,
                 columns=columns,
                 own_data=True)
