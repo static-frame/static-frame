@@ -13,6 +13,7 @@ from static_frame.core.util import _INT_TYPES
 from static_frame.core.util import _KEY_ITERABLE_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import DtypeSpecifier
 
 from static_frame.core.util import mloc
 from static_frame.core.util import _full_for_fill
@@ -278,7 +279,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 shape=self._shape,
                 row_dtype=self._row_dtype)
 
-    def axis_values(self, axis=0, reverse=False) -> tp.Generator[np.ndarray, None, None]:
+    def axis_values(self, axis=0, reverse=False) -> tp.Generator[
+            np.ndarray, None, None]:
         '''Generator of arrays produced along an axis.
 
         Args:
@@ -347,6 +349,31 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
+    def _reblock_signature(self) -> tp.Generator[tp.Tuple[np.dtype, int], None, None]:
+        '''For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
+
+        This is a generator to permit lazy pairwise comparison.
+        '''
+        group_dtype = None # store type found along contiguous blocks
+        group_cols = 0
+        for block in self._blocks:
+            if group_dtype is None: # first block of a type
+                group_dtype = block.dtype
+                if block.ndim == 1:
+                    group_cols += 1
+                else:
+                    group_cols += block.shape[1]
+                continue
+            if block.dtype != group_dtype:
+                yield (group_dtype, group_cols)
+                group_dtype = block.dtype
+                group_cols = 0
+            if block.ndim == 1:
+                group_cols += 1
+            else:
+                group_cols += block.shape[1]
+        if group_cols > 0:
+            yield (group_dtype, group_cols)
 
     def block_compatible(self,
             other: 'TypeBlocks',
@@ -384,16 +411,59 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return True
 
     @classmethod
-    def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]):
+    def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]) -> np.array:
+        '''This will always return a 2D array.
         '''
-        '''
+        # NOTE: if len(group) is 1, can return
         return np.concatenate([cls.single_column_filter(x) for x in group], axis=1)
+
+    def _astype_blocks(self,
+            # raw_blocks: tp.Iterable[np.ndarray],
+            column_key: GetItemKeyType,
+            dtype: DtypeSpecifier
+            ) -> tp.Generator[np.ndarray, None, None]:
+        '''
+        Generator consumer, generator producer of np.ndarray, consolidating types are exact matches.
+        '''
+        # these will only be contiguous slices, but there could be multiple discontinuous slices within the same block; and these might not be in block order
+        astype_slices = iter(self._key_to_block_slices(column_key))
+
+        group_dtype = None
+        # generate entire list of target columns first
+
+        for block in self._blocks:
+            if group_dtype is None: # first block of a type
+                group_dtype = block.dtype
+                group.append(block)
+                continue
+
+            # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
+            if block.dtype != group_dtype:
+                # new group found, return stored
+                if len(group) == 1: # return reference without copy
+                    # NOTE: using pop() here not shown to be faster
+                    yield group[0]
+                else: # combine groups
+                    # could pre allocating and assing as necessary for large groups
+                    yield cls._concatenate_blocks(group)
+                group_dtype = block.dtype
+                group = [block]
+            else: # new block has same group dtype
+                group.append(block)
+
+        # always have one or more leftover
+        if group:
+            if len(group) == 1:
+                yield group[0]
+            else:
+                yield cls._concatenate_blocks(group)
+
 
     @classmethod
     def consolidate_blocks(cls,
             raw_blocks: tp.Iterable[np.ndarray]) -> tp.Generator[np.ndarray, None, None]:
         '''
-        Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches. Possible improvement to discover when a type can correctly old another type.
+        Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
         '''
         group_dtype = None # store type found along contiguous blocks
         group = []
@@ -404,9 +474,11 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 group.append(block)
                 continue
 
+            # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
             if block.dtype != group_dtype:
                 # new group found, return stored
                 if len(group) == 1: # return reference without copy
+                    # NOTE: using pop() here not shown to be faster
                     yield group[0]
                 else: # combine groups
                     # could pre allocating and assing as necessary for large groups
@@ -416,7 +488,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             else: # new block has same group dtype
                 group.append(block)
 
-        # get anything leftover
+        # always have one or more leftover
         if group:
             if len(group) == 1:
                 yield group[0]
@@ -435,32 +507,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # note: not sure if we have a single block if we should return a new TypeBlocks instance (as done presently), or simply return self; either way, no new np arrays will be created
         return self.from_blocks(self.consolidate_blocks(raw_blocks=self._blocks))
 
-
-    def _reblock_signature(self) -> tp.Generator[tp.Tuple[np.dtype, int], None, None]:
-        '''For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
-
-        This is a generator to permit lazy pairwise comparison.
-        '''
-        group_dtype = None # store type found along contiguous blocks
-        group_cols = 0
-        for block in self._blocks:
-            if group_dtype is None: # first block of a type
-                group_dtype = block.dtype
-                if block.ndim == 1:
-                    group_cols += 1
-                else:
-                    group_cols += block.shape[1]
-                continue
-            if block.dtype != group_dtype:
-                yield (group_dtype, group_cols)
-                group_dtype = block.dtype
-                group_cols = 0
-            if block.ndim == 1:
-                group_cols += 1
-            else:
-                group_cols += block.shape[1]
-        if group_cols > 0:
-            yield (group_dtype, group_cols)
 
     def resize_blocks(self, *,
             index_ic: tp.Optional[IndexCorrespondence],

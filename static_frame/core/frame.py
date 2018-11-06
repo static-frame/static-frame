@@ -221,7 +221,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             records: tp.Iterable[tp.Any],
             *,
             index: tp.Optional[IndexInitializer]=None,
-            columns: tp.Optional[IndexInitializer]=None
+            columns: tp.Optional[IndexInitializer]=None,
+            consolidate_blocks: bool=True
             ):
         '''Frame constructor from an iterable of rows.
 
@@ -285,7 +286,10 @@ class Frame(metaclass=MetaOperatorDelegate):
                 values.flags.writeable = False
                 yield values
 
-        return cls(TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks())),
+        blocks = (TypeBlocks.consolidate_blocks(blocks())
+                if consolidate_blocks else blocks())
+
+        return cls(TypeBlocks.from_blocks(blocks),
                 index=index,
                 columns=columns,
                 own_data=True)
@@ -520,9 +524,10 @@ class Frame(metaclass=MetaOperatorDelegate):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks():
+            #import ipdb; ipdb.set_trace()
             pairs = value.dtypes.items()
             column_start, dtype_current = next(pairs)
-            column_last = None
+            column_last = column_start
             for column, dtype in pairs:
 
                 if dtype != dtype_current:
@@ -1467,6 +1472,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             kind=_DEFAULT_SORT_KIND) -> 'Frame':
         '''
         Return a new Frame ordered by the sorted values, where values is given by one or more columns.
+
+        Args:
+            key: a key or tuple of keys. Presently a list is not supported.
         '''
         # argsort lets us do the sort once and reuse the results
         if axis == 0: # get a column ordering
@@ -1669,6 +1677,19 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=self._index.values.copy(),
                 columns=self._columns.values.copy())
 
+    def to_frame_go(self):
+        '''
+        Return a FrameGO version of this Frame
+        '''
+        # copying blocks does not copy underlying data
+        return FrameGO(self._blocks.copy(),
+                index=self.index,
+                columns=self.columns.values,
+                own_data=True,
+                own_index=True,
+                own_columns=False # need to make grow only
+                )
+
     def to_csv(self,
             fp: FilePathOrFileLike,
             sep: str=',',
@@ -1800,6 +1821,13 @@ class FrameGO(Frame):
         '''Extend by simply extending this frames blocks.
         '''
         raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+    def to_frame_go(self):
+        '''
+        Return a FrameGO version of this Frame.
+        '''
+        raise NotImplementedError('Already a FrameGO')
 
 
 class FrameAssign:

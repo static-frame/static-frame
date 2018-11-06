@@ -105,6 +105,14 @@ class TestUnit(TestCase):
                 ((10, None), (20, None), (30, None))
                 )
 
+    def test_series_init_e(self):
+        s1 = Series(dict(a=1, b=2, c=np.nan, d=None), dtype=object)
+        self.assertEqual(s1.to_pairs(),
+                (('a', 1), ('b', 2), ('c', nan), ('d', None))
+                )
+        with self.assertRaises(ValueError):
+            s1.values[1] = 23
+
 
     def test_series_slice_a(self):
         # create a series from a single value
@@ -735,6 +743,32 @@ class TestUnit(TestCase):
         self.assertEqual(list(pds.items()), list(sfs.items()))
 
         # NOTE: some operations in Pandas can refresh the values attribute
+
+
+    def test_series_astype_a(self):
+
+        s1 = Series(['a', 'b', 'c'])
+
+        s2 = s1.astype(object)
+        self.assertEqual(s2.to_pairs(),
+                ((0, 'a'), (1, 'b'), (2, 'c')))
+        self.assertTrue(s2.dtype == object)
+
+        # we cannot convert to float
+        with self.assertRaises(ValueError):
+            s1.astype(float)
+
+    def test_series_astype_b(self):
+
+        s1 = Series([1, 3, 4, 0])
+
+        s2 = s1.astype(bool)
+        self.assertEqual(
+                s2.to_pairs(),
+                ((0, True), (1, True), (2, True), (3, False)))
+        self.assertTrue(s2.dtype == bool)
+
+
 
 if __name__ == '__main__':
     unittest.main()

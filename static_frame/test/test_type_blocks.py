@@ -1103,5 +1103,14 @@ class TestUnit(TestCase):
         self.assertEqual(len(tb2._blocks), 1)
 
 
+    @unittest.skip('not ready yet')
+    def test_type_blocks_astype_a(self):
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        blocks1 = list(tb1._astype_blocks(2, bool))
+
 if __name__ == '__main__':
     unittest.main()

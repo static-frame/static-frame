@@ -2085,8 +2085,6 @@ class TestUnit(TestCase):
                 (30, 34, 'b', True, False),
                 (54, 95, 'c', False, False),
                 )
-
-
         f1 = Frame.from_records(records,
                 columns=('a', 'b', 'c', 'd', 'e'),
                 index=('x', 'y', 'z'))
@@ -2099,7 +2097,7 @@ class TestUnit(TestCase):
 
 
     @unittest.skip('non required dependency')
-    def test_from_from_pandas_a(self):
+    def test_frame_from_from_pandas_a(self):
         import pandas as pd
 
         pdf = pd.DataFrame(
@@ -2113,6 +2111,20 @@ class TestUnit(TestCase):
         self.assertTrue((pdf.dtypes.values == sff.dtypes.values).all())
 
 
+    def test_frame_to_frame_go_a(self):
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = f1.to_frame_go()
+        f2['f'] = None
+        self.assertEqual(f2.columns.values.tolist(),
+                ['a', 'b', 'c', 'd', 'e', 'f'])
 
 
 if __name__ == '__main__':

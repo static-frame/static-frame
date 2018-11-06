@@ -133,14 +133,18 @@ class Series(metaclass=MetaOperatorDelegate):
             if isinstance(values, dict):
                 # not sure if we should sort; not sure what to do if index is provided
                 if index is not None:
-                    raise Exception('cannot create Series from dictionary when index is defined')
+                    raise Exception('cannot create a Series from a dictionary when an index is defined')
                 index = []
                 def values_gen():
                     for k, v in _dict_to_sorted_items(values):
                         # populate index as side effect of iterating values
                         index.append(k)
                         yield v
-                self.values = np.fromiter(values_gen(), dtype=dtype, count=len(values))
+                if dtype != object: # fromiter does not work with object types
+                    self.values = np.fromiter(values_gen(), dtype=dtype, count=len(values))
+                else:
+                    self.values = np.array(tuple(values_gen()), dtype=dtype)
+                self.values.flags.writeable = False
 
             # NOTE: not sure if we need to check __iter__ here
             elif (dtype and dtype != object and dtype != str
@@ -162,7 +166,7 @@ class Series(metaclass=MetaOperatorDelegate):
         else: # is numpy
             if dtype is not None and dtype != values.dtype:
                 # what to do here?
-                raise Exception('type requested is not the type given')
+                raise Exception('when supplying values via array, the dtype argument is not necessary; if provided, it must agree with the dtype of the array')
             if values.shape == (): # handle special case of NP element
                 def values_constructor(shape):
                     self.values = np.repeat(values, shape)
@@ -677,6 +681,12 @@ class Series(metaclass=MetaOperatorDelegate):
                 exclude_last=exclude_last)
         keep = ~duplicates
         return self.__class__(self.values[keep], index=self._index[keep])
+
+    def astype(self, dtype: DtypeSpecifier) -> 'Series':
+        '''
+        Return a Series with type determined by `dtype` argument.
+        '''
+        return self.__class__(self.values.astype(dtype), index=self._index)
 
     #---------------------------------------------------------------------------
     # utility function to numpy array

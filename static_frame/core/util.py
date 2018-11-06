@@ -26,8 +26,6 @@ import numpy as np
 # Series in from_concat
 # roll() on TypeBlocks (can be used in duplicate discovery on blocks)
 # shift as non-wrapping roll
-# astype: TypeBlocks, Series, Frame
-#   Frame.astype[a:b](int)
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
