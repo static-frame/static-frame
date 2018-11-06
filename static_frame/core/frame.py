@@ -1267,7 +1267,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def get(self, key, default=None):
         '''
-        Return the value found at the columns key, else the default if the key is not found.
+        Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
         if key not in self._columns:
             return default

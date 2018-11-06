@@ -104,21 +104,26 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('x','y'))
 
-        # # show that block hav ebeen consolidated
-        # self.assertEqual(len(f1._blocks._blocks), 3)
-
-        # s1 = f1['s']
-        # self.assertTrue((s1.index == f1.index).all())
-
-        # # we have not copied the index array
-        # self.assertEqual(mloc(f1.index.values), mloc(s1.index.values))
-
         f2 = f1['r':]
         self.assertEqual(f2.columns.values.tolist(), ['r', 's', 't'])
         self.assertTrue((f2.index == f1.index).all())
         self.assertEqual(mloc(f2.index.values), mloc(f1.index.values))
 
+    def test_frame_getitem_b(self):
 
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        # using an Index object for selection
+        self.assertEqual(
+                f1[f1.columns.loc['r':]].to_pairs(0),
+                (('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
+                )
 
 
     def test_frame_length_a(self):

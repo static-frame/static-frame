@@ -18,14 +18,10 @@ import numpy as np
 # handle nan in object blocks with skipna processing on ufuncs
 # allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
-# read_csv needs nan types; empty strings might need to be loaded as nans
-
-
-# future features
-# drop on TypeBlocks (if needed, update set_index to use); drop on Frame, Series
 # Series in from_concat
 # roll() on TypeBlocks (can be used in duplicate discovery on blocks)
 # shift as non-wrapping roll
+
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -70,7 +66,7 @@ _KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # for type hinting
 # keys once dimension has been isolated
-GetItemKeyType = tp.Union[int, slice, list, None]
+GetItemKeyType = tp.Union[int, slice, list, None] # TODO: add Index types
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[tuple, int, slice, list, None]
 
@@ -372,7 +368,6 @@ def _isna(array: np.ndarray) -> np.ndarray:
     elif array.dtype.kind != 'O':
         return np.full(array.shape, False, dtype=bool)
     # only check for None if we have an object type
-    # identify nans by them being the only thing not equal to itself
     return np.not_equal(array, array) | np.equal(array, None)
 
     # try: # this will only work for arrays that do not have strings

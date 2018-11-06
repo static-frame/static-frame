@@ -364,7 +364,7 @@ class Index(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
 
-        if isinstance(key, Series):
+        if isinstance(key, (Series, Index)):
             key = key.values
 
         if self._loc_is_iloc:
