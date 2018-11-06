@@ -561,11 +561,13 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('x','y'))
+                index=('x','y'),
+                consolidate_blocks=True)
 
         value1 = Frame.from_records(((20, 21, 22),(23, 24, 25)),
                 index=('x', 'y'),
-                columns=('s', 't', 'w'))
+                columns=('s', 't', 'w'),
+                consolidate_blocks=True)
 
         f2 = f1.assign.loc[['x', 'y'], ['s', 't']](value1)
         self.assertEqual(f2.to_pairs(0),
@@ -1949,7 +1951,8 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('x', 'y'))
+                index=('x', 'y'),
+                consolidate_blocks=True)
 
         self.assertEqual(f1.set_index('r').to_pairs(0),
                 (('p', (('a', 2), ('b', 30))), ('q', (('a', 2), ('b', 34))), ('r', (('a', 'a'), ('b', 'b'))), ('s', (('a', False), ('b', True))), ('t', (('a', False), ('b', False)))))
@@ -1960,7 +1963,6 @@ class TestUnit(TestCase):
 
         f2 = f1.set_index('r', drop=True)
 
-        # in extracting the index, we leave unconnected blocks unchanged.
         self.assertTrue(f1.mloc[[0, 2]].tolist() == f2.mloc.tolist())
 
 

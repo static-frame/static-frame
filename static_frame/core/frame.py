@@ -109,7 +109,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             axis: int=0,
             union: bool=True,
             index: IndexInitializer=None,
-            columns: IndexInitializer=None):
+            columns: IndexInitializer=None,
+            consolidate_blocks: bool=False
+            ):
         '''
         Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will have those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
 
@@ -149,9 +151,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                         frame = frame.reindex(index=index)
                     for block in frame._blocks._blocks:
                         yield block
-
-            blocks = TypeBlocks.from_blocks(blocks())
-            return cls(blocks, index=index, columns=columns, own_data=True)
 
         elif axis == 0:
             if index is None:
@@ -209,12 +208,15 @@ class Frame(metaclass=MetaOperatorDelegate):
                     array = np.vstack(frame.values for frame in frames)
                     array.flags.writeable = False
                     yield array
-
-            blocks = TypeBlocks.from_blocks(blocks())
-            return cls(blocks, index=index, columns=columns, own_data=True)
-
         else:
             raise NotImplementedError('no support for axis', axis)
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()), index=index, columns=columns, own_data=True)
 
     @classmethod
     def from_records(cls,
@@ -222,7 +224,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             index: tp.Optional[IndexInitializer]=None,
             columns: tp.Optional[IndexInitializer]=None,
-            consolidate_blocks: bool=True
+            consolidate_blocks: bool=False
             ):
         '''Frame constructor from an iterable of rows.
 
@@ -286,10 +288,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                 values.flags.writeable = False
                 yield values
 
-        blocks = (TypeBlocks.consolidate_blocks(blocks())
-                if consolidate_blocks else blocks())
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(blocks),
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 own_data=True)
@@ -314,7 +318,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer=None,
-            consolidate_blocks: bool=True):
+            consolidate_blocks: bool=False):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
         Args:
@@ -333,10 +337,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                     values.flags.writeable = False
                     yield values
 
-        blocks = (TypeBlocks.consolidate_blocks(blocks())
-                if consolidate_blocks else blocks())
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(blocks),
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
                 own_data=True)
@@ -345,7 +351,8 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_structured_array(cls,
             array: np.ndarray,
             *,
-            index_column: tp.Optional[IndexSpecifier]=None) -> 'Frame':
+            index_column: tp.Optional[IndexSpecifier]=None,
+            consolidate_blocks: bool=False) -> 'Frame':
         '''
         Convert a NumPy structed array into a Frame.
 
@@ -375,7 +382,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                 # this is not expected to make a copy
                 yield array[name]
 
-        return cls(TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks())),
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()),
                 columns=columns,
                 index=index_array,
                 own_data=True)
