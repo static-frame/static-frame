@@ -41,6 +41,8 @@ nan = np.nan
 
 LONG_SAMPLE_STR = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
 
+# TODO:
+# test Series.clip
 
 class TestUnit(TestCase):
 
@@ -443,6 +445,15 @@ class TestUnit(TestCase):
         self.assertEqual(s1.sum(), 60)
 
 
+    def test_series_sum_b(self):
+        s1 = Series(list('abc'), dtype=object)
+        self.assertEqual(s1.sum(), 'abc')
+        # get the same result from character arrays
+        s2 = sf.Series(list('abc'))
+        self.assertEqual(s2.sum(), 'abc')
+
+
+
     def test_series_mask_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
@@ -767,6 +778,35 @@ class TestUnit(TestCase):
                 s2.to_pairs(),
                 ((0, True), (1, True), (2, True), (3, False)))
         self.assertTrue(s2.dtype == bool)
+
+
+    def test_series_min_max_a(self):
+
+        s1 = Series([1, 3, 4, 0])
+        self.assertEqual(s1.min(), 0)
+        self.assertEqual(s1.max(), 4)
+
+
+        s2 = sf.Series([-1, 4, None, np.nan])
+        self.assertEqual(s2.min(), -1)
+        self.assertTrue(np.isnan(s2.min(skipna=False)))
+
+        self.assertEqual(s2.max(), 4)
+        self.assertTrue(np.isnan(s2.max(skipna=False)))
+
+
+    def test_series_min_max_b(self):
+        # string objects work as expected; when fixed length strings, however, the do not
+
+        s1 = Series(list('abc'), dtype=object)
+        self.assertEqual(s1.min(), 'a')
+        self.assertEqual(s1.max(), 'c')
+
+        # get the same result from character arrays
+        s2 = sf.Series(list('abc'))
+        self.assertEqual(s2.min(), 'a')
+        self.assertEqual(s2.max(), 'c')
+
 
 
 

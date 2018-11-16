@@ -15,8 +15,9 @@ from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 
-from static_frame.core.util import immutable_filter
 
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import IndexCorrespondence
 from static_frame.test.test_case import TestCase
 
 
@@ -1101,6 +1102,24 @@ class TestUnit(TestCase):
             [(np.dtype('<M8[D]'), 3)])
 
         self.assertEqual(len(tb2._blocks), 1)
+
+
+    def test_type_blocks_resize_blocks_a(self):
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([False, True, False])
+        a3 = np.array(['b', 'c', 'd'])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((1, 2)),
+                iloc_dst=np.array((0, 2)),
+                size=3)
+
+        tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
+        self.assertEqual(tb2.shape, (2, 3))
+
 
 
     @unittest.skip('not ready yet')

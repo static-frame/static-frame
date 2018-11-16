@@ -1,6 +1,7 @@
 import io
 import argparse
 import typing as tp
+import types
 import fnmatch
 import collections
 import timeit
@@ -56,7 +57,7 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
     return p
 
 
-def yield_classes(module, pattern: str):
+def yield_classes(module: types.ModuleType, pattern: str):
     # this will not find children of children
     for attr_name, attr in vars(module).items():
         if attr_name.startswith('_'):

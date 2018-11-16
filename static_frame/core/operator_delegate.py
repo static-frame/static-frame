@@ -42,6 +42,12 @@ _UFUNC_BINARY_OPERATORS = (
         '__ge__',
         )
 
+_UFUNC_OPERATORS_MAP = {k: getattr(operator_mod, k)
+        for k in chain(_UFUNC_UNARY_OPERATORS, _UFUNC_BINARY_OPERATORS)
+        }
+
+
+
 # all reverse are binary
 # should be RIGHT, not REVERSE
 _REVERSE_OPERATOR_MAP = {
@@ -135,18 +141,24 @@ _UFUNC_AXIS_SKIPNA = {
         'cumprod': (np.cumprod, np.nancumprod, None)
         }
 
+# place here functions that will not work with _DTYPE_STR_KIND, but do work if converted to object arrays
+_UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
+
 class MetaOperatorDelegate(type):
     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
     '''
 
     @staticmethod
-    def create_ufunc_operator(func_name, opperand_count=1, reverse=False):
+    def create_ufunc_operator(func_name,
+            opperand_count: int=1,
+            reverse: bool=False):
         # operator module defines alias to funcs with names like __add__, etc
         if not reverse:
             operator_func = getattr(operator_mod, func_name)
             func_wrapper = operator_func
         else:
-            unreversed_operator_func = getattr(operator_mod, _REVERSE_OPERATOR_MAP[func_name])
+            unreversed_operator_func = getattr(operator_mod,
+                _REVERSE_OPERATOR_MAP[func_name])
             # flip the order of the arguments
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
             func_wrapper = unreversed_operator_func
@@ -189,9 +201,11 @@ class MetaOperatorDelegate(type):
         for opperand_count, func_name in chain(
                 product((1,), _UFUNC_UNARY_OPERATORS),
                 product((2,), _UFUNC_BINARY_OPERATORS)):
+
             attrs[func_name] = mcs.create_ufunc_operator(
                     func_name,
                     opperand_count=opperand_count)
+
         for func_name in _REVERSE_OPERATOR_MAP:
             attrs[func_name] = mcs.create_ufunc_operator(
                     func_name,

@@ -1,4 +1,7 @@
 import typing as tp
+import operator as operator_mod
+
+
 import numpy as np
 
 from static_frame.core.util import _DEFAULT_SORT_KIND
@@ -428,6 +431,7 @@ class Index(metaclass=MetaOperatorDelegate):
 
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
+
         array = operator(self._labels, other)
         array.flags.writeable = False
         return array
@@ -858,3 +862,36 @@ class IndexYear(IndexDate):
                 )
         labels.flags.writeable = False
         return cls(labels)
+
+
+#-------------------------------------------------------------------------------
+
+def _is_index_initializer(value) -> bool:
+    '''Determine if value is a non-empty index initializer. This could almost just be a truthy test, but ndarrays need to be handled in isolation. Generators should return True.
+    '''
+    if value is None:
+        return False
+    elif isinstance(value, Index):
+        return False
+    elif isinstance(value, np.ndarray):
+        return bool(len(value))
+    return bool(value)
+
+
+def _requires_reindex(left: Index, right: Index) -> bool:
+    '''
+    Given two Index objects, determine if we need to reindex
+    '''
+    if len(left) != len(right):
+        return True
+    # do not need a new Index object, so just compare arrays directly, which might return a single Boolean if the types are not compatible
+
+    # NOTE: NP raises a warning here if we go to scalar value
+    ne = left.values != right.values
+    if isinstance(ne, np.ndarray):
+        if ne.any(): # if any not equal
+            return True # require reindex
+        return False
+    # assume we have a bool
+    return ne # if not equal, require reindex
+

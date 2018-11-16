@@ -89,6 +89,10 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return cls(values(), index=index, dtype=dtype)
 
+    #
+    # @classmethod
+    # def from_record()
+
     @classmethod
     def from_pandas(cls,
             value,
@@ -413,7 +417,6 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             dtype: not used, part of signature for a commin interface
         '''
-        # following pandas convention, we replace Nones with nans so that, if skipna is False, a None can cause a nan result
         return _ufunc_skipna_1d(
                 array=self.values,
                 skipna=skipna,
@@ -643,6 +646,23 @@ class Series(metaclass=MetaOperatorDelegate):
         # cannot use assume_unique because do not know if values is unique
         v, _ = _iterable_to_array(other)
         array = np.in1d(self.values, v)
+        array.flags.writeable = False
+        return self.__class__(array, index=self._index)
+
+
+    def clip(self, lower=None, upper=None):
+        '''Apply a clip opeation to the Series.
+        '''
+        args = [lower, upper]
+        for idx in range(len(args)):
+            arg = args[idx]
+            if isinstance(arg, Series):
+                args[idx] = arg.reindex(self.index)
+            elif hasattr(arg, '__iter__'):
+                raise Exception('only Series are supported as lower/upper arguments')
+            # assume single value otherwise, no change necessary
+
+        array = np.clip(self.values, *args)
         array.flags.writeable = False
         return self.__class__(array, index=self._index)
 

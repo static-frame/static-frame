@@ -30,6 +30,9 @@ from static_frame.test.test_case import TestCase
 
 nan = np.nan
 
+# TODO: added tests:
+# Frame.from_items() with Series
+
 
 class TestUnit(TestCase):
 
@@ -277,7 +280,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_frame_extend_columns_a(self):
+    def test_frame_extend_items_a(self):
         records = (
                 (1, 2, 'a', False, True),
                 (30, 50, 'b', True, False))
@@ -289,7 +292,7 @@ class TestUnit(TestCase):
         columns = OrderedDict(
             (('c', np.array([0, -1])), ('d', np.array([3, 5]))))
 
-        f1.extend_columns(columns.keys(), columns.values())
+        f1.extend_items(columns.items())
 
         self.assertEqual(f1.columns.values.tolist(),
                 ['p', 'q', 'r', 's', 't', 'c', 'd'])
@@ -299,7 +302,7 @@ class TestUnit(TestCase):
                 [30, 50, 'b', True, False, -1, 5]],
                 match_dtype=object)
 
-    def test_frame_extend_blocks_a(self):
+    def test_frame_extend_a(self):
         records = (
                 (1, 2, 'a', False, True),
                 (30, 50, 'b', True, False))
@@ -307,16 +310,19 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('x','y'))
 
-        blocks = ([[50, 40], [30, 20]], [[50, 40], [30, 20]])
+        blocks = (np.array([[50, 40], [30, 20]]),
+                np.array([[50, 40], [30, 20]]))
         columns = ('a', 'b', 'c', 'd')
-        f1.extend_blocks(columns, blocks)
+        f2 = Frame(TypeBlocks.from_blocks(blocks), columns=columns, index=('y', 'z'))
+
+        f1.extend(f2)
+        f3 = f1.fillna(None)
 
         self.assertEqual(f1.columns.values.tolist(),
                 ['p', 'q', 'r', 's', 't', 'a', 'b', 'c', 'd'])
 
-        self.assertEqual(f1.values.tolist(),
-                [[1, 2, 'a', False, True, 50, 40, 50, 40],
-                [30, 50, 'b', True, False, 30, 20, 30, 20]]
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))))
                 )
 
 

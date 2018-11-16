@@ -53,6 +53,8 @@ _EMPTY_ARRAY.flags.writeable = False
 
 _DICT_STABLE = sys.version_info >= (3, 6)
 
+
+
 #-------------------------------------------------------------------------------
 # utility
 
@@ -217,6 +219,8 @@ def _dtype_to_na(dtype):
         return ''
     raise NotImplementedError('no support for this dtype', dtype.kind)
 
+# ufunc functions that will not work with _DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
+_UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
@@ -232,6 +236,8 @@ def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     elif array.dtype.kind == 'M':
         # dates do not support skipna functions
         return ufunc(array)
+    elif array.dtype.kind in _DTYPE_STR_KIND and ufunc in _UFUNC_AXIS_STR_TO_OBJ:
+        v = array.astype(object)
     else:
         v = array
 
@@ -565,6 +571,9 @@ class ExtractInterface:
 
 
 #-------------------------------------------------------------------------------
+# index utilities
+
+
 class IndexCorrespondence:
     '''
     All iloc data necessary for reindexing.
@@ -616,7 +625,7 @@ class IndexCorrespondence:
 
         size = len(dst_index.values)
 
-        # either a reordering or a subsetfrom_index
+        # either a reordering or a subset
         if has_common:
             if len(common_labels) == len(dst_index):
                 # use new index to retain order
@@ -629,7 +638,7 @@ class IndexCorrespondence:
                         size=size
                         )
 
-            # these will be equal sized; not sure if they will be in order
+            # these will be equal sized
             iloc_src = src_index.loc_to_iloc(common_labels)
             iloc_dst = dst_index.loc_to_iloc(common_labels)
 
@@ -654,7 +663,11 @@ class IndexCorrespondence:
             size: int) -> None:
         '''
         Args:
-            iloc_pairs: generate corresponding pairs of iloc postions between src and dst; may be empty or have less constituents than index.
+            has_common: True if any of the indices align
+            is_subset: True if the destination is a reordering or subset
+            iloc_src: An iterable of iloc values to be taken from the source
+            iloc_dst: An iterable of iloc values to be written to
+            size: The size of the destination.
         '''
         self.has_common = has_common
         self.is_subset = is_subset

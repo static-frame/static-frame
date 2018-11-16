@@ -60,6 +60,9 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.series import Series
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index import _requires_reindex
+from static_frame.core.index import _is_index_initializer
+
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 
@@ -318,20 +321,39 @@ class Frame(metaclass=MetaOperatorDelegate):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer=None,
+            fill_value=np.nan,
             consolidate_blocks: bool=False):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
             index: Iterable of values to create an Index.
+            fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
             consoidate_blocks: If True, same typed adjacent columns will be consolidated into a contiguous array.
         '''
         columns = []
+
+        # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
+        own_index = False
+        if _is_index_initializer(index):
+            index = Index(index)
+            own_index = True
+
         def blocks():
             for k, v in pairs:
                 columns.append(k) # side effet of generator!
                 if isinstance(v, np.ndarray):
+                    # NOTE: we rely on TypeBlocks constructor to check that these are same sized
                     yield v
+                elif isinstance(v, Series):
+                    if index is None:
+                        raise Exception('can only consume Series if an Index is provided.')
+                    if _requires_reindex(v.index, index):
+                        yield v.reindex(index, fill_value=fill_value).values
+                    else:
+                        yield v.values
+                elif isinstance(v, Frame):
+                    raise NotImplementedError('Frames are not supported in from_items constructor.')
                 else:
                     values = np.array(v)
                     values.flags.writeable = False
@@ -345,7 +367,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return cls(TypeBlocks.from_blocks(block_gen()),
                 index=index,
                 columns=columns,
-                own_data=True)
+                own_data=True,
+                own_index=own_index)
 
     @classmethod
     def from_structured_array(cls,
@@ -1198,7 +1221,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     def _extract_iloc_mask(self, key: GetItemKeyTypeCompound) -> 'Frame':
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return self.__class__(masked_blocks,
-                columns=self._columns.values,
+                columns=self._columns,
                 index=self._index,
                 own_data=True)
 
@@ -1390,12 +1413,15 @@ class Frame(metaclass=MetaOperatorDelegate):
     # grouping methods naturally return their "index" as the group element
 
     def _axis_group_iloc_items(self, key, *, axis):
+
+        # NOTE: can we own_columns or own_index in this?
+
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
                         index=self._index[selection],
-                        columns=self._columns.values,
+                        columns=self._columns,
                         own_data=True)
             elif axis == 1:
                 # axis 1 is a column iterators, so need to slice columns, keep index
@@ -1775,6 +1801,8 @@ class FrameGO(Frame):
     def __setitem__(self, key, value):
         '''For adding a single column, one column at a time.
         '''
+        # TODO: support assignment from iterables of keys, vlaues?
+
         if key in self._columns:
             raise Exception('key already defined in columns; use .assign to get new Frame')
 
@@ -1793,6 +1821,7 @@ class FrameGO(Frame):
                     value = np.array(value)
                 value.flags.writeable = False
 
+            # NOTE: this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1 or (
                     self._blocks._shape[0] > 0 and
                     len(value) != self._blocks._shape[0]):
@@ -1804,37 +1833,42 @@ class FrameGO(Frame):
         self._columns.append(key)
 
 
-    def extend_columns(self,
-            keys: tp.Iterable,
-            values: tp.Iterable):
-        '''Extend the FrameGO (add more columns) by providing two iterables, one for column names and antoher for appropriately sized iterables.
+    def extend_items(self, pairs: tp.Iterable[tp.Tuple[tp.Hashable, Series]]):
         '''
-        for k, v in zip_longest(keys, values):
+        Given an iterable of pairs of column name, column value, extend this FrameGO.
+        '''
+        for k, v in pairs:
             self.__setitem__(k, v)
 
-    def extend_blocks(self,
-            keys: tp.Iterable,
-            values: tp.Iterable[np.ndarray]):
-        '''Extend the FrameGO (add more columns) by providing two iterables, one of needed column names (not nested), and an iterable of blocks (definting one or more columns in an ndarray).
+
+    def extend(self, frame: 'Frame', fill_value=np.nan):
+        '''Extend this Frame (in-place) with another Frame's blocks; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame will be reindexed (as happens when adding a column to a FrameGO) This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended to this Frame.
         '''
-        self._columns.extend(keys)
-        # TypeBlocks only accepts ndarrays; can try to convert here if lists or tuples given
-        for value in values:
-            if not isinstance(value, np.ndarray):
-                value = np.array(value)
-                value.flags.writeable = False
-            self._blocks.append(value)
+        if _requires_reindex(self._index, frame._index):
+            frame = frame.reindex(self._index, fill_value=fill_value)
+
+        self._columns.extend(frame.keys())
+        self._blocks.extend(frame._blocks)
 
         if len(self._columns) != self._blocks._shape[1]:
-            raise Exception('incompatible keys and values')
+            raise Exception('malformed Frame was use in extension')
 
-
-    def extend(self, frame: 'FrameGO'):
-        '''Extend by simply extending this frames blocks.
-        '''
-        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
+    def to_frame(self):
+        '''
+        Return Frame version of this Frame.
+        '''
+        # copying blocks does not copy underlying data
+        return Frame(self._blocks.copy(),
+                index=self.index,
+                columns=self.columns.values,
+                own_data=True,
+                own_index=True,
+                own_columns=False # need to make static only
+                )
+
+
     def to_frame_go(self):
         '''
         Return a FrameGO version of this Frame.

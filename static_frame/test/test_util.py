@@ -19,7 +19,7 @@ from static_frame.core.operator_delegate import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
 
-
+from static_frame import Index
 
 # TODO test
 from static_frame.core.util import _dict_to_sorted_items
@@ -365,6 +365,7 @@ class TestUnit(TestCase):
     def test_read_url(self):
         url = 'https://jsonplaceholder.typicode.com/todos'
         post = _read_url(url)
+
 
 if __name__ == '__main__':
     unittest.main()

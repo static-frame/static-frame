@@ -510,8 +510,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def resize_blocks(self, *,
             index_ic: tp.Optional[IndexCorrespondence],
-            columns_ic = tp.Optional[IndexCorrespondence],
-            fill_value = tp.Any
+            columns_ic: tp.Optional[IndexCorrespondence],
+            fill_value: tp.Any
             ) -> tp.Generator[np.ndarray, None, None]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
@@ -951,17 +951,17 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
             if not target.any():
                 yield block
-
-            assigned_dtype = _resolve_dtype(value_dtype, block.dtype)
-
-            if block.dtype == assigned_dtype:
-                assigned = block.copy()
             else:
-                assigned = block.astype(assigned_dtype)
+                assigned_dtype = _resolve_dtype(value_dtype, block.dtype)
 
-            assert assigned.shape == target.shape
-            assigned[target] = value
-            yield assigned
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                assert assigned.shape == target.shape
+                assigned[target] = value
+                yield assigned
 
 
     def _slice_blocks(self,
@@ -1319,7 +1319,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 row_count = block.shape[0]
             block_columns = block.shape[1]
 
-
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)
 
@@ -1345,7 +1344,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         if isinstance(other, TypeBlocks):
             if self._shape[0]:
-                assert self._shape[0] == other._shape[0]
+                if self._shape[0] != other._shape[0]:
+                    raise Exception('cannot extend unaligned shapes')
             blocks = other._blocks
         else: # accept iterables of np.arrays
             blocks = other
