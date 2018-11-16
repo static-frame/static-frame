@@ -141,9 +141,6 @@ _UFUNC_AXIS_SKIPNA = {
         'cumprod': (np.cumprod, np.nancumprod, None)
         }
 
-# place here functions that will not work with _DTYPE_STR_KIND, but do work if converted to object arrays
-_UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
-
 class MetaOperatorDelegate(type):
     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
     '''
