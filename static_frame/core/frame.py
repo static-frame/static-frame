@@ -43,6 +43,7 @@ from static_frame.core.util import _read_url
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import ExtractInterface
+from static_frame.core.util import AsTypeInterface
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
@@ -92,6 +93,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             'mask',
             'masked_array',
             'assign',
+            'astype',
             'iter_array',
             'iter_array_items',
             'iter_tuple',
@@ -720,6 +722,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 loc=GetItem(self._extract_loc_assign),
                 getitem=self._extract_getitem_assign)
 
+        self.astype = AsTypeInterface(getitem=self._extract_getitem_astype)
+
         # generators
         self.iter_array = IterNode(
                 container=self,
@@ -1177,6 +1181,9 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     def _extract_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+        '''
+        Give a compound key, return a new Frame. This method simply handles the variabiliyt of single or compound selectors.
+        '''
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
@@ -1198,7 +1205,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def _compound_loc_to_getitem_iloc(self,
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
-        '''Handle a potentially compound key in the style of __getitem__
+        '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
@@ -1217,7 +1224,6 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     #---------------------------------------------------------------------------
-
     def _extract_iloc_mask(self, key: GetItemKeyTypeCompound) -> 'Frame':
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return self.__class__(masked_blocks,
@@ -1233,8 +1239,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_mask(key=key)
 
-
-
+    #---------------------------------------------------------------------------
     def _extract_iloc_masked_array(self, key: GetItemKeyTypeCompound) -> MaskedArray:
         masked_blocks = self._blocks.extract_iloc_mask(key)
         return MaskedArray(data=self.values, mask=masked_blocks.values)
@@ -1248,7 +1253,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self._extract_iloc_masked_array(key=key)
 
     #---------------------------------------------------------------------------
-
     def _extract_iloc_assign(self, key: GetItemKeyTypeCompound) -> 'FrameAssign':
         return FrameAssign(data=self, iloc_key=key)
 
@@ -1261,6 +1265,16 @@ class Frame(metaclass=MetaOperatorDelegate):
         # extract if tuple, then pack back again
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
+
+
+    #---------------------------------------------------------------------------
+
+    def _extract_getitem_astype(self, key: GetItemKeyType) -> 'FrameAsType':
+        # extract if tuple, then pack back again
+        _, key = self._compound_loc_to_getitem_iloc(key)
+        return FrameAsType(data=self, column_key=key)
+
+
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -1842,10 +1856,18 @@ class FrameGO(Frame):
 
 
     def extend(self, frame: 'Frame', fill_value=np.nan):
-        '''Extend this Frame (in-place) with another Frame's blocks; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame will be reindexed (as happens when adding a column to a FrameGO) This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended to this Frame.
+        '''Extend this Frame (in-place) with another Frame's blocks; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame will be reindexed (as happens when adding a column to a FrameGO). This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended to this Frame.
         '''
+
+        if not len(frame.index): # must be an empty data, empty index Frame
+            return
+
+        # self's index will never change; we only take what aligns in the passed frame
         if _requires_reindex(self._index, frame._index):
             frame = frame.reindex(self._index, fill_value=fill_value)
+
+        if not len(frame.columns):
+            return
 
         self._columns.extend(frame.keys())
         self._blocks.extend(frame._blocks)
@@ -1886,13 +1908,39 @@ class FrameAssign:
         self.data = data
         self.iloc_key = iloc_key
 
-    def __call__(self, value):
+    def __call__(self, value) -> 'Frame':
         if isinstance(value, (Series, Frame)):
             value = self.data._reindex_other_like_iloc(value, self.iloc_key).values
 
         blocks = self.data._blocks.extract_iloc_assign(self.iloc_key, value)
         # can own the newly created block given by extract
         # pass Index objects unchanged, so as to let types be handled elsewhere
+        return self.data.__class__(
+                data=blocks,
+                columns=self.data.columns,
+                index=self.data.index,
+                own_data=True)
+
+
+class FrameAsType:
+    __slots__ = ('data', 'column_key',)
+
+    def __init__(self, *,
+            data: Frame,
+            column_key: GetItemKeyType
+            ) -> None:
+        self.data = data
+        self.column_key = column_key
+
+    def __call__(self, dtype, consolidate_blocks: bool=True) -> 'Frame':
+
+        blocks = self.data._blocks._astype_blocks(self.column_key, dtype)
+
+        if consolidate_blocks:
+            blocks = TypeBlocks.consolidate_blocks(blocks)
+
+        blocks = TypeBlocks.from_blocks(blocks)
+
         return self.data.__class__(
                 data=blocks,
                 columns=self.data.columns,

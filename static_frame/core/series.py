@@ -657,9 +657,12 @@ class Series(metaclass=MetaOperatorDelegate):
         for idx in range(len(args)):
             arg = args[idx]
             if isinstance(arg, Series):
-                args[idx] = arg.reindex(self.index)
+                # after reindexing, strip away the index
+                # NOTE: using the bound forces going to a float type; this may not be the best approach
+                bound = -np.inf if idx == 0 else np.inf
+                args[idx] = arg.reindex(self.index).fillna(bound).values
             elif hasattr(arg, '__iter__'):
-                raise Exception('only Series are supported as lower/upper arguments')
+                raise Exception('only Series are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
         array = np.clip(self.values, *args)

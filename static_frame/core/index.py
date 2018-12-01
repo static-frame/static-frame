@@ -889,9 +889,7 @@ def _requires_reindex(left: Index, right: Index) -> bool:
     # NOTE: NP raises a warning here if we go to scalar value
     ne = left.values != right.values
     if isinstance(ne, np.ndarray):
-        if ne.any(): # if any not equal
-            return True # require reindex
-        return False
+        return ne.any() # if any not equal, require reindex
     # assume we have a bool
     return ne # if not equal, require reindex
 

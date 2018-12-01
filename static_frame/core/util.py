@@ -284,6 +284,28 @@ def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
     return v, assume_unique
 
 
+def _slice_to_ascending_slice(key: slice, size: int) -> slice:
+    '''
+    Given a slice, return a slice that, with ascending integers, covers the same values.
+    '''
+    if key.step is None or key.step > 0:
+        return key
+
+    stop = key.start if key.start is None else key.start + 1
+
+    if key.step == -1:
+        # if 6, 1, -1, then
+        start = key.stop if key.stop is None else key.stop + 1
+        return slice(start, stop, 1)
+
+    # if 6, 1, -2: 6, 4, 2; then
+    start = next(iter(reversed(range(*key.indices(size)))))
+    step = abs(key.step)
+    return slice(start, stop, step)
+
+
+
+
 def _slice_to_datetime_slice_args(key):
     for attr in SLICE_ATTRS:
         value = getattr(key, attr)
@@ -530,10 +552,6 @@ def _union2d(array, other) -> np.ndarray:
 #-------------------------------------------------------------------------------
 # URL handling, file downloading
 
-# def _is_url(fp: str) -> bool:
-#     # mathc http, https
-#     return str.startswith('http')
-
 def _read_url(fp: str):
     with request.urlopen(fp) as response:
         return response.read().decode('utf-8')
@@ -549,6 +567,19 @@ class GetItem:
 
     def __getitem__(self, key: GetItemKeyType):
         return self.callback(key)
+
+
+class AsTypeInterface:
+    __slots__ = ('getitem',)
+
+    def __init__(self, getitem: tp.Callable) -> None:
+        self.getitem = getitem
+
+    def __getitem__(self, key) -> 'FrameAsType':
+        return self.getitem(key)
+
+    def __call__(self, dtype):
+        return self.getitem(_NULL_SLICE)(dtype)
 
 
 class ExtractInterface:

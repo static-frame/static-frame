@@ -326,6 +326,98 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_extend_empty_a(self):
+        # full Frame, empty extensions with no index
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = FrameGO() # no index or columns
+
+        f1.extend(f2)
+        self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
+
+
+
+    def test_frame_extend_empty_b(self):
+        # full Frame, empty extension with index
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = FrameGO(index=('x', 'y', 'z'))
+        f1.extend(f2)
+        self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
+
+
+    def test_frame_extend_empty_c(self):
+        # empty with index, full frame extension
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = FrameGO(index=('x', 'y', 'z'))
+        f2.extend(f1)
+        self.assertEqual(f2.shape, (3, 5)) # extension happens, but no change in shape
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 1), ('y', 30), ('z', 54))), ('b', (('x', 2), ('y', 34), ('z', 95))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', False), ('y', True), ('z', False))), ('e', (('x', True), ('y', False), ('z', False))))
+                )
+
+    def test_frame_extend_empty_d(self):
+        # full Frame, empty extension with different index
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = FrameGO(index=('w', 'x', 'y', 'z'))
+        f1.extend(f2)
+        self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
+
+
+
+    def test_frame_extend_empty_e(self):
+        # empty Frame with no index extended by full frame
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = FrameGO() # no index or columns
+
+        f2.extend(f1)
+        # as we align on the caller's index, if that index is empty, there is nothing to take from the passed Frame; however, since we observe columns, we add those (empty columns). this falls out of lower-level implementations: could be done differently if desirable.
+        self.assertEqual(f2.shape, (0, 5))
+
+
+
+
+
     def test_frame_extract_a(self):
         # reindex both axis
         records = (
@@ -2138,6 +2230,30 @@ class TestUnit(TestCase):
         f2['f'] = None
         self.assertEqual(f2.columns.values.tolist(),
                 ['a', 'b', 'c', 'd', 'e', 'f'])
+
+
+
+    def test_frame_astype_a(self):
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = f1.astype['d':](int)
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 1), ('y', 30), ('z', 54))), ('b', (('x', 2), ('y', 34), ('z', 95))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', 0), ('y', 1), ('z', 0))), ('e', (('x', 1), ('y', 0), ('z', 0))))
+                )
+
+        f3 = f1.astype[['a', 'b']](bool)
+        self.assertEqual(f3.to_pairs(0),
+                (('a', (('x', True), ('y', True), ('z', True))), ('b', (('x', True), ('y', True), ('z', True))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', False), ('y', True), ('z', False))), ('e', (('x', True), ('y', False), ('z', False))))
+                )
+
+
 
 
 if __name__ == '__main__':

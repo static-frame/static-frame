@@ -27,6 +27,7 @@ from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
+from static_frame.core.util import _slice_to_ascending_slice
 
 from static_frame.test.test_case import TestCase
 
@@ -366,6 +367,23 @@ class TestUnit(TestCase):
         url = 'https://jsonplaceholder.typicode.com/todos'
         post = _read_url(url)
 
+
+    def test_slice_to_ascending_slice_a(self):
+
+        a1 = np.arange(10)
+
+        def compare(slc):
+            slc_asc = _slice_to_ascending_slice(slc, len(a1))
+            self.assertEqual(sorted(a1[slc]), list(a1[slc_asc]))
+        #     print(slc, a1[slc])
+        #     print(slc_asc, a1[slc_asc])
+
+        compare(slice(4,))
+        compare(slice(6, 1, -1))
+        compare(slice(6, 1, -2))
+        compare(slice(6, None, -3))
+        compare(slice(6, 2, -2))
+        compare(slice(None, 1, -1))
 
 if __name__ == '__main__':
     unittest.main()

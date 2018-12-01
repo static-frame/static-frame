@@ -3,7 +3,7 @@
 import typing as tp
 
 from itertools import zip_longest
-
+from collections import defaultdict
 import numpy as np
 
 
@@ -22,6 +22,7 @@ from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _isna
+from static_frame.core.util import _slice_to_ascending_slice
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence
@@ -152,7 +153,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Args:
             blocks: A list of one or two-dimensional NumPy arrays
             dtypes: list of dtypes per external column
-            index: list of tuple coordinates, where list index is external column and the tuple is the block, intra-block column
+            index: list of pairs, where the first element is the block index, the second elemetns is the intra-block column
             shape: two-element tuple defining row and column count. A (0, 0) shape is permitted for empty TypeBlocks.
         '''
         self._blocks = blocks
@@ -393,7 +394,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if self.shape_filter(a)[1] != self.shape_filter(b)[1]:
                     return False
             # this does not show us if the types can be operated on;
-            # similarly, np.can_cast, np.result_type do not telll us if an operation will succeede
+            # similarly, np.can_cast, np.result_type do not tell us if an operation will succeede
             # if not a.dtype is b.dtype:
             #     return False
         return True
@@ -416,47 +417,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         # NOTE: if len(group) is 1, can return
         return np.concatenate([cls.single_column_filter(x) for x in group], axis=1)
-
-    def _astype_blocks(self,
-            # raw_blocks: tp.Iterable[np.ndarray],
-            column_key: GetItemKeyType,
-            dtype: DtypeSpecifier
-            ) -> tp.Generator[np.ndarray, None, None]:
-        '''
-        Generator consumer, generator producer of np.ndarray, consolidating types are exact matches.
-        '''
-        # these will only be contiguous slices, but there could be multiple discontinuous slices within the same block; and these might not be in block order
-        astype_slices = iter(self._key_to_block_slices(column_key))
-
-        group_dtype = None
-        # generate entire list of target columns first
-
-        for block in self._blocks:
-            if group_dtype is None: # first block of a type
-                group_dtype = block.dtype
-                group.append(block)
-                continue
-
-            # NOTE: could be less strict and look for compatibility within dtype kind (or other compatible types)
-            if block.dtype != group_dtype:
-                # new group found, return stored
-                if len(group) == 1: # return reference without copy
-                    # NOTE: using pop() here not shown to be faster
-                    yield group[0]
-                else: # combine groups
-                    # could pre allocating and assing as necessary for large groups
-                    yield cls._concatenate_blocks(group)
-                group_dtype = block.dtype
-                group = [block]
-            else: # new block has same group dtype
-                group.append(block)
-
-        # always have one or more leftover
-        if group:
-            if len(group) == 1:
-                yield group[0]
-            else:
-                yield cls._concatenate_blocks(group)
 
 
     @classmethod
@@ -736,10 +696,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     @staticmethod
     def _cols_to_slice(indices: tp.Sequence[int]) -> slice:
-        '''Translate an iterable of contiguous integers into a slice
+        '''Translate an iterable of contiguous integers into a slice. Integers are assumed to be intentionally ordered and contiguous.
         '''
         start_idx = indices[0]
-        # can always represetn a singel column a single slice
+        # single column as a single slice
         if len(indices) == 1:
             return slice(start_idx, start_idx + 1)
 
@@ -770,21 +730,20 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if last[0] == block_idx and abs(col - last[1]) == 1:
                 # if contiguous, update last, add to bundle
                 last = (block_idx, col)
+                # do not need to store all col, only the last, however probably easier to just accumulate all
                 bundle.append(col)
                 continue
             # either new block, or not contiguous on same block
-            # store what we have so far
-            assert len(bundle) > 0
-            # yield a pair of block_idx, contiguous slice
             yield (last[0], cls._cols_to_slice(bundle))
-            # but this one on bundle
+            # start a new bundle
             bundle = [col]
             last = (block_idx, col)
-        # last might be None if we
+
+        # last can be None
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    def _all_block_slices(self):
+    def _all_block_slices(self) -> tp.Generator:
         '''
         Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
         '''
@@ -794,10 +753,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             else:
                 yield (idx, slice(0, b.shape[1]))
 
-    def _key_to_block_slices(self, key) -> tp.Generator[
+    def _key_to_block_slices(self,
+                key,
+                retain_key_order: bool=True) -> tp.Generator[
                 tp.Tuple[int, tp.Union[slice, int]], None, None]:
         '''
         For a column key (an integer, slice, or iterable), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
+
+        Args:
+            retain_key_order: if False, returned slices will be in ascending order.
 
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
@@ -805,42 +769,52 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if key is None or (isinstance(key, slice) and slice == _NULL_SLICE):
             yield from self._all_block_slices()
         else:
-            # do type checking on slice v others, as with others we need to sort once iterable of keys
             if isinstance(key, _INT_TYPES):
                 # the index has the pair block, column integer
                 yield self._index[key]
-            else:
+            else: # all cases where we try to get contiguous slices
                 if isinstance(key, slice):
-                    # we have already handled the null slice
-                    indices = self._index[key] # slice the index
-                    # already sorted
+                    #  slice the index; null slice already handled
+                    if not retain_key_order:
+                        key = _slice_to_ascending_slice(key, self._shape[1])
+                    indices = self._index[key]
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
+                    # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx]
                             for idx, v in enumerate(key) if v == True)
                 elif isinstance(key, _KEY_ITERABLE_TYPES):
-                    # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator anyways so probably this is as fast as it can be.
-                    indices = (self._index[x] for x in key)
+                    # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
+                    if retain_key_order:
+                        indices = (self._index[x] for x in key)
+                    else:
+                        indices = (self._index[x] for x in sorted(key))
                 elif key is None: # get all
                     indices = self._index
                 else:
-                    raise NotImplementedError('got key', key)
+                    raise NotImplementedError('Cannot handle key', key)
                 yield from self._indices_to_contiguous_pairs(indices)
 
 
+    #---------------------------------------------------------------------------
     def _mask_blocks(self,
             row_key=None,
             column_key=None) -> tp.Generator[np.ndarray, None, None]:
         '''Return Boolean blocks of the same size and shape, where key selection sets values to True.
         '''
 
-        # this selects the columns; but need to return all bloics
-        block_slices = iter(self._key_to_block_slices(column_key))
+        # this selects the columns; but need to return all blocks
+
+        # block slices must be in ascending order, not key order
+        block_slices = iter(self._key_to_block_slices(
+                column_key,
+                retain_key_order=False))
         target_block_idx = target_slice = None
 
         for block_idx, b in enumerate(self._blocks):
             mask = np.full(b.shape, False, dtype=bool)
 
             while True:
+                # get target block and slice
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
@@ -861,6 +835,78 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 target_block_idx = target_slice = None
 
             yield mask
+
+
+    def _astype_blocks(self,
+            column_key: GetItemKeyType,
+            dtype: DtypeSpecifier
+            ) -> tp.Generator[np.ndarray, None, None]:
+        '''
+        Generator consumer, generator producer of np.ndarray, consolidating types are exact matches.
+        '''
+
+        # block slices must be in ascending order, not key order
+        block_slices = iter(self._key_to_block_slices(
+                column_key,
+                retain_key_order=False))
+
+        target_block_idx = target_slice = None
+
+        for block_idx, b in enumerate(self._blocks):
+            parts = []
+            part_start_last = 0
+
+            while True:
+
+                # get target block and slice
+                if target_block_idx is None: # can be zero
+                    try:
+                        target_block_idx, target_slice = next(block_slices)
+                    except StopIteration:
+                        break
+
+                # print('in while', block_idx, b, target_block_idx)
+
+                if block_idx != target_block_idx:
+                    break # need to advance blocks
+
+                if dtype == b.dtype:
+                    target_block_idx = target_slice = None
+                    continue # there may be more slices for this block
+
+                if b.ndim == 1: # given 1D array, our row key is all we need
+                    parts.append(b.astype(dtype))
+                    part_start_last = 1
+                    target_block_idx = target_slice = None
+                    break
+                else:
+                    # target_slice can be a slice or an integer
+                    if isinstance(target_slice, slice):
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
+                    else: # it is an integer
+                        target_start = target_slice
+                        target_stop = target_slice + 1
+
+                    if target_start > part_start_last:
+                        # yield un changed components before and after
+                        parts.append(b[:, slice(part_start_last, target_start)])
+
+                    parts.append(b[:, target_slice].astype(dtype))
+                    part_start_last = target_stop
+
+                target_block_idx = target_slice = None
+
+            # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
+            if b.ndim != 1 and part_start_last < b.shape[1]:
+                parts.append(b[:, slice(part_start_last, None)])
+
+            if not parts:
+                yield b # no change for this block
+            else:
+                yield from parts
+
+
 
 
     def _assign_blocks_from_keys(self,

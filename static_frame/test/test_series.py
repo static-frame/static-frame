@@ -808,6 +808,50 @@ class TestUnit(TestCase):
         self.assertEqual(s2.max(), 'c')
 
 
+    def test_series_clip_a(self):
+
+        s1 = Series(range(6), index=list('abcdef'))
+
+        self.assertEqual(s1.clip(lower=3).to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 5))
+                )
+
+        self.assertEqual(s1.clip(lower=-1).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4), ('f', 5))
+                )
+
+        self.assertEqual(s1.clip(upper=-1).to_pairs(),
+                (('a', -1), ('b', -1), ('c', -1), ('d', -1), ('e', -1), ('f', -1))
+                )
+
+        self.assertEqual(s1.clip(upper=3).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 3), ('f', 3))
+                )
+
+
+    def test_series_clip_b(self):
+        s1 = Series(range(6), index=list('abcdef'))
+
+        s2 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        self.assertEqual(s1.clip(lower=s2).to_pairs(),
+                (('a', 2), ('b', 3), ('c', 2), ('d', 3), ('e', 8), ('f', 6))
+                )
+
+        self.assertEqual(s1.clip(upper=s2).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 0), ('d', -1), ('e', 4), ('f', 5))
+                )
+
+        s3 = Series((2, 3, 0), index=list('abc'))
+
+        self.assertEqual(s1.clip(lower=s3).to_pairs(),
+                (('a', 2), ('b', 3), ('c', 2), ('d', 3), ('e', 4), ('f', 5))
+                )
+
+        self.assertEqual(s1.clip(upper=s3).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 0), ('d', 3), ('e', 4), ('f', 5))
+                )
+
 
 
 if __name__ == '__main__':

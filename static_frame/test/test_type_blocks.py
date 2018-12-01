@@ -684,7 +684,6 @@ class TestUnit(TestCase):
 
 
     def test_type_blocks_mask_blocks_a(self):
-        # test negative slices
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -697,10 +696,71 @@ class TestUnit(TestCase):
             [[False, False, True, True, False, True, True, False], [False, False, True, True, False, True, True, False], [False, False, True, True, False, True, True, False]]
             )
 
+    def test_type_blocks_mask_blocks_b(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6]])
+        a2 = np.array([[False, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        # show that index order is not relevant to selection
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._mask_blocks(column_key=[0, 5, 6])),
+                [[ True, False, False, False, False,  True,  True, False],
+                [ True, False, False, False, False,  True,  True, False]])
+
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._mask_blocks(column_key=[0, 6, 5])),
+                [[ True, False, False, False, False,  True,  True, False],
+                [ True, False, False, False, False,  True,  True, False]])
+
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._mask_blocks(column_key=[6, 5, 0])),
+                [[ True, False, False, False, False,  True,  True, False],
+                [ True, False, False, False, False,  True,  True, False]])
+
+        # with repeated values we get the same result; we are not presently filtering out duplicates, however
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._mask_blocks(column_key=[6, 6, 5, 5, 0])),
+                [[ True, False, False, False, False,  True,  True, False],
+                [ True, False, False, False, False,  True,  True, False]])
+
+
+    def test_type_blocks_mask_blocks_c(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6]])
+        a2 = np.array([[False, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._mask_blocks(column_key=slice(2, None, 2))),
+                [[False, False,  True, False,  True, False,  True, False],
+                [False, False,  True, False,  True, False,  True, False]])
+
+        tb2 = TypeBlocks.from_blocks(tb1._mask_blocks(column_key=slice(4, None, -1)))
+        self.assertTypeBlocksArrayEqual(tb2,
+                [[ True,  True,  True,  True,  True, False, False, False],
+                [ True,  True,  True,  True,  True, False, False, False]])
+
+        tb3 = TypeBlocks.from_blocks(tb1._mask_blocks(column_key=slice(4, 2, -1)))
+        self.assertTypeBlocksArrayEqual(tb3,
+                [[ False,  False,  False,  True,  True, False, False, False],
+                [ False,  False,  False,  True,  True, False, False, False]])
+
+        tb4 = TypeBlocks.from_blocks(tb1._mask_blocks(column_key=slice(6, None, -2)))
+        self.assertTypeBlocksArrayEqual(tb4,
+                [[ True, False,  True, False,  True, False,  True, False],
+                [ True, False,  True, False,  True, False,  True, False]])
+
+        tb5 = TypeBlocks.from_blocks(tb1._mask_blocks(column_key=slice(6, None, -3)))
+        self.assertTypeBlocksArrayEqual(tb5,
+                [[ True, False, False,  True, False, False,  True, False],
+                [ True, False, False,  True, False, False,  True, False]])
+
 
 
     def test_type_blocks_assign_blocks_a(self):
-        # test negative slices
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -1122,14 +1182,74 @@ class TestUnit(TestCase):
 
 
 
-    @unittest.skip('not ready yet')
     def test_type_blocks_astype_a(self):
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        blocks1 = list(tb1._astype_blocks(2, bool))
+        tb2 = TypeBlocks.from_blocks(tb1._astype_blocks(slice(0, 2), bool))
+
+        self.assertTypeBlocksArrayEqual(tb2,
+                [[True, True, 3, False, False, True],
+                [True, True, 6, True, False, True],
+                [False, False, 1, True, False, True]])
+
+        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks(slice(1, 3), bool))
+        self.assertTypeBlocksArrayEqual(tb3,
+                [[1, True, True, False, False, True],
+                [4, True, True, True, False, True],
+                [0, False, True, True, False, True]]
+                )
+
+        tb4 = TypeBlocks.from_blocks(tb1._astype_blocks([0, 2, 4], bool))
+        self.assertTypeBlocksArrayEqual(tb4,
+                [[True, 2, True, False, False, True],
+                [True, 5, True, True, False, True],
+                [False, 0, True, True, False, True]]
+                )
+
+        tb5 = TypeBlocks.from_blocks(tb1._astype_blocks([4, 2, 0], bool))
+        self.assertTypeBlocksArrayEqual(tb4,
+                [[True, 2, True, False, False, True],
+                [True, 5, True, True, False, True],
+                [False, 0, True, True, False, True]]
+                )
+
+        tb6 = TypeBlocks.from_blocks(tb1._astype_blocks(4, int))
+        self.assertTypeBlocksArrayEqual(tb6,
+                [[1, 2, 3, False, 0, True],
+                [4, 5, 6, True, 0, True],
+                [0, 0, 1, True, 0, True]]
+                )
+
+
+    def test_type_blocks_astype_b(self):
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._astype_blocks(slice(2, None), int))
+
+        self.assertTypeBlocksArrayEqual(tb2,
+                [[1, 4, 0, 1],
+                [2, 5, 0, 0],
+                [3, 6, 1, 1]]
+                )
+
+        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks([0, 1], bool))
+
+        self.assertTypeBlocksArrayEqual(tb3,
+                [[True, True, False, True],
+                [True, True, False, False],
+                [True, True, True, True]]
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
