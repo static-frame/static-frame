@@ -6,6 +6,7 @@ from collections import OrderedDict
 from io import StringIO
 import string
 import hashlib
+import pickle
 
 import numpy as np
 
@@ -851,6 +852,22 @@ class TestUnit(TestCase):
         self.assertEqual(s1.clip(upper=s3).to_pairs(),
                 (('a', 0), ('b', 1), ('c', 0), ('d', 3), ('e', 4), ('f', 5))
                 )
+
+
+    def test_series_pickle_a(self):
+        s1 = Series(range(6), index=list('abcdef'))
+        s2 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+        s3 = s2.astype(bool)
+
+
+        for series in (s1, s2, s3):
+            pbytes = pickle.dumps(series)
+            series_new = pickle.loads(pbytes)
+            for v in series: # iter labels
+                # this compares series objects
+                self.assertFalse(series_new.values.flags.writeable)
+                self.assertEqual(series_new.loc[v], series.loc[v])
+
 
 
 

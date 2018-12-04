@@ -7,6 +7,7 @@ from collections import namedtuple
 from io import StringIO
 import string
 import hashlib
+import pickle
 
 
 import numpy as np
@@ -2163,6 +2164,7 @@ class TestUnit(TestCase):
                 ['completed', 'id', 'title', 'userId'])
 
 
+
     def test_frame_reindex_flat_a(self):
 
         records = (
@@ -2252,6 +2254,42 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('a', (('x', True), ('y', True), ('z', True))), ('b', (('x', True), ('y', True), ('z', True))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', False), ('y', True), ('z', False))), ('e', (('x', True), ('y', False), ('z', False))))
                 )
+
+
+    def test_frame_pickle_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        pbytes = pickle.dumps(f1)
+        f2 = pickle.loads(pbytes)
+
+        self.assertEqual([b.flags.writeable for b in f2._blocks._blocks],
+                [False, False, False, False, False])
+
+
+    @unittest.skip('requires file system')
+    def test_frame_to_pickle_a(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        fp = '/tmp/frame.p'
+        f1.to_pickle(fp)
+
+        # we can use either class to renaimate the data
+        f2 = Frame.from_pickle(fp)
+        f3 = FrameGO.from_pickle(fp)
 
 
 

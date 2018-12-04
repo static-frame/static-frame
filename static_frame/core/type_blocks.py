@@ -171,6 +171,16 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # set up callbacks
         self.iloc = GetItem(self._extract_iloc)
 
+    #---------------------------------------------------------------------------
+    def __setstate__(self, state):
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            if key == '_blocks':
+                for block in value:
+                    block.flags.writeable = False
+            setattr(self, key, value)
 
     def copy(self) -> 'TypeBlocks':
         '''
@@ -766,7 +776,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
         '''
-        if key is None or (isinstance(key, slice) and slice == _NULL_SLICE):
+        if key is None or (isinstance(key, slice) and key == _NULL_SLICE):
             yield from self._all_block_slices()
         else:
             if isinstance(key, _INT_TYPES):
@@ -842,7 +852,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             dtype: DtypeSpecifier
             ) -> tp.Generator[np.ndarray, None, None]:
         '''
-        Generator consumer, generator producer of np.ndarray, consolidating types are exact matches.
+        Generator producer of np.ndarray.
         '''
 
         # block slices must be in ascending order, not key order
@@ -864,8 +874,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         target_block_idx, target_slice = next(block_slices)
                     except StopIteration:
                         break
-
-                # print('in while', block_idx, b, target_block_idx)
 
                 if block_idx != target_block_idx:
                     break # need to advance blocks
@@ -907,6 +915,85 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 yield from parts
 
 
+    def _drop_blocks(self,
+            row_key: GetItemKeyType=None,
+            column_key: GetItemKeyType=None,
+            ) -> tp.Generator[np.ndarray, None, None]:
+        '''
+        Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
+
+        Args:
+            column_key: Selection of columns to leave out of blocks. A
+        '''
+        if column_key is None:
+            # the default should not be the null slice, which would drop all
+            block_slices = iter(())
+        else:
+            # block slices must be in ascending order, not key order
+            block_slices = iter(self._key_to_block_slices(
+                    column_key,
+                    retain_key_order=False))
+
+        target_block_idx = target_slice = None
+
+        for block_idx, b in enumerate(self._blocks):
+            parts = []
+            drop_block = False
+            part_start_last = 0
+
+            while True:
+
+                # get target block and slice
+                if target_block_idx is None: # can be zero
+                    try:
+                        target_block_idx, target_slice = next(block_slices)
+                    except StopIteration:
+                        break
+
+                if block_idx != target_block_idx:
+                    break # need to advance blocks
+
+                if b.ndim == 1: # given 1D array
+                    part_start_last = 1
+                    target_block_idx = target_slice = None
+                    drop_block = True
+                    break
+                else:
+                    # target_slice can be a slice or an integer
+                    if isinstance(target_slice, slice):
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
+                    else: # it is an integer
+                        target_start = target_slice
+                        target_stop = target_slice + 1
+
+                    if target_start > part_start_last:
+                        # yield retained components before and after
+                        parts.append(b[:, slice(part_start_last, target_start)])
+
+                    part_start_last = target_stop
+
+                target_block_idx = target_slice = None
+
+            # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
+            if b.ndim != 1 and part_start_last < b.shape[1]:
+                parts.append(b[:, slice(part_start_last, None)])
+
+            # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set
+
+            if not drop_block and not parts:
+                if row_key is not None:
+                    b = np.delete(b, row_key, axis=0)
+                    b.flags.writeable = False
+                yield b
+            elif parts:
+                if row_key is not None:
+                    for part in parts:
+                        part = np.delete(part, row_key, axis=0)
+                        part.flags.writeable = False
+                        yield part
+                else:
+                    yield from parts
 
 
     def _assign_blocks_from_keys(self,

@@ -6,6 +6,7 @@ import typing as tp
 
 import csv
 import json
+import pickle
 
 from collections import namedtuple
 
@@ -316,7 +317,22 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         return cls.from_json(_read_url(url))
 
+    @classmethod
+    def from_pickle(cls, fp: str):
+        '''Frame constructor form a Python pickle object.
+        '''
+        with open(fp, 'rb') as f:
+            frame = pickle.load(f)
+            if frame.__class__ == cls:
+                return frame
 
+        # reuse data, create new indices
+        return cls(frame._blocks,
+                index=frame._index,
+                columns=frame._columns,
+                own_data=True,
+                own_index=True
+                )
 
     @classmethod
     def from_items(cls,
@@ -695,10 +711,14 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         if row_count and len(self._index) != row_count:
             # row count might be 0 for an empty DF
-            raise Exception('index provided do not have correct size')
+            raise Exception(
+                    'Index has incorrect size (got {}, expected {})'.format(
+                    len(self._index), row_count))
         if len(self._columns) != col_count:
             import ipdb; ipdb.set_trace()
-            raise Exception('columns provided do not have correct size')
+            raise Exception(
+                    'Columns has incorrect size (got {}, expected {})'.format(
+                    len(self._columns), col_count))
 
 
         #-----------------------------------------------------------------------
@@ -1635,15 +1655,13 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=self._index,
                 columns=self._columns[keep])
 
-    def set_index(self, column: tp.Optional[tp.Union[int, str]],
+    def set_index(self,
+            column: tp.Hashable,
             drop: bool=False) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
-        if isinstance(column, int):
-            column_iloc = column
-        else:
-            column_iloc = self._columns.loc_to_iloc(column)
+        column_iloc = self._columns.loc_to_iloc(column)
 
         if drop:
             # NOTE: not sure if there is a faster way; perhaps with a drop interface on TypeBlocks
@@ -1665,6 +1683,14 @@ class Frame(metaclass=MetaOperatorDelegate):
                 columns=columns,
                 index=index,
                 own_data=own_data)
+
+
+    def set_index_hierarchy(self,
+            columns: tp.Iterable[tp.Hashable],
+            drop: bool=False
+            ):
+        raise NotImplementedError()
+
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -1741,6 +1767,14 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 own_columns=False # need to make grow only
                 )
+
+
+    def to_pickle(self, fp: str):
+        '''Frame constructor form a Python pickle object.
+        '''
+        with open(fp, 'wb') as f:
+            return pickle.dump(self, f)
+
 
     def to_csv(self,
             fp: FilePathOrFileLike,
@@ -1898,6 +1932,9 @@ class FrameGO(Frame):
         raise NotImplementedError('Already a FrameGO')
 
 
+#-------------------------------------------------------------------------------
+# utility delegates returned from selection routines and exposing the __call__ interface.
+
 class FrameAssign:
     __slots__ = ('data', 'iloc_key',)
 
@@ -1923,6 +1960,9 @@ class FrameAssign:
 
 
 class FrameAsType:
+    '''
+    The object returned from the getitem selector, exposing the functional (__call__) interface to pass in the dtype, as well as (optionally) whether blocks are consolidated.
+    '''
     __slots__ = ('data', 'column_key',)
 
     def __init__(self, *,

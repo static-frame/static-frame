@@ -248,8 +248,17 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     #---------------------------------------------------------------------------
-    # index manipulation
+    def __setstate__(self, state):
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            if key == 'values':
+                value.flags.writeable = False
+            setattr(self, key, value)
 
+    #---------------------------------------------------------------------------
+    # index manipulation
     def _reindex_other_like_iloc(self,
             value: 'Series',
             iloc_key: GetItemKeyType) -> 'Series':

@@ -1,6 +1,7 @@
 
 import unittest
 import numpy as np
+import pickle
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -393,6 +394,20 @@ class TestUnit(TestCase):
         self.assertTrue(_requires_reindex(a, c))
         self.assertTrue(_requires_reindex(a, d))
         self.assertTrue(_requires_reindex(a, e))
+
+    def test_index_pickle_a(self):
+        a = Index([('a','b'), ('b','c'), ('c','d')])
+        b = Index([1, 2, 3, 4])
+        c = IndexYear.from_date_range('2014-12-15', '2018-03-15')
+
+        for index in (a, b, c):
+            pbytes = pickle.dumps(index)
+            index_new = pickle.loads(pbytes)
+            for v in index: # iter labels
+                # import ipdb; ipdb.set_trace()
+                # this compares Index objects
+                self.assertFalse(index_new._labels.flags.writeable)
+                self.assertEqual(index_new.loc[v], index.loc[v])
 
 
 if __name__ == '__main__':

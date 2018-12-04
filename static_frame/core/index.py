@@ -251,6 +251,15 @@ class Index(metaclass=MetaOperatorDelegate):
         self.iloc = GetItem(self._extract_iloc)
 
 
+    def __setstate__(self, state):
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            if key == '_labels':
+                value.flags.writeable = False
+            setattr(self, key, value)
+
     def _update_array_cache(self):
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
         '''

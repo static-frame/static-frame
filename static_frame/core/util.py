@@ -569,22 +569,11 @@ class GetItem:
         return self.callback(key)
 
 
-class AsTypeInterface:
-    __slots__ = ('getitem',)
-
-    def __init__(self, getitem: tp.Callable) -> None:
-        self.getitem = getitem
-
-    def __getitem__(self, key) -> 'FrameAsType':
-        return self.getitem(key)
-
-    def __call__(self, dtype):
-        return self.getitem(_NULL_SLICE)(dtype)
-
 
 class ExtractInterface:
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
+
     __slots__ = ('iloc', 'loc', 'getitem')
 
     def __init__(self, *,
@@ -598,6 +587,25 @@ class ExtractInterface:
     def __getitem__(self, key):
         return self.getitem(key)
 
+
+class AsTypeInterface:
+    '''An instance to serve as an interface to __getitem__ extractors.
+    '''
+
+    __slots__ = ('getitem',)
+
+    def __init__(self, getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']) -> None:
+        '''
+        Args:
+            getitem: a callable that expects a getitem key and returns a FrameAsType interface; for example, Frame._extract_getitem_astype.
+        '''
+        self.getitem = getitem
+
+    def __getitem__(self, key) -> 'FrameAsType':
+        return self.getitem(key)
+
+    def __call__(self, dtype):
+        return self.getitem(_NULL_SLICE)(dtype)
 
 
 
