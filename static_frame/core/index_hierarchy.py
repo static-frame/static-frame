@@ -560,7 +560,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         return cls(levels=cls._tree_to_index_level(tree))
 
 
-# NOTE: this alternative implementation works, but is shown to be slowe than the implementation used above
+# NOTE: this alternative implementation works, but is shown to be slower than the implementation used above
     # @classmethod
     # def from_labels(cls,
     #         labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':

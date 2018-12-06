@@ -256,9 +256,8 @@ class Index(metaclass=MetaOperatorDelegate):
         Ensure that reanimated NP arrays are set not writeable.
         '''
         for key, value in state[1].items():
-            if key == '_labels':
-                value.flags.writeable = False
             setattr(self, key, value)
+        self._labels.flags.writeable = False
 
     def _update_array_cache(self):
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
@@ -388,7 +387,7 @@ class Index(metaclass=MetaOperatorDelegate):
                 offset
                 )
 
-    def _extract_iloc(self, key) -> 'Index':
+    def _extract_iloc(self, key: GetItemKeyType) -> 'Index':
         '''Extract a new index given an iloc key
         '''
         if self._recache:
@@ -408,6 +407,7 @@ class Index(metaclass=MetaOperatorDelegate):
             labels = self._labels[key]
         else: # select a single label value
             labels = (self._labels[key],)
+
         return self.__class__(labels=labels)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Index':
@@ -417,6 +417,20 @@ class Index(metaclass=MetaOperatorDelegate):
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
+
+
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self.__class__(labels=np.delete(self._labels, key))
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'Index':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        return self._drop_iloc(self.loc_to_iloc(key))
+
 
     #---------------------------------------------------------------------------
     # operators

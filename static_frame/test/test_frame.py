@@ -551,7 +551,6 @@ class TestUnit(TestCase):
                 index=('w', 'x', 'y', 'z'))
 
         post = f1.loc['x':]
-        # import ipdb; ipdb.set_trace()
 
 
     def test_frame_attrs_a(self):
@@ -2067,6 +2066,10 @@ class TestUnit(TestCase):
 
         f2 = f1.set_index('r', drop=True)
 
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('a', 2), ('b', 30))), ('q', (('a', 2), ('b', 34))), ('s', (('a', False), ('b', True))), ('t', (('a', False), ('b', False))))
+                )
+
         self.assertTrue(f1.mloc[[0, 2]].tolist() == f2.mloc.tolist())
 
 
@@ -2272,26 +2275,35 @@ class TestUnit(TestCase):
         self.assertEqual([b.flags.writeable for b in f2._blocks._blocks],
                 [False, False, False, False, False])
 
-
-    @unittest.skip('requires file system')
-    def test_frame_to_pickle_a(self):
+    def test_frame_set_index_hierarchy(self):
 
         records = (
                 (1, 2, 'a', False, True),
-                (30, 50, 'b', True, False))
+                (30, 2, 'b', True, False),
+                (30, 50, 'a', True, False),
+                (30, 50, 'b', True, False),
+                )
 
         f1 = FrameGO.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('x','y'))
+                index=('w', 'x', 'y', 'z'))
 
-        fp = '/tmp/frame.p'
-        f1.to_pickle(fp)
+        f2 = f1.set_index_hierarchy(['q', 'r'])
 
-        # we can use either class to renaimate the data
-        f2 = Frame.from_pickle(fp)
-        f3 = FrameGO.from_pickle(fp)
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('q', (((2, 'a'), 2), ((2, 'b'), 2), ((50, 'a'), 50), ((50, 'b'), 50))), ('r', (((2, 'a'), 'a'), ((2, 'b'), 'b'), ((50, 'a'), 'a'), ((50, 'b'), 'b'))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False)))))
 
+        f3 = f1.set_index_hierarchy(['q', 'r'], drop=True)
 
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
+                )
+
+        f4 = f1.set_index_hierarchy(slice('q', 'r'), drop=True)
+
+        self.assertEqual(f4.to_pairs(0),
+                (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
+                )
 
 
 if __name__ == '__main__':

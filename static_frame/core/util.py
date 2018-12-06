@@ -299,9 +299,8 @@ def _slice_to_ascending_slice(key: slice, size: int) -> slice:
         return slice(start, stop, 1)
 
     # if 6, 1, -2: 6, 4, 2; then
-    start = next(iter(reversed(range(*key.indices(size)))))
-    step = abs(key.step)
-    return slice(start, stop, step)
+    start = next(reversed(range(*key.indices(size))))
+    return slice(start, stop, -key.step)
 
 
 

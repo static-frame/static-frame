@@ -253,9 +253,8 @@ class Series(metaclass=MetaOperatorDelegate):
         Ensure that reanimated NP arrays are set not writeable.
         '''
         for key, value in state[1].items():
-            if key == 'values':
-                value.flags.writeable = False
             setattr(self, key, value)
+        self.values.flags.writeable = False
 
     #---------------------------------------------------------------------------
     # index manipulation

@@ -317,22 +317,23 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         return cls.from_json(_read_url(url))
 
-    @classmethod
-    def from_pickle(cls, fp: str):
-        '''Frame constructor form a Python pickle object.
-        '''
-        with open(fp, 'rb') as f:
-            frame = pickle.load(f)
-            if frame.__class__ == cls:
-                return frame
+    # @classmethod
+    # def from_pickle(cls, fp: str):
+    #     '''Frame constructor from a file path to a Python pickle.
+    #     '''
+    #     with open(fp, 'rb') as f:
+    #         frame = pickle.load(f)
+    #         if frame.__class__ == cls:
+    #             return frame
 
-        # reuse data, create new indices
-        return cls(frame._blocks,
-                index=frame._index,
-                columns=frame._columns,
-                own_data=True,
-                own_index=True
-                )
+    #     #  use this class, reuse data, create new indices
+    #     return cls(frame._blocks,
+    #             index=frame._index,
+    #             columns=frame._columns,
+    #             own_data=True,
+    #             own_index=True
+    #             )
+
 
     @classmethod
     def from_items(cls,
@@ -1656,7 +1657,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 columns=self._columns[keep])
 
     def set_index(self,
-            column: tp.Hashable,
+            column: GetItemKeyType,
             drop: bool=False) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
@@ -1664,32 +1665,59 @@ class Frame(metaclass=MetaOperatorDelegate):
         column_iloc = self._columns.loc_to_iloc(column)
 
         if drop:
-            # NOTE: not sure if there is a faster way; perhaps with a drop interface on TypeBlocks
-            selection = np.fromiter(
-                    (x != column_iloc for x in range(self._blocks._shape[1])),
-                    count=self._blocks._shape[1],
-                    dtype=bool)
-            blocks = self._blocks[selection]
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(column_key=column_iloc))
+            columns = self._columns._drop_iloc(column_iloc)
             own_data = True
-            columns = self._columns.values[selection]
+            own_columns = True
         else:
             blocks = self._blocks
-            own_data = False
             columns = self._columns
+            own_data = False
+            own_columns = False
 
-        index = self._blocks._extract_array(column_key=column_iloc)
+        index_values = self._blocks._extract_array(column_key=column_iloc)
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index_values,
+                own_data=own_data,
+                own_columns=own_columns
+                )
+
+
+    def set_index_hierarchy(self,
+            columns: GetItemKeyType,
+            drop: bool=False
+            ):
+        column_iloc = self._columns.loc_to_iloc(columns)
+
+        if drop:
+            blocks = TypeBlocks.from_blocks(
+                    self._blocks._drop_blocks(column_key=column_iloc))
+            columns = self._columns._drop_iloc(column_iloc)
+            own_data = True
+            own_columns = True
+        else:
+            blocks = self._blocks
+            columns = self._columns
+            own_data = False
+            own_columns = False
+
+        index_labels = self._blocks._extract_array(column_key=column_iloc)
+        if self._COLUMN_CONSTRUCTOR.STATIC:
+            index = IndexHierarchy.from_labels(index_labels)
+        else:
+            index = IndexHierarchyGO.from_labels(index_labels)
 
         return self.__class__(blocks,
                 columns=columns,
                 index=index,
-                own_data=own_data)
+                own_data=own_data,
+                own_columns=own_columns,
+                own_index=True
+                )
 
-
-    def set_index_hierarchy(self,
-            columns: tp.Iterable[tp.Hashable],
-            drop: bool=False
-            ):
-        raise NotImplementedError()
 
 
     #---------------------------------------------------------------------------
@@ -1769,11 +1797,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                 )
 
 
-    def to_pickle(self, fp: str):
-        '''Frame constructor form a Python pickle object.
-        '''
-        with open(fp, 'wb') as f:
-            return pickle.dump(self, f)
+    # def to_pickle(self, fp: str):
+    #     '''Given a file path, write the Frame as a Python pickle.
+    #     '''
+    #     with open(fp, 'wb') as f:
+    #         return pickle.dump(self, f)
 
 
     def to_csv(self,

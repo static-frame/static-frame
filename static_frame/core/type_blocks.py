@@ -177,10 +177,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Ensure that reanimated NP arrays are set not writeable.
         '''
         for key, value in state[1].items():
-            if key == '_blocks':
-                for block in value:
-                    block.flags.writeable = False
             setattr(self, key, value)
+
+        for b in self._blocks:
+            b.flags.writeable = False
 
     def copy(self) -> 'TypeBlocks':
         '''
@@ -1192,10 +1192,12 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 columns += b.shape[1]
             blocks.append(b)
 
+        row_dtype = _resolve_dtype_iter(b.dtype for b in blocks)
+
         return self._blocks_to_array(
                 blocks=blocks,
                 shape=(rows, columns),
-                row_dtype=self._row_dtype)
+                row_dtype=row_dtype)
 
     def _extract(self,
             row_key: GetItemKeyType=None,
