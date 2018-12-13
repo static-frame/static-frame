@@ -9,10 +9,10 @@ import string
 import hashlib
 import pickle
 
-
 import numpy as np
 
 import static_frame as sf
+
 # assuming located in the same directory
 from static_frame import Index
 from static_frame import IndexGO
@@ -24,6 +24,7 @@ from static_frame import FrameGO
 from static_frame import TypeBlocks
 from static_frame import Display
 from static_frame import mloc
+from static_frame import ILoc
 from static_frame import DisplayConfig
 
 from static_frame.test.test_case import TestCase
@@ -672,10 +673,51 @@ class TestUnit(TestCase):
                 columns=('s', 't', 'w'),
                 consolidate_blocks=True)
 
+
         f2 = f1.assign.loc[['x', 'y'], ['s', 't']](value1)
+
+        # In : f1.assign.loc[['x', 'y'], ['s', 't']](value1)
+        # <Frame>
+        # <Index> p       q       r     s        t        <<U1>
+        # <Index>
+        # x       1       2       a     20       21
+        # y       30      50      b     23       24
+        # <<U1>   <int64> <int64> <<U1> <object> <object>
+
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', 20), ('y', 23))), ('t', (('x', 21), ('y', 24)))))
 
+
+    def test_frame_assign_loc_e(self):
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False),
+                (30, 50, 'c', False, False),
+                (3, 5, 'c', False, True),
+                (30, 500, 'd', True, True),
+                (30, 2, 'e', True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=list('abcdef')
+                )
+
+        f3 = f1.assign.iloc[5](f1.iloc[0])
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('a', 1), ('b', 30), ('c', 30), ('d', 3), ('e', 30), ('f', 1))), ('q', (('a', 2), ('b', 50), ('c', 50), ('d', 5), ('e', 500), ('f', 2))), ('r', (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'c'), ('e', 'd'), ('f', 'a'))), ('s', (('a', False), ('b', True), ('c', False), ('d', False), ('e', True), ('f', False))), ('t', (('a', True), ('b', False), ('c', False), ('d', True), ('e', True), ('f', True))))
+                )
+
+        f4 = f1.assign['q'](f1['q'] * 2)
+        self.assertEqual(f4.to_pairs(0),
+                (('p', (('a', 1), ('b', 30), ('c', 30), ('d', 3), ('e', 30), ('f', 30))), ('q', (('a', 4), ('b', 100), ('c', 100), ('d', 10), ('e', 1000), ('f', 4))), ('r', (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'c'), ('e', 'd'), ('f', 'e'))), ('s', (('a', False), ('b', True), ('c', False), ('d', False), ('e', True), ('f', True))), ('t', (('a', True), ('b', False), ('c', False), ('d', True), ('e', True), ('f', True))))
+                )
+
+        f5 = f1.assign[['p', 'q']](f1[['p', 'q']] * 2)
+        self.assertEqual(f5.to_pairs(0),
+                (('p', (('a', 2), ('b', 60), ('c', 60), ('d', 6), ('e', 60), ('f', 60))), ('q', (('a', 4), ('b', 100), ('c', 100), ('d', 10), ('e', 1000), ('f', 4))), ('r', (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'c'), ('e', 'd'), ('f', 'e'))), ('s', (('a', False), ('b', True), ('c', False), ('d', False), ('e', True), ('f', True))), ('t', (('a', True), ('b', False), ('c', False), ('d', True), ('e', True), ('f', True))))
+                )
 
 
     def test_frame_assign_coercion_a(self):
@@ -2303,6 +2345,28 @@ class TestUnit(TestCase):
 
         self.assertEqual(f4.to_pairs(0),
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
+                )
+
+
+    def test_frame_iloc_in_loc_a(self):
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(f1.loc[ILoc[-2:], ['q', 't']].to_pairs(0),
+                (('q', (('y', 95), ('z', 73))), ('t', (('y', False), ('z', True)))))
+
+        self.assertEqual(f1.loc[ILoc[[0, -1]], 's':].to_pairs(0),
+                (('s', (('w', False), ('z', True))), ('t', (('w', False), ('z', True)))))
+
+        self.assertEqual(f1.loc[['w', 'x'], ILoc[[0, -1]]].to_pairs(0),
+                (('p', (('w', 2), ('x', 30))), ('t', (('w', False), ('x', False))))
                 )
 
 

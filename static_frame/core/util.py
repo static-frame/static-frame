@@ -68,9 +68,12 @@ _KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # for type hinting
 # keys once dimension has been isolated
-GetItemKeyType = tp.Union[int, slice, list, None] # TODO: add Index types
+GetItemKeyType = tp.Union[
+        int, slice, list, None, 'Index', 'Series', np.ndarray]
+
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
-GetItemKeyTypeCompound = tp.Union[tuple, int, slice, list, None]
+GetItemKeyTypeCompound = tp.Union[
+        tuple, int, slice, list, None, 'Index', 'Series', np.ndarray]
 
 CallableOrMapping = tp.Union[tp.Callable, tp.Mapping]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
@@ -419,7 +422,7 @@ def _array_to_duplicated(
         axis: int=0,
         exclude_first=False,
         exclude_last=False):
-    '''Given a numpy array, return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares  colimns and returns a column-length Boolean array.
+    '''Given a numpy array, return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:
         exclude_first: Mark as True all duplicates except the first encountared.

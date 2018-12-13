@@ -10,6 +10,7 @@ from static_frame import Series
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import HLoc
+from static_frame import ILoc
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
@@ -421,6 +422,47 @@ class TestUnit(TestCase):
 
         self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),
                 ['a'])
+
+
+    def test_index_iloc_loc_to_iloc(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx.loc_to_iloc(ILoc[1]), 1)
+        self.assertEqual(idx.loc_to_iloc(ILoc[[0, 2]]), [0, 2])
+
+
+    def test_index_loc_to_iloc_boolen_a(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        # unlike Pandas, both of these presently fail
+        with self.assertRaises(KeyError):
+            idx.loc_to_iloc([False, True])
+
+        with self.assertRaises(KeyError):
+            idx.loc_to_iloc([False, True, False, True])
+
+        # but a Boolean array works
+        post = idx.loc_to_iloc(np.array([False, True, False, True]))
+        self.assertEqual(post.tolist(), [1, 3])
+
+
+    def test_index_loc_to_iloc_boolen_a(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        # returns nothing as index does not match anything
+        post = idx.loc_to_iloc(Series([False, True, False, True]))
+        self.assertTrue(len(post) == 0)
+
+        post = idx.loc_to_iloc(Series([False, True, False, True],
+                index=('b', 'c', 'd', 'a')))
+        self.assertEqual(post.tolist(), [0, 2])
+
+        post = idx.loc_to_iloc(Series([False, True, False, True],
+                index=list('abcd')))
+        self.assertEqual(post.tolist(), [1,3])
 
 if __name__ == '__main__':
     unittest.main()

@@ -69,6 +69,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 
 from static_frame.core.index import Index
+from static_frame.core.index import ILoc
 
 
 
@@ -828,28 +829,30 @@ class Frame(metaclass=MetaOperatorDelegate):
             row_key, column_key = iloc_key, None
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
-        axis_nm = self._extract_axis_not_multi(row_key, column_key)
+        nm_row, nm_column = self._extract_axis_not_multi(row_key, column_key)
         v = None
 
-        if axis_nm[0] and not axis_nm[1]:
-            # only column is multi
+        if nm_row and not nm_column:
+            # only column is multi selection, reindex by column
             if isinstance(value, Series):
                 v = value.reindex(self._columns._extract_iloc(column_key))
-        elif not axis_nm[0] and axis_nm[1]:
-            # only row is multi
+        elif not nm_row and nm_column:
+            # only row is multi selection, reindex by index
             if isinstance(value, Series):
                 v = value.reindex(self._index._extract_iloc(row_key))
-        elif not axis_nm[0] and not axis_nm[1]:
-            # both multi, must be a DF
+        elif not nm_row and not nm_column:
+            # both multi, must be a Frame
             if isinstance(value, Frame):
                 target_column_index = self._columns._extract_iloc(column_key)
                 target_row_index = self._index._extract_iloc(row_key)
-                v = value.reindex(index=target_row_index,
+                # this will use the default fillna type, which may or may not be what is wanted
+                v = value.reindex(
+                        index=target_row_index,
                         columns=target_column_index)
         if v is None:
             raise Exception(('cannot assign '
                     + value.__class__.__name__
-                    + ' with key configuration'), axis_nm)
+                    + ' with key configuration'), (nm_row, nm_column))
         return v
 
 
@@ -1130,7 +1133,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     @staticmethod
     def _extract_axis_not_multi(row_key, column_key) -> tp.Tuple[bool, bool]:
         '''
-        If either row or column is given with a non-multiple type of selection, reduce dimensionality.
+        If either row or column is given with a non-multiple type of selection (a single scalar), reduce dimensionality.
         '''
         row_nm = False
         column_nm = False

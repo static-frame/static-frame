@@ -2,7 +2,7 @@
 Assignment
 ===============================
 
-:py:class:`Series` and :py:class:`Frame` provide asign-to-copy interfaces, permitting immutable assignment to new containers with the same flexability as Pandas and Numpy.
+:py:class:`Series` and :py:class:`Frame` provide assign-to-copy interfaces, permitting immutable assignment to new containers with the same flexibility as Pandas and NumPy.
 
 
 Series

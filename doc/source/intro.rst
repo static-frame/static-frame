@@ -68,6 +68,7 @@ Contributors
 
 These members of the Investment Systems team have contributed greatly to the design of StaticFrame:
 
+- Brandt Bucher
 - Guru Devanla
 - John Hawk
 - Adam Kay

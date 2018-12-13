@@ -41,18 +41,34 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 
 
+class ILocMeta(type):
+
+    def __getitem__(self,
+            key: GetItemKeyType
+            ) -> tp.Iterable[GetItemKeyType]:
+        return self(key)
+
+class ILoc(metaclass=ILocMeta):
+    __slots__ = (
+            'key',
+            )
+
+    def __init__(self, key: GetItemKeyType):
+        self.key = key
+
+
 
 class LocMap:
 
-    @classmethod
-    def map_slice_args(cls,
-            label_to_pos: tp.Dict,
+    @staticmethod
+    def map_slice_args(
+            label_to_pos: tp.Callable[[tp.Hashable], int],
             key: slice,
             offset: tp.Optional[int]=0):
-        '''Given a slice and a label to position mapping, yield each argument necessary to create a new slice.
+        '''Given a slice and a label-to-position mapping, yield each argument necessary to create a new slice.
 
         Args:
-            label_to_pos: mapping, no order dependency
+            label_to_pos: callable into mapping (can be a get() method from a dictionary)
         '''
         offset_apply = not offset is None
 
@@ -61,7 +77,7 @@ class LocMap:
             if attr is None:
                 yield None
             else:
-                pos = label_to_pos[attr]
+                pos = label_to_pos(attr)
                 if offset_apply:
                     pos += offset
                 if field is SLICE_STOP_ATTR:
@@ -78,12 +94,17 @@ class LocMap:
             offset: tp.Optional[int]=None
             ) -> GetItemKeyType:
         '''
+        Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
+
         Args:
             offset: in the contect of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
         offset_apply = not offset is None
+
+        if isinstance(key, ILoc):
+            return key.key
 
         if isinstance(key, slice):
             if offset_apply and key == _NULL_SLICE:
@@ -92,11 +113,12 @@ class LocMap:
                         len(positions) + offset,
                         )
             return slice(*cls.map_slice_args(
-                label_to_pos,
+                label_to_pos.get,
                 key,
                 offset)
                 )
 
+        # handles only lists and arrays
         elif isinstance(key, _KEY_ITERABLE_TYPES):
             # can be an iterable of labels (keys) or an iterable of Booleans
             # if len(key) == len(label_to_pos) and isinstance(key[0], (bool, np.bool_)):
@@ -362,11 +384,13 @@ class Index(metaclass=MetaOperatorDelegate):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            offset: tp.Optional[int]=None
+            offset: tp.Optional[int]=None,
+            key_transform: tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]=None
             ) -> GetItemKeyType:
         '''
         Args:
             offset: A default of None is critical to avoid large overhead in unnecessary application of offsets.
+            key_transform: A function that transforms keys to specialized type; used by Data indices.
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
@@ -375,11 +399,24 @@ class Index(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
 
-        if isinstance(key, (Series, Index)):
+        if isinstance(key, Index):
+            # if an Index, we simply use the values of the index
             key = key.values
+
+        if isinstance(key, Series):
+            if key.dtype == bool:
+                if _requires_reindex(key.index, self):
+                    key = key.reindex(self, fill_value=False).values
+                else: # the index is equal
+                    key = key.values
+            else:
+                key = key.values
 
         if self._loc_is_iloc:
             return key
+
+        if key_transform:
+            key = key_transform(key)
 
         return LocMap.loc_to_iloc(self._map,
                 self._positions, # always an np.ndarray
@@ -499,7 +536,7 @@ class Index(metaclass=MetaOperatorDelegate):
 
 
     #---------------------------------------------------------------------------
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarhcy':
+    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarhcy with an added root level.
         '''
         from static_frame import IndexHierarchy
@@ -716,23 +753,9 @@ class IndexDate(Index):
 
     def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
         '''
-        Specialized for IndexData indicies to convert string data representations into np.datetime64 objects as appropriate.
+        Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
-        from static_frame.core.series import Series
-
-        # NOTE: not calling base class to avoid some unnecessary operations and function call overhead
-
-        if self._recache:
-            self._update_array_cache()
-
-        if isinstance(key, Series):
-            key = key.values
-
-        # try to convert all keys to datetime eksys
-        return LocMap.loc_to_iloc(self._map,
-                self._positions,
-                _key_to_datetime_key(key))
-
+        return Index.loc_to_iloc(self, key=key, key_transform=_key_to_datetime_key)
 
 
 #-------------------------------------------------------------------------------

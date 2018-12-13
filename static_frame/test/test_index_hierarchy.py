@@ -704,14 +704,35 @@ class TestUnit(TestCase):
                 ('I', 'A', 1),
                 ('I', 'B', 1),
                 ('II', 'A', 1),
-                ('II', 'A', 2),
+                ('II', 'B', 2),
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        #TODO: add tests!
+        ih2 = ih.drop_level()
 
-        # ih2 = ih.add_level('b')
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(ih2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
+
+
+    def test_hierarchy_boolean_loc(self):
+        records = (
+                ('a', 999999, 0.1),
+                ('a', 201810, 0.1),
+                ('b', 999999, 0.4),
+                ('b', 201810, 0.4))
+        f1 = Frame.from_records(records, columns=list('abc'))
+
+        f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
+
+        f2 = f1.loc[f1['b'] == 999999]
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((('a', 999999), 'a'), (('b', 999999), 'b'))), ('b', ((('a', 999999), 999999), (('b', 999999), 999999))), ('c', ((('a', 999999), 0.1), (('b', 999999), 0.4)))))
+
+        f3 = f1.loc[Series([False, True], index=(('b', 999999), ('b', 201810)))]
+        self.assertEqual(f3.to_pairs(0),
+                (('a', ((('b', 201810), 'b'),)), ('b', ((('b', 201810), 201810),)), ('c', ((('b', 201810), 0.4),))))
+
 
 if __name__ == '__main__':
     unittest.main()

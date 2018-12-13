@@ -932,6 +932,8 @@ class TestUnit(TestCase):
                 [[False, False, False, False, False, False, False, False], [False, False, False, False, True, True, True, True], [False, False, False, False, True, True, True, True]])
 
 
+
+
     def test_type_blocks_extract_iloc_assign_a(self):
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -941,29 +943,93 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(tb.extract_iloc_assign(1, 600).values.tolist(),
-                [[1, 2, 3, False, False, True, 'a', 'b'], [600, 600, 600, 600, 600, 600, 600, 600], [0, 0, 1, True, False, True, 'oe', 'od']])
+                [[1, 2, 3, False, False, True, 'a', 'b'],
+                [600, 600, 600, 600, 600, 600, 600, 600],
+                [0, 0, 1, True, False, True, 'oe', 'od']])
+
+
+    def test_type_blocks_extract_iloc_assign_b(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(tb.extract_iloc_assign((1, 5), 20).values.tolist(),
-                [[1, 2, 3, False, False, True, 'a', 'b'], [4, 5, 6, True, False, 20, 'c', 'd'], [0, 0, 1, True, False, True, 'oe', 'od']])
+                [[1, 2, 3, False, False, True, 'a', 'b'],
+                [4, 5, 6, True, False, 20, 'c', 'd'],
+                [0, 0, 1, True, False, True, 'oe', 'od']])
+
+
+    def test_type_blocks_extract_iloc_assign_c(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(tb.extract_iloc_assign((slice(2), slice(5)), 'X').values.tolist(),
-                [['X', 'X', 'X', 'X', 'X', True, 'a', 'b'], ['X', 'X', 'X', 'X', 'X', True, 'c', 'd'], [0, 0, 1, True, False, True, 'oe', 'od']]
+                [['X', 'X', 'X', 'X', 'X', True, 'a', 'b'],
+                ['X', 'X', 'X', 'X', 'X', True, 'c', 'd'],
+                [0, 0, 1, True, False, True, 'oe', 'od']]
                 )
 
-        self.assertEqual(tb.extract_iloc_assign(([0,1], [1,4,7]), -5).values.tolist(),
-                [[1, -5, 3, False, -5, True, 'a', -5], [4, -5, 6, True, -5, True, 'c', -5], [0, 0, 1, True, False, True, 'oe', 'od']])
 
+    def test_type_blocks_extract_iloc_assign_d(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
+
+        self.assertEqual(tb.extract_iloc_assign(([0,1], [1,4,7]), -5).values.tolist(),
+                [[1, -5, 3, False, -5, True, 'a', -5],
+                [4, -5, 6, True, -5, True, 'c', -5],
+                [0, 0, 1, True, False, True, 'oe', 'od']])
+
+
+    def test_type_blocks_extract_iloc_assign_e(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
                 tb.extract_iloc_assign((1, slice(4)), (-1, -2, -3, -4)).values.tolist(),
-                [[1, 2, 3, False, False, True, 'a', 'b'], [-1, -2, -3, -4, False, True, 'c', 'd'], [0, 0, 1, True, False, True, 'oe', 'od']])
+                [[1, 2, 3, False, False, True, 'a', 'b'],
+                [-1, -2, -3, -4, False, True, 'c', 'd'],
+                [0, 0, 1, True, False, True, 'oe', 'od']])
+
+
+    def test_type_blocks_extract_iloc_assign_f(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
                 tb.extract_iloc_assign((2, slice(3,7)), (-1, -2, -3, -4)).values.tolist(),
-                [[1, 2, 3, False, False, True, 'a', 'b'], [4, 5, 6, True, False, True, 'c', 'd'], [0, 0, 1, -1, -2, -3, -4, 'od']])
+                [[1, 2, 3, False, False, True, 'a', 'b'],
+                [4, 5, 6, True, False, True, 'c', 'd'],
+                [0, 0, 1, -1, -2, -3, -4, 'od']])
+
+
+    def test_type_blocks_extract_iloc_assign_g(self):
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
+
         self.assertEqual(
                 tb.extract_iloc_assign((0, slice(4,8)), (-1, -2, -3, -4)).values.tolist(),
-                [[1, 2, 3, False, -1, -2, -3, -4], [4, 5, 6, True, False, True, 'c', 'd'], [0, 0, 1, True, False, True, 'oe', 'od']])
+                [[1, 2, 3, False, -1, -2, -3, -4],
+                [4, 5, 6, True, False, True, 'c', 'd'],
+                [0, 0, 1, True, False, True, 'oe', 'od']])
+
+
 
 
     def test_type_blocks_elements_items_a(self):

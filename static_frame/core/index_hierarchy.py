@@ -6,6 +6,11 @@ from itertools import chain
 
 import numpy as np
 
+from static_frame.core.index import LocMap
+from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+from static_frame.core.index import _requires_reindex
+
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import _NULL_SLICE
 from static_frame.core.util import SLICE_ATTRS
@@ -28,8 +33,6 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 
-from static_frame import Index
-from static_frame import IndexGO
 
 
 class HLocMeta(type):
@@ -191,23 +194,13 @@ class IndexLevel:
                 return pos + node.index.loc_to_iloc(k)
 
 
-    def loc_to_iloc(self, key) -> GetItemKeyType:
-
+    def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
+        '''
+        This is the low-level loc_to_iloc, analagous to LocMap.loc_to_iloc as used by Index. As such, the key at this point should not be a Series or Index object.
+        '''
         if isinstance(key, slice):
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
-            # NOTE: this similar to LocMap.map_slice_args; can they be consolidated
-            slice_args = []
-            for field in SLICE_ATTRS:
-                attr = getattr(key, field)
-                if attr is None:
-                    slice_args.append(attr)
-                else:
-                    pos = self.leaf_loc_to_iloc(attr)
-                    if field is SLICE_STOP_ATTR:
-                        slice_args.append(pos + 1)
-                    else:
-                        slice_args.append(pos)
-            return slice(*slice_args)
+            return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
         # this should not match tuples that are leaf-locs
         elif isinstance(key, _KEY_ITERABLE_TYPES):
@@ -825,6 +818,22 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         '''
         Given iterable of GetItemKeyTypes, apply to each level of levels.
         '''
+        from static_frame.core.series import Series
+
+        if isinstance(key, Index):
+            # if an Index, we simply use the values of the index
+            key = key.values
+
+        if isinstance(key, Series):
+            if key.dtype == bool:
+                if _requires_reindex(key.index, self):
+                    key = key.reindex(self, fill_value=False).values
+                else: # the index is equal
+                    print('requires reindex is False')
+                    key = key.values
+            else:
+                key = key.values
+
         return self._levels.loc_to_iloc(key)
 
     def _extract_iloc(self, key) -> 'IndexHierarchy':

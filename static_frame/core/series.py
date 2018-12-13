@@ -498,8 +498,9 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if not isinstance(values, np.ndarray): # if we have a single element
             return values
-        # this might create new index from iloc, and then createa another Index on Index __init__
-        return self.__class__(values, index=self._index.iloc[iloc_key])
+        return self.__class__(values,
+                index=self._index.iloc[iloc_key],
+                own_index=True)
 
     def __getitem__(self, key: GetItemKeyType) -> 'Series':
         '''A Loc selection (by index labels).

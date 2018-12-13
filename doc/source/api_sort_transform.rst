@@ -47,6 +47,10 @@ The following utilites transform a container into a container of similar size.
 Series
 ---------
 
+.. automethod:: static_frame.Series.astype
+
+.. automethod:: static_frame.Series.clip
+
 .. automethod:: static_frame.Series.isin
 
 .. automethod:: static_frame.Series.transpose
@@ -61,6 +65,16 @@ Series
 Frame
 ---------
 
+
+.. py:method:: Series.astype(dtype)
+
+    Replace the values specified by the key with values casted to the provided dtype.
+
+.. py:method:: Series.astype[key](dtype)
+
+    Given a key, replace the values specified by the column key with values casted to the provided dtype.
+
+
 .. automethod:: static_frame.Frame.isin
 
 .. automethod:: static_frame.Frame.transpose
@@ -72,6 +86,8 @@ Frame
 .. automethod:: static_frame.Frame.drop_duplicated
 
 .. automethod:: static_frame.Frame.set_index
+
+.. automethod:: static_frame.Frame.set_index_hierarchy
 
 .. automethod:: static_frame.Frame.head
 

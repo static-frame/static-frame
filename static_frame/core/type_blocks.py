@@ -1038,16 +1038,29 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         and hasattr(value, '__len__')):
                     if b.ndim == 1:
                         width = 1
-                        value_piece = value[0] # do not want to slice
+                        # if block is 1D, then we can only take 1 column if we have a 2d value
+                        value_piece_column_key = 0
                     else:
                         width = len(range(*target_slice.indices(assigned.shape[1])))
-                        value_piece = value[slice(0, width)]
-                    # reassign remainder for next iteration
-                    value = value[slice(width, None)]
-                else: # not sliceable
+                        # if block id 2D, can take up to width from value
+                        value_piece_column_key = slice(0, width)
+
+                    # import ipdb; ipdb.set_trace()
+                    if isinstance(value, np.ndarray) and value.ndim > 1:
+                        # if value is 2D array, we want value[:, 0]
+                        value_piece = value[:, value_piece_column_key]
+                        value = value[:, slice(width, None)]
+                        # reassign remainder for next iteration
+                    else: # value is 1D array or tuple
+                        # we assume we assigning into a horizontal position
+                        value_piece = value[value_piece_column_key]
+                        value = value[slice(width, None)]
+                else: # not sliceable; this can be a single column
                     value_piece = value
-                    value = value
+                    value = value # reuse the value repeatedly
+
                 if b.ndim == 1: # given 1D array, our row key is all we need
+                    # TODO: handle row_key of None
                     assigned[row_key] = value_piece
                 else:
                     if row_key is None:
