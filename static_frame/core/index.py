@@ -33,6 +33,7 @@ from static_frame.core.util import YearInitializer
 
 
 from static_frame.core.util import GetItem
+from static_frame.core.util import ExtractInterface1D
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -162,6 +163,7 @@ class Index(metaclass=MetaOperatorDelegate):
             '_loc_is_iloc',
             'loc',
             'iloc',
+            'drop'
             )
 
     #---------------------------------------------------------------------------
@@ -266,12 +268,16 @@ class Index(metaclass=MetaOperatorDelegate):
         if len(self._map) != len(self._labels):
             raise KeyError('labels have non-unique values')
 
-        # NOTE:  automatic discovery is possible
+        # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
 
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
+        # on Index, getitem is an iloc selector; on Series, getitme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
+        self.drop = ExtractInterface1D(
+                iloc=GetItem(self._drop_iloc),
+                loc=GetItem(self._drop_loc))
 
     def __setstate__(self, state):
         '''
@@ -324,6 +330,14 @@ class Index(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
         return self._labels
+
+    @property
+    def positions(self) -> np.ndarray:
+        '''Return the immutable positions array. This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._positions
 
     @property
     def mloc(self):
@@ -388,6 +402,8 @@ class Index(metaclass=MetaOperatorDelegate):
             key_transform: tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]=None
             ) -> GetItemKeyType:
         '''
+        Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
+
         Args:
             offset: A default of None is critical to avoid large overhead in unnecessary application of offsets.
             key_transform: A function that transforms keys to specialized type; used by Data indices.
@@ -461,7 +477,14 @@ class Index(metaclass=MetaOperatorDelegate):
         '''
         if self._recache:
             self._update_array_cache()
-        return self.__class__(labels=np.delete(self._labels, key))
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            # can use labels, as we already recached
+            # use Boolean area to select indices from positions, as np.delete does not work with arrays
+            labels = np.delete(self._labels, self._positions[key])
+        else:
+            labels = np.delete(self._labels, key)
+        labels.flags.writeable = False
+        return self.__class__(labels)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the loc key.

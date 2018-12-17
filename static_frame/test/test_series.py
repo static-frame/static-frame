@@ -869,7 +869,33 @@ class TestUnit(TestCase):
                 self.assertEqual(series_new.loc[v], series.loc[v])
 
 
+    def test_series_drop_loc_a(self):
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
 
+        self.assertEqual(s1.drop.loc['d'].to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('e', 8), ('f', 6)))
+
+        self.assertEqual(s1.drop.loc['d':].to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0)))
+
+        self.assertEqual(s1.drop.loc['d':'e'].to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('f', 6)))
+
+        self.assertEqual(s1.drop.loc[s1 > 0].to_pairs(),
+                (('c', 0), ('d', -1)))
+
+
+    def test_series_drop_iloc_a(self):
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        self.assertEqual(s1.drop.iloc[-1].to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', -1), ('e', 8))
+                )
+        self.assertEqual(s1.drop.iloc[2:].to_pairs(),
+                (('a', 2), ('b', 3)))
+
+        self.assertEqual(s1.drop.iloc[[0, 3]].to_pairs(),
+                (('b', 3), ('c', 0), ('e', 8), ('f', 6)))
 
 if __name__ == '__main__':
     unittest.main()

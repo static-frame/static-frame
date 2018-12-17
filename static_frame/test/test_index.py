@@ -464,6 +464,29 @@ class TestUnit(TestCase):
                 index=list('abcd')))
         self.assertEqual(post.tolist(), [1,3])
 
+
+    def test_index_drop_a(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx.drop.iloc[2].values.tolist(), ['a', 'b', 'd'])
+        self.assertEqual(idx.drop.iloc[2:].values.tolist(), ['a', 'b'])
+        self.assertEqual(
+                idx.drop.iloc[np.array([True, False, False, True])].values.tolist(),
+                ['b', 'c'])
+
+    def test_index_drop_b(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx.drop.loc['c'].values.tolist(), ['a', 'b', 'd'])
+        self.assertEqual(idx.drop.loc['b':'c'].values.tolist(), ['a', 'd'])
+
+        self.assertEqual(
+                idx.drop.loc[np.array([True, False, False, True])].values.tolist(),
+                ['b', 'c']
+                )
+
 if __name__ == '__main__':
     unittest.main()
 

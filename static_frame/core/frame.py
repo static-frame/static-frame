@@ -43,7 +43,7 @@ from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import _read_url
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface
+from static_frame.core.util import ExtractInterface2D
 from static_frame.core.util import AsTypeInterface
 from static_frame.core.util import IndexCorrespondence
 
@@ -729,17 +729,17 @@ class Frame(metaclass=MetaOperatorDelegate):
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
-        self.mask = ExtractInterface(
+        self.mask = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_mask),
                 loc=GetItem(self._extract_loc_mask),
                 getitem=self._extract_getitem_mask)
 
-        self.masked_array = ExtractInterface(
+        self.masked_array = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_masked_array),
                 loc=GetItem(self._extract_loc_masked_array),
                 getitem=self._extract_getitem_masked_array)
 
-        self.assign = ExtractInterface(
+        self.assign = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_assign),
                 loc=GetItem(self._extract_loc_assign),
                 getitem=self._extract_getitem_assign)

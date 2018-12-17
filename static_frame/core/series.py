@@ -26,7 +26,8 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface
+from static_frame.core.util import ExtractInterface1D
+from static_frame.core.util import ExtractInterface2D
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
@@ -59,8 +60,9 @@ class Series(metaclass=MetaOperatorDelegate):
     __slots__ = (
         'values',
         '_index',
-        'iloc',
         'loc',
+        'iloc',
+        'drop',
         'mask',
         'masked_array',
         'assign',
@@ -204,17 +206,25 @@ class Series(metaclass=MetaOperatorDelegate):
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
-        self.mask = ExtractInterface(
+        # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
+
+        self.drop = ExtractInterface2D(
+                iloc=GetItem(self._drop_iloc),
+                loc=GetItem(self._drop_loc),
+                getitem=GetItem(self._drop_loc),
+                )
+
+        self.mask = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_mask),
                 loc=GetItem(self._extract_loc_mask),
                 getitem=self._extract_loc_mask)
 
-        self.masked_array = ExtractInterface(
+        self.masked_array = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_masked_array),
                 loc=GetItem(self._extract_loc_masked_array),
                 getitem=self._extract_loc_masked_array)
 
-        self.assign = ExtractInterface(
+        self.assign = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_assign),
                 loc=GetItem(self._extract_loc_assign),
                 getitem=self._extract_loc_assign)
@@ -513,6 +523,22 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # utilites for alternate extraction: mask and assignment
 
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
+        if isinstance(key, np.ndarray) and key.dtype == bool:
+            # use Boolean area to select indices from Index positions, as np.delete does not work with arrays
+            values = np.delete(self.values, self._index.positions[key])
+        else:
+            values = np.delete(self.values, key)
+        values.flags.writeable = False
+        index = self._index._drop_iloc(key)
+        return self.__class__(values, index=index, own_index=True)
+
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'Series':
+        return self._drop_iloc(self._index.loc_to_iloc(key))
+
+    #---------------------------------------------------------------------------
+
     def _extract_iloc_mask(self, key: GetItemKeyType) -> 'Series':
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
         '''
@@ -528,6 +554,7 @@ class Series(metaclass=MetaOperatorDelegate):
         iloc_key = self._index.loc_to_iloc(key)
         return self._extract_iloc_mask(key=iloc_key)
 
+    #---------------------------------------------------------------------------
 
     def _extract_iloc_masked_array(self, key: GetItemKeyType) -> MaskedArray:
         '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.

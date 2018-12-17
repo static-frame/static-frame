@@ -12,7 +12,7 @@ from static_frame.core.util import FrameInitializer
 from static_frame.core.util import mloc
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface
+from static_frame.core.util import ExtractInterface2D
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType

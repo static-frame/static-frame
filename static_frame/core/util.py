@@ -571,8 +571,20 @@ class GetItem:
         return self.callback(key)
 
 
+class ExtractInterface1D:
+    '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
+    '''
 
-class ExtractInterface:
+    __slots__ = ('iloc', 'loc')
+
+    def __init__(self, *,
+            iloc: GetItem,
+            loc: GetItem) -> None:
+        self.iloc = iloc
+        self.loc = loc
+
+
+class ExtractInterface2D:
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
