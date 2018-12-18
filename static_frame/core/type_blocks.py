@@ -854,7 +854,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         Generator producer of np.ndarray.
         '''
-
         # block slices must be in ascending order, not key order
         block_slices = iter(self._key_to_block_slices(
                 column_key,
@@ -942,7 +941,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             part_start_last = 0
 
             while True:
-
                 # get target block and slice
                 if target_block_idx is None: # can be zero
                     try:

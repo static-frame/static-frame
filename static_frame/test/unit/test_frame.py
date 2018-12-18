@@ -2370,5 +2370,30 @@ class TestUnit(TestCase):
                 )
 
 
+
+    def test_frame_iter_group_items_a(self):
+
+        # testing a hierarchical index and columns, selecting column with a tuple
+
+        records = (
+                ('a', 999999, 0.1),
+                ('a', 201810, 0.1),
+                ('b', 999999, 0.4),
+                ('b', 201810, 0.4))
+        f1 = Frame.from_records(records, columns=list('abc'))
+
+        f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
+        f1 = f1.reindex_add_level(columns='i')
+
+        groups = list(f1.iter_group_items(('i', 'a'), axis=0))
+        self.assertEqual(groups[0][0], 'a')
+        self.assertEqual(groups[0][1].to_pairs(0),
+                ((('i', 'a'), ((('a', 999999), 'a'), (('a', 201810), 'a'))), (('i', 'b'), ((('a', 999999), 999999), (('a', 201810), 201810))), (('i', 'c'), ((('a', 999999), 0.1), (('a', 201810), 0.1)))))
+
+        self.assertEqual(groups[1][0], 'b')
+        self.assertEqual(groups[1][1].to_pairs(0),
+                ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
+
+
 if __name__ == '__main__':
     unittest.main()

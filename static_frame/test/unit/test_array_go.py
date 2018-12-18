@@ -19,7 +19,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
-    def test_append_a(self):
+    def test_array_append_a(self):
 
         ag1 = ArrayGO(('a', 'b', 'c', 'd'))
 
@@ -40,7 +40,7 @@ class TestUnit(TestCase):
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
 
-    def test_append_b(self):
+    def test_array_append_b(self):
 
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
 
@@ -61,7 +61,7 @@ class TestUnit(TestCase):
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
 
-    def test_getitem_a(self):
+    def test_array_getitem_a(self):
 
         a = np.array(('a', 'b', 'c', 'd'), object)
         a.flags.writeable = False

@@ -1973,6 +1973,7 @@ class FrameAssign:
             data: Frame,
             iloc_key: GetItemKeyTypeCompound
             ) -> None:
+        # NOTE: the stored data reference here migth be best as weak reference
         self.data = data
         self.iloc_key = iloc_key
 

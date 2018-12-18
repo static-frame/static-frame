@@ -42,8 +42,6 @@ nan = np.nan
 
 LONG_SAMPLE_STR = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
 
-# TODO:
-# test Series.clip
 
 class TestUnit(TestCase):
 
@@ -896,6 +894,26 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.drop.iloc[[0, 3]].to_pairs(),
                 (('b', 3), ('c', 0), ('e', 8), ('f', 6)))
+
+
+
+    def test_series_head_a(self):
+        s1 = Series(range(100), index=reversed(range(100)))
+        self.assertEqual(s1.head().to_pairs(),
+                ((99, 0), (98, 1), (97, 2), (96, 3), (95, 4)))
+        self.assertEqual(s1.head(2).to_pairs(),
+                ((99, 0), (98, 1)))
+
+
+    def test_series_tail_a(self):
+        s1 = Series(range(100), index=reversed(range(100)))
+
+        self.assertEqual(s1.tail().to_pairs(),
+                ((4, 95), (3, 96), (2, 97), (1, 98), (0, 99)))
+
+        self.assertEqual(s1.tail(2).to_pairs(),
+                ((1, 98), (0, 99)))
+
 
 if __name__ == '__main__':
     unittest.main()

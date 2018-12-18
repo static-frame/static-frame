@@ -521,7 +521,23 @@ class Series(metaclass=MetaOperatorDelegate):
         return self._extract_loc(key)
 
     #---------------------------------------------------------------------------
-    # utilites for alternate extraction: mask and assignment
+    # utilites for alternate extraction: drop, mask and assignment
+
+    def _extract_iloc_drop(self, key: GetItemKeyType) -> 'Series':
+        values = np.delete(self.values, key)
+        values.flags.writeable = False
+
+        # better way to get the index class? or implemetn delete on index...
+        index = self._index.__class__(np.delete(self._index.values, key))
+        # can pass self here as it is immutable (assuming index cannot change)
+        return self.__class__(values,
+                index=index,
+                own_index=True)
+
+    def _extract_loc_drop(self, key: GetItemKeyType) -> 'Series':
+        pass
+
+    #---------------------------------------------------------------------------
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:
@@ -747,6 +763,21 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self.__class__(self.values.astype(dtype), index=self._index)
 
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in reduced dimensionality
+
+    def head(self, count: int=5) -> 'Series':
+        '''Return a Series consisting only of the top elements as specified by ``count``.
+        '''
+        return self.iloc[:count]
+
+    def tail(self, count: int=5) -> 'Series':
+        '''Return a Series consisting only of the bottom elements as specified by ``count``.
+        '''
+        return self.iloc[-count:]
+
+
     #---------------------------------------------------------------------------
     # utility function to numpy array
 
@@ -788,6 +819,7 @@ class SeriesAssign:
             data: Series,
             iloc_key: GetItemKeyType
             ) -> None:
+        # NOTE: the stored data reference here migth be best as weak reference
         self.data = data
         self.iloc_key = iloc_key
 
