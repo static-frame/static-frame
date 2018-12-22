@@ -477,13 +477,18 @@ class Index(metaclass=MetaOperatorDelegate):
         '''
         if self._recache:
             self._update_array_cache()
-        if isinstance(key, np.ndarray) and key.dtype == bool:
+
+        if key is None:
+            labels = self._labels # already immutable
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
             labels = np.delete(self._labels, self._positions[key])
+            labels.flags.writeable = False
         else:
             labels = np.delete(self._labels, key)
-        labels.flags.writeable = False
+            labels.flags.writeable = False
+
         return self.__class__(labels)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Index':

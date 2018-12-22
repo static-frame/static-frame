@@ -523,21 +523,6 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # utilites for alternate extraction: drop, mask and assignment
 
-    def _extract_iloc_drop(self, key: GetItemKeyType) -> 'Series':
-        values = np.delete(self.values, key)
-        values.flags.writeable = False
-
-        # better way to get the index class? or implemetn delete on index...
-        index = self._index.__class__(np.delete(self._index.values, key))
-        # can pass self here as it is immutable (assuming index cannot change)
-        return self.__class__(values,
-                index=index,
-                own_index=True)
-
-    def _extract_loc_drop(self, key: GetItemKeyType) -> 'Series':
-        pass
-
-    #---------------------------------------------------------------------------
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:

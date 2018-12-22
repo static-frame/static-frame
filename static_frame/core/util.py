@@ -663,6 +663,7 @@ class IndexCorrespondence:
 
         # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
         if depth == 1:
+            # NOTE: this can fail in some cases: comparing two object arrays with NaNs and strings.
             common_labels = np.intersect1d(src_index.values, dst_index.values)
             has_common = len(common_labels) > 0
             assert not mixed_depth

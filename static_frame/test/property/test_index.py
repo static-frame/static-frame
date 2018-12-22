@@ -35,6 +35,8 @@ labels = st.one_of(list_mixed, list_integers, list_floats, list_text)
 class TestUnit(TestCase):
 
 
+    # TODO: check that non-unique values fail
+
     def _property_values(self, cls, values):
         '''
         Property: that the length of the index is the length of the (unique) values.

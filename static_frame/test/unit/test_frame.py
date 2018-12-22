@@ -2395,5 +2395,30 @@ class TestUnit(TestCase):
                 ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
 
 
+    def test_frame_drop_a(self):
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(f1.drop['r':].to_pairs(0),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73)))))
+
+        self.assertEqual(f1.drop.loc[['x', 'z'], 's':].to_pairs(0),
+                (('p', (('w', 2), ('y', 2))), ('q', (('w', 2), ('y', 95))), ('r', (('w', 'a'), ('y', 'c')))))
+
+        self.assertEqual(f1.drop.loc['x':, 'q':].to_pairs(0),
+                (('p', (('w', 2),)),))
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

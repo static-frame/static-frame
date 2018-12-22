@@ -819,16 +819,18 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 column_key,
                 retain_key_order=False))
         target_block_idx = target_slice = None
+        targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
             mask = np.full(b.shape, False, dtype=bool)
 
-            while True:
+            while targets_remain:
                 # get target block and slice
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
                     except StopIteration:
+                        targets_remain = False
                         break
 
                 if block_idx != target_block_idx:
@@ -860,18 +862,19 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 retain_key_order=False))
 
         target_block_idx = target_slice = None
+        targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
             parts = []
             part_start_last = 0
 
-            while True:
-
+            while targets_remain:
                 # get target block and slice
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
                     except StopIteration:
+                        targets_remain = False
                         break
 
                 if block_idx != target_block_idx:
@@ -934,18 +937,20 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                     retain_key_order=False))
 
         target_block_idx = target_slice = None
+        targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
             parts = []
             drop_block = False
             part_start_last = 0
 
-            while True:
+            while targets_remain:
                 # get target block and slice
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
                     except StopIteration:
+                        targets_remain = False
                         break
 
                 if block_idx != target_block_idx:
@@ -1008,15 +1013,17 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # this selects the columns; but need to return all blocks
         block_slices = iter(self._key_to_block_slices(column_key))
         target_block_idx = target_slice = None
+        targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
 
             assigned = None
-            while True:
+            while targets_remain:
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
                     except StopIteration:
+                        targets_remain = False
                         break
 
                 if block_idx != target_block_idx:
@@ -1272,6 +1279,11 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if isinstance(key, tuple):
             return TypeBlocks.from_blocks(self._assign_blocks_from_keys(*key, value=value))
         return TypeBlocks.from_blocks(self._assign_blocks_from_keys(row_key=key, value=value))
+
+    def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+        if isinstance(key, tuple):
+            return TypeBlocks.from_blocks(self._drop_blocks(*key))
+        return TypeBlocks.from_blocks(self._drop_blocks(row_key=key))
 
 
     def __getitem__(self, key) -> 'TypeBlocks':

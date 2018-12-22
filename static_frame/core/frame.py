@@ -90,8 +90,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_blocks',
             '_columns',
             '_index',
-            'iloc',
             'loc',
+            'iloc',
+            'drop',
             'mask',
             'masked_array',
             'assign',
@@ -317,23 +318,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''Frame constructor from a JSON document provided via a URL.
         '''
         return cls.from_json(_read_url(url))
-
-    # @classmethod
-    # def from_pickle(cls, fp: str):
-    #     '''Frame constructor from a file path to a Python pickle.
-    #     '''
-    #     with open(fp, 'rb') as f:
-    #         frame = pickle.load(f)
-    #         if frame.__class__ == cls:
-    #             return frame
-
-    #     #  use this class, reuse data, create new indices
-    #     return cls(frame._blocks,
-    #             index=frame._index,
-    #             columns=frame._columns,
-    #             own_data=True,
-    #             own_index=True
-    #             )
 
 
     @classmethod
@@ -728,6 +712,11 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
+
+        self.drop = ExtractInterface2D(
+                iloc=GetItem(self._drop_iloc),
+                loc=GetItem(self._drop_loc),
+                getitem=self._drop_getitem)
 
         self.mask = ExtractInterface2D(
                 iloc=GetItem(self._extract_iloc_mask),
@@ -1245,6 +1234,45 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def __getitem__(self, key: GetItemKeyType):
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
+
+    #---------------------------------------------------------------------------
+
+    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+
+        blocks =self._blocks.drop(key)
+
+        if isinstance(key, tuple):
+            iloc_row_key, iloc_column_key = key
+
+            index = self._index._drop_iloc(iloc_row_key)
+            own_index = True
+
+            columns = self._columns._drop_iloc(iloc_column_key)
+            own_columns = True
+        else:
+            iloc_row_key = key # no column selection
+
+            index = self._index._drop_iloc(iloc_row_key)
+            own_index = True
+
+            columns = self._columns
+            own_columns = False
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                own_data=True,
+                own_columns=own_columns,
+                own_index=own_index
+                )
+
+    def _drop_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+        key = self._compound_loc_to_iloc(key)
+        return self._drop_iloc(key=key)
+
+    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> 'Frame':
+        key = self._compound_loc_to_getitem_iloc(key)
+        return self._drop_iloc(key=key)
 
 
     #---------------------------------------------------------------------------
@@ -1877,10 +1905,10 @@ class FrameGO(Frame):
     # _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO.from_any
 
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value, fill_value=np.nan):
         '''For adding a single column, one column at a time.
         '''
-        # TODO: support assignment from iterables of keys, vlaues?
+        # TODO: support assignment from iterables of keys, values?
 
         if key in self._columns:
             raise Exception('key already defined in columns; use .assign to get new Frame')
@@ -1888,7 +1916,9 @@ class FrameGO(Frame):
         if isinstance(value, Series):
             # TODO: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
             # select only the values matching our index
-            self._blocks.append(value.reindex(self.index).values)
+            self._blocks.append(
+                    value.reindex(
+                    self.index, fill_value=fill_value).values)
         else: # unindexed array
             if not isinstance(value, np.ndarray):
                 if isinstance(value, GeneratorType):
@@ -1912,17 +1942,20 @@ class FrameGO(Frame):
         self._columns.append(key)
 
 
-    def extend_items(self, pairs: tp.Iterable[tp.Tuple[tp.Hashable, Series]]):
+    def extend_items(self,
+            pairs: tp.Iterable[tp.Tuple[tp.Hashable, Series]],
+            fill_value=np.nan):
         '''
         Given an iterable of pairs of column name, column value, extend this FrameGO.
         '''
         for k, v in pairs:
-            self.__setitem__(k, v)
+            self.__setitem__(k, v, fill_value)
 
 
     def extend(self, frame: 'Frame', fill_value=np.nan):
         '''Extend this Frame (in-place) with another Frame's blocks; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame will be reindexed (as happens when adding a column to a FrameGO). This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended to this Frame.
         '''
+        # TODO: can support extending with a Series when Series have name attribute; for now, can do the same thing with extend_items
 
         if not len(frame.index): # must be an empty data, empty index Frame
             return
