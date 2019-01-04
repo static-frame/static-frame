@@ -33,7 +33,7 @@ StaticFrame requires Python 3.5+ and NumPy 1.14.1+.
 Quick-Start Guide
 ---------------------
 
-StaticFrame provides numerous methods for reading in and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_csv()`` or ``Frame.from_records()``. For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then ``Frame.head()`` to reduce the displayed output to just the first five rows.
+StaticFrame provides numerous methods for reading in and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_csv()`` or ``Frame.from_records()``. For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows.
 
 >>> import static_frame as sf
 >>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')
