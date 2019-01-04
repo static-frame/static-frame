@@ -27,13 +27,13 @@ Install StaticFrame via PIP::
 Dependencies
 --------------
 
-StaticFrame depends only on NumPy (1.14.2 or greater), and requires Python 3.5 or greater.
+StaticFrame requires Python 3.5+ and NumPy 1.14.1+.
 
 
 Quick-Start Guide
 ---------------------
 
-StaticFrame provides numerous methods for reading in and creating data, either as a 1D Series or a 2D Frame. All creation routines are exposed as alternate constructors on the desired class. For example, we can grab JSON data from a URL using ``Frame.from_json_url()`` and then ``Frame.head()`` to reduce the output to the first five rows.
+StaticFrame provides numerous methods for reading in and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_csv()`` or ``Frame.from_records()``. For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then ``Frame.head()`` to reduce the displayed output to just the first five rows.
 
 >>> import static_frame as sf
 >>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')
@@ -49,7 +49,7 @@ StaticFrame provides numerous methods for reading in and creating data, either a
 <int64> <int64> <int64> <<U38>               <<U86>               <<U38>
 
 
-As with NumPy arrays, the ``Frame`` exposes numerous attributes of shape and size.
+As with a NumPy array, the ``Frame`` exposes common attributes of shape and size.
 
 >>> frame.shape
 (5000, 5)
@@ -59,7 +59,7 @@ As with NumPy arrays, the ``Frame`` exposes numerous attributes of shape and siz
 3320000
 
 
-Unlike NumPy, a Frame stores heterogenous types per column. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Of course, character strings can be converted to Python objects or other types as needed with ``Frame.astype()``:
+Unlike a NumPy array, a Frame stores heterogenous types per column. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Of course, character strings can be converted to Python objects or other types as needed with ``Frame.astype()``:
 
 >>> frame.dtypes
 <Index>      <Series>
@@ -80,7 +80,7 @@ url          object
 <<U12>       <object>
 
 
-Interfaces for extracting and examining data will be familiar to Pandas users, though with a number of refinements to remove redundancies and increase consistency. On a ``Frame``, ``__getitem__`` is (exclusively) a column selector; ``loc`` and ``iloc`` are (with one argument) row selectors or (with two arguments) row and column selectors. For example:
+StaticFrame interfaces for extracting data will be familiar to Pandas users, though with a number of refinements to remove redundancies and increase consistency. On a ``Frame``, ``__getitem__`` is (exclusively) a column selector; ``loc`` and ``iloc`` are (with one argument) row selectors or (with two arguments) row and column selectors. For example:
 
 >>> frame['albumId'].tail()
 <Index> <Series>
@@ -122,7 +122,7 @@ url          https://via.place...
 <int64> <int64> <<U86>
 
 
-Just as with Pandas, expressions can be used in ``__getitem__``, ``loc``, and ``iloc`` statements for creating more narrow selections.
+Just as with Pandas, expressions can be used in ``__getitem__``, ``loc``, and ``iloc`` statements to create more narrow selections.
 
 >>> frame.loc[frame['albumId'] >= 98, ['albumId', 'title']].head()
 <Frame>
@@ -136,7 +136,7 @@ Just as with Pandas, expressions can be used in ``__getitem__``, ``loc``, and ``
 <int64> <int64> <<U86>
 
 
-However, unlike with Pandas, ``__getitem__``, ``loc``, and ``iloc`` cannot be used for assignment or in-place mutation on a ``Frame`` or ``Series``. Throughout StaticFrame, all underlying NumPy arrays, and all container attributes, are immutable. By making data and objects immutable after creation, opportunities for coding errors are reduced.
+However, unlike Pandas, ``__getitem__``, ``loc``, and ``iloc`` cannot be used for assignment or in-place mutation on a ``Frame`` or ``Series``. Throughout StaticFrame, all underlying NumPy arrays, and all container attributes, are immutable. Making data and objects immutable reduces opportunities for coding errors and offers, in some situations, greater efficiency by avoiding defensive copies.
 
 >>> frame.loc[4854, 'albumId']
 98
@@ -148,7 +148,7 @@ Traceback (most recent call last):
 ValueError: assignment destination is read-only
 
 
-Instead of in-place assignment, an ``assign`` interface object is provided to expose ``__getitem__``, ``loc``, and ``iloc`` interfaces that, when called with an argument, return a new object with the desired changes. Arguments can be single values, ``Series``, or ``Frame``, where assignment will align on the Index.
+Instead of in-place assignment, an ``assign`` interface object is provided to expose ``__getitem__``, ``loc``, and ``iloc`` interfaces that, when called with an argument, return a new object with the desired changes. These interfaces expose the full range of expressive assignment-like idioms found in Pandas and NumPy. Arguments can be single values, or ``Series`` and ``Frame`` objects, where assignment will align on the Index.
 
 >>> frame_new = frame.assign.loc[4854, 'albumId'](200)
 >>> frame_new.loc[4854, 'albumId']
@@ -180,7 +180,7 @@ This pattern of specialized interfaces is used throughout StaticFrame, such as w
 <int64> <int64> <int64> <<U86>
 
 
-Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces.
+Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_array()``) are yielded.
 
 >>> next(iter(frame.iter_series(axis=1)))
 <Index>      <Series>
@@ -201,8 +201,7 @@ url          https://via.place...
 <int64> <object>
 
 
-
-Group by functionality is exposed in similar manner.
+Group-by functionality is exposed in a similar manner with ``Frame.iter_group_items()`` and ``Frame.iter_group()``.
 
 >>> next(iter(frame.iter_group('albumId', axis=0))).shape
 (50, 5)
@@ -217,7 +216,7 @@ Group by functionality is exposed in similar manner.
 <int64> <int64>
 
 
-Unlike with Pandas, StaticFrame `Index` objects always enforce uniqueness (there is no "verify_integrity" option: integrity is never optional). Thus, an index can never be set from a non-unique data:
+Unlike with Pandas, StaticFrame `Index` objects always enforce uniqueness (there is no "verify_integrity" option: integrity is never optional). Thus, an index can never be set from non-unique data:
 
 >>> frame.set_index('albumId')
 Traceback (most recent call last):
@@ -230,7 +229,7 @@ KeyError: 'labels have non-unique values'
 .. frame_h = frame.set_index_hierarchy(['albumId', 'id'], drop=True)
 
 
-Common utility functions are available on ``Frame`` and ``Series``, such as ``Series.unqiue()``, ``Series.isna()``, and ``Series.any()``.
+Utility functions common to Pandas users are available on ``Frame`` and ``Series``, such as ``Series.unqiue()``, ``Series.isna()``, and ``Series.any()``.
 
 >>> frame['albumId'].unique()
 array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
@@ -245,7 +244,7 @@ array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
 False
 
 
-If performing calculations on the ``Frame`` that result in a Series with the same ``Index``, a grow-only ``FrameGO`` can be used. This limited form of mutation provide a convenient compromise between mutability and immutability.
+If performing calculations on the ``Frame`` that result in a Series with a compatible ``Index``, a grow-only ``FrameGO`` can be used to add columns. This limited form of mutation, i.e., only the addition of columns, provides a convenient compromise between mutability and immutability. (Underlying NumPy array data remains immutable.)
 
 >>> frame_go = frame.to_frame_go()
 >>> tracks = frame.iter_group('albumId', axis=0).apply(lambda g: len(g))
@@ -255,8 +254,6 @@ If performing calculations on the ``Frame`` that result in a Series with the sam
 Finally, if functionality of Pandas is needed, StaticFrame can export a Pandas ``DataFrame`` from a ``Frame``.
 
 >>> df = frame_go.to_pandas()
-
-
 
 
 
