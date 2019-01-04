@@ -33,7 +33,7 @@ from static_frame.core.util import YearInitializer
 
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface1D
+from static_frame.core.util import InterfaceSelection1D
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -161,9 +161,9 @@ class Index(metaclass=MetaOperatorDelegate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            'loc',
-            'iloc',
-            'drop'
+            # 'loc',
+            # 'iloc',
+            # 'drop'
             )
 
     #---------------------------------------------------------------------------
@@ -271,14 +271,8 @@ class Index(metaclass=MetaOperatorDelegate):
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
 
-        self.loc = GetItem(self._extract_loc)
-        self.iloc = GetItem(self._extract_iloc)
 
-        # on Index, getitem is an iloc selector; on Series, getitme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
-        self.drop = ExtractInterface1D(
-                iloc=GetItem(self._drop_iloc),
-                loc=GetItem(self._drop_loc))
-
+    #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''
         Ensure that reanimated NP arrays are set not writeable.
@@ -286,6 +280,29 @@ class Index(metaclass=MetaOperatorDelegate):
         for key, value in state[1].items():
             setattr(self, key, value)
         self._labels.flags.writeable = False
+
+    #---------------------------------------------------------------------------
+
+    @property
+    def loc(self):
+        return GetItem(self._extract_loc)
+
+    @property
+    def iloc(self):
+        return GetItem(self._extract_iloc)
+
+    # # on Index, getitem is an iloc selector; on Series, getitme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
+
+    @property
+    def drop(self):
+        return InterfaceSelection1D(
+            func_iloc=self._drop_iloc,
+            func_loc=self._drop_loc,
+            )
+
+
+    #---------------------------------------------------------------------------
+
 
     def _update_array_cache(self):
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
@@ -584,7 +601,7 @@ class IndexGO(Index):
             '_labels',
             '_positions',
             '_recache',
-            'iloc',
+            # 'iloc',
             )
 
     def _extract_labels(self,
@@ -690,8 +707,8 @@ class IndexDate(Index):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            'loc',
-            'iloc',
+            # 'loc',
+            # 'iloc',
             )
 
 
@@ -804,8 +821,8 @@ class IndexYearMonth(IndexDate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            'loc',
-            'iloc',
+            # 'loc',
+            # 'iloc',
             )
 
 
@@ -880,8 +897,8 @@ class IndexYear(IndexDate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            'loc',
-            'iloc',
+            # 'loc',
+            # 'iloc',
             )
 
 

@@ -26,8 +26,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface1D
-from static_frame.core.util import ExtractInterface2D
+from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
@@ -58,19 +57,48 @@ class Series(metaclass=MetaOperatorDelegate):
     '''
 
     __slots__ = (
-        'values',
-        '_index',
-        'loc',
-        'iloc',
-        'drop',
-        'mask',
-        'masked_array',
-        'assign',
-        'iter_group',
-        'iter_group_items',
-        'iter_element',
-        'iter_element_items',
-        )
+            'values',
+            '_index',
+            # 'loc',
+            # 'iloc',
+            # 'drop',
+            # 'mask',
+            # 'masked_array',
+            # 'assign',
+            # 'iter_group',
+            # 'iter_group_items',
+            # 'iter_element',
+            # 'iter_element_items',
+            )
+
+
+    # loc = GetItemDescriptor('_extract_loc')
+    # iloc = GetItemDescriptor('_extract_iloc')
+
+    # drop = DescriptorSelection2D(
+    #         func_attr_iloc='_drop_iloc',
+    #         func_attr_loc='_drop_loc',
+    #         func_attr_getitem='_drop_loc'
+    #         )
+
+    # mask = DescriptorSelection2D(
+    #         func_attr_iloc='_extract_iloc_mask',
+    #         func_attr_loc='_extract_loc_mask',
+    #         func_attr_getitem='_extract_loc_mask'
+    #         )
+
+    # masked_array = DescriptorSelection2D(
+    #         func_attr_iloc='_extract_iloc_masked_array',
+    #         func_attr_loc='_extract_loc_masked_array',
+    #         func_attr_getitem='_extract_loc_masked_array'
+    #         )
+
+    # assign = DescriptorSelection2D(
+    #         func_attr_iloc='_extract_iloc_assign',
+    #         func_attr_loc='_extract_loc_assign',
+    #         func_attr_getitem='_extract_loc_assign'
+    #         )
+
 
     @classmethod
     def from_items(cls,
@@ -201,61 +229,9 @@ class Series(metaclass=MetaOperatorDelegate):
             raise Exception('values and index do not match length')
 
         #-----------------------------------------------------------------------
-        # attributes
-
-        self.loc = GetItem(self._extract_loc)
-        self.iloc = GetItem(self._extract_iloc)
-
-        # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
-
-        self.drop = ExtractInterface2D(
-                iloc=GetItem(self._drop_iloc),
-                loc=GetItem(self._drop_loc),
-                getitem=GetItem(self._drop_loc),
-                )
-
-        self.mask = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_mask),
-                loc=GetItem(self._extract_loc_mask),
-                getitem=self._extract_loc_mask)
-
-        self.masked_array = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_masked_array),
-                loc=GetItem(self._extract_loc_masked_array),
-                getitem=self._extract_loc_masked_array)
-
-        self.assign = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_assign),
-                loc=GetItem(self._extract_loc_assign),
-                getitem=self._extract_loc_assign)
 
 
-        self.iter_group = IterNode(
-                container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_group_items = IterNode(
-                container=self,
-                function_items=self._axis_group_items,
-                function_values=self._axis_group,
-                yield_type=IterNodeType.ITEMS
-                )
 
-
-        self.iter_element = IterNode(
-                container=self,
-                function_items=self._axis_element_items,
-                function_values=self._axis_element,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_element_items = IterNode(
-                container=self,
-                function_items=self._axis_element_items,
-                function_values=self._axis_element,
-                yield_type=IterNodeType.ITEMS
-                )
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
@@ -266,8 +242,91 @@ class Series(metaclass=MetaOperatorDelegate):
             setattr(self, key, value)
         self.values.flags.writeable = False
 
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def loc(self):
+        return GetItem(self._extract_loc)
+
+    @property
+    def iloc(self):
+        return GetItem(self._extract_iloc)
+
+    # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
+
+    @property
+    def drop(self):
+        return InterfaceSelection2D(
+                func_iloc=self._drop_iloc,
+                func_loc=self._drop_loc,
+                func_getitem=self._drop_loc
+                )
+
+    @property
+    def mask(self):
+        return InterfaceSelection2D(
+                func_iloc=self._extract_iloc_mask,
+                func_loc=self._extract_loc_mask,
+                func_getitem=self._extract_loc_mask
+                )
+
+    @property
+    def masked_array(self):
+        return InterfaceSelection2D(
+                func_iloc=self._extract_iloc_masked_array,
+                func_loc=self._extract_loc_masked_array,
+                func_getitem=self._extract_loc_masked_array
+                )
+
+    @property
+    def assign(self):
+        return InterfaceSelection2D(
+                func_iloc=self._extract_iloc_assign,
+                func_loc=self._extract_loc_assign,
+                func_getitem=self._extract_loc_assign
+                )
+
+    @property
+    def iter_group(self):
+        return IterNode(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_group_items(self):
+        return IterNode(
+                container=self,
+                function_items=self._axis_group_items,
+                function_values=self._axis_group,
+                yield_type=IterNodeType.ITEMS
+                )
+
+    @property
+    def iter_element(self):
+        return IterNode(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_element_items(self):
+        return IterNode(
+                container=self,
+                function_items=self._axis_element_items,
+                function_values=self._axis_element,
+                yield_type=IterNodeType.ITEMS
+                )
+
     #---------------------------------------------------------------------------
     # index manipulation
+
     def _reindex_other_like_iloc(self,
             value: 'Series',
             iloc_key: GetItemKeyType) -> 'Series':
@@ -744,7 +803,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def astype(self, dtype: DtypeSpecifier) -> 'Series':
         '''
-        Return a Series with type determined by `dtype` argument.
+        Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for Frame, this is an interface exposing both a callable and a getitem interface.
         '''
         return self.__class__(self.values.astype(dtype), index=self._index)
 

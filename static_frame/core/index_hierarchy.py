@@ -221,6 +221,9 @@ class IndexLevel:
             depth_key = key[depth]
             next_offset = offset + level.offset
 
+            # print(level, depth, offset, depth_key, next_offset)
+            # import ipdb; ipdb.set_trace()
+
             if level.targets is None:
                 try:
                     ilocs.append(level.index.loc_to_iloc(depth_key, offset=next_offset))
@@ -243,7 +246,7 @@ class IndexLevel:
 
         iloc_count = len(ilocs)
         if iloc_count == 0:
-            raise KeyError('no matching keys')
+            raise KeyError('no matching keys across all levels')
         elif iloc_count == 1:
             return ilocs[0]
 

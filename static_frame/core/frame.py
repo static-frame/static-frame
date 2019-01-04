@@ -43,8 +43,8 @@ from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import _read_url
 
 from static_frame.core.util import GetItem
-from static_frame.core.util import ExtractInterface2D
-from static_frame.core.util import AsTypeInterface
+from static_frame.core.util import InterfaceSelection2D
+from static_frame.core.util import InterfaceAsType
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
@@ -90,23 +90,23 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_blocks',
             '_columns',
             '_index',
-            'loc',
-            'iloc',
-            'drop',
-            'mask',
-            'masked_array',
-            'assign',
-            'astype',
-            'iter_array',
-            'iter_array_items',
-            'iter_tuple',
-            'iter_tuple_items',
-            'iter_series',
-            'iter_series_items',
-            'iter_group',
-            'iter_group_items',
-            'iter_element',
-            'iter_element_items'
+            # 'loc',
+            # 'iloc',
+            # 'drop',
+            # 'mask',
+            # 'masked_array',
+            # 'assign',
+            # 'astype',
+            # 'iter_array',
+            # 'iter_array_items',
+            # 'iter_tuple',
+            # 'iter_tuple_items',
+            # 'iter_series',
+            # 'iter_series_items',
+            # 'iter_group',
+            # 'iter_group_items',
+            # 'iter_element',
+            # 'iter_element_items'
             )
 
     _COLUMN_CONSTRUCTOR = Index
@@ -707,102 +707,141 @@ class Frame(metaclass=MetaOperatorDelegate):
                     len(self._columns), col_count))
 
 
-        #-----------------------------------------------------------------------
-        # attributes
+    #---------------------------------------------------------------------------
+    # interfaces
 
-        self.loc = GetItem(self._extract_loc)
-        self.iloc = GetItem(self._extract_iloc)
+    @property
+    def loc(self):
+        return GetItem(self._extract_loc)
 
-        self.drop = ExtractInterface2D(
-                iloc=GetItem(self._drop_iloc),
-                loc=GetItem(self._drop_loc),
-                getitem=self._drop_getitem)
+    @property
+    def iloc(self):
+        return GetItem(self._extract_iloc)
 
-        self.mask = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_mask),
-                loc=GetItem(self._extract_loc_mask),
-                getitem=self._extract_getitem_mask)
+    @property
+    def drop(self):
+        return InterfaceSelection2D(
+            func_iloc=self._drop_iloc,
+            func_loc=self._drop_loc,
+            func_getitem=self._drop_getitem)
 
-        self.masked_array = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_masked_array),
-                loc=GetItem(self._extract_loc_masked_array),
-                getitem=self._extract_getitem_masked_array)
+    @property
+    def mask(self):
+        return InterfaceSelection2D(
+            func_iloc=self._extract_iloc_mask,
+            func_loc=self._extract_loc_mask,
+            func_getitem=self._extract_getitem_mask)
 
-        self.assign = ExtractInterface2D(
-                iloc=GetItem(self._extract_iloc_assign),
-                loc=GetItem(self._extract_loc_assign),
-                getitem=self._extract_getitem_assign)
+    @property
+    def masked_array(self):
+        return InterfaceSelection2D(
+            func_iloc=self._extract_iloc_masked_array,
+            func_loc=self._extract_loc_masked_array,
+            func_getitem=self._extract_getitem_masked_array)
 
-        self.astype = AsTypeInterface(getitem=self._extract_getitem_astype)
+    @property
+    def assign(self):
+        return InterfaceSelection2D(
+            func_iloc=self._extract_iloc_assign,
+            func_loc=self._extract_loc_assign,
+            func_getitem=self._extract_getitem_assign)
 
-        # generators
-        self.iter_array = IterNode(
-                container=self,
-                function_values=self._axis_array,
-                function_items=self._axis_array_items,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_array_items = IterNode(
-                container=self,
-                function_values=self._axis_array,
-                function_items=self._axis_array_items,
-                yield_type=IterNodeType.ITEMS
-                )
+    @property
+    def astype(self):
+        return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
-        self.iter_tuple = IterNode(
-                container=self,
-                function_values=self._axis_tuple,
-                function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_tuple_items = IterNode(
-                container=self,
-                function_values=self._axis_tuple,
-                function_items=self._axis_tuple_items,
-                yield_type=IterNodeType.ITEMS
-                )
+    # generators
+    @property
+    def iter_array(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_array,
+            function_items=self._axis_array_items,
+            yield_type=IterNodeType.VALUES
+            )
 
-        self.iter_series = IterNode(
-                container=self,
-                function_values=self._axis_series,
-                function_items=self._axis_series_items,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_series_items = IterNode(
-                container=self,
-                function_values=self._axis_series,
-                function_items=self._axis_series_items,
-                yield_type=IterNodeType.ITEMS
-                )
+    @property
+    def iter_array_items(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_array,
+            function_items=self._axis_array_items,
+            yield_type=IterNodeType.ITEMS
+            )
 
-        self.iter_group = IterNode(
-                container=self,
-                function_values=self._axis_group_loc,
-                function_items=self._axis_group_loc_items,
-                yield_type=IterNodeType.VALUES
-                )
-        self.iter_group_items = IterNode(
-                container=self,
-                function_values=self._axis_group_loc,
-                function_items=self._axis_group_loc_items,
-                yield_type=IterNodeType.ITEMS
-                )
+    @property
+    def iter_tuple(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_tuple,
+            function_items=self._axis_tuple_items,
+            yield_type=IterNodeType.VALUES
+            )
 
-        self.iter_element = IterNode(
-                container=self,
-                function_values=self._iter_element_loc,
-                function_items=self._iter_element_loc_items,
-                yield_type=IterNodeType.VALUES,
-                apply_type=IterNodeApplyType.FRAME_ELEMENTS
-                )
-        self.iter_element_items = IterNode(
-                container=self,
-                function_values=self._iter_element_loc,
-                function_items=self._iter_element_loc_items,
-                yield_type=IterNodeType.ITEMS,
-                apply_type=IterNodeApplyType.FRAME_ELEMENTS
-                )
+    @property
+    def iter_tuple_items(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_tuple,
+            function_items=self._axis_tuple_items,
+            yield_type=IterNodeType.ITEMS
+            )
 
+    @property
+    def iter_series(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_series,
+            function_items=self._axis_series_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_series_items(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_series,
+            function_items=self._axis_series_items,
+            yield_type=IterNodeType.ITEMS
+            )
+
+    @property
+    def iter_group(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_group_loc,
+            function_items=self._axis_group_loc_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_group_items(self):
+        return IterNode(
+            container=self,
+            function_values=self._axis_group_loc,
+            function_items=self._axis_group_loc_items,
+            yield_type=IterNodeType.ITEMS
+            )
+
+    @property
+    def iter_element(self):
+        return IterNode(
+            container=self,
+            function_values=self._iter_element_loc,
+            function_items=self._iter_element_loc_items,
+            yield_type=IterNodeType.VALUES,
+            apply_type=IterNodeApplyType.FRAME_ELEMENTS
+            )
+
+    @property
+    def iter_element_items(self):
+        return IterNode(
+            container=self,
+            function_values=self._iter_element_loc,
+            function_items=self._iter_element_loc_items,
+            yield_type=IterNodeType.ITEMS,
+            apply_type=IterNodeApplyType.FRAME_ELEMENTS
+            )
 
     #---------------------------------------------------------------------------
     # index manipulation
@@ -1238,8 +1277,12 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Frame':
+        '''
+        Args:
+            key: If a Boolean Series was passed, it has been converted to Boolean NumPy array already in loc to iloc.
+        '''
 
-        blocks =self._blocks.drop(key)
+        blocks = self._blocks.drop(key)
 
         if isinstance(key, tuple):
             iloc_row_key, iloc_column_key = key
@@ -1257,6 +1300,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
             columns = self._columns
             own_columns = False
+
 
         return self.__class__(blocks,
                 columns=columns,
@@ -1897,8 +1941,6 @@ class FrameGO(Frame):
         '_blocks',
         '_columns',
         '_index',
-        'iloc',
-        'loc',
         )
 
     _COLUMN_CONSTRUCTOR = IndexGO

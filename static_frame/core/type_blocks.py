@@ -925,7 +925,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
 
         Args:
-            column_key: Selection of columns to leave out of blocks. A
+            column_key: Selection of columns to leave out of blocks.
         '''
         if column_key is None:
             # the default should not be the null slice, which would drop all
@@ -935,6 +935,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             block_slices = iter(self._key_to_block_slices(
                     column_key,
                     retain_key_order=False))
+
+        if isinstance(row_key, np.ndarray) and row_key.dtype == bool:
+            # row_key is used with np.delete, which does not support Boolean arrays; instead, convert to an array of integers
+            row_key = np.arange(len(row_key))[row_key]
 
         target_block_idx = target_slice = None
         targets_remain = True
@@ -982,7 +986,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if b.ndim != 1 and part_start_last < b.shape[1]:
                 parts.append(b[:, slice(part_start_last, None)])
 
-            # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set
+            # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors
 
             if not drop_block and not parts:
                 if row_key is not None:

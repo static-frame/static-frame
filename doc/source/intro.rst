@@ -19,11 +19,11 @@ What StaticFrame Is and Is Not
 ***********************************
 
 
-StaticFrame is not a drop-in replacment for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due the immutable data model) or by choice (to offer more uniform, less redundant, and more explicit interfaces). Further, as StaticFrame does not support in-place mutation, approaches used in Pandas will have to be refactored for StaticFrame. Certain conveniences in Pandas are not supported for the sake of having "one ... obvious way to do it" [#]_ or to achieve greater consistency.
+StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due the immutable data model) or by choice (to offer more uniform, less redundant, and more explicit interfaces). Further, as StaticFrame does not support in-place mutation, approaches used in Pandas will have to be refactored for StaticFrame. Certain conveniences in Pandas are not supported for the sake of having "one ... obvious way to do it" [#]_ or to achieve greater consistency.
 
 StaticFrame requires modern Python (3.5+) and modern NumPy (1.14.1+). There are no plans to support older versions. Modern features of Python, such as type-hints, are used throughout the code, and provide benefits for users using type-hint-aware IDEs.
 
-StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency). The entire library is less than 6,000 lines of code, less than 3% the size of the Pandas code base [#]_.
+StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency). The core library is less than 10,000 lines of code, less than 5% the size of the Pandas code base [#]_.
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures.
 

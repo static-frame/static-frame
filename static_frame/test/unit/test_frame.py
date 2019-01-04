@@ -25,6 +25,7 @@ from static_frame import TypeBlocks
 from static_frame import Display
 from static_frame import mloc
 from static_frame import ILoc
+from static_frame import HLoc
 from static_frame import DisplayConfig
 
 from static_frame.test.test_case import TestCase
@@ -2317,7 +2318,7 @@ class TestUnit(TestCase):
         self.assertEqual([b.flags.writeable for b in f2._blocks._blocks],
                 [False, False, False, False, False])
 
-    def test_frame_set_index_hierarchy(self):
+    def test_frame_set_index_hierarchy_a(self):
 
         records = (
                 (1, 2, 'a', False, True),
@@ -2346,6 +2347,36 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
                 )
+
+
+    def test_frame_set_index_hierarchy_b(self):
+
+        labels = (
+                (1, 1, 'a'),
+                (1, 2, 'b'),
+                (1, 3, 'c'),
+                (2, 1, 'd'),
+                (2, 2, 'e'),
+                (2, 3, 'f'),
+                (3, 1, 'g'),
+                (3, 2, 'h'),
+                (3, 3, 'i'),
+                )
+
+        f = Frame(labels)
+        # import ipdb; ipdb.set_trace()
+        f = f.astype[[0, 1]](int)
+
+        # TODO: this fails
+        # fh = f.set_index_hierarchy([0, 1], drop=True)
+
+        fh = f.set_index_hierarchy([0, 1], drop=False)
+        self.assertEqual(
+                fh.loc[HLoc[:, 3]].to_pairs(0),
+                ((0, (((1, 3), 1), ((2, 3), 2), ((3, 3), 3))), (1, (((1, 3), 3), ((2, 3), 3), ((3, 3), 3))), (2, (((1, 3), 'c'), ((2, 3), 'f'), ((3, 3), 'i'))))
+                )
+
+
 
 
     def test_frame_iloc_in_loc_a(self):
@@ -2414,9 +2445,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.drop.loc['x':, 'q':].to_pairs(0),
                 (('p', (('w', 2),)),))
-
-
-
 
 
 

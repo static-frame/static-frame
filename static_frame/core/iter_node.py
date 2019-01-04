@@ -184,12 +184,13 @@ class IterNodeDelegate:
 
 
 class IterNode:
-    '''Iterface to a type of iteration on :py:class:`Series` and :py:class:`Frame`.
+    '''Interface to a type of iteration on :py:class:`Series` and :py:class:`Frame`.
     '''
     # '''Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
     # '''
 
-    __slots__ = ('_container',
+    __slots__ = (
+            '_container',
             '_func_values',
             '_func_items',
             '_yield_type',
@@ -197,7 +198,7 @@ class IterNode:
             )
 
     def __init__(self, *,
-            container: tp.Union['static_frame.Series', 'static_frame.Frame'],
+            container: tp.Union['Series', 'Frame'],
             function_values,
             function_items,
             yield_type: IterNodeType,

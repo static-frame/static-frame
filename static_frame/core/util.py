@@ -8,7 +8,7 @@ from io import StringIO
 from io import BytesIO
 import datetime
 from urllib import request
-
+from functools import wraps
 
 import numpy as np
 
@@ -561,66 +561,109 @@ def _read_url(fp: str):
 
 #-------------------------------------------------------------------------------
 
-class GetItem:
-    __slots__ = ('callback',)
+# Options:
+# 1. store GetItem instance on object: created at init regardless of use, storage on container
+# 2. use descripter to return a GetItem instance lazily created and stored on the container: no init creation, incurs extra branching on call, stored once used.
 
-    def __init__(self, callback) -> None:
-        self.callback = callback
+# NOTE: object creation can be faster than getattr and branching
+# In [3]: %timeit sf.GetItem('')
+# 249 ns ± 3.1 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+# In [4]: x = object()
+
+# In [5]: %timeit getattr(x, '', None); 0 if x else 1
+# 316 ns ± 1.29 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+
+
+#TODO: rename InterfaceGetItem
+class GetItem:
+    __slots__ = ('_func',)
+
+    def __init__(self, func) -> None:
+        self._func = func
 
     def __getitem__(self, key: GetItemKeyType):
-        return self.callback(key)
+        return self._func(key)
+
+#-------------------------------------------------------------------------------
+
+class InterfaceSelection1D:
+    '''An instance to serve as an interface to all of iloc and loc
+    '''
+
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            )
+
+    def __init__(self, *,
+            func_iloc: str,
+            func_loc: str) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+
+    @property
+    def iloc(self):
+        return GetItem(self._func_iloc)
+
+    @property
+    def loc(self):
+        return GetItem(self._func_loc)
 
 
-class ExtractInterface1D:
+#-------------------------------------------------------------------------------
+
+class InterfaceSelection2D:
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
-    __slots__ = ('iloc', 'loc')
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem'
+            )
 
     def __init__(self, *,
-            iloc: GetItem,
-            loc: GetItem) -> None:
-        self.iloc = iloc
-        self.loc = loc
+            func_iloc: str,
+            func_loc: str,
+            func_getitem: str) -> None:
 
-
-class ExtractInterface2D:
-    '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
-    '''
-
-    __slots__ = ('iloc', 'loc', 'getitem')
-
-    def __init__(self, *,
-            iloc: GetItem,
-            loc: GetItem,
-            getitem: tp.Callable) -> None:
-        self.iloc = iloc
-        self.loc = loc
-        self.getitem = getitem
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
 
     def __getitem__(self, key):
-        return self.getitem(key)
+        return self._func_getitem(key)
 
+    @property
+    def iloc(self):
+        return GetItem(self._func_iloc)
 
-class AsTypeInterface:
+    @property
+    def loc(self):
+        return GetItem(self._func_loc)
+
+#-------------------------------------------------------------------------------
+
+class InterfaceAsType:
     '''An instance to serve as an interface to __getitem__ extractors.
     '''
 
-    __slots__ = ('getitem',)
+    __slots__ = ('_func_getitem',)
 
-    def __init__(self, getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']) -> None:
+    def __init__(self, func_getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']) -> None:
         '''
         Args:
-            getitem: a callable that expects a getitem key and returns a FrameAsType interface; for example, Frame._extract_getitem_astype.
+            _func_getitem: a callable that expects a _func_getitem key and returns a FrameAsType interface; for example, Frame._extract_getitem_astype.
         '''
-        self.getitem = getitem
+        self._func_getitem = func_getitem
 
     def __getitem__(self, key) -> 'FrameAsType':
-        return self.getitem(key)
+        return self._func_getitem(key)
 
     def __call__(self, dtype):
-        return self.getitem(_NULL_SLICE)(dtype)
-
+        return self._func_getitem(_NULL_SLICE)(dtype)
 
 
 #-------------------------------------------------------------------------------
