@@ -438,6 +438,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             )
 
     STATIC = True
+    _IMMUTABLE_CONSTRUCTOR = None
     _LEVEL_CONSTRUCTOR = IndexLevel
     _INDEX_CONSTRUCTOR = Index
 
@@ -966,6 +967,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 class IndexHierarchyGO(IndexHierarchy):
 
     STATIC = False
+    _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
     _LEVEL_CONSTRUCTOR = IndexLevelGO
     _INDEX_CONSTRUCTOR = IndexGO
 

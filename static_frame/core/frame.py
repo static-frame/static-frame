@@ -11,6 +11,7 @@ import pickle
 from collections import namedtuple
 
 from itertools import zip_longest
+from itertools import chain
 from functools import partial
 
 
@@ -70,7 +71,7 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 
 from static_frame.core.index import Index
 from static_frame.core.index import ILoc
-
+from static_frame.core.index import immutable_index_filter
 
 
 class Frame(metaclass=MetaOperatorDelegate):
@@ -244,12 +245,13 @@ class Frame(metaclass=MetaOperatorDelegate):
         derive_columns = False
         if columns is None:
             derive_columns = True
-            # leave columns list in outer scope for blocks() to use
+            # leave columns list in outer scope for blocks() to populate
             columns = []
 
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
             return cls(records, index=index, columns=columns)
+
 
         def blocks():
 
@@ -276,23 +278,29 @@ class Frame(metaclass=MetaOperatorDelegate):
                         column_getter = row_reference._fields.__getitem__
 
             # derive types from first rows
-            # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
             for col_idx in col_idx_iter:
-                if column_getter:
-                    # side effect of generator!
+                if column_getter: # append as side effect of generator!
                     columns.append(column_getter(col_idx))
 
                 field_ref = row_reference[col_idx]
+                # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
                 column_type = (type(field_ref)
                         if not isinstance(field_ref, (str, np.datetime64))
                         else None)
-                if column_type is None: # let array constructor determine type
+
+                values = None
+                if column_type is not None:
+                    try:
+                        values = np.fromiter(
+                                (row[col_idx] for row in rows),
+                                count=row_count,
+                                dtype=column_type)
+                    except ValueError:
+                        # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+                        pass
+                if values is None: # let array constructor determine type
                     values = np.array([row[col_idx] for row in rows])
-                else:
-                    values = np.fromiter(
-                            (row[col_idx] for row in rows),
-                            count=row_count,
-                            dtype=column_type)
+
                 values.flags.writeable = False
                 yield values
 
@@ -1204,10 +1212,11 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
 
+
         if blocks._shape == (1, 1):
             # if TypeBlocks did not return an element, need to determine which axis to use for Series index
             if axis_nm[0]: # if row not multi
-                return Series(blocks.values[0], index=columns)
+                return Series(blocks.values[0], index=immutable_index_filter(columns))
             elif axis_nm[1]:
                 return Series(blocks.values[0], index=index)
             # if both are multi, we return a Fram
@@ -1216,9 +1225,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                 # best to use blocks.values, as will need to consolidate if necessary
                 block = blocks.values
                 if block.ndim == 1:
-                    return Series(block, index=columns)
+                    return Series(block, index=immutable_index_filter(columns))
                 # 2d block, get teh first row
-                return Series(block[0], index=columns)
+                return Series(block[0], index=immutable_index_filter(columns))
         elif blocks._shape[1] == 1: # if one column
             if axis_nm[1]: # if column key is not multi
                 return Series(blocks.values, index=index)
@@ -1780,10 +1789,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             own_columns = False
 
         index_labels = self._blocks._extract_array(column_key=column_iloc)
-        if self._COLUMN_CONSTRUCTOR.STATIC:
-            index = IndexHierarchy.from_labels(index_labels)
-        else:
-            index = IndexHierarchyGO.from_labels(index_labels)
+        # index is always immutable
+        index = IndexHierarchy.from_labels(index_labels)
 
         return self.__class__(blocks,
                 columns=columns,

@@ -12,18 +12,18 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 .. toctree::
    :maxdepth: 3
    :numbered:
-   :caption: Introduction
+   :caption: Package Documents
 
-   intro
+   readme
+   license
 
 
 .. toctree::
    :maxdepth: 3
    :numbered:
-   :caption: Package Documents
+   :caption: Introduction
 
-   readme
-   license
+   intro
 
 
 .. toctree::
@@ -42,9 +42,6 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_util_mls
    api_operators
    api_export
-
-
-
 
 
 :ref:`genindex`

@@ -139,6 +139,16 @@ class LocMap:
             return label_to_pos[key] + offset
         return label_to_pos[key]
 
+
+def immutable_index_filter(
+        index: tp.Union['Index', 'IndexHierarchy']) -> tp.Union[
+        'Index', 'IndexHierarchy']:
+    '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
+
+    if index.STATIC:
+        return index
+    return index._IMMUTABLE_CONSTRUCTOR(index)
+
 #-------------------------------------------------------------------------------
 
 class Index(metaclass=MetaOperatorDelegate):
@@ -150,6 +160,7 @@ class Index(metaclass=MetaOperatorDelegate):
         dtype: Optional dytpe to be used for labels.
     '''
     STATIC = True
+    _IMMUTABLE_CONSTRUCTOR = None
     _DTYPE = None # for specialized indices requiring a typed labels
 
     # for compatability with IndexHierarchy, where this is implemented as a property method
@@ -239,10 +250,16 @@ class Index(metaclass=MetaOperatorDelegate):
             dtype: DtypeSpecifier=None
             ) -> None:
 
+        '''
+        Args:
+            labels: Initializer of Index. If an Index or IndexGO object is provided, appropriate usage of those objects is implemented. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
+        '''
         self._recache = False
         self._map = None
 
         positions = None
+
+        # NOTE: this will not, and shold not, catch IndexHierarchy
         if issubclass(labels.__class__, Index):
             # get a reference to the immutable arrays
             # even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
@@ -588,11 +605,19 @@ class Index(metaclass=MetaOperatorDelegate):
         return IndexHierarchy.from_tree({level: self.values})
 
 
+    # def to_index(self) -> 'Index':
+    #     '''
+    #     To permit going from a mutable to an immutable Index or IndexHierarchy.
+    #     '''
+    #     return self # as immutable, we can hand bakc a reference
+
+
 class IndexGO(Index):
     '''
     A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
     '''
     STATIC = False
+    _IMMUTABLE_CONSTRUCTOR = Index
 
     __slots__ = (
             '_map',

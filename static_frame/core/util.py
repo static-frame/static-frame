@@ -59,6 +59,7 @@ _DICT_STABLE = sys.version_info >= (3, 6)
 # utility
 
 _INT_TYPES = (int, np.int_)
+_BOOL_TYPES = (bool, np.bool_)
 
 # for getitem / loc selection
 _KEY_ITERABLE_TYPES = (list, np.ndarray)

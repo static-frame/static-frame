@@ -33,7 +33,9 @@ StaticFrame requires Python 3.5+ and NumPy 1.14.1+.
 Quick-Start Guide
 ---------------------
 
-StaticFrame provides numerous methods for reading in and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_csv()`` or ``Frame.from_records()``. For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows.
+StaticFrame provides numerous methods for loading and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_records()``, ``Frame.from_csv()`` or ``Frame.from_pandas()``.
+
+For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows.
 
 >>> import static_frame as sf
 >>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')
@@ -48,6 +50,7 @@ StaticFrame provides numerous methods for reading in and creating data, either a
 4       1       5       https://via.place... natus nisi omnis ... https://via.place...
 <int64> <int64> <int64> <<U38>               <<U86>               <<U38>
 
+(Note that the Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading CSV files into StaticFrame.)
 
 As with a NumPy array, the ``Frame`` exposes common attributes of shape and size.
 
@@ -59,7 +62,7 @@ As with a NumPy array, the ``Frame`` exposes common attributes of shape and size
 3320000
 
 
-Unlike a NumPy array, a Frame stores heterogenous types per column. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Of course, character strings can be converted to Python objects or other types as needed with ``Frame.astype()``:
+Unlike a NumPy array, a Frame stores heterogeneous types, where each column is a single type. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Character strings can be converted to Python objects or other types as needed with the ``Frame.astype`` interface, which exposes a ``__getitem__`` style interface for selecting columns to convert. As with all similar funcions, a new ``Frame`` is returned.
 
 >>> frame.dtypes
 <Index>      <Series>
@@ -80,7 +83,24 @@ url          object
 <<U12>       <object>
 
 
-StaticFrame interfaces for extracting data will be familiar to Pandas users, though with a number of refinements to remove redundancies and increase consistency. On a ``Frame``, ``__getitem__`` is (exclusively) a column selector; ``loc`` and ``iloc`` are (with one argument) row selectors or (with two arguments) row and column selectors. For example:
+Utility functions common to Pandas users are available on ``Frame`` and ``Series``, such as ``Series.unqiue()``, ``Series.isna()``, and ``Series.any()``.
+
+>>> frame['albumId'].unique()
+array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
+        14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,
+        27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,
+        40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,
+        53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,
+        66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,
+        79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,
+        92,  93,  94,  95,  96,  97,  98,  99, 100])
+>>> frame['id'].isna().any()
+False
+
+
+StaticFrame interfaces for extracting data will be familiar to Pandas users, though with a number of interface refinements to remove redundancies and increase consistency. On a ``Frame``, ``__getitem__`` is (exclusively) a column selector; ``loc`` and ``iloc`` are (with one argument) row selectors or (with two arguments) row and column selectors.
+
+For example we can select a single column with ``__getitem__``:
 
 >>> frame['albumId'].tail()
 <Index> <Series>
@@ -90,6 +110,9 @@ StaticFrame interfaces for extracting data will be familiar to Pandas users, tho
 4998    100
 4999    100
 <int64> <int64>
+
+
+Consistent with other ``__getitem__`` style selectors, a slice or a list can be used to select columns:
 
 >>> frame['id':'title'].head()
 <Frame>
@@ -102,6 +125,9 @@ StaticFrame interfaces for extracting data will be familiar to Pandas users, tho
 4       5       https://via.place... natus nisi omnis ...
 <int64> <int64> <<U38>               <<U86>
 
+
+The ``loc`` interface, with one argument, returns a ``Series`` for the row found at the given index label.
+
 >>> frame.loc[4]
 <Index>      <Series>
 albumId      1
@@ -110,6 +136,9 @@ thumbnailUrl https://via.place...
 title        natus nisi omnis ...
 url          https://via.place...
 <<U12>       <object>
+
+
+With two arguments, ``loc`` can select both rows and columns at the same time:
 
 >>> frame.loc[4:8, ['albumId', 'title']]
 <Frame>
@@ -122,7 +151,36 @@ url          https://via.place...
 <int64> <int64> <<U86>
 
 
-Just as with Pandas, expressions can be used in ``__getitem__``, ``loc``, and ``iloc`` statements to create more narrow selections.
+Where the ``loc`` interface uses index and column labels, the ``iloc`` interface uses integer offets from zero, just as if the ``Frame`` where a NumPy array. For eample, we can select the last row with ``-1``:
+
+>>> frame.iloc[-1]
+<Index>      <Series>
+albumId      100
+id           5000
+thumbnailUrl https://via.place...
+title        error quasi sunt ...
+url          https://via.place...
+<<U12>       <object>
+
+
+Or, using two arguments, we can select the first two columns of the last two rows:
+
+>>> frame.iloc[-2:, 0:2]
+<Frame>
+<Index> albumId id      <<U12>
+<Index>
+4998    100     4999
+4999    100     5000
+<int64> <int64> <int64>
+
+
+.. As providing both axis arguments at the same time is always more efficient than sequential selections, StaticFrame provides a selection wrapper, ``ILoc``, which permits including an ``iloc``-style seleciton in a ``loc`` selection:
+.. Example here fails!
+.. frame.loc[sf.ILoc[-1], ['id', 'title', 'url']]
+
+
+
+Just as with Pandas, expressions can be used in ``__getitem__``, ``loc``, and ``iloc`` statements to create more narrow selections. For example, we can select all "albumId" greater than or equal to 98.
 
 >>> frame.loc[frame['albumId'] >= 98, ['albumId', 'title']].head()
 <Frame>
@@ -148,14 +206,14 @@ Traceback (most recent call last):
 ValueError: assignment destination is read-only
 
 
-Instead of in-place assignment, an ``assign`` interface object is provided to expose ``__getitem__``, ``loc``, and ``iloc`` interfaces that, when called with an argument, return a new object with the desired changes. These interfaces expose the full range of expressive assignment-like idioms found in Pandas and NumPy. Arguments can be single values, or ``Series`` and ``Frame`` objects, where assignment will align on the Index.
+Instead of in-place assignment, an ``assign`` interface object (similar to the ``Frame.astype`` interface shown above) is provided to expose ``__getitem__``, ``loc``, and ``iloc`` interfaces that, when called with an argument, return a new object with the desired changes. These interfaces expose the full range of expressive assignment-like idioms found in Pandas and NumPy. Arguments can be single values, or ``Series`` and ``Frame`` objects, where assignment will align on the Index.
 
 >>> frame_new = frame.assign.loc[4854, 'albumId'](200)
 >>> frame_new.loc[4854, 'albumId']
 200
 
 
-This pattern of specialized interfaces is used throughout StaticFrame, such as with the ``Frame.mask`` and ``Frame.drop`` interfaces.
+This pattern of specialized interfaces is used throughout StaticFrame, such as with the ``Frame.mask`` and ``Frame.drop`` interfaces. For example, ``Frame.mask`` can be used to create a Boolean ``Frame`` that sets rows to True if their "id" is even:
 
 >>> frame.mask.loc[frame['id'] % 2 == 0].head()
 <Frame>
@@ -167,6 +225,9 @@ This pattern of specialized interfaces is used throughout StaticFrame, such as w
 3       True    True   True         True   True
 4       False   False  False        False  False
 <int64> <bool>  <bool> <bool>       <bool> <bool>
+
+
+Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by droping rows with even "id" values and droping URL columns specified in a list:
 
 >>> frame.drop.loc[frame['id'] % 2 == 0, ['thumbnailUrl', 'url']].head()
 <Frame>
@@ -180,7 +241,7 @@ This pattern of specialized interfaces is used throughout StaticFrame, such as w
 <int64> <int64> <int64> <<U86>
 
 
-Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_array()``) are yielded.
+Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_series()``) are yielded. For example, we can iterate over each row of a ``Frame`` and yield a corresponding ``Series``:
 
 >>> next(iter(frame.iter_series(axis=1)))
 <Index>      <Series>
@@ -190,6 +251,9 @@ thumbnailUrl https://via.place...
 title        accusamus beatae ...
 url          https://via.place...
 <<U12>       <object>
+
+
+Or we can iterate over rows as named tuples, applying a function that matches a substring of the "title" or returns None, then drop those None records:
 
 >>> frame.iter_tuple(axis=1).apply(lambda r: r.title if 'voluptatem' in r.title else None).dropna().head()
 <Index> <Series>
@@ -201,10 +265,27 @@ url          https://via.place...
 <int64> <object>
 
 
+Element iteration and function application works the same way as for rows or columns (though without an ``axis`` argument). For example, here each URL is processed with the same string transformation function:
+
+>>> frame[['thumbnailUrl', 'url']].iter_element().apply(lambda c: c.replace('https://', '')).iloc[-4:]
+<Frame>
+<Index> thumbnailUrl         url                  <<U12>
+<Index>
+4996    via.placeholder.c... via.placeholder.c...
+4997    via.placeholder.c... via.placeholder.c...
+4998    via.placeholder.c... via.placeholder.c...
+4999    via.placeholder.c... via.placeholder.c...
+<int64> <object>             <object>
+
+
+
 Group-by functionality is exposed in a similar manner with ``Frame.iter_group_items()`` and ``Frame.iter_group()``.
 
 >>> next(iter(frame.iter_group('albumId', axis=0))).shape
 (50, 5)
+
+
+Function application to a group ``Frame`` can be used to produce a ``Series`` indexed by the group label. For example, a ``Series``, indexed by "albumId", can be produced to show the number of unique titles found per album.
 
 >>> frame.iter_group('albumId', axis=0).apply(lambda g: len(g['title'].unique())).head()
 <Index> <Series>
@@ -216,45 +297,88 @@ Group-by functionality is exposed in a similar manner with ``Frame.iter_group_it
 <int64> <int64>
 
 
-Unlike with Pandas, StaticFrame `Index` objects always enforce uniqueness (there is no "verify_integrity" option: integrity is never optional). Thus, an index can never be set from non-unique data:
+If performing calculations on a ``Frame`` that result in a ``Series`` with a compatible ``Index``, a grow-only ``FrameGO`` can be used to add ``Series`` as new columns. This limited form of mutation, i.e., only the addition of columns, provides a convenient compromise between mutability and immutability. (Underlying NumPy array data always remains immutable.)
 
->>> frame.set_index('albumId')
+A ``FrameGO`` can be efficiently created from a ``Frame``, as underling NumPy arrays do not have to be copied:
+
+>>> frame_go = frame.to_frame_go()
+
+
+We can obtain a track number within each album, assuming the records are sorted, by creating the following generator expression pipe-line. Using a ``Frame`` grouped by "albumId", ``zip`` together as pairs the ``Frame.index`` and a contiguous integer sequence via ``range()``; ``chain`` all of those iterables, and then pass the resulting generator to ``Series.from_items()``. ( As much as possible, StaticFrame supports generators as arguments wherever an ordered sequence is expected.)
+
+>>> from itertools import chain
+>>> index_to_track = chain.from_iterable(zip(g.index, range(len(g))) for g in frame_go.iter_group('albumId'))
+>>> frame_go['track'] = sf.Series.from_items(index_to_track) + 1
+
+>>> frame_go.iloc[45:55]
+<FrameGO>
+<IndexGO> albumId id      thumbnailUrl         title                url                  track   <<U12>
+<Index>
+45        1       46      https://via.place... quidem maiores in... https://via.place... 46
+46        1       47      https://via.place... et soluta est        https://via.place... 47
+47        1       48      https://via.place... ut esse id           https://via.place... 48
+48        1       49      https://via.place... quasi quae est mo... https://via.place... 49
+49        1       50      https://via.place... et inventore quae... https://via.place... 50
+50        2       51      https://via.place... non sunt voluptat... https://via.place... 1
+51        2       52      https://via.place... eveniet pariatur ... https://via.place... 2
+52        2       53      https://via.place... soluta et harum a... https://via.place... 3
+53        2       54      https://via.place... ut ex quibusdam d... https://via.place... 4
+54        2       55      https://via.place... voluptatem conseq... https://via.place... 5
+<int64>   <int64> <int64> <<U38>               <<U86>               <<U38>               <int64>
+
+
+
+Unlike with Pandas, StaticFrame ``Index`` objects always enforce uniqueness (there is no "verify_integrity" option: integrity is never optional). Thus, an index can never be set from non-unique data:
+
+>>> frame_go.set_index('albumId')
 Traceback (most recent call last):
 KeyError: 'labels have non-unique values'
 
 
-.. TODO: need to refine hierarchical indices as this test case gave errirs
-.. StaticFrame's implementation of hierarchical indices deviates from Pandas' in many ways, but provides similar functionality
-.. This does not work!
-.. frame_h = frame.set_index_hierarchy(['albumId', 'id'], drop=True)
+For a data set such as the one used in this example, a hierarchical index, by "albumId" and "track", is practical. StaticFrame implements hierarchical indices as ``IndexHierarchy`` objects. The ``Frame.set_index_hierarchy()`` method, given columns in a ``Frame``, can be used to create a hierarchical index:
 
 
-Utility functions common to Pandas users are available on ``Frame`` and ``Series``, such as ``Series.unqiue()``, ``Series.isna()``, and ``Series.any()``.
-
->>> frame['albumId'].unique()
-array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
-        14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,
-        27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,
-        40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  52,
-        53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,
-        66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,  78,
-        79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,  91,
-        92,  93,  94,  95,  96,  97,  98,  99, 100])
->>> frame['id'].isna().any()
-False
+>>> frame_h = frame_go.set_index_hierarchy(['albumId', 'track'], drop=True)
+>>> frame_h.head()
+<FrameGO>
+<IndexGO>        id      thumbnailUrl         title                url                  <<U12>
+<IndexHierarchy>
+1 1              1       https://via.place... accusamus beatae ... https://via.place...
+1 2              2       https://via.place... reprehenderit est... https://via.place...
+1 3              3       https://via.place... officia porro iur... https://via.place...
+1 4              4       https://via.place... culpa odio esse r... https://via.place...
+1 5              5       https://via.place... natus nisi omnis ... https://via.place...
+                 <int64> <<U38>               <<U86>               <<U38>
 
 
-If performing calculations on the ``Frame`` that result in a Series with a compatible ``Index``, a grow-only ``FrameGO`` can be used to add columns. This limited form of mutation, i.e., only the addition of columns, provides a convenient compromise between mutability and immutability. (Underlying NumPy array data remains immutable.)
+Hierarchical indices permit specifying selectors, per axis, at each hierarchical level. To distinguish hierarchical levels from axis arguments in a ``loc`` expression, the ``HLoc`` wrapper, exposing a ``__getitem__`` interface, can be used. For example, we can select, from all albums, the second and fifth track, and then only the "title" and "url" columns.
 
->>> frame_go = frame.to_frame_go()
->>> tracks = frame.iter_group('albumId', axis=0).apply(lambda g: len(g))
->>> frame_go['tracks'] = frame['albumId'].iter_element().apply(tracks)
+>>> frame_h.loc[sf.HLoc[:, [2,5]], ['title', 'url']].head()
+<FrameGO>
+<IndexGO>        title                url                  <<U12>
+<IndexHierarchy>
+1 2              reprehenderit est... https://via.place...
+1 5              natus nisi omnis ... https://via.place...
+2 2              eveniet pariatur ... https://via.place...
+2 5              voluptatem conseq... https://via.place...
+3 2              eaque iste corpor... https://via.place...
+                 <<U86>               <<U38>
+
+Just as a hierarchical selection can reside in a ``loc`` expression with an ``HLoc`` wrapper, an integer index selection can reside in a ``loc`` expression with an ``ILoc`` wrapper. For example, the previous row selection is combined with the selection of the last column:
+
+>>> frame_h.loc[sf.HLoc[:, [2,5]], sf.ILoc[-1]].head()
+<IndexHierarchy> <Series>
+1 2              https://via.place...
+1 5              https://via.place...
+2 2              https://via.place...
+2 5              https://via.place...
+3 2              https://via.place...
+                 <<U38>
 
 
-Finally, if functionality of Pandas is needed, StaticFrame can export a Pandas ``DataFrame`` from a ``Frame``.
+While StaticFrame offers many of the features of Pandas and similar data structures, exporting directly to NumPy arrays (via the ``.values`` attribute) or to Pandas is supported for functionality not found in StaticFrame or compatibility with other libraries. For example, a ``Frame`` can export to a Pandas ``DataFrame`` with ``Frame.to_pandas()``.
 
 >>> df = frame_go.to_pandas()
-
 
 
 

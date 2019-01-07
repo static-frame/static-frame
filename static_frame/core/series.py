@@ -5,6 +5,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import _DEFAULT_SORT_KIND
+from static_frame.core.util import _BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import _resolve_dtype
 from static_frame.core.util import _isna
@@ -215,10 +216,19 @@ class Series(metaclass=MetaOperatorDelegate):
         if index is None or (hasattr(index, '__len__') and len(index) == 0):
             # create an integer index
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
-        elif own_index or (hasattr(index, 'STATIC') and index.STATIC):
+        elif own_index:
             self._index = index
+        elif hasattr(index, 'STATIC'):
+            if index.STATIC:
+                self._index = index
+            else:
+                raise Exception('non-static index cannot be assigned to Series')
         else: # let index handle instantiation
-            self._index = Index(index)
+            if isinstance(index, (Index, IndexHierarchy)):
+                # call with the class of the passed-in index, in case it is hierarchical
+                self._index = index.__class__(index)
+            else:
+                self._index = Index(index)
 
         shape = self._index.__len__()
 
@@ -484,6 +494,14 @@ class Series(metaclass=MetaOperatorDelegate):
 
         # we want the dtype to be the result of applying the operator; this happends by default
         result = operator(values, other)
+
+        if not isinstance(result, np.ndarray):
+            # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+            if isinstance(result, _BOOL_TYPES):
+                result = np.full(1, result)
+            else:
+                raise Exception('unexpected branch from non-array result of operator application to array')
+
         result.flags.writeable = False
         return self.__class__(result, index=index)
 

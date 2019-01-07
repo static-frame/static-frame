@@ -275,6 +275,7 @@ class TestUnit(TestCase):
 
         f1['u'] = 0
 
+        # TODO: this fails
         self.assertEqual(f1.loc['x'].values.tolist(),
                 [1, 2, 'a', False, True, 0])
 
@@ -1292,6 +1293,23 @@ class TestUnit(TestCase):
 
         self.assertEqual((f1 * [0, 1, 0]).to_pairs(0),
                 (('p', (('w', 0), ('x', 0), ('y', 0), ('z', 0))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 0.0), ('x', 0.0), ('y', 0.0), ('z', 0.0)))))
+
+
+    def test_frame_binary_operator_d(self):
+
+        records = (
+                (2, True, ''),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'))
+
+        self.assertEqual((f1['q'] == True).to_pairs(),
+                ((0, True),))
+
+        # this handles the case where, because we are comparing to an empty string, NumPy returns a single Boolean. This is manually handled in Series._ufunc_binary_operator
+        self.assertEqual((f1['r'] == True).to_pairs(),
+                ((0, False),))
+
 
 
     def test_frame_isin_a(self):
@@ -2377,6 +2395,31 @@ class TestUnit(TestCase):
                 )
 
 
+    @unittest.skip('requires network')
+    def test_frame_set_index_hierarchy_c(self):
+
+        f = sf.FrameGO.from_json_url('https://jsonplaceholder.typicode.com/photos')
+        tracks = f.iter_group('albumId', axis=0).apply(lambda g: len(g))
+        # f['tracks'] = f['albumId'].iter_element().apply(tracks)
+
+        from itertools import chain
+
+        items = chain.from_iterable(zip(g.index, range(len(g))) for g in f.iter_group('albumId'))
+
+        f['track'] = Series.from_items(items)
+
+
+        fh = f.set_index_hierarchy(['albumId', 'track'], drop=True)
+
+        fh.loc[HLoc[:, [2, 5]], ['title', 'url']]
+
+        # import ipdb; ipdb.set_trace()
+        # this gives the wrong result:
+        fh.loc[HLoc[:, [2, 5]], 'title']
+
+        # import ipdb; ipdb.set_trace()
+        # NOTE: this fails
+        frame.loc[sf.ILoc[-1], ['id', 'title', 'url']]
 
 
     def test_frame_iloc_in_loc_a(self):

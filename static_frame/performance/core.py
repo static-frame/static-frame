@@ -96,12 +96,15 @@ def get_sample_frame_mixed_string_index(size=10000, columns=100):
         s = sf.Series(_typed_array(dtypes[idx % 4], size=size, shift=idx), index=index)
         sff[col] = s
 
+    npf = sff.values
+
     pdf = pd.DataFrame(index=index)
     for idx, col in enumerate(columns):
         s = pd.Series(_typed_array(dtypes[idx % 4], size=size, shift=idx), index=index)
         pdf[col] = s
 
-    return pdf, sff
+
+    return pdf, sff, npf
 
 
 def get_series_float_h2d_str_index(size=1000):
@@ -150,7 +153,7 @@ class SampleData:
         pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
         pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
         pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
-        pdf_mixed_10k, sff_mixed_10k = get_sample_frame_mixed_string_index()
+        pdf_mixed_10k, sff_mixed_10k, npf_mixed_10k = get_sample_frame_mixed_string_index()
 
         pds_float_h2d_str_index, sfs_float_h2d_str_index = get_series_float_h2d_str_index()
         pds_float_h3d_str_index, sfs_float_h3d_str_index = get_series_float_h3d_str_index()
@@ -523,7 +526,8 @@ class FrameFloat_init(PerfTest):
 
     @staticmethod
     def sf():
-        post = pd.DataFrame(SampleData.get('npf_float_10k'))
+        post = sf.Frame(SampleData.get('npf_float_10k'))
+
 
 class FrameStrFloat_init(PerfTest):
     @staticmethod
@@ -539,6 +543,44 @@ class FrameStrFloat_init(PerfTest):
         post = sf.Frame(data, index=labels[:data.shape[0]], columns=labels[:data.shape[1]])
 
 
+class FrameFloat_from_records(PerfTest):
+
+    NUMBER = 10
+
+    @staticmethod
+    def pd():
+        # make data into a list to force type identification
+        post = pd.DataFrame.from_records(list(SampleData.get('npf_float_10k')))
+        assert post.shape == (10000, 100)
+
+    @staticmethod
+    def sf():
+        post = sf.Frame.from_records(list(SampleData.get('npf_float_10k')))
+        assert post.shape == (10000, 100)
+
+
+
+class FrameMixed_from_records(PerfTest):
+
+    NUMBER = 10
+
+    @staticmethod
+    def pd():
+        # make data into a list to force type identification
+        post = pd.DataFrame.from_records(list(SampleData.get('npf_mixed_10k')))
+        assert post.shape == (10000, 100)
+
+    @staticmethod
+    def sf():
+        post = sf.Frame.from_records(list(SampleData.get('npf_mixed_10k')))
+        assert post.shape == (10000, 100)
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# frame util functions
 
 class FrameFloat_sum_skipna_axis0(PerfTest):
     @staticmethod
@@ -572,8 +614,6 @@ class FrameFloat_sum_skipna_axis1(PerfTest):
     def sf():
         post = SampleData.get('sff_float_10k').sum(axis=1, skipna=True)
         assert post.shape == (10000,)
-
-
 
 
 class FrameFloat_dropna_any_axis0(PerfTest):
@@ -615,9 +655,6 @@ class FrameFloat_isna(PerfTest):
     @staticmethod
     def sf():
         post = SampleData.get('sff_float_10k').isna()
-
-
-
 
 
 class FrameFloat_apply_axis0(PerfTest):
