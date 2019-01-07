@@ -23,6 +23,8 @@ def get_version():
     with open(path.join(root_dir_fp, 'static_frame', '__init__.py'), encoding='utf-8') as f:
         for l in f:
             if l.startswith('__version__'):
+                if '#' in l:
+                    l = l.split('#')[0].strip()
                 return l.split('=')[-1].strip()[1:-1]
 
 setup(
