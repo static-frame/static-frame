@@ -115,6 +115,11 @@ class TestUnit(TestCase):
             s1.values[1] = 23
 
 
+    def test_series_init_f(self):
+        s1 = Series({'a': 'x', 'b': 'y', 'c': 'z'})
+        self.assertEqual(s1.to_pairs(), (('a', 'x'), ('b', 'y'), ('c', 'z')))
+
+
     def test_series_slice_a(self):
         # create a series from a single value
         # s0 = Series(3, index=('a',))
@@ -517,10 +522,46 @@ class TestUnit(TestCase):
                 (('a', 'p'), ('b', None), ('c', None), ('d', None)))
 
 
+    def test_series_assign_e(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        s2 = Series(range(2), index=('c', 'd'))
+        self.assertEqual(
+                s1.assign[s2.index](s2).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 0), ('d', 1))
+                )
+
+
+    def test_series_assign_f(self):
+        s1 = Series(range(5), index=('a', 'b', 'c', 'd', 'e'))
+
+
+        with self.assertRaises(Exception):
+            # cannot have an assignment target that is not in the Series
+            s1.assign[['f', 'd']](10)
+
+        self.assertEqual(
+                s1.assign[['d', 'c']](Series((10, 20), index=('d', 'c'))).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 20), ('d', 10), ('e', 4)))
+
+        self.assertEqual(
+                s1.assign[['c', 'd']](Series((10, 20), index=('d', 'c'))).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 20), ('d', 10), ('e', 4)))
+
+        self.assertEqual(
+                s1.assign[['c', 'd']](Series((10, 20, 30), index=('d', 'c', 'f'))).to_pairs(),
+                (('a', 0), ('b', 1), ('c', 20), ('d', 10), ('e', 4)))
+
+
+        self.assertEqual(
+                s1.assign[['c', 'd', 'b']](Series((10, 20), index=('d', 'c')), fill_value=-1).to_pairs(),
+                (('a', 0), ('b', -1), ('c', 20), ('d', 10), ('e', 4))
+                )
+
+
+
     def test_series_loc_extract_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         # TODO: raaise exectin when doing a loc that Pandas reindexes
-
 
 
     def test_series_group_a(self):

@@ -856,7 +856,9 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
-            iloc_key: GetItemKeyTypeCompound) -> 'Frame':
+            iloc_key: GetItemKeyTypeCompound,
+            fill_value=np.nan
+            ) -> 'Frame':
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
         if isinstance(iloc_key, tuple):
@@ -871,11 +873,13 @@ class Frame(metaclass=MetaOperatorDelegate):
         if nm_row and not nm_column:
             # only column is multi selection, reindex by column
             if isinstance(value, Series):
-                v = value.reindex(self._columns._extract_iloc(column_key))
+                v = value.reindex(self._columns._extract_iloc(column_key),
+                        fill_value=fill_value)
         elif not nm_row and nm_column:
             # only row is multi selection, reindex by index
             if isinstance(value, Series):
-                v = value.reindex(self._index._extract_iloc(row_key))
+                v = value.reindex(self._index._extract_iloc(row_key),
+                        fill_value=fill_value)
         elif not nm_row and not nm_column:
             # both multi, must be a Frame
             if isinstance(value, Frame):
@@ -884,7 +888,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 # this will use the default fillna type, which may or may not be what is wanted
                 v = value.reindex(
                         index=target_row_index,
-                        columns=target_column_index)
+                        columns=target_column_index,
+                        fill_value=fill_value)
         if v is None:
             raise Exception(('cannot assign '
                     + value.__class__.__name__
@@ -1475,7 +1480,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             post = self._blocks.block_apply_axis(ufunc, axis=axis, dtype=dtype)
         # post has been made immutable so Series will own
         if axis == 0:
-            return Series(post, index=self._columns)
+            return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
     #---------------------------------------------------------------------------
@@ -1801,6 +1806,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                 )
 
 
+    def roll(self,
+            index: int=0,
+            columns: int=0,
+            wrap: bool=True,
+            fill_value=np.nan) -> 'Frame':
+        pass
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -2059,9 +2070,11 @@ class FrameAssign:
         self.data = data
         self.iloc_key = iloc_key
 
-    def __call__(self, value) -> 'Frame':
+    def __call__(self, value, fill_value=np.nan) -> 'Frame':
         if isinstance(value, (Series, Frame)):
-            value = self.data._reindex_other_like_iloc(value, self.iloc_key).values
+            value = self.data._reindex_other_like_iloc(value,
+                    self.iloc_key,
+                    fill_value=fill_value).values
 
         blocks = self.data._blocks.extract_iloc_assign(self.iloc_key, value)
         # can own the newly created block given by extract

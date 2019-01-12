@@ -3,6 +3,7 @@
 import typing as tp
 
 from itertools import zip_longest
+from itertools import chain
 from collections import defaultdict
 import numpy as np
 
@@ -1001,6 +1002,57 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         yield part
                 else:
                     yield from parts
+
+
+    def _roll_blocks(self,
+            row_shift: int=0,
+            column_shift: int=0,
+            wrap: bool=True,
+            fill_value: tp.Any=np.nan
+            ) -> tp.Generator[np.ndarray, None, None]:
+        '''
+        '''
+        column_count = self._shape[1]
+        row_count = self._shape[0]
+
+        # new start index is the opposite of the shfit; if shfiting by 2, the new start is the second from the end
+        index_start_pos = -(column_shift % column_count)
+        row_start_pos = -(row_shift % row_count)
+
+        if index_start_pos == 0 and row_start_pos == 0:
+            yield from self._blocks
+
+        block_start_idx, block_start_column = self._index[index_start_pos]
+        block_start = self._blocks[block_start_idx]
+
+        if block_start_column == 0:
+            # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
+            block_head_iter = chain(
+                    (block_start,),
+                    self._blocks[block_start_idx + 1:])
+            block_tail_iter = self._blocks[:block_start_idx]
+        else:
+            block_head_iter = chain(
+                    (block_start[:, block_start_column:],),
+                    self._blocks[block_start_idx + 1:])
+            block_tail_iter = chain(
+                    self._blocks[:block_start_idx],
+                    (block_start[:, :block_start_column],)
+                    )
+
+        if not wrap:
+            shape = (self._shape[0], min(self._shape[1], abs(column_shift)))
+            empty = np.full(shape, fill_value)
+            if column_shift > 0:
+                block_head_iter = (empty,)
+            elif column_shift < 0:
+                block_tail_iter = (empty,)
+
+        # TODO: might consider not rolling when yielding an empty array
+        # TODO: use util._roll_or_shift(), so as to pass wrap argument
+        yield from (np.roll(b, row_shift, axis=0) for b in chain(
+                block_head_iter, block_tail_iter))
+
 
 
     def _assign_blocks_from_keys(self,

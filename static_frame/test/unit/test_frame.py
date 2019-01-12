@@ -1177,6 +1177,18 @@ class TestUnit(TestCase):
                 [('w', 7), ('x', 124), ('y', 98), ('z', 153)])
 
 
+    def test_frame_sum_c(self):
+
+        index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
+
+        f1 = FrameGO(index=index)
+        for col in range(100):
+            s = Series(col * .1, index=index[col: col+20])
+            f1[col] = s
+        assert f1.sum().sum() == 9900.0
+
+
+
     def test_frame_min_a(self):
         # reindex both axis
         records = (

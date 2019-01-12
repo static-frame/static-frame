@@ -175,8 +175,11 @@ class Series(metaclass=MetaOperatorDelegate):
                         # populate index as side effect of iterating values
                         index.append(k)
                         yield v
-                if dtype != object: # fromiter does not work with object types
-                    self.values = np.fromiter(values_gen(), dtype=dtype, count=len(values))
+                if dtype and dtype != object:
+                    # fromiter does not work with object types
+                    self.values = np.fromiter(values_gen(),
+                            dtype=dtype,
+                            count=len(values))
                 else:
                     self.values = np.array(tuple(values_gen()), dtype=dtype)
                 self.values.flags.writeable = False
@@ -339,10 +342,11 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def _reindex_other_like_iloc(self,
             value: 'Series',
-            iloc_key: GetItemKeyType) -> 'Series':
+            iloc_key: GetItemKeyType,
+            fill_value=np.nan) -> 'Series':
         '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
         '''
-        return value.reindex(self._index._extract_iloc(iloc_key))
+        return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
 
     def reindex(self,
@@ -885,16 +889,21 @@ class SeriesAssign:
         self.data = data
         self.iloc_key = iloc_key
 
-    def __call__(self, value):
+    def __call__(self, value, fill_value=np.nan):
+
         if isinstance(value, Series):
-            value = self.data._reindex_other_like_iloc(value, self.iloc_key).values
+            value = self.data._reindex_other_like_iloc(value,
+                    self.iloc_key,
+                    fill_value=fill_value).values
 
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
         else:
             value_dtype = np.array(value).dtype
+
         dtype = _resolve_dtype(self.data.dtype, value_dtype)
 
+        # create or copy the array to return
         if dtype == self.data.dtype:
             array = self.data.values.copy()
         else:

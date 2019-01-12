@@ -307,8 +307,6 @@ def _slice_to_ascending_slice(key: slice, size: int) -> slice:
     return slice(start, stop, -key.step)
 
 
-
-
 def _slice_to_datetime_slice_args(key):
     for attr in SLICE_ATTRS:
         value = getattr(key, attr)
@@ -485,6 +483,20 @@ def _array_to_duplicated(
     r_idx = np.argsort(o_idx, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
+def _roll_or_shift(array: np.ndarray,
+        shift: int,
+        wrap: bool=True,
+        fill_value=np.nan):
+    '''
+    Apply an np-style roll to an array; if wrap is False, fill values out-shifted values with fill_value.
+
+    Args:
+        fill_value: only used if wrap is False.
+    '''
+    if shift == 0:
+        # not making a copy, as assuming immutable
+        return array
+    pass
 
 def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
     '''
