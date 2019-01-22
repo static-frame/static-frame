@@ -487,6 +487,17 @@ class TestUnit(TestCase):
                 ['b', 'c']
                 )
 
+    def test_index_roll_a(self):
+
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx.roll(-2).values.tolist(),
+                ['c', 'd', 'a', 'b'])
+
+        self.assertEqual(idx.roll(1).values.tolist(),
+                ['d', 'a', 'b', 'c'])
+
+
 if __name__ == '__main__':
     unittest.main()
 

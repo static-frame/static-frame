@@ -91,23 +91,6 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_blocks',
             '_columns',
             '_index',
-            # 'loc',
-            # 'iloc',
-            # 'drop',
-            # 'mask',
-            # 'masked_array',
-            # 'assign',
-            # 'astype',
-            # 'iter_array',
-            # 'iter_array_items',
-            # 'iter_tuple',
-            # 'iter_tuple_items',
-            # 'iter_series',
-            # 'iter_series_items',
-            # 'iter_group',
-            # 'iter_group_items',
-            # 'iter_element',
-            # 'iter_element_items'
             )
 
     _COLUMN_CONSTRUCTOR = Index
@@ -252,9 +235,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         if isinstance(records, np.ndarray):
             return cls(records, index=index, columns=columns)
 
-
         def blocks():
-
             if not hasattr(records, '__len__'):
                 rows = list(records)
             else:
@@ -427,6 +408,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                 index=index_array,
                 own_data=True)
 
+    #---------------------------------------------------------------------------
+    # iloc/loc pairs constructors: these are not yet documented
+
     @classmethod
     def from_element_iloc_items(cls,
             items,
@@ -471,6 +455,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True,
                 own_index=True,
                 own_columns=True)
+
+    #---------------------------------------------------------------------------
+    # file, data format loaders
 
     @classmethod
     def from_csv(cls,
@@ -1809,9 +1796,67 @@ class Frame(metaclass=MetaOperatorDelegate):
     def roll(self,
             index: int=0,
             columns: int=0,
-            wrap: bool=True,
+            include_index: bool=False,
+            include_columns: bool=False) -> 'Frame':
+        '''
+        Args:
+            include_index: Determine if index is included in index-wise rotation.
+            include_columns: Determine if column index is included in index-wise rotation.
+        '''
+        shift_index = index
+        shift_column = columns
+
+        blocks = TypeBlocks.from_blocks(
+                self._blocks._shift_blocks(
+                row_shift=shift_index,
+                column_shift=shift_column,
+                wrap=True
+                ))
+
+        if include_index:
+            index = self._index.roll(shift_index)
+            own_index = True
+        else:
+            index = self._index
+            own_index = False
+
+        if include_columns:
+            columns = self._columns.roll(shift_column)
+            own_columns = True
+        else:
+            columns = self._columns
+            own_columns = False
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                own_data=True,
+                own_columns=own_columns,
+                own_index=own_index,
+                )
+
+
+    def shift(self,
+            index: int=0,
+            columns: int=0,
             fill_value=np.nan) -> 'Frame':
-        pass
+
+        shift_index = index
+        shift_column = columns
+
+        blocks = TypeBlocks.from_blocks(
+                self._blocks._shift_blocks(
+                row_shift=shift_index,
+                column_shift=shift_column,
+                wrap=False,
+                fill_value=fill_value
+                ))
+
+        return self.__class__(blocks,
+                columns=self._columns,
+                index=self._index,
+                own_data=True,
+                )
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
@@ -1878,7 +1923,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def to_frame_go(self):
         '''
-        Return a FrameGO version of this Frame
+        Return a FrameGO version of this Frame. As underlying data is immutable, this is a no-copy operation.
         '''
         # copying blocks does not copy underlying data
         return FrameGO(self._blocks.copy(),
@@ -1888,14 +1933,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 own_columns=False # need to make grow only
                 )
-
-
-    # def to_pickle(self, fp: str):
-    #     '''Given a file path, write the Frame as a Python pickle.
-    #     '''
-    #     with open(fp, 'wb') as f:
-    #         return pickle.dump(self, f)
-
 
     def to_csv(self,
             fp: FilePathOrFileLike,

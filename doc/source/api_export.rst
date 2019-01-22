@@ -17,6 +17,9 @@ Frame
 
 .. automethod:: static_frame.Frame.to_pairs
 
+.. automethod:: static_frame.Frame.to_frame_go
+
+
 .. automethod:: static_frame.Frame.to_pandas
 
 .. automethod:: static_frame.Frame.to_csv

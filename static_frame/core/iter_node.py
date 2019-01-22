@@ -2,21 +2,15 @@
 Tools for iterators in Series and Frame. These components are imported by both series.py and frame.py; these components also need to be able to return Series and Frame, and thus use deferred, function-based imports.
 '''
 
-
 import typing as tp
 from enum import Enum
-
 
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
-
 from static_frame.core.util import CallableOrMapping
 
 from functools import partial
-
-
-
 
 
 class IterNodeApplyType(Enum):

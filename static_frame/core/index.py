@@ -26,6 +26,7 @@ from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _key_to_datetime_key
 from static_frame.core.util import immutable_filter
+from static_frame.core.util import array_shift
 
 from static_frame.core.util import DateInitializer
 from static_frame.core.util import YearMonthInitializer
@@ -172,9 +173,6 @@ class Index(metaclass=MetaOperatorDelegate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            # 'loc',
-            # 'iloc',
-            # 'drop'
             )
 
     #---------------------------------------------------------------------------
@@ -252,7 +250,7 @@ class Index(metaclass=MetaOperatorDelegate):
 
         '''
         Args:
-            labels: Initializer of Index. If an Index or IndexGO object is provided, appropriate usage of those objects is implemented. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
+            labels: Initializer of the Index. If an Index or IndexGO object is provided, appropriate usage of those objects is implemented. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
         '''
         self._recache = False
         self._map = None
@@ -582,11 +580,12 @@ class Index(metaclass=MetaOperatorDelegate):
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        v = np.sort(self._labels, kind=kind)
+        # force usage of property for caching
+        v = np.sort(self.values, kind=kind)
         if not ascending:
             v = v[::-1]
         v.flags.writeable = False
-        return __class__(v)
+        return self.__class__(v)
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
@@ -596,6 +595,18 @@ class Index(metaclass=MetaOperatorDelegate):
         v, assume_unique = _iterable_to_array(other)
         return np.in1d(self._labels, v, assume_unique=assume_unique)
 
+    def roll(self, shift: int) -> 'Index':
+        '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
+        '''
+        values = self.values # force usage of property for cache update
+        if shift % len(values):
+            values = array_shift(values,
+                    shift,
+                    axis=0,
+                    wrap=True)
+            values.flags.writeable = False
+        # NOTE: could recycle self._map if we know this is an immutable Index
+        return self.__class__(values)
 
     #---------------------------------------------------------------------------
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':

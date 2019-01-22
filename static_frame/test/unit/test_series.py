@@ -234,6 +234,37 @@ class TestUnit(TestCase):
             s3 = s1 | s2
 
 
+    def test_series_binary_operator_e(self):
+
+        s1 = Series((False, True, False, True), index=list('abcd'))
+        s2 = Series([True] * 3, index=list('abc'))
+
+        self.assertEqual((s1 == -1).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', False)))
+
+        self.assertEqual((s1 == s2).to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', False)))
+
+        self.assertEqual((s1 == True).to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', True)))
+
+        # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
+
+        self.assertEqual((s1 == (True,)).to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', True)))
+
+        self.assertEqual((s1 == (True, False)).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', False)))
+
+        # as this is samed sized, NP does element wise comparison
+        self.assertEqual((s1 == (False, True, False, True)).to_pairs(),
+                (('a', True), ('b', True), ('c', True), ('d', True)))
+
+        self.assertEqual((s1 == (False, True, False, True, False)).to_pairs(),
+                (('a', False), ('b', False), ('c', False), ('d', False)))
+
+
+
     def test_series_reindex_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
@@ -954,6 +985,69 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.tail(2).to_pairs(),
                 ((1, 98), (0, 99)))
+
+
+    def test_series_roll_a(self):
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        self.assertEqual(s1.roll(2).to_pairs(),
+                (('a', 8), ('b', 6), ('c', 2), ('d', 3), ('e', 0), ('f', -1))
+                )
+
+        self.assertEqual(s1.roll(-2).to_pairs(),
+                (('a', 0), ('b', -1), ('c', 8), ('d', 6), ('e', 2), ('f', 3))
+                )
+
+        # if the roll is a noop, we reuse the same array
+        self.assertEqual(s1.mloc, s1.roll(len(s1)).mloc)
+
+
+    def test_series_roll_b(self):
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        self.assertEqual(s1.roll(2, include_index=True).to_pairs(),
+            (('e', 8), ('f', 6), ('a', 2), ('b', 3), ('c', 0), ('d', -1))
+            )
+
+        self.assertEqual(s1.roll(-2, include_index=True).to_pairs(),
+            (('c', 0), ('d', -1), ('e', 8), ('f', 6), ('a', 2), ('b', 3))
+            )
+
+        # import ipdb; ipdb.set_trace()
+
+
+
+    def test_series_shift_a(self):
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        # if the shift is a noop, we reuse the same array
+        self.assertEqual(s1.mloc, s1.shift(0).mloc)
+
+        # default fill is NaN
+        self.assertEqual(s1.shift(4).dtype,
+                np.dtype('float64')
+                )
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(s1.shift(4, None).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None), ('e', 2), ('f', 3))
+                )
+
+        self.assertEqual(s1.shift(-4, None).to_pairs(),
+                (('a', 8), ('b', 6), ('c', None), ('d', None), ('e', None), ('f', None))
+                )
+
+        self.assertEqual(
+                s1.shift(6, None).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
+                )
+
+        self.assertEqual(
+                s1.shift(-6, None).to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
+                )
+
+
 
 
 if __name__ == '__main__':

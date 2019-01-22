@@ -61,6 +61,14 @@ Series
 
 .. automethod:: static_frame.Series.drop_duplicated
 
+.. automethod:: static_frame.Series.roll
+
+.. automethod:: static_frame.Series.shift
+
+.. automethod:: static_frame.Series.head
+
+.. automethod:: static_frame.Series.tail
+
 
 Frame
 ---------
@@ -72,7 +80,7 @@ Frame
 
 .. py:method:: Series.astype[key](dtype)
 
-    Given a key, replace the values specified by the column key with values casted to the provided dtype.
+    Given a column key (either a column label, list of column lables, slice of colum labels, or Boolean array), replace the values specified by the column key with values casted to the provided ``dtype``.
 
 
 .. automethod:: static_frame.Frame.isin
@@ -88,6 +96,12 @@ Frame
 .. automethod:: static_frame.Frame.set_index
 
 .. automethod:: static_frame.Frame.set_index_hierarchy
+
+
+.. automethod:: static_frame.Frame.roll
+
+.. automethod:: static_frame.Frame.shift
+
 
 .. automethod:: static_frame.Frame.head
 

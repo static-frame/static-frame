@@ -28,6 +28,8 @@ from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.util import _slice_to_ascending_slice
+from static_frame.core.util import array_shift
+
 
 from static_frame.test.test_case import TestCase
 
@@ -177,6 +179,13 @@ class TestUnit(TestCase):
         self.assertEqual(_resolve_dtype(a1.dtype, a4.dtype), np.float64)
         self.assertEqual(_resolve_dtype(a1.dtype, a6.dtype), np.float64)
         self.assertEqual(_resolve_dtype(a4.dtype, a6.dtype), np.float64)
+
+    def test_resolve_dtype_b(self):
+
+        self.assertEqual(
+                _resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
+                np.dtype(('U', 3))
+                )
 
     def test_resolve_dtype_iter_a(self):
 
@@ -384,6 +393,69 @@ class TestUnit(TestCase):
         compare(slice(6, None, -3))
         compare(slice(6, 2, -2))
         compare(slice(None, 1, -1))
+
+
+    def test_array_shift_a(self):
+        a1 = np.arange(6)
+
+
+        # import ipdb; ipdb.set_trace()
+
+        self.assertEqual(array_shift(a1, 2, axis=0, wrap=True).tolist(),
+                [4, 5, 0, 1, 2, 3])
+        self.assertEqual(array_shift(a1, -2, axis=0, wrap=True).tolist(),
+                [2, 3, 4, 5, 0, 1])
+        self.assertEqual(array_shift(a1, 5, axis=0, wrap=True).tolist(),
+                [1, 2, 3, 4, 5, 0])
+
+        self.assertEqual(
+                array_shift(a1, 2, axis=0, wrap=False, fill_value=-1).tolist(),
+                [-1, -1, 0, 1, 2, 3])
+
+        self.assertEqual(
+                array_shift(a1, 2, axis=0, wrap=False, fill_value=1.5).tolist(),
+                [1.5, 1.5, 0, 1, 2, 3])
+
+        self.assertEqual(
+                array_shift(a1, -2, axis=0, wrap=False, fill_value=1.5).tolist(),
+                [2, 3, 4, 5, 1.5, 1.5])
+
+
+    def test_array_shift_b(self):
+        a1 = np.array([('a', 'b', 'e', 'd'),
+                ('c', 'd', 'f', 'w'),
+                ('e', 'f', 's', 'q')])
+
+        self.assertEqual(array_shift(a1, 2, axis=0, wrap=True).tolist(),
+                [['c', 'd', 'f', 'w'], ['e', 'f', 's', 'q'], ['a', 'b', 'e', 'd']])
+
+        self.assertEqual(array_shift(a1, -2, axis=0, wrap=True).tolist(),
+                [['e', 'f', 's', 'q'], ['a', 'b', 'e', 'd'], ['c', 'd', 'f', 'w']])
+
+
+        self.assertEqual(
+                array_shift(a1, -2, axis=0, wrap=False, fill_value='XX').dtype,
+                np.dtype('<U2')
+                )
+
+        self.assertEqual(
+                array_shift(a1, -2, axis=0, wrap=False, fill_value='XX').tolist(),
+                [['e', 'f', 's', 'q'],
+                ['XX', 'XX', 'XX', 'XX'],
+                ['XX', 'XX', 'XX', 'XX']])
+
+        self.assertEqual(
+                array_shift(a1, 2, axis=1, wrap=False, fill_value='XX').tolist(),
+                [['XX', 'XX', 'a', 'b'],
+                ['XX', 'XX', 'c', 'd'],
+                ['XX', 'XX', 'e', 'f']])
+
+        self.assertEqual(
+                array_shift(a1, -2, axis=1, wrap=False, fill_value='XX').tolist(),
+                [['e', 'd', 'XX', 'XX'],
+                ['f', 'w', 'XX', 'XX'],
+                ['s', 'q', 'XX', 'XX']])
+
 
 if __name__ == '__main__':
     unittest.main()

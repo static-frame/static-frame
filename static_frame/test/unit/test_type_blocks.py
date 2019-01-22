@@ -1459,28 +1459,54 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._roll_blocks(1, 1)),
+                TypeBlocks.from_blocks(tb1._shift_blocks(1, 1, wrap=True)),
                 [[None, 0, 0, 1, 'oe', 'od'],
                 [None, 1, 2, 3, 'a', 'b'],
                 [None, 4, -1, 6, 'c', 'd']]
                 )
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._roll_blocks(-1, -1)),
+                TypeBlocks.from_blocks(tb1._shift_blocks(-1, -1, wrap=True)),
                 [[-1, 6, 'c', 'd', None, 4],
                 [0, 1, 'oe', 'od', None, 0],
                 [2, 3, 'a', 'b', None, 1]]
                 )
 
         self.assertTypeBlocksArrayEqual(
-                TypeBlocks.from_blocks(tb1._roll_blocks(-2, 2)),
+                TypeBlocks.from_blocks(tb1._shift_blocks(-2, 2, wrap=True)),
                 [['od', None, 0, 0, 1, 'oe'],
                 ['b', None, 1, 2, 3, 'a'],
                 ['d', None, 4, -1, 6, 'c']]
                 )
 
 
+    def test_type_blocks_roll_blocks_b(self):
+
+        a1 = np.array([[1, 2, 3], [4, -1, 6], [0, 0, 1]], dtype=object)
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a3 = np.array([None, None, None])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
         # import ipdb; ipdb.set_trace()
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._shift_blocks(1, 1, wrap=False,fill_value='x')),
+                [['x', 'x', 'x', 'x', 'x', 'x'],
+                ['x', 1, 2, 3, 'a', 'b'],
+                ['x', 4, -1, 6, 'c', 'd']],
+                match_dtype=object
+                )
+
+        self.assertTypeBlocksArrayEqual(
+                TypeBlocks.from_blocks(tb1._shift_blocks(2,
+                        -2,
+                        wrap=False,
+                        fill_value=10)),
+                [[10, 10, 10, 10, 10, 10],
+                [10, 10, 10, 10, 10, 10],
+                [3, 'a', 'b', None, 10, 10]],
+                match_dtype=object
+                )
 
 
 if __name__ == '__main__':

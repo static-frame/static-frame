@@ -18,9 +18,7 @@ import numpy as np
 # handle nan in object blocks with skipna processing on ufuncs
 # allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
-# Series in from_concat
 # roll() on TypeBlocks (can be used in duplicate discovery on blocks)
-# shift as non-wrapping roll
 
 
 # dtype.kind
@@ -41,6 +39,7 @@ _DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+DTYPE_OBJECT = np.dtype(object)
 
 _NULL_SLICE = slice(None)
 SLICE_STOP_ATTR = 'stop'
@@ -146,23 +145,6 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def _full_for_fill(
-        dtype: np.dtype,
-        shape: tp.Union[int, tp.Tuple[int, int]],
-        fill_value):
-    '''
-    Args:
-        dtype: target dtype, which may or may not be possible given the fill_value.
-    '''
-
-    try:
-        fill_can_cast = np.can_cast(fill_value, dtype)
-    except TypeError: # happens when fill is None and dtype is float
-        fill_can_cast = False
-
-    dtype = object if not fill_can_cast else dtype
-    return np.full(shape, fill_value, dtype=dtype)
-
 def _resolve_dtype(dt1, dt2) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
@@ -174,7 +156,7 @@ def _resolve_dtype(dt1, dt2) -> np.dtype:
 
     # if either is object, we go to object
     if dt1.kind == 'O' or dt2.kind == 'O':
-        return np.object_
+        return DTYPE_OBJECT
 
     dt1_is_str = dt1.kind in _DTYPE_STR_KIND
     dt2_is_str = dt2.kind in _DTYPE_STR_KIND
@@ -188,7 +170,7 @@ def _resolve_dtype(dt1, dt2) -> np.dtype:
 
     # if any one is a string or a bool, we have to go to object; result_type gives a string in mixed cases
     if dt1_is_str or dt2_is_str or dt1_is_bool or dt2_is_bool:
-        return np.object_
+        return DTYPE_OBJECT
 
     # if not a string or an object, can use result type
     return np.result_type(dt1, dt2)
@@ -200,9 +182,30 @@ def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
     dt_resolve = next(dtypes)
     for dt in dtypes:
         dt_resolve = _resolve_dtype(dt_resolve, dt)
-        if dt_resolve == np.object_:
+        if dt_resolve == DTYPE_OBJECT:
             return dt_resolve
     return dt_resolve
+
+
+def _full_for_fill(
+        dtype: np.dtype,
+        shape: tp.Union[int, tp.Tuple[int, int]],
+        fill_value) -> np.ndarray:
+    '''
+    Return a "full" NP array for the given fill_value
+    Args:
+        dtype: target dtype, which may or may not be possible given the fill_value.
+    '''
+
+    dtype = _resolve_dtype(dtype, np.array(fill_value).dtype)
+    # try:
+    #     fill_can_cast = np.can_cast(fill_value, dtype)
+    # except TypeError: # happens when fill is None and dtype is float
+    #     fill_can_cast = False
+
+    # dtype = object if not fill_can_cast else dtype
+    return np.full(shape, fill_value, dtype=dtype)
+
 
 def _dtype_to_na(dtype):
     '''Given a dtype, return an appropriate and compatible null value.
@@ -483,20 +486,49 @@ def _array_to_duplicated(
     r_idx = np.argsort(o_idx, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
-def _roll_or_shift(array: np.ndarray,
+def array_shift(array: np.ndarray,
         shift: int,
-        wrap: bool=True,
-        fill_value=np.nan):
+        axis: int, # 0 is rows, 1 is columns
+        wrap: bool,
+        fill_value=np.nan) -> np.ndarray:
     '''
     Apply an np-style roll to an array; if wrap is False, fill values out-shifted values with fill_value.
 
     Args:
         fill_value: only used if wrap is False.
     '''
-    if shift == 0:
-        # not making a copy, as assuming immutable
-        return array
-    pass
+    # works for all shapes
+    if shift > 0:
+        shift_mod = shift % array.shape[axis]
+    elif shift < 0:
+        # do negative modulo to force negative value
+        shift_mod = shift % -array.shape[axis]
+    else:
+        shift_mod = 0
+
+    if (not wrap and shift == 0) or (wrap and shift_mod == 0):
+        # must copy so as not let caller mutate arguement
+        return array.copy()
+    if wrap:
+        # standard np roll works fine
+        return np.roll(array, shift_mod, axis=axis)
+
+    # will insure that the result can contain the fill and the original values
+    result = _full_for_fill(array.dtype, array.shape, fill_value)
+
+    if axis == 0:
+        if shift > 0:
+            result[shift:] = array[:-shift]
+        elif shift < 0:
+            result[:shift] = array[-shift:]
+    elif axis == 1:
+        if shift > 0:
+            result[:, shift:] = array[:, :-shift]
+        elif shift < 0:
+            result[:, :shift] = array[:, -shift:]
+
+    return result
+
 
 def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
     '''

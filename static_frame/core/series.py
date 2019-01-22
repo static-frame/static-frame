@@ -18,6 +18,7 @@ from static_frame.core.util import immutable_filter
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array2d_to_tuples
+from static_frame.core.util import array_shift
 
 
 from static_frame.core.util import CallableOrMapping
@@ -60,46 +61,7 @@ class Series(metaclass=MetaOperatorDelegate):
     __slots__ = (
             'values',
             '_index',
-            # 'loc',
-            # 'iloc',
-            # 'drop',
-            # 'mask',
-            # 'masked_array',
-            # 'assign',
-            # 'iter_group',
-            # 'iter_group_items',
-            # 'iter_element',
-            # 'iter_element_items',
             )
-
-
-    # loc = GetItemDescriptor('_extract_loc')
-    # iloc = GetItemDescriptor('_extract_iloc')
-
-    # drop = DescriptorSelection2D(
-    #         func_attr_iloc='_drop_iloc',
-    #         func_attr_loc='_drop_loc',
-    #         func_attr_getitem='_drop_loc'
-    #         )
-
-    # mask = DescriptorSelection2D(
-    #         func_attr_iloc='_extract_iloc_mask',
-    #         func_attr_loc='_extract_loc_mask',
-    #         func_attr_getitem='_extract_loc_mask'
-    #         )
-
-    # masked_array = DescriptorSelection2D(
-    #         func_attr_iloc='_extract_iloc_masked_array',
-    #         func_attr_loc='_extract_loc_masked_array',
-    #         func_attr_getitem='_extract_loc_masked_array'
-    #         )
-
-    # assign = DescriptorSelection2D(
-    #         func_attr_iloc='_extract_iloc_assign',
-    #         func_attr_loc='_extract_loc_assign',
-    #         func_attr_getitem='_extract_loc_assign'
-    #         )
-
 
     @classmethod
     def from_items(cls,
@@ -240,10 +202,6 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if len(self.values) != shape:
             raise Exception('values and index do not match length')
-
-        #-----------------------------------------------------------------------
-
-
 
 
     #---------------------------------------------------------------------------
@@ -502,7 +460,8 @@ class Series(metaclass=MetaOperatorDelegate):
         if not isinstance(result, np.ndarray):
             # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
             if isinstance(result, _BOOL_TYPES):
-                result = np.full(1, result)
+                # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equalt to an erray, NP will perform element wise comparison; bit if the arguemtn is a tuple of length greater or eqial, each value in value will be compared to that tuple
+                result = np.full(len(values), result)
             else:
                 raise Exception('unexpected branch from non-array result of operator application to array')
 
@@ -769,7 +728,11 @@ class Series(metaclass=MetaOperatorDelegate):
 
 
     def clip(self, lower=None, upper=None):
-        '''Apply a clip opeation to the Series.
+        '''Apply a clip operation to the Series.
+
+        Args:
+            lower: value or Series to define the inclusive lower bound.
+            upper: value or Series to define the inclusive upper bound.
         '''
         args = [lower, upper]
         for idx in range(len(args)):
@@ -830,16 +793,75 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.__class__(self.values.astype(dtype), index=self._index)
 
 
+    def roll(self,
+            shift: int,
+            include_index: bool=False) -> 'Series':
+        '''Return a Series with values rotated forward and wrapped around the index (with a postive shift) or backward and wrapped around the index (with a negative shift).
+
+        Args:
+            shift: Postive or negative integer shift.
+            include_index: Determine if the Index is shifted with the underlying data.
+        '''
+        if shift % len(self.values):
+            values = array_shift(self.values,
+                    shift,
+                    axis=0,
+                    wrap=True)
+            values.flags.writeable = False
+        else:
+            values = self.values
+
+        if include_index:
+            index = self._index.roll(shift=shift)
+            own_index = True
+        else:
+            index = self._index
+            own_index = False
+
+        return self.__class__(values,
+                index=index,
+                own_index=own_index)
+
+
+    def shift(self,
+            shift: int,
+            fill_value=np.nan) -> 'Series':
+        '''Return a Series with values shifted forward on the index (with a postive shift) or backward on the index (with a negative shift).
+
+        Args:
+            shift: Postive or negative integer shift.
+            fill_value: Value to be used to fill data missing after the shift.
+        '''
+
+        if shift:
+            values = array_shift(self.values,
+                    shift,
+                    axis=0,
+                    wrap=False,
+                    fill_value=fill_value)
+            values.flags.writeable = False
+        else:
+            values = self.values
+
+        return self.__class__(values, index=self._index)
+
+
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
 
     def head(self, count: int=5) -> 'Series':
         '''Return a Series consisting only of the top elements as specified by ``count``.
+
+        Args:
+            count: Number of elements to be returned from the top of the Series.
         '''
         return self.iloc[:count]
 
     def tail(self, count: int=5) -> 'Series':
         '''Return a Series consisting only of the bottom elements as specified by ``count``.
+
+        Args:
+            count: Number of elements to be returned from the bottom of the Series.
         '''
         return self.iloc[-count:]
 
@@ -855,6 +877,8 @@ class Series(metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     # export
+
+    # NOTE: can add to_frame and to_fram_go after Series has name attribute
 
     def to_pairs(self) -> tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]:
         '''
