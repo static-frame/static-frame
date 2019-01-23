@@ -252,7 +252,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def assign(self):
+    def assign(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,

@@ -124,7 +124,7 @@ def _gen_skip_middle(
         forward_count: int,
         reverse_iter: CallableToIterType,
         reverse_count: int,
-        center_sentinel: tp.Any):
+        center_sentinel: tp.Any) -> tp.Generator:
     '''
     Provide a generator to yield the count values from each side.
     '''
@@ -145,7 +145,7 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def _resolve_dtype(dt1, dt2) -> np.dtype:
+def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
     '''
@@ -190,7 +190,7 @@ def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
 def _full_for_fill(
         dtype: np.dtype,
         shape: tp.Union[int, tp.Tuple[int, int]],
-        fill_value) -> np.ndarray:
+        fill_value: object) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value
     Args:
@@ -207,7 +207,7 @@ def _full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def _dtype_to_na(dtype):
+def _dtype_to_na(dtype: np.dtype):
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
@@ -370,7 +370,7 @@ def _dict_to_sorted_items(
 
 def _array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: int=None):
+        unique_axis: int=0):
     '''Locations are index positions for each group.
     '''
     try:
@@ -530,7 +530,9 @@ def array_shift(array: np.ndarray,
     return result
 
 
-def _array_set_ufunc_many(arrays, ufunc=np.intersect1d):
+def _array_set_ufunc_many(
+        arrays: tp.Iterable[np.ndarray],
+        ufunc=np.intersect1d):
     '''
     Iteratively apply a set operation unfunc to a arrays; if all are equal, no operation is performed and order is retained.
     '''
@@ -551,7 +553,10 @@ def _array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
         yield tuple(row)
 
 
-def _ufunc2d(func, array, other):
+def _ufunc2d(
+        func: tp.Callable[[np.ndarray], np.ndarray],
+        array: np.ndarray,
+        other: np.ndarray):
     '''
     Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
     '''
@@ -589,7 +594,8 @@ def _ufunc2d(func, array, other):
         return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 
-def _intersect2d(array, other) -> np.ndarray:
+def _intersect2d(array: np.ndarray,
+        other: np.ndarray) -> np.ndarray:
     return _ufunc2d(np.intersect1d, array, other)
 
 def _union2d(array, other) -> np.ndarray:
@@ -620,14 +626,18 @@ def _read_url(fp: str):
 # 316 ns ± 1.29 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
 
+TContainer = tp.TypeVar('Container', 'Index', 'Series', 'Frame')
+
 #TODO: rename InterfaceGetItem
 class GetItem:
     __slots__ = ('_func',)
 
-    def __init__(self, func) -> None:
+    def __init__(self,
+            func: tp.Callable[[GetItemKeyType], TContainer]
+            ) -> None:
         self._func = func
 
-    def __getitem__(self, key: GetItemKeyType):
+    def __getitem__(self, key: GetItemKeyType) -> TContainer:
         return self._func(key)
 
 #-------------------------------------------------------------------------------
@@ -649,11 +659,11 @@ class InterfaceSelection1D:
         self._func_loc = func_loc
 
     @property
-    def iloc(self):
+    def iloc(self) -> GetItem:
         return GetItem(self._func_iloc)
 
     @property
-    def loc(self):
+    def loc(self) -> GetItem:
         return GetItem(self._func_loc)
 
 
@@ -682,11 +692,11 @@ class InterfaceSelection2D:
         return self._func_getitem(key)
 
     @property
-    def iloc(self):
+    def iloc(self) -> GetItem:
         return GetItem(self._func_iloc)
 
     @property
-    def loc(self):
+    def loc(self) -> GetItem:
         return GetItem(self._func_loc)
 
 #-------------------------------------------------------------------------------

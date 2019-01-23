@@ -1113,15 +1113,15 @@ class Frame(metaclass=MetaOperatorDelegate):
     # accessors
 
     @property
-    def values(self):
+    def values(self) -> np.ndarray:
         return self._blocks.values
 
     @property
-    def index(self):
+    def index(self) -> Index:
         return self._index
 
     @property
-    def columns(self):
+    def columns(self) -> Index:
         return self._columns
 
     #---------------------------------------------------------------------------
