@@ -44,6 +44,6 @@ from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.frame import FrameAssign
 
-__version__ = '0.2.1-dev' # use -dev for new version in development
+__version__ = '0.2.3-dev' # use -dev for new version in development
 
 
