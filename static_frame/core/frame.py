@@ -113,6 +113,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         # TODO: should this upport Series?
 
@@ -217,13 +220,16 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: tp.Optional[IndexInitializer]=None,
             columns: tp.Optional[IndexInitializer]=None,
             consolidate_blocks: bool=False
-            ):
+            ) -> 'Frame':
         '''Frame constructor from an iterable of rows.
 
         Args:
             records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
             index: Iterable of index labels, equal in length to the number of records.
             columns: Iterable of column labels, equal in length to the length of each row.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         derive_columns = False
         if columns is None:
@@ -296,15 +302,27 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True)
 
     @classmethod
-    def from_json(cls, json_data):
+    def from_json(cls, json_data: str) -> 'Frame':
         '''Frame constructor from an in-memory JSON document.
+
+        Args:
+            json_data: a string of JSON, encoding a table as an array of JSON objects.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         data = json.loads(json_data)
         return cls.from_records(data)
 
     @classmethod
-    def from_json_url(cls, url):
+    def from_json_url(cls, url: str) -> 'Frame':
         '''Frame constructor from a JSON document provided via a URL.
+
+        Args:
+            url: URL to the JSON resource.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         return cls.from_json(_read_url(url))
 
@@ -314,7 +332,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer=None,
-            fill_value=np.nan,
+            fill_value: object=np.nan,
             consolidate_blocks: bool=False):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
@@ -323,6 +341,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: Iterable of values to create an Index.
             fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
             consoidate_blocks: If True, same typed adjacent columns will be consolidated into a contiguous array.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         columns = []
 
@@ -373,8 +394,11 @@ class Frame(metaclass=MetaOperatorDelegate):
         Convert a NumPy structed array into a Frame.
 
         Args:
-            array: Structured numpy array.
+            array: Structured NumPy array.
             index_column: Optionally provide the name or position offset of the column to use as the index.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
 
         names = array.dtype.names
@@ -417,9 +441,12 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             index,
             columns,
-            dtype):
+            dtype) -> 'Frame':
         '''
         Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. Dtype must be specified.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         index = Index(index)
         columns = cls._COLUMN_CONSTRUCTOR(columns)
@@ -439,7 +466,11 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             index,
             columns,
-            dtype=None):
+            dtype=None) -> 'Frame':
+        '''
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
         index = Index(index)
         columns = cls._COLUMN_CONSTRUCTOR(columns)
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
@@ -483,6 +514,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_footer: Numver of trailing lines to skip.
             header_is_columns: If True, columns names are read from the first line after the first skip_header lines.
             dtype: set to None by default to permit discovery
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
@@ -521,9 +555,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                 )
 
     @classmethod
-    def from_tsv(cls, fp, **kwargs):
+    def from_tsv(cls, fp, **kwargs) -> 'Frame':
         '''
         Specialized version of :py:meth:`Frame.from_csv` for TSV files.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         return cls.from_csv(fp, delimiter='\t', **kwargs)
 
@@ -542,6 +579,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
             own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
             own_columns: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+
+        Returns:
+            :py:class:`static_frame.Frame`
         '''
         if own_index:
             index = value.index.values

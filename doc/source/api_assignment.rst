@@ -26,6 +26,13 @@ Series
 
     :returns: :py:class:`static_frame.Series`
 
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_series_assign_a
+   :end-before: end_series_assign_a
+
+
 Frame
 .................
 
@@ -40,6 +47,13 @@ Frame
     :param value: The value to be assigned. Can be a single value, an iterable of values, a ``Series``, or a ``Frame``.
 
     :returns: :py:class:`static_frame.Frame`
+
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_frame_assign_a
+   :end-before: end_frame_assign_a
+
 
 
 
@@ -63,6 +77,14 @@ Series
     :returns: :py:class:`static_frame.Series`
 
 
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_series_drop_a
+   :end-before: end_series_drop_a
+
+
+
+
 Frame
 .................
 
@@ -77,6 +99,15 @@ Frame
     :returns: :py:class:`static_frame.Frame`
 
 
+
+.. literalinclude:: api.py
+   :language: python
+   :start-after: start_frame_drop_a
+   :end-before: end_frame_drop_a
+
+
+
+
 Masking Data
 ------------------------------
 
@@ -86,7 +117,7 @@ While Boolean ``Series`` and ``Frame`` can be created directly or with compariso
 Series
 .................
 
-.. py:method:: Series.mask[key] -> Series
+.. py:method:: Series.mask[key]
 .. py:method:: Series.mask.loc[key]
 .. py:method:: Series.mask.iloc[key]
 
@@ -124,7 +155,7 @@ https://docs.scipy.org/doc/numpy/reference/maskedarray.generic.html
 Series
 .................
 
-.. py:method:: Series.masked_array[key] -> Series
+.. py:method:: Series.masked_array[key]
 .. py:method:: Series.masked_array.loc[key]
 .. py:method:: Series.masked_array.iloc[key]
 
@@ -138,7 +169,7 @@ Series
 Frame
 .................
 
-.. py:method:: Frame.masked_array[key] -> Frame
+.. py:method:: Frame.masked_array[key]
 .. py:method:: Frame.masked_array.loc[key]
 .. py:method:: Frame.masked_array.iloc[key]
 

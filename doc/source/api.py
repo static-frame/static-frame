@@ -748,6 +748,158 @@ Venus   4.87      0
 #end_frame_iter_group_items_a
 
 
+#start_series_assign_a
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s
+<Index> <Series>
+Venus   108.2
+Earth   149.6
+Saturn  1433.5
+<<U6>   <float64>
+>>> s.assign['Earth'](150)
+<Index> <Series>
+Venus   108.2
+Earth   150.0
+Saturn  1433.5
+<<U6>   <float64>
+>>> s.assign['Earth':](0)
+<Index> <Series>
+Venus   108.2
+Earth   0.0
+Saturn  0.0
+<<U6>   <float64>
+>>> s.assign.loc[s < 150](0)
+<Index> <Series>
+Venus   0.0
+Earth   0.0
+Saturn  1433.5
+<<U6>   <float64>
+>>> s.assign.iloc[-1](0)
+<Index> <Series>
+Venus   108.2
+Earth   149.6
+Saturn  0.0
+<<U6>   <float64>
+
+#end_series_assign_a
+
+#start_frame_assign_a
+>>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    5.97
+Mars    6792     0.642
+Jupiter 142984   1898.0
+<<U7>   <int64>  <float64>
+>>> f.assign['mass'](f['mass'] * .001)
+<Frame>
+<Index> diameter mass               <<U8>
+<Index>
+Earth   12756    0.00597
+Mars    6792     0.000642
+Jupiter 142984   1.8980000000000001
+<<U7>   <int64>  <float64>
+>>> f.assign.loc['Mars', 'mass'](0)
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    5.97
+Mars    6792     0.0
+Jupiter 142984   1898.0
+<<U7>   <int64>  <float64>
+>>> f.assign.loc['Mars':, 'diameter'](0)
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    5.97
+Mars    0        0.642
+Jupiter 0        1898.0
+<<U7>   <int64>  <float64>
+>>> f.assign.loc[f['diameter'] > 10000, 'mass'](0)
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    0.0
+Mars    6792     0.642
+Jupiter 142984   0.0
+<<U7>   <int64>  <float64>
+
+#end_frame_assign_a
+
+
+
+#start_series_drop_a
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> s
+<Index> <Series>
+Mercury 0
+Venus   0
+Earth   1
+Mars    2
+<<U7>   <int64>
+>>> s.drop[s < 1]
+<Index> <Series>
+Earth   1
+Mars    2
+<<U7>   <int64>
+>>> s.drop[['Mercury', 'Mars']]
+<Index> <Series>
+Venus   0
+Earth   1
+<<U7>   <int64>
+>>> s.drop.iloc[-2:]
+<Index> <Series>
+Mercury 0
+Venus   0
+<<U7>   <int64>
+
+#end_series_drop_a
+
+#start_frame_drop_a
+>>> f = sf.Frame(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f
+<Frame>
+<Index> diameter temperature <<U11>
+<Index>
+Earth   12756    15
+Jupiter 142984   -110
+Saturn  120536   -140
+<<U7>   <int64>  <int64>
+>>> f.drop['diameter']
+<Frame>
+<Index> temperature <<U11>
+<Index>
+Earth   15
+Jupiter -110
+Saturn  -140
+<<U7>   <int64>
+>>> f.drop.loc[f['temperature'] < 0]
+<Frame>
+<Index> diameter temperature <<U11>
+<Index>
+Earth   12756    15
+<<U7>   <int64>  <int64>
+>>> f.drop.iloc[-1, -1]
+<Frame>
+<Index> diameter <<U11>
+<Index>
+Earth   12756
+Jupiter 142984
+<<U7>   <int64>
+
+#end_frame_drop_a
+
+
+
+
+
+
+
+
+
+
 
 
 '''

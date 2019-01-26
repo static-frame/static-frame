@@ -33,6 +33,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
    api_structures
    api_creation
+   api_selection
    api_dict_like
    api_assignment
    api_index

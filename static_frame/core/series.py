@@ -67,11 +67,14 @@ class Series(metaclass=MetaOperatorDelegate):
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             dtype: DtypeSpecifier=None) -> 'Series':
-        '''Series construction from an iterator or generator of pairs, where the first value is the index and the second value is the value.
+        '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
         Args:
             pairs: Iterable of pairs of index, value.
             dtype: dtype or valid dtype specifier.
+
+        Returns:
+            :py:class:`static_frame.Series`
         '''
         index = []
         def values():
@@ -97,6 +100,9 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
             own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+
+        Returns:
+            :py:class:`static_frame.Series`
         '''
         if own_data:
             data = value.values
