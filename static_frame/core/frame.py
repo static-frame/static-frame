@@ -994,7 +994,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: bool=False,
             columns: bool=False) -> 'Frame':
         '''
-        Return a new Frame, where a hierarhical index or column (if deifined) is replaced with a flat, one-dimension index of tuples.
+        Return a new Frame, where an ``IndexHierarchy`` defined on the index or columns is replaced with a flat, one-dimension index of tuples.
         '''
 
         index = self._index.flat() if index else self._index.copy()
@@ -1012,7 +1012,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: tp.Hashable=None,
             columns: tp.Hashable=None) -> 'Frame':
         '''
-        Return a new Frame, adding a new root level to the index and/or columns.
+        Return a new Frame, adding a new root level to the ``IndexHierarchy`` defined on the index or columns.
         '''
 
         index = self._index.add_level(index) if index else self._index.copy()
@@ -1028,9 +1028,9 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def reindex_drop_level(self,
             index: int=0,
-            columns: int=0) -> 'Frmae':
+            columns: int=0) -> 'Frame':
         '''
-        Return a new Frame, dropping one or more leaf levels from the index and/or columns.
+        Return a new Frame, dropping one or more leaf levels from the ``IndexHierarchy`` defined on the index or columns.
         '''
 
         index = self._index.drop_level(index) if index else self._index.copy()
@@ -1169,7 +1169,11 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @property
     def dtypes(self) -> Series:
-        '''Return a Series of dytpes for each realizable column.
+        '''
+        Return a Series of dytpes for each realizable column.
+
+        Returns:
+            :py:class:`static_frame.Series`
         '''
         return Series(self._blocks.dtypes, index=self._columns.values)
 
@@ -1183,18 +1187,43 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @property
     def shape(self) -> tp.Tuple[int, int]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :py:class:`tp.Tuple[int]`
+        '''
         return self._blocks._shape
 
     @property
     def ndim(self) -> int:
+        '''
+        Return the number of dimensions, which for a `Frame` is always 2.
+
+        Returns:
+            :py:class:`int`
+        '''
         return self._blocks.ndim
 
     @property
     def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :py:class:`int`
+        '''
+
         return self._blocks.size
 
     @property
     def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy array.
+
+        Returns:
+            :py:class:`int`
+        '''
         return self._blocks.nbytes
 
     #---------------------------------------------------------------------------
@@ -1805,7 +1834,18 @@ class Frame(metaclass=MetaOperatorDelegate):
     def set_index_hierarchy(self,
             columns: GetItemKeyType,
             drop: bool=False
-            ):
+            ) -> 'Frame':
+        '''
+        Given an iterable of column labels, return a new ``Frame`` with those columns as an ``IndexHierarchy`` on the index.
+
+        Args:
+            columns: Iterable of column labels.
+            drop: Boolean to determine if selected columns should be removed from the data.
+
+        Returns:
+            :py:class:`IndexHierarchy`
+        '''
+
         column_iloc = self._columns.loc_to_iloc(columns)
 
         if drop:

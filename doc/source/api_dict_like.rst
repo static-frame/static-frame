@@ -28,7 +28,7 @@ Series
 .. automethod:: static_frame.Series.get
 
 
-Examples:
+Examples
 ................
 
 .. literalinclude:: api.py
@@ -57,7 +57,7 @@ Frame
 .. automethod:: static_frame.Frame.get
 
 
-Examples:
+Examples
 ................
 
 .. literalinclude:: api.py

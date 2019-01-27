@@ -51,6 +51,9 @@ class ILocMeta(type):
         return self(key)
 
 class ILoc(metaclass=ILocMeta):
+    '''A wrapper for embedding ``iloc`` specificiations within a single axis argument of a ``loc`` selection.
+    '''
+
     __slots__ = (
             'key',
             )

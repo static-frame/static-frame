@@ -3,10 +3,15 @@
 Structures
 ===============================
 
+
 Primary Containers
 ---------------------
 
-The primary components of the StaticFrame library are the 1D :py:class:`Series` and the 2D :py:class:`Frame` and :py:class:`FrameGO`.
+The primary components of the StaticFrame library are the one-dimensional :py:class:`static_frame.Series` and the two-dimensional :py:class:`static_frame.Frame` and :py:class:`static_frame.FrameGO`.
+
+While `Frame` and `Series` are immutable, the `FrameGO` permits a type of grow-only mutation, the addition of columns.
+
+
 
 .. autoclass:: static_frame.Series
 
@@ -59,6 +64,10 @@ Index mapping classes are used to map labels to ordinal positions on the :py:cla
 
     :py:class:`Index` and :py:class:`IndexGO` require that all labels are unique. Duplicated labels will raise an error in all cases. This deviates form Pandas, where Index objects permit duplicate labels. This also makes options like the ``verify_integrity`` argument to ``pd.Series.set_index`` and ``pd.DataFrame.set_index`` unnecessary.
 
+
+.. autoclass:: static_frame.IndexHierarchy
+
+.. autoclass:: static_frame.IndexHierarchyGO
 
 
 Utility Objects

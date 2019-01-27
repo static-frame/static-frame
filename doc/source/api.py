@@ -9,9 +9,9 @@
 
 >>> sf.Series(dict(Mercury=167, Neptune=-200))
 <Index> <Series>
-Mercury 167.0
-Neptune -200.0
-<<U7>   <float64>
+Mercury 167
+Neptune -200
+<<U7>   <int64>
 
 >>> sf.Series((167, -200), index=('Mercury', 'Neptune'))
 <Index> <Series>
@@ -311,9 +311,9 @@ Saturn  9.582219251336898
 >>> s1 * s2
 <Index> <Series>
 Earth   nan
-Mars    4
+Mars    4.0
 Mercury nan
-<<U7>   <object>
+<<U7>   <float64>
 
 >>> s1 == s2
 <Index> <Series>
@@ -443,11 +443,11 @@ NE       13
 
 >>> s.reindex(('Venus', 'Earth', 'Mars', 'Neptune'))
 <Index> <Series>
-Venus   0
+Venus   0.0
 Earth   nan
 Mars    nan
-Neptune 13
-<<U7>   <object>
+Neptune 13.0
+<<U7>   <float64>
 
 #end_series_reindex_a
 
@@ -895,7 +895,168 @@ Jupiter 142984
 
 
 
+#start_series_shape_a
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s
+<Index> <Series>
+Earth   1
+Mars    2
+Jupiter 67
+Saturn  62
+Uranus  27
+Neptune 14
+<<U7>   <int64>
+>>> s.shape
+(6,)
+>>> s.ndim
+1
+>>> s.size
+6
+>>> s.nbytes
+48
+>>> s.dtype
+dtype('int64')
 
+#end_series_shape_a
+
+
+#start_frame_shape_a
+>>> f = sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f
+<Frame>
+<Index> diameter mass      <<U8>
+<Index>
+Earth   12756    5.97
+Jupiter 142984   1898.0
+Saturn  120536   568.0
+<<U7>   <int64>  <float64>
+>>> f.shape
+(3, 2)
+>>> f.ndim
+2
+>>> f.size
+6
+>>> f.nbytes
+48
+>>> f.dtypes
+<Index>  <Series>
+diameter int64
+mass     float64
+<<U8>    <object>
+
+#end_frame_shape_a
+
+
+
+#start_series_selection_a
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s
+<Index> <Series>
+Earth   1
+Mars    2
+Jupiter 67
+Saturn  62
+Uranus  27
+Neptune 14
+<<U7>   <int64>
+
+>>> s['Mars']
+2
+>>> s['Mars':]
+<Index> <Series>
+Mars    2
+Jupiter 67
+Saturn  62
+Uranus  27
+Neptune 14
+<<U7>   <int64>
+>>> s[['Mars', 'Saturn']]
+<Index> <Series>
+Mars    2
+Saturn  62
+<<U7>   <int64>
+>>> s[s > 60]
+<Index> <Series>
+Jupiter 67
+Saturn  62
+<<U7>   <int64>
+
+>>> s.iloc[-2:]
+<Index> <Series>
+Uranus  27
+Neptune 14
+<<U7>   <int64>
+
+#end_series_selection_a
+
+
+
+#start_frame_selection_a
+>>> index = ('Mercury', 'Venus', 'Earth', 'Mars')
+>>> columns = ('diameter', 'gravity', 'temperature')
+>>> records = ((4879, 3.7, 167), (12104, 8.9, 464), (12756, 9.8, 15), (6792, 3.7, -65))
+>>> f = sf.Frame.from_records(records, index=index, columns=columns)
+>>> f
+<Frame>
+<Index> diameter gravity   temperature <<U11>
+<Index>
+Mercury 4879     3.7       167
+Venus   12104    8.9       464
+Earth   12756    9.8       15
+Mars    6792     3.7       -65
+<<U7>   <int64>  <float64> <int64>
+
+>>> f['gravity']
+<Index> <Series>
+Mercury 3.7
+Venus   8.9
+Earth   9.8
+Mars    3.7
+<<U7>   <float64>
+>>> f['gravity':]
+<Frame>
+<Index> gravity   temperature <<U11>
+<Index>
+Mercury 3.7       167
+Venus   8.9       464
+Earth   9.8       15
+Mars    3.7       -65
+<<U7>   <float64> <int64>
+>>> f[['diameter', 'temperature']]
+<Frame>
+<Index> diameter temperature <<U11>
+<Index>
+Mercury 4879     167
+Venus   12104    464
+Earth   12756    15
+Mars    6792     -65
+<<U7>   <int64>  <int64>
+
+>>> f.loc['Earth', 'temperature']
+15
+>>> f.loc['Earth':, 'temperature']
+<Index> <Series>
+Earth   15
+Mars    -65
+<<U7>   <int64>
+>>> f.loc[f['temperature'] > 100, 'diameter']
+<Index> <Series>
+Mercury 4879
+Venus   12104
+<<U7>   <int64>
+>>> f.loc[sf.ILoc[-1], ['gravity', 'temperature']]
+<Index>     <Series>
+gravity     3.7
+temperature -65.0
+<<U11>      <float64>
+
+>>> f.iloc[-2:, -1]
+<Index> <Series>
+Earth   15
+Mars    -65
+<<U7>   <int64>
+
+#end_frame_selection_a
 
 
 

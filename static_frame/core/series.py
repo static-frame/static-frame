@@ -360,19 +360,19 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def reindex_flat(self):
         '''
-        Return a new Series, where a hierarhical index (if deifined) is replaced with a flat, one-dimension index of tuples.
+        Return a new Series, where a ``IndexHierarchy`` (if deifined) is replaced with a flat, one-dimension index of tuples.
         '''
         return self.__class__(self.values, index=self._index.flat())
 
     def reindex_add_level(self, level: tp.Hashable):
         '''
-        Return a new Series, adding a new root level to the index.
+        Return a new Series, adding a new root level to an ``IndexHierarchy``.
         '''
         return self.__class__(self.values, index=self._index.add_level(level))
 
     def reindex_drop_level(self, count: int=1):
         '''
-        Return a new Series, dropping one or more leaf levels from the index.
+        Return a new Series, dropping one or more leaf levels from an ``IndexHierarchy``.
         '''
         return self.__class__(self.values, index=self._index.drop_level(count))
 
@@ -516,23 +516,53 @@ class Series(metaclass=MetaOperatorDelegate):
         return mloc(self.values)
 
     @property
-    def dtype(self):
+    def dtype(self) -> np.dtype:
+        '''
+        Return the dtype of the underlying NumPy array.
+
+        Returns:
+            :py:class:`numpy.dtype`
+        '''
         return self.values.dtype
 
     @property
-    def shape(self):
+    def shape(self) -> tp.Tuple[int]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :py:class:`tp.Tuple[int]`
+        '''
         return self.values.shape
 
     @property
-    def ndim(self):
+    def ndim(self) -> int:
+        '''
+        Return the number of dimensions, which for a `Series` is always 1.
+
+        Returns:
+            :py:class:`int`
+        '''
         return self.values.ndim
 
     @property
-    def size(self):
+    def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :py:class:`int`
+        '''
         return self.values.size
 
     @property
-    def nbytes(self):
+    def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy array.
+
+        Returns:
+            :py:class:`int`
+        '''
         return self.values.nbytes
 
     #---------------------------------------------------------------------------

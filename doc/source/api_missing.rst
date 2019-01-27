@@ -2,7 +2,7 @@
 Missing Value Handling
 ===============================
 
-:py:class:`Series` and :py:class:`Frame` provide covnient funcions for finding, dropping, and replacing missing values. In the tradition of Pandas, NaN and None values are treated as both missing, regardless of the dtype in which they are contained.
+:py:class:`static_frame.Series` and :py:class:`static_frame.Frame` provide convenient funcions for finding, dropping, and replacing missing values. In the tradition of Pandas, NaN and None values are treated as both missing, regardless of the dtype in which they are contained.
 
 
 Series

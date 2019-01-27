@@ -25,7 +25,7 @@ class IterNodeType(Enum):
 
 class IterNodeDelegate:
     '''
-    Delegate returned from :py:class:`IterNode`, providing iteration as well as a family of apply methods.
+    Delegate returned from :py:class:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
     '''
 
     __slots__ = (
@@ -91,7 +91,7 @@ class IterNodeDelegate:
         Generator that applies function to each element iterated and yields the pair of element and the result.
 
         Args:
-            func: A function or a mapping object that defines __getitem__ and __contains__. If a mpping is given and a value is not found in the mapping, the value is returned unchanged (this deviates from Pandas Series.map, which inserts NaNs)
+            func: A function or a mapping object that defines ``__getitem__`` and ``__contains__``. If a mpping is given and a value is not found in the mapping, the value is returned unchanged (this deviates from Pandas ``Series.map``, which inserts NaNs)
         '''
         condition = None
         if not callable(func):
@@ -129,12 +129,12 @@ class IterNodeDelegate:
     def apply(self,
             func: CallableOrMapping,
             dtype=None
-            ) -> tp.Union['static_frame.Series', 'static_frame.Frame']:
+            ):
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance.
 
         Args:
-            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
+            func: A function, or a mapping object that defines ``__getitem__``. If a mapping is given, all values must be found in the mapping.
             dtype: Type used to create the returned array.
         '''
         return self._apply_constructor(
@@ -148,7 +148,7 @@ class IterNodeDelegate:
             max_workers: tp.Optional[int]=None,
             chunksize: int=1,
             use_threads: bool=False
-            ) -> tp.Union['static_frame.Series', 'static_frame.Frame']:
+            ):
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
 
@@ -178,7 +178,7 @@ class IterNodeDelegate:
 
 
 class IterNode:
-    '''Interface to a type of iteration on :py:class:`Series` and :py:class:`Frame`.
+    '''Interface to a type of iteration on :py:class:`static_frame.Series` and :py:class:`static_frame.Frame`.
     '''
     # '''Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
     # '''
@@ -192,7 +192,7 @@ class IterNode:
             )
 
     def __init__(self, *,
-            container: tp.Union['Series', 'Frame'],
+            container, # tp.Union['static_frame.Series', 'static_frame.Frame']
             function_values,
             function_items,
             yield_type: IterNodeType,

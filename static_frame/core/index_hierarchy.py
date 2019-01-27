@@ -45,7 +45,9 @@ class HLocMeta(type):
         return self(key)
 
 class HLoc(metaclass=HLocMeta):
-    '''A container of hiearchical keys, that implements NULL slices or all lower dimensions that are not defined by construction.
+    '''A wrapper for embedding hierarchical specificiations for :py:class:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
+
+    Implemented as a container of hiearchical keys that defiines NULL slices for all lower dimensions that are not defined at construction.
     '''
 
     __slots__ = (
@@ -426,7 +428,9 @@ class IndexLevelGO(IndexLevel):
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(metaclass=MetaOperatorDelegate):
-
+    '''
+    A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
+    '''
     __slots__ = (
             '_levels', # IndexLevel
             '_labels',
@@ -447,6 +451,13 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_product(cls, *levels) -> 'IndexHierarchy': # tp.Iterable[tp.Hashable]
+        '''
+        Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
+
+        Returns:
+            :py:class:`static_frame.IndexHierarchy`
+
+        '''
         indices = [] # store in a list, where index is depth
         for lvl in levels:
             if not isinstance(lvl, Index):
@@ -512,7 +523,10 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             tree
             ) -> 'IndexHierarchy':
         '''
-        Convert a dictionary of either iterables or dictionaries into a IndexHierarchy.
+        Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
+
+        Returns:
+            :py:class:`static_frame.IndexHierarchy`
         '''
         return cls(cls._tree_to_index_level(tree))
 
@@ -521,10 +535,13 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
     def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':
         '''
-        From an iterable of labels, each constituting the components of each label, construct an index hierarcy.
+        Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
         Args:
             labels: an iterator or generator of tuples.
+
+        Returns:
+            :py:class:`static_frame.IndexHierarchy`
         '''
         labels_iter = iter(labels)
         first = next(labels_iter)
@@ -965,6 +982,10 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         return self.__class__(levels)
 
 class IndexHierarchyGO(IndexHierarchy):
+
+    '''
+    A hierarchy of :py:class:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
+    '''
 
     STATIC = False
     _IMMUTABLE_CONSTRUCTOR = IndexHierarchy

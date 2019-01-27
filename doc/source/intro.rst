@@ -14,14 +14,8 @@ The StaticFrame library consists of the Series and Frame, immutable data structu
     https://github.com/InvestmentSystems/static-frame/issues
 
 
+StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due to the immutable data model) or by choice (offering more uniform, less redundant, and more explicit interfaces). Further, as StaticFrame does not support in-place mutation, architectures that made significant use of mutability in Pandas will require refactoring.
 
-What StaticFrame Is and Is Not
-***********************************
-
-
-StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due the immutable data model) or by choice (to offer more uniform, less redundant, and more explicit interfaces). Further, as StaticFrame does not support in-place mutation, approaches used in Pandas will have to be refactored for StaticFrame. Certain conveniences in Pandas are not supported for the sake of having "one ... obvious way to do it" [#]_ or to achieve greater consistency.
-
-StaticFrame requires modern Python (3.5+) and modern NumPy (1.14.1+). There are no plans to support older versions. Modern features of Python, such as type-hints, are used throughout the code, and provide benefits for users using type-hint-aware IDEs.
 
 StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency). The core library is less than 10,000 lines of code, less than 5% the size of the Pandas code base [#]_.
 
@@ -34,7 +28,7 @@ StaticFrame does not implement its own types or numeric computation routines, re
 Immutability
 ***********************************
 
-The :py:class:`Series` and :py:class:`Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
+The :py:class:`static_frame.Series` and :py:class:`static_frame.Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
 .. literalinclude:: intro.py
    :language: python
@@ -42,7 +36,7 @@ The :py:class:`Series` and :py:class:`Frame` store data in immutable NumPy array
    :end-before: end_immutability
 
 
-To mutate values in a :py:class:`Series` or :py:class:`Frame`, a copy must be made. Convenient functional interfaces to assign to a copy are provided, using conventions familiar to NumPy and Pandas users.
+To mutate values in a ``Series`` or ``Frame``, a copy must be made. Convenient functional interfaces to assign to a copy are provided, using conventions familiar to NumPy and Pandas users.
 
 
 .. literalinclude:: intro.py
@@ -51,9 +45,9 @@ To mutate values in a :py:class:`Series` or :py:class:`Frame`, a copy must be ma
    :end-before: end_assign
 
 
-Immutable data has the overwhelming benefit of providing the confidence that a client of a :py:class:`Series` or :py:class:`Frame` cannot mutate its data. This removes the need for many unneccesary copies, and forces clients to only make copies when absolutely necessary.
+Immutable data has the overwhelming benefit of providing the confidence that a client of a ``Series`` or ``Frame`` cannot mutate its data. This removes the need for many unnecessary copies, and forces clients to only make copies when absolutely necessary.
 
-There is no guarantee that using immutable data will produce correct code or more resilliant and robust libraries. It is true, however, that using immutable data removes countless opportunites for introducing serious flaws in data processing routines and libraries.
+There is no guarantee that using immutable data will produce correct code or more resilient and robust libraries. It is true, however, that using immutable data removes countless opportunities for introducing flaws in data processing routines and libraries.
 
 
 
@@ -79,7 +73,6 @@ These members of the Investment Systems team have contributed greatly to the des
 - Quang Vu
 
 
-.. [#] The Zen of Python: https://www.python.org/dev/peps/pep-0020/
 
 .. [#] The Pandas 2.0 Design Docs state that the Pandas codebase has over 200,000 lines of code: https://pandas-dev.github.io/pandas2/goals.html
 

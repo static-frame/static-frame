@@ -71,3 +71,19 @@ Frame
 
 
 .. automethod:: static_frame.Frame.from_pandas
+
+
+
+
+
+Index Creation
+===============================
+
+While indices are often specified with their data in container creation, in some cases explicitly creating indices in advance of the data is practical.
+
+
+.. automethod:: static_frame.IndexHierarchy.from_product
+
+.. automethod:: static_frame.IndexHierarchy.from_tree
+
+.. automethod:: static_frame.IndexHierarchy.from_labels

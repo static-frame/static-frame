@@ -120,7 +120,7 @@ Axis iterators are available on :py:class:`Frame` to support iterating on rows o
 
 .. py:method:: Frame.iter_series()
 
-    Iterate over Series of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over ``Series`` of ``Frame`` axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
 
 .. literalinclude:: api.py
    :language: python
@@ -130,7 +130,7 @@ Axis iterators are available on :py:class:`Frame` to support iterating on rows o
 
 .. py:method:: Frame.iter_series_items()
 
-    Iterate over pairs of label, Series, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over pairs of label, ``Series``, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
 
 .. literalinclude:: api.py
    :language: python
@@ -200,7 +200,7 @@ Frame
 Function Application to Iterators
 =============================================
 
-:py:class:`Frame` and :py:class:`Series` :py:class:`IterNode` attributes return, when called,  :py:class:`IterNodeDelegate` instances. These instances are prepared for iteation via :py:meth:`IterNodeDelegate.__iter__`, and expose a number of methods for function application.
+:py:class:`static_frame.Frame` and :py:class:`static_frame.Series` :py:class:`static_frame.IterNode` attributes return, when called,  :py:class:`static_frame.IterNodeDelegate` instances. These instances are prepared for iteration via :py:meth:`static_frame.IterNodeDelegate.__iter__`, and expose a number of methods for function application.
 
 .. automethod:: static_frame.IterNodeDelegate.__iter__
 
