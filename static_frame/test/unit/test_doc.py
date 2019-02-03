@@ -1168,6 +1168,8 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
 
+        doctest_str = api_example_str # TEMP
+
         sample = doctest.DocTestParser().get_doctest(
                 doctest_str,
                 globs={},
