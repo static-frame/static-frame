@@ -75,12 +75,12 @@ Binary Operators
 Examples
 ..................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_operators_a
    :end-before: end_series_operators_a
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_operators_b
    :end-before: end_series_operators_b
@@ -129,7 +129,7 @@ Binary Operators
 Examples
 ..................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_operators_a
    :end-before: end_frame_operators_a

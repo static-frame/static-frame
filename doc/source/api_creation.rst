@@ -10,7 +10,7 @@ Series
 
 .. automethod:: static_frame.Series.from_items
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_from_items_a
    :end-before: end_series_from_items_a
@@ -23,7 +23,7 @@ Frame
 
 .. automethod:: static_frame.Frame.from_items
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_from_items_a
    :end-before: end_frame_from_items_a
@@ -31,7 +31,7 @@ Frame
 
 .. automethod:: static_frame.Frame.from_records
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_from_records_a
    :end-before: end_frame_from_records_a
@@ -39,7 +39,7 @@ Frame
 
 .. automethod:: static_frame.Frame.from_structured_array
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_from_structured_array_a
    :end-before: end_frame_from_structured_array_a
@@ -47,7 +47,7 @@ Frame
 
 .. automethod:: static_frame.Frame.from_concat
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_from_concat_a
    :end-before: end_frame_from_concat_a
@@ -55,7 +55,7 @@ Frame
 
 .. automethod:: static_frame.Frame.from_csv
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_from_csv_a
    :end-before: end_frame_from_csv_a

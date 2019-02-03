@@ -30,7 +30,7 @@ Immutability
 
 The :py:class:`static_frame.Series` and :py:class:`static_frame.Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
-.. literalinclude:: intro.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_immutability
    :end-before: end_immutability
@@ -39,7 +39,7 @@ The :py:class:`static_frame.Series` and :py:class:`static_frame.Frame` store dat
 To mutate values in a ``Series`` or ``Frame``, a copy must be made. Convenient functional interfaces to assign to a copy are provided, using conventions familiar to NumPy and Pandas users.
 
 
-.. literalinclude:: intro.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_assign
    :end-before: end_assign
@@ -51,7 +51,7 @@ There is no guarantee that using immutable data will produce correct code or mor
 
 
 
-History of StaticFrame
+History
 ***********************************
 
 The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.

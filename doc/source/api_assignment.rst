@@ -27,7 +27,7 @@ Series
     :returns: :py:class:`static_frame.Series`
 
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_assign_a
    :end-before: end_series_assign_a
@@ -49,7 +49,7 @@ Frame
     :returns: :py:class:`static_frame.Frame`
 
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_assign_a
    :end-before: end_frame_assign_a
@@ -77,7 +77,7 @@ Series
     :returns: :py:class:`static_frame.Series`
 
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_drop_a
    :end-before: end_series_drop_a
@@ -100,7 +100,7 @@ Frame
 
 
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_drop_a
    :end-before: end_frame_drop_a

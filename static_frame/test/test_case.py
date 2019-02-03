@@ -1,5 +1,6 @@
 
 import unittest
+import os
 from itertools import zip_longest
 
 
@@ -15,6 +16,16 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         pass
+
+    @staticmethod
+    def get_test_input(file_name: str):
+        # input dir should be a sibling of this module
+        fp_module = os.path.join(os.getcwd(), __file__)
+        fp = os.path.join(os.path.dirname(fp_module), 'input', file_name)
+        if not os.path.isfile(fp):
+            raise RuntimeError('file not found', fp)
+        return fp
+
 
     def assertTypeBlocksArrayEqual(self, tb: TypeBlocks, match, match_dtype=None):
         '''

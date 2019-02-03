@@ -5,7 +5,7 @@ Iterators
 Both :py:class:`Series` and :py:class:`Frame` offer a variety of iterators (all generators) for flexible transversal of axis and values. In addition, all iterators have a family of apply methods for applying functions to the values iterated. In all cases, alternate "items" versions of iterators are provided; these methods return pairs of (index, value).
 
 
-.. NOTE: Iterator functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`IterNodeDelegate` instances. See below for documentation of :py:class:`IterNodeDelegate` functions for function application on iterables.
+.. NOTE: Iterator functionality is implemented with instances of :py:class:`IterNode` that, when called, return :py:class:`static_frame.IterNodeDelegate` instances. See below for documentation of :py:class:`static_frame.IterNodeDelegate` functions for function application on iterables.
 
 
 Element Iterators
@@ -16,20 +16,28 @@ Series
 ........
 
 .. py:method:: Series.iter_element()
+.. py:method:: Series.iter_element().apply(func, dtype)
+.. py:method:: Series.iter_element().apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_element().apply_iter(func)
+.. py:method:: Series.iter_element().apply_iter_items(func)
 
-    Iterate over the values of the Series, or expose :py:class:`IterNodeDelegate` for function application.
+    Iterate over the values of the Series, or expose :py:class:`static_frame.IterNodeDelegate` for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_iter_element_a
    :end-before: end_series_iter_element_a
 
 
 .. py:method:: Series.iter_element_items()
+.. py:method:: Series.iter_element_items().apply(func)
+.. py:method:: Series.iter_element_items().apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_element_items().apply_iter(func)
+.. py:method:: Series.iter_element_items().apply_iter_items(func)
 
-    Iterate over pairs of index and values of the Series, or expose :py:class:`IterNodeDelegate` for function application.
+    Iterate over pairs of index and values of the Series, or expose :py:class:`static_frame.IterNodeDelegate` for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_iter_element_items_a
    :end-before: end_series_iter_element_items_a
@@ -46,20 +54,28 @@ Frame
 ............
 
 .. py:method:: Frame.iter_element()
+.. py:method:: Frame.iter_element().apply(func)
+.. py:method:: Frame.iter_element().apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_element().apply_iter(func)
+.. py:method:: Frame.iter_element().apply_iter_items(func)
 
-    Iterate over the values of the Frame, or expose :py:class:`IterNodeDelegate` for function application.
+    Iterate over the values of the Frame, or expose :py:class:`static_frame.IterNodeDelegate` for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_element_a
    :end-before: end_frame_iter_element_a
 
 
 .. py:method:: Frame.iter_element_items()
+.. py:method:: Frame.iter_element_items().apply(func)
+.. py:method:: Frame.iter_element_items().apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_element_items().apply_iter(func)
+.. py:method:: Frame.iter_element_items().apply_iter_items(func)
 
-    Iterate over pairs of index / column coordinates and values of the Frame, or expose :py:class:`IterNodeDelegate` for function application.
+    Iterate over pairs of index / column coordinates and values of the Frame, or expose :py:class:`static_frame.IterNodeDelegate` for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_element_items_a
    :end-before: end_frame_iter_element_items_a
@@ -78,61 +94,85 @@ Axis Iterators
 Axis iterators are available on :py:class:`Frame` to support iterating on rows or columns as NumPy arrays, named tuples, or :py:class:`Series`. Alternative items functions are also available to pair values with the appropriate axis label (either columns or index).
 
 
-.. py:method:: Frame.iter_array()
+.. py:method:: Frame.iter_array(axis)
+.. py:method:: Frame.iter_array(axis).apply(func)
+.. py:method:: Frame.iter_array(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_array(axis).apply_iter(func)
+.. py:method:: Frame.iter_array(axis).apply_iter_items(func)
 
-    Iterate over NumPy arrays of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over NumPy arrays of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_array_a
    :end-before: end_frame_iter_array_a
 
 
-.. py:method:: Frame.iter_array_items()
+.. py:method:: Frame.iter_array_items(axis)
+.. py:method:: Frame.iter_array_items(axis).apply(func)
+.. py:method:: Frame.iter_array_items(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_array_items(axis).apply_iter(func)
+.. py:method:: Frame.iter_array_items(axis).apply_iter_items(func)
 
-    Iterate over pairs of label, NumPy array, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over pairs of label, NumPy array, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_array_items_a
    :end-before: end_frame_iter_array_items_a
 
 
-.. py:method:: Frame.iter_tuple()
+.. py:method:: Frame.iter_tuple(axis)
+.. py:method:: Frame.iter_tuple(axis).apply(func)
+.. py:method:: Frame.iter_tuple(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_tuple(axis).apply_iter(func)
+.. py:method:: Frame.iter_tuple(axis).apply_iter_items(func)
 
-    Iterate over NamedTuples of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over NamedTuples of Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_tuple_a
    :end-before: end_frame_iter_tuple_a
 
 
-.. py:method:: Frame.iter_tuple_items()
+.. py:method:: Frame.iter_tuple_items(axis)
+.. py:method:: Frame.iter_tuple_items(axis).apply(func)
+.. py:method:: Frame.iter_tuple_items(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_tuple_items(axis).apply_iter(func)
+.. py:method:: Frame.iter_tuple_items(axis).apply_iter_items(func)
 
-    Iterate over pairs of label, NamedTuple, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over pairs of label, NamedTuple, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_tuple_items_a
    :end-before: end_frame_iter_tuple_items_a
 
 
-.. py:method:: Frame.iter_series()
+.. py:method:: Frame.iter_series(axis)
+.. py:method:: Frame.iter_series(axis).apply(func)
+.. py:method:: Frame.iter_series(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_series(axis).apply_iter(func)
+.. py:method:: Frame.iter_series(axis).apply_iter_items(func)
 
-    Iterate over ``Series`` of ``Frame`` axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over ``Series`` of ``Frame`` axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_series_a
    :end-before: end_frame_iter_series_a
 
 
-.. py:method:: Frame.iter_series_items()
+.. py:method:: Frame.iter_series_items(axis)
+.. py:method:: Frame.iter_series_items(axis).apply(func)
+.. py:method:: Frame.iter_series_items(axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_series_items(axis).apply_iter(func)
+.. py:method:: Frame.iter_series_items(axis).apply_iter_items(func)
 
-    Iterate over pairs of label, ``Series``, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`IterNodeDelegate` exposes interfaces for function application.
+    Iterate over pairs of label, ``Series``, per Frame axis, where axis 0 iterates column data and axis 1 iterates row data. The returned :py:class:`static_frame.IterNodeDelegate` exposes interfaces for function application.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_series_items_a
    :end-before: end_frame_iter_series_items_a
@@ -153,44 +193,60 @@ Group Iterators
 Series
 ........
 
-.. py:method:: Series.iter_group()
+.. py:method:: Series.iter_group(key)
+.. py:method:: Series.iter_group(key).apply(func)
+.. py:method:: Series.iter_group(key).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_group(key).apply_iter(func)
+.. py:method:: Series.iter_group(key).apply_iter_items(func)
 
     Iterator of Series formed from groups of unique values in a Series.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_iter_group_a
    :end-before: end_series_iter_group_a
 
 
-.. py:method:: Series.iter_group_items()
+.. py:method:: Series.iter_group_items(key)
+.. py:method:: Series.iter_group_tiems(key).apply(func)
+.. py:method:: Series.iter_group_items(key).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_group_items(key).apply_iter(func)
+.. py:method:: Series.iter_group_items(key).apply_iter_items(func)
 
     Iterator of pairs of group value and the Series formed from groups of unique values in a Series.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_iter_group_items_a
    :end-before: end_series_iter_group_items_a
 
 
-
 Frame
 ............
 
-.. py:method:: Frame.iter_group(key, axis=0)
+.. py:method:: Frame.iter_group(key, axis)
+.. py:method:: Frame.iter_group(key, axis).apply(func)
+.. py:method:: Frame.iter_group(key, axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_group(key, axis).apply_iter(func)
+.. py:method:: Frame.iter_group(key, axis).apply_iter_items(func)
 
     Iterate over groups (as Frames) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_group_a
    :end-before: end_frame_iter_group_a
 
-.. py:method:: Frame.iter_group_items(key, axis=0)
+
+.. py:method:: Frame.iter_group_items(key, axis)
+.. py:method:: Frame.iter_group_items(key, axis).apply(func)
+.. py:method:: Frame.iter_group_items(key, axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_group_items(key, axis).apply_iter(func)
+.. py:method:: Frame.iter_group_items(key, axis).apply_iter_items(func)
 
     Iterator of pairs of group value and groups (as Frames) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_group_items_a
    :end-before: end_frame_iter_group_items_a
@@ -201,6 +257,11 @@ Function Application to Iterators
 =============================================
 
 :py:class:`static_frame.Frame` and :py:class:`static_frame.Series` :py:class:`static_frame.IterNode` attributes return, when called,  :py:class:`static_frame.IterNodeDelegate` instances. These instances are prepared for iteration via :py:meth:`static_frame.IterNodeDelegate.__iter__`, and expose a number of methods for function application.
+
+
+.. autoclass:: static_frame.IterNode
+
+.. autoclass:: static_frame.IterNodeDelegate
 
 .. automethod:: static_frame.IterNodeDelegate.__iter__
 

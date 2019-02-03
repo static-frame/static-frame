@@ -2049,7 +2049,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        f.write(self._index._labels[row_idx] + sep)
+                        f.write(to_str(self._index._labels[row_idx]) + sep)
                     row_current_idx = row_idx
                 f.write(to_str(element))
                 if col_idx != col_idx_last:

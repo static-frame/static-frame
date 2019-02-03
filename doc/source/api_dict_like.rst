@@ -31,7 +31,7 @@ Series
 Examples
 ................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_dict_like_a
    :end-before: end_series_dict_like_a
@@ -60,7 +60,7 @@ Frame
 Examples
 ................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_dict_like_a
    :end-before: end_frame_dict_like_a

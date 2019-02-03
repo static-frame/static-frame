@@ -27,7 +27,7 @@ Series
 Examples
 ................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_shape_a
    :end-before: end_series_shape_a
@@ -51,7 +51,7 @@ Frame
 Examples
 ................
 
-.. literalinclude:: api.py
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_shape_a
    :end-before: end_frame_shape_a
