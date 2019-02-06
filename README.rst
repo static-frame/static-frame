@@ -59,7 +59,12 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 4       1       5       https://via.place... natus nisi omnis ... https://via.place...
 <int64> <int64> <int64> <<U38>               <<U86>               <<U38>
 
-(Note that the Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading CSV files into StaticFrame.)
+.. note::
+
+    The Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading CSV files into StaticFrame.
+
+    For more information on Series and Frame constructors, see `Container Import and Creation <https://static-frame.readthedocs.io/en/latest/api_creation.html>`_.
+
 
 As with a NumPy array, the ``Frame`` exposes common attributes of shape and size.
 
