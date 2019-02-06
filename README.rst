@@ -61,9 +61,9 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 
 .. note::
 
-    The Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading CSV files into StaticFrame.
+    The Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading CSV files.
 
-    For more information on Series and Frame constructors, see `Container Import and Creation <https://static-frame.readthedocs.io/en/latest/api_creation.html>`_.
+    For more information on Series and Frame constructors, see `Container Import & Creation <https://static-frame.readthedocs.io/en/latest/api_creation.html>`_.
 
 
 As with a NumPy array, the ``Frame`` exposes common attributes of shape and size.
@@ -111,6 +111,9 @@ array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
 >>> frame['id'].isna().any()
 False
 
+.. note::
+
+    For more information on Series and Frame utility functions, see `Transformations & Utilities <https://static-frame.readthedocs.io/en/latest/api_transform.html>`_.
 
 StaticFrame interfaces for extracting data will be familiar to Pandas users, though with a number of interface refinements to remove redundancies and increase consistency. On a ``Frame``, ``__getitem__`` is (exclusively) a column selector; ``loc`` and ``iloc`` are (with one argument) row selectors or (with two arguments) row and column selectors.
 
@@ -220,6 +223,11 @@ Traceback (most recent call last):
 ValueError: assignment destination is read-only
 
 
+.. note::
+
+    For more information on Series and Frame selection interfaces, see `Selection <https://static-frame.readthedocs.io/en/latest/api_selection.html>`_.
+
+
 Instead of in-place assignment, an ``assign`` interface object (similar to the ``Frame.astype`` interface shown above) is provided to expose ``__getitem__``, ``loc``, and ``iloc`` interfaces that, when called with an argument, return a new object with the desired changes. These interfaces expose the full range of expressive assignment-like idioms found in Pandas and NumPy. Arguments can be single values, or ``Series`` and ``Frame`` objects, where assignment will align on the Index.
 
 >>> frame_new = frame.assign.loc[4854, 'albumId'](200)
@@ -254,6 +262,9 @@ Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by dropin
 8       1       9       qui eius qui aute...
 <int64> <int64> <int64> <<U86>
 
+.. note::
+
+    For more information on Series and Frame interfaces, see `Assignment / Dropping / Masking <https://static-frame.readthedocs.io/en/latest/api_assignment.html>`_.
 
 Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_series()``) are yielded. For example, we can iterate over each row of a ``Frame`` and yield a corresponding ``Series``:
 
@@ -310,6 +321,9 @@ Function application to a group ``Frame`` can be used to produce a ``Series`` in
 5       50
 <int64> <int64>
 
+.. note::
+
+    For more information on Series and Frame iterators and tools for function application, see `Iterators <https://static-frame.readthedocs.io/en/latest/api_iter.html>`_.
 
 If performing calculations on a ``Frame`` that result in a ``Series`` with a compatible ``Index``, a grow-only ``FrameGO`` can be used to add ``Series`` as new columns. This limited form of mutation, i.e., only the addition of columns, provides a convenient compromise between mutability and immutability. (Underlying NumPy array data always remains immutable.)
 
@@ -389,6 +403,10 @@ Just as a hierarchical selection can reside in a ``loc`` expression with an ``HL
 3 2              https://via.place...
                  <<U38>
 
+
+.. note::
+
+    For more information on Index and IndexHierarchy, see `Index Manipulation <https://static-frame.readthedocs.io/en/latest/api_index.html>`_.
 
 While StaticFrame offers many of the features of Pandas and similar data structures, exporting directly to NumPy arrays (via the ``.values`` attribute) or to Pandas is supported for functionality not found in StaticFrame or compatibility with other libraries. For example, a ``Frame`` can export to a Pandas ``DataFrame`` with ``Frame.to_pandas()``.
 

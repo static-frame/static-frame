@@ -76,3 +76,7 @@ Frame
 
 .. automethod:: static_frame.Frame.reindex_drop_level
 
+
+.. automethod:: static_frame.Frame.set_index
+
+.. automethod:: static_frame.Frame.set_index_hierarchy

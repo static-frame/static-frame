@@ -40,7 +40,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_index
    api_iter
    api_missing
-   api_sort_transform
+   api_sort
+   api_transform
    api_util_mls
    api_operators
    api_export
