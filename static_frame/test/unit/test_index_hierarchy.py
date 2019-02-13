@@ -420,6 +420,48 @@ class TestUnit(TestCase):
         self.assertTrue(('I', 'A') in ih)
 
 
+    def test_hierarchy_iter_a(self):
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2)), ('B', (1, 2))
+                        ])
+                ),
+                ])
+
+        ih = IndexHierarchy.from_tree(tree)
+
+        # this iterates over numpy arrays, which can be used with contains
+        self.assertEqual([k in ih for k in ih],
+                [True, True, True, True, True, True, True, True]
+                )
+
+
+    def test_hierarchy_keys_a(self):
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2)), ('B', (1, 2))
+                        ])
+                ),
+                ])
+
+        ih = IndexHierarchy.from_tree(tree)
+
+        # NOTE: for now, __iter__ return arrays, so we have convert to a tuple
+        self.assertEqual([tuple(k) in ih.keys() for k in ih],
+                [True, True, True, True, True, True, True, True]
+                )
+
+
     def test_hierarchy_display_a(self):
         OD = OrderedDict
         tree = OD([

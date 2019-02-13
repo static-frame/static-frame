@@ -209,7 +209,6 @@ class Series(metaclass=MetaOperatorDelegate):
         if len(self.values) != shape:
             raise Exception('values and index do not match length')
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''
@@ -218,7 +217,6 @@ class Series(metaclass=MetaOperatorDelegate):
         for key, value in state[1].items():
             setattr(self, key, value)
         self.values.flags.writeable = False
-
 
     #---------------------------------------------------------------------------
     # interfaces

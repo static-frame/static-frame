@@ -1,6 +1,6 @@
 import typing as tp
 import operator as operator_mod
-
+from collections import KeysView
 
 import numpy as np
 
@@ -21,7 +21,7 @@ from static_frame.core.util import DtypeSpecifier
 # from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 
-from static_frame.core.util import mloc
+# from static_frame.core.util import mloc
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _key_to_datetime_key
@@ -35,6 +35,8 @@ from static_frame.core.util import YearInitializer
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
+
+from static_frame.core.index_base import IndexBase
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -155,7 +157,8 @@ def immutable_index_filter(
 
 #-------------------------------------------------------------------------------
 
-class Index(metaclass=MetaOperatorDelegate):
+class Index(IndexBase,
+        metaclass=MetaOperatorDelegate):
     '''A mapping of labels to positions, immutable and of fixed size. Used in :py:class:`Series` and as index and columns in :py:class:`Frame`.
 
     Args:
@@ -163,12 +166,6 @@ class Index(metaclass=MetaOperatorDelegate):
         loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
         dtype: Optional dytpe to be used for labels.
     '''
-    STATIC = True
-    _IMMUTABLE_CONSTRUCTOR = None
-    _DTYPE = None # for specialized indices requiring a typed labels
-
-    # for compatability with IndexHierarchy, where this is implemented as a property method
-    depth = 1
 
     __slots__ = (
             '_map',
@@ -177,6 +174,16 @@ class Index(metaclass=MetaOperatorDelegate):
             '_recache',
             '_loc_is_iloc',
             )
+
+    STATIC = True
+    _IMMUTABLE_CONSTRUCTOR = None
+    _DTYPE = None # for specialized indices requiring a typed labels
+    _UFUNC_UNION = np.union1d
+    _UFUNC_INTERSECTION = np.intersect1d
+
+    # for compatability with IndexHierarchy, where this is implemented as a property method
+    depth = 1
+
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
@@ -245,6 +252,17 @@ class Index(metaclass=MetaOperatorDelegate):
         return {v: k for k, v in enumerate(labels)}
 
     #---------------------------------------------------------------------------
+    # constructors
+
+    @classmethod
+    def from_labels(cls,
+            labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'Index':
+        '''
+        Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interfave to ``IndexHierarchy``.
+        '''
+        return cls(labels=labels)
+
+    #---------------------------------------------------------------------------
     def __init__(self,
             labels: IndexInitializer,
             loc_is_iloc: bool=False,
@@ -289,7 +307,6 @@ class Index(metaclass=MetaOperatorDelegate):
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
 
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''
@@ -300,6 +317,7 @@ class Index(metaclass=MetaOperatorDelegate):
         self._labels.flags.writeable = False
 
     #---------------------------------------------------------------------------
+    # interfaces
 
     @property
     def loc(self):
@@ -309,7 +327,7 @@ class Index(metaclass=MetaOperatorDelegate):
     def iloc(self):
         return GetItem(self._extract_iloc)
 
-    # # on Index, getitem is an iloc selector; on Series, getitme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
+    # # on Index, getitem is an iloc selector; on Series, getiteme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     @property
     def drop(self):
@@ -318,14 +336,19 @@ class Index(metaclass=MetaOperatorDelegate):
             func_loc=self._drop_loc,
             )
 
-
     #---------------------------------------------------------------------------
-
 
     def _update_array_cache(self):
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
         '''
         pass
+
+    #---------------------------------------------------------------------------
+
+    def __len__(self) -> int:
+        if self._recache:
+            self._update_array_cache()
+        return len(self._labels)
 
     def display(self, config: DisplayConfig=None) -> Display:
         config = config or DisplayActive.get()
@@ -340,23 +363,8 @@ class Index(metaclass=MetaOperatorDelegate):
     def __repr__(self) -> str:
         return repr(self.display())
 
-    def __len__(self) -> int:
-        if self._recache:
-            self._update_array_cache()
-        return len(self._labels)
-
-    def __iter__(self):
-        '''Iterate over labels.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return self._labels.__iter__()
-
-    def __contains__(self, value) -> bool:
-        '''Return True if value in the labels.
-        '''
-        return self._map.__contains__(value)
-
+    #---------------------------------------------------------------------------
+    # core internal representation
 
     @property
     def values(self) -> np.ndarray:
@@ -374,13 +382,78 @@ class Index(metaclass=MetaOperatorDelegate):
             self._update_array_cache()
         return self._positions
 
-    @property
-    def mloc(self):
-        '''Memory location
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return mloc(self._labels)
+    # #---------------------------------------------------------------------------
+    # # common attributes from the numpy array
+
+    # @property
+    # def mloc(self):
+    #     '''Memory location
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return mloc(self._labels)
+
+    # @property
+    # def dtype(self) -> np.dtype:
+    #     '''
+    #     Return the dtype of the underlying NumPy array.
+
+    #     Returns:
+    #         :py:class:`numpy.dtype`
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self._labels.dtype
+
+    # @property
+    # def shape(self) -> tp.Tuple[int]:
+    #     '''
+    #     Return a tuple describing the shape of the underlying NumPy array.
+
+    #     Returns:
+    #         :py:class:`tp.Tuple[int]`
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self.values.shape
+
+    # @property
+    # def ndim(self) -> int:
+    #     '''
+    #     Return the number of dimensions.
+
+    #     Returns:
+    #         :py:class:`int`
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self._labels.ndim
+
+    # @property
+    # def size(self) -> int:
+    #     '''
+    #     Return the size of the underlying NumPy array.
+
+    #     Returns:
+    #         :py:class:`int`
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self._labels.size
+
+    # @property
+    # def nbytes(self) -> int:
+    #     '''
+    #     Return the total bytes of the underlying NumPy array.
+
+    #     Returns:
+    #         :py:class:`int`
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self._labels.nbytes
+
+    #---------------------------------------------------------------------------
 
     def copy(self) -> 'Index':
         '''
@@ -390,7 +463,6 @@ class Index(metaclass=MetaOperatorDelegate):
         if self._recache:
             self._update_array_cache()
         return self.__class__(labels=self)
-
 
     def relabel(self, mapper: CallableOrMapping) -> 'Index':
         '''
@@ -406,27 +478,27 @@ class Index(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # set operations
 
-    def intersection(self, other) -> 'Index':
-        if self._recache:
-            self._update_array_cache()
+    # def intersection(self, other) -> 'Index':
+    #     if self._recache:
+    #         self._update_array_cache()
 
-        if isinstance(other, np.ndarray):
-            opperand = other
-        else: # assume we can get it from a .values attribute
-            opperand = other.values
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
 
-        return self.__class__(labels=np.intersect1d(self._labels, opperand))
+    #     return self.__class__.from_labels(np.intersect1d(self._labels, opperand))
 
-    def union(self, other) -> 'Index':
-        if self._recache:
-            self._update_array_cache()
+    # def union(self, other) -> 'Index':
+    #     if self._recache:
+    #         self._update_array_cache()
 
-        if isinstance(other, np.ndarray):
-            opperand = other
-        else: # assume we can get it from a .values attribute
-            opperand = other.values
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
 
-        return self.__class__(labels=np.union1d(self._labels, opperand))
+    #     return self.__class__.from_labels(np.union1d(self._labels, opperand))
 
     #---------------------------------------------------------------------------
     # extraction and selection
@@ -573,6 +645,38 @@ class Index(metaclass=MetaOperatorDelegate):
                 ufunc_skipna=ufunc_skipna)
 
     #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> KeysView:
+        '''
+        Iterator of index labels.
+        '''
+        return self._map.keys()
+
+    def __iter__(self):
+        '''Iterate over labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels.__iter__()
+
+    def __contains__(self, value) -> bool:
+        '''Return True if value in the labels.
+        '''
+        return self._map.__contains__(value)
+
+    def items(self) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
+        '''Iterator of pairs of index label and value.
+        '''
+        return self._map.items()
+
+    def get(self, key, default=None):
+        '''
+        Return the value found at the index key, else the default if the key is not found.
+        '''
+        return self._map.get(key, default)
+
+    #---------------------------------------------------------------------------
     # utility functions
 
     def sort(self,
@@ -612,18 +716,21 @@ class Index(metaclass=MetaOperatorDelegate):
         return self.__class__(values)
 
     #---------------------------------------------------------------------------
+    # export
+
+    def to_series(self) -> 'Series':
+        '''Return a Series with values from this Index's labels.
+        '''
+        # not sure if index should be self here
+        from static_frame import Series
+        return Series(self.values, index=None)
+
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarhcy with an added root level.
         '''
         from static_frame import IndexHierarchy
         return IndexHierarchy.from_tree({level: self.values})
 
-
-    # def to_index(self) -> 'Index':
-    #     '''
-    #     To permit going from a mutable to an immutable Index or IndexHierarchy.
-    #     '''
-    #     return self # as immutable, we can hand bakc a reference
 
 
 class IndexGO(Index):

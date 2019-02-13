@@ -1,11 +1,15 @@
 
 import typing as tp
 from collections import OrderedDict
+from collections import KeysView
 from collections import deque
 from itertools import chain
 
 import numpy as np
 
+from static_frame.core.util import _DEFAULT_SORT_KIND
+
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index import LocMap
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
@@ -89,10 +93,6 @@ class IndexLevel:
             offset: integer offset for this level.
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
         '''
-        # if targets is not None:
-        #     assert len(targets) == len(index)
-        #     assert isinstance(targets, ArrayGO)
-
         self.index = index
         self.targets = targets
         self.offset = offset
@@ -123,7 +123,6 @@ class IndexLevel:
         offset = self.offset if offset is None else offset
         cls = cls if cls else self.__class__
         return cls(index=index, targets=targets, offset=offset)
-
 
     def __len__(self):
         '''
@@ -344,23 +343,6 @@ class IndexLevelGO(IndexLevel):
 
         self.targets.extend(target_gen())
 
-        # count_prior = len(self.targets)
-
-        # # allocate new targets array
-        # targets = np.empty(count_prior + len(level.targets), dtype=object)
-        # # can assign these in without copying, as they are owned by this instance
-        # targets[:count_prior] = self.targets
-
-        # # targets are other IndexLevel instances that may be GO or not
-        # for idx, t in enumerate(level.targets, start=count_prior):
-        #     # only need to update offsets at this level, as lower levels are relative to this
-        #     target = t.to_index_level(offset_prior, cls=self.__class__)
-        #     targets[idx] = target
-        #     offset_prior += len(target)
-
-        # # TODO: handle validation of incomplete depths, duplicate values
-        # self.targets = targets
-
 
     def append(self, key: tuple):
         '''Add a single, full-depth leaf loc.
@@ -399,15 +381,6 @@ class IndexLevelGO(IndexLevel):
                     level_previous.offset = node.__len__()
                     node.targets.append(level_previous)
 
-                    # # TODO: possibly defer target appending
-                    # target_count = len(node.targets)
-                    # targets = np.empty(target_count + 1, dtype=object)
-                    # targets[:target_count] = node.targets
-
-                    # level_previous.offset = node.__len__()
-                    # targets[target_count] = level_previous
-                    # node.targets = targets
-
             else: # depth not found is higher up
                 if node.targets is None:
                     # we are at the max depth; will need to create a LevelGO to append in th next level
@@ -427,7 +400,8 @@ class IndexLevelGO(IndexLevel):
 
 
 #-------------------------------------------------------------------------------
-class IndexHierarchy(metaclass=MetaOperatorDelegate):
+class IndexHierarchy(IndexBase,
+        metaclass=MetaOperatorDelegate):
     '''
     A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
     '''
@@ -435,6 +409,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             '_levels', # IndexLevel
             '_labels',
             '_depth',
+            '_keys',
             '_length',
             '_recache',
             'loc',
@@ -445,6 +420,8 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
     _IMMUTABLE_CONSTRUCTOR = None
     _LEVEL_CONSTRUCTOR = IndexLevel
     _INDEX_CONSTRUCTOR = Index
+    _UFUNC_UNION = _union2d
+    _UFUNC_INTERSECTION = _intersect2d
 
     #---------------------------------------------------------------------------
     # constructors
@@ -690,6 +667,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
 
             self._labels = levels.values
             self._depth = levels.depth
+            self._keys = levels.keys() # immutable keys view can be shared
             self._length = self._labels.__len__() #levels.__len__()
             self._recache = False
         elif isinstance(levels, IndexLevel):
@@ -697,22 +675,35 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             # vlaues derived from levels are deferred
             self._labels = None
             self._depth = None
+            self._keys = None
             self._length = None
             self._recache = True
         else:
-            raise NotImplementedError()
+            raise NotImplementedError('no handling for creation from', levels)
 
         self.loc = GetItem(self._extract_loc)
         self.iloc = GetItem(self._extract_iloc)
 
+    #---------------------------------------------------------------------------
 
     def _update_array_cache(self):
         # extract all features from self._levels
         self._depth = next(self._levels.depths())
+        # store both NP array of labels, as well as KeysView of hashable tuples
         self._labels = self._levels.get_labels()
+        # note: this does not retain order in 3.5
+        self._keys = KeysView._from_iterable(_array2d_to_tuples(self._labels))
         # if we get labels, faster to get that length
         self._length = len(self._labels) #self._levels.__len__()
         self._recache = False
+
+    #---------------------------------------------------------------------------
+
+    def __len__(self) -> int:
+        if self._recache:
+            # faster to just get from levels
+            return self._levels.__len__()
+        return self._length
 
     def display(self, config: DisplayConfig=None) -> Display:
         config = config or DisplayActive.get()
@@ -747,22 +738,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
     def __repr__(self) -> str:
         return repr(self.display())
 
-    def __len__(self) -> int:
-        if self._recache:
-            # faster to just get from levels
-            return self._levels.__len__()
-        return self._length
-
-    def __iter__(self):
-        if self._recache:
-            self._update_array_cache()
-        return self._labels.__iter__()
-
-    def __contains__(self, value) -> bool:
-        '''Determine if a leaf loc is contained in this Index.
-        '''
-        # levels only, no need to recache
-        return self._levels.__contains__(value)
+    #---------------------------------------------------------------------------
 
     @property
     def values(self) -> np.ndarray:
@@ -771,17 +747,14 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
         return self._labels
 
     @property
-    def mloc(self):
-        if self._recache:
-            self._update_array_cache()
-        return mloc(self._labels)
-
-    @property
     def depth(self):
         if self._recache:
             return next(self._levels.depths())
             # self._update_array_cache()
         return self._depth
+
+
+    #---------------------------------------------------------------------------
 
     def copy(self) -> 'IndexHierarchy':
         '''
@@ -809,27 +782,27 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # set operations
 
-    def intersection(self, other) -> 'IndexHierarchy':
-        if self._recache:
-            self._update_array_cache()
+    # def intersection(self, other) -> 'IndexHierarchy':
+    #     if self._recache:
+    #         self._update_array_cache()
 
-        if isinstance(other, np.ndarray):
-            opperand = other
-        else: # assume we can get it from a .values attribute
-            opperand = other.values
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
 
-        return self.__class__.from_labels(_intersect2d(self._labels, opperand))
+    #     return self.__class__.from_labels(_intersect2d(self._labels, opperand))
 
-    def union(self, other) -> 'IndexHierarchy':
-        if self._recache:
-            self._update_array_cache()
+    # def union(self, other) -> 'IndexHierarchy':
+    #     if self._recache:
+    #         self._update_array_cache()
 
-        if isinstance(other, np.ndarray):
-            opperand = other
-        else: # assume we can get it from a .values attribute
-            opperand = other.values
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
 
-        return self.__class__.from_labels(_union2d(self._labels, opperand))
+    #     return self.__class__.from_labels(_union2d(self._labels, opperand))
 
     #---------------------------------------------------------------------------
 
@@ -927,6 +900,63 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                 ufunc_skipna=ufunc_skipna)
 
     #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> KeysView:
+        '''
+        Iterator of index labels.
+        '''
+        return self._keys
+
+    def __iter__(self):
+        '''Iterate over labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        # TODO: replace with iter of self._keys on 3.6
+        return self._labels.__iter__()
+
+    def __contains__(self, value) -> bool:
+        '''Determine if a leaf loc is contained in this Index.
+        '''
+        # levels only, no need to recache
+        return self._levels.__contains__(value)
+
+    def get(self, key, default=None):
+        '''
+        Return the value found at the index key, else the default if the key is not found.
+        '''
+        try:
+            return self._levels.leaf_loc_to_iloc(key)
+        except KeyError:
+            return default
+
+
+
+    #---------------------------------------------------------------------------
+    # utility functions
+
+    def sort(self,
+            ascending: bool=True,
+            kind: str=_DEFAULT_SORT_KIND) -> 'Index':
+        '''Return a new Index with the labels sorted.
+
+        Args:
+            kind: Sort algorithm passed to NumPy.
+        '''
+        raise NotImplementedError()
+
+    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+        '''Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
+        '''
+        raise NotImplementedError()
+
+    def roll(self, shift: int) -> 'Index':
+        '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
+        '''
+        raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
     # export
 
     def to_frame(self):
@@ -957,7 +987,6 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
                 )
         return self.__class__(levels)
 
-
     def drop_level(self, count: int=1) -> tp.Union[Index, 'IndexHieararchy']:
         '''Return an IndexHierarhcy with one or more leaf levels removed.
         '''
@@ -980,6 +1009,7 @@ class IndexHierarchy(metaclass=MetaOperatorDelegate):
             # fall back to 1D index
             return levels.index
         return self.__class__(levels)
+
 
 class IndexHierarchyGO(IndexHierarchy):
 
@@ -1017,13 +1047,3 @@ class IndexHierarchyGO(IndexHierarchy):
         self._levels.extend(other._levels)
         self._recache = True
 
-
-        # length = self._length + other._levels.__len__()
-
-        # labels = np.empty((length, self._depth), dtype=object)
-        # labels[0:self._length, :] = self._labels
-        # labels[self._length:, :] = other._labels
-        # labels.flags.writeable = False
-
-        # self._length = length
-        # self._labels = labels

@@ -4,9 +4,6 @@
 .. image:: https://badge.fury.io/py/static-frame.svg
     :target: https://badge.fury.io/py/static-frame
 
-.. image:: https://img.shields.io/pypi/dm/static-frame.svg
-    :target: https://pypistats.org/packages/static-frame
-
 .. image:: https://img.shields.io/pypi/status/static-frame.svg
     :target: https://pypi.org/project/static-frame
 

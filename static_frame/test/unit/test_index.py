@@ -7,6 +7,7 @@ from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import Series
+from static_frame import Frame
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import HLoc
@@ -496,6 +497,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.roll(1).values.tolist(),
                 ['d', 'a', 'b', 'c'])
+
+
+    def test_index_attributes_a(self):
+        idx = Index(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx.shape, (4,))
+        self.assertEqual(idx.dtype.kind, 'U')
+        self.assertEqual(idx.ndim, 1)
+        self.assertEqual(idx.nbytes, 16)
+
+        # import ipdb; ipdb.set_trace()
+
 
 
 if __name__ == '__main__':

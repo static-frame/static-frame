@@ -19,6 +19,7 @@ from static_frame.core.iter_node import IterNodeDelegate
 from static_frame.core.iter_node import IterNode
 
 from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayConfigs
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 

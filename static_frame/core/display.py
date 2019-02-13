@@ -86,6 +86,24 @@ class DisplayConfig:
         return self.__class__(**args)
 
 
+class DisplayConfigs:
+    DEFAULT = DisplayConfig()
+    UNBOUND = DisplayConfig(
+            display_columns=np.inf,
+            display_rows=np.inf,
+            cell_max_width=np.inf,
+            )
+    UNBOUND_COLUMNS = DisplayConfig(
+            display_columns=np.inf,
+            cell_max_width=np.inf,
+            )
+    UNBOUND_ROWS = DisplayConfig(
+            display_rows=np.inf,
+            cell_max_width=np.inf,
+            )
+
+
+
 _module._display_active = DisplayConfig()
 
 class DisplayActive:
