@@ -7,6 +7,8 @@
 .. image:: https://img.shields.io/pypi/status/static-frame.svg
     :target: https://pypi.org/project/static-frame
 
+.. image:: https://readthedocs.org/projects/static-frame/badge/?version=latest
+    :target: https://static-frame.readthedocs.io/en/latest/?badge=latest
 
 
 
