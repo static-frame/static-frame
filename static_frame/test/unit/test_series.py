@@ -1048,6 +1048,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_isin_a(self):
+
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        self.assertEqual(s1.isin([]).to_pairs(),
+            (('a', False), ('b', False), ('c', False), ('d', False), ('e', False), ('f', False))
+            )
+
+        self.assertEqual(s1.isin((-1, 8)).to_pairs(),
+            (('a', False), ('b', False), ('c', False), ('d', True), ('e', True), ('f', False))
+            )
+
+        self.assertEqual(s1.isin(s1.values).to_pairs(),
+            (('a', True), ('b', True), ('c', True), ('d', True), ('e', True), ('f', True))
+            )
 
 
 if __name__ == '__main__':

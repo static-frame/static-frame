@@ -756,6 +756,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         # cannot use assume_unique because do not know if values is unique
         v, _ = _iterable_to_array(other)
+        # NOTE: could identify empty iterable and create False array
         array = np.in1d(self.values, v)
         array.flags.writeable = False
         return self.__class__(array, index=self._index)

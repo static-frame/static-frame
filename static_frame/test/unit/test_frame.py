@@ -2198,6 +2198,15 @@ class TestUnit(TestCase):
                 (('a', 6), ('b', 6), ('c', 6)))
 
 
+    def test_frame_from_records_c(self):
+
+        f1 = sf.Frame.from_records([[1, 2], [2, 3]], columns=['a', 'b'])
+        self.assertEqual(f1.to_pairs(0),
+                (('a', ((0, 1), (1, 2))), ('b', ((0, 2), (1, 3)))))
+
+        with self.assertRaises(Exception):
+            f2 = sf.Frame.from_records([[1, 2], [2, 3]], columns=['a'])
+
 
     def test_frame_from_json_a(self):
 

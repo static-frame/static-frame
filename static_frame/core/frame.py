@@ -736,7 +736,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                     'Index has incorrect size (got {}, expected {})'.format(
                     len(self._index), row_count))
         if len(self._columns) != col_count:
-            import ipdb; ipdb.set_trace()
             raise Exception(
                     'Columns has incorrect size (got {}, expected {})'.format(
                     len(self._columns), col_count))
@@ -1684,7 +1683,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True)
 
     def sort_values(self,
-            key: KeyOrKeys,
+            key: KeyOrKeys, # TODO: rename "labels"
             ascending: bool=True,
             axis: int=1,
             kind=_DEFAULT_SORT_KIND) -> 'Frame':

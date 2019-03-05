@@ -1,15 +1,17 @@
 .. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
     :target: https://travis-ci.org/InvestmentSystems/static-frame
 
-.. image:: https://badge.fury.io/py/static-frame.svg
-    :target: https://badge.fury.io/py/static-frame
+.. image:: https://readthedocs.org/projects/static-frame/badge/?version=latest
+    :target: https://static-frame.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://img.shields.io/pypi/status/static-frame.svg
     :target: https://pypi.org/project/static-frame
 
-.. image:: https://readthedocs.org/projects/static-frame/badge/?version=latest
-    :target: https://static-frame.readthedocs.io/en/latest/?badge=latest
+.. image:: https://badge.fury.io/py/static-frame.svg
+    :target: https://badge.fury.io/py/static-frame
 
+.. image:: https://anaconda.org/conda-forge/static-frame/badges/version.svg
+    :target: https://anaconda.org/conda-forge/static-frame
 
 
 static-frame

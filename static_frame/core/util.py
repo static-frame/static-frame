@@ -273,7 +273,11 @@ def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
             assume_unique = False
 
         # must determine if we have heterogenous types, as if we have string and float, for example, all numbers become quoted
-        x = next(v_iter)
+        try:
+            x = next(v_iter)
+        except StopIteration:
+            return _EMPTY_ARRAY, True
+
         dtype = type(x)
         array_values = [x]
         for x in v_iter:
