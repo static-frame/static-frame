@@ -9,6 +9,7 @@ import numpy as np
 
 
 from static_frame.core.util import _NULL_SLICE
+from static_frame.core.util import _UNIT_SLICE
 
 from static_frame.core.util import _INT_TYPES
 from static_frame.core.util import _KEY_ITERABLE_TYPES
@@ -684,15 +685,18 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return self._shape[0]
 
 
-    def display(self, config: DisplayConfig=None) -> Display:
+    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
         config = config or DisplayActive.get()
+        # header = (config.type_delimiter_left
+        #         + self.__class__.__name__
+        #         + config.type_delimiter_right)
 
-        h = '<' + self.__class__.__name__ + '>'
+        # h = '<' + self.__class__.__name__ + '>'
         d = None
         for idx, block in enumerate(self._blocks):
             block = self.single_column_filter(block)
-            header = '' if idx > 0 else h
-            display = Display.from_values(block, header, config=config)
+            h = '' if idx > 0 else self.__class__
+            display = Display.from_values(block, h, config=config)
             if not d: # assign first
                 d = display
             else:
@@ -761,10 +765,11 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         for idx, b in enumerate(self._blocks):
             if b.ndim == 1:
-                yield (idx, slice(0, 1)) # cannot give an integer here instead of a slice
+                yield (idx, _UNIT_SLICE) # cannot give an integer here instead of a slice
             else:
                 yield (idx, slice(0, b.shape[1]))
 
+    # @profile
     def _key_to_block_slices(self,
                 key,
                 retain_key_order: bool=True) -> tp.Generator[
@@ -779,7 +784,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             A generator iterable of pairs, where values are block index, slice or column index
         '''
         if key is None or (isinstance(key, slice) and key == _NULL_SLICE):
-            yield from self._all_block_slices()
+            yield from self._all_block_slices() # slow from line profiler, 80% of this function call
         else:
             if isinstance(key, _INT_TYPES):
                 # the index has the pair block, column integer
@@ -1184,6 +1189,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 yield assigned
 
 
+    # @profile
     def _slice_blocks(self,
             row_key=None,
             column_key=None) -> tp.Generator[np.ndarray, None, None]:
@@ -1214,13 +1220,13 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
-        for block_idx, slc in self._key_to_block_slices(column_key):
+        for block_idx, slc in self._key_to_block_slices(column_key): # slow from line profiler
             b = self._blocks[block_idx]
             if b.ndim == 1: # given 1D array, our row key is all we need
                 if row_key_null:
                     block_sliced = b
                 else:
-                    block_sliced = b[row_key]
+                    block_sliced = b[row_key] # slow from line profiler
             else: # given 2D, use row key and column slice
                 if row_key_null:
                     block_sliced = b[:, slc]

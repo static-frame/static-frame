@@ -10,6 +10,9 @@ api_example_str = '''
 
 #start_immutability
 >>> import static_frame as sf
+
+>>> sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
+
 >>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> s #doctest: +NORMALIZE_WHITESPACE
 <Index> <Series>

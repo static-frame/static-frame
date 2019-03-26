@@ -6,6 +6,8 @@ from collections import OrderedDict
 from io import StringIO
 import string
 import hashlib
+import json
+
 
 import numpy as np
 
@@ -22,6 +24,7 @@ from static_frame import TypeBlocks
 from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
+from static_frame import DisplayConfigs
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -29,6 +32,7 @@ from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _array_set_ufunc_many
 
+from static_frame.core.display import DisplayTypeCategoryFactory
 
 from static_frame.core.operator_delegate import _all
 from static_frame.core.operator_delegate import _any
@@ -55,9 +59,8 @@ class TestUnit(TestCase):
     def test_display_config_b(self):
         post = sf.DisplayConfig.from_default(cell_align_left=False)
 
-        self.assertEqual(
-                sorted(post.to_dict().items()),
-                [('cell_align_left', False), ('cell_max_width', 20), ('display_columns', 12), ('display_rows', 36), ('type_color', False), ('type_delimiter', '<>'), ('type_show', True)])
+        self.assertFalse(post.cell_align_left)
+
 
 
     def test_display_config_c(self):
@@ -65,14 +68,12 @@ class TestUnit(TestCase):
         config_left = sf.DisplayConfig.from_default(cell_align_left=True)
 
         msg = config_right.to_json()
-        # self.assertEqual(msg,
-        #         '{"type_show": true, "type_delimiter": "<>", "cell_align_left": false, "type_color": false, "cell_max_width": 20, "display_rows": null, "display_columns": null}')
-        # d = DisplayConfig.from_json(msg)
+
 
 
     def test_display_cell_align_left_a(self):
-        config_right = sf.DisplayConfig.from_default(cell_align_left=False)
-        config_left = sf.DisplayConfig.from_default(cell_align_left=True)
+        config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
+        config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
         index = Index((x for x in 'abc'))
 
@@ -87,8 +88,8 @@ class TestUnit(TestCase):
 
 
     def test_display_cell_align_left_b(self):
-        config_right = sf.DisplayConfig.from_default(cell_align_left=False)
-        config_left = sf.DisplayConfig.from_default(cell_align_left=True)
+        config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
+        config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
         s = Series(range(3), index=('a', 'b', 'c'))
 
@@ -137,8 +138,8 @@ class TestUnit(TestCase):
 
 
     def test_display_type_show_a(self):
-        config_type_show_true = sf.DisplayConfig.from_default(type_show=True)
-        config_type_show_false = sf.DisplayConfig.from_default(type_show=False)
+        config_type_show_true = sf.DisplayConfig.from_default(type_show=True, type_color=False)
+        config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
 
         records = (
                 (2, 2, 'a', False, False),
@@ -172,8 +173,8 @@ class TestUnit(TestCase):
 
     def test_display_cell_fill_width_a(self):
 
-        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12)
-        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6)
+        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, type_color=False)
+        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, type_color=False)
 
         def chunks(size, count):
             pos = 0
@@ -197,7 +198,9 @@ class TestUnit(TestCase):
                 'b      t a...',
                 'c      adi...',
                 '<<U1>  <<U20>']
-)
+                )
+
+        config = sf.DisplayConfig.from_default(type_color=False)
 
         row_count = 2
         index = [str(chr(x)) for x in range(97, 97+row_count)]
@@ -207,7 +210,7 @@ class TestUnit(TestCase):
             s = Series((x for x in chunker), index=index)
             f[i] = s
 
-        self.assertEqual(f.display().to_rows(),
+        self.assertEqual(f.display(config=config).to_rows(),
                 ['<FrameGO>',
                 '<IndexGO> 0          1          2          3          <int64>',
                 '<Index>',
@@ -227,8 +230,8 @@ class TestUnit(TestCase):
 
     def test_display_display_rows_a(self):
 
-        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12)
-        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7)
+        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
+        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False)
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index)
@@ -259,8 +262,8 @@ class TestUnit(TestCase):
 
     def test_display_display_columns_a(self):
 
-        config_columns_8 = sf.DisplayConfig.from_default(display_columns=8)
-        config_columns_5 = sf.DisplayConfig.from_default(display_columns=5)
+        config_columns_8 = sf.DisplayConfig.from_default(display_columns=8, type_color=False)
+        config_columns_5 = sf.DisplayConfig.from_default(display_columns=5, type_color=False)
 
         columns = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         f = FrameGO(index=range(4))
@@ -295,8 +298,8 @@ class TestUnit(TestCase):
 
     def test_display_display_columns_b(self):
 
-        config_columns_4 = sf.DisplayConfig.from_default(display_columns=4)
-        config_columns_5 = sf.DisplayConfig.from_default(display_columns=5)
+        config_columns_4 = sf.DisplayConfig.from_default(display_columns=4, type_color=False)
+        config_columns_5 = sf.DisplayConfig.from_default(display_columns=5, type_color=False)
 
         records = (
                 (2, 2, 'a', False, False),
@@ -356,6 +359,60 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 len(f.display(config_rows_7_cols_5).to_rows()), 9)
+
+
+    def test_display_type_delimiter_a(self):
+
+        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
+        self.assertEqual(x, '<int8>')
+        self.assertEqual(y, 6)
+
+        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.HTML_PRE)
+        self.assertEqual(x, '&lt;int8&gt;')
+        self.assertEqual(y, 6)
+
+    def test_display_type_category_a(self):
+
+        x = DisplayTypeCategoryFactory.to_category(np.dtype(int))
+        self.assertEqual(x.__name__, 'DisplayTypeInt')
+
+        x = DisplayTypeCategoryFactory.to_category(np.dtype(object))
+        self.assertEqual(x.__name__, 'DisplayTypeObject')
+
+
+
+    def test_display_config_from_json_a(self):
+        json_data = json.dumps(dict(type_show=False))
+        dc = DisplayConfig.from_json(json_data)
+        self.assertEqual(dc.type_show, False)
+
+        # with a bad name, we filter out the key
+        json_data = json.dumps(dict(show=False))
+        dc = DisplayConfig.from_json(json_data)
+        self.assertEqual(dc.type_show, True)
+
+
+    @unittest.skip('too colorful')
+    def test_display_type_color_a(self):
+
+        f = Frame(dict(a=(1, 2),
+                b=(1.2, 3.4),
+                c=(False, True),
+                d=(object(), []),
+                e=(1j, 3j),
+                f=(np.datetime64('2014'), np.datetime64('2015')),
+                g=(np.datetime64('2014')-np.datetime64('2015'),
+                np.datetime64('2014')-np.datetime64('2015'))
+                ),
+                index=tuple('xy'))
+        print(f)
+        print(f.loc['x'])
+
+        print(f.display(DisplayConfigs.COLOR))
+        print(f.loc['x'].display(DisplayConfigs.COLOR))
+
+
+
 
 
 if __name__ == '__main__':

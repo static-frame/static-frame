@@ -320,17 +320,17 @@ class Index(IndexBase,
     # interfaces
 
     @property
-    def loc(self):
+    def loc(self) -> GetItem:
         return GetItem(self._extract_loc)
 
     @property
-    def iloc(self):
+    def iloc(self) -> GetItem:
         return GetItem(self._extract_iloc)
 
     # # on Index, getitem is an iloc selector; on Series, getiteme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     @property
-    def drop(self):
+    def drop(self) -> InterfaceSelection1D:
         return InterfaceSelection1D(
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
@@ -350,14 +350,17 @@ class Index(IndexBase,
             self._update_array_cache()
         return len(self._labels)
 
-    def display(self, config: DisplayConfig=None) -> Display:
+    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
         config = config or DisplayActive.get()
+        # header = (config.type_delimiter_left
+        #         + self.__class__.__name__
+        #         + config.type_delimiter_right)
 
         if self._recache:
             self._update_array_cache()
 
         return Display.from_values(self.values,
-                header='<' + self.__class__.__name__ + '>',
+                header=self.__class__,
                 config=config)
 
     def __repr__(self) -> str:
@@ -382,77 +385,6 @@ class Index(IndexBase,
             self._update_array_cache()
         return self._positions
 
-    # #---------------------------------------------------------------------------
-    # # common attributes from the numpy array
-
-    # @property
-    # def mloc(self):
-    #     '''Memory location
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return mloc(self._labels)
-
-    # @property
-    # def dtype(self) -> np.dtype:
-    #     '''
-    #     Return the dtype of the underlying NumPy array.
-
-    #     Returns:
-    #         :py:class:`numpy.dtype`
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self._labels.dtype
-
-    # @property
-    # def shape(self) -> tp.Tuple[int]:
-    #     '''
-    #     Return a tuple describing the shape of the underlying NumPy array.
-
-    #     Returns:
-    #         :py:class:`tp.Tuple[int]`
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self.values.shape
-
-    # @property
-    # def ndim(self) -> int:
-    #     '''
-    #     Return the number of dimensions.
-
-    #     Returns:
-    #         :py:class:`int`
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self._labels.ndim
-
-    # @property
-    # def size(self) -> int:
-    #     '''
-    #     Return the size of the underlying NumPy array.
-
-    #     Returns:
-    #         :py:class:`int`
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self._labels.size
-
-    # @property
-    # def nbytes(self) -> int:
-    #     '''
-    #     Return the total bytes of the underlying NumPy array.
-
-    #     Returns:
-    #         :py:class:`int`
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self._labels.nbytes
-
     #---------------------------------------------------------------------------
 
     def copy(self) -> 'Index':
@@ -474,31 +406,6 @@ class Index(IndexBase,
             return self.__class__(getitem(x) if x in mapper else x for x in self._labels)
 
         return self.__class__(mapper(x) for x in self._labels)
-
-    #---------------------------------------------------------------------------
-    # set operations
-
-    # def intersection(self, other) -> 'Index':
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     return self.__class__.from_labels(np.intersect1d(self._labels, opperand))
-
-    # def union(self, other) -> 'Index':
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     return self.__class__.from_labels(np.union1d(self._labels, opperand))
 
     #---------------------------------------------------------------------------
     # extraction and selection

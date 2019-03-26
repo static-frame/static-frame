@@ -745,48 +745,48 @@ class Frame(metaclass=MetaOperatorDelegate):
     # interfaces
 
     @property
-    def loc(self):
+    def loc(self) -> GetItem:
         return GetItem(self._extract_loc)
 
     @property
-    def iloc(self):
+    def iloc(self) -> GetItem:
         return GetItem(self._extract_iloc)
 
     @property
-    def drop(self):
+    def drop(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
-    def mask(self):
+    def mask(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
 
     @property
-    def masked_array(self):
+    def masked_array(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
             func_getitem=self._extract_getitem_masked_array)
 
     @property
-    def assign(self):
+    def assign(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
             func_getitem=self._extract_getitem_assign)
 
     @property
-    def astype(self):
+    def astype(self) -> InterfaceAsType:
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     # generators
     @property
-    def iter_array(self):
+    def iter_array(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_array,
@@ -795,7 +795,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_array_items(self):
+    def iter_array_items(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_array,
@@ -804,7 +804,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_tuple(self):
+    def iter_tuple(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_tuple,
@@ -813,7 +813,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_tuple_items(self):
+    def iter_tuple_items(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_tuple,
@@ -822,7 +822,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_series(self):
+    def iter_series(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_series,
@@ -831,7 +831,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_series_items(self):
+    def iter_series_items(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_series,
@@ -840,7 +840,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_group(self):
+    def iter_group(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_group_loc,
@@ -849,7 +849,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_group_items(self):
+    def iter_group_items(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._axis_group_loc,
@@ -858,7 +858,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_element(self):
+    def iter_element(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._iter_element_loc,
@@ -868,7 +868,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
-    def iter_element_items(self):
+    def iter_element_items(self) -> IterNode:
         return IterNode(
             container=self,
             function_values=self._iter_element_loc,
@@ -1105,8 +1105,11 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         return self._blocks._shape[0]
 
-    def display(self, config: DisplayConfig=None) -> Display:
+    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
         config = config or DisplayActive.get()
+        # header = (config.type_delimiter_left
+        #         + self.__class__.__name__
+        #         + config.type_delimiter_right)
 
         d = self._index.display(config=config)
 
@@ -1133,7 +1136,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 d.append_iterable(column, header='')
 
         cls_display = Display.from_values((),
-                header='<' + self.__class__.__name__ + '>',
+                header=self.__class__,
                 config=config)
         # add two rows, one for class, another for columns
 

@@ -42,6 +42,7 @@ _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_OBJECT = np.dtype(object)
 
 _NULL_SLICE = slice(None)
+_UNIT_SLICE = slice(0, 1)
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
 SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)

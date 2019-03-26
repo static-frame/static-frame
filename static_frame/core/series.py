@@ -222,17 +222,17 @@ class Series(metaclass=MetaOperatorDelegate):
     # interfaces
 
     @property
-    def loc(self):
+    def loc(self) -> GetItem:
         return GetItem(self._extract_loc)
 
     @property
-    def iloc(self):
+    def iloc(self) -> GetItem:
         return GetItem(self._extract_iloc)
 
     # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
 
     @property
-    def drop(self):
+    def drop(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
@@ -240,7 +240,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def mask(self):
+    def mask(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
@@ -248,7 +248,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def masked_array(self):
+    def masked_array(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
@@ -264,7 +264,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def iter_group(self):
+    def iter_group(self) -> IterNode:
         return IterNode(
                 container=self,
                 function_items=self._axis_group_items,
@@ -273,7 +273,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def iter_group_items(self):
+    def iter_group_items(self) -> IterNode:
         return IterNode(
                 container=self,
                 function_items=self._axis_group_items,
@@ -282,7 +282,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def iter_element(self):
+    def iter_element(self) -> IterNode:
         return IterNode(
                 container=self,
                 function_items=self._axis_element_items,
@@ -291,7 +291,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 )
 
     @property
-    def iter_element_items(self):
+    def iter_element_items(self) -> IterNode:
         return IterNode(
                 container=self,
                 function_items=self._axis_element_items,
@@ -491,15 +491,19 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self.values.__len__()
 
-    def display(self, config: DisplayConfig=None) -> Display:
+    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
         '''Return a Display of the Series.
         '''
         config = config or DisplayActive.get()
+        # header = (config.type_delimiter_left
+        #         + self.__class__.__name__
+        #         + config.type_delimiter_right)
 
         d = self._index.display(config=config)
+
         d.append_display(Display.from_values(
                 self.values,
-                header='<' + self.__class__.__name__ + '>',
+                header=self.__class__,
                 config=config))
         return d
 

@@ -204,7 +204,7 @@ class IterNode:
         self._yield_type = yield_type
         self._apply_type = apply_type
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> IterNodeDelegate:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
         '''

@@ -705,8 +705,11 @@ class IndexHierarchy(IndexBase,
             return self._levels.__len__()
         return self._length
 
-    def display(self, config: DisplayConfig=None) -> Display:
+    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
         config = config or DisplayActive.get()
+        # header = (config.type_delimiter_left
+        #         + self.__class__.__name__
+        #         + config.type_delimiter_right)
 
         if self._recache:
             self._update_array_cache()
@@ -728,10 +731,9 @@ class IndexHierarchy(IndexBase,
             else:
                 sub_display.append_iterable(col, header='')
 
-        header = '<' + self.__class__.__name__ + '>'
         return Display.from_values(
                 sub_display.to_rows()[1:-1], # truncate unused header
-                header = header,
+                header=self.__class__,
                 config=config
                 )
 
