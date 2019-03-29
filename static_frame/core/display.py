@@ -110,8 +110,8 @@ class DisplayTypeIndex(DisplayTypeCategory):
 
     @classmethod
     def in_category(cls, t: type) -> bool:
-        from static_frame import Index
-        return issubclass(t, Index)
+        from static_frame.core.index_base import IndexBase
+        return issubclass(t, IndexBase)
 
 class DisplayTypeSeries(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_series'
@@ -168,27 +168,116 @@ class DisplayTypeCategoryFactory:
 
 #-------------------------------------------------------------------------------
 
-# NOTE: needs to be jsonable to use an enum
-class DisplayFormat:
+# NOTE: needs to be jsonable to use directly in enum
+
+class DisplayFormats(str, Enum):
+    '''
+    Define display output format.
+    '''
 
     HTML_PRE = 'html_pre'
     HTML_TABLE = 'html_table'
     TERMINAL = 'terminal'
 
-_DISPLAY_FORMAT_HTML = {DisplayFormat.HTML_PRE, DisplayFormat.HTML_TABLE}
-_DISPLAY_FORMAT_TERMINAL = {DisplayFormat.TERMINAL}
+_DISPLAY_FORMAT_HTML = {DisplayFormats.HTML_PRE, DisplayFormats.HTML_TABLE}
+_DISPLAY_FORMAT_TERMINAL = {DisplayFormats.TERMINAL}
 
+
+class DisplayFormat:
+
+    CELL_WIDTH_NORMALIZE = True
+
+    @staticmethod
+    def markup_row(
+            row: tp.Iterable[str],
+            header_depth: int
+            ) -> tp.Generator[str, None, None]:
+        '''
+        Args:
+            header_depth: number of columsn that should be treated as headers.
+        '''
+        for msg in row:
+            yield msg
+
+    @staticmethod
+    def markup_header(msg: str):
+        return msg
+
+    @staticmethod
+    def markup_body(msg: str):
+        return msg
+
+    @staticmethod
+    def markup_outermost(msg: str) -> str:
+        return msg
+
+class DisplayFormatTerminal(DisplayFormat):
+    pass
+
+class DisplayFormatHTMLTable(DisplayFormat):
+
+    CELL_WIDTH_NORMALIZE = False
+
+    @staticmethod
+    def markup_row(
+            row: tp.Iterable[str],
+            header_depth: int) -> tp.Generator[str, None, None]:
+        '''
+        Args:
+            header_depth: number of columsn that should be treated as headers.
+        '''
+        yield '<tr>'
+        for count, msg in enumerate(row):
+            if count < header_depth:
+                yield '<th>{}</th>'.format(msg)
+            else:
+                yield '<td>{}</td>'.format(msg)
+        yield '</tr>'
+
+    @staticmethod
+    def markup_header(msg: str):
+        return '<thead>{}</thead>'.format(msg)
+
+    @staticmethod
+    def markup_body(msg: str):
+        return '<tbody>{}</tbody>'.format(msg)
+
+    @staticmethod
+    def markup_outermost(msg: str) -> str:
+        return '<table border="1">{}</table>'.format(msg)
+
+
+class DisplayFormatHTMLPre(DisplayFormat):
+
+    @staticmethod
+    def markup_outermost(msg: str) -> str:
+        return '<div style="white-space: pre; font-family: monospace">{}</div>'.format(msg)
+
+
+
+_DISPLAY_FORMAT_MAP = {
+        DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
+        DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
+        DisplayFormats.TERMINAL: DisplayFormatTerminal
+        }
+
+#-------------------------------------------------------------------------------
 
 def terminal_ansi(stream=sys.stdout) -> bool:
     '''
     Return True if the terminal is ANSI color compatible.
     '''
-    if 'ANSICON' in os.environ or 'PYCHARM_HOSTED' in os.environ:
+    environ = os.environ
+    if 'ANSICON' in environ or 'PYCHARM_HOSTED' in environ:
         return True
-    if 'TERM' in os.environ and os.environ['TERM'] == 'ANSI':
+    if 'TERM' in environ and environ['TERM'] == 'ANSI':
         return True
+    if 'INSIDE_EMACS' in environ:
+        return False
+
     if hasattr(stream, "isatty") and stream.isatty() and platform.system() != 'Windows':
         return True
+
     return False
 
 
@@ -243,38 +332,32 @@ class DisplayConfig:
         with open(fp) as f:
             return cls.from_json(f.read())
 
-    def write(self, fp):
-        '''Write a JSON file.
-        '''
-        with open(fp, 'w') as f:
-            f.write(self.to_json() + '\n')
-
     @classmethod
-    def from_default(cls, **kwargs):
+    def from_default(cls, **kwargs) -> 'DisplayConfig':
         return cls(**kwargs)
 
     def __init__(self,
             type_show: bool=True,
             type_color: bool=True,
 
-            type_color_default: ColorConstructor='gray',
-            type_color_int: ColorConstructor='MidnightBlue',
-            type_color_float: ColorConstructor='MidnightBlue',
-            type_color_complex: ColorConstructor='MidnightBlue',
-            type_color_bool: ColorConstructor='SteelBlue',
-            type_color_object: ColorConstructor='DarkSlateBlue',
-            type_color_str: ColorConstructor='DarkOrchid',
+            type_color_default: ColorConstructor=0x505050,
+            type_color_int: ColorConstructor=0x505050,
+            type_color_float: ColorConstructor=0x505050,
+            type_color_complex: ColorConstructor=0x505050,
+            type_color_bool: ColorConstructor=0x505050,
+            type_color_object: ColorConstructor=0x505050,
+            type_color_str: ColorConstructor=0x505050,
 
-            type_color_datetime: ColorConstructor='DarkSlateBlue',
-            type_color_timedelta: ColorConstructor='DarkSlateBlue',
+            type_color_datetime: ColorConstructor=0x505050,
+            type_color_timedelta: ColorConstructor=0x505050,
 
-            type_color_index: ColorConstructor='DarkSlateGray',
-            type_color_series: ColorConstructor='dimgray',
-            type_color_frame: ColorConstructor='lightslategray',
+            type_color_index: ColorConstructor=0x777777,
+            type_color_series: ColorConstructor=0x777777,
+            type_color_frame: ColorConstructor=0x777777,
 
             type_delimiter_left: str='<',
             type_delimiter_right: str='>',
-            display_format=DisplayFormat.TERMINAL,
+            display_format=DisplayFormats.TERMINAL,
             display_columns: tp.Optional[int]=12,
             display_rows: tp.Optional[int]=36,
             cell_max_width: int=20,
@@ -309,6 +392,12 @@ class DisplayConfig:
         self.cell_max_width = cell_max_width
         self.cell_align_left = cell_align_left
 
+    def write(self, fp):
+        '''Write a JSON file.
+        '''
+        with open(fp, 'w') as f:
+            f.write(self.to_json() + '\n')
+
     def __repr__(self):
         return '<' + self.__class__.__name__ + ' ' + ' '.join(
                 '{k}={v}'.format(k=k, v=getattr(self, k))
@@ -337,12 +426,12 @@ class DisplayConfigs:
     DEFAULT = DisplayConfig()
 
     HTML_PRE = DisplayConfig(
-            display_format=DisplayFormat.HTML_PRE,
+            display_format=DisplayFormats.HTML_PRE,
             type_color=True
             )
 
     COLOR = DisplayConfig(
-            display_format=DisplayFormat.TERMINAL,
+            display_format=DisplayFormats.TERMINAL,
             type_color=True,
             type_color_default='gray',
             type_color_int='yellowgreen',
@@ -386,8 +475,13 @@ class DisplayActive:
         _module._display_active = dc
 
     @staticmethod
-    def get():
-        return _module._display_active
+    def get(**kwargs):
+        config = _module._display_active
+        if not kwargs:
+            return config
+        args = config.to_dict()
+        args.update(kwargs)
+        return DisplayConfig(**args)
 
     @classmethod
     def update(cls, **kwargs):
@@ -413,11 +507,21 @@ class DisplayActive:
 
 
 #-------------------------------------------------------------------------------
+
+DisplayCell = tp.Tuple[str, int]
+
+
 class Display:
     '''
     A Display is a string representation of a table, encoded as a list of lists, where list components are equal-width strings, keyed by row index
     '''
-    __slots__ = ('_rows', '_config')
+    __slots__ = (
+        '_rows',
+        '_config',
+        '_outermost',
+        '_index_depth',
+        '_columns_depth',
+        )
 
     CHAR_MARGIN = 1
     CELL_EMPTY = ('', 0)
@@ -426,6 +530,9 @@ class Display:
     ELLIPSIS_INDICES = (None,)
     DATA_MARGINS = 2 # columns / rows that seperate data
     ELLIPSIS_CENTER_SENTINEL = object()
+
+    #---------------------------------------------------------------------------
+    # utility methods
 
     @staticmethod
     def type_attributes(
@@ -478,10 +585,12 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: tp.Any,
+            value: object,
             config: DisplayConfig,
-            is_dtype=False) -> tp.Tuple[str, int]:
-
+            is_dtype=False) -> DisplayCell:
+        '''
+        Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
+        '''
         if is_dtype or inspect.isclass(value):
             type_str, type_length, type_category = cls.type_attributes(
                     value,
@@ -496,11 +605,18 @@ class Display:
         msg = str(value)
         return (msg, len(msg))
 
+    #---------------------------------------------------------------------------
+    # aalternate constructor
+
     @classmethod
     def from_values(cls,
             values: np.ndarray,
-            header: tp.Union[str, type],
-            config: DisplayConfig=None) -> 'Display':
+            header: tp.Optional[tp.Union[str, type]],
+            config: DisplayConfig=None,
+            outermost: bool=False,
+            index_depth: int=0,
+            columns_depth: int=0
+            ) -> 'Display':
         '''
         Given a 1 or 2D ndarray, return a Display instance. Generally 2D arrays are passed here only from TypeBlocks.
         '''
@@ -508,7 +624,9 @@ class Display:
         config = config or DisplayActive.get()
 
         # create a list of lists, always starting with the header
-        rows = [[cls.to_cell(header, config=config)]]
+        rows = []
+        if header is not None:
+            rows.append([cls.to_cell(header, config=config)])
 
         if isinstance(values, np.ndarray) and values.ndim == 2:
             # get rows from numpy string formatting
@@ -543,11 +661,18 @@ class Display:
         # add the types to the last row
         if isinstance(values, np.ndarray) and config.type_show:
             rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
-        else: # this is an object
-            rows.append([cls.CELL_EMPTY])
+        # else: # this is an object
+        #     rows.append([cls.CELL_EMPTY])
 
-        return cls(rows, config=config)
+        return cls(rows,
+                config=config,
+                outermost=outermost,
+                index_depth=index_depth,
+                columns_depth=columns_depth)
 
+
+    #---------------------------------------------------------------------------
+    # core cell-to-rwo expansion routines
 
     @staticmethod
     def truncate_half_count(count_target: int) -> int:
@@ -581,12 +706,55 @@ class Display:
                     indices[-half_count:]))
         return indices
 
+
+    @classmethod
+    def _get_max_width_pad_width(cls, *,
+            rows: tp.Iterable[tp.Iterable[DisplayCell]],
+            col_idx_src: int,
+            col_last_src: int,
+            row_indices: tp.Iterable[int],
+            config: DisplayConfig=None
+            ) -> tp.Tuple[int, int]:
+        '''
+        Args:
+            row_indices: passed here so same bundle can be reused.
+        '''
+        max_width = 0
+        for row_idx_src in row_indices:
+            # get existing max width, up to the max
+            if row_idx_src is not None:
+                row = rows[row_idx_src]
+                if col_idx_src >= len(row): # this row does not have this column
+                    continue
+                cell = row[col_idx_src]
+                max_width = max(max_width, cell[1])
+            else:
+                max_width = max(max_width, len(cls.ELLIPSIS))
+            # if we have already exceeded max width, can stop iterating
+            if max_width >= config.cell_max_width:
+                break
+        max_width = min(max_width, config.cell_max_width)
+
+        if ((config.cell_align_left is True and col_idx_src == col_last_src) or
+                (config.cell_align_left is False and col_idx_src == 0)):
+            pad_width = max_width
+        else:
+            pad_width = max_width + cls.CHAR_MARGIN
+
+        return max_width, pad_width
+
     @classmethod
     def _to_rows(cls,
             display: 'Display',
-            config: DisplayConfig=None) -> tp.Iterable[str]:
+            config: DisplayConfig=None,
+            index_depth: int=0,
+            columns_depth: int=0,
+            ) -> tp.Iterable[str]:
         '''
-        Given already defined rows, align them to left or right and return one joined string per row.
+        Given a Display object, return an iterable of strings, where each string is the combination of all cells in that row, and appropriate padding (if necessary), as been applied. Based on configruation, align cells left or right with space and return one joined string per row.
+
+        Returns:
+            Returns an iterable of formatted strings, generally one per row.
         '''
         config = config or DisplayActive.get()
 
@@ -595,34 +763,24 @@ class Display:
         col_last_src = col_count_src - 1
 
         row_count_src = len(display._rows)
-        row_indices = tuple(range(row_count_src))
+        row_indices = range(row_count_src)
 
         rows = [[] for _ in row_indices]
 
+        # if we normalize, we truncate cells and pad
+        dfc = _DISPLAY_FORMAT_MAP[config.display_format]
+
         for col_idx_src in range(col_count_src):
+
             # for each column, get the max width
-            max_width = 0
-            for row_idx_src in row_indices:
-                # get existing max width, up to the max
-                if row_idx_src is not None:
-                    row = display._rows[row_idx_src]
-                    if col_idx_src >= len(row): # this row does not have this column
-                        continue
-                    cell = row[col_idx_src]
-
-                    max_width = max(max_width, cell[1])
-                else:
-                    max_width = max(max_width, len(cls.ELLIPSIS))
-                # if we have already exceeded max width, can stop iterating
-                if max_width >= config.cell_max_width:
-                    break
-            max_width = min(max_width, config.cell_max_width)
-
-            if ((config.cell_align_left is True and col_idx_src == col_last_src) or
-                    (config.cell_align_left is False and col_idx_src == 0)):
-                pad_width = max_width
-            else:
-                pad_width = max_width + cls.CHAR_MARGIN
+            if dfc.CELL_WIDTH_NORMALIZE:
+                max_width, pad_width = cls._get_max_width_pad_width(
+                        rows=display._rows,
+                        col_idx_src=col_idx_src,
+                        col_last_src=col_last_src,
+                        row_indices=row_indices,
+                        config=config
+                        )
 
             for row_idx_src in row_indices:
                 row = display._rows[row_idx_src]
@@ -630,40 +788,80 @@ class Display:
                     cell = cls.CELL_EMPTY
                 else:
                     cell = row[col_idx_src]
-                # msg may have been ljusted before, so we strip again here
-                # cannot use ljust here, as the cell might have more characters for coloring
-                if cell[1] > max_width:
-                    cell_content = cell[0].strip()[:max_width - 3] + cls.ELLIPSIS
-                    cell_fill_width = cls.CHAR_MARGIN # should only be margin left
-                else:
-                    cell_content = cell[0].strip()
-                    cell_fill_width = pad_width - cell[1] # this includes margin
 
-                # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
-                if config.cell_align_left:
-                    # must manually add space as color chars make ljust not
-                    msg = cell_content + ' ' * cell_fill_width
+                # msg may have been ljusted before, so we strip again here
+                cell_content = cell[0].strip()
+
+                if dfc.CELL_WIDTH_NORMALIZE:
+                    if cell[1] > max_width:
+                        # must truncate if cell width is greater than max width
+                        width_truncate = max_width - cls.CELL_ELLIPSIS[1]
+                        cell_content = cell_content[:width_truncate] + cls.ELLIPSIS
+                        cell_fill_width = cls.CHAR_MARGIN # should only be margin left
+                    else:
+                        cell_fill_width = pad_width - cell[1] # this includes margin
+
+                    # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
+                    if config.cell_align_left:
+                        # must manually add space as color chars make ljust not work
+                        msg = cell_content + ' ' * cell_fill_width
+                    else:
+                        msg = ' ' * cell_fill_width + cell_content
                 else:
-                    msg = ' ' * cell_fill_width + cell_content
+                    msg = cell_content
 
                 rows[row_idx_src].append(msg)
 
-        # rstrip to remove extra white space on last column
-        return [''.join(row).rstrip() for row in rows]
 
+        post = []
+        for row_idx, row in enumerate(rows):
+            # make sure the entire row is marked as head if row index less than column depth
+            added_depth = col_count_src if row_idx < columns_depth else 0
+            # rstrip to remove extra white space on last column
+            post.append(''.join(dfc.markup_row(row,
+                    header_depth=index_depth + added_depth)).rstrip()
+                    )
+        return post
 
+    #---------------------------------------------------------------------------
     def __init__(self,
-            rows: tp.List[tp.List[tp.Tuple[str, int]]],
-            config: DisplayConfig=None) -> None:
+            rows: tp.List[tp.List[DisplayCell]],
+            config: DisplayConfig=None,
+            outermost: bool=False,
+            index_depth: int=0,
+            columns_depth: int=0,
+            ) -> None:
         '''Define rows as a list of lists, for each row; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
         '''
         config = config or DisplayActive.get()
+
         self._rows = rows
         self._config = config
-
+        self._outermost = outermost
+        self._index_depth = index_depth
+        self._columns_depth = columns_depth
 
     def __repr__(self):
-        return '\n'.join(self._to_rows(self, self._config))
+        rows = self._to_rows(self,
+                self._config,
+                index_depth=self._index_depth,
+                columns_depth=self._columns_depth
+                )
+
+        if self._outermost:
+            dfc = _DISPLAY_FORMAT_MAP[self._config.display_format]
+            header = []
+            body = []
+            for idx, row in enumerate(rows):
+                if idx < self._columns_depth:
+                    header.append(row)
+                else:
+                    body.append(row)
+            header_str = dfc.markup_header('\n'.join(header))
+            body_str = dfc.markup_body('\n'.join(body))
+            return dfc.markup_outermost(header_str + '\n' + body_str)
+
+        return '\n'.join(rows)
 
     def to_rows(self) -> tp.Iterable[str]:
         return self._to_rows(self, self._config)
@@ -678,21 +876,26 @@ class Display:
     #---------------------------------------------------------------------------
     # in place mutation
 
-    def append_display(self, display: 'Display') -> None:
+    def extend_display(self, display: 'Display') -> None:
         '''
         Mutate this display by extending to the right with the passed display.
         '''
         # NOTE: do not want to pass config or call format here as we call this for each column or block we add
         for row_idx, row in enumerate(display._rows):
+            if row_idx == len(self._rows):
+                self._rows.append([])
             self._rows[row_idx].extend(row)
 
-    def append_iterable(self,
+    def extend_iterable(self,
             iterable: tp.Iterable[tp.Any],
-            header: str) -> None:
+            header: tp.Optional[str]) -> None:
         '''
         Add an iterable of strings as a column to the display.
         '''
-        self._rows[0].append(self.to_cell(header, config=self._config))
+        row_idx_start = 0
+        if header is not None:
+            self._rows[0].append(self.to_cell(header, config=self._config))
+            row_idx_start = 1
 
         # truncate iterable if necessary
         count_max = self._config.display_rows - self.DATA_MARGINS
@@ -711,7 +914,7 @@ class Display:
 
         # start at 1 as 0 is header
         idx = 0 # store in case value gen is empty
-        for idx, value in enumerate(value_gen(), start=1):
+        for idx, value in enumerate(value_gen(), start=row_idx_start):
             if value is self.ELLIPSIS_CENTER_SENTINEL:
                 self._rows[idx].append(self.CELL_ELLIPSIS)
             else:
@@ -722,33 +925,62 @@ class Display:
                     config=self._config,
                     is_dtype=True))
 
-    def append_ellipsis(self):
+    def extend_ellipsis(self):
         '''Append an ellipsis over all rows.
         '''
         for row in self._rows:
             row.append(self.CELL_ELLIPSIS)
 
-    def insert_rows(self, *displays: tp.Iterable['Display']):
+    def insert_displays(self,
+            *displays: tp.Iterable['Display'],
+            insert_index: int=0):
         '''
         Insert rows on top of existing rows.
         args:
             Each arg in args is an instance of Display
+            insert_index: the index at which to start insertion
         '''
         # each arg is a list, to be a new row
         # assume each row in display becomes a column
         new_rows = []
         for display in displays:
             new_rows.extend(display._rows)
-        # slow for now: make rows a dict to make faster
-        new_rows.extend(self._rows)
-        self._rows = new_rows
+
+        rows = []
+        rows.extend(self._rows[:insert_index])
+        rows.extend(new_rows)
+        rows.extend(self._rows[insert_index:])
+        self._rows = rows
+
+    def append_row(self, row: tp.Iterable[DisplayCell]):
+        '''
+        Append a row at the bottom of existing rows.
+        '''
+        self._rows.append(row)
 
     #---------------------------------------------------------------------------
     # return a new display
 
     def flatten(self) -> 'Display':
+        '''
+        Return a Display from this Display that is a single row, formed the contents of all rows put in a single senquece, from the top down. Through this a single-column index Display can be made into a single row Display.
+        '''
         row = []
         for part in self._rows:
             row.extend(part)
         rows = [row]
         return self.__class__(rows, config=self._config)
+
+    def transform(self) -> 'Display':
+        '''
+        Return Display transformed (rotated) on its upper left; i.e., the first column becomes the first row.
+        '''
+
+        # assume first row gives us column count
+        col_count = len(self._rows[0])
+        rows = [[] for _ in range(col_count)]
+        for r in self._rows:
+            for idx, cell in enumerate(r):
+                rows[idx].append(cell)
+        return self.__class__(rows, config=self._config)
+

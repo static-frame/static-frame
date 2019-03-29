@@ -148,6 +148,7 @@ _COLOR_NAME_X11 = {
     'tomato': 0xff6347,
     'turquoise': 0x40e0d0,
     'violet': 0xee82ee,
+    'webgray': 0x808080,
     'wheat': 0xf5deb3,
     'white': 0xffffff,
     'whitesmoke': 0xf5f5f5,
@@ -300,7 +301,11 @@ class HexColor:
         '''
         Given a hex color and text, return a string formatted for ANSI colors
         '''
-        hex_int = cls._hex_str_to_int(hex_color)
+        if isinstance(hex_color, str):
+            hex_int = cls._hex_str_to_int(hex_color)
+        else:
+            hex_int = hex_color
+
         color = '#' + format(hex_int, 'x')
         return '<span style="color: {color}">{text}</span>'.format(
                 color=color,

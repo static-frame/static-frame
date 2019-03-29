@@ -705,17 +705,18 @@ class IndexHierarchy(IndexBase,
             return self._levels.__len__()
         return self._length
 
-    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> Display:
         config = config or DisplayActive.get()
-        # header = (config.type_delimiter_left
-        #         + self.__class__.__name__
-        #         + config.type_delimiter_right)
 
         if self._recache:
             self._update_array_cache()
 
         # render display rows just of columns
-        sub_config = DisplayConfig(**config.to_dict(type_show=False))
+        # sub_config_type = DisplayConfig(**config.to_dict(type_show=False))
+        # sub_config_no_type = DisplayConfig(**config.to_dict(type_show=False))
+        sub_config = config
         sub_display = None
 
         for d in range(self._depth):
@@ -724,21 +725,38 @@ class IndexHierarchy(IndexBase,
             # repeats = col == np.roll(col, 1)
             # repeats[0] = False
             # col[repeats] = '.' # TODO: spacer may not be best
-            if sub_display is None:
-                sub_display = Display.from_values(col,
-                        header='',
-                        config=sub_config)
+            if sub_display is None: # the first
+                sub_display = Display.from_values(
+                        col,
+                        header=self.__class__,
+                        config=sub_config,
+                        outermost=True,
+                        index_depth=0,
+                        columns_depth=1)
             else:
-                sub_display.append_iterable(col, header='')
+                sub_display.extend_iterable(col, header='')
 
-        return Display.from_values(
-                sub_display.to_rows()[1:-1], # truncate unused header
-                header=self.__class__,
-                config=config
-                )
+        return sub_display
 
-    def __repr__(self) -> str:
-        return repr(self.display())
+        # if config.type_show:
+        #     # this will but the type in the left-most column, so it will not be spaced  evenly under the columns of the index
+        #     sub_display.append_row(
+        #             [Display.to_cell(self._labels.dtype,
+        #             config=config,
+        #             is_dtype=True)])
+
+        # import ipdb; ipdb.set_trace()
+
+        # return Display.from_values(
+        #         sub_display.to_rows(), # truncate unused header
+        #         header=self.__class__,
+        #         config=config,
+        #         outermost=True,
+        #         index_depth=0, # will chnage if we do not aggregate index cells
+        #         columns_depth=1
+        #         )
+
+
 
     #---------------------------------------------------------------------------
 

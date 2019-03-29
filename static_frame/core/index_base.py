@@ -2,6 +2,8 @@ import numpy as np
 import typing as tp
 
 from static_frame.core.util import mloc
+from static_frame.core.display import DisplayFormats
+from static_frame.core.display import DisplayActive
 
 class IndexBase:
 
@@ -109,3 +111,19 @@ class IndexBase:
         return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
 
 
+    #---------------------------------------------------------------------------
+    # common display
+
+    def __repr__(self) -> str:
+        return repr(self.display())
+
+    def _repr_html_(self):
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # modify the active display to be fore HTML
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False
+                )
+        return repr(self.display(config))

@@ -36,6 +36,7 @@ from static_frame.core.operator_delegate import MetaOperatorDelegate
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayFormats
 
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
@@ -491,17 +492,23 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self.values.__len__()
 
-    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> Display:
         '''Return a Display of the Series.
         '''
         config = config or DisplayActive.get()
-        # header = (config.type_delimiter_left
-        #         + self.__class__.__name__
-        #         + config.type_delimiter_right)
 
-        d = self._index.display(config=config)
+        d = Display([],
+                config=config,
+                outermost=True,
+                index_depth=1,
+                columns_depth=1)
 
-        d.append_display(Display.from_values(
+        display_index = self._index.display(config=config)
+        d.extend_display(display_index)
+
+        d.extend_display(Display.from_values(
                 self.values,
                 header=self.__class__,
                 config=config))
@@ -509,6 +516,17 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def __repr__(self):
         return repr(self.display())
+
+    def _repr_html_(self):
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # modify the active display to be fore HTML
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False
+                )
+        return repr(self.display(config))
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

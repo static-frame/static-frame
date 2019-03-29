@@ -685,22 +685,24 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return self._shape[0]
 
 
-    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> Display:
         config = config or DisplayActive.get()
-        # header = (config.type_delimiter_left
-        #         + self.__class__.__name__
-        #         + config.type_delimiter_right)
-
-        # h = '<' + self.__class__.__name__ + '>'
         d = None
+        outermost = True # only for the first
         for idx, block in enumerate(self._blocks):
             block = self.single_column_filter(block)
             h = '' if idx > 0 else self.__class__
-            display = Display.from_values(block, h, config=config)
+            display = Display.from_values(block,
+                    h,
+                    config=config,
+                    outermost=outermost)
             if not d: # assign first
                 d = display
+                outermost = False
             else:
-                d.append_display(display)
+                d.extend_display(display)
         return d
 
     def __repr__(self) -> str:

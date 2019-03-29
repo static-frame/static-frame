@@ -57,6 +57,7 @@ from static_frame.core.iter_node import IterNode
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayFormats
 
 
 from static_frame.core.type_blocks import TypeBlocks
@@ -1105,13 +1106,20 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         return self._blocks._shape[0]
 
-    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> Display:
         config = config or DisplayActive.get()
-        # header = (config.type_delimiter_left
-        #         + self.__class__.__name__
-        #         + config.type_delimiter_right)
 
-        d = self._index.display(config=config)
+        # create an empty display, then populate with index
+        d = Display([[]],
+                config=config,
+                outermost=True,
+                index_depth=self._index.depth,
+                columns_depth=self._columns.depth + 2)
+
+        display_index = self._index.display(config=config)
+        d.extend_display(display_index)
 
         if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
@@ -1131,25 +1139,53 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         for column in column_gen():
             if column is Display.ELLIPSIS_CENTER_SENTINEL:
-                d.append_ellipsis()
+                d.extend_ellipsis()
             else:
-                d.append_iterable(column, header='')
+                d.extend_iterable(column, header='')
 
-        cls_display = Display.from_values((),
+        config_transpose = config.to_transpose()
+        display_cls = Display.from_values((),
                 header=self.__class__,
-                config=config)
+                config=config_transpose)
         # add two rows, one for class, another for columns
 
         # need to apply the column config such that it truncates it based on the the max columns, not the max rows
-        config_column = config.to_transpose()
-        d.insert_rows(
-                cls_display.flatten(),
-                self._columns.display(config=config_column).flatten(),
+        display_columns = self._columns.display(
+                config=config_transpose)
+
+        # add spacers for a wide index
+        for _ in range(self._index.depth - 1):
+            # will need a width equal to the column depth
+            row = [Display.to_cell('', config=config)
+                    for _ in range(self._columns.depth)]
+            spacer = Display([row])
+            display_columns.insert_displays(spacer,
+                    insert_index=1) # after the first, the name
+
+        if self._columns.depth > 1:
+            display_columns_horizontal = display_columns.transform()
+        else: # can just flatten a single column into one row
+            display_columns_horizontal = display_columns.flatten()
+
+        d.insert_displays(
+                display_cls.flatten(),
+                display_columns_horizontal,
                 )
         return d
 
     def __repr__(self) -> str:
         return repr(self.display())
+
+    def _repr_html_(self):
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # modify the active display to be fore HTML
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False
+                )
+        return repr(self.display(config))
 
     #---------------------------------------------------------------------------
     # accessors
@@ -1847,6 +1883,10 @@ class Frame(metaclass=MetaOperatorDelegate):
         Returns:
             :py:class:`IndexHierarchy`
         '''
+
+        # columns cannot be a tuple
+        if isinstance(columns, tuple):
+            columns = list(columns)
 
         column_iloc = self._columns.loc_to_iloc(columns)
 

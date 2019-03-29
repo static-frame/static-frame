@@ -350,21 +350,23 @@ class Index(IndexBase,
             self._update_array_cache()
         return len(self._labels)
 
-    def display(self, config: tp.Optional[DisplayConfig]=None) -> Display:
+    def display(self,
+            config: tp.Optional[DisplayConfig]=None,
+            ) -> Display:
+        # NOTE: deafult index/column is suitable for outermost display.
+
         config = config or DisplayActive.get()
-        # header = (config.type_delimiter_left
-        #         + self.__class__.__name__
-        #         + config.type_delimiter_right)
 
         if self._recache:
             self._update_array_cache()
 
         return Display.from_values(self.values,
                 header=self.__class__,
-                config=config)
-
-    def __repr__(self) -> str:
-        return repr(self.display())
+                config=config,
+                outermost=True,
+                index_depth=0,
+                columns_depth=1
+                )
 
     #---------------------------------------------------------------------------
     # core internal representation

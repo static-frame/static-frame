@@ -1,4 +1,3 @@
-
 from itertools import zip_longest
 from itertools import combinations
 import unittest
@@ -54,7 +53,6 @@ class TestUnit(TestCase):
         d = Display.from_values(np.array([[1, 2], [3, 4]]), 'header', config=config)
         self.assertEqual(d.to_rows(),
                 ['header', '1 2', '3 4', '<int64>'])
-
 
     def test_display_config_b(self):
         post = sf.DisplayConfig.from_default(cell_align_left=False)
@@ -158,7 +156,7 @@ class TestUnit(TestCase):
                 'w       2  2  a False False',
                 'x       30 34 b True  False',
                 'y       2  95 c False False',
-                ''])
+                ])
 
         self.assertEqual(f1.display(config_type_show_true).to_rows(),
                 ['<Frame>',
@@ -391,6 +389,71 @@ class TestUnit(TestCase):
         dc = DisplayConfig.from_json(json_data)
         self.assertEqual(dc.type_show, True)
 
+    def test_display_flatten_a(self):
+        config = DisplayConfig.from_default(type_color=False)
+
+        d1 = Display.from_values(np.array([1, 2, 3, 4]), 'header', config=config)
+        self.assertEqual(d1.flatten().to_rows(), ['header 1 2 3 4 <int64>'])
+
+
+        d2 = Display.from_values(np.array([5, 6, 7, 8]), 'header', config=config)
+
+        # mutates in place
+        d1.extend_display(d2)
+        self.assertEqual(
+                d1.to_rows(),
+                ['header  header', '1       5', '2       6', '3       7', '4       8', '<int64> <int64>'])
+
+        self.assertEqual(d1.flatten().to_rows(),
+                ['header header 1 5 2 6 3 7 4 8 <int64> <int64>'])
+
+        self.assertEqual(d1.transform().to_rows(),
+                ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'])
+
+
+    def test_display_html_pre_a(self):
+        f = Frame(dict(a=(1, 2),
+                b=(1.2, 3.4),
+                c=(False, True)))
+
+
+        expected = f.display(sf.DisplayConfig(
+                display_format='html_pre', type_color=False))
+
+        html = '''<div style="white-space: pre; font-family: monospace">&lt;Frame&gt;
+&lt;Index&gt; a       b         c      &lt;&lt;U1&gt;
+&lt;Index&gt;
+0       1       1.2       False
+1       2       3.4       True
+&lt;int64&gt; &lt;int64&gt; &lt;float64&gt; &lt;bool&gt;</div>'''
+
+        self.assertEqual(html.strip(), str(expected).strip())
+
+
+    def test_display_html_table_a(self):
+        f = sf.Frame(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
+        f = f.set_index_hierarchy(['a', 'b'])
+        f = f.reindex_add_level(columns='I')
+        f = f.reindex_add_level(columns='J')
+
+
+        expected = f.display(sf.DisplayConfig(
+                display_format='html_table', type_color=False))
+        html = '''
+<table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr>
+<tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr>
+<tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr>
+<tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr>
+<tr><th>&lt;IndexHierarchy&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead>
+<tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr>
+<tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr>
+<tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr>
+<tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr>
+<tr><th>&lt;object&gt;</th><th>&lt;object&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
+        '''
+
+        self.assertEqual(html.strip(), str(expected).strip())
+
 
     @unittest.skip('too colorful')
     def test_display_type_color_a(self):
@@ -411,11 +474,16 @@ class TestUnit(TestCase):
         print(f.display(DisplayConfigs.COLOR))
         print(f.loc['x'].display(DisplayConfigs.COLOR))
 
+        f = sf.Frame(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
+        f = f.set_index_hierarchy(['a', 'b'])
+        f = f.reindex_add_level(columns='I')
+        f = f.reindex_add_level(columns='J')
+        print(f)
+
+        # import ipdb; ipdb.set_trace()
 
 
 
 
 if __name__ == '__main__':
     unittest.main()
-
-

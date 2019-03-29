@@ -484,7 +484,6 @@ class TestUnit(TestCase):
         post = s.display()
         self.assertEqual(len(post), 10)
 
-
     def test_hierarchy_loc_a(self):
         OD = OrderedDict
         tree = OD([
