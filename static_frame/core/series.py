@@ -956,7 +956,15 @@ class Series(metaclass=MetaOperatorDelegate):
         return pandas.Series(self.values.copy(),
                 index=self._index.values.copy())
 
-
+    def to_html(self):
+        '''
+        Return an HTML table reprsentation of this Series.
+        '''
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False
+                )
+        return repr(self.display(config))
 
 
 class SeriesAssign:

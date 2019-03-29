@@ -11,7 +11,8 @@ Series
 
 .. automethod:: static_frame.Series.to_pandas
 
-
+.. automethod:: static_frame.Series.to_html
+s
 Frame
 ---------
 
@@ -26,6 +27,7 @@ Frame
 
 .. automethod:: static_frame.Frame.to_tsv
 
+.. automethod:: static_frame.Frame.to_html
 
 
 

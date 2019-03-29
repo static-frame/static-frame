@@ -2109,6 +2109,17 @@ class Frame(metaclass=MetaOperatorDelegate):
             fp: FilePathOrFileLike, **kwargs):
         return self.to_csv(fp=fp, sep='\t', **kwargs)
 
+    def to_html(self):
+        '''
+        Return an HTML table reprsentation of this Frame.
+        '''
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False
+                )
+        return repr(self.display(config))
+
+
 
 class FrameGO(Frame):
     '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.

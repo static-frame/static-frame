@@ -1065,5 +1065,15 @@ class TestUnit(TestCase):
             )
 
 
+    def test_series_to_html_a(self):
+
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        post = s1.to_html()
+        html = '''<table border="1"><thead><tr><th>&lt;Index&gt;</th><th>&lt;Series&gt;</th></tr></thead>\n<tbody><tr><th>a</th><td>2</td></tr>\n<tr><th>b</th><td>3</td></tr>\n<tr><th>c</th><td>0</td></tr>\n<tr><th>d</th><td>-1</td></tr>\n<tr><th>e</th><td>8</td></tr>\n<tr><th>f</th><td>6</td></tr></tbody></table>
+        '''
+        self.assertEqual(post.replace('\n', '').strip(), html.replace('\n', '').strip())
+
+
 if __name__ == '__main__':
     unittest.main()
