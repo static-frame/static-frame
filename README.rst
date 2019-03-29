@@ -77,7 +77,7 @@ As with a NumPy array, the ``Frame`` exposes common attributes of shape and size
 3320000
 
 
-Unlike a NumPy array, a Frame stores heterogeneous types, where each column is a single type. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Character strings can be converted to Python objects or other types as needed with the ``Frame.astype`` interface, which exposes a ``__getitem__`` style interface for selecting columns to convert. As with all similar funcions, a new ``Frame`` is returned.
+Unlike a NumPy array, a Frame stores heterogeneous types, where each column is a single type. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Character strings can be converted to Python objects or other types as needed with the ``Frame.astype`` interface, which exposes a ``__getitem__`` style interface for selecting columns to convert. As with all similar functions, a new ``Frame`` is returned.
 
 >>> frame.dtypes
 <Index>      <Series>
@@ -98,7 +98,7 @@ url          object
 <<U12>       <object>
 
 
-Utility functions common to Pandas users are available on ``Frame`` and ``Series``, such as ``Series.unqiue()``, ``Series.isna()``, and ``Series.any()``.
+Utility functions common to Pandas users are available on ``Frame`` and ``Series``, such as ``Series.unique()``, ``Series.isna()``, and ``Series.any()``.
 
 >>> frame['albumId'].unique()
 array([  1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,
@@ -169,7 +169,7 @@ With two arguments, ``loc`` can select both rows and columns at the same time:
 <int64> <int64> <<U86>
 
 
-Where the ``loc`` interface uses index and column labels, the ``iloc`` interface uses integer offets from zero, just as if the ``Frame`` where a NumPy array. For eample, we can select the last row with ``-1``:
+Where the ``loc`` interface uses index and column labels, the ``iloc`` interface uses integer offsets from zero, just as if the ``Frame`` were a NumPy array. For example, we can select the last row with ``-1``:
 
 >>> frame.iloc[-1]
 <Index>      <Series>
@@ -250,7 +250,7 @@ This pattern of specialized interfaces is used throughout StaticFrame, such as w
 <int64> <bool>  <bool> <bool>       <bool> <bool>
 
 
-Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by droping rows with even "id" values and droping URL columns specified in a list:
+Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by dropping rows with even "id" values and dropping URL columns specified in a list:
 
 >>> frame.drop.loc[frame['id'] % 2 == 0, ['thumbnailUrl', 'url']].head()
 <Frame>
@@ -333,7 +333,7 @@ A ``FrameGO`` can be efficiently created from a ``Frame``, as underling NumPy ar
 >>> frame_go = frame.to_frame_go()
 
 
-We can obtain a track number within each album, assuming the records are sorted, by creating the following generator expression pipe-line. Using a ``Frame`` grouped by "albumId", ``zip`` together as pairs the ``Frame.index`` and a contiguous integer sequence via ``range()``; ``chain`` all of those iterables, and then pass the resulting generator to ``Series.from_items()``. ( As much as possible, StaticFrame supports generators as arguments wherever an ordered sequence is expected.)
+We can obtain a track number within each album, assuming the records are sorted, by creating the following generator expression pipe-line. Using a ``Frame`` grouped by "albumId", ``zip`` together as pairs the ``Frame.index`` and a contiguous integer sequence via ``range()``; ``chain`` all of those iterables, and then pass the resulting generator to ``Series.from_items()``. (As much as possible, StaticFrame supports generators as arguments wherever an ordered sequence is expected.)
 
 >>> from itertools import chain
 >>> index_to_track = chain.from_iterable(zip(g.index, range(len(g))) for g in frame_go.iter_group('albumId'))
