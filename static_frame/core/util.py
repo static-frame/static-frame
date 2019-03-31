@@ -12,6 +12,7 @@ from functools import wraps
 
 import numpy as np
 
+from static_frame import Index
 
 
 # min/max fail on object arrays
