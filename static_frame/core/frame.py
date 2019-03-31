@@ -6,7 +6,6 @@ import typing as tp
 
 import csv
 import json
-import pickle
 
 from collections import namedtuple
 
@@ -42,6 +41,7 @@ from static_frame.core.util import _array_set_ufunc_many
 from static_frame.core.util import _array2d_to_tuples
 
 from static_frame.core.util import _read_url
+from static_frame.core.util import write_optional_file
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection2D
@@ -74,18 +74,20 @@ from static_frame.core.index import Index
 from static_frame.core.index import ILoc
 from static_frame.core.index import immutable_index_filter
 
+from static_frame.core.doc_str import doc_inject
 
+@doc_inject(selector='container_init', class_name='Frame')
 class Frame(metaclass=MetaOperatorDelegate):
     '''
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
     Args:
         data: An iterable of row iterables, a 2D numpy array, or dictionary mapping column names to column values.
-        index: Iterable of index labels, equal in length to the number of records.
-        columns: Iterable of column labels, equal in length to the length of each row.
-        own_data: Flag data as ownable by Frame; primarily for internal clients.
-        own_index: Flag index as ownable by Frame; primarily for internal clients.
-        own_columns: Flag columns as ownable by Frame; primarily for internal clients.
+        {index}
+        {columns}
+        {own_data}
+        {own_index}
+        {own_columns}
     '''
 
     __slots__ = (
@@ -567,6 +569,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
+    @doc_inject()
     def from_pandas(cls,
             value,
             *,
@@ -577,9 +580,9 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         Args:
             value: Pandas DataFrame.
-            own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
-            own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
-            own_columns: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+            {own_data}
+            {own_index}
+            {own_columns}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -2107,19 +2110,45 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def to_tsv(self,
             fp: FilePathOrFileLike, **kwargs):
+        '''
+        Given a file path or file-like object, write the Frame as tab-delimited text.
+        '''
         return self.to_csv(fp=fp, sep='\t', **kwargs)
 
-    def to_html(self):
+    @doc_inject(class_name='Frame')
+    def to_html(self,
+            config: tp.Optional[DisplayConfig]=None
+            ):
         '''
-        Return an HTML table reprsentation of this Frame.
+        {}
         '''
-        config = DisplayActive.get(
+        # if a config is given, try to use all settings; if using active, hide types
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
                 )
         return repr(self.display(config))
 
+    @doc_inject(class_name='Frame')
+    def to_html_datatables(self,
+            fp: tp.Optional[FilePathOrFileLike]=None,
+            show: bool=True,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> str:
+        '''
+        {}
+        '''
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
+                display_format=DisplayFormats.HTML_DATATABLES,
+                )
+        content = repr(self.display(config))
+        fp = write_optional_file(content=content, fp=fp)
 
+        if show:
+            import webbrowser
+            webbrowser.open_new_tab(fp)
+        return fp
 
 class FrameGO(Frame):
     '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.
@@ -2135,7 +2164,10 @@ class FrameGO(Frame):
     # _COLUMN_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO.from_any
 
 
-    def __setitem__(self, key, value, fill_value=np.nan):
+    def __setitem__(self,
+            key: tp.Hashable,
+            value,
+            fill_value=np.nan):
         '''For adding a single column, one column at a time.
         '''
         # TODO: support assignment from iterables of keys, values?

@@ -843,7 +843,6 @@ class IndexHierarchy(IndexBase,
                 if _requires_reindex(key.index, self):
                     key = key.reindex(self, fill_value=False).values
                 else: # the index is equal
-                    print('requires reindex is False')
                     key = key.values
             else:
                 key = key.values
@@ -950,8 +949,6 @@ class IndexHierarchy(IndexBase,
             return self._levels.leaf_loc_to_iloc(key)
         except KeyError:
             return default
-
-
 
     #---------------------------------------------------------------------------
     # utility functions

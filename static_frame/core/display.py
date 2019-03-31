@@ -16,6 +16,8 @@ import numpy as np
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.display_color import HexColor
+from static_frame.core import display_html_datatables
+
 from static_frame.core.util import _DTYPE_INT_KIND
 from static_frame.core.util import _DTYPE_STR_KIND
 
@@ -177,15 +179,21 @@ class DisplayFormats(str, Enum):
 
     HTML_PRE = 'html_pre'
     HTML_TABLE = 'html_table'
+    HTML_DATATABLES = 'html_datatables'
     TERMINAL = 'terminal'
 
-_DISPLAY_FORMAT_HTML = {DisplayFormats.HTML_PRE, DisplayFormats.HTML_TABLE}
+_DISPLAY_FORMAT_HTML = {
+        DisplayFormats.HTML_PRE,
+        DisplayFormats.HTML_TABLE,
+        DisplayFormats.HTML_DATATABLES
+        }
 _DISPLAY_FORMAT_TERMINAL = {DisplayFormats.TERMINAL}
 
 
 class DisplayFormat:
 
     CELL_WIDTH_NORMALIZE = True
+    LINE_SEP = '\n'
 
     @staticmethod
     def markup_row(
@@ -217,6 +225,7 @@ class DisplayFormatTerminal(DisplayFormat):
 class DisplayFormatHTMLTable(DisplayFormat):
 
     CELL_WIDTH_NORMALIZE = False
+    LINE_SEP = ''
 
     @staticmethod
     def markup_row(
@@ -243,11 +252,28 @@ class DisplayFormatHTMLTable(DisplayFormat):
         return '<tbody>{}</tbody>'.format(msg)
 
     @staticmethod
+    def markup_outermost(msg: str, id: tp.Optional[str]=None) -> str:
+        if id:
+            id_str = 'id="{}" '.format(id)
+        else:
+            id_str = ''
+        return '<table {id_str}border="1">{content}</table>'.format(
+                id_str=id_str,
+                content=msg)
+
+
+class DisplayFormatHTMLDataTables(DisplayFormatHTMLTable):
+
+    @staticmethod
     def markup_outermost(msg: str) -> str:
-        return '<table border="1">{}</table>'.format(msg)
+        # embed the table HTML in the datatables template
+        html_table = DisplayFormatHTMLTable.markup_outermost(msg, id='SFTable')
+        return display_html_datatables.TEMPLATE('SFTable', html_table)
 
 
 class DisplayFormatHTMLPre(DisplayFormat):
+
+    CELL_WIDTH_NORMALIZE = True
 
     @staticmethod
     def markup_outermost(msg: str) -> str:
@@ -256,9 +282,10 @@ class DisplayFormatHTMLPre(DisplayFormat):
 
 
 _DISPLAY_FORMAT_MAP = {
-        DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
-        DisplayFormats.TERMINAL: DisplayFormatTerminal
+        DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
+        DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
+        DisplayFormats.TERMINAL: DisplayFormatTerminal,
         }
 
 #-------------------------------------------------------------------------------
@@ -412,10 +439,13 @@ class DisplayConfig:
         return json.dumps(self.to_dict())
 
     def to_transpose(self) -> 'DisplayConfig':
-        args = self.to_dict()
-        args['display_columns'], args['display_rows'] = (
-                args['display_rows'], args['display_columns'])
-        return self.__class__(**args)
+        kwargs = self.to_dict()
+        kwargs['display_columns'], kwargs['display_rows'] = (
+                kwargs['display_rows'], kwargs['display_columns'])
+        return self.__class__(**kwargs)
+
+    def to_display_config(self, **kwargs) -> 'DisplayConfig':
+        return self.__class__(**self.to_dict(**kwargs))
 
 #-------------------------------------------------------------------------------
 class DisplayConfigs:
@@ -600,10 +630,13 @@ class Display:
                         type_str,
                         type_category,
                         config)
-            return (type_str, type_length)
+            return type_str, type_length
 
         msg = str(value)
-        return (msg, len(msg))
+        msg_length = len(msg)
+        if config.display_format in _DISPLAY_FORMAT_HTML:
+            msg = html.escape(msg)
+        return msg, msg_length
 
     #---------------------------------------------------------------------------
     # aalternate constructor
@@ -857,11 +890,11 @@ class Display:
                     header.append(row)
                 else:
                     body.append(row)
-            header_str = dfc.markup_header('\n'.join(header))
-            body_str = dfc.markup_body('\n'.join(body))
-            return dfc.markup_outermost(header_str + '\n' + body_str)
+            header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
+            body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
+            return dfc.markup_outermost(header_str + dfc.LINE_SEP + body_str)
 
-        return '\n'.join(rows)
+        return dfc.LINE_SEP.join(rows)
 
     def to_rows(self) -> tp.Iterable[str]:
         return self._to_rows(self, self._config)

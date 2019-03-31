@@ -436,24 +436,58 @@ class TestUnit(TestCase):
         f = f.reindex_add_level(columns='I')
         f = f.reindex_add_level(columns='J')
 
-
         expected = f.display(sf.DisplayConfig(
                 display_format='html_table', type_color=False))
         html = '''
-<table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr>
-<tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr>
-<tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr>
-<tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr>
-<tr><th>&lt;IndexHierarchy&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead>
-<tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr>
-<tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr>
-<tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr>
-<tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr>
-<tr><th>&lt;object&gt;</th><th>&lt;object&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
+<table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;object&gt;</th><th>&lt;object&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
         '''
 
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(html.strip(), str(expected).strip())
 
+
+    def test_display_html_table_b(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        self.assertEqual(f._repr_html_(),
+            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Frame&gt;</span></th><th></th><th></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th>p</th><th>q</th><th>r</th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>30</td><td>b</td><td>False</td></tr></tbody></table>')
+
+
+    def test_display_html_series_a(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        self.assertEqual(f['q']._repr_html_(),
+            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th><span style="color: #777777">&lt;Series&gt;</span></th></tr></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
+
+    def test_display_html_index_a(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        self.assertEqual(f.index._repr_html_(),
+                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Index&gt;</span></th></tr></thead><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
+
+        f1 = f.set_index_hierarchy(('p', 'q'))
+
+        self.assertEqual(f1.index._repr_html_(),
+                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
+                )
 
     @unittest.skip('too colorful')
     def test_display_type_color_a(self):
@@ -480,7 +514,27 @@ class TestUnit(TestCase):
         f = f.reindex_add_level(columns='J')
         print(f)
 
-        # import ipdb; ipdb.set_trace()
+        # columns = sf.IndexHierarchy.from_product((96361, 96345), (0, 1))
+        # index = sf.IndexHierarchy.from_product((32155, 32175), (0, 4))
+        # columns = range(4)
+        # index = range(4)
+        # f = sf.Frame.from_records(
+        #     ([y for y in range(x, x + 4)] for x in range(4)),
+        #     index=index, columns=columns)
+
+        from itertools import product
+        index = (0x2210, 0x2260, 0x2290)
+        columns = (0x1, 0xd, 0xe)
+        f = Frame.from_element_loc_items(
+                ((x, chr(sum(x))) for x in product(index, columns)),
+                index=index,
+                columns=columns,
+                dtype=str)
+        print(f)
+
+        # f.display(sf.DisplayActive.get(display_format='html_datatables'))
+
+        # f.to_html_datatables()
 
 
 

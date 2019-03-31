@@ -2,12 +2,17 @@ import numpy as np
 import typing as tp
 
 from static_frame.core.util import mloc
+from static_frame.core.util import FilePathOrFileLike
+from static_frame.core.util import write_optional_file
+
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+
+from static_frame.core.doc_str import doc_inject
 
 class IndexBase:
 
-    # not if instantiation
     __slots__ = (
             )
 
@@ -121,21 +126,46 @@ class IndexBase:
         '''
         Provide HTML representation for Jupyter Notebooks.
         '''
-        # modify the active display to be fore HTML
+        # modify the active display to be force HTML
         config = DisplayActive.get(
                 display_format=DisplayFormats.HTML_TABLE,
                 type_show=False
                 )
         return repr(self.display(config))
 
-    def to_html(self):
+    #---------------------------------------------------------------------------
+    # exporters
+
+    @doc_inject(class_name='Index')
+    def to_html(self,
+            config: tp.Optional[DisplayConfig]=None
+            ):
         '''
-        Return an HTML table reprsentation of this Index.
+        {}
         '''
-        config = DisplayActive.get(
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
                 )
         return repr(self.display(config))
 
+    @doc_inject(class_name='Index')
+    def to_html_datatables(self,
+            fp: tp.Optional[FilePathOrFileLike]=None,
+            show: bool=True,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> str:
+        '''
+        {}
+        '''
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
+                display_format=DisplayFormats.HTML_DATATABLES,
+                )
+        content = repr(self.display(config))
+        fp = write_optional_file(content=content, fp=fp)
 
+        if show:
+            import webbrowser
+            webbrowser.open_new_tab(fp)
+        return fp

@@ -19,10 +19,12 @@ from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import array_shift
+from static_frame.core.util import write_optional_file
 
 
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import FilePathOrFileLike
 
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
@@ -45,18 +47,20 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_hierarchy import IndexHierarchy
 
+from static_frame.core.doc_str import doc_inject
 
 
 
 #-------------------------------------------------------------------------------
+@doc_inject(selector='container_init', class_name='Series')
 class Series(metaclass=MetaOperatorDelegate):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
 
     Args:
         values: An iterable of values, or a single object, to be aligned with the supplied (or automatically generated) index. Alternatively, a dictionary of index / value pairs can be provided.
-        index: Option index initializer. If provided, lenght must be equal to length of values.
-        own_index: Flag index as ownable by Series; primarily for internal clients.
+        {index}
+        {own_index}
     '''
 
     __slots__ = (
@@ -86,11 +90,9 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return cls(values(), index=index, dtype=dtype)
 
-    #
-    # @classmethod
-    # def from_record()
 
     @classmethod
+    @doc_inject()
     def from_pandas(cls,
             value,
             *,
@@ -99,8 +101,9 @@ class Series(metaclass=MetaOperatorDelegate):
         '''Given a Pandas Series, return a Series.
 
         Args:
-            own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.
-            own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.
+            value: Pandas Series.
+            {own_data}
+            {own_index}
 
         Returns:
             :py:class:`static_frame.Series`
@@ -956,17 +959,42 @@ class Series(metaclass=MetaOperatorDelegate):
         return pandas.Series(self.values.copy(),
                 index=self._index.values.copy())
 
-    def to_html(self):
+    @doc_inject(class_name='Series')
+    def to_html(self,
+            config: tp.Optional[DisplayConfig]=None
+            ):
         '''
-        Return an HTML table reprsentation of this Series.
+        {}
         '''
-        config = DisplayActive.get(
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
                 display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
                 )
         return repr(self.display(config))
 
+    @doc_inject(class_name='Series')
+    def to_html_datatables(self,
+            fp: tp.Optional[FilePathOrFileLike]=None,
+            show: bool=True,
+            config: tp.Optional[DisplayConfig]=None
+            ) -> str:
+        '''
+        {}
+        '''
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
+                display_format=DisplayFormats.HTML_DATATABLES,
+                )
+        content = repr(self.display(config))
+        fp = write_optional_file(content=content, fp=fp)
 
+        if show:
+            import webbrowser
+            webbrowser.open_new_tab(fp)
+        return fp
+
+
+#-------------------------------------------------------------------------------
 class SeriesAssign:
     __slots__ = ('data', 'iloc_key')
 

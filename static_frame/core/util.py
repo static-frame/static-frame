@@ -1,6 +1,6 @@
 import sys
 import typing as tp
-
+import os
 
 from collections import OrderedDict
 from collections import abc
@@ -9,6 +9,8 @@ from io import BytesIO
 import datetime
 from urllib import request
 from functools import wraps
+import tempfile
+
 
 import numpy as np
 
@@ -608,12 +610,28 @@ def _union2d(array, other) -> np.ndarray:
 
 
 #-------------------------------------------------------------------------------
-# URL handling, file downloading
+# URL handling, file downloading, file writing
 
 def _read_url(fp: str):
     with request.urlopen(fp) as response:
         return response.read().decode('utf-8')
 
+
+def write_optional_file(
+        content: str,
+        fp: tp.Optional[FilePathOrFileLike]=None,
+        ):
+    if not fp:
+        fd, fp = tempfile.mkstemp(suffix='.html', text=True)
+    else:
+        fd = None
+    try:
+        with open(fp, 'w') as f:
+            f.write(content)
+    finally:
+        if fd is not None:
+            os.close(fd)
+    return fp
 
 #-------------------------------------------------------------------------------
 
