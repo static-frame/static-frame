@@ -2,7 +2,7 @@
 Container Export
 ===============================
 
-Methods for exporting alternative repesentations from :py:class:`Series` and :py:class:`Frame`.
+Methods for exporting alternative representations from :py:class:`Series` and :py:class:`Frame`.
 
 
 Index

@@ -175,8 +175,7 @@ class Series(metaclass=MetaOperatorDelegate):
                     self.values.flags.writeable = False
         else: # is numpy
             if dtype is not None and dtype != values.dtype:
-                # what to do here?
-                raise Exception('when supplying values via array, the dtype argument is not necessary; if provided, it must agree with the dtype of the array')
+                raise Exception('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
             if values.shape == (): # handle special case of NP element
                 def values_constructor(shape):
                     self.values = np.repeat(values, shape)
