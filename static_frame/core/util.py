@@ -12,8 +12,7 @@ from functools import wraps
 
 import numpy as np
 
-from static_frame import Index
-
+from static_frame.core.index import Index
 
 # min/max fail on object arrays
 # handle nan in object blocks with skipna processing on ufuncs
