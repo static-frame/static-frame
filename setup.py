@@ -6,11 +6,16 @@ from os import path
 
 # https://packaging.python.org/distributing/
 # to deploy:
-# rm -r build
-# rm -r dist
 # python setup.py sdist
 # python setup.py bdist_wheel
 # twine upload dist/*
+# rm -r build
+# rm -r dist
+
+# in /static-frame-feedstock/recipe
+# update meta.yaml in feedstock: set version and tar sha256 for tar, commit and push
+# submit PR to conda-forge/static-frame-feedstock from clone
+# merge into conda forge feedstock after all checks pass
 
 root_dir_fp = path.abspath(path.dirname(__file__))
 
