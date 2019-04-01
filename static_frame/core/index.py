@@ -162,7 +162,7 @@ class Index(IndexBase,
     '''A mapping of labels to positions, immutable and of fixed size. Used in :py:class:`Series` and as index and columns in :py:class:`Frame`.
 
     Args:
-        labels: Iterable of values to be used as the index.
+        labels: Iterable of values to be used as the index. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
         loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
         dtype: Optional dytpe to be used for labels.
     '''
@@ -269,10 +269,6 @@ class Index(IndexBase,
             dtype: DtypeSpecifier=None
             ) -> None:
 
-        '''
-        Args:
-            labels: Initializer of the Index. If an Index or IndexGO object is provided, appropriate usage of those objects is implemented. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
-        '''
         self._recache = False
         self._map = None
 
