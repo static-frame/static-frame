@@ -2438,9 +2438,7 @@ class TestUnit(TestCase):
         # this gives the wrong result:
         fh.loc[HLoc[:, [2, 5]], 'title']
 
-        # import ipdb; ipdb.set_trace()
-        # NOTE: this fails
-        frame.loc[sf.ILoc[-1], ['id', 'title', 'url']]
+        fh.loc[sf.ILoc[-1], ['id', 'title', 'url']]
 
 
     def test_frame_iloc_in_loc_a(self):

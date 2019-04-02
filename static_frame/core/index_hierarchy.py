@@ -13,6 +13,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index import LocMap
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index import ILoc
 from static_frame.core.index import _requires_reindex
 
 from static_frame.core.util import GetItemKeyType
@@ -24,6 +25,7 @@ from static_frame.core.util import _intersect2d
 from static_frame.core.util import _union2d
 from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array2d_to_tuples
+from static_frame.core.util import _ufunc_skipna_1d
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
@@ -184,6 +186,9 @@ class IndexLevel:
     def leaf_loc_to_iloc(self, key: tp.Iterable[tp.Hashable]) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
         '''
+        if isinstance(key, ILoc):
+            return key.key
+
         node = self
         pos = 0
         for k in key:
