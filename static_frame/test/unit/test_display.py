@@ -523,8 +523,8 @@ class TestUnit(TestCase):
         #     index=index, columns=columns)
 
         from itertools import product
-        index = (0x2210, 0x2260, 0x2290)
-        columns = (0x1, 0xd, 0xe)
+        index = (0x2210, 0x2330)
+        columns = (0x1, 0xe)
         f = Frame.from_element_loc_items(
                 ((x, chr(sum(x))) for x in product(index, columns)),
                 index=index,

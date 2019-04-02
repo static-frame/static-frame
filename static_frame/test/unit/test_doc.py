@@ -7,11 +7,14 @@ api_example_str = '''
 #-------------------------------------------------------------------------------
 # information
 
+>>> import static_frame as sf
+>>> _display_config_active = sf.DisplayActive.get()
+>>> sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
+
 
 #start_immutability
->>> import static_frame as sf
 
->>> sf.DisplayActive.set(sf.DisplayConfig(type_color=False))
+>>> import static_frame as sf
 
 >>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> s #doctest: +NORMALIZE_WHITESPACE
@@ -1121,6 +1124,11 @@ Mars    -65
 <<U7>   <int64>
 
 #end_frame_selection_a
+
+
+
+# restore initial configuration
+>>> sf.DisplayActive.set(_display_config_active)
 
 
 '''
