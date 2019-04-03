@@ -1,3 +1,7 @@
+.. figure:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/sf-line.png
+   :width: 340px
+   :align: center
+
 .. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
     :target: https://travis-ci.org/InvestmentSystems/static-frame
 
@@ -12,6 +16,8 @@
 
 .. image:: https://anaconda.org/conda-forge/static-frame/badges/version.svg
     :target: https://anaconda.org/conda-forge/static-frame
+
+
 
 
 static-frame
@@ -32,6 +38,10 @@ Installation
 Install StaticFrame via PIP::
 
     pip install static-frame
+
+Or, install StaticFrame via conda::
+
+    conda install static-frame
 
 
 Dependencies

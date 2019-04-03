@@ -16,7 +16,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 .. toctree::
    :maxdepth: 3
    :numbered:
-   :caption: Package Documents
+   :caption: Quick Start
 
    readme
    license
