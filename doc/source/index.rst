@@ -1,5 +1,9 @@
 .. documentation master file
 
+.. image:: ../images/sf-icon.png
+   :scale: 7 %
+   :align: center
+
 StaticFrame
 =========================================
 
