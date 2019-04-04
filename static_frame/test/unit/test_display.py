@@ -532,10 +532,57 @@ class TestUnit(TestCase):
                 dtype=str)
         print(f)
 
+
+        columns = list('abcdefgh')
+        index = range(1, 9)
+
+        f = sf.Frame(np.empty((8, 8), dtype='U1'), columns=columns, index=index)
+        print(f)
+
         # f.display(sf.DisplayActive.get(display_format='html_datatables'))
 
         # f.to_html_datatables()
+        columns = tuple('efgh')
+        index = range(3, 0, -1)
 
+        f = Frame.from_element_loc_items(
+                (
+                ((2, 'f'), chr(0x265F)), # pawn
+                ((2, 'g'), chr(0x265F)),
+                ((2, 'h'), chr(0x265F)),
+                ((1, 'e'), chr(0x265A)), # king
+                ((1, 'h'), chr(0x265C)), # rook
+                ),
+                index=index,
+                columns=columns,
+                dtype=str)
+
+        #part of Sicilian Defense Najdorf Variation
+        columns = tuple('hgfe')
+        index = range(6, 9)
+
+        f = Frame.from_element_loc_items(
+                (
+                ((7, 'h'), chr(0x265F)), # pawn
+                ((6, 'g'), chr(0x265F)),
+                ((7, 'f'), chr(0x265F)),
+                ((7, 'e'), chr(0x265F)),
+                ((8, 'e'), chr(0x265A)), # king
+                ((7, 'g'), chr(0x265D)), # biship
+                ((6, 'f'), chr(0x265E)), # horse
+                ((8, 'h'), chr(0x265C)), # rook
+                ),
+                index=index,
+                columns=columns,
+                dtype=str)
+
+        # s = Series(('', chr(0x265C), '', chr(0x265A)), index=tuple('efgh'))
+
+        # s = Series.from_items((('f', chr(0x265C)), ('h', chr(0x265A)))).reindex(tuple('efgh'), fill_value='')
+
+        s = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
+
+        f.assign.loc[8, :](s, fill_value='')
 
 
 

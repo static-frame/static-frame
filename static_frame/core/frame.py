@@ -47,6 +47,7 @@ from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import InterfaceAsType
 from static_frame.core.util import IndexCorrespondence
+from static_frame.core.util import DtypeSpecifier
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -222,14 +223,16 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             index: tp.Optional[IndexInitializer]=None,
             columns: tp.Optional[IndexInitializer]=None,
+            dtypes: tp.Optional[tp.Iterable[DtypeSpecifier]]=None,
             consolidate_blocks: bool=False
             ) -> 'Frame':
         '''Frame constructor from an iterable of rows.
 
         Args:
             records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
-            index: Iterable of index labels, equal in length to the number of records.
-            columns: Iterable of column labels, equal in length to the length of each row.
+            index: Optionally provide an iterable of index labels, equal in length to the number of records.
+            columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
+            dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row. If a dtype is given as None, NumPy's default type determination will be used.
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -253,6 +256,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             row_reference = rows[0]
             row_count = len(rows)
             col_count = len(row_reference)
+            if dtypes is not None and len(dtypes) != col_count:
+                raise RuntimeError('length of dtypes does not match rows')
 
             column_getter = None
             if isinstance(row_reference, dict):
@@ -272,11 +277,15 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if column_getter: # append as side effect of generator!
                     columns.append(column_getter(col_idx))
 
-                field_ref = row_reference[col_idx]
-                # string, datetime64 types requires size, so cannot use np.fromiter, as we do not know the size of all columns
-                column_type = (type(field_ref)
-                        if not isinstance(field_ref, (str, np.datetime64))
-                        else None)
+                if dtypes is None:
+                    field_ref = row_reference[col_idx]
+                    # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
+                    column_type = (type(field_ref)
+                            if not isinstance(field_ref, (str, np.datetime64))
+                            else None)
+                else:
+                    # column_type returned here can be None.
+                    column_type = dtypes[col_idx]
 
                 values = None
                 if column_type is not None:
