@@ -1,6 +1,6 @@
 
 
-What New in Static Frame
+What is New in Static Frame
 ===============================
 
 
@@ -14,6 +14,8 @@ The ``Frame.from_records()`` method has been extended to support explicitly pass
 0.3.0
 ---------
 
+The ``Index.keys()`` method now returns the underlying KeysView from the Index's dictionary.
+
 All primary containers (i.e., Series, Frame, and Index) now display HTML tables in Jupyter Notebooks. This is implemented via the ``_repr_html_()`` methods.
 
 All primary containers now feature a ``to_html()`` method.
@@ -26,5 +28,6 @@ StaticFrame's display infrastructure now shows hierarchical indices, used for ei
 
 The ``DisplayConfig`` class has been expanded to permit definition of colors, specified in hexadecimal integers or string codes, for all type categories, as well as independent settings for type delimiters, and a new setting for ``display_format``.
 
-The following ``DisplayFormats`` have been created nad implemented: ``terminal``, ``html_datatables``, ``html_table``, and ``html_pre``.
+The following ``DisplayFormats`` have been created and implemented: ``terminal``, ``html_datatables``, ``html_table``, and ``html_pre``.
 
+s
