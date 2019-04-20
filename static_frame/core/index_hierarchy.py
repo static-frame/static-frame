@@ -18,18 +18,16 @@ from static_frame.core.index import _requires_reindex
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import _NULL_SLICE
-from static_frame.core.util import SLICE_ATTRS
-from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import _INT_TYPES
-from static_frame.core.util import _intersect2d
-from static_frame.core.util import _union2d
+from static_frame.core.util import intersect2d
+from static_frame.core.util import union2d
 from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import _ufunc_skipna_1d
+from static_frame.core.util import name_filter
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import CallableOrMapping
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
@@ -38,17 +36,18 @@ from static_frame.core.array_go import ArrayGO
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayHeader
 
 
 
 class HLocMeta(type):
 
-    def __getitem__(self,
+    def __getitem__(cls,
             key: GetItemKeyType
             ) -> tp.Iterable[GetItemKeyType]:
         if not isinstance(key, tuple):
             key = (key,)
-        return self(key)
+        return cls(key)
 
 class HLoc(metaclass=HLocMeta):
     '''A wrapper for embedding hierarchical specificiations for :py:class:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
@@ -87,8 +86,8 @@ class IndexLevel:
 
     def __init__(self,
             index: Index,
-            targets: tp.Optional[ArrayGO]=None, # np.ndarray[IndexLevel]
-            offset: int=0
+            targets: tp.Optional[ArrayGO] = None, # np.ndarray[IndexLevel]
+            offset: int = 0
             ):
         '''
         Args:
@@ -100,8 +99,8 @@ class IndexLevel:
         self.offset = offset
 
     def to_index_level(self,
-            offset: tp.Optional[int]=0,
-            cls: tp.Type['IndexLevel']=None,
+            offset: tp.Optional[int] = 0,
+            cls: tp.Type['IndexLevel'] = None,
             ) -> 'IndexLevel':
         '''
         A deepcopy with optional adjustments, such as a different offset and possibly a different class.
@@ -177,8 +176,10 @@ class IndexLevel:
         for k in key:
             if not node.index.__contains__(k):
                 return False
+
             if node.targets is not None:
                 node = node.targets[node.index.loc_to_iloc(k)]
+                continue
             else: # targets is None, meaning we are done
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
@@ -317,8 +318,8 @@ class IndexLevelGO(IndexLevel):
 
     def __init__(self,
             index: IndexGO,
-            targets: tp.Optional[np.ndarray]=None, # np.ndarray[IndexLevel]
-            offset: int=0
+            targets: tp.Optional[np.ndarray] = None,
+            offset: int = 0
             ):
         assert isinstance(index, IndexGO)
         # assume that we must copy this index as it is mutable; possibly add an own_index option if this can be optimized
@@ -354,8 +355,10 @@ class IndexLevelGO(IndexLevel):
         '''
         # find fist depth that does not contain key
         depth_count = next(self.depths())
-        # import ipdb; ipdb.set_trace()
-        assert len(key) == depth_count
+
+        if len(key) != depth_count:
+            raise RuntimeError('appending key {} of insufficent depth {}'.format(
+                        key, depth_count))
 
         depth_not_found = -1
         edge_nodes = np.empty(depth_count, dtype=object)
@@ -417,22 +420,25 @@ class IndexHierarchy(IndexBase,
             '_keys',
             '_length',
             '_recache',
-            'loc',
-            'iloc',
+            '_name'
             )
 
-    STATIC = True
-    _IMMUTABLE_CONSTRUCTOR = None
-    _LEVEL_CONSTRUCTOR = IndexLevel
+    # _IMMUTABLE_CONSTRUCTOR = None
     _INDEX_CONSTRUCTOR = Index
-    _UFUNC_UNION = _union2d
-    _UFUNC_INTERSECTION = _intersect2d
+    _UFUNC_UNION = union2d
+    _UFUNC_INTERSECTION = intersect2d
+
+    _LEVEL_CONSTRUCTOR = IndexLevel
+
 
     #---------------------------------------------------------------------------
     # constructors
 
     @classmethod
-    def from_product(cls, *levels) -> 'IndexHierarchy': # tp.Iterable[tp.Hashable]
+    def from_product(cls,
+            *levels,
+            name: tp.Hashable = None
+            ) -> 'IndexHierarchy': # tp.Iterable[tp.Hashable]
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
@@ -472,7 +478,7 @@ class IndexHierarchy(IndexBase,
             depth -= 1
 
         level = cls._LEVEL_CONSTRUCTOR(index=index_up, targets=targets_previous)
-        return cls(level)
+        return cls(level, name=name)
 
     @classmethod
     def _tree_to_index_level(cls, tree) -> IndexLevel:
@@ -502,7 +508,9 @@ class IndexHierarchy(IndexBase,
 
     @classmethod
     def from_tree(cls,
-            tree
+            tree,
+            *,
+            name: tp.Hashable = None
             ) -> 'IndexHierarchy':
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
@@ -510,12 +518,15 @@ class IndexHierarchy(IndexBase,
         Returns:
             :py:class:`static_frame.IndexHierarchy`
         '''
-        return cls(cls._tree_to_index_level(tree))
+        return cls(cls._tree_to_index_level(tree), name=name)
 
 
     @classmethod
     def from_labels(cls,
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':
+            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            *,
+            name: tp.Hashable = None
+            ) -> 'IndexHierarchy':
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
@@ -553,7 +564,7 @@ class IndexHierarchy(IndexBase,
                 else:
                     raise Exception('label exceeded expected depth', label)
 
-        return cls(levels=cls._tree_to_index_level(tree))
+        return cls(levels=cls._tree_to_index_level(tree), name=name)
 
 
 # NOTE: this alternative implementation works, but is shown to be slower than the implementation used above
@@ -657,6 +668,8 @@ class IndexHierarchy(IndexBase,
     #---------------------------------------------------------------------------
     def __init__(self,
             levels: tp.Union[IndexLevel, 'IndexHierarchy'],
+            *,
+            name: tp.Hashable = None
             ):
         '''
         Args:
@@ -675,6 +688,10 @@ class IndexHierarchy(IndexBase,
             self._keys = levels.keys() # immutable keys view can be shared
             self._length = self._labels.__len__() #levels.__len__()
             self._recache = False
+
+            if name is None and levels.name is not None:
+                name = levels.name
+
         elif isinstance(levels, IndexLevel):
             self._levels = levels
             # vlaues derived from levels are deferred
@@ -683,11 +700,46 @@ class IndexHierarchy(IndexBase,
             self._keys = None
             self._length = None
             self._recache = True
+
         else:
             raise NotImplementedError('no handling for creation from', levels)
 
-        self.loc = GetItem(self._extract_loc)
-        self.iloc = GetItem(self._extract_iloc)
+        self._name = name if name is None else name_filter(name)
+
+
+    #---------------------------------------------------------------------------
+    def __setstate__(self, state):
+        '''
+        Ensure that reanimated NP arrays are set not writeable.
+        '''
+        for key, value in state[1].items():
+            setattr(self, key, value)
+        if self._labels is not None:
+            # might not yet have been created
+            self._labels.flags.writeable = False
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    def rename(self, name: tp.Hashable) -> 'Index':
+        '''
+        Return a new Frame with an updated name attribute.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        # let the constructor handle reuse
+        return self.__class__(self, name=name)
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def loc(self) -> GetItem:
+        return GetItem(self._extract_loc)
+
+    @property
+    def iloc(self) -> GetItem:
+        return GetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
 
@@ -711,7 +763,7 @@ class IndexHierarchy(IndexBase,
         return self._length
 
     def display(self,
-            config: tp.Optional[DisplayConfig]=None
+            config: tp.Optional[DisplayConfig] = None
             ) -> Display:
         config = config or DisplayActive.get()
 
@@ -733,7 +785,7 @@ class IndexHierarchy(IndexBase,
             if sub_display is None: # the first
                 sub_display = Display.from_values(
                         col,
-                        header=self.__class__,
+                        header=DisplayHeader(self.__class__, self._name),
                         config=sub_config,
                         outermost=True,
                         index_depth=0,
@@ -742,25 +794,6 @@ class IndexHierarchy(IndexBase,
                 sub_display.extend_iterable(col, header='')
 
         return sub_display
-
-        # if config.type_show:
-        #     # this will but the type in the left-most column, so it will not be spaced  evenly under the columns of the index
-        #     sub_display.append_row(
-        #             [Display.to_cell(self._labels.dtype,
-        #             config=config,
-        #             is_dtype=True)])
-
-        # import ipdb; ipdb.set_trace()
-
-        # return Display.from_values(
-        #         sub_display.to_rows(), # truncate unused header
-        #         header=self.__class__,
-        #         config=config,
-        #         outermost=True,
-        #         index_depth=0, # will chnage if we do not aggregate index cells
-        #         columns_depth=1
-        #         )
-
 
 
     #---------------------------------------------------------------------------
@@ -803,31 +836,6 @@ class IndexHierarchy(IndexBase,
 
         return self.__class__.from_labels(mapper(x) for x in self._labels)
 
-
-    #---------------------------------------------------------------------------
-    # set operations
-
-    # def intersection(self, other) -> 'IndexHierarchy':
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     return self.__class__.from_labels(_intersect2d(self._labels, opperand))
-
-    # def union(self, other) -> 'IndexHierarchy':
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     return self.__class__.from_labels(_union2d(self._labels, opperand))
 
     #---------------------------------------------------------------------------
 
@@ -930,6 +938,8 @@ class IndexHierarchy(IndexBase,
         '''
         Iterator of index labels.
         '''
+        if self._recache:
+            self._update_array_cache()
         return self._keys
 
     def __iter__(self):
@@ -943,7 +953,7 @@ class IndexHierarchy(IndexBase,
     def __contains__(self, value) -> bool:
         '''Determine if a leaf loc is contained in this Index.
         '''
-        # levels only, no need to recache
+        # levels only, no need to recache as this is what has been mutated
         return self._levels.__contains__(value)
 
     def get(self, key, default=None):
@@ -959,8 +969,8 @@ class IndexHierarchy(IndexBase,
     # utility functions
 
     def sort(self,
-            ascending: bool=True,
-            kind: str=_DEFAULT_SORT_KIND) -> 'Index':
+            ascending: bool = True,
+            kind: str = _DEFAULT_SORT_KIND) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -1009,7 +1019,7 @@ class IndexHierarchy(IndexBase,
                 )
         return self.__class__(levels)
 
-    def drop_level(self, count: int=1) -> tp.Union[Index, 'IndexHieararchy']:
+    def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHieararchy']:
         '''Return an IndexHierarhcy with one or more leaf levels removed.
         '''
         # probably need a deep copy
@@ -1041,6 +1051,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
     STATIC = False
     _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
+
     _LEVEL_CONSTRUCTOR = IndexLevelGO
     _INDEX_CONSTRUCTOR = IndexGO
 
@@ -1048,10 +1059,10 @@ class IndexHierarchyGO(IndexHierarchy):
             '_levels', # IndexLevel
             '_labels',
             '_depth',
+            '_keys',
             '_length',
             '_recache',
-            'loc',
-            'iloc',
+            '_name'
             )
 
     def append(self, value: tuple):
@@ -1060,7 +1071,6 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         self._levels.append(value)
         self._recache = True
-
 
     def extend(self, other: IndexHierarchy):
         '''

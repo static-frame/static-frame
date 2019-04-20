@@ -1,5 +1,5 @@
-import numpy as np
 import typing as tp
+import numpy as np
 
 from static_frame.core.util import mloc
 from static_frame.core.util import FilePathOrFileLike
@@ -13,8 +13,19 @@ from static_frame.core.doc_str import doc_inject
 
 class IndexBase:
 
-    __slots__ = (
-            )
+    STATIC = True
+    _IMMUTABLE_CONSTRUCTOR = None
+    _UFUNC_UNION = None
+    _UFUNC_INTERSECTION = None
+
+    __slots__ = () # defined in dervied classes
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    @property
+    def name(self) -> tp.Hashable:
+        return self._name
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
@@ -138,7 +149,7 @@ class IndexBase:
 
     @doc_inject(class_name='Index')
     def to_html(self,
-            config: tp.Optional[DisplayConfig]=None
+            config: tp.Optional[DisplayConfig] = None
             ):
         '''
         {}
@@ -151,9 +162,9 @@ class IndexBase:
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
-            fp: tp.Optional[FilePathOrFileLike]=None,
-            show: bool=True,
-            config: tp.Optional[DisplayConfig]=None
+            fp: tp.Optional[FilePathOrFileLike] = None,
+            show: bool = True,
+            config: tp.Optional[DisplayConfig] = None
             ) -> str:
         '''
         {}
@@ -169,3 +180,4 @@ class IndexBase:
             import webbrowser
             webbrowser.open_new_tab(fp)
         return fp
+

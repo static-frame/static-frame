@@ -4,7 +4,6 @@ import typing as tp
 
 from itertools import zip_longest
 from itertools import chain
-from collections import defaultdict
 import numpy as np
 
 
@@ -19,7 +18,7 @@ from static_frame.core.util import DtypeSpecifier
 
 from static_frame.core.util import mloc
 from static_frame.core.util import array_shift
-from static_frame.core.util import _full_for_fill
+from static_frame.core.util import full_for_fill
 from static_frame.core.util import _resolve_dtype
 from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _dtype_to_na
@@ -263,7 +262,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             array = np.empty(shape, dtype=row_dtype)
 
         # can we use a np.concatenate, but need to handle 1D arrrays and need to converty type before concatenate
-
         pos = 0
         for block in blocks:
             if block.ndim == 1:
@@ -500,7 +498,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                     yield b[index_ic.iloc_src]
                 else:
                     shape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
-                    values = _full_for_fill(b.dtype, shape, fill_value)
+                    values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                     values.flags.writeable = False
@@ -510,7 +508,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if not columns_ic.has_common:
                 # just return an empty frame; what type it shold be is not clear
                 shape = self.shape[0], columns_ic.size
-                values = _full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(self._row_dtype, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -533,7 +531,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         else:
                             # just get an empty position
                             # dtype should be the same as the column replacing?
-                            values = _full_for_fill(self._row_dtype,
+                            values = full_for_fill(self._row_dtype,
                                     self.shape[0],
                                     fill_value)
                             values.flags.writeable = False
@@ -543,7 +541,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if not columns_ic.has_common and not index_ic.has_common:
                 # just return an empty frame; what type it shold be is not clear
                 shape = index_ic.size, columns_ic.size
-                values = _full_for_fill(self._row_dtype, shape, fill_value)
+                values = full_for_fill(self._row_dtype, shape, fill_value)
                 values.flags.writeable = False
                 yield values
             else:
@@ -567,7 +565,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                                 else:
                                     yield b[index_ic.iloc_src, block_col]
                             else: # need an empty to fill
-                                values = _full_for_fill(self._row_dtype,
+                                values = full_for_fill(self._row_dtype,
                                         index_ic.size,
                                         fill_value)
                                 if b.ndim == 1:
@@ -577,7 +575,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                                 values.flags.writeable = False
                                 yield values
                         else:
-                            values = _full_for_fill(self._row_dtype,
+                            values = full_for_fill(self._row_dtype,
                                         index_ic.size,
                                         fill_value)
                             values.flags.writeable = False
@@ -686,7 +684,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     def display(self,
-            config: tp.Optional[DisplayConfig]=None
+            config: tp.Optional[DisplayConfig] = None
             ) -> Display:
         config = config or DisplayActive.get()
         d = None
@@ -774,7 +772,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     # @profile
     def _key_to_block_slices(self,
                 key,
-                retain_key_order: bool=True) -> tp.Generator[
+                retain_key_order: bool = True) -> tp.Generator[
                 tp.Tuple[int, tp.Union[slice, int]], None, None]:
         '''
         For a column key (an integer, slice, or iterable), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
@@ -799,8 +797,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                     indices = self._index[key]
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
                     # NOTE: if self._index was an array we could use Boolean selection directly
-                    indices = (self._index[idx]
-                            for idx, v in enumerate(key) if v == True)
+                    indices = (self._index[idx] for idx, v in enumerate(key) if v)
                 elif isinstance(key, _KEY_ITERABLE_TYPES):
                     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
                     if retain_key_order:
@@ -927,8 +924,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     def _drop_blocks(self,
-            row_key: GetItemKeyType=None,
-            column_key: GetItemKeyType=None,
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None,
             ) -> tp.Generator[np.ndarray, None, None]:
         '''
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
@@ -1013,10 +1010,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     def _shift_blocks(self,
-            row_shift: int=0,
-            column_shift: int=0,
-            wrap: bool=True,
-            fill_value: tp.Any=np.nan
+            row_shift: int = 0,
+            column_shift: int = 0,
+            wrap: bool = True,
+            fill_value: object = np.nan
             ) -> tp.Generator[np.ndarray, None, None]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
@@ -1254,7 +1251,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def _extract_array(self,
             row_key=None,
             column_key=None) -> np.ndarray:
-        '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that want to process row/column with an array.
+        '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, int):
@@ -1268,8 +1265,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 return b[:, column]
             return b[row_key, column]
 
-        # pass a generator to from_block; will return a TypeBlocks or a single element
-        # TODO: figure out shape from keys so as to not accumulate?
+        # figure out shape from keys so as to not accumulate?
         blocks = []
         rows = 0
         columns = 0
@@ -1295,8 +1291,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 row_dtype=row_dtype)
 
     def _extract(self,
-            row_key: GetItemKeyType=None,
-            column_key: GetItemKeyType=None) -> 'TypeBlocks': # but sometimes an element
+            row_key: GetItemKeyType = None,
+            column_key: GetItemKeyType = None) -> 'TypeBlocks': # but sometimes an element
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.
 
@@ -1495,8 +1491,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     def dropna_to_keep_locations(self,
-            axis: int=0,
-            condition: tp.Callable[[np.ndarray], bool]=np.all) -> 'TypeBlocks':
+            axis: int = 0,
+            condition: tp.Callable[[np.ndarray], bool] = np.all) -> 'TypeBlocks':
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 

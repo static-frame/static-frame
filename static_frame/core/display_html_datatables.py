@@ -2,7 +2,7 @@
 
 from functools import partial
 
-VERSION_BOOTSTRAP  = '4.3.1'
+VERSION_BOOTSTRAP = '4.3.1'
 VERSION_DATATABLES = '1.10.19'
 VERSION_JQUERY = '3.3.1'
 VERSION_JQUERY_UI = '1.12.0'

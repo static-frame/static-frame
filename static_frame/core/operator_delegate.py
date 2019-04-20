@@ -62,7 +62,7 @@ _REVERSE_OPERATOR_MAP = {
 def _ufunc_logical_skipna(array: np.ndarray,
         ufunc: tp.Callable,
         skipna: bool,
-        axis: int=0,
+        axis: int = 0,
         out=None
         ) -> np.ndarray:
     '''
@@ -73,9 +73,8 @@ def _ufunc_logical_skipna(array: np.ndarray,
 
     if len(array) == 0:
         # TODO: handle if this is ndim == 2 and has no length
-        if ufunc == np.all:
-            return True
-        return False # any() of an empty array is False
+        # any() of an empty array is False
+        return ufunc == np.all
 
     if array.dtype.kind == 'b':
         # if boolean execute first
@@ -147,8 +146,8 @@ class MetaOperatorDelegate(type):
 
     @staticmethod
     def create_ufunc_operator(func_name,
-            opperand_count: int=1,
-            reverse: bool=False):
+            opperand_count: int = 1,
+            reverse: bool = False):
         # operator module defines alias to funcs with names like __add__, etc
         if not reverse:
             operator_func = getattr(operator_mod, func_name)

@@ -4,11 +4,16 @@ What is New in Static Frame
 ===============================
 
 
-0.3.1
+0.3.1-dev
 ----------
+
+The ``name`` attribute is now implemented for all containers; all constructors now take a ``name`` argument, and a ``rename`` method is available. Extracting columns, rows, and setting indices on ``Frame`` all propagate name attributes appropriately.
+
+The default ``Series`` display has been updated to show the "<Series>" label above the index, consistent with the presentation of ``Frame``.
 
 The ``Frame.from_records()`` method has been extended to support explicitly passing dtypes per column, which permits avoiding type discovery through observing the first record or relying on NumPy's type discovery in array creation.
 
+The ``Frame.from_concat()`` constructor now handles hierarchical indices correctly.
 
 
 0.3.0
@@ -30,4 +35,3 @@ The ``DisplayConfig`` class has been expanded to permit definition of colors, sp
 
 The following ``DisplayFormats`` have been created and implemented: ``terminal``, ``html_datatables``, ``html_table``, and ``html_pre``.
 
-s

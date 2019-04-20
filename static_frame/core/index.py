@@ -26,6 +26,7 @@ from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _key_to_datetime_key
 from static_frame.core.util import immutable_filter
+from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift
 
 from static_frame.core.util import DateInitializer
@@ -43,6 +44,7 @@ from static_frame.core.operator_delegate import MetaOperatorDelegate
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayHeader
 
 
 class ILocMeta(type):
@@ -173,14 +175,13 @@ class Index(IndexBase,
             '_positions',
             '_recache',
             '_loc_is_iloc',
+            '_name'
             )
 
-    STATIC = True
-    _IMMUTABLE_CONSTRUCTOR = None
-    _DTYPE = None # for specialized indices requiring a typed labels
     _UFUNC_UNION = np.union1d
     _UFUNC_INTERSECTION = np.intersect1d
 
+    _DTYPE = None # for specialized indices requiring a typed labels
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth = 1
 
@@ -265,9 +266,12 @@ class Index(IndexBase,
     #---------------------------------------------------------------------------
     def __init__(self,
             labels: IndexInitializer,
+            *,
             loc_is_iloc: bool=False,
+            name: tp.Hashable = None,
             dtype: DtypeSpecifier=None
             ) -> None:
+
 
         self._recache = False
         self._map = None
@@ -285,7 +289,14 @@ class Index(IndexBase,
 
             positions = labels._positions
             loc_is_iloc = labels._loc_is_iloc
+
+            if name is None and labels.name is not None:
+                name = labels.name # immutable, so no copy necessary
+
             labels = labels._labels
+
+
+        self._name = name if name is None else name_filter(name)
 
         if self._map is None:
             self._map = self._get_map(labels, positions)
@@ -311,6 +322,18 @@ class Index(IndexBase,
         for key, value in state[1].items():
             setattr(self, key, value)
         self._labels.flags.writeable = False
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    def rename(self, name: tp.Hashable) -> 'Index':
+        '''
+        Return a new Frame with an updated name attribute.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        # let the constructor handle reuse
+        return self.__class__(self, name=name)
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -349,7 +372,6 @@ class Index(IndexBase,
     def display(self,
             config: tp.Optional[DisplayConfig]=None,
             ) -> Display:
-        # NOTE: deafult index/column is suitable for outermost display.
 
         config = config or DisplayActive.get()
 
@@ -357,7 +379,7 @@ class Index(IndexBase,
             self._update_array_cache()
 
         return Display.from_values(self.values,
-                header=self.__class__,
+                header=DisplayHeader(self.__class__, self._name),
                 config=config,
                 outermost=True,
                 index_depth=0,
@@ -647,12 +669,13 @@ class IndexGO(Index):
 
     __slots__ = (
             '_map',
-            '_labels_mutable',
-            '_positions_mutable_count',
             '_labels',
             '_positions',
             '_recache',
-            # 'iloc',
+            '_loc_is_iloc',
+            '_name',
+            '_labels_mutable',
+            '_positions_mutable_count',
             )
 
     def _extract_labels(self,
@@ -758,8 +781,7 @@ class IndexDate(Index):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            # 'loc',
-            # 'iloc',
+            '_name'
             )
 
 
@@ -872,8 +894,7 @@ class IndexYearMonth(IndexDate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            # 'loc',
-            # 'iloc',
+            '_name'
             )
 
 
@@ -948,8 +969,7 @@ class IndexYear(IndexDate):
             '_positions',
             '_recache',
             '_loc_is_iloc',
-            # 'loc',
-            # 'iloc',
+            '_name',
             )
 
 

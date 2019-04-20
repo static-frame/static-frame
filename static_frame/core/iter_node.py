@@ -4,13 +4,12 @@ Tools for iterators in Series and Frame. These components are imported by both s
 
 import typing as tp
 from enum import Enum
+from functools import partial
 
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 from static_frame.core.util import CallableOrMapping
-
-from functools import partial
 
 
 class IterNodeApplyType(Enum):
@@ -45,7 +44,7 @@ class IterNodeDelegate:
             apply_constructor: Callable (generally a class) used to construct the object returned from apply(); must take an iterator of items.
         '''
         self._func_values = func_values
-        self._func_items= func_items
+        self._func_items = func_items
         self._yield_type = yield_type
         self._apply_constructor = apply_constructor
 
@@ -145,9 +144,9 @@ class IterNodeDelegate:
     def apply_pool(self,
             func: CallableOrMapping,
             dtype=None,
-            max_workers: tp.Optional[int]=None,
-            chunksize: int=1,
-            use_threads: bool=False
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False
             ):
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
@@ -196,7 +195,7 @@ class IterNode:
             function_values,
             function_items,
             yield_type: IterNodeType,
-            apply_type: IterNodeApplyType=IterNodeApplyType.SERIES_ITEMS
+            apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
             ) -> None:
         self._container = container
         self._func_values = function_values

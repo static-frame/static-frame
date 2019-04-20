@@ -4,11 +4,11 @@ import os
 
 from collections import OrderedDict
 from collections import abc
+from itertools import chain
 from io import StringIO
 from io import BytesIO
 import datetime
 from urllib import request
-from functools import wraps
 import tempfile
 
 
@@ -48,6 +48,7 @@ _UNIT_SLICE = slice(0, 1)
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
 SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
+STATIC_ATTR = 'STATIC'
 
 # defaults to float64
 _EMPTY_ARRAY = np.array((), dtype=None)
@@ -121,6 +122,16 @@ def immutable_filter(src_array: np.ndarray) -> np.ndarray:
         return dst_array
     return src_array # keep it as is
 
+def name_filter(name: tp.Hashable) -> tp.Hashable:
+    '''
+    For name attributes on containers, only permit recursively hashable objects.
+    '''
+    try:
+        hash(name)
+    except TypeError:
+        raise TypeError('unhashable name attribute', name)
+    return name
+
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,
@@ -190,7 +201,7 @@ def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
     return dt_resolve
 
 
-def _full_for_fill(
+def full_for_fill(
         dtype: np.dtype,
         shape: tp.Union[int, tp.Tuple[int, int]],
         fill_value: object) -> np.ndarray:
@@ -199,14 +210,7 @@ def _full_for_fill(
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value.
     '''
-
     dtype = _resolve_dtype(dtype, np.array(fill_value).dtype)
-    # try:
-    #     fill_can_cast = np.can_cast(fill_value, dtype)
-    # except TypeError: # happens when fill is None and dtype is float
-    #     fill_can_cast = False
-
-    # dtype = object if not fill_can_cast else dtype
     return np.full(shape, fill_value, dtype=dtype)
 
 
@@ -254,6 +258,37 @@ def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     if skipna:
         return ufunc_skipna(v)
     return ufunc(v)
+
+
+def ufunc_unique(array: np.ndarray,
+        axis: tp.Optional[int] = None
+        ) -> tp.Union[frozenset, np.ndarray]:
+    '''
+    Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
+    '''
+    if array.dtype.kind == 'O':
+        if axis is None or array.ndim < 2:
+            try:
+                return np.unique(array)
+            except TypeError: # if unorderable types
+                pass
+            # this may or may not work, depending on contained types
+            if array.ndim > 1: # need to flatten
+                array_iter = array.flat
+            else:
+                array_iter = array
+            return frozenset(array_iter)
+            # return np.array(sorted(frozenset(array_iter)), dtype=object)
+
+        # ndim == 2 and axis is not None
+        # the normal np.unique will give TypeError: The axis argument to unique is not supported for dtype object
+        if axis == 0:
+            array_iter = array
+        else:
+            array_iter = array.T
+        return frozenset(tuple(x) for x in array_iter)
+    # all other types, use the main ufunc
+    return np.unique(array, axis=axis)
 
 
 def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
@@ -340,13 +375,9 @@ def _key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
         return np.datetime64(key)
 
     if isinstance(key, np.ndarray):
-        if key.dtype.kind == 'b':
-            # return Boolean unaltered
+        if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
-        elif key.dtype.kind == 'M':
-            return key
-        else:
-            return key.astype(np.datetime64)
+        return key.astype(np.datetime64)
 
     if hasattr(key, '__iter__') and hasattr(key, '__len__'):
         return np.fromiter(key, dtype=np.datetime64, count=len(key))
@@ -377,7 +408,7 @@ def _dict_to_sorted_items(
 
 def _array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: int=0):
+        unique_axis: int = 0):
     '''Locations are index positions for each group.
     '''
     try:
@@ -428,7 +459,7 @@ def _isna(array: np.ndarray) -> np.ndarray:
 
 def _array_to_duplicated(
         array: np.ndarray,
-        axis: int=0,
+        axis: int = 0,
         exclude_first=False,
         exclude_last=False):
     '''Given a numpy array, return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
@@ -521,7 +552,7 @@ def array_shift(array: np.ndarray,
         return np.roll(array, shift_mod, axis=axis)
 
     # will insure that the result can contain the fill and the original values
-    result = _full_for_fill(array.dtype, array.shape, fill_value)
+    result = full_for_fill(array.dtype, array.shape, fill_value)
 
     if axis == 0:
         if shift > 0:
@@ -559,6 +590,8 @@ def _array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
     for row in array: # assuming 2d
         yield tuple(row)
 
+#-------------------------------------------------------------------------------
+# extension to union and intersection handling
 
 def _ufunc2d(
         func: tp.Callable[[np.ndarray], np.ndarray],
@@ -568,7 +601,6 @@ def _ufunc2d(
     Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
     '''
     if array.dtype.kind == 'O' or other.dtype.kind == 'O':
-        # TODO: support !D object arrays here:
         if array.ndim == 1:
             array_set = set(array)
         else:
@@ -585,6 +617,7 @@ def _ufunc2d(
         else:
             raise Exception('unexpected func', func)
         # sort so as to duplicate results from NP functions
+        # NOTE: this sort may not always be necssary
         return np.array(sorted(result), dtype=object)
     else:
         assert array.shape[1] == other.shape[1]
@@ -601,12 +634,29 @@ def _ufunc2d(
         return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 
-def _intersect2d(array: np.ndarray,
+def intersect2d(array: np.ndarray,
         other: np.ndarray) -> np.ndarray:
     return _ufunc2d(np.intersect1d, array, other)
 
-def _union2d(array, other) -> np.ndarray:
+def union2d(array, other) -> np.ndarray:
     return _ufunc2d(np.union1d, array, other)
+
+def intersect1d(array: np.ndarray,
+        other: np.ndarray) -> np.ndarray:
+    '''
+    Extend ufunc version to handle cases where types cannot be sorted.
+    '''
+    try:
+        return np.intersect1d(array, other)
+    except TypeError:
+        result = set(array) & set(other)
+
+    dtype = _resolve_dtype(array.dtype, other.dtype)
+    if dtype.kind == 'O':
+        # np fromiter does not work with object types
+        return np.array(tuple(result), dtype=dtype)
+    return np.fromiter(result, count=len(result), dtype=dtype)
+
 
 
 #-------------------------------------------------------------------------------
@@ -619,12 +669,14 @@ def _read_url(fp: str):
 
 def write_optional_file(
         content: str,
-        fp: tp.Optional[FilePathOrFileLike]=None,
+        fp: tp.Optional[FilePathOrFileLike] = None,
         ):
+
     if not fp:
         fd, fp = tempfile.mkstemp(suffix='.html', text=True)
     else:
         fd = None
+
     try:
         with open(fp, 'w') as f:
             f.write(content)
@@ -785,12 +837,12 @@ class IndexCorrespondence:
         # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
         if depth == 1:
             # NOTE: this can fail in some cases: comparing two object arrays with NaNs and strings.
-            common_labels = np.intersect1d(src_index.values, dst_index.values)
+            common_labels = intersect1d(src_index.values, dst_index.values)
             has_common = len(common_labels) > 0
             assert not mixed_depth
         elif depth > 1:
             # if either values arrays are object, we have to covert all values to tuples
-            common_labels = _intersect2d(src_index.values, dst_index.values)
+            common_labels = intersect2d(src_index.values, dst_index.values)
             if mixed_depth:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
                 common_labels = list(_array2d_to_tuples(common_labels))

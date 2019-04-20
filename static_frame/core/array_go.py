@@ -108,3 +108,4 @@ class ArrayGO:
         if self._recache:
             self._update_array_cache()
         return self.__class__(self._array, dtype=self._dtype)
+

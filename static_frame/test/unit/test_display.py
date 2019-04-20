@@ -92,19 +92,11 @@ class TestUnit(TestCase):
         s = Series(range(3), index=('a', 'b', 'c'))
 
         self.assertEqual(s.display(config_right).to_rows(),
-                ['<Index> <Series>',
-                '      a        0',
-                '      b        1',
-                '      c        2',
-                '  <<U1>  <int64>'])
+                ['<Series>', ' <Index>', '       a       0', '       b       1', '       c       2', '   <<U1> <int64>']
+                )
 
         self.assertEqual(s.display(config_left).to_rows(),
-                ['<Index> <Series>',
-                'a       0',
-                'b       1',
-                'c       2',
-                '<<U1>   <int64>'])
-
+                ['<Series>', '<Index>', 'a        0', 'b        1', 'c        2', '<<U1>    <int64>'])
 
         records = (
                 (2, 2, 'a', False, False),
@@ -140,7 +132,7 @@ class TestUnit(TestCase):
         config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
 
         records = (
-                (2, 2, 'a', False, False),
+                    (2, 2, 'a', False, False),
                 (30, 34, 'b', True, False),
                 (2, 95, 'c', False, False),
                 )
@@ -184,14 +176,18 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(s.display(config=config_width_12).to_rows(),
-                ['<Index> <Series>',
-                'a       Lorem ips...',
-                'b       t amet, c...',
-                'c       adipiscin...',
-                '<<U1>   <<U20>'])
+                [
+                '<Series>',
+                '<Index>',
+                'a        Lorem ips...',
+                'b        t amet, c...',
+                'c        adipiscin...',
+                '<<U1>    <<U20>'])
 
         self.assertEqual(s.display(config=config_width_6).to_rows(),
-                ['<In... <Se...',
+                [
+                '<Se...',
+                '<In...',
                 'a      Lor...',
                 'b      t a...',
                 'c      adi...',
@@ -234,27 +230,32 @@ class TestUnit(TestCase):
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index)
 
+
         self.assertEqual(s.display(config_rows_12).to_rows(),
-                ['<Index> <Series>',
-                'ab      0',
-                'ac      1',
-                'ad      2',
-                'ae      3',
-                '...     ...',
-                'wz      321',
-                'xy      322',
-                'xz      323',
-                'yz      324',
-                '<<U2>   <int64>'])
+                [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                'ad       2',
+                'ae       3',
+                '...      ...',
+                'wz       321',
+                'xy       322',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>'])
 
         self.assertEqual(s.display(config_rows_7).to_rows(),
-                ['<Index> <Series>',
-                'ab      0',
-                'ac      1',
-                '...     ...',
-                'xz      323',
-                'yz      324',
-                '<<U2>   <int64>'])
+                [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                '...      ...',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>'])
 
 
 
@@ -467,9 +468,8 @@ class TestUnit(TestCase):
         f = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('w', 'x'))
-
         self.assertEqual(f['q']._repr_html_(),
-            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th><span style="color: #777777">&lt;Series&gt;</span></th></tr></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
+            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Series: q&gt;</span></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th></tr></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
 
     def test_display_html_index_a(self):
         records = (
@@ -484,9 +484,8 @@ class TestUnit(TestCase):
                 '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Index&gt;</span></th></tr></thead><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
 
         f1 = f.set_index_hierarchy(('p', 'q'))
-
         self.assertEqual(f1.index._repr_html_(),
-                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
+                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
 
     @unittest.skip('too colorful')

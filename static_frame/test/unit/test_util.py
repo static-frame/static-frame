@@ -10,8 +10,8 @@ from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import _array_set_ufunc_many
 
-from static_frame.core.util import _intersect2d
-from static_frame.core.util import _union2d
+from static_frame.core.util import intersect2d
+from static_frame.core.util import union2d
 
 
 from static_frame.core.util import _gen_skip_middle
@@ -29,7 +29,7 @@ from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.util import _slice_to_ascending_slice
 from static_frame.core.util import array_shift
-
+from static_frame.core.util import ufunc_unique
 
 from static_frame.test.test_case import TestCase
 
@@ -354,19 +354,19 @@ class TestUnit(TestCase):
         a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
         b = np.array([('a', 'g'), ('c', 'd'), ('e', 'f')])
 
-        post = _intersect2d(a, b)
+        post = intersect2d(a, b)
         self.assertEqual(post.tolist(),
                 [['c', 'd'], ['e', 'f']])
 
-        post = _intersect2d(a.astype(object), b.astype(object))
+        post = intersect2d(a.astype(object), b.astype(object))
         self.assertEqual(post.tolist(),
                 [['c', 'd'], ['e', 'f']])
 
-        post = _union2d(a, b)
+        post = union2d(a, b)
         self.assertEqual(post.tolist(),
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
-        post = _union2d(a.astype(object), b.astype(object))
+        post = union2d(a.astype(object), b.astype(object))
         self.assertEqual(post.tolist(),
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
@@ -455,6 +455,50 @@ class TestUnit(TestCase):
                 [['e', 'd', 'XX', 'XX'],
                 ['f', 'w', 'XX', 'XX'],
                 ['s', 'q', 'XX', 'XX']])
+
+
+
+    def test_ufunc_unique_a(self):
+
+        a1 = np.array([1, 1, 1, 2, 2])
+        post = ufunc_unique(a1)
+        self.assertEqual(post.tolist(), [1, 2])
+
+        a2 = np.array([1, 1, 1, 2, 2], dtype=object)
+        post = ufunc_unique(a2)
+        self.assertEqual(post.tolist(), [1, 2])
+
+        a3 = np.array([1, 'x', 1, None, 2], dtype=object)
+        post = ufunc_unique(a3)
+        self.assertEqual(post, {None, 1, 2, 'x'})
+
+
+    def test_ufunc_unique_b(self):
+
+        a1 = np.array([[1, 1], [1, 2], [1, 2]])
+        post = ufunc_unique(a1)
+        self.assertEqual(post.tolist(), [1, 2])
+
+        post = ufunc_unique(a1, axis=0)
+        self.assertEqual(post.tolist(), [[1, 1], [1, 2]])
+
+        post = ufunc_unique(a1, axis=1)
+        self.assertEqual(post.tolist(), [[1, 1], [1, 2], [1, 2]])
+
+
+    def test_ufunc_unique_c(self):
+
+        a1 = np.array([[1, 'x', 1], [1, None, 1], [1, 'x', 1]], dtype=object)
+
+        post = ufunc_unique(a1)
+        self.assertEqual(post, {'x', 1, None})
+
+        post = ufunc_unique(a1, axis=0)
+        self.assertEqual(post, {(1, 'x', 1), (1, None, 1)})
+
+        post = ufunc_unique(a1, axis=1)
+        self.assertEqual(post, {(1, 1, 1), ('x', None, 'x')})
+
 
 
 if __name__ == '__main__':

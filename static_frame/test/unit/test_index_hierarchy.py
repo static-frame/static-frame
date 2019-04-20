@@ -12,6 +12,7 @@ from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
+from static_frame import DisplayConfig
 
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
@@ -168,6 +169,16 @@ class TestUnit(TestCase):
                 lvl0.get_labels().tolist(),
                 [['I', 'A', 'x'], ['I', 'A', 'y'], ['I', 'B', 'x'], ['I', 'B', 'y'], ['II', 'A', 'x'], ['II', 'A', 'y'], ['II', 'B', 'x'], ['II', 'B', 'y'], ['II', 'B', 'z'], ['II', 'C', 'a'], ['III', 'A', 'a']])
 
+    def test_hierarhcy_init_a(self):
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        ih2 = IndexHierarchy(ih1)
+        self.assertEqual(ih1.name, 'foo')
+        self.assertEqual(ih2.name, 'foo')
 
 
     def test_hierarchy_loc_to_iloc_a(self):
@@ -482,7 +493,7 @@ class TestUnit(TestCase):
 
         s = Series(range(8), index=ih)
         post = s.display()
-        self.assertEqual(len(post), 10)
+        self.assertEqual(len(post), 11)
 
     def test_hierarchy_loc_a(self):
         OD = OrderedDict
@@ -773,6 +784,48 @@ class TestUnit(TestCase):
         f3 = f1.loc[Series([False, True], index=(('b', 999999), ('b', 201810)))]
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((('b', 201810), 'b'),)), ('b', ((('b', 201810), 201810),)), ('c', ((('b', 201810), 0.4),))))
+
+
+    def test_hierarch_name_a(self):
+
+        idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+        self.assertEqual(idx1.name, 'q')
+
+        idx2 = idx1.rename('w')
+        self.assertEqual(idx2.name, 'w')
+
+
+    def test_hierarch_name_b(self):
+
+        idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
+        idx2 = idx1.rename('w')
+
+        self.assertEqual(idx1.name, 'q')
+        self.assertEqual(idx2.name, 'w')
+
+        idx1.append(('c', 'c'))
+        idx2.append(('x', 'x'))
+
+        self.assertEqual(
+                idx1.values.tolist(),
+                [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['c', 'c']]
+                )
+
+        self.assertEqual(
+                idx2.values.tolist(),
+                [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['x', 'x']]
+                )
+
+    def test_hierarch_display_a(self):
+
+        idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+
+        match = tuple(idx1.display(DisplayConfig(type_color=False)))
+
+        self.assertEqual(
+                match,
+                (['<IndexHierarchy: q>', ''], ['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['<<U1>', '<<U1>'])
+                )
 
 
 if __name__ == '__main__':

@@ -20,6 +20,13 @@ from static_frame.core.index import _is_index_initializer
 
 class TestUnit(TestCase):
 
+    def test_index_init_a(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
+        idx2 = Index(idx1)
+
+        self.assertEqual(idx1.name, 'foo')
+        self.assertEqual(idx2.name, 'foo')
+
 
     def test_index_loc_to_iloc_a(self):
 
@@ -509,6 +516,39 @@ class TestUnit(TestCase):
 
         # import ipdb; ipdb.set_trace()
 
+    def test_index_name_a(self):
+
+        idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(idx1.name, 'foo')
+
+        idx2 = idx1.rename('bar')
+        self.assertEqual(idx2.name, 'bar')
+
+    def test_name_b(self):
+
+        with self.assertRaises(TypeError):
+            Index(('a', 'b', 'c', 'd'), name=['x', 'y'])
+
+        with self.assertRaises(TypeError):
+            Index(('a', 'b', 'c', 'd'), name={'x', 'y'})
+
+
+    def test_index_name_c(self):
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(idx1.name, 'foo')
+
+        idx2 = idx1.rename('bar')
+        self.assertEqual(idx2.name, 'bar')
+
+        idx1.append('e')
+        idx2.append('x')
+
+        self.assertEqual(idx1.values.tolist(),
+                ['a', 'b', 'c', 'd', 'e'])
+
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd', 'x'])
 
 
 if __name__ == '__main__':

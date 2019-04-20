@@ -202,7 +202,7 @@ class DisplayFormat:
             ) -> tp.Generator[str, None, None]:
         '''
         Args:
-            header_depth: number of columsn that should be treated as headers.
+            header_depth: number of columns that should be treated as headers.
         '''
         for msg in row:
             yield msg
@@ -216,7 +216,9 @@ class DisplayFormat:
         return msg
 
     @staticmethod
-    def markup_outermost(msg: str) -> str:
+    def markup_outermost(msg: str,
+            identifier: tp.Optional[str] = None
+            ) -> str:
         return msg
 
 class DisplayFormatTerminal(DisplayFormat):
@@ -252,9 +254,11 @@ class DisplayFormatHTMLTable(DisplayFormat):
         return '<tbody>{}</tbody>'.format(msg)
 
     @staticmethod
-    def markup_outermost(msg: str, id: tp.Optional[str]=None) -> str:
-        if id:
-            id_str = 'id="{}" '.format(id)
+    def markup_outermost(msg: str,
+            identifier: tp.Optional[str] = None
+            ) -> str:
+        if identifier:
+            id_str = 'id="{}" '.format(identifier)
         else:
             id_str = ''
         return '<table {id_str}border="1">{content}</table>'.format(
@@ -265,10 +269,13 @@ class DisplayFormatHTMLTable(DisplayFormat):
 class DisplayFormatHTMLDataTables(DisplayFormatHTMLTable):
 
     @staticmethod
-    def markup_outermost(msg: str) -> str:
+    def markup_outermost(msg: str,
+            identifier: tp.Optional[str] = 'SFTable'
+            ) -> str:
         # embed the table HTML in the datatables template
-        html_table = DisplayFormatHTMLTable.markup_outermost(msg, id='SFTable')
-        return display_html_datatables.TEMPLATE('SFTable', html_table)
+        html_table = DisplayFormatHTMLTable.markup_outermost(msg,
+                identifier=identifier)
+        return display_html_datatables.TEMPLATE(identifier, html_table)
 
 
 class DisplayFormatHTMLPre(DisplayFormat):
@@ -276,8 +283,17 @@ class DisplayFormatHTMLPre(DisplayFormat):
     CELL_WIDTH_NORMALIZE = True
 
     @staticmethod
-    def markup_outermost(msg: str) -> str:
-        return '<div style="white-space: pre; font-family: monospace">{}</div>'.format(msg)
+    def markup_outermost(msg: str,
+            identifier: tp.Optional[str] = None
+            ) -> str:
+
+        style = 'style="white-space: pre; font-family: monospace"'
+        id_str = 'id="{}" '.format(identifier) if identifier else ''
+
+        return '<div {id_str}{style}>{msg}</div>'.format(
+                style=style,
+                id_str=id_str,
+                msg=msg)
 
 
 
@@ -302,12 +318,13 @@ def terminal_ansi(stream=sys.stdout) -> bool:
     if 'INSIDE_EMACS' in environ:
         return False
 
+    if stream.closed:
+        return False
+
     if hasattr(stream, "isatty") and stream.isatty() and platform.system() != 'Windows':
         return True
 
     return False
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -345,8 +362,8 @@ class DisplayConfig:
             )
 
     @classmethod
-    def from_json(cls, str) -> 'DisplayConfig':
-        args = json.loads(str.strip())
+    def from_json(cls, json_str) -> 'DisplayConfig':
+        args = json.loads(json_str.strip())
         # filter arguments by current slots
         args_valid = {}
         for k in cls.__slots__:
@@ -364,31 +381,31 @@ class DisplayConfig:
         return cls(**kwargs)
 
     def __init__(self,
-            type_show: bool=True,
-            type_color: bool=True,
+            type_show: bool = True,
+            type_color: bool = True,
 
-            type_color_default: ColorConstructor=0x505050,
-            type_color_int: ColorConstructor=0x505050,
-            type_color_float: ColorConstructor=0x505050,
-            type_color_complex: ColorConstructor=0x505050,
-            type_color_bool: ColorConstructor=0x505050,
-            type_color_object: ColorConstructor=0x505050,
-            type_color_str: ColorConstructor=0x505050,
+            type_color_default: ColorConstructor = 0x505050,
+            type_color_int: ColorConstructor = 0x505050,
+            type_color_float: ColorConstructor = 0x505050,
+            type_color_complex: ColorConstructor = 0x505050,
+            type_color_bool: ColorConstructor = 0x505050,
+            type_color_object: ColorConstructor = 0x505050,
+            type_color_str: ColorConstructor = 0x505050,
 
-            type_color_datetime: ColorConstructor=0x505050,
-            type_color_timedelta: ColorConstructor=0x505050,
+            type_color_datetime: ColorConstructor = 0x505050,
+            type_color_timedelta: ColorConstructor = 0x505050,
 
-            type_color_index: ColorConstructor=0x777777,
-            type_color_series: ColorConstructor=0x777777,
-            type_color_frame: ColorConstructor=0x777777,
+            type_color_index: ColorConstructor = 0x777777,
+            type_color_series: ColorConstructor = 0x777777,
+            type_color_frame: ColorConstructor = 0x777777,
 
-            type_delimiter_left: str='<',
-            type_delimiter_right: str='>',
+            type_delimiter_left: str = '<',
+            type_delimiter_right: str = '>',
             display_format=DisplayFormats.TERMINAL,
-            display_columns: tp.Optional[int]=12,
-            display_rows: tp.Optional[int]=36,
-            cell_max_width: int=20,
-            cell_align_left: bool=True
+            display_columns: tp.Optional[int] = 12,
+            display_rows: tp.Optional[int] = 36,
+            cell_max_width: int = 20,
+            cell_align_left: bool = True
             ) -> None:
 
         self.type_show = type_show
@@ -411,7 +428,7 @@ class DisplayConfig:
         self.type_delimiter_left = type_delimiter_left
         self.type_delimiter_right = type_delimiter_right
 
-        self.display_format  = display_format
+        self.display_format = display_format
 
         self.display_columns = display_columns
         self.display_rows = display_rows
@@ -538,6 +555,29 @@ class DisplayActive:
 
 #-------------------------------------------------------------------------------
 
+
+class DisplayHeader:
+    '''
+    Wraper for passing in display header that have a name attribute.
+    '''
+    __slots__ = ('cls', 'name')
+
+    def __init__(self,
+            cls,
+            name: tp.Optional[object]=None):
+        self.cls = cls
+        self.name = name
+
+    def __repr__(self) -> str:
+        '''
+        Provide string representation before additon of outer delimiters.
+        '''
+        if self.name:
+            return '{}: {}'.format(self.cls.__name__, self.name)
+        return self.cls.__name__
+
+
+HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 DisplayCell = tp.Tuple[str, int]
 
 
@@ -566,20 +606,25 @@ class Display:
 
     @staticmethod
     def type_attributes(
-            dtype: np.dtype,
+            type_input: tp.Union[np.dtype, DisplayHeader],
             config: DisplayConfig
             ) -> tp.Tuple[str, int, DisplayTypeCategory]:
         '''
         Apply delimteres to type, for either numpy types or Python classes.
         '''
-        if isinstance(dtype, np.dtype):
-            type_str = str(dtype)
-        elif inspect.isclass(dtype):
-            type_str = dtype.__name__
+        if isinstance(type_input, np.dtype):
+            type_str = str(type_input)
+            type_ref = type_input
+        elif inspect.isclass(type_input):
+            type_str = type_input.__name__
+            type_ref = type_input
+        elif isinstance(type_input, DisplayHeader):
+            type_str = repr(type_input)
+            type_ref = type_input.cls
         else:
-            NotImplementedError('no handling for this type', dtype)
+            NotImplementedError('no handling for this input', type_input)
 
-        type_category = DisplayTypeCategoryFactory.to_category(dtype)
+        type_category = DisplayTypeCategoryFactory.to_category(type_ref)
 
         # if config.type_delimiter_left or config.type_delimiter_right:
         left = config.type_delimiter_left or ''
@@ -615,13 +660,13 @@ class Display:
 
     @classmethod
     def to_cell(cls,
-            value: object,
+            value: object, # dtype, HeaderInitializer, or a type
             config: DisplayConfig,
             is_dtype=False) -> DisplayCell:
         '''
         Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
         '''
-        if is_dtype or inspect.isclass(value):
+        if is_dtype or inspect.isclass(value) or isinstance(value, DisplayHeader):
             type_str, type_length, type_category = cls.type_attributes(
                     value,
                     config=config)
@@ -632,6 +677,7 @@ class Display:
                         config)
             return type_str, type_length
 
+        # handling for all other values that are stringable
         msg = str(value)
         msg_length = len(msg)
         if config.display_format in _DISPLAY_FORMAT_HTML:
@@ -644,11 +690,11 @@ class Display:
     @classmethod
     def from_values(cls,
             values: np.ndarray,
-            header: tp.Optional[tp.Union[str, type]],
-            config: DisplayConfig=None,
-            outermost: bool=False,
-            index_depth: int=0,
-            columns_depth: int=0
+            header: HeaderInitializer,
+            config: DisplayConfig = None,
+            outermost: bool = False,
+            index_depth: int = 0,
+            columns_depth: int = 0
             ) -> 'Display':
         '''
         Given a 1 or 2D ndarray, return a Display instance. Generally 2D arrays are passed here only from TypeBlocks.
@@ -746,7 +792,7 @@ class Display:
             col_idx_src: int,
             col_last_src: int,
             row_indices: tp.Iterable[int],
-            config: DisplayConfig=None
+            config: DisplayConfig = None
             ) -> tp.Tuple[int, int]:
         '''
         Args:
@@ -779,9 +825,9 @@ class Display:
     @classmethod
     def _to_rows(cls,
             display: 'Display',
-            config: DisplayConfig=None,
-            index_depth: int=0,
-            columns_depth: int=0,
+            config: DisplayConfig = None,
+            index_depth: int = 0,
+            columns_depth: int = 0,
             ) -> tp.Iterable[str]:
         '''
         Given a Display object, return an iterable of strings, where each string is the combination of all cells in that row, and appropriate padding (if necessary), as been applied. Based on configruation, align cells left or right with space and return one joined string per row.
@@ -859,10 +905,10 @@ class Display:
     #---------------------------------------------------------------------------
     def __init__(self,
             rows: tp.List[tp.List[DisplayCell]],
-            config: DisplayConfig=None,
-            outermost: bool=False,
-            index_depth: int=0,
-            columns_depth: int=0,
+            config: DisplayConfig = None,
+            outermost: bool = False,
+            index_depth: int = 0,
+            columns_depth: int = 0,
             ) -> None:
         '''Define rows as a list of lists, for each row; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
         '''
@@ -921,7 +967,7 @@ class Display:
 
     def extend_iterable(self,
             iterable: tp.Iterable[tp.Any],
-            header: tp.Optional[str]) -> None:
+            header: HeaderInitializer) -> None:
         '''
         Add an iterable of strings as a column to the display.
         '''
@@ -966,7 +1012,7 @@ class Display:
 
     def insert_displays(self,
             *displays: tp.Iterable['Display'],
-            insert_index: int=0):
+            insert_index: int = 0):
         '''
         Insert rows on top of existing rows.
         args:

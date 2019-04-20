@@ -12,14 +12,16 @@ from static_frame.core.util import _isna
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _array_to_duplicated
-from static_frame.core.util import _full_for_fill
+from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
+from static_frame.core.util import name_filter
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import ufunc_unique
 
 
 from static_frame.core.util import CallableOrMapping
@@ -28,6 +30,7 @@ from static_frame.core.util import FilePathOrFileLike
 
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import STATIC_ATTR
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection2D
@@ -39,16 +42,15 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayFormats
+from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
 
 from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
 from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.doc_str import doc_inject
-
 
 
 #-------------------------------------------------------------------------------
@@ -66,12 +68,16 @@ class Series(metaclass=MetaOperatorDelegate):
     __slots__ = (
             'values',
             '_index',
+            '_name',
             )
 
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
-            dtype: DtypeSpecifier=None) -> 'Series':
+            *,
+            dtype: DtypeSpecifier = None,
+            name: tp.Hashable = None
+            ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
         Args:
@@ -88,16 +94,18 @@ class Series(metaclass=MetaOperatorDelegate):
                 index.append(pair[0])
                 yield pair[1]
 
-        return cls(values(), index=index, dtype=dtype)
-
+        return cls(values(),
+                index=index,
+                dtype=dtype,
+                name=name)
 
     @classmethod
     @doc_inject()
     def from_pandas(cls,
             value,
             *,
-            own_data: bool=False,
-            own_index: bool=False) -> 'Series':
+            own_data: bool = False,
+            own_index: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
         Args:
@@ -120,22 +128,28 @@ class Series(metaclass=MetaOperatorDelegate):
         else:
             index = immutable_filter(value.index.values)
 
-        # index is already managed, can own
-        return cls(data, index=index)
+        return cls(data,
+                index=index,
+                name=value.name
+                )
 
     def __init__(self,
             values: SeriesInitializer,
             *,
-            index: IndexInitializer=None,
-            dtype: DtypeSpecifier=None,
-            own_index: bool=False
+            index: IndexInitializer = None,
+            name: tp.Hashable = None,
+            dtype: DtypeSpecifier = None,
+            own_index: bool = False
             ) -> None:
+
+        # TODO: support construction from another Series, propagate name attr
+        self._name = name if name is None else name_filter(name)
+
         #-----------------------------------------------------------------------
         # values assignment
 
         values_constructor = None # if deferred
 
-        # expose .values directly as it is immutable
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
                 # not sure if we should sort; not sure what to do if index is provided
@@ -185,18 +199,18 @@ class Series(metaclass=MetaOperatorDelegate):
 
         #-----------------------------------------------------------------------
         # index assignment
-        # NOTE: this generally must be done after values assignment, as from_items needs a values generator to be exhausted before looking to values
+        # NOTE: this generally must be done after values assignment, as from_items (for example) needs the values generator to be exhausted before looking to index
 
         if index is None or (hasattr(index, '__len__') and len(index) == 0):
             # create an integer index
             self._index = Index(range(len(self.values)), loc_is_iloc=True)
         elif own_index:
             self._index = index
-        elif hasattr(index, 'STATIC'):
+        elif hasattr(index, STATIC_ATTR):
             if index.STATIC:
                 self._index = index
             else:
-                raise Exception('non-static index cannot be assigned to Series')
+                raise RuntimeError('non-static index cannot be assigned to Series')
         else: # let index handle instantiation
             if isinstance(index, (Index, IndexHierarchy)):
                 # call with the class of the passed-in index, in case it is hierarchical
@@ -210,7 +224,7 @@ class Series(metaclass=MetaOperatorDelegate):
             values_constructor(shape) # updates self.values
 
         if len(self.values) != shape:
-            raise Exception('values and index do not match length')
+            raise RuntimeError('values and index do not match length')
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
@@ -220,6 +234,22 @@ class Series(metaclass=MetaOperatorDelegate):
         for key, value in state[1].items():
             setattr(self, key, value)
         self.values.flags.writeable = False
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    @property
+    def name(self) -> tp.Hashable:
+        return self._name
+
+    def rename(self, name: tp.Hashable) -> 'Series':
+        '''
+        Return a new Series with an updated name attribute.
+        '''
+        return self.__class__(self.values,
+                index=self._index,
+                name=name,
+                )
 
     #---------------------------------------------------------------------------
     # interfaces
@@ -313,7 +343,6 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
-
     def reindex(self,
             index: tp.Union[Index, tp.Sequence[tp.Any]],
             fill_value=np.nan) -> 'Series':
@@ -323,8 +352,6 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             fill_value: attempted to be used, but may be coerced by the dtype of this Series. `
         '''
-        # TODO: implement `method` argument with bfill, ffill options
-
         if isinstance(index, (Index, IndexHierarchy)):
             # always use the Index constructor for safe reuse when possible
             index = index.__class__(index)
@@ -336,9 +363,10 @@ class Series(metaclass=MetaOperatorDelegate):
         if ic.is_subset: # must have some common
             return self.__class__(self.values[ic.iloc_src],
                     index=index,
-                    own_index=True)
+                    own_index=True,
+                    name=self._name)
 
-        values = _full_for_fill(self.values.dtype, len(index), fill_value)
+        values = full_for_fill(self.values.dtype, len(index), fill_value)
 
         # if some intersection of values
         if ic.has_common:
@@ -348,7 +376,8 @@ class Series(metaclass=MetaOperatorDelegate):
         values.flags.writeable = False
         return self.__class__(values,
                 index=index,
-                own_index=True)
+                own_index=True,
+                name=self._name)
 
     def relabel(self, mapper: CallableOrMapping) -> 'Series':
         '''
@@ -356,27 +385,32 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self.__class__(self.values,
                 index=self._index.relabel(mapper),
-                own_index=True)
-
+                own_index=True,
+                name=self._name)
 
     def reindex_flat(self):
         '''
         Return a new Series, where a ``IndexHierarchy`` (if deifined) is replaced with a flat, one-dimension index of tuples.
         '''
-        return self.__class__(self.values, index=self._index.flat())
+        return self.__class__(self.values,
+                index=self._index.flat(),
+                name=self._name)
 
     def reindex_add_level(self, level: tp.Hashable):
         '''
         Return a new Series, adding a new root level to an ``IndexHierarchy``.
         '''
-        return self.__class__(self.values, index=self._index.add_level(level))
+        return self.__class__(self.values,
+                index=self._index.add_level(level),
+                name=self._name)
 
-    def reindex_drop_level(self, count: int=1):
+    def reindex_drop_level(self, count: int = 1):
         '''
         Return a new Series, dropping one or more leaf levels from an ``IndexHierarchy``.
         '''
-        return self.__class__(self.values, index=self._index.drop_level(count))
-
+        return self.__class__(self.values,
+                index=self._index.drop_level(count),
+                name=self._name)
 
 
     #---------------------------------------------------------------------------
@@ -409,7 +443,10 @@ class Series(metaclass=MetaOperatorDelegate):
 
         values = self.values[sel]
         values.flags.writeable = False
-        return self.__class__(values, index=self._index.loc[sel])
+
+        return self.__class__(values,
+                index=self._index.loc[sel],
+                name=self._name)
 
     def fillna(self, value) -> 'Series':
         '''Return a new Series after replacing NaN or None values with the supplied value.
@@ -432,16 +469,27 @@ class Series(metaclass=MetaOperatorDelegate):
 
         assigned[sel] = value
         assigned.flags.writeable = False
-        return self.__class__(assigned, index=self._index)
+
+        return self.__class__(assigned,
+                index=self._index,
+                name=self._name)
 
     #---------------------------------------------------------------------------
     # operators
 
     def _ufunc_unary_operator(self, operator: tp.Callable) -> 'Series':
-        return self.__class__(operator(self.values), index=self._index, dtype=self.dtype)
+        '''
+        For unary operations, the `name` attribute propagates.
+        '''
+        return self.__class__(operator(self.values),
+                index=self._index,
+                dtype=self.dtype,
+                name=self._name)
 
     def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> 'Series':
-
+        '''
+        For binary operations, the `name` attribute does not propagate.
+        '''
         values = self.values
         index = self._index
 
@@ -475,7 +523,6 @@ class Series(metaclass=MetaOperatorDelegate):
         result.flags.writeable = False
         return self.__class__(result, index=index)
 
-
     def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
         '''For a Series, all functions of this type reduce the single axis of the Series to 1d, so Index has no use here.
 
@@ -495,7 +542,7 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.values.__len__()
 
     def display(self,
-            config: tp.Optional[DisplayConfig]=None
+            config: tp.Optional[DisplayConfig] = None
             ) -> Display:
         '''Return a Display of the Series.
         '''
@@ -505,15 +552,20 @@ class Series(metaclass=MetaOperatorDelegate):
                 config=config,
                 outermost=True,
                 index_depth=1,
-                columns_depth=1)
+                columns_depth=2) # series and index header
 
         display_index = self._index.display(config=config)
         d.extend_display(display_index)
 
         d.extend_display(Display.from_values(
                 self.values,
-                header=self.__class__,
+                header='',
                 config=config))
+
+        display_cls = Display.from_values((),
+                header=DisplayHeader(self.__class__, self._name),
+                config=config)
+        d.insert_displays(display_cls.flatten())
         return d
 
     def __repr__(self):
@@ -594,7 +646,8 @@ class Series(metaclass=MetaOperatorDelegate):
         # iterable selection should be handled by NP (but maybe not if a tuple)
         return self.__class__(
                 self.values[key],
-                index=self._index.iloc[key])
+                index=self._index.iloc[key],
+                name=self._name)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Series':
         '''
@@ -608,7 +661,8 @@ class Series(metaclass=MetaOperatorDelegate):
             return values
         return self.__class__(values,
                 index=self._index.iloc[iloc_key],
-                own_index=True)
+                own_index=True,
+                name=self._name)
 
     def __getitem__(self, key: GetItemKeyType) -> 'Series':
         '''A Loc selection (by index labels).
@@ -621,7 +675,6 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # utilites for alternate extraction: drop, mask and assignment
 
-
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:
             # use Boolean area to select indices from Index positions, as np.delete does not work with arrays
@@ -629,9 +682,14 @@ class Series(metaclass=MetaOperatorDelegate):
         else:
             values = np.delete(self.values, key)
         values.flags.writeable = False
-        index = self._index._drop_iloc(key)
-        return self.__class__(values, index=index, own_index=True)
 
+        index = self._index._drop_iloc(key)
+
+        return self.__class__(values,
+                index=index,
+                name=self._name,
+                own_index=True
+                )
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Series':
         return self._drop_iloc(self._index.loc_to_iloc(key))
@@ -639,16 +697,15 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def _extract_iloc_mask(self, key: GetItemKeyType) -> 'Series':
-        '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True.
+        '''Produce a new boolean Series of the same shape, where the values selected via iloc selection are True. The `name` attribute is not propagated.
         '''
         mask = np.full(self.values.shape, False, dtype=bool)
         mask[key] = True
         mask.flags.writeable = False
-        # can pass self here as it is immutable (assuming index cannot change)
         return self.__class__(mask, index=self._index)
 
     def _extract_loc_mask(self, key: GetItemKeyType) -> 'Series':
-        '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True.
+        '''Produce a new boolean Series of the same shape, where the values selected via loc selection are True. The `name` attribute is not propagated.
         '''
         iloc_key = self._index.loc_to_iloc(key)
         return self._extract_iloc_mask(key=iloc_key)
@@ -670,11 +727,11 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def _extract_iloc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
-        return SeriesAssign(data=self, iloc_key=key)
+        return SeriesAssign(self, iloc_key=key)
 
     def _extract_loc_assign(self, key: GetItemKeyType) -> 'SeriesAssign':
         iloc_key = self._index.loc_to_iloc(key)
-        return SeriesAssign(data=self, iloc_key=iloc_key)
+        return SeriesAssign(self, iloc_key=iloc_key)
 
     #---------------------------------------------------------------------------
     # axis functions
@@ -740,8 +797,8 @@ class Series(metaclass=MetaOperatorDelegate):
     # transformations resulting in the same dimensionality
 
     def sort_index(self,
-            ascending: bool=True,
-            kind: str=_DEFAULT_SORT_KIND) -> 'Series':
+            ascending: bool = True,
+            kind: str = _DEFAULT_SORT_KIND) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
         '''
@@ -757,8 +814,8 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.__class__(values, index=index_values)
 
     def sort_values(self,
-            ascending: bool=True,
-            kind: str=_DEFAULT_SORT_KIND) -> 'Series':
+            ascending: bool = True,
+            kind: str = _DEFAULT_SORT_KIND) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
         '''
@@ -794,8 +851,8 @@ class Series(metaclass=MetaOperatorDelegate):
             upper: value or Series to define the inclusive upper bound.
         '''
         args = [lower, upper]
-        for idx in range(len(args)):
-            arg = args[idx]
+        for idx, arg in enumerate(args):
+            # arg = args[idx]
             if isinstance(arg, Series):
                 # after reindexing, strip away the index
                 # NOTE: using the bound forces going to a float type; this may not be the best approach
@@ -849,12 +906,16 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for Frame, this is an interface exposing both a callable and a getitem interface.
         '''
-        return self.__class__(self.values.astype(dtype), index=self._index)
+        return self.__class__(
+                self.values.astype(dtype),
+                index=self._index,
+                name=self._name
+                )
 
 
     def roll(self,
             shift: int,
-            include_index: bool=False) -> 'Series':
+            include_index: bool = False) -> 'Series':
         '''Return a Series with values rotated forward and wrapped around the index (with a postive shift) or backward and wrapped around the index (with a negative shift).
 
         Args:
@@ -879,6 +940,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return self.__class__(values,
                 index=index,
+                name=self._name,
                 own_index=own_index)
 
 
@@ -902,13 +964,15 @@ class Series(metaclass=MetaOperatorDelegate):
         else:
             values = self.values
 
-        return self.__class__(values, index=self._index)
+        return self.__class__(values,
+                index=self._index,
+                name=self._name)
 
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
 
-    def head(self, count: int=5) -> 'Series':
+    def head(self, count: int = 5) -> 'Series':
         '''Return a Series consisting only of the top elements as specified by ``count``.
 
         Args:
@@ -916,7 +980,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         return self.iloc[:count]
 
-    def tail(self, count: int=5) -> 'Series':
+    def tail(self, count: int = 5) -> 'Series':
         '''Return a Series consisting only of the bottom elements as specified by ``count``.
 
         Args:
@@ -932,7 +996,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a NumPy array of unqiue values.
         '''
-        return np.unique(self.values)
+        return ufunc_unique(self.values)
 
     #---------------------------------------------------------------------------
     # export
@@ -956,11 +1020,12 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         import pandas
         return pandas.Series(self.values.copy(),
-                index=self._index.values.copy())
+                index=self._index.values.copy(),
+                name=self._name)
 
     @doc_inject(class_name='Series')
     def to_html(self,
-            config: tp.Optional[DisplayConfig]=None
+            config: tp.Optional[DisplayConfig] = None
             ):
         '''
         {}
@@ -973,9 +1038,9 @@ class Series(metaclass=MetaOperatorDelegate):
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,
-            fp: tp.Optional[FilePathOrFileLike]=None,
-            show: bool=True,
-            config: tp.Optional[DisplayConfig]=None
+            fp: tp.Optional[FilePathOrFileLike] = None,
+            show: bool = True,
+            config: tp.Optional[DisplayConfig] = None
             ) -> str:
         '''
         {}
@@ -995,20 +1060,23 @@ class Series(metaclass=MetaOperatorDelegate):
 
 #-------------------------------------------------------------------------------
 class SeriesAssign:
-    __slots__ = ('data', 'iloc_key')
+    __slots__ = ( 'container', 'iloc_key')
 
-    def __init__(self, *,
-            data: Series,
+    def __init__(self,
+            container: Series,
             iloc_key: GetItemKeyType
             ) -> None:
-        # NOTE: the stored data reference here migth be best as weak reference
-        self.data = data
+        self.container = container
         self.iloc_key = iloc_key
 
-    def __call__(self, value, fill_value=np.nan):
-
+    def __call__(self,
+            value, # any possible assignment type
+            fill_value=np.nan):
+        '''
+        Calling with a value performs the assignment. The `name` attribute is propagated.
+        '''
         if isinstance(value, Series):
-            value = self.data._reindex_other_like_iloc(value,
+            value = self.container._reindex_other_like_iloc(value,
                     self.iloc_key,
                     fill_value=fill_value).values
 
@@ -1017,17 +1085,20 @@ class SeriesAssign:
         else:
             value_dtype = np.array(value).dtype
 
-        dtype = _resolve_dtype(self.data.dtype, value_dtype)
+        dtype = _resolve_dtype(self.container.dtype, value_dtype)
 
         # create or copy the array to return
-        if dtype == self.data.dtype:
-            array = self.data.values.copy()
+        if dtype == self.container.dtype:
+            array = self.container.values.copy()
         else:
-            array = self.data.values.astype(dtype)
+            array = self.container.values.astype(dtype)
 
         array[self.iloc_key] = value
         array.flags.writeable = False
-        return Series(array, index=self.data.index)
+
+        return self.container.__class__(array,
+                index=self.container._index,
+                name=self.container._name)
 
 
 

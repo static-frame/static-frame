@@ -315,14 +315,16 @@ class TestUnit(TestCase):
                 s1.reindex(((0, 1), (0, 3), (4,5)), fill_value=None).to_pairs(),
                 (((0, 1), 'b'), ((0, 3), 'd'), ((4, 5), None)))
 
-
-        # s2 = s1.reindex(('c', 'd', 'a'))
-        # self.assertEqual(list(s2.items()), [('c', 2), ('d', 3), ('a', 0)])
-
-        # s3 = s1.reindex(['a','b'])
-        # self.assertEqual(list(s3.items()), [('a', 0), ('b', 1)])
+        s2 = s1.reindex(('c', 'd', 'a'))
+        self.assertEqual(sorted(s2.index.values.tolist()), ['a', 'c', 'd'])
 
 
+    def test_series_reindex_d(self):
+
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        s2 = s1.reindex(('c', 'd', 'a'))
+        self.assertEqual(s2.index.values.tolist(), ['c', 'd', 'a'])
+        self.assertEqual(s2.name, 'foo')
 
 
     def test_series_isnull_a(self):
@@ -439,7 +441,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, int)
 
 
-    def test_series_from_pairs_a(self):
+    def test_series_from_items_a(self):
 
         def gen():
             r1 = range(10)
@@ -450,12 +452,17 @@ class TestUnit(TestCase):
         s1 = Series.from_items(gen())
         self.assertEqual(s1.loc[7:9].values.tolist(), [17, 18, 19])
 
-        # NOTE: ordere here is unstable until python 3.6
         s2 = Series.from_items(dict(a=30, b=40, c=50).items())
         self.assertEqual(s2['c'], 50)
         self.assertEqual(s2['b'], 40)
         self.assertEqual(s2['a'], 30)
 
+
+    def test_series_from_items_b(self):
+
+        s1 = Series.from_items(zip(list('abc'), (1,2,3)), dtype=str, name='foo')
+        self.assertEqual(s1.name, 'foo')
+        self.assertEqual(s1.values.tolist(), ['1', '2', '3'])
 
     def test_series_contains_a(self):
 
@@ -560,11 +567,8 @@ class TestUnit(TestCase):
                 s1.assign[s2.index](s2).to_pairs(),
                 (('a', 0), ('b', 1), ('c', 0), ('d', 1))
                 )
-
-
     def test_series_assign_f(self):
         s1 = Series(range(5), index=('a', 'b', 'c', 'd', 'e'))
-
 
         with self.assertRaises(Exception):
             # cannot have an assignment target that is not in the Series
@@ -588,11 +592,27 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', -1), ('c', 20), ('d', 10), ('e', 4))
                 )
 
+    def test_series_assign_g(self):
+        s1 = Series(range(5), index=('a', 'b', 'c', 'd', 'e'), name='x')
+
+        s2 = Series(list('abc'), index=list('abc'), name='y')
+
+        post = s1.assign[s2.index](s2)
+        self.assertEqual(post.name, 'x')
+        self.assertEqual(post.values.tolist(), ['a', 'b', 'c', 3, 4])
 
 
     def test_series_loc_extract_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-        # TODO: raaise exectin when doing a loc that Pandas reindexes
+        with self.assertRaises(KeyError):
+            s1.loc[['c', 'd', 'e']]
+
+    def test_series_loc_extract_b(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        s2 = s1.loc[['b', 'd']]
+
+        self.assertEqual(s2.to_pairs(), (('b', 1), ('d', 3)))
+        self.assertEqual(s2.name, 'foo')
 
 
     def test_series_group_a(self):
@@ -1071,9 +1091,29 @@ class TestUnit(TestCase):
 
         post = s1.to_html(config=DisplayConfig(type_show=False, type_color=False))
 
-        html = '''<table border="1"><thead><tr><th>&lt;Index&gt;</th><th>&lt;Series&gt;</th></tr></thead><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>
+        html = '''<table border="1"><thead><tr><th>&lt;Series&gt;</th><th></th></tr><tr><th>&lt;Index&gt;</th><th></th></tr></thead><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>
         '''
         self.assertEqual(post.strip(), html.strip())
+
+
+    def test_series_disply_a(self):
+
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+
+        match = tuple(s1.display(DisplayConfig(type_color=False)))
+        self.assertEqual(
+            match,
+            (['<Series: alt>'], ['<Index>', ''], ['a', '2'], ['b', '3'], ['<<U1>', '<int64>'])
+            )
+
+        s2 = Series(('a', 'b'), index=Index(('x', 'y'), name='bar'), name='foo')
+
+        match = tuple(s2.display(DisplayConfig(type_color=False)))
+
+        self.assertEqual(
+            match,
+            (['<Series: foo>'], ['<Index: bar>', ''], ['x', 'a'], ['y', 'b'], ['<<U1>', '<<U1>'])
+            )
 
 
 if __name__ == '__main__':

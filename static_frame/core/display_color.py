@@ -236,8 +236,8 @@ class HexColor:
         grayscale_end = 0xf8
         grayscale_step = 10
         c = 232
-        for hex in range(grayscale_start, grayscale_end, grayscale_step):
-            color = (hex << 16) | (hex << 8) | hex
+        for hex_int in range(grayscale_start, grayscale_end, grayscale_step):
+            color = (hex_int << 16) | (hex_int << 8) | hex_int
             colors[c] = color
             c += 1
 

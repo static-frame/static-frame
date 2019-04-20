@@ -2,9 +2,6 @@
 Storage for common doc strings and templates shared in non-related classes and methods.
 '''
 
-from functools import wraps
-
-
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------

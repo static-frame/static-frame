@@ -61,14 +61,15 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 >>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')
 >>> frame.head()
 <Frame>
-<Index> albumId id      thumbnailUrl         title                url                  <<U12>
+<Index> albumId id      title                url                  thumbnailUrl         <<U12>
 <Index>
-0       1       1       https://via.place... accusamus beatae ... https://via.place...
-1       1       2       https://via.place... reprehenderit est... https://via.place...
-2       1       3       https://via.place... officia porro iur... https://via.place...
-3       1       4       https://via.place... culpa odio esse r... https://via.place...
-4       1       5       https://via.place... natus nisi omnis ... https://via.place...
-<int64> <int64> <int64> <<U38>               <<U86>               <<U38>
+0       1       1       accusamus beatae ... https://via.place... https://via.place...
+1       1       2       reprehenderit est... https://via.place... https://via.place...
+2       1       3       officia porro iur... https://via.place... https://via.place...
+3       1       4       culpa odio esse r... https://via.place... https://via.place...
+4       1       5       natus nisi omnis ... https://via.place... https://via.place...
+<int64> <int64> <int64> <<U86>               <<U38>               <<U38>
+
 
 .. note::
 
@@ -90,21 +91,23 @@ As with a NumPy array, the ``Frame`` exposes common attributes of shape and size
 Unlike a NumPy array, a Frame stores heterogeneous types, where each column is a single type. StaticFrame preserves the full range of NumPy types, including fixed-size character strings. Character strings can be converted to Python objects or other types as needed with the ``Frame.astype`` interface, which exposes a ``__getitem__`` style interface for selecting columns to convert. As with all similar functions, a new ``Frame`` is returned.
 
 >>> frame.dtypes
-<Index>      <Series>
+<Series>
+<Index>
 albumId      int64
 id           int64
-thumbnailUrl <U38
 title        <U86
 url          <U38
+thumbnailUrl <U38
 <<U12>       <object>
 
->>> frame.astype['thumbnailUrl':](object).dtypes
-<Index>      <Series>
+>>> frame.astype['title':](object).dtypes
+<Series>
+<Index>
 albumId      int64
 id           int64
-thumbnailUrl object
 title        object
 url          object
+thumbnailUrl object
 <<U12>       <object>
 
 
@@ -131,38 +134,40 @@ StaticFrame interfaces for extracting data will be familiar to Pandas users, tho
 For example we can select a single column with ``__getitem__``:
 
 >>> frame['albumId'].tail()
-<Index> <Series>
-4995    100
-4996    100
-4997    100
-4998    100
-4999    100
-<int64> <int64>
+<Series: albumId>
+<Index>
+4995              100
+4996              100
+4997              100
+4998              100
+4999              100
+<int64>           <int64>
 
 
 Consistent with other ``__getitem__`` style selectors, a slice or a list can be used to select columns:
 
 >>> frame['id':'title'].head()
 <Frame>
-<Index> id      thumbnailUrl         title                <<U12>
+<Index> id      title                <<U12>
 <Index>
-0       1       https://via.place... accusamus beatae ...
-1       2       https://via.place... reprehenderit est...
-2       3       https://via.place... officia porro iur...
-3       4       https://via.place... culpa odio esse r...
-4       5       https://via.place... natus nisi omnis ...
-<int64> <int64> <<U38>               <<U86>
+0       1       accusamus beatae ...
+1       2       reprehenderit est...
+2       3       officia porro iur...
+3       4       culpa odio esse r...
+4       5       natus nisi omnis ...
+<int64> <int64> <<U86>
 
 
 The ``loc`` interface, with one argument, returns a ``Series`` for the row found at the given index label.
 
 >>> frame.loc[4]
-<Index>      <Series>
+<Series: 4>
+<Index>
 albumId      1
 id           5
-thumbnailUrl https://via.place...
 title        natus nisi omnis ...
 url          https://via.place...
+thumbnailUrl https://via.place...
 <<U12>       <object>
 
 
@@ -182,13 +187,14 @@ With two arguments, ``loc`` can select both rows and columns at the same time:
 Where the ``loc`` interface uses index and column labels, the ``iloc`` interface uses integer offsets from zero, just as if the ``Frame`` were a NumPy array. For example, we can select the last row with ``-1``:
 
 >>> frame.iloc[-1]
-<Index>      <Series>
-albumId      100
-id           5000
-thumbnailUrl https://via.place...
-title        error quasi sunt ...
-url          https://via.place...
-<<U12>       <object>
+<Series: 4999>
+<Index>
+albumId        100
+id             5000
+title          error quasi sunt ...
+url            https://via.place...
+thumbnailUrl   https://via.place...
+<<U12>         <object>
 
 
 Or, using two arguments, we can select the first two columns of the last two rows:
@@ -250,14 +256,15 @@ This pattern of specialized interfaces is used throughout StaticFrame, such as w
 
 >>> frame.mask.loc[frame['id'] % 2 == 0].head()
 <Frame>
-<Index> albumId id     thumbnailUrl title  url    <<U12>
+<Index> albumId id     title  url    thumbnailUrl <<U12>
 <Index>
-0       False   False  False        False  False
-1       True    True   True         True   True
-2       False   False  False        False  False
-3       True    True   True         True   True
-4       False   False  False        False  False
-<int64> <bool>  <bool> <bool>       <bool> <bool>
+0       False   False  False  False  False
+1       True    True   True   True   True
+2       False   False  False  False  False
+3       True    True   True   True   True
+4       False   False  False  False  False
+<int64> <bool>  <bool> <bool> <bool> <bool>
+
 
 
 Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by dropping rows with even "id" values and dropping URL columns specified in a list:
@@ -280,25 +287,26 @@ Or, using the ``Frame.drop`` interface, a new ``Frame`` can be created by droppi
 Iteration of rows, columns, and elements, as well as function application on those values, is unified under a family of generator interfaces. These interfaces are distinguished by the form of the data iterated (``Series``, ``namedtuple``, or ``array``) and whether key-value pairs (e.g., ``Frame.iter_series_items()``) or just values (e.g., ``Frame.iter_series()``) are yielded. For example, we can iterate over each row of a ``Frame`` and yield a corresponding ``Series``:
 
 >>> next(iter(frame.iter_series(axis=1)))
-<Index>      <Series>
+<Series>
+<Index>
 albumId      1
 id           1
-thumbnailUrl https://via.place...
 title        accusamus beatae ...
 url          https://via.place...
+thumbnailUrl https://via.place...
 <<U12>       <object>
-
 
 Or we can iterate over rows as named tuples, applying a function that matches a substring of the "title" or returns None, then drop those None records:
 
 >>> frame.iter_tuple(axis=1).apply(lambda r: r.title if 'voluptatem' in r.title else None).dropna().head()
-<Index> <Series>
-19      assumenda volupta...
-27      non neque eligend...
-29      odio enim volupta...
-31      ad enim dignissim...
-40      in voluptatem dol...
-<int64> <object>
+<Series>
+<Index>
+19       assumenda volupta...
+27       non neque eligend...
+29       odio enim volupta...
+31       ad enim dignissim...
+40       in voluptatem dol...
+<int64>  <object>
 
 
 Element iteration and function application works the same way as for rows or columns (though without an ``axis`` argument). For example, here each URL is processed with the same string transformation function:
@@ -324,13 +332,14 @@ Group-by functionality is exposed in a similar manner with ``Frame.iter_group_it
 Function application to a group ``Frame`` can be used to produce a ``Series`` indexed by the group label. For example, a ``Series``, indexed by "albumId", can be produced to show the number of unique titles found per album.
 
 >>> frame.iter_group('albumId', axis=0).apply(lambda g: len(g['title'].unique())).head()
-<Index> <Series>
-1       50
-2       50
-3       50
-4       50
-5       50
-<int64> <int64>
+<Series>
+<Index>
+1        50
+2        50
+3        50
+4        50
+5        50
+<int64>  <int64>
 
 .. note::
 
@@ -351,20 +360,19 @@ We can obtain a track number within each album, assuming the records are sorted,
 
 >>> frame_go.iloc[45:55]
 <FrameGO>
-<IndexGO> albumId id      thumbnailUrl         title                url                  track   <<U12>
+<IndexGO> albumId id      title                url                  thumbnailUrl         track   <<U12>
 <Index>
-45        1       46      https://via.place... quidem maiores in... https://via.place... 46
-46        1       47      https://via.place... et soluta est        https://via.place... 47
-47        1       48      https://via.place... ut esse id           https://via.place... 48
-48        1       49      https://via.place... quasi quae est mo... https://via.place... 49
-49        1       50      https://via.place... et inventore quae... https://via.place... 50
-50        2       51      https://via.place... non sunt voluptat... https://via.place... 1
-51        2       52      https://via.place... eveniet pariatur ... https://via.place... 2
-52        2       53      https://via.place... soluta et harum a... https://via.place... 3
-53        2       54      https://via.place... ut ex quibusdam d... https://via.place... 4
-54        2       55      https://via.place... voluptatem conseq... https://via.place... 5
-<int64>   <int64> <int64> <<U38>               <<U86>               <<U38>               <int64>
-
+45        1       46      quidem maiores in... https://via.place... https://via.place... 46
+46        1       47      et soluta est        https://via.place... https://via.place... 47
+47        1       48      ut esse id           https://via.place... https://via.place... 48
+48        1       49      quasi quae est mo... https://via.place... https://via.place... 49
+49        1       50      et inventore quae... https://via.place... https://via.place... 50
+50        2       51      non sunt voluptat... https://via.place... https://via.place... 1
+51        2       52      eveniet pariatur ... https://via.place... https://via.place... 2
+52        2       53      soluta et harum a... https://via.place... https://via.place... 3
+53        2       54      ut ex quibusdam d... https://via.place... https://via.place... 4
+54        2       55      voluptatem conseq... https://via.place... https://via.place... 5
+<int64>   <int64> <int64> <<U86>               <<U38>               <<U38>               <int64>
 
 
 Unlike with Pandas, StaticFrame ``Index`` objects always enforce uniqueness (there is no "verify_integrity" option: integrity is never optional). Thus, an index can never be set from non-unique data:
@@ -380,39 +388,42 @@ For a data set such as the one used in this example, a hierarchical index, by "a
 >>> frame_h = frame_go.set_index_hierarchy(['albumId', 'track'], drop=True)
 >>> frame_h.head()
 <FrameGO>
-<IndexGO>        id      thumbnailUrl         title                url                  <<U12>
+<IndexGO>                id      title                url                  thumbnailUrl         <<U12>
 <IndexHierarchy>
-1 1              1       https://via.place... accusamus beatae ... https://via.place...
-1 2              2       https://via.place... reprehenderit est... https://via.place...
-1 3              3       https://via.place... officia porro iur... https://via.place...
-1 4              4       https://via.place... culpa odio esse r... https://via.place...
-1 5              5       https://via.place... natus nisi omnis ... https://via.place...
-                 <int64> <<U38>               <<U86>               <<U38>
+1                1       1       accusamus beatae ... https://via.place... https://via.place...
+1                2       2       reprehenderit est... https://via.place... https://via.place...
+1                3       3       officia porro iur... https://via.place... https://via.place...
+1                4       4       culpa odio esse r... https://via.place... https://via.place...
+1                5       5       natus nisi omnis ... https://via.place... https://via.place...
+<int64>          <int64> <int64> <<U86>               <<U38>               <<U38>
+
 
 
 Hierarchical indices permit specifying selectors, per axis, at each hierarchical level. To distinguish hierarchical levels from axis arguments in a ``loc`` expression, the ``HLoc`` wrapper, exposing a ``__getitem__`` interface, can be used. For example, we can select, from all albums, the second and fifth track, and then only the "title" and "url" columns.
 
 >>> frame_h.loc[sf.HLoc[:, [2,5]], ['title', 'url']].head()
 <FrameGO>
-<IndexGO>        title                url                  <<U12>
+<IndexGO>                title                url                  <<U12>
 <IndexHierarchy>
-1 2              reprehenderit est... https://via.place...
-1 5              natus nisi omnis ... https://via.place...
-2 2              eveniet pariatur ... https://via.place...
-2 5              voluptatem conseq... https://via.place...
-3 2              eaque iste corpor... https://via.place...
-                 <<U86>               <<U38>
+1                2       reprehenderit est... https://via.place...
+1                5       natus nisi omnis ... https://via.place...
+2                2       eveniet pariatur ... https://via.place...
+2                5       voluptatem conseq... https://via.place...
+3                2       eaque iste corpor... https://via.place...
+<int64>          <int64> <<U86>               <<U38>
+
 
 Just as a hierarchical selection can reside in a ``loc`` expression with an ``HLoc`` wrapper, an integer index selection can reside in a ``loc`` expression with an ``ILoc`` wrapper. For example, the previous row selection is combined with the selection of the last column:
 
 >>> frame_h.loc[sf.HLoc[:, [2,5]], sf.ILoc[-1]].head()
-<IndexHierarchy> <Series>
-1 2              https://via.place...
-1 5              https://via.place...
-2 2              https://via.place...
-2 5              https://via.place...
-3 2              https://via.place...
-                 <<U38>
+<Series: thumbnai...
+<IndexHierarchy>
+1                    2       https://via.place...
+1                    5       https://via.place...
+2                    2       https://via.place...
+2                    5       https://via.place...
+3                    2       https://via.place...
+<int64>              <int64> <<U38>
 
 
 .. note::
