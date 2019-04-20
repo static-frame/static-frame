@@ -41,7 +41,7 @@ Install StaticFrame via PIP::
 
 Or, install StaticFrame via conda::
 
-    conda install static-frame
+    conda install -c conda-forge static-frame
 
 
 Dependencies
