@@ -1116,5 +1116,32 @@ class TestUnit(TestCase):
             )
 
 
+    def test_series_to_frame_a(self):
+
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+
+        f1 = s1.to_frame()
+
+        self.assertTrue(f1.__class__ is Frame)
+        self.assertEqual(f1.columns.values.tolist(), ['alt'])
+        self.assertEqual(f1.to_pairs(0),
+            (('alt', (('a', 2), ('b', 3))),))
+
+        self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
+
+    def test_series_to_frame_b(self):
+
+        s1 = Series((2, 3), index=list('ab'), name='alt')
+
+        f1 = s1.to_frame_go()
+
+        self.assertTrue(f1.__class__ is FrameGO)
+        self.assertEqual(f1.columns.values.tolist(), ['alt'])
+        self.assertEqual(f1.to_pairs(0),
+            (('alt', (('a', 2), ('b', 3))),))
+
+        self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
+
+
 if __name__ == '__main__':
     unittest.main()

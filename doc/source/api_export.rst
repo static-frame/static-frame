@@ -18,6 +18,10 @@ Series
 
 .. automethod:: static_frame.Series.to_pairs
 
+.. automethod:: static_frame.Series.to_frame
+
+.. automethod:: static_frame.Series.to_frame_go
+
 .. automethod:: static_frame.Series.to_pandas
 
 .. automethod:: static_frame.Series.to_html

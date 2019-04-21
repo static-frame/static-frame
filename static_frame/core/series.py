@@ -52,6 +52,8 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.doc_str import doc_inject
 
+if tp.TYPE_CHECKING:
+    from static_frame import Frame
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
@@ -1001,8 +1003,6 @@ class Series(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # export
 
-    # NOTE: can add to_frame and to_fram_go after Series has name attribute
-
     def to_pairs(self) -> tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]:
         '''
         Return a tuple of tuples, where each inner tuple is a pair of index label, value.
@@ -1013,6 +1013,49 @@ class Series(metaclass=MetaOperatorDelegate):
             index_values = self._index.values
 
         return tuple(zip(index_values, self.values))
+
+
+    def to_frame(self):
+        '''
+        Return Frame view of this Series. As underlying data is immutable, this is a no-copy operation.
+        '''
+        from static_frame import Frame
+        from static_frame import TypeBlocks
+
+        def block_gen():
+            yield self.values
+
+        columns = None if self._name is None else (self._name,)
+
+        return Frame(
+                TypeBlocks.from_blocks(block_gen()),
+                index=self._index,
+                columns=columns,
+                own_data=True,
+                own_index=True,
+                )
+
+    def to_frame_go(self):
+        '''
+        Return FrameGO view of this Series. As underlying data is immutable, this is a no-copy operation.
+        '''
+        from static_frame import FrameGO
+        from static_frame import TypeBlocks
+
+        def block_gen():
+            yield self.values
+
+        columns = None if self._name is None else (self._name,)
+
+        return FrameGO(
+                TypeBlocks.from_blocks(block_gen()),
+                index=self._index,
+                columns=columns,
+                own_data=True,
+                own_index=True,
+                )
+
+
 
     def to_pandas(self):
         '''

@@ -2162,7 +2162,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def to_frame_go(self):
         '''
-        Return a FrameGO version of this Frame. As underlying data is immutable, this is a no-copy operation.
+        Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
         '''
         # copying blocks does not copy underlying data
         return FrameGO(self._blocks.copy(),
