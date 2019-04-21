@@ -1569,7 +1569,9 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             # we do not use _resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
             self._row_dtype = object
 
-    def extend(self, other: 'TypeBlocks'):
+    def extend(self,
+            other: tp.Union['TypeBlocks', tp.Iterable[np.ndarray]]
+            ):
         '''Extend this TypeBlock with the contents of another.
         '''
 

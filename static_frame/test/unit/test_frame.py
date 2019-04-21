@@ -354,6 +354,40 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))))
                 )
 
+    def test_frame_extend_b(self):
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('y', 'x'))
+
+        # this will work with a None name
+
+        f1.extend(s1)
+
+        self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', None])
+        self.assertEqual(f1[None].values.tolist(), [-3, 200])
+
+
+    def test_frame_extend_c(self):
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('y', 'x'), name='s')
+
+        f1.extend(s1)
+
+        self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's'])
+        self.assertEqual(f1['s'].values.tolist(), [-3, 200])
+
+
 
     def test_frame_extend_empty_a(self):
         # full Frame, empty extensions with no index

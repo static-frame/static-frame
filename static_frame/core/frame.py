@@ -2329,26 +2329,38 @@ class FrameGO(Frame):
             self.__setitem__(k, v, fill_value)
 
 
-    def extend(self, frame: 'Frame', fill_value=np.nan):
-        '''Extend this Frame (in-place) with another Frame's blocks; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame will be reindexed (as happens when adding a column to a FrameGO). This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended to this Frame.
+    def extend(self,
+            container: tp.Union['Frame', Series],
+            fill_value=np.nan
+            ):
+        '''Extend this FrameGO (in-place) with another Frame's blocks or Series array; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame or Series will be reindexed (as happens when adding a column to a FrameGO).
+
+        If a Series is passed in, the column name will be taken from the Series ``name`` attribute.
+
+        This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended from another Frame into this Frame.
         '''
-        # TODO: can support extending with a Series when Series have name attribute; for now, can do the same thing with extend_items
 
-        if not len(frame.index): # must be an empty data, empty index Frame
+        if not len(container.index): # must be empty data, empty index container
             return
 
-        # self's index will never change; we only take what aligns in the passed frame
-        if _requires_reindex(self._index, frame._index):
-            frame = frame.reindex(self._index, fill_value=fill_value)
+        # self's index will never change; we only take what aligns in the passed container
+        if _requires_reindex(self._index, container._index):
+            container = container.reindex(self._index, fill_value=fill_value)
 
-        if not len(frame.columns):
-            return
-
-        self._columns.extend(frame.keys())
-        self._blocks.extend(frame._blocks)
+        if isinstance(container, Frame):
+            if not len(container.columns):
+                return
+            self._columns.extend(container.keys())
+            self._blocks.extend(container._blocks)
+        elif isinstance(container, Series):
+            self._columns.append(container.name)
+            self._blocks.append(container.values)
+        else:
+            raise NotImplementedError(
+                    'no support for extending with %s' % type(container))
 
         if len(self._columns) != self._blocks._shape[1]:
-            raise Exception('malformed Frame was use in extension')
+            raise RuntimeError('malformed Frame was used in extension')
 
 
     #---------------------------------------------------------------------------
