@@ -25,6 +25,7 @@ from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexDate
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -827,7 +828,6 @@ class TestUnit(TestCase):
                 )
 
 
-    @unittest.skip('non required dependency')
     def test_series_from_pandas_a(self):
         import pandas as pd
 
@@ -841,10 +841,37 @@ class TestUnit(TestCase):
 
         # owning data
         pds = pd.Series([3,4,5], index=list('abc'))
-        sfs = Series.from_pandas(pds, own_data=True, own_index=True)
+        sfs = Series.from_pandas(pds, own_data=True)
         self.assertEqual(list(pds.items()), list(sfs.items()))
 
-        # NOTE: some operations in Pandas can refresh the values attribute
+    def test_series_to_pandas_a(self):
+
+        s1 = Series(range(4),
+            index=IndexHierarchy.from_product(('a', 'b'), ('x', 'y')))
+        df = s1.to_pandas()
+
+        self.assertEqual(df.index.values.tolist(),
+                [('a', 'x'), ('a', 'y'), ('b', 'x'), ('b', 'y')]
+                )
+        self.assertEqual(df.values.tolist(),
+                [0, 1, 2, 3]
+                )
+
+    def test_series_to_pandas_b(self):
+
+        from pandas import Timestamp
+
+        s1 = Series(range(4),
+            index=IndexDate(('2018-01-02', '2018-01-03', '2018-01-04', '2018-01-05')))
+        df = s1.to_pandas()
+
+        self.assertEqual(df.index.tolist(),
+            [Timestamp('2018-01-02 00:00:00'), Timestamp('2018-01-03 00:00:00'), Timestamp('2018-01-04 00:00:00'), Timestamp('2018-01-05 00:00:00')]
+            )
+        self.assertEqual(df.values.tolist(),
+            [0, 1, 2, 3]
+            )
+
 
 
     def test_series_astype_a(self):

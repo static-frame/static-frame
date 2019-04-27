@@ -2,6 +2,7 @@
 import unittest
 import numpy as np
 import pickle
+import datetime
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -242,13 +243,13 @@ class TestUnit(TestCase):
     def test_index_date_b(self):
 
         with self.assertRaises(Exception):
-            index = IndexDate([3,4,5])
+            IndexDate([3,4,5], dtype=int)
 
-        with self.assertRaises(Exception):
-            index = IndexDate(['2017', '2018'])
+        idx1 = IndexDate(['2017', '2018'])
+        self.assertTrue(idx1[0].values[0].__class__ == np.datetime64)
 
-        with self.assertRaises(Exception):
-            index = IndexDate(['2017-01', '2018-07'])
+        idx2 = IndexDate(['2017-01', '2018-07'])
+        self.assertTrue(idx2[0].values[0].__class__ == np.datetime64)
 
 
     def test_index_date_c(self):
@@ -292,6 +293,13 @@ class TestUnit(TestCase):
         self.assertEqual(s.sum(), 1891)
         self.assertEqual(s.loc[s.index == '2018-01'].sum(), 1426)
         self.assertEqual(s.loc[s.index == '2017-12'].sum(), 465)
+
+
+    def test_index_year_month_a(self):
+        idx1 = IndexYearMonth(('2018-01', '2018-06'))
+
+        self.assertEqual(idx1.values.tolist(),
+            [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)])
 
 
     def test_index_year_month_from_date_range_a(self):
@@ -549,6 +557,51 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd', 'x'])
+
+
+    def test_index_to_pandas_a(self):
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        pdidx = idx1.to_pandas()
+        self.assertEqual(pdidx.name, idx1.name)
+        self.assertTrue((pdidx.values == idx1.values).all())
+
+
+    def test_index_to_pandas_b(self):
+        import pandas
+        idx1 = IndexDate(('2018-01-01', '2018-06-01'), name='foo')
+        pdidx = idx1.to_pandas()
+        self.assertEqual(pdidx.name, idx1.name)
+        self.assertTrue((pdidx.values == idx1.values).all())
+        self.assertTrue(pdidx[1].__class__ == pandas.Timestamp)
+
+
+    def test_index_from_pandas_a(self):
+        import pandas
+
+        pdidx = pandas.Index(list('abcd'))
+        idx = Index.from_pandas(pdidx)
+        self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
+
+
+    def test_index_from_pandas_a(self):
+        import pandas
+
+        pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
+        idx = IndexDate.from_pandas(pdidx)
+        self.assertEqual(idx.values.tolist(),
+                [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)])
+
+
+    def test_index_iter_label_a(self):
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(list(idx1.iter_label(0)), ['a', 'b', 'c', 'd'])
+
+        post = idx1.iter_label(0).apply(lambda x: x.upper())
+        self.assertEqual(post.to_pairs(),
+                ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')))
+
 
 
 if __name__ == '__main__':

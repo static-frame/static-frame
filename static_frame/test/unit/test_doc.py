@@ -1228,8 +1228,9 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         # inject content from local files
         src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')"
-        dst = ">>> frame == sf.Frame.from_tsv('%s')" % fp_alt
-        readme_str.replace(src, dst)
+        dst = ">>> frame = sf.Frame.from_tsv('%s')" % fp_alt
+
+        readme_str = readme_str.replace(src, dst)
 
         # restore active config
         readme_str = readme_str + '''

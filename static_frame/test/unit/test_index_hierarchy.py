@@ -88,7 +88,7 @@ class TestUnit(TestCase):
         self.assertEqual(level1.get_labels().dtype.kind, 'i')
 
 
-    def test_level_leaf_loc_to_iloc_a(self):
+    def test_index_level_leaf_loc_to_iloc_a(self):
 
         groups = Index(('A', 'B', 'C'))
         dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
@@ -116,7 +116,7 @@ class TestUnit(TestCase):
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
 
 
-    def test_level_append_a(self):
+    def test_index_level_append_a(self):
 
         category = IndexGO(('I', 'II'))
         groups = IndexGO(('A', 'B'))
@@ -168,6 +168,55 @@ class TestUnit(TestCase):
         self.assertEqual(
                 lvl0.get_labels().tolist(),
                 [['I', 'A', 'x'], ['I', 'A', 'y'], ['I', 'B', 'x'], ['I', 'B', 'y'], ['II', 'A', 'x'], ['II', 'A', 'y'], ['II', 'B', 'x'], ['II', 'B', 'y'], ['II', 'B', 'z'], ['II', 'C', 'a'], ['III', 'A', 'a']])
+
+
+
+    def test_index_level_iter_a(self):
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2, 3)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels = IndexHierarchy._tree_to_index_level(tree)
+
+        post = list(levels.iter(0))
+        self.assertEqual(post, ['I', 'II'])
+
+        post = list(levels.iter(1))
+        self.assertEqual(post, ['A', 'B', 'C', 'A', 'B'])
+
+        post = list(levels.iter(2))
+        self.assertEqual(post, [1, 2, 1, 2, 3, 2, 3, 1, 2, 3, 1])
+
+
+
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
 
     def test_hierarhcy_init_a(self):
 
@@ -786,7 +835,7 @@ class TestUnit(TestCase):
                 (('a', ((('b', 201810), 'b'),)), ('b', ((('b', 201810), 201810),)), ('c', ((('b', 201810), 0.4),))))
 
 
-    def test_hierarch_name_a(self):
+    def test_hierarchy_name_a(self):
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
         self.assertEqual(idx1.name, 'q')
@@ -795,7 +844,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.name, 'w')
 
 
-    def test_hierarch_name_b(self):
+    def test_hierarchy_name_b(self):
 
         idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
         idx2 = idx1.rename('w')
@@ -816,7 +865,7 @@ class TestUnit(TestCase):
                 [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['x', 'x']]
                 )
 
-    def test_hierarch_display_a(self):
+    def test_hierarchy_display_a(self):
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
 
@@ -826,6 +875,46 @@ class TestUnit(TestCase):
                 match,
                 (['<IndexHierarchy: q>', ''], ['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['<<U1>', '<<U1>'])
                 )
+
+    def test_hierarchy_to_pandas_a(self):
+
+        idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+
+        pdidx = idx1.to_pandas()
+        # NOTE: pandas .values on a hierarchical index returns an array of tuples
+        self.assertEqual(
+                idx1.values.tolist(),
+                [list(x) for x in pdidx.values.tolist()])
+
+
+
+    def test_hierarchy_from_pandas_a(self):
+        import pandas
+
+        pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
+
+        idx = IndexHierarchy.from_pandas(pdidx)
+
+        self.assertEqual(idx.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
+                )
+
+
+    def test_hierarchy_from_pandas_a(self):
+        import pandas
+
+        idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+
+        self.assertEqual(list(idx.iter_label(0)), ['I', 'II'])
+        self.assertEqual(list(idx.iter_label(1)), ['A', 'B', 'A', 'B'])
+        self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
+
+        post = idx.iter_label(1).apply(lambda x: x.lower())
+        self.assertEqual(post.to_pairs(),
+                ((0, 'a'), (1, 'b'), (2, 'a'), (3, 'b')))
+
+
+
 
 
 if __name__ == '__main__':

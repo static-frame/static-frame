@@ -49,6 +49,7 @@ from static_frame.core.iter_node import IterNode
 
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_base import IndexBase
 
 from static_frame.core.doc_str import doc_inject
 
@@ -106,8 +107,7 @@ class Series(metaclass=MetaOperatorDelegate):
     def from_pandas(cls,
             value,
             *,
-            own_data: bool = False,
-            own_index: bool = False) -> 'Series':
+            own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
         Args:
@@ -124,15 +124,10 @@ class Series(metaclass=MetaOperatorDelegate):
         else:
             data = immutable_filter(value.values)
 
-        if own_index:
-            index = value.index.values
-            index.flags.writeable = False
-        else:
-            index = immutable_filter(value.index.values)
-
         return cls(data,
-                index=index,
-                name=value.name
+                index=IndexBase.from_pandas(value.index),
+                name=value.name,
+                own_index=True
                 )
 
     def __init__(self,
@@ -1055,15 +1050,13 @@ class Series(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 )
 
-
-
     def to_pandas(self):
         '''
         Return a Pandas Series.
         '''
         import pandas
         return pandas.Series(self.values.copy(),
-                index=self._index.values.copy(),
+                index=self._index.to_pandas(),
                 name=self._name)
 
     @doc_inject(class_name='Series')

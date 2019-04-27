@@ -8,9 +8,26 @@ Methods for exporting alternative representations from :py:class:`Series` and :p
 Index
 ---------
 
+.. automethod:: static_frame.Index.to_series
+
 .. automethod:: static_frame.Index.to_html
 
 .. automethod:: static_frame.Index.to_html_datatables
+
+.. automethod:: static_frame.Index.to_pandas
+
+
+
+Index Hierarchy
+-------------------------
+
+.. automethod:: static_frame.IndexHierarhcy.to_frame
+
+.. automethod:: static_frame.IndexHierarhcy.to_html
+
+.. automethod:: static_frame.IndexHierarhcy.to_html_datatables
+
+.. automethod:: static_frame.IndexHierarhcy.to_pandas
 
 
 Series

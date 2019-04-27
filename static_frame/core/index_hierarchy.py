@@ -38,6 +38,10 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
+from static_frame.core.iter_node import IterNodeType
+from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeApplyType
+
 
 
 class HLocMeta(type):
@@ -183,6 +187,23 @@ class IndexLevel:
             else: # targets is None, meaning we are done
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
+
+    def iter(self, depth_position: int) -> tp.Generator[tp.Hashable, None, None]:
+        '''Given a depth position, return labels at that depth.
+        '''
+        if depth_position == 0:
+            yield from self.index
+        else:
+            levels = deque(((self, 0),))
+            while levels:
+                level, depth = levels.popleft()
+                if depth == depth_position:
+                    yield from level.index
+                    continue # do not need to descend
+                if level.targets is not None: # terminus
+                    next_depth = depth + 1
+                    levels.extend([(lvl, next_depth) for lvl in level.targets])
+
 
     def leaf_loc_to_iloc(self, key: tp.Iterable[tp.Hashable]) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
@@ -741,6 +762,23 @@ class IndexHierarchy(IndexBase,
     def iloc(self) -> GetItem:
         return GetItem(self._extract_iloc)
 
+
+    def _iter_label(self, depth_position: int = 0):
+        yield from self._levels.iter(depth_position=depth_position)
+
+    def _iter_label_items(self, depth_position: int = 0):
+        yield from enumerate(self._levels.iter(depth_position=depth_position))
+
+    @property
+    def iter_label(self) -> IterNode:
+        return IterNode(
+                container=self,
+                function_items=self._iter_label_items,
+                function_values=self._iter_label,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.INDEX_LABELS
+                )
+
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self):
@@ -1000,6 +1038,13 @@ class IndexHierarchy(IndexBase,
                 columns=range(self._depth),
                 index=None)
 
+    def to_pandas(self):
+        '''Return a Pandas MultiIndex.
+        '''
+        # NOTE: cannot set name attribute via from_tuples
+        import pandas
+        return pandas.MultiIndex.from_tuples(list(map(tuple, self.__iter__())))
+
     def flat(self):
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
@@ -1020,7 +1065,7 @@ class IndexHierarchy(IndexBase,
         return self.__class__(levels)
 
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHieararchy']:
-        '''Return an IndexHierarhcy with one or more leaf levels removed.
+        '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
         '''
         # probably need a deep copy
         levels = self._levels.to_index_level()

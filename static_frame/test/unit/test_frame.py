@@ -123,6 +123,47 @@ class TestUnit(TestCase):
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', False), ('y', True))))
                 )
 
+        with self.assertRaises(Exception):
+            f['c'] = 0
+
+
+    def test_frame_from_pandas_c(self):
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=(False, True)), index=('x', 'y'))
+
+        f = FrameGO.from_pandas(df)
+        f['c'] = -1
+
+        self.assertEqual(f.to_pairs(0),
+                (('a', (('x', 1), ('y', 2))), ('b', (('x', False), ('y', True))), ('c', (('x', -1), ('y', -1)))))
+
+
+    def test_frame_to_pandas_a(self):
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        df = f1.to_pandas()
+
+        self.assertEqual(df.index.values.tolist(),
+            [(100, True), (100, False), (200, True), (200, False)]
+            )
+
+        self.assertEqual(df.columns.values.tolist(),
+            [('a', 1), ('a', 2), ('b', 1), ('b', 2)]
+            )
+
+        self.assertEqual(df.values.tolist(),
+            [[1, 2, 'a', False], [30, 34, 'b', True], [54, 95, 'c', False], [65, 73, 'd', True]])
 
 
     def test_frame_getitem_a(self):
@@ -387,6 +428,20 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's'])
         self.assertEqual(f1['s'].values.tolist(), [-3, 200])
 
+    def test_frame_extend_d(self):
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('q', 'x'), name='s')
+
+        f1.extend(s1, fill_value=0)
+
+        self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's'])
+        self.assertEqual(f1['s'].values.tolist(), [-3, 0])
 
 
     def test_frame_extend_empty_a(self):
@@ -2876,6 +2931,18 @@ class TestUnit(TestCase):
             match,
             (['<Frame: foo>'], ['<Index: rig>', 'a', 'b', '<<U1>'], ['<Index: bar>', '', ''], ['x', '1', '2'], ['y', '1', '0'], ['<<U1>', '<int64>', '<int64>'])
             )
+
+
+
+    def test_frame_reindex_drop_level_a(self):
+
+        f1 = Frame.from_records(
+                (dict(a=x, b=x) for x in range(4)),
+                index=sf.IndexHierarchy.from_labels([(1,1),(1,2),(2,3),(2,4)]))
+
+        with self.assertRaises(Exception):
+            # this results in an index of size 2 being created, as we dro the leves with a postive depth; next support negative depth?
+            f2 = f1.reindex_drop_level(index=1)
 
 
 

@@ -38,6 +38,9 @@ from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
 
 from static_frame.core.index_base import IndexBase
+from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeType
+from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -272,7 +275,6 @@ class Index(IndexBase,
             dtype: DtypeSpecifier=None
             ) -> None:
 
-
         self._recache = False
         self._map = None
 
@@ -295,18 +297,26 @@ class Index(IndexBase,
 
             labels = labels._labels
 
-
         self._name = name if name is None else name_filter(name)
 
         if self._map is None:
             self._map = self._get_map(labels, positions)
 
+        if dtype is None:
+            dtype_extract = self._DTYPE # set in specialized Index classes
+        else: # dtype is not None
+            if self._DTYPE is not None and dtype != self._DTYPE:
+                raise RuntimeError('invalid dtype argument for this Index',
+                        dtype, self._DTYPE)
+            # self._DTYPE is None, dtype is not None, use dtype
+            dtype_extract = dtype
+
         # this might be NP array, or a list, depending on if static or grow only
-        self._labels = self._extract_labels(self._map, labels, dtype)
+        self._labels = self._extract_labels(self._map, labels, dtype_extract)
         self._positions = self._extract_positions(self._map, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
-            raise Exception('invalide label dtype for this index',
+            raise RuntimeError('invalid label dtype for this Index',
                     self._labels.dtype, self._DTYPE)
         if len(self._map) != len(self._labels):
             raise KeyError('labels have non-unique values')
@@ -346,7 +356,24 @@ class Index(IndexBase,
     def iloc(self) -> GetItem:
         return GetItem(self._extract_iloc)
 
-    # # on Index, getitem is an iloc selector; on Series, getiteme is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
+    # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
+
+    def _iter_label(self, depth_position: int = 0):
+        yield from self._labels
+
+    def _iter_label_items(self, depth_position: int = 0):
+        yield from zip(self._positions, self._labels)
+
+    @property
+    def iter_label(self) -> IterNode:
+        return IterNode(
+                container=self,
+                function_items=self._iter_label_items,
+                function_values=self._iter_label,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.INDEX_LABELS
+                )
+
 
     @property
     def drop(self) -> InterfaceSelection1D:
@@ -658,8 +685,15 @@ class Index(IndexBase,
         from static_frame import IndexHierarchy
         return IndexHierarchy.from_tree({level: self.values})
 
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        import pandas
+        # must copy to remove immutability, decouple reference
+        return pandas.Index(self.values.copy(),
+                name=self._name)
 
-
+#-------------------------------------------------------------------------------
 class IndexGO(Index):
     '''
     A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
@@ -784,7 +818,6 @@ class IndexDate(Index):
             '_name'
             )
 
-
     @classmethod
     def from_date_range(cls,
             start: DateInitializer,
@@ -797,7 +830,6 @@ class IndexDate(Index):
                 _to_datetime64(start, _DT64_DAY),
                 _to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
                 np.timedelta64(step, 'D'))
-
         labels.flags.writeable = False
         return cls(labels)
 
@@ -809,7 +841,6 @@ class IndexDate(Index):
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
-
         labels = np.arange(
                 _to_datetime64(start, _DT64_MONTH),
                 _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
@@ -817,7 +848,6 @@ class IndexDate(Index):
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
         return cls(labels)
-
 
     @classmethod
     def from_year_range(cls,
@@ -835,7 +865,6 @@ class IndexDate(Index):
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
         return cls(labels)
-
 
     #---------------------------------------------------------------------------
     # dict like interface
@@ -875,6 +904,15 @@ class IndexDate(Index):
         '''
         return Index.loc_to_iloc(self, key=key, key_transform=_key_to_datetime_key)
 
+    #---------------------------------------------------------------------------
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        import pandas
+        # do not need a copy as Pandas will coerce to datetime64
+        return pandas.DatetimeIndex(self.values,
+                name=self._name)
+
 
 #-------------------------------------------------------------------------------
 class IndexYearMonth(IndexDate):
@@ -896,7 +934,6 @@ class IndexYearMonth(IndexDate):
             '_loc_is_iloc',
             '_name'
             )
-
 
     @classmethod
     def from_date_range(cls,
@@ -950,6 +987,11 @@ class IndexYearMonth(IndexDate):
         labels.flags.writeable = False
         return cls(labels)
 
+    #---------------------------------------------------------------------------
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        raise NotImplementedError('Pandas does not support a year month type, and it is amiguous if a date proxy should be the first of the month or the last of the month.')
 
 #-------------------------------------------------------------------------------
 class IndexYear(IndexDate):
@@ -1024,6 +1066,13 @@ class IndexYear(IndexDate):
                 )
         labels.flags.writeable = False
         return cls(labels)
+
+    #---------------------------------------------------------------------------
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        raise NotImplementedError('Pandas does not support a year type, and it is amiguous if a date proxy should be the first of the year or the last of the year.')
+
 
 
 #-------------------------------------------------------------------------------

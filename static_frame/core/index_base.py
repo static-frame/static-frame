@@ -20,6 +20,39 @@ class IndexBase:
 
     __slots__ = () # defined in dervied classes
 
+
+    #---------------------------------------------------------------------------
+    # constructors
+
+    @classmethod
+    def from_pandas(cls,
+            value,
+            is_go: bool = False) -> 'IndexBase':
+        '''
+        Given a Pandas index, return the appropriate IndexBase derived class.
+        '''
+        import pandas
+        from static_frame import Index
+        from static_frame import IndexGO
+
+        from static_frame import IndexDate
+
+        from static_frame import IndexHierarchy
+        from static_frame import IndexHierarchyGO
+
+        if isinstance(value, pandas.MultiIndex):
+            # iterating over a hierarchucal index will iterate over labels
+            if is_go:
+                return IndexHierarchyGO.from_labels(value)
+            return IndexHierarchy.from_labels(value)
+        elif isinstance(value, pandas.DatetimeIndex):
+            if is_go:
+                raise NotImplementedError('No grow-only version of IndexDate yet exists')
+            return IndexDate(value)
+        if is_go:
+            return IndexGO(value)
+        return Index(value)
+
     #---------------------------------------------------------------------------
     # name interface
 

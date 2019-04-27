@@ -15,6 +15,7 @@ from static_frame.core.util import CallableOrMapping
 class IterNodeApplyType(Enum):
     SERIES_ITEMS = 1
     FRAME_ELEMENTS = 2
+    INDEX_LABELS = 3
 
 
 class IterNodeType(Enum):
@@ -209,6 +210,7 @@ class IterNode:
         '''
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.frame import Index
 
         func_values = partial(self._func_values, *args, **kwargs)
         func_items = partial(self._func_items, *args, **kwargs)
@@ -219,6 +221,9 @@ class IterNode:
             apply_constructor = partial(Frame.from_element_loc_items,
                     index=self._container._index,
                     columns=self._container._columns)
+        elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
+            # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
+            apply_constructor = Series.from_items
         else:
             raise NotImplementedError()
 

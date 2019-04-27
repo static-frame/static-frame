@@ -7,6 +7,16 @@ What is New in Static Frame
 0.3.1-dev
 ----------
 
+Added ``Index.iter_label()`` and ``IndexHierarchy.iter_label()``, for variable depth label iteration, particularly useful for IndexHierarchy.
+
+Improved initializer behavior of IndexDate, IndexYearMonth, IndexYear to apply expected dtype when creating arrays from non-array initializers, allowing conversion of string date represetnations to proper date types.
+
+Added ``Index.to_pandas`` and specialized methods on ``IndexDate`` and derived classes. Added ``IndexHierarhcy.to_pandas``.
+
+Added support for ``Series`` as an argument to ``FrameGO.extend()``.
+
+Added ``Series.to_frame()`` and ``Series.to_frame_go()``.
+
 The ``name`` attribute is now implemented for all containers; all constructors now take a ``name`` argument, and a ``rename`` method is available. Extracting columns, rows, and setting indices on ``Frame`` all propagate name attributes appropriately.
 
 The default ``Series`` display has been updated to show the "<Series>" label above the index, consistent with the presentation of ``Frame``.

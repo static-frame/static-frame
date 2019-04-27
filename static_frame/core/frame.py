@@ -58,6 +58,7 @@ from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.series import Series
 
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _requires_reindex
@@ -630,32 +631,16 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_pandas(cls,
             value,
             *,
-            own_data: bool = False,
-            own_index: bool = False,
-            own_columns: bool = False) -> 'Frame':
+            own_data: bool = False) -> 'Frame':
         '''Given a Pandas DataFrame, return a Frame.
 
         Args:
             value: Pandas DataFrame.
             {own_data}
-            {own_index}
-            {own_columns}
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        if own_index:
-            index = value.index.values
-            index.flags.writeable = False
-        else:
-            index = immutable_filter(value.index.values)
-
-        if own_columns:
-            columns = value.columns.values
-            columns.flags.writeable = False
-        else:
-            columns = immutable_filter(value.columns.values)
-
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks():
@@ -668,7 +653,8 @@ class Frame(metaclass=MetaOperatorDelegate):
 
                 if dtype != dtype_current:
                     # use loc to select before calling .values
-                    array = value.loc[_NULL_SLICE, slice(column_start, column_last)].values
+                    array = value.loc[_NULL_SLICE,
+                            slice(column_start, column_last)].values
                     if own_data:
                         array.flags.writeable = False
                     yield array
@@ -691,11 +677,15 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             name = None
 
+        is_go = not cls._COLUMN_CONSTRUCTOR.STATIC
+
         return cls(blocks,
-                index=index,
-                columns=columns,
+                index=IndexBase.from_pandas(value.index),
+                columns=IndexBase.from_pandas(value.columns, is_go=is_go),
                 name=name,
-                own_data=True)
+                own_data=True,
+                own_index=True,
+                own_columns=True)
 
 
 
@@ -1120,7 +1110,8 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def reindex_drop_level(self,
             index: int = 0,
-            columns: int = 0) -> 'Frame':
+            columns: int = 0
+            ) -> 'Frame':
         '''
         Return a new Frame, dropping one or more leaf levels from the ``IndexHierarchy`` defined on the index or columns.
         '''
@@ -2153,8 +2144,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         import pandas
         df = pandas.DataFrame(self.values.copy(),
-                index=self._index.values.copy(),
-                columns=self._columns.values.copy(),
+                index=self._index.to_pandas(),
+                columns=self._columns.to_pandas(),
                 )
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name
