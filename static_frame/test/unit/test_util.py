@@ -12,6 +12,7 @@ from static_frame.core.util import _array_set_ufunc_many
 
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
+from static_frame.core.util import concat_resolved
 
 
 from static_frame.core.util import _gen_skip_middle
@@ -500,6 +501,29 @@ class TestUnit(TestCase):
         self.assertEqual(post, {(1, 1, 1), ('x', None, 'x')})
 
 
+    def test_concat_resolved_a(self):
+        a1 = np.array([[3,4,5],[0,0,0]])
+        a2 = np.array([1,2,3]).reshape((1,3))
+        a3 = np.array([('3', '4', '5'),('1','1','1')])
+        a4 = np.array(['3', '5'])
+        a5 = np.array([1, 1, 1])
+
+        post = concat_resolved((a1, a3))
+        self.assertEqual(
+                post.tolist(),
+                [[3, 4, 5], [0, 0, 0], ['3', '4', '5'], ['1', '1', '1']]
+                )
+
+        post = concat_resolved((a3, a1, a2))
+        self.assertEqual(post.tolist(),
+                [['3', '4', '5'], ['1', '1', '1'], [3, 4, 5], [0, 0, 0], [1, 2, 3]])
+
+        self.assertEqual(concat_resolved((a1, a3), axis=1).tolist(),
+                [[3, 4, 5, '3', '4', '5'], [0, 0, 0, '1', '1', '1']]
+                )
+
+        self.assertEqual(concat_resolved((a4, a5)).tolist(),
+                ['3', '5', 1, 1, 1])
 
 if __name__ == '__main__':
     unittest.main()

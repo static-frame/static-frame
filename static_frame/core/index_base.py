@@ -27,6 +27,7 @@ class IndexBase:
     @classmethod
     def from_pandas(cls,
             value,
+            *,
             is_go: bool = False) -> 'IndexBase':
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.

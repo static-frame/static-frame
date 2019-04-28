@@ -7,11 +7,13 @@ What is New in Static Frame
 0.3.1-dev
 ----------
 
+Implemented Series.from_concat; improved Frame.from_concat in concatenating indices with diverse types.
+
 Added ``Index.iter_label()`` and ``IndexHierarchy.iter_label()``, for variable depth label iteration, particularly useful for IndexHierarchy.
 
-Improved initializer behavior of IndexDate, IndexYearMonth, IndexYear to apply expected dtype when creating arrays from non-array initializers, allowing conversion of string date represetnations to proper date types.
+Improved initializer behavior of IndexDate, IndexYearMonth, IndexYear to apply expected dtype when creating arrays from non-array initializers, allowing conversion of string date representations to proper date types.
 
-Added ``Index.to_pandas`` and specialized methods on ``IndexDate`` and derived classes. Added ``IndexHierarhcy.to_pandas``.
+Added ``Index.to_pandas`` and specialized methods on ``IndexDate`` and derived classes. Added ``IndexHierarchy.to_pandas``.
 
 Added support for ``Series`` as an argument to ``FrameGO.extend()``.
 

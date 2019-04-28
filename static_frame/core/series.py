@@ -12,6 +12,7 @@ from static_frame.core.util import _isna
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
@@ -22,7 +23,7 @@ from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import ufunc_unique
-
+from static_frame.core.util import concat_resolved
 
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
@@ -101,6 +102,31 @@ class Series(metaclass=MetaOperatorDelegate):
                 index=index,
                 dtype=dtype,
                 name=name)
+
+    @classmethod
+    def from_concat(cls,
+            containers: tp.Iterable['Series'],
+            *,
+            name: tp.Hashable = None
+            ):
+        '''
+        Concatenate multiple Series into a new Series, assuming the combination of all Indices result in a unique Index.
+        '''
+        array_values = []
+        array_index = []
+        for c in containers:
+            array_values.append(c.values)
+            array_index.append(c.index.values)
+
+        # returns immutable arrays
+        values = concat_resolved(array_values)
+        index = concat_resolved(array_index)
+
+        if index.ndim == 2:
+            index = IndexHierarchy.from_labels(index)
+
+        return cls(values, index=index, name=name)
+
 
     @classmethod
     @doc_inject()

@@ -2366,6 +2366,56 @@ class TestUnit(TestCase):
         self.assertEqual(f.name, 'foo')
 
 
+    def test_frame_from_concat_m(self):
+        records = (
+                (2, 2, False),
+                (30, 34, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 't'),
+                index=('x', 'a'))
+
+        records = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records,
+                columns=(3, 4,),
+                index=('x', 'a'))
+
+        f = Frame.from_concat((f1, f2), axis=1, name='foo')
+
+        self.assertEqual(f.columns.values.tolist(),
+                ['p', 'q', 't', 3, 4])
+        self.assertEqual(f.to_pairs(0),
+                (('p', (('x', 2), ('a', 30))), ('q', (('x', 2), ('a', 34))), ('t', (('x', False), ('a', False))), (3, (('x', 'c'), ('a', 'd'))), (4, (('x', False), ('a', True))))
+                )
+
+    def test_frame_from_concat_n(self):
+        records = (
+                (2, False),
+                (30, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('x', 'a'))
+
+        records = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=(3, 10))
+
+        f = Frame.from_concat((f1, f2), axis=0, name='foo')
+
+        self.assertEqual(f.index.values.tolist(),
+                ['x', 'a', 3, 10])
+        self.assertEqual(f.to_pairs(0),
+                (('p', (('x', '2'), ('a', '30'), (3, 'c'), (10, 'd'))), ('q', (('x', False), ('a', False), (3, False), (10, True))))
+                )
+
     def test_frame_set_index_a(self):
         records = (
                 (2, 2, 'a', False, False),

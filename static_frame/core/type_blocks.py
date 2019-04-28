@@ -390,7 +390,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def block_compatible(self,
             other: 'TypeBlocks',
             by_shape=True) -> bool:
-        '''Block compatible means that the blocks are the same shape and the same (or compatible) dtype.
+        '''Block compatible means that the blocks are the same shape. Have not yet added type to this evaluation.
 
         Args:
             by_shape: If True, the full shape is compared; if False, only the columns width iis compared.

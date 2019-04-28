@@ -41,6 +41,7 @@ from static_frame.core.util import InterfaceAsType
 from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import concat_resolved
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -136,13 +137,12 @@ class Frame(metaclass=MetaOperatorDelegate):
         if axis == 1:
             # index can be the same, columns must be redefined if not unique
             if columns is None:
-                # if these are different types unexpected things could happen
-                columns = np.concatenate([frame._columns.values for frame in frames])
-                columns.flags.writeable = False
+                # returns immutable array
+                columns = concat_resolved([frame._columns.values for frame in frames])
                 from_array_columns = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(columns, axis=0)) != len(columns):
-                    raise Exception('Column names after concatenation are not unique; supply a columns argument.')
+                    raise RuntimeError('Column names after concatenation are not unique; supply a columns argument.')
 
             if index is None:
                 index = _array_set_ufunc_many(
@@ -160,8 +160,8 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         elif axis == 0:
             if index is None:
-                # if these are different types unexpected things could happen
-                index = np.concatenate([frame._index.values for frame in frames])
+                # returns immutable array
+                index = concat_resolved([frame._index.values for frame in frames])
                 index.flags.writeable = False
                 from_array_index = True
 

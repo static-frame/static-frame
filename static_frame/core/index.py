@@ -25,6 +25,8 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _key_to_datetime_key
+from static_frame.core.util import _resolve_dtype_iter
+
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift

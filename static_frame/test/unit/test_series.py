@@ -1170,5 +1170,43 @@ class TestUnit(TestCase):
         self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
 
 
+    def test_series_from_concat_a(self):
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series((10, 20), index=list('de'))
+        s3 = Series((8, 6), index=list('fg'))
+
+        s = Series.from_concat((s1, s2, s3))
+
+        self.assertEqual(s.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20), ('f', 8), ('g', 6))
+                )
+
+    def test_series_from_concat_b(self):
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series(('10', '20'), index=list('de'))
+        s3 = Series((8, 6), index=list('fg'))
+
+        s = Series.from_concat((s1, s2, s3))
+
+        self.assertEqual(s.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', '10'), ('e', '20'), ('f', 8), ('g', 6))
+                )
+
+
+    def test_series_from_concat_c(self):
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series(('10', '20'), index=list('de'))
+        s3 = Series((8, 6), index=(1, 2))
+
+        s = Series.from_concat((s1, s2, s3))
+
+        self.assertEqual(s.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', '10'), ('e', '20'), (1, 8), (2, 6))
+                )
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

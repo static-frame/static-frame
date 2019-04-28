@@ -200,6 +200,37 @@ def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
             return dt_resolve
     return dt_resolve
 
+def concat_resolved(arrays: tp.Iterable[np.ndarray],
+        axis=0):
+    '''
+    Concatenation that uses resolved dtypes to avoid truncation.
+
+    Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
+
+    Now shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
+    '''
+    #all the input array dimensions except for the concatenation axis must match exactly
+    if axis is None:
+        raise NotImplementedError('no handling of concatenating flattened arrays')
+
+    # first pass to determine shape and resolvved type
+    arrays_iter = iter(arrays)
+    first = next(arrays_iter)
+
+    ndim = first.ndim
+    dt_resolve = first.dtype
+    shape = list(first.shape)
+
+    for array in arrays_iter:
+        if dt_resolve != DTYPE_OBJECT:
+            dt_resolve = _resolve_dtype(array.dtype, dt_resolve)
+        shape[axis] += array.shape[axis]
+
+    out = np.empty(shape=shape, dtype=dt_resolve)
+    np.concatenate(arrays, out=out, axis=axis)
+    out.flags.writeable = False
+    return out
+
 
 def full_for_fill(
         dtype: np.dtype,
