@@ -162,7 +162,6 @@ class Frame(metaclass=MetaOperatorDelegate):
             if index is None:
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])
-                index.flags.writeable = False
                 from_array_index = True
 
                 # avoid sort for performance; always want rows if ndim is 2
