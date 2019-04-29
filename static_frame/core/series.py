@@ -1036,45 +1036,55 @@ class Series(metaclass=MetaOperatorDelegate):
         return tuple(zip(index_values, self.values))
 
 
-    def to_frame(self):
+
+    def _to_frame(self, constructor, axis: int = 1):
         '''
-        Return Frame view of this Series. As underlying data is immutable, this is a no-copy operation.
+        Common Frame construction utilities.
+        '''
+        from static_frame import TypeBlocks
+
+        if axis == 1:
+            # present as a column
+            def block_gen():
+                yield self.values
+
+            index = self._index
+            own_index = True
+            columns = None if self._name is None else (self._name,)
+            own_columns = False
+
+        elif axis == 0:
+            def block_gen():
+                yield self.values.reshape((1, self.values.shape[0]))
+
+            index = None if self._name is None else (self._name,)
+            own_index = False
+            columns = self._index
+            own_columns = True # index is immutable
+
+        return constructor(
+                TypeBlocks.from_blocks(block_gen()),
+                index=index,
+                columns=columns,
+                own_data=True,
+                own_index=own_index,
+                own_columns=own_columns,
+                )
+
+
+    def to_frame(self, axis: int = 1):
+        '''
+        Return a :py:class:`static_frame.Frame` view of this :py:class:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
         '''
         from static_frame import Frame
-        from static_frame import TypeBlocks
+        return self._to_frame(constructor=Frame, axis=axis)
 
-        def block_gen():
-            yield self.values
-
-        columns = None if self._name is None else (self._name,)
-
-        return Frame(
-                TypeBlocks.from_blocks(block_gen()),
-                index=self._index,
-                columns=columns,
-                own_data=True,
-                own_index=True,
-                )
-
-    def to_frame_go(self):
+    def to_frame_go(self, axis: int = 1):
         '''
-        Return FrameGO view of this Series. As underlying data is immutable, this is a no-copy operation.
+        Return :py:class:`static_frame.FrameGO` view of this :py:class:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
         '''
         from static_frame import FrameGO
-        from static_frame import TypeBlocks
-
-        def block_gen():
-            yield self.values
-
-        columns = None if self._name is None else (self._name,)
-
-        return FrameGO(
-                TypeBlocks.from_blocks(block_gen()),
-                index=self._index,
-                columns=columns,
-                own_data=True,
-                own_index=True,
-                )
+        return self._to_frame(constructor=FrameGO, axis=axis)
 
     def to_pandas(self):
         '''

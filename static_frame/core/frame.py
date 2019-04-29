@@ -98,7 +98,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_concat(cls,
-            frames: tp.Iterable['Frame'],
+            frames: tp.Iterable[tp.Union['Frame', Series]],
             *,
             axis: int = 0,
             union: bool = True,
@@ -120,12 +120,12 @@ class Frame(metaclass=MetaOperatorDelegate):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        # TODO: should this upport Series?
-
         if union:
             ufunc = np.union1d
         else:
             ufunc = np.intersect1d
+
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis=axis) for f in frames]
 
         # switch if we have reduced the columns argument to an array
         from_array_columns = False
@@ -134,7 +134,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         own_columns = False
         own_index = False
 
-        if axis == 1:
+        if axis == 1: # stacks columns (extends rows)
             # index can be the same, columns must be redefined if not unique
             if columns is None:
                 # returns immutable array
@@ -158,7 +158,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                     for block in frame._blocks._blocks:
                         yield block
 
-        elif axis == 0:
+        elif axis == 0: # stacks rows (extends columns)
             if index is None:
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])
@@ -186,7 +186,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                         frame = frame.reindex(columns=columns)
                     aligned_frames.append(frame)
                     # column size is all the same by this point
-                    # NOTE: this could be implemented on TypeBlock as a vstack opperations
                     if previous_frame is not None:
                         if block_compatible:
                             block_compatible &= frame._blocks.block_compatible(
@@ -209,14 +208,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                             b = TypeBlocks.single_column_filter(
                                     type_blocks[frame_idx]._blocks[block_idx])
                             block_parts.append(b)
-                        array = np.vstack(block_parts)
-                        array.flags.writeable = False
-                        yield array
+                        # returns immutable array
+                        yield concat_resolved(block_parts)
                 else:
-                    # must just combine .values
-                    array = np.vstack(frame.values for frame in frames)
-                    array.flags.writeable = False
-                    yield array
+                    # must just combine .values; returns immutable array
+                    yield concat_resolved([frame.values for frame in frames])
         else:
             raise NotImplementedError('no support for axis', axis)
 
@@ -294,6 +290,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if derive_columns:
                     # just pass the key back
                     column_getter = lambda key: key
+            elif isinstance(row_reference, Series):
+                raise RuntimeError('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
             else:
                 # all other iterables
                 col_idx_iter = range(col_count)

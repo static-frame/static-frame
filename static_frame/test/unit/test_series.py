@@ -1169,6 +1169,15 @@ class TestUnit(TestCase):
 
         self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
 
+    def test_series_to_frame_c(self):
+
+        s1 = Series((2, 3, 4), index=list('abc'), name='alt')
+
+        f2 = s1.to_frame(axis=0)
+        self.assertEqual(f2.to_pairs(0),
+            (('a', (('alt', 2),)), ('b', (('alt', 3),)), ('c', (('alt', 4),))))
+
+
 
     def test_series_from_concat_a(self):
         s1 = Series((2, 3, 0,), index=list('abc'))
@@ -1202,6 +1211,16 @@ class TestUnit(TestCase):
 
         self.assertEqual(s.to_pairs(),
                 (('a', 2), ('b', 3), ('c', 0), ('d', '10'), ('e', '20'), (1, 8), (2, 6))
+                )
+
+    def test_series_from_concat_d(self):
+        s1 = Series((2, 3, 0,), index=list('abc')).reindex_add_level('i')
+        s2 = Series(('10', '20', '100'), index=list('abc')).reindex_add_level('ii')
+
+        s3 = Series.from_concat((s1, s2))
+
+        self.assertEqual(s3.to_pairs(),
+                ((('i', 'a'), 2), (('i', 'b'), 3), (('i', 'c'), 0), (('ii', 'a'), '10'), (('ii', 'b'), '20'), (('ii', 'c'), '100'))
                 )
 
 

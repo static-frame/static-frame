@@ -7,7 +7,7 @@ What is New in Static Frame
 0.3.1-dev
 ----------
 
-Implemented Series.from_concat; improved Frame.from_concat in concatenating indices with diverse types.
+Implemented Series.from_concat; improved Frame.from_concat in concatenating indices with diverse types. Frame.from_concat() now accepts Series.
 
 Added ``Index.iter_label()`` and ``IndexHierarchy.iter_label()``, for variable depth label iteration, particularly useful for IndexHierarchy.
 

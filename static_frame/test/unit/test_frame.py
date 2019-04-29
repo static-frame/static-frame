@@ -2413,8 +2413,57 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.values.tolist(),
                 ['x', 'a', 3, 10])
         self.assertEqual(f.to_pairs(0),
-                (('p', (('x', '2'), ('a', '30'), (3, 'c'), (10, 'd'))), ('q', (('x', False), ('a', False), (3, False), (10, True))))
+                (('p', (('x', 2), ('a', 30), (3, 'c'), (10, 'd'))), ('q', (('x', False), ('a', False), (3, False), (10, True))))
                 )
+
+
+    def test_frame_from_concat_o(self):
+        records = (
+                (2, False),
+                (34, False),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q',),
+                index=('x', 'z'))
+
+        records = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records,
+                columns=('r', 's',),
+                index=('x', 'z'))
+
+
+        s1 = Series((0, 100), index=('x', 'z'), name='t')
+
+        f = Frame.from_concat((f1, f2, s1), axis=1)
+
+        self.assertEqual(f.to_pairs(0),
+                (('p', (('x', 2), ('z', 34))), ('q', (('x', False), ('z', False))), ('r', (('x', 'c'), ('z', 'd'))), ('s', (('x', False), ('z', True))), ('t', (('x', 0), ('z', 100))))
+                )
+
+
+
+    def test_frame_from_concat_p(self):
+        records = (
+                (2, False),
+                (34, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q',),
+                index=('a', 'b'))
+
+        s1 = Series((0, True), index=('p', 'q'), name='c', dtype=object)
+        s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
+
+        f = Frame.from_concat((s2, f1, s1), axis=0)
+
+        self.assertEqual(f.to_pairs(0),
+                (('p', (('d', -2), ('a', 2), ('b', 34), ('c', 0))), ('q', (('d', False), ('a', False), ('b', False), ('c', True)))))
+
+
 
     def test_frame_set_index_a(self):
         records = (
@@ -2519,6 +2568,16 @@ class TestUnit(TestCase):
 
         with self.assertRaises(Exception):
             f2 = sf.Frame.from_records([[1, 2], [2, 3]], columns=['a'])
+
+
+    def test_frame_from_records_d(self):
+
+        s1 = Series([3, 4, 5], index=('x', 'y', 'z'))
+        s2 = Series(list('xyz'), index=('x', 'y', 'z'))
+
+        with self.assertRaises(Exception):
+            # cannot use Series in from_records
+            f1 = sf.Frame.from_records([s1, s2], columns=['a', 'b', 'c'])
 
 
     def test_frame_from_json_a(self):
