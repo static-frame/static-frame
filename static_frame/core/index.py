@@ -1,5 +1,4 @@
 import typing as tp
-import operator as operator_mod
 from collections import KeysView
 
 import numpy as np
@@ -9,10 +8,8 @@ from static_frame.core.util import _NULL_SLICE
 
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import SLICE_STEP_ATTR
 
 from static_frame.core.util import _KEY_ITERABLE_TYPES
-from static_frame.core.util import _DTYPE_STR_KIND
 from static_frame.core.util import _EMPTY_ARRAY
 
 from static_frame.core.util import GetItemKeyType
@@ -20,12 +17,11 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DtypeSpecifier
 # from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
-
+from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import _ufunc_skipna_1d
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _key_to_datetime_key
-from static_frame.core.util import _resolve_dtype_iter
 
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
@@ -54,10 +50,10 @@ from static_frame.core.display import DisplayHeader
 
 class ILocMeta(type):
 
-    def __getitem__(self,
+    def __getitem__(cls,
             key: GetItemKeyType
             ) -> tp.Iterable[GetItemKeyType]:
-        return self(key)
+        return cls(key)
 
 class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specificiations within a single axis argument of a ``loc`` selection.
@@ -78,7 +74,7 @@ class LocMap:
     def map_slice_args(
             label_to_pos: tp.Callable[[tp.Hashable], int],
             key: slice,
-            offset: tp.Optional[int]=0):
+            offset: tp.Optional[int] = 0):
         '''Given a slice and a label-to-position mapping, yield each argument necessary to create a new slice.
 
         Args:
@@ -105,7 +101,7 @@ class LocMap:
             label_to_pos: tp.Dict,
             positions: np.ndarray,
             key: GetItemKeyType,
-            offset: tp.Optional[int]=None
+            offset: tp.Optional[int] = None
             ) -> GetItemKeyType:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
@@ -272,9 +268,9 @@ class Index(IndexBase,
     def __init__(self,
             labels: IndexInitializer,
             *,
-            loc_is_iloc: bool=False,
+            loc_is_iloc: bool = False,
             name: tp.Hashable = None,
-            dtype: DtypeSpecifier=None
+            dtype: DtypeSpecifier = None
             ) -> None:
 
         self._recache = False
@@ -360,10 +356,10 @@ class Index(IndexBase,
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
-    def _iter_label(self, depth_position: int = 0):
+    def _iter_label(self, depth_level: DepthLevelSpecifier = 0):
         yield from self._labels
 
-    def _iter_label_items(self, depth_position: int = 0):
+    def _iter_label_items(self, depth_level: DepthLevelSpecifier = 0):
         yield from zip(self._positions, self._labels)
 
     @property
@@ -399,7 +395,7 @@ class Index(IndexBase,
         return len(self._labels)
 
     def display(self,
-            config: tp.Optional[DisplayConfig]=None,
+            config: tp.Optional[DisplayConfig] = None,
             ) -> Display:
 
         config = config or DisplayActive.get()
@@ -461,8 +457,8 @@ class Index(IndexBase,
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            offset: tp.Optional[int]=None,
-            key_transform: tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]=None
+            offset: tp.Optional[int] = None,
+            key_transform: tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]] = None
             ) -> GetItemKeyType:
         '''
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
@@ -588,7 +584,12 @@ class Index(IndexBase,
         return array
 
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None):
         '''Axis argument is required but is irrelevant.
 
         Args:
@@ -636,8 +637,8 @@ class Index(IndexBase,
     # utility functions
 
     def sort(self,
-            ascending: bool=True,
-            kind: str=_DEFAULT_SORT_KIND) -> 'Index':
+            ascending: bool = True,
+            kind: str = _DEFAULT_SORT_KIND) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -787,7 +788,7 @@ _TD64_YEAR = np.timedelta64(1, 'Y')
 
 def _to_datetime64(
         value: DateInitializer,
-        dtype: tp.Optional[np.dtype]=None
+        dtype: tp.Optional[np.dtype] = None
         ) -> np.datetime64:
 
     # for now, only support creating from a string, as creation from integers is based on offset from epoch
@@ -824,7 +825,7 @@ class IndexDate(Index):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
@@ -839,7 +840,7 @@ class IndexDate(Index):
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
@@ -855,7 +856,7 @@ class IndexDate(Index):
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int=1
+            step: int = 1
             ):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
@@ -941,7 +942,7 @@ class IndexYearMonth(IndexDate):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
@@ -958,7 +959,7 @@ class IndexYearMonth(IndexDate):
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -976,7 +977,7 @@ class IndexYearMonth(IndexDate):
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int=1
+            step: int = 1
             ):
         '''
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
@@ -1021,7 +1022,7 @@ class IndexYear(IndexDate):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
@@ -1038,7 +1039,7 @@ class IndexYear(IndexDate):
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int=1):
+            step: int = 1):
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -1056,7 +1057,7 @@ class IndexYear(IndexDate):
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int=1
+            step: int = 1
             ):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.

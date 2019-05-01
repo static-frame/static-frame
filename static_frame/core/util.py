@@ -84,6 +84,8 @@ KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+DepthLevelSpecifier = tp.Union[int, tp.Iterable[int]]
+
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
 IndexSpecifier = tp.Union[int, str]
@@ -175,7 +177,7 @@ def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     dt1_is_str = dt1.kind in _DTYPE_STR_KIND
     dt2_is_str = dt2.kind in _DTYPE_STR_KIND
 
-    # if both are string or string-lie, we can use result type to get the longest string
+    # if both are string or string-like, we can use result type to get the longest string
     if dt1_is_str and dt2_is_str:
         return np.result_type(dt1, dt2)
 
@@ -599,22 +601,41 @@ def array_shift(array: np.ndarray,
     return result
 
 
-def _array_set_ufunc_many(
+def array_set_ufunc_many(
         arrays: tp.Iterable[np.ndarray],
-        ufunc=np.intersect1d):
+        union: bool = False):
     '''
     Iteratively apply a set operation unfunc to a arrays; if all are equal, no operation is performed and order is retained.
+
+    Args:
+        union: if True, a union is taken, else, an intersection.
     '''
-    # TODO: this needs to handle 2D arrays for hierarchical indices
     arrays = iter(arrays)
     result = next(arrays)
+
+    if result.ndim == 1:
+        ufunc = np.union1d if union else np.intersect1d
+        ndim = 1
+    else: # ndim == 2
+        ufunc = union2d if union else intersect2d
+        ndim = 2
+
     for array in arrays:
+        if array.ndim != ndim:
+            raise RuntimeError('arrays do not all have the same ndim')
         # is the new array different
-        if len(array) != len(result) or (array != result).any():
+        if ndim == 1:
+            # if lengths are not comparable, or comparable and the values are not the same
+            if len(array) != len(result) or (array != result).any():
+                result = ufunc(result, array)
+            # otherwise, arrays are identical and can skip ufunc application
+        else:
             result = ufunc(result, array)
-        if ufunc == np.intersect1d and len(result) == 0:
-            # short circuit intersection
+
+        if not union and len(result) == 0:
+            # short circuit intersection that results in no common values
             return result
+
     return result
 
 def _array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:

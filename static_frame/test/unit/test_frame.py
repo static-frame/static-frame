@@ -2465,6 +2465,38 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_concat_q(self):
+        s1 = Series((2, 3, 0,), index=list('abc'), name='x').reindex_add_level('i')
+        s2 = Series(('10', '20', '100'), index=list('abc'), name='y').reindex_add_level('i')
+
+        # stack horizontally
+        f = Frame.from_concat((s1, s2), axis=1)
+
+        self.assertEqual(f.to_pairs(0),
+                (('x', ((('i', 'a'), 2), (('i', 'b'), 3), (('i', 'c'), 0))), ('y', ((('i', 'a'), '10'), (('i', 'b'), '20'), (('i', 'c'), '100'))))
+            )
+
+        # stack vertically
+        f = Frame.from_concat((s1, s2), axis=0)
+        self.assertEqual(f.to_pairs(0),
+                ((('i', 'a'), (('x', 2), ('y', '10'))), (('i', 'b'), (('x', 3), ('y', '20'))), (('i', 'c'), (('x', 0), ('y', '100'))))
+            )
+
+
+    def test_frame_from_concat_r(self):
+        f1 = sf.Frame.from_records(
+                [dict(a=1,b=1),dict(a=2,b=3),dict(a=1,b=1),dict(a=2,b=3)],
+                index=sf.IndexHierarchy.from_labels([(1,'dd'),(1,'bb'),(2,'cc'),(2,'dd')]))
+
+        f2 = sf.Frame.from_records(
+                [dict(a=1,b=1),dict(a=2,b=3),dict(a=1,b=1),dict(a=2,b=3)],
+                index=sf.IndexHierarchy.from_labels([(3,'ddd'),(3,'bbb'),(4,'ccc'),(4,'ddd')])) * 100
+
+        self.assertEqual(Frame.from_concat((f1, f2), axis=0).to_pairs(0),
+                (('a', (((1, 'dd'), 1), ((1, 'bb'), 2), ((2, 'cc'), 1), ((2, 'dd'), 2), ((3, 'ddd'), 100), ((3, 'bbb'), 200), ((4, 'ccc'), 100), ((4, 'ddd'), 200))), ('b', (((1, 'dd'), 1), ((1, 'bb'), 3), ((2, 'cc'), 1), ((2, 'dd'), 3), ((3, 'ddd'), 100), ((3, 'bbb'), 300), ((4, 'ccc'), 100), ((4, 'ddd'), 300))))
+                )
+
+
     def test_frame_set_index_a(self):
         records = (
                 (2, 2, 'a', False, False),
@@ -3052,6 +3084,7 @@ class TestUnit(TestCase):
         with self.assertRaises(Exception):
             # this results in an index of size 2 being created, as we dro the leves with a postive depth; next support negative depth?
             f2 = f1.reindex_drop_level(index=1)
+
 
 
 

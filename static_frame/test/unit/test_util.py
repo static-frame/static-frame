@@ -8,7 +8,7 @@ from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
 from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
-from static_frame.core.util import _array_set_ufunc_many
+from static_frame.core.util import array_set_ufunc_many
 
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
@@ -331,10 +331,10 @@ class TestUnit(TestCase):
         a3 = np.array([3, 2, 1])
         a4 = np.array([3, 2, 1])
 
-        post = _array_set_ufunc_many((a1, a2, a3, a4), ufunc=np.intersect1d)
+        post = array_set_ufunc_many((a1, a2, a3, a4), union=False)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-        post = _array_set_ufunc_many((a1, a2, a3, a4), ufunc=np.union1d)
+        post = array_set_ufunc_many((a1, a2, a3, a4), union=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
     def test_array_set_ufunc_many_b(self):
@@ -343,11 +343,25 @@ class TestUnit(TestCase):
         a3 = np.array([5, 3, 2, 1])
         a4 = np.array([2])
 
-        post = _array_set_ufunc_many((a1, a2, a3, a4), ufunc=np.intersect1d)
+        post = array_set_ufunc_many((a1, a2, a3, a4), union=False)
         self.assertEqual(post.tolist(), [2])
 
-        post = _array_set_ufunc_many((a1, a2, a3, a4), ufunc=np.union1d)
+        post = array_set_ufunc_many((a1, a2, a3, a4), union=True)
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
+
+
+
+    def test_array_set_ufunc_many_c(self):
+        a1 = np.array([[3, 2, 1], [1, 2, 3]])
+        a2 = np.array([[5, 2, 1], [1, 2, 3]])
+        a3 = np.array([[10, 20, 30], [1, 2, 3]])
+
+        post = array_set_ufunc_many((a1, a2, a3), union=False)
+        self.assertEqual(post.tolist(), [[1, 2, 3]])
+
+        post = array_set_ufunc_many((a1, a2, a3), union=True)
+        self.assertEqual(post.tolist(),
+                [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
 
 

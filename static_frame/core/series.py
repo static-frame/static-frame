@@ -28,6 +28,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import FilePathOrFileLike
+from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
@@ -93,10 +94,10 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         index = []
         def values():
-            for pair in pairs:
-                # populate index as side effect of iterating values
-                index.append(pair[0])
-                yield pair[1]
+            for k, v in pairs:
+                # populate index list as side effect of iterating values
+                index.append(k)
+                yield v
 
         return cls(values(),
                 index=index,
@@ -162,7 +163,8 @@ class Series(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
-            own_index: bool = False
+            own_index: bool = False,
+
             ) -> None:
 
         # TODO: support construction from another Series, propagate name attr
@@ -336,6 +338,26 @@ class Series(metaclass=MetaOperatorDelegate):
                 function_values=self._axis_group,
                 yield_type=IterNodeType.ITEMS
                 )
+
+
+    @property
+    def iter_group_index(self) -> IterNode:
+        return IterNode(
+                container=self,
+                function_items=self._axis_group_index_items,
+                function_values=self._axis_group_index,
+                yield_type=IterNodeType.VALUES
+                )
+
+    @property
+    def iter_group_index_items(self) -> IterNode:
+        return IterNode(
+                container=self,
+                function_items=self._axis_group_index_items,
+                function_values=self._axis_group_index,
+                yield_type=IterNodeType.ITEMS
+                )
+
 
     @property
     def iter_element(self) -> IterNode:
@@ -775,6 +797,39 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def _axis_element(self, *, axis=0):
         yield from (x for _, x in self._axis_element_items(axis=axis))
+
+
+    def _axis_group_index_items(self,
+            depth_level: DepthLevelSpecifier = 0,
+            ):
+
+        group_to_tuple = False
+        if self.index.depth == 1:
+            values = self.index.values
+        else: # hierarchical index
+            if isinstance(depth_level, int):
+                sel = depth_level
+            else:
+                sel = list(depth_level)
+                group_to_tuple = True
+
+            values = self.index.values[:, sel]
+
+        groups, locations = _array_to_groups_and_locations(
+                values)
+
+        for idx, g in enumerate(groups):
+            selection = locations == idx
+            if group_to_tuple:
+                g = tuple(g)
+            yield g, self._extract_iloc(selection)
+
+    def _axis_group_index(self,
+            depth_level: DepthLevelSpecifier = 0,
+            ):
+        yield from (x for _, x in self._axis_group_index_items(
+                depth_level=depth_level))
+
 
     #---------------------------------------------------------------------------
 

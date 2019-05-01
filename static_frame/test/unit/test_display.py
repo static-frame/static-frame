@@ -29,7 +29,6 @@ from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
 from static_frame.core.util import _resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
-from static_frame.core.util import _array_set_ufunc_many
 
 from static_frame.core.display import DisplayTypeCategoryFactory
 

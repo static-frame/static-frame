@@ -31,7 +31,7 @@ from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _iterable_to_array
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array_to_duplicated
-from static_frame.core.util import _array_set_ufunc_many
+from static_frame.core.util import array_set_ufunc_many
 from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
@@ -120,12 +120,10 @@ class Frame(metaclass=MetaOperatorDelegate):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        if union:
-            ufunc = np.union1d
-        else:
-            ufunc = np.intersect1d
 
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis=axis) for f in frames]
+        # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
+        # axis_series = (0 if axis is 1 else 1)
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
         # switch if we have reduced the columns argument to an array
         from_array_columns = False
@@ -145,9 +143,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                     raise RuntimeError('Column names after concatenation are not unique; supply a columns argument.')
 
             if index is None:
-                index = _array_set_ufunc_many(
+                index = array_set_ufunc_many(
                         (frame._index.values for frame in frames),
-                        ufunc=ufunc)
+                        union=union)
                 index.flags.writeable = False
                 from_array_index = True
 
@@ -163,15 +161,16 @@ class Frame(metaclass=MetaOperatorDelegate):
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])
                 from_array_index = True
-
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(index, axis=0)) != len(index):
+                    import ipdb; ipdb.set_trace()
                     raise Exception('Index names after concatenation are not unique; supply an index argument.')
 
             if columns is None:
-                columns = _array_set_ufunc_many(
+                columns = array_set_ufunc_many(
                         (frame._columns.values for frame in frames),
-                        ufunc=ufunc)
+                        union=union)
+                # import ipdb; ipdb.set_trace()
                 columns.flags.writeable = False
                 from_array_columns = True
 

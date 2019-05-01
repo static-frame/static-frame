@@ -101,6 +101,7 @@ class IterNodeDelegate:
 
         # apply always calls the items function
         for k, v in self._func_items():
+            # with IndexHierarchy, k might be an unhashable np array
             if condition and not condition(v):
                 if self._yield_type is IterNodeType.VALUES:
                     yield k, v

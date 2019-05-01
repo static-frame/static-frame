@@ -188,16 +188,16 @@ class IndexLevel:
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
 
-    def iter(self, depth_position: int) -> tp.Generator[tp.Hashable, None, None]:
+    def iter(self, depth_level: int) -> tp.Generator[tp.Hashable, None, None]:
         '''Given a depth position, return labels at that depth.
         '''
-        if depth_position == 0:
+        if depth_level == 0:
             yield from self.index
         else:
             levels = deque(((self, 0),))
             while levels:
                 level, depth = levels.popleft()
-                if depth == depth_position:
+                if depth == depth_level:
                     yield from level.index
                     continue # do not need to descend
                 if level.targets is not None: # terminus
@@ -763,11 +763,11 @@ class IndexHierarchy(IndexBase,
         return GetItem(self._extract_iloc)
 
 
-    def _iter_label(self, depth_position: int = 0):
-        yield from self._levels.iter(depth_position=depth_position)
+    def _iter_label(self, depth_level: int = 0):
+        yield from self._levels.iter(depth_level=depth_level)
 
-    def _iter_label_items(self, depth_position: int = 0):
-        yield from enumerate(self._levels.iter(depth_position=depth_position))
+    def _iter_label_items(self, depth_level: int = 0):
+        yield from enumerate(self._levels.iter(depth_level=depth_level))
 
     @property
     def iter_label(self) -> IterNode:
