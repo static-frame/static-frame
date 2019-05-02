@@ -803,17 +803,8 @@ class Series(metaclass=MetaOperatorDelegate):
             depth_level: DepthLevelSpecifier = 0,
             ):
 
-        group_to_tuple = False
-        if self.index.depth == 1:
-            values = self.index.values
-        else: # hierarchical index
-            if isinstance(depth_level, int):
-                sel = depth_level
-            else:
-                sel = list(depth_level)
-                group_to_tuple = True
-
-            values = self.index.values[:, sel]
+        values = self.index.values_at_depth(depth_level)
+        group_to_tuple = values.ndim == 2
 
         groups, locations = _array_to_groups_and_locations(
                 values)

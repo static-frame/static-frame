@@ -29,6 +29,7 @@ from static_frame.core.util import name_filter
 from static_frame.core.util import GetItem
 from static_frame.core.util import _KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 from static_frame.core.array_go import ArrayGO
@@ -235,6 +236,11 @@ class IndexLevel:
             if isinstance(key, np.ndarray) and key.dtype == bool:
                 return key # keep as Boolean?
             return [self.leaf_loc_to_iloc(x) for x in key]
+
+        # NOTE: not sure if this is necessary
+        # elif isinstance(key, IndexHierarchy):
+        #     # values will give an iterable if rows, where rows are iloc selectors
+        #     return [self.leaf_loc_to_iloc(tuple(x)) for x in key.values]
 
         elif not isinstance(key, HLoc):
             # assume it is a leaf loc tuple
@@ -849,6 +855,16 @@ class IndexHierarchy(IndexBase,
             # self._update_array_cache()
         return self._depth
 
+    def values_at_depth(self, depth_level: DepthLevelSpecifier = 0):
+        '''
+        Return an NP array for the `depth_level` specified.
+        '''
+        if isinstance(depth_level, int):
+            sel = depth_level
+        else:
+            sel = list(depth_level)
+        return self.values[:, sel]
+
 
     #---------------------------------------------------------------------------
 
@@ -888,6 +904,9 @@ class IndexHierarchy(IndexBase,
         if isinstance(key, Index):
             # if an Index, we simply use the values of the index
             key = key.values
+
+        if isinstance(key, IndexHierarchy):
+            return [self._levels.leaf_loc_to_iloc(tuple(k)) for k in key.values]
 
         if isinstance(key, Series):
             if key.dtype == bool:

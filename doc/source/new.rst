@@ -4,10 +4,15 @@ What is New in Static Frame
 ===============================
 
 
-0.3.1-dev
+0.3.2-dev
+-----------
+
+
+
+0.3.1
 ----------
 
-Implemented Series.iter_group_index() and Series.iter_group_index_items(), for producing iterators (and targets of function application) based on groupings of the index; particularly useful for IndexHierarhcy.
+Implemented Series.iter_group_index(), Series.iter_group_index_items(), Frame.iter_group_index(), Frame.iter_group_index_items() for producing iterators (and targets of function application) based on groupings of the index; particularly useful for IndexHierarhcy.
 
 Implemented Series.from_concat; improved Frame.from_concat in concatenating indices with diverse types. Frame.from_concat() now accepts Series.
 

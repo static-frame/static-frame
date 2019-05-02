@@ -42,6 +42,8 @@ from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import _array_to_groups_and_locations
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -935,6 +937,25 @@ class Frame(metaclass=MetaOperatorDelegate):
             )
 
     @property
+    def iter_group_index(self) -> IterNode:
+        return IterNode(
+            container=self,
+            function_values=self._axis_group_index,
+            function_items=self._axis_group_index_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_group_index_items(self) -> IterNode:
+        return IterNode(
+            container=self,
+            function_values=self._axis_group_index,
+            function_items=self._axis_group_index_items,
+            yield_type=IterNodeType.ITEMS
+            )
+
+
+    @property
     def iter_element(self) -> IterNode:
         return IterNode(
             container=self,
@@ -1724,20 +1745,21 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def _axis_group_iloc_items(self, key, *, axis):
 
-        # NOTE: can we own_columns or own_index in this?
-
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
                         index=self._index[selection],
-                        columns=self._columns,
+                        columns=self._columns, # let constructor determine ownership
+                        own_index=True,
                         own_data=True)
             elif axis == 1:
                 # axis 1 is a column iterators, so need to slice columns, keep index
                 yield group, self.__class__(tb,
                         index=self._index,
                         columns=self._columns[selection],
+                        own_index=True,
+                        own_columns=True,
                         own_data=True)
             else:
                 raise NotImplementedError()
@@ -1753,6 +1775,56 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def _axis_group_loc(self, key, *, axis=0):
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
+
+
+
+    def _axis_group_index_items(self,
+            depth_level: DepthLevelSpecifier = 0,
+            *,
+            axis=0):
+
+        if axis == 0: # maintain columns, group by index
+            ref_index = self._index
+        elif axis == 1: # maintain index, group by columns
+            ref_index = self._columns
+        else:
+            raise NotImplementedError()
+
+        values = ref_index.values_at_depth(depth_level)
+        group_to_tuple = values.ndim > 1
+
+        groups, locations = _array_to_groups_and_locations(values)
+
+        for idx, group in enumerate(groups):
+            selection = locations == idx
+
+            if axis == 0:
+                # axis 0 is a row iter, so need to slice index, keep columns
+                tb = self._blocks._extract(row_key=selection)
+                yield group, self.__class__(tb,
+                        index=self._index[selection],
+                        columns=self._columns, # let constructor determine ownership
+                        own_index=True,
+                        own_data=True)
+
+            elif axis == 1:
+                # axis 1 is a column iterators, so need to slice columns, keep index
+                tb = self._blocks._extract(column_key=selection)
+                yield group, self.__class__(tb,
+                        index=self._index,
+                        columns=self._columns[selection],
+                        own_index=True,
+                        own_columns=True,
+                        own_data=True)
+            else:
+                raise NotImplementedError()
+
+    def _axis_group_index(self,
+            depth_level: DepthLevelSpecifier = 0,
+            *,
+            axis=0):
+        yield from (x for _, x in self._axis_group_index_items(
+                depth_level=depth_level, axis=axis))
 
 
     #---------------------------------------------------------------------------

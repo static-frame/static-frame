@@ -3087,6 +3087,54 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_iter_group_index_a(self):
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y', 'z'))
+
+        post = tuple(f1.iter_group_index(0, axis=0))
+
+        self.assertEqual(len(post), 3)
+        self.assertEqual(
+                f1.iter_group_index(0, axis=0).apply(lambda x: x[['p', 'q']].values.sum()).to_pairs(),
+                (('x', 4), ('y', 64), ('z', 97))
+                )
+
+
+    def test_frame_iter_group_index_b(self):
+
+        records = (
+                (2, 2, 'a', 'q', False, False),
+                (30, 34, 'b', 'c', True, False),
+                (2, 95, 'c', 'd', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((1, 2, 3), ('a', 'b')),
+                index=('x', 'y', 'z'))
+
+        # with axis 1, we are grouping based on columns while maintain the index
+        post = tuple(f1.iter_group_index(1, axis=1))
+
+        self.assertEqual(len(post), 2)
+
+        # NOTE: this presently returns a Frame, not a Series, not sure if this is consistent
+        post = f1[f1.columns[0]]
+        self.assertEqual(post.to_pairs(0),
+                (((1, 'a'), (('x', 2), ('y', 30), ('z', 2))),)
+                )
+
+        self.assertEqual(
+            f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
+            (('a', 34), ('b', 131))
+            )
+
+
 
 if __name__ == '__main__':
     unittest.main()

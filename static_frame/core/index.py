@@ -430,6 +430,15 @@ class Index(IndexBase,
             self._update_array_cache()
         return self._positions
 
+
+    def values_at_depth(self, depth_level: DepthLevelSpecifier = 0):
+        '''
+        Return an NP array for the `depth_level` specified.
+        '''
+        if depth_level is not 0:
+            raise RuntimeError('invalid depth_level', depth_level)
+        return self.values
+
     #---------------------------------------------------------------------------
 
     def copy(self) -> 'Index':
