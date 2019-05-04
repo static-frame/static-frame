@@ -4,5 +4,9 @@ matrix:
     - python: "3.6"
     - python: "3.7"
       dist: xenial  # required for Python >= 3.7
-install: pip install -r requirements-test.txt
-script: pytest
+install:
+  - pip install codecov pytest-cov
+  - pip install -r requirements-test.txt
+script: pytest --cov=static_frame
+after_success:
+  - codecov
