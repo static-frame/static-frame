@@ -1,0 +1,3 @@
+ignore:
+  - "static_frame/performance/.*"
+  - "static_frame/test/.*"
