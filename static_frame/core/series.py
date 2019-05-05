@@ -163,8 +163,7 @@ class Series(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
-            own_index: bool = False,
-
+            own_index: bool = False
             ) -> None:
 
         # TODO: support construction from another Series, propagate name attr

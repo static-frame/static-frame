@@ -72,6 +72,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - Yu Tomita
 - Quang Vu
 
+Thanks also for additional contributions from GitHub pull requests.
 
 
 .. [#] The Pandas 2.0 Design Docs state that the Pandas codebase has over 200,000 lines of code: https://pandas-dev.github.io/pandas2/goals.html
