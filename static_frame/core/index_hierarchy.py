@@ -1129,6 +1129,14 @@ class IndexHierarchyGO(IndexHierarchy):
             '_name'
             )
 
+    @classmethod
+    def from_pandas(cls, value) -> 'IndexHierarchyGO':
+        '''
+        Given a Pandas index, return the appropriate IndexBase derived class.
+        '''
+        return IndexBase.from_pandas(value, is_go=True)
+
+
     def append(self, value: tuple):
         '''
         Append a single label to this index.

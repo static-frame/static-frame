@@ -46,6 +46,45 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
         self.assertTrue(idx.mloc == idx[:2].mloc)
 
+    def test_index_mloc_b(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        self.assertTrue(idx.mloc == idx[:2].mloc)
+
+
+    def test_index_dtype_a(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(str(idx.dtype), '<U1')
+        idx.append('eee')
+        self.assertEqual(str(idx.dtype), '<U3')
+
+
+    def test_index_shape_a(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.shape, (4,))
+        idx.append('e')
+        self.assertEqual(idx.shape, (5,))
+
+
+    def test_index_ndim_a(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.ndim, 1)
+        idx.append('e')
+        self.assertEqual(idx.ndim, 1)
+
+
+    def test_index_size_a(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.size, 4)
+        idx.append('e')
+        self.assertEqual(idx.size, 5)
+
+    def test_index_nbytes_a(self):
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        self.assertEqual(idx.nbytes, 16)
+        idx.append('e')
+        self.assertEqual(idx.nbytes, 20)
+
 
     def test_index_unique(self):
 
@@ -85,8 +124,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc['c'].values.tolist(), ['c'])
 
-
-
         idxgo = IndexGO(('a', 'b', 'c', 'd'))
         self.assertEqual(idxgo.values.tolist(), ['a', 'b', 'c', 'd'])
 
@@ -95,7 +132,6 @@ class TestUnit(TestCase):
 
         idxgo.extend(('f', 'g'))
         self.assertEqual(idxgo.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
-
 
 
     def test_index_creation_b(self):
@@ -603,8 +639,40 @@ class TestUnit(TestCase):
                 ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D')))
 
 
+    def test_index_intersection_a(self):
+
+        idx1 = Index(('a', 'b', 'c', 'd', 'e'))
+
+        a1 = np.array(['c', 'dd', 'b', 'a'])
+
+        idx2 = idx1.intersection(a1)
+
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c'])
+
+
+    def test_index_union_a(self):
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        idx1.append('f')
+        a1 = np.array(['c', 'dd', 'b', 'a'])
+
+        idx2 = idx1.union(a1)
+
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd', 'dd', 'e', 'f'])
+
+
+    def test_index_to_html_a(self):
+
+        idx1 = IndexGO(('a', 'b', 'c'))
+
+        self.assertEqual(idx1.to_html(),
+                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexGO&gt;</span></th></tr></thead><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
-
 

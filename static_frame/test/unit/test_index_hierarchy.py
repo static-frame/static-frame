@@ -900,7 +900,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_from_pandas_a(self):
+    def test_hierarchy_from_pandas_b(self):
         import pandas
 
         idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
@@ -915,6 +915,24 @@ class TestUnit(TestCase):
 
 
 
+    def test_hierarchy_from_pandas_c(self):
+        import pandas
+
+        pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
+
+        idx = IndexHierarchyGO.from_pandas(pdidx)
+
+        self.assertEqual(idx.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
+                )
+
+        self.assertEqual(idx.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
+
+        idx.append(('III', 'A'))
+
+        self.assertEqual(idx.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
 
 
 if __name__ == '__main__':
