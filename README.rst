@@ -17,7 +17,8 @@
 .. image:: https://anaconda.org/conda-forge/static-frame/badges/version.svg
     :target: https://anaconda.org/conda-forge/static-frame
 
-
+.. image:: https://codecov.io/gh/InvestmentSystems/static-frame/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
 
 static-frame
