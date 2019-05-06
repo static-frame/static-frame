@@ -1097,7 +1097,6 @@ class Series(metaclass=MetaOperatorDelegate):
             own_index = True
             columns = None if self._name is None else (self._name,)
             own_columns = False
-
         elif axis == 0:
             def block_gen():
                 yield self.values.reshape((1, self.values.shape[0]))
@@ -1106,6 +1105,8 @@ class Series(metaclass=MetaOperatorDelegate):
             own_index = False
             columns = self._index
             own_columns = True # index is immutable
+        else:
+            raise NotImplementedError('no handling for axis', axis)
 
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),

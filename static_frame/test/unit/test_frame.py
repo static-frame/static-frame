@@ -88,6 +88,29 @@ class TestUnit(TestCase):
         self.assertEqual(s.to_pairs(),
                 ((0, 'black'),))
 
+    def test_frame_init_d(self):
+        a1 = np.array([[1, 2, 3], [4, 5, 6]])
+
+        f = sf.Frame(a1, own_data=True)
+        self.assertEqual(mloc(a1), f.mloc[0])
+
+    def test_frame_init_e(self):
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+
+        with self.assertRaises(RuntimeError):
+            f = sf.Frame(dict(a=a1, b=a2), columns=('x', 'y'))
+
+    def test_frame_init_f(self):
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+
+        f = sf.Frame(dict(a=a1, b=a2))
+
+        self.assertEqual(f.to_pairs(0),
+            (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
+            )
+
     def test_frame_from_pairs_a(self):
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))
@@ -137,6 +160,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(f.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', False), ('y', True))), ('c', (('x', -1), ('y', -1)))))
+
+    def test_frame_from_pandas_a(self):
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=(3,4)))
+        df.name = 'foo'
+
+        f = Frame.from_pandas(df, own_data=True)
+        self.assertEqual(f.to_pairs(0),
+                (('a', ((0, 1), (1, 2))), ('b', ((0, 3), (1, 4))))
+                )
 
 
     def test_frame_to_pandas_a(self):
@@ -1616,6 +1650,48 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(f1.name, 'foo')
 
+    def test_frame_from_items_b(self):
+
+        s1 = Series((1, 2, 3), index=('a', 'b', 'c'))
+        s2 = Series((4, 5, 6), index=('a', 'b', 'c'))
+
+        with self.assertRaises(RuntimeError):
+            # must have an index to consume Series
+            Frame.from_items(zip(list('xy'), (s1, s2)))
+
+    def test_frame_from_items_c(self):
+
+        s1 = Series((1, 2, 3), index=('a', 'b', 'c'))
+        s2 = Series((4, 5, 6), index=('a', 'b', 'c'))
+
+        f1 = Frame.from_items(zip(list('xy'), (s1, s2)), index=s1.index)
+
+        self.assertEqual(f1.to_pairs(0),
+                (('x', (('a', 1), ('b', 2), ('c', 3))), ('y', (('a', 4), ('b', 5), ('c', 6)))))
+
+    def test_frame_from_items_d(self):
+
+        s1 = Series((1, 2, 3), index=('a', 'b', 'c'))
+        s2 = Series((4, 5, 6), index=('a', 'b', 'c'))
+
+        f1 = Frame.from_items(zip(list('xy'), (s1, s2)), index=('c', 'a'))
+
+        self.assertEqual(f1.to_pairs(0),
+            (('x', (('c', 3), ('a', 1))), ('y', (('c', 6), ('a', 4)))))
+
+
+    def test_frame_from_items_e(self):
+
+        s1 = Series((1, 2, 3), index=('a', 'b', 'c'))
+        s2 = Series((4, 5, 6), index=('a', 'b', 'c'))
+        s3 = Series((7, 8, 9), index=('a', 'b', 'c'))
+
+        f1 = Frame.from_items(zip(list('xy'), (s1, s2, s3)), index=('c', 'a'),
+                consolidate_blocks=True)
+
+        self.assertEqual(len(f1._blocks._blocks), 1)
+
+
 
     def test_frame_from_structured_array_a(self):
         a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
@@ -1626,6 +1702,16 @@ class TestUnit(TestCase):
         self.assertEqual(f.shape, (2, 2))
         self.assertEqual(f.name, 'foo')
         self.assertEqual(f['temperature'].sum(), 264)
+
+
+    def test_frame_from_structured_array_b(self):
+        a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
+                dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
+
+        f = sf.Frame.from_structured_array(a, index_column=2, name='foo')
+        self.assertEqual(f['name'].to_pairs(),
+                ((464, 'Venus'), (-200, 'Neptune')))
+
 
 
     def test_frame_iter_element_a(self):
@@ -2560,6 +2646,26 @@ class TestUnit(TestCase):
                 (('a', (((1, 'dd'), 1), ((1, 'bb'), 2), ((2, 'cc'), 1), ((2, 'dd'), 2), ((3, 'ddd'), 100), ((3, 'bbb'), 200), ((4, 'ccc'), 100), ((4, 'ddd'), 200))), ('b', (((1, 'dd'), 1), ((1, 'bb'), 3), ((2, 'cc'), 1), ((2, 'dd'), 3), ((3, 'ddd'), 100), ((3, 'bbb'), 300), ((4, 'ccc'), 100), ((4, 'ddd'), 300))))
                 )
 
+    def test_frame_from_concat_s(self):
+        records = (
+                (2, False),
+                (34, False),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q',),
+                index=('x', 'z'))
+
+        records = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records,
+                columns=('r', 's',),
+                index=('x', 'z'))
+
+        with self.assertRaises(NotImplementedError):
+            f = Frame.from_concat((f1, f2), axis=None)
 
     def test_frame_set_index_a(self):
         records = (
@@ -2675,6 +2781,28 @@ class TestUnit(TestCase):
             # cannot use Series in from_records
             f1 = sf.Frame.from_records([s1, s2], columns=['a', 'b', 'c'])
 
+
+    def test_frame_from_records_e(self):
+
+        a1 = np.array([[1,2,3], [4,5,6]])
+
+        f1 = sf.Frame.from_records(a1, index=('x', 'y'), columns=['a', 'b', 'c'])
+
+        self.assertEqual(f1.to_pairs(0),
+                (('a', (('x', 1), ('y', 4))), ('b', (('x', 2), ('y', 5))), ('c', (('x', 3), ('y', 6)))))
+
+
+    def test_frame_from_records_f(self):
+
+        records = [[1,'2',3], [4,'5',6]]
+        dtypes = (int, str, str)
+        f1 = sf.Frame.from_records(records,
+                index=('x', 'y'),
+                columns=['a', 'b', 'c'],
+                dtypes=dtypes)
+        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
+                (('a', 'int64'), ('b', '<U1'), ('c', '<U1'))
+                )
 
     def test_frame_from_json_a(self):
 

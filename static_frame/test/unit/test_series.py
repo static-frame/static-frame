@@ -1190,7 +1190,11 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
             (('a', (('alt', 2),)), ('b', (('alt', 3),)), ('c', (('alt', 4),))))
 
+    def test_series_to_frame_d(self):
 
+        s1 = Series((2, 3, 4), index=list('abc'), name='alt')
+        with self.assertRaises(NotImplementedError):
+            s1.to_frame(axis=None)
 
     def test_series_from_concat_a(self):
         s1 = Series((2, 3, 0,), index=list('abc'))

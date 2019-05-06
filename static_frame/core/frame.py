@@ -165,8 +165,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 from_array_index = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(index, axis=0)) != len(index):
-                    import ipdb; ipdb.set_trace()
-                    raise Exception('Index names after concatenation are not unique; supply an index argument.')
+                    raise RuntimeError('Index names after concatenation are not unique; supply an index argument.')
 
             if columns is None:
                 columns = array_set_ufunc_many(
@@ -305,14 +304,14 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if column_getter: # append as side effect of generator!
                     columns.append(column_getter(col_idx))
 
+                # for each column, try to get a column_type, or None
                 if dtypes is None:
                     field_ref = row_reference[col_idx]
                     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
                     column_type = (type(field_ref)
                             if not isinstance(field_ref, (str, np.datetime64))
                             else None)
-                else:
-                    # column_type returned here can be None.
+                else: # column_type returned here can be None.
                     column_type = dtypes[col_idx]
 
                 values = None
@@ -325,8 +324,10 @@ class Frame(metaclass=MetaOperatorDelegate):
                     except ValueError:
                         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
                         pass
-                if values is None: # let array constructor determine type
-                    values = np.array([row[col_idx] for row in rows])
+                if values is None:
+                    # let array constructor determine type if column_type is None
+                    values = np.array([row[col_idx] for row in rows],
+                            dtype=column_type)
 
                 values.flags.writeable = False
                 yield values
@@ -411,7 +412,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                     yield v
                 elif isinstance(v, Series):
                     if index is None:
-                        raise Exception('can only consume Series if an Index is provided.')
+                        raise RuntimeError('can only consume Series in Frame.from_items if an Index is provided.')
                     if _requires_reindex(v.index, index):
                         yield v.reindex(index, fill_value=fill_value).values
                     else:
@@ -685,8 +686,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 own_columns=True)
 
-
-
     #---------------------------------------------------------------------------
 
     def __init__(self,
@@ -725,7 +724,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif isinstance(data, dict):
             # if a dictionary is given, it is treated as a dictionary of columns
             if columns is not None:
-                raise Exception('cannot create Frame from dictionary when columns is defined')
+                raise RuntimeError('cannot create Frame from dictionary when columns is defined')
             columns = []
             def blocks():
                 for k, v in _dict_to_sorted_items(data):
@@ -767,7 +766,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._columns = columns
         elif columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
             if col_count is None:
-                raise Exception('cannot create columns when no data given')
+                raise RuntimeError('cannot create columns when no data given')
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
                     loc_is_iloc=True)
@@ -779,7 +778,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._index = index
         elif index is None or (hasattr(index, '__len__') and len(index) == 0):
             if row_count is None:
-                raise Exception('cannot create rows when no data given')
+                raise RuntimeError('cannot create rows when no data given')
             self._index = Index(range(row_count), loc_is_iloc=True)
         else:
             self._index = Index(index)
@@ -793,11 +792,11 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         if row_count and len(self._index) != row_count:
             # row count might be 0 for an empty DF
-            raise Exception(
+            raise RuntimeError(
                     'Index has incorrect size (got {}, expected {})'.format(
                     len(self._index), row_count))
         if len(self._columns) != col_count:
-            raise Exception(
+            raise RuntimeError(
                     'Columns has incorrect size (got {}, expected {})'.format(
                     len(self._columns), col_count))
 
