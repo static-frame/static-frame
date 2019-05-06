@@ -684,7 +684,7 @@ class Index(IndexBase,
     #---------------------------------------------------------------------------
     # export
 
-    def to_series(self) -> 'Series':
+    def to_series(self):
         '''Return a Series with values from this Index's labels.
         '''
         # not sure if index should be self here

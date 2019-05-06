@@ -21,13 +21,13 @@ Index
 Index Hierarchy
 -------------------------
 
-.. automethod:: static_frame.IndexHierarhcy.to_frame
+.. automethod:: static_frame.IndexHierarchy.to_frame
 
-.. automethod:: static_frame.IndexHierarhcy.to_html
+.. automethod:: static_frame.IndexHierarchy.to_html
 
-.. automethod:: static_frame.IndexHierarhcy.to_html_datatables
+.. automethod:: static_frame.IndexHierarchy.to_html_datatables
 
-.. automethod:: static_frame.IndexHierarhcy.to_pandas
+.. automethod:: static_frame.IndexHierarchy.to_pandas
 
 
 Series

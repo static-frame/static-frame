@@ -199,7 +199,7 @@ Series
 .. py:method:: Series.iter_group(key).apply_iter(func)
 .. py:method:: Series.iter_group(key).apply_iter_items(func)
 
-    Iterator of Series formed from groups of unique values in a Series.
+    Iterator of ``Series`` formed from groups of unique values in a Series.
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
@@ -208,17 +208,37 @@ Series
 
 
 .. py:method:: Series.iter_group_items(key)
-.. py:method:: Series.iter_group_tiems(key).apply(func)
+.. py:method:: Series.iter_group_items(key).apply(func)
 .. py:method:: Series.iter_group_items(key).apply_pool(func, dtype, max_workers, chunksize, use_threads)
 .. py:method:: Series.iter_group_items(key).apply_iter(func)
 .. py:method:: Series.iter_group_items(key).apply_iter_items(func)
 
-    Iterator of pairs of group value and the Series formed from groups of unique values in a Series.
+    Iterator of pairs of group value and the ``Series`` formed from groups of unique values in a Series.
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_iter_group_items_a
    :end-before: end_series_iter_group_items_a
+
+
+
+.. py:method:: Series.iter_group_index(depth_level)
+.. py:method:: Series.iter_group_index(depth_level).apply(func)
+.. py:method:: Series.iter_group_index(depth_level).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_group_index(depth_level).apply_iter(func)
+.. py:method:: Series.iter_group_index(depth_level).apply_iter_items(func)
+
+    Iterator of ``Series`` formed from groups of unique ``Index`` labels.
+
+.. py:method:: Series.iter_group_index_items(depth_level)
+.. py:method:: Series.iter_group_index_items(depth_level).apply(func)
+.. py:method:: Series.iter_group_index_items(depth_level).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Series.iter_group_index_items(depth_level).apply_iter(func)
+.. py:method:: Series.iter_group_index_items(depth_level).apply_iter_items(func)
+
+    Iterator of pairs of group value and ``Series`` formed from groups of unique ``Index`` labels.
+
+
 
 
 Frame
@@ -244,12 +264,33 @@ Frame
 .. py:method:: Frame.iter_group_items(key, axis).apply_iter(func)
 .. py:method:: Frame.iter_group_items(key, axis).apply_iter_items(func)
 
-    Iterator of pairs of group value and groups (as Frames) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
+    Iterator over pairs of group value and groups (as ``Frame``) based on unique values found in the column specified by ``key``. If axis is 0, subgroups of rows are retuned and key selects columns; If axis is 1, subgroups of columns are returned and key selects rows.
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_frame_iter_group_items_a
    :end-before: end_frame_iter_group_items_a
+
+
+
+.. py:method:: Frame.iter_group_index(depth_level, axis)
+.. py:method:: Frame.iter_group_index(depth_level, axis).apply(func)
+.. py:method:: Frame.iter_group_index(depth_level, axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_group_index(depth_level, axis).apply_iter(func)
+.. py:method:: Frame.iter_group_index(depth_level, axis).apply_iter_items(func)
+
+    Iterate over groups (as ``Frame``) based on unique labels found in the index specified by ``depth_level``. If axis is 0, subgroups of rows are retuned and ``depth_level`` selects columns; If axis is 1, subgroups of columns are returned and ``depth_level`` selects rows.
+
+
+.. py:method:: Frame.iter_group_index_items(depth_level, axis)
+.. py:method:: Frame.iter_group_index_items(depth_level, axis).apply(func)
+.. py:method:: Frame.iter_group_index_items(depth_level, axis).apply_pool(func, dtype, max_workers, chunksize, use_threads)
+.. py:method:: Frame.iter_group_index_items(depth_level, axis).apply_iter(func)
+.. py:method:: Frame.iter_group_index_items(depth_level, axis).apply_iter_items(func)
+
+    Iterator over pairs of group value and groups (as ``Frame``) based on unique labels found in the index specified by ``depth_level``. If axis is 0, subgroups of rows are retuned and ``depth_level`` selects columns; If axis is 1, subgroups of columns are returned and ``depth_level`` selects rows.
+
+
 
 
 
