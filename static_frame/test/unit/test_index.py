@@ -88,6 +88,20 @@ class TestUnit(TestCase):
         self.assertEqual(idx.nbytes, 20)
 
 
+    def test_index_rename_a(self):
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        idx1.append('e')
+        idx2 = idx1.rename('bar')
+        self.assertEqual(idx2.name, 'bar')
+
+    def test_index_positions_a(self):
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(idx1.positions.tolist(), list(range(4)))
+
+        idx1.append('e')
+        self.assertEqual(idx1.positions.tolist(), list(range(5)))
+
+
     def test_index_unique(self):
 
         with self.assertRaises(KeyError):
