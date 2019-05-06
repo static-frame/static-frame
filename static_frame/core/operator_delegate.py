@@ -63,13 +63,13 @@ def _ufunc_logical_skipna(array: np.ndarray,
         ufunc: tp.Callable,
         skipna: bool,
         axis: int = 0,
-        out=None
+        out: tp.Optional[np.ndarray] = None
         ) -> np.ndarray:
     '''
     Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
     '''
     if ufunc != np.all and ufunc != np.any:
-        raise Exception('unsupported ufunc')
+        raise NotImplementedError('unsupported ufunc')
 
     if len(array) == 0:
         # TODO: handle if this is ndim == 2 and has no length

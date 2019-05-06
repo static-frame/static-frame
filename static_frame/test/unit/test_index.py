@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import pickle
 import datetime
+from io import StringIO
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -13,6 +14,7 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import HLoc
 from static_frame import ILoc
+
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
@@ -670,6 +672,17 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.to_html(),
                 '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexGO&gt;</span></th></tr></thead><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
 
+    def test_index_to_html_datatables_a(self):
+
+        idx1 = IndexGO(('a', 'b', 'c'))
+
+        sio = StringIO()
+
+        post = idx1.to_html_datatables(sio, show=False)
+
+        self.assertEqual(post, None)
+
+        self.assertTrue(len(sio.read()) > 1300)
 
 
 

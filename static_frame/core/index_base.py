@@ -197,6 +197,7 @@ class IndexBase:
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
             fp: tp.Optional[FilePathOrFileLike] = None,
+            *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> str:
@@ -210,7 +211,7 @@ class IndexBase:
         content = repr(self.display(config))
         fp = write_optional_file(content=content, fp=fp)
 
-        if show:
+        if fp and show:
             import webbrowser
             webbrowser.open_new_tab(fp)
         return fp

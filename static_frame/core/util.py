@@ -82,6 +82,7 @@ GetItemKeyTypeCompound = tp.Union[
 CallableOrMapping = tp.Union[tp.Callable, tp.Mapping]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
+
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
 DepthLevelSpecifier = tp.Union[int, tp.Iterable[int]]
@@ -412,10 +413,8 @@ def _key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
             return key
         return key.astype(np.datetime64)
 
-    if hasattr(key, '__iter__') and hasattr(key, '__len__'):
-        return np.fromiter(key, dtype=np.datetime64, count=len(key))
-
     if hasattr(key, '__len__'):
+        # use array constructor to determine type
         return np.array(key, dtype=np.datetime64)
 
     if hasattr(key, '__next__'): # a generator-like
@@ -724,17 +723,24 @@ def write_optional_file(
         fp: tp.Optional[FilePathOrFileLike] = None,
         ):
 
-    if not fp:
+    fd = f = None
+    if not fp: # get a temp file
         fd, fp = tempfile.mkstemp(suffix='.html', text=True)
-    else:
-        fd = None
+    elif isinstance(fp, StringIO):
+        f = fp
+        fp = None
+    # nothing to do if we have an fp
 
-    try:
-        with open(fp, 'w') as f:
-            f.write(content)
-    finally:
-        if fd is not None:
-            os.close(fd)
+    if f is None: # do not have a file object
+        try:
+            with open(fp, 'w') as f:
+                f.write(content)
+        finally:
+            if fd is not None:
+                os.close(fd)
+    else: # string IO
+        f.write(content)
+        f.seek(0)
     return fp
 
 #-------------------------------------------------------------------------------

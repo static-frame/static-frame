@@ -7,6 +7,7 @@ from io import StringIO
 import string
 import hashlib
 import pickle
+from io import StringIO
 
 import numpy as np
 
@@ -1120,6 +1121,19 @@ class TestUnit(TestCase):
         html = '''<table border="1"><thead><tr><th>&lt;Series&gt;</th><th></th></tr><tr><th>&lt;Index&gt;</th><th></th></tr></thead><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>
         '''
         self.assertEqual(post.strip(), html.strip())
+
+
+    def test_series_to_html_datatables_a(self):
+
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        sio = StringIO()
+
+        post = s1.to_html_datatables(sio, show=False)
+
+        self.assertEqual(post, None)
+
+        self.assertTrue(len(sio.read()) > 1500)
 
 
     def test_series_disply_a(self):

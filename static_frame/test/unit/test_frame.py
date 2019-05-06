@@ -307,6 +307,40 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, (100,))
         self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
+    def test_frame_iter_array_c(self):
+        arrays = []
+        for _ in range(8):
+            arrays.append(list(range(8)))
+        f1 = Frame.from_items(
+                zip(range(8), arrays)
+                )
+
+        func = {x: chr(x+65) for x in range(8)}
+        # iter columns
+        post = f1.iter_element().apply_pool(func, max_workers=4, use_threads=True)
+
+        self.assertEqual(post.to_pairs(0),
+                ((0, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (1, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (2, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (3, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (4, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (5, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (6, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (7, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))))
+                )
+
+    def test_frame_iter_array_d(self):
+        arrays = []
+        for _ in range(8):
+            arrays.append(list(range(8)))
+        f1 = Frame.from_items(
+                zip(range(8), arrays)
+                )
+
+        # when called with a pool, values are gien the func as a single argument, which for an element iteration is a tuple of coord, value
+        func = lambda arg: arg[0][1]
+        # iter columns
+        post = f1.iter_element_items().apply_pool(func, max_workers=4, use_threads=True)
+
+        self.assertEqual(post.to_pairs(0),
+                ((0, ((0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))), (1, ((0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1))), (2, ((0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2))), (3, ((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3))), (4, ((0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4))), (5, ((0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5))), (6, ((0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6))), (7, ((0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7))))
+                )
+
+
 
     def test_frame_setitem_a(self):
 
@@ -1980,6 +2014,36 @@ class TestUnit(TestCase):
         self.assertEqual(file.read(),
 'index\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
 
+
+    def test_frame_to_html_a(self):
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+        post = f1.to_html()
+        self.assertEqual(post, '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Frame&gt;</span></th><th></th><th></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th>r</th><th>s</th><th>t</th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
+        )
+
+
+    def test_frame_to_html_datatables_a(self):
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+
+        sio = StringIO()
+
+        post = f1.to_html_datatables(sio, show=False)
+
+        self.assertEqual(post, None)
+
+        self.assertTrue(len(sio.read()) > 1600)
 
 
 

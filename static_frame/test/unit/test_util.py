@@ -16,9 +16,13 @@ from static_frame.core.util import concat_resolved
 
 
 from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import _dtype_to_na
+from static_frame.core.util import _key_to_datetime_key
+
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
+from static_frame.core.util import _ufunc2d
 
 from static_frame import Index
 
@@ -157,6 +161,29 @@ class TestUnit(TestCase):
         self.assertEqual(
                 _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
                 [True, True])
+
+
+    def test_ufunc_logical_skipna_c(self):
+
+        a1 = np.array([], dtype=float)
+        with self.assertRaises(NotImplementedError):
+            _ufunc_logical_skipna(a1, np.sum, skipna=True)
+
+
+    def test_ufunc_logical_skipna_d(self):
+
+        a1 = np.array(['2018-01-01', '2018-02-01'], dtype=np.datetime64)
+        post = _ufunc_logical_skipna(a1, np.all, skipna=True)
+        self.assertTrue(post)
+
+
+    def test_ufunc_logical_skipna_e(self):
+
+        a1 = np.array([['2018-01-01', '2018-02-01'],
+                ['2018-01-01', '2018-02-01']], dtype=np.datetime64)
+        post = _ufunc_logical_skipna(a1, np.all, skipna=True)
+        self.assertEqual(post.tolist(), [True, True])
+
 
 
 
@@ -325,6 +352,13 @@ class TestUnit(TestCase):
                 [False, True, False, False, True])
 
 
+    def test_array_to_duplicated_c(self):
+        a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
+        with self.assertRaises(Exception):
+            _array_to_duplicated(a, axis=None)
+
+
+
     def test_array_set_ufunc_many_a(self):
         a1 = np.array([3, 2, 1])
         a2 = np.array([3, 2, 1])
@@ -336,6 +370,7 @@ class TestUnit(TestCase):
 
         post = array_set_ufunc_many((a1, a2, a3, a4), union=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
+
 
     def test_array_set_ufunc_many_b(self):
         a1 = np.array([3, 2, 1])
@@ -350,7 +385,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
 
-
     def test_array_set_ufunc_many_c(self):
         a1 = np.array([[3, 2, 1], [1, 2, 3]])
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
@@ -363,6 +397,21 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
+
+    def test_array_set_ufunc_many_d(self):
+        a1 = np.array([3, 2, 1])
+        a2 = np.array([[5, 2, 1], [1, 2, 3]])
+
+        with self.assertRaises(Exception):
+            post = array_set_ufunc_many((a1, a2), union=False)
+
+
+    def test_array_set_ufunc_many_e(self):
+        a1 = np.array([3, 2, 1])
+        a2 = np.array([30, 20])
+
+        post = array_set_ufunc_many((a1, a2), union=False)
+        self.assertEqual(post.tolist(), [])
 
 
     def test_intersect2d_a(self):
@@ -472,6 +521,11 @@ class TestUnit(TestCase):
                 ['s', 'q', 'XX', 'XX']])
 
 
+    def test_array_shift_c(self):
+        a1 = np.arange(6)
+        post = array_shift(a1, 0, axis=0, wrap=False)
+        self.assertEqual(a1.tolist(), post.tolist())
+
 
     def test_ufunc_unique_a(self):
 
@@ -538,6 +592,85 @@ class TestUnit(TestCase):
 
         self.assertEqual(concat_resolved((a4, a5)).tolist(),
                 ['3', '5', 1, 1, 1])
+
+
+    def test_concat_resolved_b(self):
+        a1 = np.array([[3,4,5],[0,0,0]])
+        a2 = np.array([1,2,3]).reshape((1,3))
+
+        with self.assertRaises(Exception):
+            concat_resolved((a1, a2), axis=None)
+
+
+    def test_dtype_to_na_a(self):
+
+        self.assertEqual(_dtype_to_na(np.dtype(int)), 0)
+        self.assertTrue(np.isnan(_dtype_to_na(np.dtype(float))))
+        self.assertEqual(_dtype_to_na(np.dtype(bool)), False)
+        self.assertEqual(_dtype_to_na(np.dtype(object)), None)
+        self.assertEqual(_dtype_to_na(np.dtype(str)), '')
+
+
+    def test_key_to_datetime_key_a(self):
+
+        post = _key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
+        self.assertEqual(post,
+                slice(np.datetime64('2018-01-01'),
+                np.datetime64('2019-01-01'), None))
+
+        post = _key_to_datetime_key(np.datetime64('2019-01-01'))
+        self.assertEqual(post, np.datetime64('2019-01-01'))
+
+        post = _key_to_datetime_key('2019-01-01')
+        self.assertEqual(post, np.datetime64('2019-01-01'))
+
+        a1 = np.array(('2019-01-01'), dtype='M')
+        post = _key_to_datetime_key(a1)
+        self.assertEqual(post, a1)
+
+        post = _key_to_datetime_key(np.array(['2018-01-01', '2019-01-01']))
+        a2 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
+        self.assertEqual(post.tolist(), a2.tolist())
+
+        post = _key_to_datetime_key(['2018-01-01', '2019-01-01'])
+        a3 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
+        self.assertEqual(post.tolist(), a3.tolist())
+
+        post = _key_to_datetime_key(['2018-01', '2019-01'])
+        a4 = np.array(['2018-01', '2019-01'], dtype='datetime64[M]')
+        self.assertEqual(post.tolist(), a4.tolist())
+
+
+        post = _key_to_datetime_key(str(x) for x in range(2012, 2015))
+        a5 = np.array(['2012', '2013', '2014'], dtype='datetime64[Y]')
+        self.assertEqual(post.tolist(), a5.tolist())
+
+        post = _key_to_datetime_key(None)
+        self.assertEqual(post, None)
+
+
+    def test_ufunc2d_a(self):
+
+        a1 = np.array([1, 1, 1])
+        with self.assertRaises(Exception):
+            _ufunc2d(np.sum, a1, a1)
+
+
+    def test_ufunc2d_b(self):
+
+        a1 = np.array([['a', 'b'], ['b', 'c']])
+        a2 = np.array([['b', 'cc'], ['dd', 'ee']])
+
+        post = _ufunc2d(np.union1d, a1, a2)
+        self.assertEqual(len(post), 4)
+        self.assertEqual(str(post.dtype), '<U2')
+
+        post = _ufunc2d(np.union1d, a2, a1)
+        self.assertEqual(len(post), 4)
+        self.assertEqual(str(post.dtype), '<U2')
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
