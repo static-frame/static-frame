@@ -48,7 +48,7 @@ Or, install StaticFrame via conda::
 Dependencies
 --------------
 
-StaticFrame requires Python 3.5+ and NumPy 1.14.1+.
+StaticFrame requires Python 3.6+ and NumPy 1.14.1+.
 
 
 Quick-Start Guide

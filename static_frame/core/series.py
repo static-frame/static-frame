@@ -481,9 +481,10 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a new Series after removing values of NaN or None.
         '''
+        # get positions that we want to keep
         sel = np.logical_not(_isna(self.values))
         if not np.any(sel):
-            return self
+            return self.__class__(())
 
         values = self.values[sel]
         values.flags.writeable = False

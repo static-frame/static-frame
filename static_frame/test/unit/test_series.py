@@ -396,18 +396,37 @@ class TestUnit(TestCase):
                 [('a', True), ('b', True), ('c', True), ('d', True)])
 
 
-    def test_series_dropna(self):
+    def test_series_dropna_a(self):
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
         s2 = Series((234.3, None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
-        s3 = Series((234.3, 5, 6.4, -234.3), index=('a', 'b', 'c', 'd'))
         s4 = Series((234.3, None, None, None), index=('a', 'b', 'c', 'd'))
         s5 = Series(('p', 'q', 'e', 'g'), index=('a', 'b', 'c', 'd'))
         s6 = Series((False, True, False, True), index=('a', 'b', 'c', 'd'))
 
-
+        self.assertEqual(s1.dropna().to_pairs(),
+                (('a', 234.3), ('b', 3.2), ('c', 6.4)))
         self.assertEqual(list(s2.dropna().items()),
                 [('a', 234.3), ('c', 6.4)])
+        self.assertEqual(s4.dropna().to_pairs(),
+                (('a', 234.3),))
+        self.assertEqual(s5.dropna().to_pairs(),
+                (('a', 'p'), ('b', 'q'), ('c', 'e'), ('d', 'g')))
+        self.assertEqual(s6.dropna().to_pairs(),
+                (('a', False), ('b', True), ('c', False), ('d', True)))
+
+    def test_series_dropna_b(self):
+        s1 = sf.Series(np.nan, index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
+        s2 = s1.dropna()
+        self.assertEqual(len(s2), 0)
+        self.assertEqual(s1.__class__, s2.__class__)
+
+    def test_series_dropna_c(self):
+        s1 = sf.Series([1, np.nan, 2, np.nan],
+                index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
+        s2 = s1.dropna()
+        self.assertEqual(s2.to_pairs(), ((('A', 1), 1.0), (('B', 1), 2.0)))
+
 
 
     def test_series_fillna_a(self):
