@@ -33,9 +33,6 @@ from static_frame.test.test_case import TestCase
 
 nan = np.nan
 
-# TODO: added tests:
-# Frame.from_items() with Series
-
 
 class TestUnit(TestCase):
 
@@ -409,7 +406,6 @@ class TestUnit(TestCase):
 
         f1['u'] = 0
 
-        # TODO: this fails
         self.assertEqual(f1.loc['x'].values.tolist(),
                 [1, 2, 'a', False, True, 0])
 
@@ -1962,7 +1958,13 @@ class TestUnit(TestCase):
         self.assertEqual(f1.dropna(axis=1, condition=np.any).to_pairs(0),
                 (('B', ((0, 2.0), (1, 4.0), (2, 1.0))), ('D', ((0, 0.0), (1, 1.0), (2, 3.0)))))
 
-
+    def test_frame_dropna_c(self):
+        f1 = Frame([
+                [np.nan, np.nan],
+                [np.nan, np.nan],],
+                columns=list('AB'))
+        f2 = f1.dropna()
+        self.assertEqual(f2.shape, (0, 2))
 
     def test_frame_fillna_a(self):
         dtype = np.dtype
@@ -2666,6 +2668,18 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             f = Frame.from_concat((f1, f2), axis=None)
+
+
+    def test_frame_from_concat_t(self):
+        frame1 = sf.Frame.from_records(
+                [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels([(1,'dd',0), (1,'bb',0), (2,'cc',0), (2,'ee',0)]))
+        frame2 = sf.Frame.from_records(
+                [dict(a=100,b=200), dict(a=20,b=30), dict(a=101,b=101), dict(a=201,b=301)], index=sf.IndexHierarchy.from_labels([(1,'ddd',0), (1,'bbb',0), (2,'ccc',0), (2,'eee',0)]))
+
+        # produce invalid index labels into an IndexHierarchy constructor
+        with self.assertRaises(RuntimeError):
+            sf.Frame.from_concat((frame1, frame2))
+
 
     def test_frame_set_index_a(self):
         records = (

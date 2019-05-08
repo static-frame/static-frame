@@ -634,6 +634,32 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), (('b', 1), ('d', 3)))
         self.assertEqual(s2.name, 'foo')
 
+    def test_series_loc_extract_c(self):
+        s = sf.Series(range(5),
+                index=sf.IndexHierarchy.from_labels(
+                (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
+
+        # this selection returns just a single value
+        s2 = s.loc[sf.HLoc[:, 'c']]
+        self.assertEqual(s2.__class__, s.__class__)
+        self.assertEqual(s2.to_pairs(), ((('b', 'c'), 4),))
+
+        # this selection yields a series
+        self.assertEqual(s.loc[sf.HLoc[:, 'a']].to_pairs(),
+                ((('a', 'a'), 0), (('b', 'a'), 2)))
+
+
+    def test_series_loc_extract_d(self):
+        s = sf.Series(range(5),
+                index=sf.IndexHierarchy.from_labels(
+                (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
+        # leaf loc selection must be terminal; using a slice or list is an exception
+        with self.assertRaises(RuntimeError):
+            s.loc['a', :]
+
+        with self.assertRaises(RuntimeError):
+            s.loc[['a', 'b'], 'b']
+
 
     def test_series_group_a(self):
 

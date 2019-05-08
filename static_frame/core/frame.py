@@ -142,7 +142,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 from_array_columns = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(columns, axis=0)) != len(columns):
-                    raise RuntimeError('Column names after concatenation are not unique; supply a columns argument.')
+                    raise RuntimeError('Column names after horizontal concatenation are not unique; supply a columns argument.')
 
             if index is None:
                 index = array_set_ufunc_many(
@@ -165,7 +165,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 from_array_index = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(index, axis=0)) != len(index):
-                    raise RuntimeError('Index names after concatenation are not unique; supply an index argument.')
+                    raise RuntimeError('Index names after vertical concatenation are not unique; supply an index argument.')
 
             if columns is None:
                 columns = array_set_ufunc_many(

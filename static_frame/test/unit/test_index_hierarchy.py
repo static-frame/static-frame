@@ -209,15 +209,6 @@ class TestUnit(TestCase):
 
 
 
-
-
-
-
-
-
-
-
-
     def test_hierarhcy_init_a(self):
 
         labels = (('I', 'A'),
@@ -228,6 +219,99 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy(ih1)
         self.assertEqual(ih1.name, 'foo')
         self.assertEqual(ih2.name, 'foo')
+
+
+    def test_hierarhcy_init_b(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'B'),
+                ('I', 'C')
+                )
+
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
+
+    def test_hierarhcy_init_c(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'B'),
+                ('III', 'B'),
+                ('III', 'A')
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(ih1.values.tolist(),
+            [['I', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['III', 'A']])
+
+
+    def test_hierarhcy_init_d(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'B'),
+                ('III', 'B'),
+                ('III', 'B')
+                )
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
+
+    def test_hierarhcy_init_e(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'B'),
+                ('III', 'B'),
+                ('I', 'B'),
+                )
+
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
+
+
+
+    def test_hierarhcy_init_f(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'B'),
+                ('III', 'B'),
+                ('I', 'B'),
+                )
+
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
+
+    def test_hierarhcy_init_g(self):
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'A', 1),
+                )
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
+
+    def test_hierarhcy_init_h(self):
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'A', 3),
+                )
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels)
 
 
     def test_hierarchy_loc_to_iloc_a(self):

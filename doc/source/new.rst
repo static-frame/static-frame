@@ -7,6 +7,9 @@ What is New in Static Frame
 0.3.2-dev
 -----------
 
+Fixed missing handlign for all-missing in ``Series.dropna``.
+
+Improved ``loc`` and ``HLoc`` usage on Series with ``IndexHierarchy`` to insure a Series is returned when a multiple selection is used.
 
 
 0.3.1

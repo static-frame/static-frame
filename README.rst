@@ -2,14 +2,14 @@
    :width: 340px
    :align: center
 
+.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg
+    :target: https://pypi.org/project/static-frame
+
 .. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
     :target: https://travis-ci.org/InvestmentSystems/static-frame
 
 .. image:: https://readthedocs.org/projects/static-frame/badge/?version=latest
     :target: https://static-frame.readthedocs.io/en/latest/?badge=latest
-
-.. image:: https://img.shields.io/pypi/status/static-frame.svg
-    :target: https://pypi.org/project/static-frame
 
 .. image:: https://badge.fury.io/py/static-frame.svg
     :target: https://badge.fury.io/py/static-frame
@@ -19,6 +19,12 @@
 
 .. image:: https://codecov.io/gh/InvestmentSystems/static-frame/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
+
+.. image:: https://img.shields.io/pypi/status/static-frame.svg
+    :target: https://pypi.org/project/static-frame
+
+
+
 
 
 static-frame

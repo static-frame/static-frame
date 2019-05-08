@@ -8,6 +8,7 @@ from itertools import chain
 import numpy as np
 
 from static_frame.core.util import _DEFAULT_SORT_KIND
+from static_frame.core.util import _KEY_MULTIPLE_TYPES
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import LocMap
@@ -77,6 +78,9 @@ class HLoc(metaclass=HLocMeta):
         if key >= len(self.key):
             return _NULL_SLICE
         return self.key.__getitem__(key)
+
+    def has_key_multiple(self) -> bool:
+        return any(isinstance(k, _KEY_MULTIPLE_TYPES) for k in self.key)
 
 #-------------------------------------------------------------------------------
 class IndexLevel:
@@ -215,11 +219,13 @@ class IndexLevel:
         node = self
         pos = 0
         for k in key:
+            if isinstance(k, _KEY_MULTIPLE_TYPES):
+                raise RuntimeError('slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{}].'.format(key))
             if node.targets is not None:
                 node = node.targets[node.index.loc_to_iloc(k)]
                 pos += node.offset
             else: # targets is None, meaning we are done
-                # assume that k returns an integert
+                # assume that k returns an integer
                 return pos + node.index.loc_to_iloc(k)
 
 
@@ -567,30 +573,62 @@ class IndexHierarchy(IndexBase,
         first = next(labels_iter)
 
         # minimum permitted depth is 2
-        assert len(first) >= 2
+        if len(first) < 2:
+            raise RuntimeError('cannot create an IndexHierarhcy from only one level.')
+
         depth_max = len(first) - 1
         depth_pre_max = len(first) - 2
 
+        # for each level, store a set of invalid ids; ids that have already been used at that level
+        token = object()
+        observed_last = [token for _ in range(len(first))]
+        # for the leaf (list) level, store a set for checking for redundancies
+        observed_leaf = None
+
         tree = OrderedDict()
-        # but first back in front
+        # put first back in front
         for label in chain((first,), labels_iter):
             current = tree
-            # each label is an iterablen
+            # each label is an iterable
             for d, v in enumerate(label):
+                # print('d', d, 'v', v, 'depth_pre_max', depth_pre_max, 'depth_max', depth_max)
                 if d < depth_pre_max:
                     if v not in current:
                         current[v] = OrderedDict()
+                    else:
+                        # can only fetch this node (and not create a new node) if this is the sequential predecessor
+                        if v != observed_last[d]:
+                            raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined'.format(
+                                    v,
+                                    label,
+                                    observed_last[d],
+                                    v))
                     current = current[v]
+                    observed_last[d] = v
                 elif d < depth_max:
                     if v not in current:
                         current[v] = list()
+                        observed_leaf = set() # reset
+                    else:
+                        # cannot just fetch this list if it is not the predecessor
+                        if v != observed_last[d]:
+                            raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
+                                    v,
+                                    label,
+                                    observed_last[d],
+                                    v))
                     current = current[v]
+                    observed_last[d] = v
                 elif d == depth_max: # at depth max
-                    # TODO: not checking that v not in current
+                    if v in observed_leaf:
+                        raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} is already defined at this level.'.format(v, label))
                     current.append(v)
+                    observed_last[d] = v
+                    observed_leaf.add(v)
                 else:
-                    raise Exception('label exceeded expected depth', label)
+                    raise RuntimeError('label exceeded expected depth', label)
 
+            # import ipdb; ipdb.set_trace()
         return cls(levels=cls._tree_to_index_level(tree), name=name)
 
 

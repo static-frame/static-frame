@@ -50,6 +50,7 @@ from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
 
 from static_frame.core.index import Index
+from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
 
@@ -703,7 +704,13 @@ class Series(metaclass=MetaOperatorDelegate):
         values = self.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            return values
+            if isinstance(key, HLoc) and key.has_key_multiple():
+                # must return a Series, even though we do not have an array
+                values = np.array(values)
+                values.flags.writeable = False
+            else:
+                return values
+
         return self.__class__(values,
                 index=self._index.iloc[iloc_key],
                 own_index=True,
