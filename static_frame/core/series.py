@@ -449,9 +449,10 @@ class Series(metaclass=MetaOperatorDelegate):
                 index=self._index.add_level(level),
                 name=self._name)
 
+    @doc_inject(selector='reindex')
     def reindex_drop_level(self, count: int = 1):
         '''
-        Return a new Series, dropping one or more leaf levels from an ``IndexHierarchy``.
+        Return a new Series, dropping one or more levels from an ``IndexHierarchy``. {count}
         '''
         return self.__class__(self.values,
                 index=self._index.drop_level(count),

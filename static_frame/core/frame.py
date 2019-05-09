@@ -311,8 +311,10 @@ class Frame(metaclass=MetaOperatorDelegate):
                     column_type = (type(field_ref)
                             if not isinstance(field_ref, (str, np.datetime64))
                             else None)
+                    column_type_explicit = False
                 else: # column_type returned here can be None.
                     column_type = dtypes[col_idx]
+                    column_type_explicit = True
 
                 values = None
                 if column_type is not None:
@@ -323,7 +325,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                                 dtype=column_type)
                     except ValueError:
                         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                        pass
+                        if not column_type_explicit:
+                            # reset to None if not explicit and failued in fromiter
+                            column_type = None
                 if values is None:
                     # let array constructor determine type if column_type is None
                     values = np.array([row[col_idx] for row in rows],
@@ -1124,12 +1128,13 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 own_columns=True)
 
+    @doc_inject(selector='reindex')
     def reindex_drop_level(self,
             index: int = 0,
             columns: int = 0
             ) -> 'Frame':
         '''
-        Return a new Frame, dropping one or more leaf levels from the ``IndexHierarchy`` defined on the index or columns.
+        Return a new Frame, dropping one or more levels from the ``IndexHierarchy`` defined on the index or columns. {count}
         '''
 
         index = self._index.drop_level(index) if index else self._index.copy()

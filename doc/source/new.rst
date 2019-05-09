@@ -4,12 +4,20 @@ What is New in Static Frame
 ===============================
 
 
-0.3.2-dev
+0.3.3-dev
+--------------
+
+
+0.3.2
 -----------
 
-Fixed missing handlign for all-missing in ``Series.dropna``.
+``IndexHierarchy.drop_level()`` and related methods have been updated such that negative integers drop innermost levels, and postive integers drop outermost levels. This is an API breaking change.
+
+Fixed missing handling for all-missing in ``Series.dropna``.
 
 Improved ``loc`` and ``HLoc`` usage on Series with ``IndexHierarchy`` to insure a Series is returned when a multiple selection is used.
+
+``IndexHierarchy.from_labels()`` now returns proper error message for invalid tree forms.
 
 
 0.3.1

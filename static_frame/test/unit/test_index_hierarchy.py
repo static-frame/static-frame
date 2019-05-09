@@ -257,7 +257,7 @@ class TestUnit(TestCase):
                 ('III', 'B'),
                 ('III', 'B')
                 )
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarhcy_init_e(self):
@@ -297,7 +297,7 @@ class TestUnit(TestCase):
                 ('II', 'A', 2),
                 ('II', 'A', 1),
                 )
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarhcy_init_h(self):
@@ -893,10 +893,55 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        ih2 = ih.drop_level()
+        ih2 = ih.drop_level(-1)
 
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
+
+
+
+    def test_hierarchy_drop_level_b(self):
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'C', 1),
+                ('II', 'C', 2),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        ih2 = ih.drop_level(1)
+        self.assertEqual(ih2.values.tolist(),
+            [['A', 1], ['B', 1], ['C', 1], ['C', 2]])
+
+        with self.assertRaises(KeyError):
+            ih2.drop_level(1)
+
+    def test_hierarchy_drop_level_c(self):
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 2),
+                ('II', 'C', 3),
+                ('II', 'C', 4),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        self.assertEqual(ih.drop_level(1).values.tolist(),
+                [['A', 1], ['B', 2], ['C', 3], ['C', 4]])
+
+    def test_hierarchy_drop_level_d(self):
+
+        labels = (
+                ('A', 1),
+                ('B', 2),
+                ('C', 3),
+                ('C', 4),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+        self.assertEqual(ih.drop_level(1).values.tolist(),
+                [1, 2, 3, 4])
 
 
     def test_hierarchy_boolean_loc(self):

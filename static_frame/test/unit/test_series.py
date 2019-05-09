@@ -867,7 +867,7 @@ class TestUnit(TestCase):
     def test_series_drop_level_a(self):
         s1 = Series(['a', 'b', 'c'],
                 index=IndexHierarchy.from_labels([('A', 1), ('B', 1), ('C', 1)]))
-        s2 = s1.reindex_drop_level()
+        s2 = s1.reindex_drop_level(-1)
         self.assertEqual(s2.to_pairs(),
                 (('A', 'a'), ('B', 'b'), ('C', 'c'))
                 )

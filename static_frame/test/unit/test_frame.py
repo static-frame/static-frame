@@ -3289,7 +3289,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(Exception):
             # this results in an index of size 2 being created, as we dro the leves with a postive depth; next support negative depth?
-            f2 = f1.reindex_drop_level(index=1)
+            f2 = f1.reindex_drop_level(index=-1)
 
 
 

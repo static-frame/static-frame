@@ -573,6 +573,7 @@ class FrameMixed_from_records(PerfTest):
     @staticmethod
     def sf():
         post = sf.Frame.from_records(list(SampleData.get('npf_mixed_10k')))
+        # NOTE: this presently casts a mixed typed column into Bools
         assert post.shape == (10000, 100)
 
 

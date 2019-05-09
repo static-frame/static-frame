@@ -26,6 +26,11 @@ class DOC_TEMPLATE:
         Absolute file path to the file written.
     '''
 
+    reindex = dict(
+        count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
+    )
+
+
     from_pandas = dict(
             own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
             own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',

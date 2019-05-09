@@ -120,10 +120,6 @@ class IndexLevel:
         index = self.index.copy()
 
         if self.targets is not None:
-            # targets = np.empty(len(self.targets), dtype=object)
-            # for idx, t in enumerate(self.targets):
-            #     # offset of None retains existing offset
-            #     targets[idx] = t.to_index_level(offset=None, cls=cls)
             targets = ArrayGO(
                 [t.to_index_level(offset=None, cls=cls) for t in self.targets],
                 own_iterable=True)
@@ -579,11 +575,8 @@ class IndexHierarchy(IndexBase,
         depth_max = len(first) - 1
         depth_pre_max = len(first) - 2
 
-        # for each level, store a set of invalid ids; ids that have already been used at that level
         token = object()
         observed_last = [token for _ in range(len(first))]
-        # for the leaf (list) level, store a set for checking for redundancies
-        observed_leaf = None
 
         tree = OrderedDict()
         # put first back in front
@@ -608,7 +601,6 @@ class IndexHierarchy(IndexBase,
                 elif d < depth_max:
                     if v not in current:
                         current[v] = list()
-                        observed_leaf = set() # reset
                     else:
                         # cannot just fetch this list if it is not the predecessor
                         if v != observed_last[d]:
@@ -620,15 +612,11 @@ class IndexHierarchy(IndexBase,
                     current = current[v]
                     observed_last[d] = v
                 elif d == depth_max: # at depth max
-                    if v in observed_leaf:
-                        raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} is already defined at this level.'.format(v, label))
+                    # if there are redundancies her they will be caught in index creation
                     current.append(v)
-                    observed_last[d] = v
-                    observed_leaf.add(v)
                 else:
                     raise RuntimeError('label exceeded expected depth', label)
 
-            # import ipdb; ipdb.set_trace()
         return cls(levels=cls._tree_to_index_level(tree), name=name)
 
 
@@ -1124,25 +1112,47 @@ class IndexHierarchy(IndexBase,
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHieararchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
         '''
-        # probably need a deep copy
-        levels = self._levels.to_index_level()
 
-        for _ in range(count):
-            levels_stack = [levels]
-            while levels_stack:
-                level = levels_stack.pop()
-                # check to see if children of this target are leaves
-                if level.targets[0].targets is None:
-                    level.targets = None
-                else:
-                    levels_stack.extend(level.targets)
+        if count < 0:
+            levels = self._levels.to_index_level()
+            for _ in range(abs(count)):
+                levels_stack = [levels]
+                while levels_stack:
+                    level = levels_stack.pop()
+                    # check to see if children of this target are leaves
+                    if level.targets[0].targets is None:
+                        level.targets = None
+                    else:
+                        levels_stack.extend(level.targets)
+                if levels.targets is None:
+                    # if our root level has no targets, we are at the root
+                    break
             if levels.targets is None:
-                # if our root level has no targets, we are at the root
-                break
-        if levels.targets is None:
-            # fall back to 1D index
-            return levels.index
-        return self.__class__(levels)
+                # fall back to 1D index
+                return levels.index
+            return self.__class__(levels)
+
+        elif count > 0:
+            level = self._levels.to_index_level()
+            for _ in range(count):
+                if level.targets is None:
+                    # we should already have a copy
+                    return level.index
+                else:
+                    targets = []
+                    labels = []
+                    for target in level.targets:
+                        labels.extend(target.index)
+                        if target.targets is not None:
+                            targets.extend(target.targets)
+                    index = level.index.__class__(labels)
+                    if not targets:
+                        return index
+                    level = level.__class__(index=index, targets=targets)
+            return self.__class__(level)
+        else:
+            raise NotImplementedError('no handling for a 0 count drop level.')
+
 
 
 class IndexHierarchyGO(IndexHierarchy):
