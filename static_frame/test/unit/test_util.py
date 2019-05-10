@@ -6,7 +6,7 @@ import numpy as np
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
-from static_frame.core.util import _resolve_dtype_iter
+from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
 
@@ -17,7 +17,7 @@ from static_frame.core.util import concat_resolved
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _dtype_to_na
-from static_frame.core.util import _key_to_datetime_key
+from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
 
@@ -28,7 +28,7 @@ from static_frame import Index
 
 # TODO test
 from static_frame.core.util import _dict_to_sorted_items
-from static_frame.core.util import _iterable_to_array
+from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
@@ -224,23 +224,23 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again'], dtype='S')
         a6 = np.array([2.3,5.4], dtype='float32')
 
-        self.assertEqual(_resolve_dtype_iter((a1.dtype, a1.dtype)), a1.dtype)
-        self.assertEqual(_resolve_dtype_iter((a2.dtype, a2.dtype)), a2.dtype)
+        self.assertEqual(resolve_dtype_iter((a1.dtype, a1.dtype)), a1.dtype)
+        self.assertEqual(resolve_dtype_iter((a2.dtype, a2.dtype)), a2.dtype)
 
         # boolean with mixed types
-        self.assertEqual(_resolve_dtype_iter((a2.dtype, a2.dtype, a3.dtype)), np.object_)
-        self.assertEqual(_resolve_dtype_iter((a2.dtype, a2.dtype, a5.dtype)), np.object_)
-        self.assertEqual(_resolve_dtype_iter((a2.dtype, a2.dtype, a6.dtype)), np.object_)
+        self.assertEqual(resolve_dtype_iter((a2.dtype, a2.dtype, a3.dtype)), np.object_)
+        self.assertEqual(resolve_dtype_iter((a2.dtype, a2.dtype, a5.dtype)), np.object_)
+        self.assertEqual(resolve_dtype_iter((a2.dtype, a2.dtype, a6.dtype)), np.object_)
 
         # numerical types go to float64
-        self.assertEqual(_resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype)), np.float64)
+        self.assertEqual(resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype)), np.float64)
 
         # add in bool or str, goes to object
-        self.assertEqual(_resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype, a2.dtype)), np.object_)
-        self.assertEqual(_resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype, a5.dtype)), np.object_)
+        self.assertEqual(resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype, a2.dtype)), np.object_)
+        self.assertEqual(resolve_dtype_iter((a1.dtype, a4.dtype, a6.dtype, a5.dtype)), np.object_)
 
         # mixed strings go to the largest
-        self.assertEqual(_resolve_dtype_iter((a3.dtype, a5.dtype)), np.dtype('<U10'))
+        self.assertEqual(resolve_dtype_iter((a3.dtype, a5.dtype)), np.dtype('<U10'))
 
 
 
@@ -613,39 +613,39 @@ class TestUnit(TestCase):
 
     def test_key_to_datetime_key_a(self):
 
-        post = _key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
+        post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
         self.assertEqual(post,
                 slice(np.datetime64('2018-01-01'),
                 np.datetime64('2019-01-01'), None))
 
-        post = _key_to_datetime_key(np.datetime64('2019-01-01'))
+        post = key_to_datetime_key(np.datetime64('2019-01-01'))
         self.assertEqual(post, np.datetime64('2019-01-01'))
 
-        post = _key_to_datetime_key('2019-01-01')
+        post = key_to_datetime_key('2019-01-01')
         self.assertEqual(post, np.datetime64('2019-01-01'))
 
         a1 = np.array(('2019-01-01'), dtype='M')
-        post = _key_to_datetime_key(a1)
+        post = key_to_datetime_key(a1)
         self.assertEqual(post, a1)
 
-        post = _key_to_datetime_key(np.array(['2018-01-01', '2019-01-01']))
+        post = key_to_datetime_key(np.array(['2018-01-01', '2019-01-01']))
         a2 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
         self.assertEqual(post.tolist(), a2.tolist())
 
-        post = _key_to_datetime_key(['2018-01-01', '2019-01-01'])
+        post = key_to_datetime_key(['2018-01-01', '2019-01-01'])
         a3 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
         self.assertEqual(post.tolist(), a3.tolist())
 
-        post = _key_to_datetime_key(['2018-01', '2019-01'])
+        post = key_to_datetime_key(['2018-01', '2019-01'])
         a4 = np.array(['2018-01', '2019-01'], dtype='datetime64[M]')
         self.assertEqual(post.tolist(), a4.tolist())
 
 
-        post = _key_to_datetime_key(str(x) for x in range(2012, 2015))
+        post = key_to_datetime_key(str(x) for x in range(2012, 2015))
         a5 = np.array(['2012', '2013', '2014'], dtype='datetime64[Y]')
         self.assertEqual(post.tolist(), a5.tolist())
 
-        post = _key_to_datetime_key(None)
+        post = key_to_datetime_key(None)
         self.assertEqual(post, None)
 
 

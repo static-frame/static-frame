@@ -13,9 +13,9 @@ from functools import partial
 import numpy as np
 from numpy.ma import MaskedArray
 
-from static_frame.core.util import _DEFAULT_SORT_KIND
-from static_frame.core.util import _NULL_SLICE
-from static_frame.core.util import _KEY_MULTIPLE_TYPES
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping
@@ -28,7 +28,7 @@ from static_frame.core.util import FrameInitializer
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import _iterable_to_array
+from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
@@ -564,7 +564,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_footer: int = 0,
             header_is_columns: bool = True,
             quote_char: str = '"',
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None, # TODO: this should be dtypes, naming type per col
             encoding: tp.Optional[str] = None
             ) -> 'Frame':
         '''
@@ -656,7 +656,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
                 if dtype != dtype_current:
                     # use loc to select before calling .values
-                    array = value.loc[_NULL_SLICE,
+                    array = value.loc[NULL_SLICE,
                             slice(column_start, column_last)].values
                     if own_data:
                         array.flags.writeable = False
@@ -667,7 +667,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 column_last = column
 
             # always have left over
-            array = value.loc[_NULL_SLICE, slice(column_start, None)].values
+            array = value.loc[NULL_SLICE, slice(column_start, None)].values
             if own_data:
                 array.flags.writeable = False
             yield array
@@ -1376,9 +1376,9 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         row_nm = False
         column_nm = False
-        if row_key is not None and not isinstance(row_key, _KEY_MULTIPLE_TYPES):
+        if row_key is not None and not isinstance(row_key, KEY_MULTIPLE_TYPES):
             row_nm = True # axis 0
-        if column_key is not None and not isinstance(column_key, _KEY_MULTIPLE_TYPES):
+        if column_key is not None and not isinstance(column_key, KEY_MULTIPLE_TYPES):
             column_nm = True # axis 1
         return row_nm, column_nm
 
@@ -1396,7 +1396,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         own_index = True # the extracted Frame can always own this index
         row_key_is_slice = isinstance(row_key, slice)
-        if row_key is None or (row_key_is_slice and row_key == _NULL_SLICE):
+        if row_key is None or (row_key_is_slice and row_key == NULL_SLICE):
             index = self._index
         else:
             index = self._index._extract_iloc(row_key)
@@ -1407,7 +1407,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         # can only own columns if _COLUMN_CONSTRUCTOR is static
         column_key_is_slice = isinstance(column_key, slice)
-        if column_key is None or (column_key_is_slice and column_key == _NULL_SLICE):
+        if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
             own_columns = self._COLUMN_CONSTRUCTOR.STATIC
         else:
@@ -1858,7 +1858,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def sort_index(self,
             ascending: bool = True,
-            kind: str = _DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
         Return a new Frame ordered by the sorted Index.
         '''
@@ -1877,7 +1877,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def sort_columns(self,
             ascending: bool = True,
-            kind: str = _DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
         Return a new Frame ordered by the sorted Columns.
         '''
@@ -1898,7 +1898,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             key: KeyOrKeys, # TODO: rename "labels"
             ascending: bool = True,
             axis: int = 1,
-            kind=_DEFAULT_SORT_KIND) -> 'Frame':
+            kind=DEFAULT_SORT_KIND) -> 'Frame':
         '''
         Return a new Frame ordered by the sorted values, where values is given by one or more columns.
 
@@ -1950,7 +1950,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Frame that shows if the same-positioned element is in the iterable passed to the function.
         '''
         # cannot use assume_unique because do not know if values is unique
-        v, _ = _iterable_to_array(other)
+        v, _ = iterable_to_array(other)
         # TODO: is it faster to do this at the block level and return blocks?
         array = np.isin(self.values, v)
         array.flags.writeable = False

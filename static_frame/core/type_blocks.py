@@ -7,11 +7,11 @@ from itertools import chain
 import numpy as np
 
 
-from static_frame.core.util import _NULL_SLICE
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import _UNIT_SLICE
 
-from static_frame.core.util import _INT_TYPES
-from static_frame.core.util import _KEY_ITERABLE_TYPES
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import DtypeSpecifier
@@ -20,7 +20,7 @@ from static_frame.core.util import mloc
 from static_frame.core.util import array_shift
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import _resolve_dtype
-from static_frame.core.util import _resolve_dtype_iter
+from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _isna
@@ -164,7 +164,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         self._shape = shape
 
         if self._blocks:
-            self._row_dtype = _resolve_dtype_iter(b.dtype for b in self._blocks)
+            self._row_dtype = resolve_dtype_iter(b.dtype for b in self._blocks)
         else:
             self._row_dtype = None
 
@@ -783,10 +783,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Returns:
             A generator iterable of pairs, where values are block index, slice or column index
         '''
-        if key is None or (isinstance(key, slice) and key == _NULL_SLICE):
+        if key is None or (isinstance(key, slice) and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
         else:
-            if isinstance(key, _INT_TYPES):
+            if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
                 yield self._index[key]
             else: # all cases where we try to get contiguous slices
@@ -798,7 +798,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
                     # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
-                elif isinstance(key, _KEY_ITERABLE_TYPES):
+                elif isinstance(key, KEY_ITERABLE_TYPES):
                     # an iterable of keys, may not have contiguous regions; provide in the order given; set as a generator; self._index is a list, not an np.array, so cannot slice self._index; requires iteration in passed generator so probably this is as fast as it can be.
                     if retain_key_order:
                         indices = (self._index[x] for x in key)
@@ -1197,7 +1197,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         The result is suitable for passing to TypeBlocks constructor.
         '''
         row_key_null = (row_key is None or
-                (isinstance(row_key, slice) and row_key == _NULL_SLICE))
+                (isinstance(row_key, slice) and row_key == NULL_SLICE))
 
         single_row = False
         if row_key_null:
@@ -1206,7 +1206,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 single_row = True
         elif isinstance(row_key, int):
             single_row = True
-        elif isinstance(row_key, _KEY_ITERABLE_TYPES) and len(row_key) == 1:
+        elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
             single_row = True
         elif isinstance(row_key, slice):
@@ -1283,7 +1283,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 columns += b.shape[1]
             blocks.append(b)
 
-        row_dtype = _resolve_dtype_iter(b.dtype for b in blocks)
+        row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
 
         return self._blocks_to_array(
                 blocks=blocks,
@@ -1311,7 +1311,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
             row_key_null = (row_key is None or
-                    (isinstance(row_key, slice) and row_key == _NULL_SLICE))
+                    (isinstance(row_key, slice) and row_key == NULL_SLICE))
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)

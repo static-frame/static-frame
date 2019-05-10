@@ -564,7 +564,7 @@ class DisplayHeader:
 
     def __init__(self,
             cls,
-            name: tp.Optional[object]=None):
+            name: tp.Optional[object] = None):
         self.cls = cls
         self.name = name
 
@@ -650,11 +650,13 @@ class Display:
         color = getattr(config, type_category.CONFIG_ATTR)
         if config.display_format in _DISPLAY_FORMAT_HTML:
             return HexColor.format_html(color, type_label)
-        elif config.display_format in _DISPLAY_FORMAT_TERMINAL:
+
+        if config.display_format in _DISPLAY_FORMAT_TERMINAL:
             if terminal_ansi():
                 return HexColor.format_terminal(color, type_label)
             # if not a compatible terminal, return label unaltered
             return type_label
+
         raise NotImplementedError('no handling for display format:',
                 config.display_format)
 

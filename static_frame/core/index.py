@@ -3,14 +3,14 @@ from collections import KeysView
 
 import numpy as np
 
-from static_frame.core.util import _DEFAULT_SORT_KIND
-from static_frame.core.util import _NULL_SLICE
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_STOP_ATTR
 
-from static_frame.core.util import _KEY_ITERABLE_TYPES
-from static_frame.core.util import _EMPTY_ARRAY
+from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import EMPTY_ARRAY
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import CallableOrMapping
@@ -19,9 +19,9 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
-from static_frame.core.util import _ufunc_skipna_1d
-from static_frame.core.util import _iterable_to_array
-from static_frame.core.util import _key_to_datetime_key
+from static_frame.core.util import ufunc_skipna_1d
+from static_frame.core.util import iterable_to_array
+from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
@@ -117,7 +117,7 @@ class LocMap:
             return key.key
 
         if isinstance(key, slice):
-            if offset_apply and key == _NULL_SLICE:
+            if offset_apply and key == NULL_SLICE:
                 # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
                 return slice(offset,
                         len(positions) + offset,
@@ -129,7 +129,7 @@ class LocMap:
                 )
 
         # handles only lists and arrays
-        elif isinstance(key, _KEY_ITERABLE_TYPES):
+        if isinstance(key, KEY_ITERABLE_TYPES):
             # can be an iterable of labels (keys) or an iterable of Booleans
             # if len(key) == len(label_to_pos) and isinstance(key[0], (bool, np.bool_)):
             if isinstance(key, np.ndarray) and key.dtype == bool:
@@ -206,10 +206,12 @@ class Index(IndexBase,
         # pre-fetching labels for faster get_item construction
         if isinstance(labels, np.ndarray): # if an np array can handle directly
             return immutable_filter(labels)
-        elif hasattr(labels, '__len__'): # not a generator, not an array
+
+        if hasattr(labels, '__len__'): # not a generator, not an array
             if not len(labels):
-                return _EMPTY_ARRAY # already immutable
-            elif isinstance(labels[0], tuple):
+                return EMPTY_ARRAY # already immutable
+
+            if isinstance(labels[0], tuple):
                 assert dtype is None or dtype == object
                 array = np.empty(len(labels), object)
                 array[:] = labels
@@ -435,7 +437,7 @@ class Index(IndexBase,
         '''
         Return an NP array for the `depth_level` specified.
         '''
-        if depth_level is not 0:
+        if depth_level != 0:
             raise RuntimeError('invalid depth_level', depth_level)
         return self.values
 
@@ -517,12 +519,12 @@ class Index(IndexBase,
         if key is None:
             labels = self._labels
         elif isinstance(key, slice):
-            if key == _NULL_SLICE:
+            if key == NULL_SLICE:
                 labels = self._labels
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
-        elif isinstance(key, _KEY_ITERABLE_TYPES):
+        elif isinstance(key, KEY_ITERABLE_TYPES):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
@@ -604,7 +606,7 @@ class Index(IndexBase,
         Args:
             dtype: Not used in 1D application, but collected here to provide a uniform signature.
         '''
-        return _ufunc_skipna_1d(
+        return ufunc_skipna_1d(
                 array=self._labels,
                 skipna=skipna,
                 ufunc=ufunc,
@@ -647,7 +649,7 @@ class Index(IndexBase,
 
     def sort(self,
             ascending: bool = True,
-            kind: str = _DEFAULT_SORT_KIND) -> 'Index':
+            kind: str = DEFAULT_SORT_KIND) -> 'Index':
         '''Return a new Index with the labels sorted.
 
         Args:
@@ -665,7 +667,7 @@ class Index(IndexBase,
         '''
         if self._recache:
             self._update_array_cache()
-        v, assume_unique = _iterable_to_array(other)
+        v, assume_unique = iterable_to_array(other)
         return np.in1d(self._labels, v, assume_unique=assume_unique)
 
     def roll(self, shift: int) -> 'Index':
@@ -773,7 +775,7 @@ class IndexGO(Index):
         self._recache = True
 
 
-    def extend(self, values: _KEY_ITERABLE_TYPES):
+    def extend(self, values: KEY_ITERABLE_TYPES):
         '''Append multiple values
         Args:
             values: can be a generator.
@@ -914,7 +916,7 @@ class IndexDate(Index):
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
-        return Index.loc_to_iloc(self, key=key, key_transform=_key_to_datetime_key)
+        return Index.loc_to_iloc(self, key=key, key_transform=key_to_datetime_key)
 
     #---------------------------------------------------------------------------
     def to_pandas(self):
@@ -1094,9 +1096,9 @@ def _is_index_initializer(value) -> bool:
     '''
     if value is None:
         return False
-    elif isinstance(value, Index):
+    if isinstance(value, Index):
         return False
-    elif isinstance(value, np.ndarray):
+    if isinstance(value, np.ndarray):
         return bool(len(value))
     return bool(value)
 

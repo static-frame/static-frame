@@ -37,13 +37,13 @@ import numpy as np
 #     U 	Unicode
 #     V 	void
 
-_DEFAULT_SORT_KIND = 'mergesort'
+DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_OBJECT = np.dtype(object)
 
-_NULL_SLICE = slice(None)
+NULL_SLICE = slice(None)
 _UNIT_SLICE = slice(0, 1)
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
@@ -51,8 +51,8 @@ SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 # defaults to float64
-_EMPTY_ARRAY = np.array((), dtype=None)
-_EMPTY_ARRAY.flags.writeable = False
+EMPTY_ARRAY = np.array((), dtype=None)
+EMPTY_ARRAY.flags.writeable = False
 
 _DICT_STABLE = sys.version_info >= (3, 6)
 
@@ -61,14 +61,14 @@ _DICT_STABLE = sys.version_info >= (3, 6)
 #-------------------------------------------------------------------------------
 # utility
 
-_INT_TYPES = (int, np.int_)
+INT_TYPES = (int, np.int_)
 _BOOL_TYPES = (bool, np.bool_)
 
 # for getitem / loc selection
-_KEY_ITERABLE_TYPES = (list, np.ndarray)
+KEY_ITERABLE_TYPES = (list, np.ndarray)
 
 # types of keys that return muultiple items, even if the selection reduces to 1
-_KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
+KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # for type hinting
 # keys once dimension has been isolated
@@ -192,7 +192,7 @@ def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     # if not a string or an object, can use result type
     return np.result_type(dt1, dt2)
 
-def _resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
+def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
     '''Given an iterable of dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object
     '''
     dtypes = iter(dtypes)
@@ -270,7 +270,7 @@ def _dtype_to_na(dtype: np.dtype):
 # ufunc functions that will not work with _DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
 _UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
-def _ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
+def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
     '''
     # if len(array) == 0:
@@ -325,7 +325,7 @@ def ufunc_unique(array: np.ndarray,
     return np.unique(array, axis=axis)
 
 
-def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
+def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
     '''Utility method to take arbitary, heterogenous typed iterables and realize them as an NP array. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
     '''
     v_iter = None
@@ -348,7 +348,7 @@ def _iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
         try:
             x = next(v_iter)
         except StopIteration:
-            return _EMPTY_ARRAY, True
+            return EMPTY_ARRAY, True
 
         dtype = type(x)
         array_values = [x]
@@ -394,7 +394,7 @@ def _slice_to_datetime_slice_args(key):
         else:
             yield np.datetime64(value)
 
-def _key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
+def key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''
@@ -670,19 +670,19 @@ def _ufunc2d(
         # sort so as to duplicate results from NP functions
         # NOTE: this sort may not always be necssary
         return np.array(sorted(result), dtype=object)
-    else:
-        assert array.shape[1] == other.shape[1]
-        # this does will work if dyptes are differently sized strings, such as U2 and U3
-        dtype = _resolve_dtype(array.dtype, other.dtype)
-        if array.dtype != dtype:
-            array = array.astype(dtype)
-        if other.dtype != dtype:
-            other = other.astype(dtype)
 
-        width = array.shape[1]
-        array_view = array.view([('', array.dtype)] * width)
-        other_view = other.view([('', other.dtype)] * width)
-        return func(array_view, other_view).view(dtype).reshape(-1, width)
+    assert array.shape[1] == other.shape[1]
+    # this does will work if dyptes are differently sized strings, such as U2 and U3
+    dtype = _resolve_dtype(array.dtype, other.dtype)
+    if array.dtype != dtype:
+        array = array.astype(dtype)
+    if other.dtype != dtype:
+        other = other.astype(dtype)
+
+    width = array.shape[1]
+    array_view = array.view([('', array.dtype)] * width)
+    other_view = other.view([('', other.dtype)] * width)
+    return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 
 def intersect2d(array: np.ndarray,
@@ -851,7 +851,7 @@ class InterfaceAsType:
         return self._func_getitem(key)
 
     def __call__(self, dtype):
-        return self._func_getitem(_NULL_SLICE)(dtype)
+        return self._func_getitem(NULL_SLICE)(dtype)
 
 
 #-------------------------------------------------------------------------------

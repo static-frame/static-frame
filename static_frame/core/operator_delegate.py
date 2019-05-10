@@ -79,18 +79,20 @@ def _ufunc_logical_skipna(array: np.ndarray,
     if array.dtype.kind == 'b':
         # if boolean execute first
         return ufunc(array, axis=axis, out=out)
-    elif array.dtype.kind == 'f':
+
+    if array.dtype.kind == 'f':
         if skipna:
             # replace nans with nonzero value; faster to use masked array?
             v = array.copy()
             v[np.isnan(array)] = 0
             return ufunc(v, axis=axis, out=out)
         return ufunc(array, axis=axis, out=out)
-    elif array.dtype.kind in _DTYPE_INT_KIND:
+
+    if array.dtype.kind in _DTYPE_INT_KIND:
         return ufunc(array, axis=axis, out=out)
 
     # all types other than strings or objects" assume truthy
-    elif array.dtype.kind != 'O' and array.dtype.kind not in _DTYPE_STR_KIND:
+    if array.dtype.kind != 'O' and array.dtype.kind not in _DTYPE_STR_KIND:
         if array.ndim == 1:
             return True
         return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)

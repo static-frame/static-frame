@@ -4,20 +4,20 @@ import typing as tp
 import numpy as np
 from numpy.ma import MaskedArray
 
-from static_frame.core.util import _DEFAULT_SORT_KIND
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import _BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import _resolve_dtype
 from static_frame.core.util import _isna
-from static_frame.core.util import _iterable_to_array
+from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _array_to_duplicated
-from static_frame.core.util import _resolve_dtype_iter
+from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
-from static_frame.core.util import _ufunc_skipna_1d
+from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array2d_to_tuples
 from static_frame.core.util import array_shift
@@ -504,9 +504,8 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if isinstance(value, np.ndarray):
             raise Exception('cannot assign an array to fillna')
-        else:
-            value_dtype = np.array(value).dtype
 
+        value_dtype = np.array(value).dtype
         assigned_dtype = _resolve_dtype(value_dtype, self.values.dtype)
 
         if self.values.dtype == assigned_dtype:
@@ -576,7 +575,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             dtype: not used, part of signature for a commin interface
         '''
-        return _ufunc_skipna_1d(
+        return ufunc_skipna_1d(
                 array=self.values,
                 skipna=skipna,
                 ufunc=ufunc,
@@ -878,7 +877,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def sort_index(self,
             ascending: bool = True,
-            kind: str = _DEFAULT_SORT_KIND) -> 'Series':
+            kind: str = DEFAULT_SORT_KIND) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
         '''
@@ -895,7 +894,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def sort_values(self,
             ascending: bool = True,
-            kind: str = _DEFAULT_SORT_KIND) -> 'Series':
+            kind: str = DEFAULT_SORT_KIND) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
         '''
@@ -916,7 +915,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Series that shows if the same-positoined element is in the iterable passed to the function.
         '''
         # cannot use assume_unique because do not know if values is unique
-        v, _ = _iterable_to_array(other)
+        v, _ = iterable_to_array(other)
         # NOTE: could identify empty iterable and create False array
         array = np.in1d(self.values, v)
         array.flags.writeable = False
@@ -1190,7 +1189,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
 #-------------------------------------------------------------------------------
 class SeriesAssign:
-    __slots__ = ( 'container', 'iloc_key')
+    __slots__ = ('container', 'iloc_key')
 
     def __init__(self,
             container: Series,
