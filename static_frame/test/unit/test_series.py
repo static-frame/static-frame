@@ -622,6 +622,15 @@ class TestUnit(TestCase):
         self.assertEqual(post.values.tolist(), ['a', 'b', 'c', 3, 4])
 
 
+    def test_series_iloc_extract_a(self):
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(s1.iloc[0], 0)
+
+        self.assertEqual(s1.iloc[2:].to_pairs(), (('c', 2), ('d', 3)))
+
+
+
     def test_series_loc_extract_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):

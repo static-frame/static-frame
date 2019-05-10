@@ -1679,7 +1679,12 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # axis functions
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype):
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype):
         # axis 0 sums ros, deliveres column index
         # axis 1 sums cols, delivers row index
         assert axis < 2
@@ -1950,6 +1955,45 @@ class Frame(metaclass=MetaOperatorDelegate):
         array = np.isin(self.values, v)
         array.flags.writeable = False
         return self.__class__(array, columns=self._columns, index=self._index)
+
+    @doc_inject(class_name='Frame')
+    def clip(self,
+            lower=None,
+            upper=None,
+            axis: tp.Optional[int] = None):
+        '''{}
+
+        Args:
+            lower: value, ``Series``, ``Frame``
+            upper: value, ``Series``, ``Frame``
+            axis: required if ``lower`` or ``upper`` are given as a ``Series``.
+        '''
+        args = [lower, upper]
+        for idx, arg in enumerate(args):
+            bound = -np.inf if idx == 0 else np.inf
+            if isinstance(arg, Series):
+                if axis is None:
+                    raise RuntimeError('cannot use a Series argument without specifying an axis')
+                target = self._index if axis == 0 else self._columns
+                values = arg.reindex(target).fillna(bound).values
+                if axis == 0: # duplicate the same column over the width
+                    args[idx] = np.vstack([values] * self.shape[1]).T
+                else:
+                    args[idx] = np.vstack([values] * self.shape[0])
+            elif isinstance(arg, Frame):
+                args[idx] = arg.reindex(
+                        index=self._index,
+                        columns=self._columns).fillna(bound).values
+            elif hasattr(arg, '__iter__'):
+                raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
+            # assume single value otherwise, no change necessary
+
+        array = np.clip(self.values, *args)
+        array.flags.writeable = False
+        return self.__class__(array,
+                columns=self._columns,
+                index=self._index)
+
 
     def transpose(self) -> 'Frame':
         '''Return a tansposed version of the Frame.

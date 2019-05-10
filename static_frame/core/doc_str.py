@@ -30,6 +30,8 @@ class DOC_TEMPLATE:
         count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
     )
 
+    clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+
 
     from_pandas = dict(
             own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',

@@ -527,7 +527,7 @@ class Index(IndexBase,
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
         else: # select a single label value
-            labels = (self._labels[key],)
+            return self._labels[key]
 
         return self.__class__(labels=labels)
 

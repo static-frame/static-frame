@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.3-dev
 --------------
 
+``Series.iloc``, when a non-mulitple selection is given, now returns a single element, not a ``Series``.
+
 
 0.3.2
 -----------

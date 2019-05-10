@@ -3340,6 +3340,69 @@ class TestUnit(TestCase):
             (('a', 34), ('b', 131))
             )
 
+    def test_frame_clip_a(self):
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.clip(upper=0).to_pairs(0),
+                (('a', (('x', 0), ('y', 0), ('z', 0))), ('b', (('x', 0), ('y', 0), ('z', 0)))))
+
+        self.assertEqual(f1.clip(lower=90).to_pairs(0),
+                (('a', (('x', 90), ('y', 90), ('z', 90))), ('b', (('x', 90), ('y', 90), ('z', 95)))))
+
+
+    def test_frame_clip_b(self):
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        s1 = Series((1, 20), index=('a', 'b'))
+
+        self.assertEqual(f1.clip(upper=s1, axis=1).to_pairs(0),
+            (('a', (('x', 1), ('y', 1), ('z', 1))), ('b', (('x', 2), ('y', 20), ('z', 20)))))
+
+        s2 = Series((3, 33, 80), index=('x', 'y', 'z'))
+
+        self.assertEqual(f1.clip(s2, axis=0).to_pairs(0),
+            (('a', (('x', 3), ('y', 33), ('z', 80))), ('b', (('x', 3), ('y', 34), ('z', 95)))))
+
+
+    def test_frame_clip_c(self):
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        f2 = sf.Frame([[5, 4], [0, 10]], index=list('yz'), columns=list('ab'))
+
+        self.assertEqual(f1.clip(upper=f2).to_pairs(0),
+                (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
+
+        self.assertEqual(f1.clip(lower=3, upper=f2).to_pairs(0),
+            (('a', (('x', 3.0), ('y', 5.0), ('z', 3.0))), ('b', (('x', 3.0), ('y', 4.0), ('z', 10.0))))
+            )
+
 
 
 if __name__ == '__main__':

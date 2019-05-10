@@ -963,6 +963,7 @@ class IndexHierarchy(IndexBase,
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
         else: # select a single label value
+            # NOTE: in some situatios this might need to return a single value
             labels = (self._labels[key],)
 
         return self.__class__.from_labels(labels=labels)

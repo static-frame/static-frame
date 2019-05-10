@@ -691,6 +691,9 @@ class Series(metaclass=MetaOperatorDelegate):
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
         # iterable selection should be handled by NP (but maybe not if a tuple)
+        values = self.values[key]
+        if not isinstance(values, np.ndarray): # if we have a single element
+            return values
         return self.__class__(
                 self.values[key],
                 index=self._index.iloc[key],
@@ -919,13 +922,13 @@ class Series(metaclass=MetaOperatorDelegate):
         array.flags.writeable = False
         return self.__class__(array, index=self._index)
 
-
+    @doc_inject(class_name='Series')
     def clip(self, lower=None, upper=None):
-        '''Apply a clip operation to the Series.
+        '''{}
 
         Args:
-            lower: value or Series to define the inclusive lower bound.
-            upper: value or Series to define the inclusive upper bound.
+            lower: value or ``Series`` to define the inclusive lower bound.
+            upper: value or ``Series`` to define the inclusive upper bound.
         '''
         args = [lower, upper]
         for idx, arg in enumerate(args):
@@ -936,7 +939,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 bound = -np.inf if idx == 0 else np.inf
                 args[idx] = arg.reindex(self.index).fillna(bound).values
             elif hasattr(arg, '__iter__'):
-                raise Exception('only Series are supported as iterable lower/upper arguments')
+                raise RuntimeError('only Series are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
         array = np.clip(self.values, *args)

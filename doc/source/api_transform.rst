@@ -42,6 +42,7 @@ Frame
 
     Given a column key (either a column label, list of column lables, slice of colum labels, or Boolean array), replace the values specified by the column key with values casted to the provided ``dtype``.
 
+.. automethod:: static_frame.Frame.clip
 
 .. automethod:: static_frame.Frame.isin
 

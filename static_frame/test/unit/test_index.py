@@ -138,7 +138,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.loc_to_iloc(['b', 'b', 'c']), [1, 1, 2])
 
-        self.assertEqual(idx.loc['c'].values.tolist(), ['c'])
+        self.assertEqual(idx.loc['c'], 'c')
 
         idxgo = IndexGO(('a', 'b', 'c', 'd'))
         self.assertEqual(idxgo.values.tolist(), ['a', 'b', 'c', 'd'])
@@ -298,10 +298,10 @@ class TestUnit(TestCase):
             IndexDate([3,4,5], dtype=int)
 
         idx1 = IndexDate(['2017', '2018'])
-        self.assertTrue(idx1[0].values[0].__class__ == np.datetime64)
+        self.assertTrue(idx1[0].__class__ == np.datetime64)
 
         idx2 = IndexDate(['2017-01', '2018-07'])
-        self.assertTrue(idx2[0].values[0].__class__ == np.datetime64)
+        self.assertTrue(idx2[0].__class__ == np.datetime64)
 
 
     def test_index_date_c(self):
