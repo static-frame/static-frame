@@ -336,8 +336,7 @@ class TestUnit(TestCase):
 
 
         post = ih.loc_to_iloc(HLoc[:, 'C', 3])
-        self.assertEqual(post, 6)
-
+        self.assertEqual(post, [6])
 
         post = ih.loc_to_iloc(HLoc[:, :, 3])
         self.assertEqual(post, [4, 6, 9])
@@ -379,6 +378,16 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels(labels)
 
         self.assertTrue(('I', 'A') in ih)
+
+
+    def test_hierarchy_extract_a(self):
+        idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])
+
+        self.assertEqual(idx.iloc[1], ('A', 2))
+        self.assertEqual(idx.loc[('B', 1)], ('B', 1))
+        self.assertEqual(idx[2], ('B', 1))
+        self.assertEqual(idx.loc[HLoc['B', 1]], ('B', 1))
+
 
 
     def test_hierarchy_iter_a(self):
@@ -880,6 +889,44 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
 
+
+    def test_hierarchy_copy_a(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1.copy()
+
+        self.assertEqual(ih2.values.tolist(),
+            [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
+
+
+
+    def test_hierarchy_copy_b(self):
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih2 = ih1.copy()
+        ih2.append(('II', 'C'))
+
+        self.assertEqual(ih2.values.tolist(),
+            [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['II', 'C']]
+            )
+
+        self.assertEqual(ih1.values.tolist(),
+            [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
+            )
 
 if __name__ == '__main__':
     unittest.main()

@@ -3329,16 +3329,22 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(post), 2)
 
-        # NOTE: this presently returns a Frame, not a Series, not sure if this is consistent
-        post = f1[f1.columns[0]]
-        self.assertEqual(post.to_pairs(0),
-                (((1, 'a'), (('x', 2), ('y', 30), ('z', 2))),)
-                )
+        post = f1[HLoc[f1.columns[0]]]
+        self.assertEqual(post.__class__, Series)
+        self.assertEqual(post.to_pairs(),
+            (('x', 2), ('y', 30), ('z', 2))
+            )
+
+        post = f1.loc[:, HLoc[f1.columns[0]]]
+        self.assertEqual(post.__class__, Series)
+        self.assertEqual(post.to_pairs(),
+            (('x', 2), ('y', 30), ('z', 2))
+            )
 
         self.assertEqual(
-            f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
-            (('a', 34), ('b', 131))
-            )
+                f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
+                (('a', 34), ('b', 131))
+                )
 
     def test_frame_clip_a(self):
 

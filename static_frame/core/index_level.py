@@ -172,19 +172,20 @@ class IndexLevel:
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
         # this should not match tuples that are leaf-locs
-        elif isinstance(key, KEY_ITERABLE_TYPES):
+        if isinstance(key, KEY_ITERABLE_TYPES):
             if isinstance(key, np.ndarray) and key.dtype == bool:
                 return key # keep as Boolean?
             return [self.leaf_loc_to_iloc(x) for x in key]
 
-        # NOTE: not sure if this is necessary
         # elif isinstance(key, IndexHierarchy):
         #     # values will give an iterable if rows, where rows are iloc selectors
         #     return [self.leaf_loc_to_iloc(tuple(x)) for x in key.values]
 
-        elif not isinstance(key, HLoc):
+        if not isinstance(key, HLoc):
             # assume it is a leaf loc tuple
             return self.leaf_loc_to_iloc(key)
+
+        # everything after this is an HLoc
 
         # collect all ilocs for all leaf indices matching HLoc patterns
         ilocs = []
@@ -221,7 +222,9 @@ class IndexLevel:
         iloc_count = len(ilocs)
         if iloc_count == 0:
             raise KeyError('no matching keys across all levels')
-        if iloc_count == 1:
+
+        if iloc_count == 1 and not key.has_key_multiple():
+            # drop to a single iloc selection
             return ilocs[0]
 
         # NOTE: might be able to combine contiguous ilocs into a single slice

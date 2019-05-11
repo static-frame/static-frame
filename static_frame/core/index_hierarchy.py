@@ -558,6 +558,7 @@ class IndexHierarchy(IndexBase,
             else:
                 key = key.values
 
+        # if an HLoc, will pass on to loc_to_iloc
         return self._levels.loc_to_iloc(key)
 
     def _extract_iloc(self, key) -> 'IndexHierarchy':
@@ -578,8 +579,10 @@ class IndexHierarchy(IndexBase,
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
         else: # select a single label value
-            # NOTE: in some situatios this might need to return a single value
-            labels = (self._labels[key],)
+            values = self._labels[key]
+            if values.ndim == 1:
+                return tuple(values)
+            labels = (values,)
 
         return self.__class__.from_labels(labels=labels)
 
@@ -815,3 +818,9 @@ class IndexHierarchyGO(IndexHierarchy):
         self._levels.extend(other._levels)
         self._recache = True
 
+
+    def copy(self) -> 'IndexHierarchy':
+        '''
+        Return a new IndexHierarchy. This is not a deep copy.
+        '''
+        return self.__class__(levels=self._levels.to_index_level())

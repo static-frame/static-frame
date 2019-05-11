@@ -649,6 +649,7 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # this selection returns just a single value
+        # import ipdb; ipdb.set_trace()
         s2 = s.loc[sf.HLoc[:, 'c']]
         self.assertEqual(s2.__class__, s.__class__)
         self.assertEqual(s2.to_pairs(), ((('b', 'c'), 4),))
@@ -668,6 +669,14 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             s.loc[['a', 'b'], 'b']
+
+
+    def test_series_loc_extract_e(self):
+        s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
+
+        self.assertEqual(s1.loc[('B', 1)], 2)
+        self.assertEqual(s1.loc[sf.HLoc['B', 1]], 2)
+        self.assertEqual(s1.iloc[2], 2)
 
 
     def test_series_group_a(self):
