@@ -12,9 +12,13 @@ from static_frame.core.util import _UNIT_SLICE
 
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import KEY_MULTIPLE_TYPES
+
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import DtypeSpecifier
+
+from static_frame.core.util import column_2d_filter
 
 from static_frame.core.util import mloc
 from static_frame.core.util import array_shift
@@ -51,15 +55,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             '_row_dtype',
             'iloc',
             )
-
-    @staticmethod
-    def single_column_filter(array: np.ndarray) -> np.ndarray:
-        '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is only used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
-        '''
-        # it is not clear when reshape is a copy or a view
-        if array.ndim == 1:
-            return np.reshape(array, (array.shape[0], 1))
-        return array
 
     @staticmethod
     def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
@@ -247,21 +242,29 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     # value extraction
 
     @staticmethod
-    def _blocks_to_array(*, blocks, shape, row_dtype) -> np.ndarray:
+    def _blocks_to_array(*,
+            blocks: tp.Iterable[np.ndarray],
+            shape: tp.Tuple[int, int],
+            row_dtype,
+            row_multiple: bool
+            ) -> np.ndarray:
         '''
-        Given blocks and a combined shape, return a consolidated single array.
+        Given blocks and a combined shape, return a consolidated 2D single array.
+
+        Args:
+            shape: used in construting returned array; not ussed as a constraint.
         '''
+        # assume column_mutltiple is True, as this routine is called after handling extraction of single columns
         if len(blocks) == 1:
-            return blocks[0]
+            return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
-        if shape[0] == 1:
-            # greturn 1 column TypeBlock as a 1D array with length equal to the number of columns
+        if not row_multiple: # and shape[0] == 1:
+            # return 1 row TypeBlock as a 1D array with length equal to the number of columns
             array = np.empty(shape[1], dtype=row_dtype)
         else: # get ndim 2 shape array
             array = np.empty(shape, dtype=row_dtype)
 
-        # can we use a np.concatenate, but need to handle 1D arrrays and need to converty type before concatenate
         pos = 0
         for block in blocks:
             if block.ndim == 1:
@@ -286,10 +289,12 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def values(self) -> np.ndarray:
         '''Returns a consolidated NP array of the all blocks.
         '''
+        # always return a 2D array
         return self._blocks_to_array(
                 blocks=self._blocks,
                 shape=self._shape,
-                row_dtype=self._row_dtype)
+                row_dtype=self._row_dtype,
+                row_multiple=True)
 
     def axis_values(self, axis=0, reverse=False) -> tp.Generator[
             np.ndarray, None, None]:
@@ -347,10 +352,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         Generator of pairs of iloc locations, values accross entire TypeBlock.
         '''
-        #np.ndindex(self._shape) # get all target indices
-        # offsets = np.cumsum([b.shape[1] if b.ndim == 2 else 1 for b in self._blocks])
-        # gens = [np.ndenumerate(self.single_column_filter(b)) for b in self._blocks]
-
         for iloc in np.ndindex(self._shape):
             block_idx, column = self._index[iloc[1]]
             b = self._blocks[block_idx]
@@ -427,7 +428,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''This will always return a 2D array.
         '''
         # NOTE: if len(group) is 1, can return
-        return np.concatenate([cls.single_column_filter(x) for x in group], axis=1)
+        return np.concatenate([column_2d_filter(x) for x in group], axis=1)
 
 
     @classmethod
@@ -662,7 +663,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         # if this is a numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then out is already boolean
                         if out.dtype == bool and b.dtype != bool:
                             # making 2D with axis 0 func will result in element-wise operation
-                            out[:, idx] = func(self.single_column_filter(b), axis=0)
+                            out[:, idx] = func(column_2d_filter(b), axis=0)
                         else: # otherwise, keep as is
                             out[:, idx] = b
                     else:
@@ -690,7 +691,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         d = None
         outermost = True # only for the first
         for idx, block in enumerate(self._blocks):
-            block = self.single_column_filter(block)
+            block = column_2d_filter(block)
             h = '' if idx > 0 else self.__class__
             display = Display.from_values(block,
                     h,
@@ -1188,7 +1189,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 yield assigned
 
 
-    # @profile
     def _slice_blocks(self,
             row_key=None,
             column_key=None) -> tp.Generator[np.ndarray, None, None]:
@@ -1252,6 +1252,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             row_key=None,
             column_key=None) -> np.ndarray:
         '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
+
+        This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, int):
@@ -1284,11 +1286,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             blocks.append(b)
 
         row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
+        row_multiple = row_key is None or isinstance(row_key, KEY_MULTIPLE_TYPES)
 
+        # import ipdb; ipdb.set_trace()
         return self._blocks_to_array(
                 blocks=blocks,
                 shape=(rows, columns),
-                row_dtype=row_dtype)
+                row_dtype=row_dtype,
+                row_multiple=row_multiple)
 
     def _extract(self,
             row_key: GetItemKeyType = None,
@@ -1411,8 +1416,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
             def operation():
                 for a, b in zip_longest(
-                        (self.single_column_filter(op) for op in self_operands),
-                        (self.single_column_filter(op) for op in other_operands)
+                        (column_2d_filter(op) for op in self_operands),
+                        (column_2d_filter(op) for op in other_operands)
                         ):
                     result = operator(a, b)
                     result.flags.writeable = False # own the data
@@ -1457,7 +1462,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         blocks = []
         for b in self._blocks:
-            b = self.single_column_filter(b).transpose()
+            b = column_2d_filter(b).transpose()
             if b.dtype != self._row_dtype:
                 b = b.astype(self._row_dtype)
             blocks.append(b)

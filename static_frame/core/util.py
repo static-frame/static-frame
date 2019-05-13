@@ -135,6 +135,23 @@ def name_filter(name: tp.Hashable) -> tp.Hashable:
         raise TypeError('unhashable name attribute', name)
     return name
 
+def column_2d_filter(array: np.ndarray) -> np.ndarray:
+    '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
+    '''
+    # it is not clear when reshape is a copy or a view
+    if array.ndim == 1:
+        return np.reshape(array, (array.shape[0], 1))
+    return array
+
+def column_1d_filter(array: np.ndarray) -> np.ndarray:
+    '''
+    Ensure that a column that might be 2D or 1D is returned as a 1D array.
+    '''
+    if array.ndim == 2:
+        # could assert that array.shape[1] == 1, but this will raise if does not fit
+        return np.reshape(array, array.shape[0])
+    return array
+
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,

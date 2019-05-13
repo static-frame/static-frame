@@ -108,6 +108,20 @@ class TestUnit(TestCase):
             (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
             )
 
+    def test_frame_values_a(self):
+        f = sf.Frame([[3]])
+        self.assertEqual(f.values.tolist(), [[3]])
+
+
+    def test_frame_values_b(self):
+        f = sf.Frame(np.array([[3, 2, 1]]))
+        self.assertEqual(f.values.tolist(), [[3, 2, 1]])
+
+    def test_frame_values_c(self):
+        f = sf.Frame(np.array([[3], [2], [1]]))
+        self.assertEqual(f.values.tolist(), [[3], [2], [1]])
+
+
     def test_frame_from_pairs_a(self):
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))
@@ -3075,6 +3089,14 @@ class TestUnit(TestCase):
 
         fh.loc[sf.ILoc[-1], ['id', 'title', 'url']]
 
+    def test_frame_set_index_hierarchy_d(self):
+        f1 = sf.Frame.from_records([('one', 1, 'hello')],
+                columns=['name', 'val', 'msg'])
+
+        f2 = f1.set_index_hierarchy(['name', 'val'], drop=True)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('msg', ((('one', 1), 'hello'),)),))
 
     def test_frame_iloc_in_loc_a(self):
         records = (

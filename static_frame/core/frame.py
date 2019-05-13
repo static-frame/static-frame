@@ -26,6 +26,9 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import immutable_filter
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import column_1d_filter
+
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array
@@ -205,7 +208,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                     for block_idx in range(len(type_blocks[0]._blocks)):
                         block_parts = []
                         for frame_idx in range(len(type_blocks)):
-                            b = TypeBlocks.single_column_filter(
+                            b = column_2d_filter(
                                     type_blocks[frame_idx]._blocks[block_idx])
                             block_parts.append(b)
                         # returns immutable array
@@ -1433,19 +1436,14 @@ class Frame(metaclass=MetaOperatorDelegate):
             # if both are multi, we return a Frame
         elif blocks._shape[0] == 1: # if one row
             if axis_nm[0]: # if row key not multi
-                # best to use blocks.values, as will need to consolidate if necessary
-                block = blocks.values
-                if block.ndim == 1:
-                    return Series(block,
-                            index=immutable_index_filter(columns),
-                            name=name_row)
-                # 2d block, get teh first row
-                return Series(block[0],
+                # best to use blocks.values, as will need to consolidate dtypes; will always return a 2D array
+                return Series(blocks.values[0],
                         index=immutable_index_filter(columns),
                         name=name_row)
         elif blocks._shape[1] == 1: # if one column
             if axis_nm[1]: # if column key is not multi
-                return Series(blocks.values,
+                return Series(
+                        column_1d_filter(blocks._blocks[0]),
                         index=index,
                         name=name_column)
 
@@ -1895,35 +1893,43 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True)
 
     def sort_values(self,
-            key: KeyOrKeys, # TODO: rename "labels"
+            key: KeyOrKeys,
             ascending: bool = True,
             axis: int = 1,
             kind=DEFAULT_SORT_KIND) -> 'Frame':
         '''
-        Return a new Frame ordered by the sorted values, where values is given by one or more columns.
+        Return a new Frame ordered by the sorted values, where values is given by single column or iterable of columns.
 
         Args:
             key: a key or tuple of keys. Presently a list is not supported.
         '''
         # argsort lets us do the sort once and reuse the results
-        if axis == 0: # get a column ordering
+        if axis == 0: # get a column ordering based on one or more rows
+            col_count = self._columns.__len__()
             if key in self._index:
                 iloc_key = self._index.loc_to_iloc(key)
-                order = np.argsort(self._blocks.iloc[iloc_key].values, kind=kind)
+                sort_array = self._blocks._extract_array(row_key=iloc_key)
+                order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
                 iloc_keys = (self._index.loc_to_iloc(key) for key in reversed(key))
-                order = np.lexsort([self._blocks.iloc[key].values for key in iloc_keys])
-        elif axis == 1:
+                sort_array = [self._blocks._extract_array(row_key=key)
+                        for key in iloc_keys]
+                order = np.lexsort(sort_array)
+        elif axis == 1: # get a row ordering based on one or more columns
             if key in self._columns:
                 iloc_key = self._columns.loc_to_iloc(key)
-                order = np.argsort(self._blocks[iloc_key].values, kind=kind)
+                sort_array = self._blocks._extract_array(column_key=iloc_key)
+                order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
                 iloc_keys = (self._columns.loc_to_iloc(key) for key in reversed(key))
-                order = np.lexsort([self._blocks[key].values for key in iloc_keys])
+                sort_array = [self._blocks._extract_array(column_key=key)
+                        for key in iloc_keys]
+                order = np.lexsort(sort_array)
         else:
             raise NotImplementedError()
+
 
         if not ascending:
             order = order[::-1]

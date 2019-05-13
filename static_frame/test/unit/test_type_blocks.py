@@ -86,8 +86,8 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        self.assertTypeBlocksArrayEqual(tb1[2], [3, 6])
-        self.assertTypeBlocksArrayEqual(tb1[4], [0.5, 0.6])
+        self.assertTypeBlocksArrayEqual(tb1[2], [[3], [6]])
+        self.assertTypeBlocksArrayEqual(tb1[4], [[0.5], [0.6]])
 
         self.assertEqual(list(tb1[7].values), ['b', 'd'])
 
@@ -108,16 +108,16 @@ class TestUnit(TestCase):
 
         # TODO: need to implement values
 
-        self.assertEqual(slice3.iloc[0].values.tolist(), [3, 'a', 1])
-        self.assertEqual(slice3.iloc[1].values.tolist(), [6, 'c', 4])
+        self.assertEqual(slice3.iloc[0].values.tolist(), [[3, 'a', 1]])
+        self.assertEqual(slice3.iloc[1].values.tolist(), [[6, 'c', 4]])
 
         ## slice refers to the same data; not sure if this is accurate test yet
 
         row1 = tb1.iloc[0].values
         self.assertEqual(row1.dtype, object)
-        self.assertEqual(len(row1), 8)
-        self.assertEqual(list(row1[:3]), [1, 2, 3])
-        self.assertEqual(list(row1[-2:]), ['a', 'b'])
+        self.assertEqual(row1.shape, (1, 8))
+        self.assertEqual(row1[:, :3].tolist(), [[1, 2, 3]])
+        self.assertEqual(row1[:, -2:].tolist(), [['a', 'b']])
 
         self.assertEqual(tb1.unified, False)
 
@@ -140,7 +140,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(tb1.shape, (3, 4))
 
-        self.assertEqual(tb1.iloc[1].values.tolist(), [2, True, 'c', 'cd'])
+        self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 'c', 'cd']])
         #tb1.iloc[0:2]
 
         #tb1.iloc[0:2, 0:2]
@@ -327,9 +327,10 @@ class TestUnit(TestCase):
                 [4, 5, 6, True, False, True, 'c', 'd']],
                 match_dtype=object
                 )
+
         self.assertTypeBlocksArrayEqual(
                 tb1._extract(slice(None), -2),
-                ['a', 'c', 'oe'],
+                [['a'], ['c'], ['oe']],
                 match_dtype=object
                 )
         self.assertTypeBlocksArrayEqual(
@@ -428,9 +429,9 @@ class TestUnit(TestCase):
         tb1.append(np.array([(3,5),(4,6),(5,10)]))
         self.assertTrue(tb1.shape, (3, 5))
 
-        self.assertEqual(tb1.iloc[0].values.tolist(), [1, False, 3, 3, 5])
-        self.assertEqual(tb1.iloc[1].values.tolist(), [2, True, 5, 4, 6])
-        self.assertEqual(tb1.iloc[:, 3].values.tolist(), [3, 4, 5])
+        self.assertEqual(tb1.iloc[0].values.tolist(), [[1, False, 3, 3, 5]])
+        self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 5, 4, 6]])
+        self.assertEqual(tb1.iloc[:, 3].values.tolist(), [[3], [4], [5]])
 
 
 
@@ -1109,10 +1110,10 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.shape, (3, 10))
 
         self.assertEqual(tb1.iloc[2].values.tolist(),
-                [0, 0, 1, True, False, True, None, 'oe', 'od', 3])
+                [[0, 0, 1, True, False, True, None, 'oe', 'od', 3]])
 
         self.assertEqual(tb2.iloc[2].values.tolist(),
-                [0, 0, 1, True, False, True, None, 'oe', 'od'])
+                [[0, 0, 1, True, False, True, None, 'oe', 'od']])
 
 
 
