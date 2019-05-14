@@ -202,7 +202,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         a.flags.writeable = False
         return a
 
-    # consider renaming pointers
     @property
     def mloc(self) -> np.ndarray:
         '''Return an immutable ndarray of NP array memory location integers.
@@ -210,7 +209,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         a = np.fromiter(
                 (mloc(b) for b in self._blocks),
                 count=len(self._blocks),
-                dtype=int)
+                dtype=np.int64)
         a.flags.writeable = False
         return a
 
