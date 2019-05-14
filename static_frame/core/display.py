@@ -358,7 +358,8 @@ class DisplayConfig:
             'display_rows',
 
             'cell_max_width',
-            'cell_align_left'
+            'cell_max_width_leftmost',
+            'cell_align_left',
             )
 
     @classmethod
@@ -380,7 +381,7 @@ class DisplayConfig:
     def from_default(cls, **kwargs) -> 'DisplayConfig':
         return cls(**kwargs)
 
-    def __init__(self,
+    def __init__(self, *,
             type_show: bool = True,
             type_color: bool = True,
 
@@ -405,6 +406,8 @@ class DisplayConfig:
             display_columns: tp.Optional[int] = 12,
             display_rows: tp.Optional[int] = 36,
             cell_max_width: int = 20,
+            cell_max_width_leftmost: int = 36,
+
             cell_align_left: bool = True
             ) -> None:
 
@@ -434,6 +437,8 @@ class DisplayConfig:
         self.display_rows = display_rows
 
         self.cell_max_width = cell_max_width
+        self.cell_max_width_leftmost = cell_max_width_leftmost
+
         self.cell_align_left = cell_align_left
 
     def write(self, fp):
@@ -498,14 +503,17 @@ class DisplayConfigs:
             display_columns=np.inf,
             display_rows=np.inf,
             cell_max_width=np.inf,
+            cell_max_width_leftmost=np.inf,
             )
     UNBOUND_COLUMNS = DisplayConfig(
             display_columns=np.inf,
             cell_max_width=np.inf,
+            cell_max_width_leftmost=np.inf,
             )
     UNBOUND_ROWS = DisplayConfig(
             display_rows=np.inf,
             cell_max_width=np.inf,
+            cell_max_width_leftmost=np.inf,
             )
 
 #-------------------------------------------------------------------------------
@@ -799,8 +807,19 @@ class Display:
         Called once for each column to determine the maximum_width and pad_width for a particular column. All row data is passed to this function, and cell values are looked up directly with the `col_idx_src` argument.
 
         Args:
+            rows: iterable of all rows, containing DisplayCell instances
+            col_idx_src: the integer index for the currrent column
+            col_last_src: the integer index for the last column
             row_indices: passed here so same range() can be reused.
         '''
+        is_last = col_idx_src == col_last_src
+        is_first = col_idx_src == 0
+
+        if is_first:
+            width_limit = config.cell_max_width_leftmost
+        else:
+            width_limit = config.cell_max_width
+
         max_width = 0
         for row_idx_src in row_indices:
             # get existing max width, up to the max
@@ -813,14 +832,14 @@ class Display:
             else:
                 max_width = max(max_width, len(cls.ELLIPSIS))
             # if already exceeded max width, stop iterating
-            if max_width >= config.cell_max_width:
+            if max_width >= width_limit:
                 break
 
         # get most binding constraint
-        max_width = min(max_width, config.cell_max_width)
+        max_width = min(max_width, width_limit)
 
-        if ((config.cell_align_left is True and col_idx_src == col_last_src) or
-                (config.cell_align_left is False and col_idx_src == 0)):
+        if ((config.cell_align_left is True and is_last) or
+                (config.cell_align_left is False and is_first)):
             pad_width = max_width
         else:
             pad_width = max_width + cls.CHAR_MARGIN

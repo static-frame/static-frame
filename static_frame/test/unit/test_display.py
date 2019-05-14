@@ -163,8 +163,8 @@ class TestUnit(TestCase):
 
     def test_display_cell_fill_width_a(self):
 
-        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, type_color=False)
-        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, type_color=False)
+        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)
+        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, cell_max_width_leftmost=6, type_color=False)
 
         def chunks(size, count):
             pos = 0
@@ -194,7 +194,7 @@ class TestUnit(TestCase):
                 '<<U1>  <<U20>']
                 )
 
-        config = sf.DisplayConfig.from_default(type_color=False)
+        config = sf.DisplayConfig.from_default(type_color=False, cell_max_width_leftmost=20)
 
         row_count = 2
         index = [str(chr(x)) for x in range(97, 97+row_count)]
@@ -494,10 +494,20 @@ class TestUnit(TestCase):
         f = f.set_index_hierarchy(('p', 'q'))
 
         # this uses cell width normaliz
-        post = f.display(sf.DisplayConfig(display_format=DisplayFormats.HTML_PRE)).to_rows()
+        post = f.display(sf.DisplayConfig(
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=20)).to_rows()
 
         self.assertEqual(post[2],
                 '<span style="color: #777777">&lt;IndexHierarchy: ...</span>')
+
+        post = f.display(sf.DisplayConfig(
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=36)).to_rows()
+
+        self.assertEqual(post[2],
+                '<span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span>')
+
 
 
     def test_display_max_width_a(self):
@@ -510,9 +520,11 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
         f2 = f1.set_index_hierarchy(('p', 'q'))
 
-        post = f2.display(sf.DisplayConfig(type_color=False)).to_rows()
+        post = f2.display(sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20)).to_rows()
         self.assertEqual(post[2], '<IndexHierarchy: ...')
 
+        post = f2.display(sf.DisplayConfig(type_color=False, cell_max_width_leftmost=30)).to_rows()
+        self.assertEqual(post[2], "<IndexHierarchy: ('p', 'q')>")
 
 
     @unittest.skip('too colorful')
