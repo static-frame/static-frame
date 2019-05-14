@@ -1,12 +1,84 @@
-language: python
+# Taken from: https://github.com/brandtbucher/travis-python-matrix
+
+# CPython 3.5.2 / CPython 3.6.8 / CPython 3.7.3
+# Ubuntu Xenial 16.04 / Windows Server 1803 / macOS 10.13
+
+# Just comment out any matrix entries you don't need.
+
+language: shell
+
 matrix:
+
   include:
-    - python: "3.6"
-    - python: "3.7"
-      dist: xenial  # required for Python >= 3.7
+  
+#     - name: CPython 3.5.2 on Ubuntu Xenial 16.04
+#       python: 3.5.2
+#       dist: xenial
+#       language: python
+      
+    - name: CPython 3.6.8 on Ubuntu Xenial 16.04
+      python: 3.6.8
+      dist: xenial
+      language: python
+
+    - name: CPython 3.7.3 on Ubuntu Xenial 16.04
+      python: 3.7.3
+      dist: xenial
+      language: python
+
+#     - name: CPython 3.5.2 on Windows Server 1803
+#       os: windows
+#       before_install: choco install python --version 3.5.2.20161029
+#       env: PATH=/c/Python35:/c/Python35/Scripts:$PATH
+
+    - name: CPython 3.6.8 on Windows Server 1803
+      os: windows
+      before_install: choco install python --version 3.6.8
+      env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
+
+    - name: CPython 3.7.3 on Windows Server 1803
+      os: windows
+      before_install: choco install python --version 3.7.3
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+
+#     - name: CPython 3.5.2 on macOS 10.13
+#       os: osx
+#       before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
+#       env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.5.2
+
+    - name: CPython 3.6.8 on macOS 10.13
+      os: osx
+      before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
+      env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
+
+    - name: CPython 3.7.3 on macOS 10.13
+      os: osx
+      before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
+      env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
+
+# Change anything below to suit your CI needs.
+# Python and pip exectuables are just named "python" and "pip" on all platforms!
+
+# Example:
+
+# Uncomment the lines below to build and upload all nine wheels to PyPI.
+# (You must have TWINE_USERNAME/TWINE_PASSWORD environment variables in Travis!)
+
+# install:
+#   - pip --version
+#   - pip install --upgrade setuptools twine wheel
+
+# script:
+#   - python --version
+#   - python setup.py sdist bdist_wheel
+#   - twine upload dist/* --skip-existing
+
 install:
   - pip install codecov pytest-cov
   - pip install -r requirements-test.txt
-script: pytest --cov=static_frame
+  
+script:
+ - pytest --cov=static_frame
+
 after_success:
   - codecov
