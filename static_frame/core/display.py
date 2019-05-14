@@ -10,6 +10,7 @@ from enum import Enum
 
 from itertools import chain
 from functools import partial
+from collections import namedtuple
 
 import numpy as np
 
@@ -296,7 +297,6 @@ class DisplayFormatHTMLPre(DisplayFormat):
                 msg=msg)
 
 
-
 _DISPLAY_FORMAT_MAP = {
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
         DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
@@ -321,7 +321,7 @@ def terminal_ansi(stream=sys.stdout) -> bool:
     if stream.closed:
         return False
 
-    if hasattr(stream, "isatty") and stream.isatty() and platform.system() != 'Windows':
+    if hasattr(stream, 'isatty') and stream.isatty() and platform.system() != 'Windows':
         return True
 
     return False
@@ -565,6 +565,11 @@ class DisplayHeader:
     def __init__(self,
             cls,
             name: tp.Optional[object] = None):
+        '''
+        Args:
+            cls: the Class to be displayed.
+            name: an optional name attribute stored on the instance.
+        '''
         self.cls = cls
         self.name = name
 
@@ -578,8 +583,10 @@ class DisplayHeader:
 
 
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
-DisplayCell = tp.Tuple[str, int]
 
+# store formatted string (with color markup), raw width (without markup), and the original, raw string
+DisplayCell = namedtuple('DisplayCell', ('format_str', 'raw'))
+FORMAT_EMPTY = '{}'
 
 class Display:
     '''
@@ -594,9 +601,9 @@ class Display:
         )
 
     CHAR_MARGIN = 1
-    CELL_EMPTY = ('', 0)
-    ELLIPSIS = '...'
-    CELL_ELLIPSIS = (ELLIPSIS, len(ELLIPSIS))
+    CELL_EMPTY = DisplayCell(FORMAT_EMPTY, '')
+    ELLIPSIS = '...' # this string is appended to truncated entries
+    CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
     ELLIPSIS_INDICES = (None,)
     DATA_MARGINS = 2 # columns / rows that seperate data
     ELLIPSIS_CENTER_SENTINEL = object()
@@ -630,32 +637,27 @@ class Display:
         left = config.type_delimiter_left or ''
         right = config.type_delimiter_right or ''
         type_label = left + type_str + right
-        # find length after stipping escape codes
-        type_length = len(type_label)
 
-        if config.display_format in _DISPLAY_FORMAT_HTML:
-            type_label = html.escape(type_label)
-
-        return type_label, type_length, type_category
+        return type_label, type_category
 
     @staticmethod
     def type_color_markup(
             type_label: str,
             type_category: DisplayTypeCategory,
             config: DisplayConfig
-            ):
+            ) -> str:
         '''
-        Return type label with markup for color.
+        Return a format string for applying color to a type based on type category and config.
         '''
         color = getattr(config, type_category.CONFIG_ATTR)
         if config.display_format in _DISPLAY_FORMAT_HTML:
-            return HexColor.format_html(color, type_label)
+            return HexColor.format_html(color, FORMAT_EMPTY)
 
         if config.display_format in _DISPLAY_FORMAT_TERMINAL:
             if terminal_ansi():
-                return HexColor.format_terminal(color, type_label)
+                return HexColor.format_terminal(color, FORMAT_EMPTY)
             # if not a compatible terminal, return label unaltered
-            return type_label
+            return FORMAT_EMPTY
 
         raise NotImplementedError('no handling for display format:',
                 config.display_format)
@@ -669,22 +671,21 @@ class Display:
         Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
         '''
         if is_dtype or inspect.isclass(value) or isinstance(value, DisplayHeader):
-            type_str, type_length, type_category = cls.type_attributes(
+            type_str_raw, type_category = cls.type_attributes(
                     value,
                     config=config)
             if config.type_color:
-                type_str = cls.type_color_markup(
-                        type_str,
+                format_str = cls.type_color_markup(
+                        type_str_raw,
                         type_category,
                         config)
-            return type_str, type_length
+            else:
+                format_str = FORMAT_EMPTY
+            return DisplayCell(format_str, type_str_raw)
 
         # handling for all other values that are stringable
         msg = str(value)
-        msg_length = len(msg)
-        if config.display_format in _DISPLAY_FORMAT_HTML:
-            msg = html.escape(msg)
-        return msg, msg_length
+        return DisplayCell(FORMAT_EMPTY, msg)
 
     #---------------------------------------------------------------------------
     # aalternate constructor
@@ -742,8 +743,6 @@ class Display:
         # add the types to the last row
         if isinstance(values, np.ndarray) and config.type_show:
             rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
-        # else: # this is an object
-        #     rows.append([cls.CELL_EMPTY])
 
         return cls(rows,
                 config=config,
@@ -797,8 +796,10 @@ class Display:
             config: DisplayConfig = None
             ) -> tp.Tuple[int, int]:
         '''
+        Called once for each column to determine the maximum_width and pad_width for a particular column. All row data is passed to this function, and cell values are looked up directly with the `col_idx_src` argument.
+
         Args:
-            row_indices: passed here so same bundle can be reused.
+            row_indices: passed here so same range() can be reused.
         '''
         max_width = 0
         for row_idx_src in row_indices:
@@ -808,12 +809,14 @@ class Display:
                 if col_idx_src >= len(row): # this row does not have this column
                     continue
                 cell = row[col_idx_src]
-                max_width = max(max_width, cell[1])
+                max_width = max(max_width, len(cell.raw))
             else:
                 max_width = max(max_width, len(cls.ELLIPSIS))
-            # if we have already exceeded max width, can stop iterating
+            # if already exceeded max width, stop iterating
             if max_width >= config.cell_max_width:
                 break
+
+        # get most binding constraint
         max_width = min(max_width, config.cell_max_width)
 
         if ((config.cell_align_left is True and col_idx_src == col_last_src) or
@@ -850,6 +853,7 @@ class Display:
 
         # if we normalize, we truncate cells and pad
         dfc = _DISPLAY_FORMAT_MAP[config.display_format]
+        is_html = config.display_format in _DISPLAY_FORMAT_HTML
 
         for col_idx_src in range(col_count_src):
 
@@ -870,29 +874,39 @@ class Display:
                 else:
                     cell = row[col_idx_src]
 
-                # msg may have been ljusted before, so we strip again here
-                cell_content = cell[0].strip()
+                cell_format_str = cell.format_str
+                cell_raw = cell.raw
 
                 if dfc.CELL_WIDTH_NORMALIZE:
-                    if cell[1] > max_width:
+
+                    if len(cell.raw) > max_width:
                         # must truncate if cell width is greater than max width
-                        width_truncate = max_width - cls.CELL_ELLIPSIS[1]
-                        cell_content = cell_content[:width_truncate] + cls.ELLIPSIS
+                        width_truncate = max_width - len(cls.CELL_ELLIPSIS.raw)
+
+                        cell_raw = cell_raw[:width_truncate] + cls.ELLIPSIS
+                        if is_html:
+                            cell_raw = html.escape(cell_raw)
+                        cell_formatted = cell_format_str.format(cell_raw)
                         cell_fill_width = cls.CHAR_MARGIN # should only be margin left
                     else:
-                        cell_fill_width = pad_width - cell[1] # this includes margin
+                        if is_html:
+                            cell_raw = html.escape(cell_raw)
+                        cell_formatted = cell_format_str.format(cell_raw)
+                        cell_fill_width = pad_width - len(cell.raw) # this includes margin
 
                     # print(col_idx, row_idx, cell, max_width, pad_width, cell_fill_width)
                     if config.cell_align_left:
                         # must manually add space as color chars make ljust not work
-                        msg = cell_content + ' ' * cell_fill_width
+                        msg = cell_formatted + ' ' * cell_fill_width
                     else:
-                        msg = ' ' * cell_fill_width + cell_content
-                else:
-                    msg = cell_content
+                        msg = ' ' * cell_fill_width + cell_formatted
+
+                else: # no width normalization
+                    if is_html:
+                        cell_raw = html.escape(cell_raw)
+                    msg = cell_format_str.format(cell_raw)
 
                 rows[row_idx_src].append(msg)
-
 
         post = []
         for row_idx, row in enumerate(rows):
@@ -949,7 +963,7 @@ class Display:
 
     def __iter__(self):
         for row in self._rows:
-            yield [cell[0] for cell in row]
+            yield [cell.format_str.format(cell.raw) for cell in row]
 
     def __len__(self):
         return len(self._rows)

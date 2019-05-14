@@ -519,14 +519,15 @@ class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
 #-------------------------------------------------------------------------------
 # frame tests
 
-class FrameFloat_init(PerfTest):
-    @staticmethod
-    def pd():
-        post = pd.DataFrame(SampleData.get('npf_float_10k'))
+# this is deemed invalid, as Pandas just holds a reference
+# class FrameFloat_init(PerfTest):
+#     @staticmethod
+#     def pd():
+#         post = pd.DataFrame(SampleData.get('npf_float_10k'))
 
-    @staticmethod
-    def sf():
-        post = sf.Frame(SampleData.get('npf_float_10k'))
+#     @staticmethod
+#     def sf():
+#         post = sf.Frame(SampleData.get('npf_float_10k'))
 
 
 class FrameStrFloat_init(PerfTest):

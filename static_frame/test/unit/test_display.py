@@ -24,6 +24,7 @@ from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
+from static_frame import DisplayFormats
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -361,13 +362,8 @@ class TestUnit(TestCase):
 
     def test_display_type_delimiter_a(self):
 
-        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
+        x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
         self.assertEqual(x, '<int8>')
-        self.assertEqual(y, 6)
-
-        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.HTML_PRE)
-        self.assertEqual(x, '&lt;int8&gt;')
-        self.assertEqual(y, 6)
 
     def test_display_type_category_a(self):
 
@@ -486,6 +482,38 @@ class TestUnit(TestCase):
         self.assertEqual(f1.index._repr_html_(),
                 '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
+
+    def test_display_html_index_b(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f = f.set_index_hierarchy(('p', 'q'))
+
+        # this uses cell width normaliz
+        post = f.display(sf.DisplayConfig(display_format=DisplayFormats.HTML_PRE)).to_rows()
+
+        self.assertEqual(post[2],
+                '<span style="color: #777777">&lt;IndexHierarchy: ...</span>')
+
+
+    def test_display_max_width_a(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f2 = f1.set_index_hierarchy(('p', 'q'))
+
+        post = f2.display(sf.DisplayConfig(type_color=False)).to_rows()
+        self.assertEqual(post[2], '<IndexHierarchy: ...')
+
+
 
     @unittest.skip('too colorful')
     def test_display_type_color_a(self):

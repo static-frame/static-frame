@@ -1254,7 +1254,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
                 config=config_transpose)
-        # add two rows, one for class, another for columns
 
         # need to apply the column config such that it truncates it based on the the max columns, not the max rows
         display_columns = self._columns.display(

@@ -22,6 +22,7 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayConfigs
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayFormats
 
 from static_frame.core.type_blocks import TypeBlocks
 
