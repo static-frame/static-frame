@@ -1153,11 +1153,11 @@ Mars    6792     -65
 >>> f.loc['Earth', 'temperature']
 15
 >>> f.loc['Earth':, 'temperature']
-<Series: temperat...
+<Series: temperature>
 <Index>
-Earth                15
-Mars                 -65
-<<U7>                <int64>
+Earth                 15
+Mars                  -65
+<<U7>                 <int64>
 >>> f.loc[f['temperature'] > 100, 'diameter']
 <Series: diameter>
 <Index>
@@ -1172,11 +1172,11 @@ temperature    -65.0
 <<U11>         <float64>
 
 >>> f.iloc[-2:, -1]
-<Series: temperat...
+<Series: temperature>
 <Index>
-Earth                15
-Mars                 -65
-<<U7>                <int64>
+Earth                 15
+Mars                  -65
+<<U7>                 <int64>
 
 #end_frame_selection_a
 

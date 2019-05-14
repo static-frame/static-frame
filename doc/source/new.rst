@@ -7,6 +7,10 @@ What is New in Static Frame
 0.3.3-dev
 --------------
 
+Improvements to application of ellipsis when normalizing width in ``Display`` string representations.
+
+``Frame.values`` now always returns a 2D NumPy array.
+
 ``Series.iloc``, when a non-mulitple selection is given, now returns a single element, not a ``Series``.
 
 

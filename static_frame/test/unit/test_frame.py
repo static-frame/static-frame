@@ -211,6 +211,18 @@ class TestUnit(TestCase):
             [[1, 2, 'a', False], [30, 34, 'b', True], [54, 95, 'c', False], [65, 73, 'd', True]])
 
 
+    def test_frame_to_pandas_b(self):
+        f1 = sf.Frame.from_records(
+                [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels(
+                [(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)]))
+        df = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
+
+        self.assertEqual(df.index.values.tolist(),
+                [(1, 'dd', 0)])
+        self.assertEqual(df.values.tolist(),
+                [[1, 1]]
+                )
+
     def test_frame_getitem_a(self):
 
         records = (

@@ -77,16 +77,8 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd')))
 
     def test_series_init_c(self):
-        # these test get different results in Pyhthon 3.6
-        # s1 = Series(dict(a=1, b=4), dtype=int)
-        # self.assertEqual(s1.to_pairs(),
-        #         (('a', 1), ('b', 4)))
 
-        # s1 = Series(dict(b=4, a=1), dtype=int)
-        # self.assertEqual(s1.to_pairs(),
-        #         (('a', 1), ('b', 4)))
-
-        s1 = Series(OrderedDict([('b', 4), ('a', 1)]), dtype=int)
+        s1 = Series(OrderedDict([('b', 4), ('a', 1)]), dtype=np.int64)
         self.assertEqual(s1.to_pairs(),
                 (('b', 4), ('a', 1)))
 
@@ -799,7 +791,7 @@ class TestUnit(TestCase):
 
 
     def test_series_unique_a(self):
-        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=int)
+        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
 
         self.assertEqual(s1.unique().tolist(), [2, 10])
 
@@ -808,7 +800,7 @@ class TestUnit(TestCase):
 
 
     def test_series_unique_a(self):
-        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=int)
+        s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
 
         self.assertEqual(s1.unique().tolist(), [2, 10])
 
@@ -819,7 +811,7 @@ class TestUnit(TestCase):
 
     def test_series_duplicated_a(self):
         s1 = Series([1, 10, 10, 5, 2, 2],
-                index=('a', 'b', 'c', 'd', 'e', 'f'), dtype=int)
+                index=('a', 'b', 'c', 'd', 'e', 'f'), dtype=np.int64)
 
         # this is showing all duplicates, not just the first-found
         self.assertEqual(s1.duplicated().to_pairs(),
@@ -834,7 +826,7 @@ class TestUnit(TestCase):
 
     def test_series_duplicated_b(self):
         s1 = Series([5, 3, 3, 3, 7, 2, 2, 2, 1],
-                index=('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'), dtype=int)
+                index=('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'), dtype=np.int64)
 
         # this is showing all duplicates, not just the first-found
         self.assertEqual(s1.duplicated().to_pairs(),

@@ -24,6 +24,7 @@ from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
+from static_frame import DisplayFormats
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -162,8 +163,8 @@ class TestUnit(TestCase):
 
     def test_display_cell_fill_width_a(self):
 
-        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, type_color=False)
-        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, type_color=False)
+        config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)
+        config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, cell_max_width_leftmost=6, type_color=False)
 
         def chunks(size, count):
             pos = 0
@@ -193,7 +194,7 @@ class TestUnit(TestCase):
                 '<<U1>  <<U20>']
                 )
 
-        config = sf.DisplayConfig.from_default(type_color=False)
+        config = sf.DisplayConfig.from_default(type_color=False, cell_max_width_leftmost=20)
 
         row_count = 2
         index = [str(chr(x)) for x in range(97, 97+row_count)]
@@ -361,13 +362,8 @@ class TestUnit(TestCase):
 
     def test_display_type_delimiter_a(self):
 
-        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
+        x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
         self.assertEqual(x, '<int8>')
-        self.assertEqual(y, 6)
-
-        x, y, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.HTML_PRE)
-        self.assertEqual(x, '&lt;int8&gt;')
-        self.assertEqual(y, 6)
 
     def test_display_type_category_a(self):
 
@@ -486,6 +482,50 @@ class TestUnit(TestCase):
         self.assertEqual(f1.index._repr_html_(),
                 '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
+
+    def test_display_html_index_b(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f = f.set_index_hierarchy(('p', 'q'))
+
+        # this uses cell width normaliz
+        post = f.display(sf.DisplayConfig(
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=20)).to_rows()
+
+        self.assertEqual(post[2],
+                '<span style="color: #777777">&lt;IndexHierarchy: ...</span>')
+
+        post = f.display(sf.DisplayConfig(
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=36)).to_rows()
+
+        self.assertEqual(post[2],
+                '<span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span>')
+
+
+
+    def test_display_max_width_a(self):
+        records = (
+                (2, 'a', False),
+                (30, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+        f2 = f1.set_index_hierarchy(('p', 'q'))
+
+        post = f2.display(sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20)).to_rows()
+        self.assertEqual(post[2], '<IndexHierarchy: ...')
+
+        post = f2.display(sf.DisplayConfig(type_color=False, cell_max_width_leftmost=30)).to_rows()
+        self.assertEqual(post[2], "<IndexHierarchy: ('p', 'q')>")
+
 
     @unittest.skip('too colorful')
     def test_display_type_color_a(self):
