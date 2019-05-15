@@ -87,11 +87,12 @@ class TestUnit(TestCase):
 
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_display_cell_align_left_b(self):
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
-        s = Series(range(3), index=('a', 'b', 'c'), dtype=np.int64)
+        s = Series(range(3), index=('a', 'b', 'c'))
 
         self.assertEqual(s.display(config_right).to_rows(),
                 ['<Series>', ' <Index>', '       a       0', '       b       1', '       c       2', '   <<U1> <int64>']
