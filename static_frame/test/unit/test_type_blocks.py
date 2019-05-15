@@ -375,7 +375,7 @@ class TestUnit(TestCase):
 
 
     def test_type_blocks_static_frame(self):
-        a1 = np.array([1, 2, 3])
+        a1 = np.array([1, 2, 3], dtype=np.int64)
         a2 = np.array([False, True, False])
         a3 = np.array(['b', 'c', 'd'])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
@@ -1053,7 +1053,7 @@ class TestUnit(TestCase):
 
     def test_type_blocks_reblock_signature_a(self):
 
-        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]], dtype=np.int64)
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
@@ -1064,7 +1064,7 @@ class TestUnit(TestCase):
                 list(tb._reblock_signature()),
                 [(dtype('int64'), 3), (dtype('bool'), 3), (dtype('O'), 1), (dtype('<U2'), 2)])
 
-        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]], dtype=np.int64)
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])

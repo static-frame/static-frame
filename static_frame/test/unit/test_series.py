@@ -1193,7 +1193,7 @@ class TestUnit(TestCase):
 
     def test_series_disply_a(self):
 
-        s1 = Series((2, 3), index=list('ab'), name='alt')
+        s1 = Series((2, 3), index=list('ab'), name='alt', dtype=np.int64)
 
         match = tuple(s1.display(DisplayConfig(type_color=False)))
         self.assertEqual(
