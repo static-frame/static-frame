@@ -19,7 +19,7 @@ from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import _dict_to_sorted_items
-from static_frame.core.util import _array2d_to_tuples
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import ufunc_unique
@@ -1085,7 +1085,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a tuple of tuples, where each inner tuple is a pair of index label, value.
         '''
         if isinstance(self._index, IndexHierarchy):
-            index_values = list(_array2d_to_tuples(self._index.values))
+            index_values = list(array2d_to_tuples(self._index.values))
         else:
             index_values = self._index.values
 

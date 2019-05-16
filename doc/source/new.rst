@@ -7,6 +7,10 @@ What is New in Static Frame
 0.3.3-dev
 --------------
 
+Improvements to all datetime64 based indicies. Added IndexSecond and IndexMillisecond.
+
+Index can now be constructed directly from an IndexHierarchy (resulting in an Index of tuples)
+
 Improvements to application of ellipsis when normalizing width in ``Display`` string representations.
 
 ``Frame.values`` now always returns a 2D NumPy array.

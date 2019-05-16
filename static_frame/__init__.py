@@ -31,6 +31,10 @@ from static_frame.core.index import IndexGO
 from static_frame.core.index import IndexDate
 from static_frame.core.index import IndexYearMonth
 from static_frame.core.index import IndexYear
+from static_frame.core.index import IndexMillisecond
+from static_frame.core.index import IndexSecond
+
+
 from static_frame.core.index import ILoc
 
 from static_frame.core.index_hierarchy import IndexLevel

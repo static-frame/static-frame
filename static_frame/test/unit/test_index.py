@@ -8,10 +8,14 @@ from io import StringIO
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
+from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
+from static_frame import IndexSecond
+from static_frame import IndexMillisecond
+
 from static_frame import HLoc
 from static_frame import ILoc
 
@@ -30,6 +34,25 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.name, 'foo')
         self.assertEqual(idx2.name, 'foo')
 
+
+    def test_index_init_b(self):
+
+        idx1 = IndexHierarchy.from_product(['A', 'B'], [1, 2])
+
+        idx2 = Index(idx1)
+
+        self.assertEqual(idx2.values.tolist(),
+            [('A', 1), ('A', 2), ('B', 1), ('B', 2)])
+
+
+    def test_index_init_c(self):
+
+
+        s1 = Series(('a', 'b', 'c'))
+        idx2 = Index(s1)
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c']
+                )
 
     def test_index_loc_to_iloc_a(self):
 
@@ -290,6 +313,8 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
         self.assertEqual(index.values[0], np.datetime64('2018-01-01'))
         self.assertEqual(index.values[-1], np.datetime64('2018-03-01'))
+        self.assertEqual(index.loc['2018-02-22'],
+                np.datetime64('2018-02-22'))
 
 
     def test_index_date_b(self):
@@ -299,10 +324,12 @@ class TestUnit(TestCase):
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
+        self.assertEqual(idx1.loc_to_iloc('2018-01-01'), 1)
 
         idx2 = IndexDate(['2017-01', '2018-07'])
         self.assertTrue(idx2[0].__class__ == np.datetime64)
-
+        self.assertEqual(idx2.loc['2017-01-01'],
+                np.datetime64('2017-01-01'))
 
     def test_index_date_c(self):
         index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
@@ -311,6 +338,22 @@ class TestUnit(TestCase):
         self.assertEqual((index == '2018-02').sum(), 14)
         self.assertEqual((index == '2018').sum(), 37)
 
+    def test_index_date_d(self):
+        index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
+        # selct by year and year month
+        self.assertAlmostEqualValues(index.loc['2017'].values,
+                np.array(['2017-12-15', '2017-12-17', '2017-12-19', '2017-12-21',
+               '2017-12-23', '2017-12-25', '2017-12-27', '2017-12-29',
+               '2017-12-31'], dtype='datetime64[D]'))
+
+        self.assertAlmostEqualValues(index.loc['2018-02'].values,
+                np.array(['2018-02-01', '2018-02-03', '2018-02-05', '2018-02-07',
+               '2018-02-09', '2018-02-11', '2018-02-13', '2018-02-15',
+               '2018-02-17', '2018-02-19', '2018-02-21', '2018-02-23',
+               '2018-02-25', '2018-02-27'], dtype='datetime64[D]'))
+
+        self.assertEqual(index.loc['2018-02-19'],
+                np.datetime64('2018-02-19'))
 
     def test_index_date_from_year_month_range_a(self):
         index = IndexDate.from_year_month_range('2017-12', '2018-03')
@@ -346,6 +389,14 @@ class TestUnit(TestCase):
         self.assertEqual(s.loc[s.index == '2018-01'].sum(), 1426)
         self.assertEqual(s.loc[s.index == '2017-12'].sum(), 465)
 
+        self.assertEqual(s['2018-01-24'], 54)
+
+        self.assertEqual(
+                s['2018-01-28':].to_pairs(),
+                ((np.datetime64('2018-01-28'), 58), (np.datetime64('2018-01-29'), 59), (np.datetime64('2018-01-30'), 60), (np.datetime64('2018-01-31'), 61))
+                )
+
+        # import ipdb; ipdb.set_trace()
 
     def test_index_year_month_a(self):
         idx1 = IndexYearMonth(('2018-01', '2018-06'))
@@ -363,9 +414,11 @@ class TestUnit(TestCase):
 
     def test_index_year_month_from_year_month_range_a(self):
 
-        with self.assertRaises(Exception):
-            index = IndexYearMonth.from_year_month_range(
-                    '2017-12-15', '2018-03-15')
+        index = IndexYearMonth.from_year_month_range(
+                '2017-12-15', '2018-03-15')
+        self.assertAlmostEqualValues(index.values,
+                np.array(['2017-12', '2018-01', '2018-02', '2018-03'],
+                dtype='datetime64[M]'))
 
         index = IndexYearMonth.from_year_month_range('2017-12', '2018-03')
         self.assertEqual(len(index), 4)
@@ -574,7 +627,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx.ndim, 1)
         self.assertEqual(idx.nbytes, 16)
 
-        # import ipdb; ipdb.set_trace()
 
     def test_index_name_a(self):
 
@@ -699,6 +751,102 @@ class TestUnit(TestCase):
         self.assertTrue(len(sio.read()) > 1300)
 
 
+    def test_index_millisecond_a(self):
+
+        msg = '''2016-04-28 04:22:12.226
+2016-04-28 16:29:21.32
+2016-04-28 17:36:13.733
+2016-04-30 20:21:07.848
+2016-05-01 00:00:33.483
+2016-05-01 03:02:03.584
+2016-05-01 09:26:43.185
+2016-05-01 13:45:22.576
+2016-05-01 15:25:46.15'''
+
+        idx = IndexMillisecond(msg.split('\n'))
+        self.assertEqual(str(idx.dtype), 'datetime64[ms]')
+
+        self.assertEqual(idx.loc['2016-04-30T20:21:07.848'],
+                np.datetime64('2016-04-30T20:21:07.848'))
+
+        self.assertAlmostEqualValues(
+                idx.loc['2016-05-01T09:26:43.185':].values,
+                np.array(['2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
+       '2016-05-01T15:25:46.150'], dtype='datetime64[ms]'))
+
+        self.assertAlmostEqualValues(idx.loc['2016-05'].values,
+                np.array(['2016-05-01T00:00:33.483', '2016-05-01T03:02:03.584',
+               '2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
+               '2016-05-01T15:25:46.150'], dtype='datetime64[ms]')
+                )
+
+        self.assertEqual(idx.loc['2016-05-01T00'].values,
+                np.array(['2016-05-01T00:00:33.483'], dtype='datetime64[ms]'))
+
+
+    def test_index_millisecond_series_a(self):
+
+        msg = '''2016-04-28 04:22:12.226
+2016-04-28 16:29:21.32
+2016-04-28 17:36:13.733
+2016-04-30 20:21:07.848
+2016-05-01 00:00:33.483
+2016-05-01 03:02:03.584
+2016-05-01 09:26:43.185
+2016-05-01 13:45:22.576
+2016-05-01 15:25:46.15'''
+
+        idx = IndexMillisecond(msg.split('\n'))
+        s = Series(range(9), index=idx)
+
+        self.assertEqual(s['2016-05-01T00:00:33.483'], 4)
+
+        self.assertEqual(s['2016-05-01T00:00:33.483':].values.tolist(),
+                [4, 5, 6, 7, 8])
+
+        self.assertEqual(s['2016-05'].to_pairs(),
+                ((np.datetime64('2016-05-01T00:00:33.483'), 4), (np.datetime64('2016-05-01T03:02:03.584'), 5), (np.datetime64('2016-05-01T09:26:43.185'), 6), (np.datetime64('2016-05-01T13:45:22.576'), 7), (np.datetime64('2016-05-01T15:25:46.150'), 8)))
+
+        self.assertEqual(s['2016-05-01T09'].to_pairs(),
+                ((np.datetime64('2016-05-01T09:26:43.185'), 6),))
+
+
+    def test_index_millisecond_frame_a(self):
+
+        msg = '''2016-04-28 04:22:12.226
+2016-04-28 16:29:21.32
+2016-04-28 17:36:13.733
+2016-04-30 20:21:07.848
+2016-05-01 00:00:33.483
+2016-05-01 03:02:03.584
+2016-05-01 09:26:43.185
+2016-05-01 13:45:22.576
+2016-05-01 15:25:46.15'''
+
+        f = Frame.from_records((x, y) for x, y in enumerate(msg.split('\n')))
+
+        idx = IndexMillisecond(f[1])
+        self.assertAlmostEqualValues(idx.values,
+                np.array(['2016-04-28T04:22:12.226', '2016-04-28T16:29:21.320',
+               '2016-04-28T17:36:13.733', '2016-04-30T20:21:07.848',
+               '2016-05-01T00:00:33.483', '2016-05-01T03:02:03.584',
+               '2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
+               '2016-05-01T15:25:46.150'], dtype='datetime64[ms]'))
+
+
+        idx = IndexSecond(f[1])
+
+        self.assertAlmostEqualValues(idx.values,
+            np.array(['2016-04-28T04:22:12', '2016-04-28T16:29:21',
+           '2016-04-28T17:36:13', '2016-04-30T20:21:07',
+           '2016-05-01T00:00:33', '2016-05-01T03:02:03',
+           '2016-05-01T09:26:43', '2016-05-01T13:45:22',
+           '2016-05-01T15:25:46'], dtype='datetime64[s]'))
+
+
+        f2 = f.set_index(1, index_constructor=IndexMillisecond)
+        self.assertEqual(f2.loc['2016-05', 0].values.tolist(),
+                [4, 5, 6, 7, 8])
 
 if __name__ == '__main__':
     unittest.main()

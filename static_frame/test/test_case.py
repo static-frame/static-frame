@@ -39,6 +39,12 @@ class TestCase(unittest.TestCase):
         self.assertTrue((tb.values == match).all())
 
 
+    def assertAlmostEqualValues(self, values1, values2):
+        for v1, v2 in zip_longest(values1, values2):
+            if isinstance(v1, float) and np.isnan(v1) and isinstance(v2, float) and np.isnan(v2):
+                continue
+            self.assertEqual(v1, v2)
+
     def assertAlmostEqualItems(self, pairs1, pairs2):
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)

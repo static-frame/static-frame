@@ -11,7 +11,6 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index import LocMap
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import ILoc
@@ -23,7 +22,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import _array2d_to_tuples
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import name_filter
 
@@ -434,7 +433,7 @@ class IndexHierarchy(IndexBase,
         # store both NP array of labels, as well as KeysView of hashable tuples
         self._labels = self._levels.get_labels()
         # note: this does not retain order in 3.5
-        self._keys = KeysView._from_iterable(_array2d_to_tuples(self._labels))
+        self._keys = KeysView._from_iterable(array2d_to_tuples(self._labels))
         # if we get labels, faster to get that length
         self._length = len(self._labels) #self._levels.__len__()
         self._recache = False
@@ -712,7 +711,7 @@ class IndexHierarchy(IndexBase,
     def flat(self):
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(_array2d_to_tuples(self.__iter__()))
+        return self._INDEX_CONSTRUCTOR(array2d_to_tuples(self.__iter__()))
 
     def add_level(self, level: tp.Hashable):
         '''Return an IndexHierarchy with a new root level added.

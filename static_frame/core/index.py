@@ -26,10 +26,26 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift
+from static_frame.core.util import array2d_to_tuples
 
 from static_frame.core.util import DateInitializer
 from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import YearInitializer
+
+from static_frame.core.util import _to_datetime64
+
+from static_frame.core.util import _DT64_DAY
+from static_frame.core.util import _DT64_MONTH
+from static_frame.core.util import _DT64_YEAR
+from static_frame.core.util import _DT64_S
+from static_frame.core.util import _DT64_MS
+
+from static_frame.core.util import _TD64_DAY
+from static_frame.core.util import _TD64_MONTH
+from static_frame.core.util import _TD64_YEAR
+from static_frame.core.util import _TD64_S
+from static_frame.core.util import _TD64_MS
+
 
 
 from static_frame.core.util import GetItem
@@ -97,8 +113,9 @@ class LocMap:
                     yield pos
 
     @classmethod
-    def loc_to_iloc(cls,
+    def loc_to_iloc(cls, *,
             label_to_pos: tp.Dict,
+            labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None
@@ -127,6 +144,12 @@ class LocMap:
                 key,
                 offset)
                 )
+
+        if isinstance(key, np.datetime64):
+            # convert this to the target representation, do a Boolean selection
+            if labels.dtype != key.dtype:
+                key = labels.astype(key.dtype) == key
+            # if not different type, keep it the same so as to do a direct, single element selection
 
         # handles only lists and arrays
         if isinstance(key, KEY_ITERABLE_TYPES):
@@ -186,7 +209,6 @@ class Index(IndexBase,
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth = 1
 
-
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
@@ -201,10 +223,12 @@ class Index(IndexBase,
         This method is overridden in the derived class.
 
         Args:
-            labels: might be an expired Generator, but if it is an immutable npdarry, we can use it without a copy
+            labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
         if isinstance(labels, np.ndarray): # if an np array can handle directly
+            if dtype is not None and dtype != labels.dtype:
+                raise RuntimeError('invalid label dtype for this Index')
             return immutable_filter(labels)
 
         if hasattr(labels, '__len__'): # not a generator, not an array
@@ -241,16 +265,22 @@ class Index(IndexBase,
         return positions
 
     @staticmethod
-    def _get_map(labels, positions=None) -> tp.Dict[tp.Hashable, int]:
+    def _get_map(
+            labels: tp.Iterable[tp.Hashable],
+            positions=None
+            ) -> tp.Dict[tp.Hashable, int]:
         '''
         Return a dictionary mapping index labels to integer positions.
 
         NOTE: this function is critical to Index performance.
+
+        Args:
+            lables: an Iterable of hashables; can be a generator.
         '''
-        if positions is not None:
+        if positions is not None: # can zip both without new collection
             return dict(zip(labels, positions))
         if hasattr(labels, '__len__'):
-            # if this is a 2D numpy array, we will get unhashable NP arrays in the map
+            # unhashable 2D numpy arrays will raise
             return dict(zip(labels, range(len(labels))))
         # support labels as a generator
         return {v: k for k, v in enumerate(labels)}
@@ -277,41 +307,59 @@ class Index(IndexBase,
 
         self._recache = False
         self._map = None
-
         positions = None
 
-        # NOTE: this will not, and shold not, catch IndexHierarchy
-        if issubclass(labels.__class__, Index):
-            # get a reference to the immutable arrays
-            # even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
-            if labels.STATIC: # can take the map
-                self._map = labels._map
+        # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
+        if dtype is None:
+            dtype_extract = self._DTYPE # set in specialized Index classes
+        else: # passed dtype is not None
+            if self._DTYPE is not None and dtype != self._DTYPE:
+                raise RuntimeError('invalid dtype argument for this Index',
+                        dtype, self._DTYPE)
+            # self._DTYPE is None, passed dtype is not None, use dtype
+            dtype_extract = dtype
+
+        # handle all Index subclasses
+        if issubclass(labels.__class__, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
-
-            positions = labels._positions
-            loc_is_iloc = labels._loc_is_iloc
-
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
 
-            labels = labels._labels
+            if labels.depth == 1: # not an IndexHierarchy
+                if labels.STATIC: # can take the map
+                    self._map = labels._map
+                # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
+                positions = labels._positions
+                loc_is_iloc = labels._loc_is_iloc
+                labels = labels._labels
+            else: # IndexHierarchy
+                # will be a generator of tuples; already updated caches
+                labels = array2d_to_tuples(labels._labels)
+        elif hasattr(labels, 'values'):
+            # it is a Series or similar
+            array = labels.values
+            if array.ndim == 1:
+                labels = array
+            else:
+                labels = array2d_to_tuples(array)
+
+        if self._DTYPE is not None:
+            if not isinstance(labels, np.ndarray):
+                # do not need to look further at labels from IndexBase
+                # do not need to look at array, as will be typed and checked to match dtype_extract in _extract_labels
+                # import ipdb; ipdb.set_trace()
+                labels = (_to_datetime64(v, dtype_extract) for v in labels)
+            else:
+                # coerce to target type
+                labels = labels.astype(dtype_extract)
 
         self._name = name if name is None else name_filter(name)
 
         if self._map is None:
             self._map = self._get_map(labels, positions)
 
-        if dtype is None:
-            dtype_extract = self._DTYPE # set in specialized Index classes
-        else: # dtype is not None
-            if self._DTYPE is not None and dtype != self._DTYPE:
-                raise RuntimeError('invalid dtype argument for this Index',
-                        dtype, self._DTYPE)
-            # self._DTYPE is None, dtype is not None, use dtype
-            dtype_extract = dtype
-
-        # this might be NP array, or a list, depending on if static or grow only
+        # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
         self._labels = self._extract_labels(self._map, labels, dtype_extract)
         self._positions = self._extract_positions(self._map, positions)
 
@@ -504,10 +552,12 @@ class Index(IndexBase,
         if key_transform:
             key = key_transform(key)
 
-        return LocMap.loc_to_iloc(self._map,
-                self._positions, # always an np.ndarray
-                key,
-                offset
+        return LocMap.loc_to_iloc(
+                label_to_pos=self._map,
+                labels=self._labels,
+                positions=self._positions, # always an np.ndarray
+                key=key,
+                offset=offset
                 )
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Index':
@@ -789,30 +839,75 @@ class IndexGO(Index):
 #-------------------------------------------------------------------------------
 # Specialized index for dates
 
-_DT64_DAY = np.dtype('datetime64[D]')
-_DT64_MONTH = np.dtype('datetime64[M]')
-_DT64_YEAR = np.dtype('datetime64[Y]')
+class _IndexDatetime(Index):
 
-_TD64_DAY = np.timedelta64(1, 'D')
-_TD64_MONTH = np.timedelta64(1, 'M')
-_TD64_YEAR = np.timedelta64(1, 'Y')
+    STATIC = True
+    _DTYPE = None # define in base class
 
-def _to_datetime64(
-        value: DateInitializer,
-        dtype: tp.Optional[np.dtype] = None
-        ) -> np.datetime64:
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name'
+            )
 
-    # for now, only support creating from a string, as creation from integers is based on offset from epoch
-    if isinstance(value, str):
-        dt = np.datetime64(value)
-    else: # take it as is, assuming it is already a datetime64
-        dt = value
-    if dtype and dt.dtype != dtype:
-        raise Exception('not supported dtype', dt, dtype)
-    return dt
+    #---------------------------------------------------------------------------
+    # dict like interface
+
+    def __contains__(self, value) -> bool:
+        '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
+        '''
+        return self._map.__contains__(_to_datetime64(value))
+
+    #---------------------------------------------------------------------------
+    # operators
+
+    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
+
+        if self._recache:
+            self._update_array_cache()
+
+        if issubclass(other.__class__, Index):
+            other = other.values # operate on labels to labels
+        elif isinstance(other, str):
+            # do not pass dtype, as want to coerce to this parsed type, not the type of sled
+            other = _to_datetime64(other)
+
+        if isinstance(other, np.datetime64):
+            # convert labels to other's datetime64 type to enable matching on month, year, etc.
+            array = operator(self._labels.astype(other.dtype), other)
+        else:
+            array = operator(self._labels, other)
+
+        array.flags.writeable = False
+        return array
 
 
-class IndexDate(Index):
+    def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
+        '''
+        Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
+        '''
+        # not passing self.dtype to key_to_datetime_key so as to allow of translation to a foreign datetime for comparison
+        return Index.loc_to_iloc(self,
+                key=key,
+                key_transform=key_to_datetime_key)
+
+    #---------------------------------------------------------------------------
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        import pandas
+        # do not need a copy as Pandas will coerce to datetime64
+        return pandas.DatetimeIndex(self.values,
+                name=self._name)
+
+
+
+#-------------------------------------------------------------------------------
+
+class IndexDate(_IndexDatetime):
     '''A mapping of dates to positions, immutable and of fixed size.
 
     Args:
@@ -880,56 +975,9 @@ class IndexDate(Index):
         labels.flags.writeable = False
         return cls(labels)
 
-    #---------------------------------------------------------------------------
-    # dict like interface
-
-    def __contains__(self, value) -> bool:
-        '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
-        '''
-        return self._map.__contains__(_to_datetime64(value))
-
-    #---------------------------------------------------------------------------
-    # operators
-
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
-
-        if self._recache:
-            self._update_array_cache()
-
-        if issubclass(other.__class__, Index):
-            other = other.values # operate on labels to labels
-        elif isinstance(other, str):
-            # assume we can convert it to datetime64
-            other = np.datetime64(other)
-
-        if isinstance(other, np.datetime64):
-            # convert labels to other's datetime64 type to enable matching on month, year, etc.
-            array = operator(self._labels.astype(other.dtype), other)
-        else:
-            array = operator(self._labels, other)
-
-        array.flags.writeable = False
-        return array
-
-
-    def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
-        '''
-        Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
-        '''
-        return Index.loc_to_iloc(self, key=key, key_transform=key_to_datetime_key)
-
-    #---------------------------------------------------------------------------
-    def to_pandas(self):
-        '''Return a Pandas Index.
-        '''
-        import pandas
-        # do not need a copy as Pandas will coerce to datetime64
-        return pandas.DatetimeIndex(self.values,
-                name=self._name)
-
 
 #-------------------------------------------------------------------------------
-class IndexYearMonth(IndexDate):
+class IndexYearMonth(_IndexDatetime):
     '''A mapping of year months to positions, immutable and of fixed size.
 
     Args:
@@ -1007,8 +1055,9 @@ class IndexYearMonth(IndexDate):
         '''
         raise NotImplementedError('Pandas does not support a year month type, and it is amiguous if a date proxy should be the first of the month or the last of the month.')
 
+
 #-------------------------------------------------------------------------------
-class IndexYear(IndexDate):
+class IndexYear(_IndexDatetime):
     '''A mapping of years to positions, immutable and of fixed size.
 
     Args:
@@ -1085,7 +1134,51 @@ class IndexYear(IndexDate):
     def to_pandas(self):
         '''Return a Pandas Index.
         '''
-        raise NotImplementedError('Pandas does not support a year type, and it is amiguous if a date proxy should be the first of the year or the last of the year.')
+        raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
+
+
+
+#-------------------------------------------------------------------------------
+class IndexSecond(_IndexDatetime):
+    '''A mapping of time stamp to positions, immutable and of fixed size.
+
+    Args:
+        labels: Iterable of values to be used as the index.
+        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
+        dtype: Optional dytpe to be used for labels.
+    '''
+    STATIC = True
+    _DTYPE = _DT64_S
+
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name',
+            )
+
+
+class IndexMillisecond(_IndexDatetime):
+    '''A mapping of time stamp to positions, immutable and of fixed size.
+
+    Args:
+        labels: Iterable of values to be used as the index.
+        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
+        dtype: Optional dytpe to be used for labels.
+    '''
+    STATIC = True
+    _DTYPE = _DT64_MS
+
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name',
+            )
 
 
 

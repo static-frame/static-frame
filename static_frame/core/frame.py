@@ -35,7 +35,7 @@ from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
-from static_frame.core.util import _array2d_to_tuples
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import GetItem
@@ -2058,7 +2058,9 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     def set_index(self,
             column: GetItemKeyType,
-            drop: bool = False) -> 'Frame':
+            *,
+            drop: bool = False,
+            index_constructor=Index) -> 'Frame':
         '''
         Return a new frame produced by setting the given column as the index, optionally removing that column from the new Frame.
         '''
@@ -2077,7 +2079,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             own_columns = False
 
         index_values = self._blocks._extract_array(column_key=column_iloc)
-        index = Index(index_values, name=column)
+        index = index_constructor(index_values, name=column)
 
         return self.__class__(blocks,
                 columns=columns,
@@ -2237,12 +2239,12 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
         '''
         if isinstance(self._index, IndexHierarchy):
-            index_values = list(_array2d_to_tuples(self._index.values))
+            index_values = list(array2d_to_tuples(self._index.values))
         else:
             index_values = self._index.values
 
         if isinstance(self._columns, IndexHierarchy):
-            columns_values = list(_array2d_to_tuples(self._columns.values))
+            columns_values = list(array2d_to_tuples(self._columns.values))
         else:
             columns_values = self._columns.values
 

@@ -402,43 +402,92 @@ def _slice_to_ascending_slice(key: slice, size: int) -> slice:
     start = next(reversed(range(*key.indices(size))))
     return slice(start, stop, -key.step)
 
+#-------------------------------------------------------------------------------
 
-def _slice_to_datetime_slice_args(key):
+_DT64_DAY = np.dtype('datetime64[D]')
+_DT64_MONTH = np.dtype('datetime64[M]')
+_DT64_YEAR = np.dtype('datetime64[Y]')
+_DT64_S = np.dtype('datetime64[s]')
+_DT64_MS = np.dtype('datetime64[ms]')
+
+_TD64_DAY = np.timedelta64(1, 'D')
+_TD64_MONTH = np.timedelta64(1, 'M')
+_TD64_YEAR = np.timedelta64(1, 'Y')
+_TD64_S = np.timedelta64(1, 's')
+_TD64_MS = np.timedelta64(1, 'ms')
+
+_DT_NOT_FROM_INT = (_DT64_DAY, _DT64_MONTH)
+
+def _to_datetime64(
+        value: DateInitializer,
+        dtype: tp.Optional[np.dtype] = None
+        ) -> np.datetime64:
+    '''
+    Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
+    '''
+    # for now, only support creating from a string, as creation from integers is based on offset from epoch
+    if not isinstance(value, np.datetime64):
+        if dtype is None:
+            # let this constructor figure it out
+            dt = np.datetime64(value)
+        else: # assume value is single value;
+            # note that integers will be converted to units from epoch
+            if isinstance(value, int):
+                if dtype == _DT64_YEAR:
+                    # convert to string as that is likely what is wanted
+                    value = str(value)
+                elif dtype in _DT_NOT_FROM_INT:
+                    raise RuntimeError('attempting to create {} from an integer, which is generally desired as the result will be offset from the epoch.'.format(dtype))
+            # cannot use the datetime directly
+            if dtype != np.datetime64:
+                dt = np.datetime64(value, np.datetime_data(dtype)[0])
+            else: # cannot use a generic datetime type
+                dt = np.datetime64(value)
+    else: # if a dtype was explicitly given, check it
+        if dtype and dt.dtype != dtype:
+            raise RuntimeError('not supported dtype', dt, dtype)
+    return dt
+
+def _slice_to_datetime_slice_args(key, dtype=None):
     for attr in SLICE_ATTRS:
         value = getattr(key, attr)
         if value is None:
             yield None
         else:
-            yield np.datetime64(value)
+            yield _to_datetime64(value, dtype=dtype)
 
-def key_to_datetime_key(key: GetItemKeyType) -> GetItemKeyType:
+def key_to_datetime_key(
+        key: GetItemKeyType,
+        dtype=np.datetime64) -> GetItemKeyType:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''
     if isinstance(key, slice):
-        return slice(*_slice_to_datetime_slice_args(key))
+        return slice(*_slice_to_datetime_slice_args(key, dtype=dtype))
 
     if isinstance(key, np.datetime64):
         return key
 
     if isinstance(key, str):
-        # not using self._DTYPE to coerce type further
-        return np.datetime64(key)
+        return _to_datetime64(key, dtype=dtype)
 
     if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
-        return key.astype(np.datetime64)
+        return key.astype(dtype)
 
     if hasattr(key, '__len__'):
         # use array constructor to determine type
-        return np.array(key, dtype=np.datetime64)
+        return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like
-        return np.array(tuple(key), dtype=np.datetime64)
+        return np.array(tuple(key), dtype=dtype)
 
     # for now, return key unaltered
     return key
+
+#-------------------------------------------------------------------------------
+
 
 def _dict_to_sorted_items(
             mapping: tp.Dict) -> tp.Generator[
@@ -654,7 +703,7 @@ def array_set_ufunc_many(
 
     return result
 
-def _array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
+def array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
     for row in array: # assuming 2d
         yield tuple(row)
 
@@ -920,7 +969,7 @@ class IndexCorrespondence:
             common_labels = intersect2d(src_index.values, dst_index.values)
             if mixed_depth:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
-                common_labels = list(_array2d_to_tuples(common_labels))
+                common_labels = list(array2d_to_tuples(common_labels))
             has_common = len(common_labels) > 0
         else:
             has_common = False
