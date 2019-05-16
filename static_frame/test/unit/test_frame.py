@@ -8,8 +8,10 @@ from io import StringIO
 import string
 import hashlib
 import pickle
+import sys
 
 import numpy as np
+import pytest
 
 import static_frame as sf
 
@@ -788,6 +790,7 @@ class TestUnit(TestCase):
 
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_attrs_a(self):
 
         records = (
@@ -1456,6 +1459,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f1.min(axis=1).items()),
                 (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)))
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_row_dtype_a(self):
         # reindex both axis
         records = (
@@ -2030,6 +2034,7 @@ class TestUnit(TestCase):
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_from_csv_a(self):
         # header, mixed types, no index
 
@@ -2374,6 +2379,7 @@ class TestUnit(TestCase):
                 )
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_from_concat_d(self):
         records = (
                 (2, 2, False),
@@ -2404,6 +2410,7 @@ class TestUnit(TestCase):
                 (('p', (('a', 2), ('b', 30), ('c', 2), ('d', 30))), ('q', (('a', 2), ('b', 34), ('c', 2), ('d', 34))), ('r', (('a', False), ('b', False), ('c', False), ('d', False)))))
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_from_concat_e(self):
 
         f1 = Frame.from_items(zip(
@@ -2430,9 +2437,9 @@ class TestUnit(TestCase):
     def test_frame_from_concat_f(self):
         # force a reblock before concatenating
 
-        a1 = np.array([1, 2, 3])
-        a2 = np.array([10,50,30])
-        a3 = np.array([1345,2234,3345])
+        a1 = np.array([1, 2, 3], dtype=np.int64)
+        a2 = np.array([10,50,30], dtype=np.int64)
+        a3 = np.array([1345,2234,3345], dtype=np.int64)
         a4 = np.array([False, True, False])
         a5 = np.array([False, False, False])
         a6 = np.array(['g', 'd', 'e'])
@@ -2835,7 +2842,7 @@ class TestUnit(TestCase):
     def test_frame_from_records_f(self):
 
         records = [[1,'2',3], [4,'5',6]]
-        dtypes = (int, str, str)
+        dtypes = (np.int64, str, str)
         f1 = sf.Frame.from_records(records,
                 index=('x', 'y'),
                 columns=['a', 'b', 'c'],
@@ -3299,6 +3306,7 @@ class TestUnit(TestCase):
 
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
     def test_frame_display_a(self):
 
         f1 = Frame(((1,2),(True,False)), name='foo',
@@ -3447,4 +3455,3 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
