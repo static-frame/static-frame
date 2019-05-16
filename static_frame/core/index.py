@@ -46,6 +46,7 @@ from static_frame.core.util import _TD64_YEAR
 from static_frame.core.util import _TD64_S
 from static_frame.core.util import _TD64_MS
 
+from static_frame.core.doc_str import doc_inject
 
 
 from static_frame.core.util import GetItem
@@ -183,14 +184,12 @@ def immutable_index_filter(
 
 #-------------------------------------------------------------------------------
 
+@doc_inject(selector='index_init')
 class Index(IndexBase,
         metaclass=MetaOperatorDelegate):
-    '''A mapping of labels to positions, immutable and of fixed size. Used in :py:class:`Series` and as index and columns in :py:class:`Frame`.
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`.
 
-    Args:
-        labels: Iterable of values to be used as the index. An Index cannot be initialized from an IndexHierarhy directly (instead, pass the indices lables via .values).
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
+    {args}
     '''
 
     __slots__ = (
@@ -758,9 +757,11 @@ class Index(IndexBase,
                 name=self._name)
 
 #-------------------------------------------------------------------------------
+@doc_inject(selector='index_init')
 class IndexGO(Index):
-    '''
-    A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`. Initialization arguments are the same as for :py:class:`Index`.
+    '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`.
+
+    {args}
     '''
     STATIC = False
     _IMMUTABLE_CONSTRUCTOR = Index
@@ -823,7 +824,6 @@ class IndexGO(Index):
 
         self._positions_mutable_count += 1
         self._recache = True
-
 
     def extend(self, values: KEY_ITERABLE_TYPES):
         '''Append multiple values
@@ -905,165 +905,13 @@ class _IndexDatetime(Index):
 
 
 
-#-------------------------------------------------------------------------------
-
-class IndexDate(_IndexDatetime):
-    '''A mapping of dates to positions, immutable and of fixed size.
-
-    Args:
-        labels: Iterable of values to be used as the index.
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
-    '''
-    STATIC = True
-    _DTYPE = _DT64_DAY
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
-
-    @classmethod
-    def from_date_range(cls,
-            start: DateInitializer,
-            stop: DateInitializer,
-            step: int = 1):
-        '''
-        Get an IndexDate instance over a range of dates, where start and stop is inclusive.
-        '''
-        labels = np.arange(
-                _to_datetime64(start, _DT64_DAY),
-                _to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
-                np.timedelta64(step, 'D'))
-        labels.flags.writeable = False
-        return cls(labels)
-
-    @classmethod
-    def from_year_month_range(cls,
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
-            step: int = 1):
-        '''
-        Get an IndexDate instance over a range of months, where start and end are inclusive.
-        '''
-        labels = np.arange(
-                _to_datetime64(start, _DT64_MONTH),
-                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
-                step=np.timedelta64(step, 'D'),
-                dtype=_DT64_DAY)
-        labels.flags.writeable = False
-        return cls(labels)
-
-    @classmethod
-    def from_year_range(cls,
-            start: YearInitializer,
-            stop: YearInitializer,
-            step: int = 1
-            ):
-        '''
-        Get an IndexDate instance over a range of years, where start and end are inclusive.
-        '''
-        labels = np.arange(
-                _to_datetime64(start, _DT64_YEAR),
-                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
-                step=np.timedelta64(step, 'D'),
-                dtype=_DT64_DAY)
-        labels.flags.writeable = False
-        return cls(labels)
-
 
 #-------------------------------------------------------------------------------
-class IndexYearMonth(_IndexDatetime):
-    '''A mapping of year months to positions, immutable and of fixed size.
-
-    Args:
-        labels: Iterable of values to be used as the index.
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
-    '''
-    STATIC = True
-    _DTYPE = _DT64_MONTH
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
-
-    @classmethod
-    def from_date_range(cls,
-            start: DateInitializer,
-            stop: DateInitializer,
-            step: int = 1):
-        '''
-        Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
-        '''
-        labels = np.arange(
-                _to_datetime64(start, _DT64_DAY),
-                _to_datetime64(stop, _DT64_DAY).astype(_DT64_MONTH) + _TD64_MONTH,
-                np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
-
-        labels.flags.writeable = False
-        return cls(labels)
-
-    @classmethod
-    def from_year_month_range(cls,
-            start: YearMonthInitializer,
-            stop: YearMonthInitializer,
-            step: int = 1):
-        '''
-        Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
-        '''
-
-        labels = np.arange(
-                _to_datetime64(start, _DT64_MONTH),
-                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
-                np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
-        labels.flags.writeable = False
-        return cls(labels)
-
-
-    @classmethod
-    def from_year_range(cls,
-            start: YearInitializer,
-            stop: YearInitializer,
-            step: int = 1
-            ):
-        '''
-        Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
-        '''
-        labels = np.arange(
-                _to_datetime64(start, _DT64_YEAR),
-                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
-                step=np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
-        labels.flags.writeable = False
-        return cls(labels)
-
-    #---------------------------------------------------------------------------
-    def to_pandas(self):
-        '''Return a Pandas Index.
-        '''
-        raise NotImplementedError('Pandas does not support a year month type, and it is amiguous if a date proxy should be the first of the month or the last of the month.')
-
-
-#-------------------------------------------------------------------------------
+@doc_inject(selector='index_init')
 class IndexYear(_IndexDatetime):
-    '''A mapping of years to positions, immutable and of fixed size.
+    '''A mapping of years (via NumPy datetime64[Y]) to positions, immutable and of fixed size.
 
-    Args:
-        labels: Iterable of values to be used as the index.
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
+    {args}
     '''
     STATIC = True
     _DTYPE = _DT64_YEAR
@@ -1136,16 +984,156 @@ class IndexYear(_IndexDatetime):
         '''
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
 
+@doc_inject(selector='index_init')
+class IndexYearMonth(_IndexDatetime):
+    '''A mapping of year months (via NumPy datetime64[M]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = _DT64_MONTH
+
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name'
+            )
+
+    @classmethod
+    def from_date_range(cls,
+            start: DateInitializer,
+            stop: DateInitializer,
+            step: int = 1):
+        '''
+        Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
+        '''
+        labels = np.arange(
+                _to_datetime64(start, _DT64_DAY),
+                _to_datetime64(stop, _DT64_DAY).astype(_DT64_MONTH) + _TD64_MONTH,
+                np.timedelta64(step, 'M'),
+                dtype=_DT64_MONTH)
+
+        labels.flags.writeable = False
+        return cls(labels)
+
+    @classmethod
+    def from_year_month_range(cls,
+            start: YearMonthInitializer,
+            stop: YearMonthInitializer,
+            step: int = 1):
+        '''
+        Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
+        '''
+
+        labels = np.arange(
+                _to_datetime64(start, _DT64_MONTH),
+                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                np.timedelta64(step, 'M'),
+                dtype=_DT64_MONTH)
+        labels.flags.writeable = False
+        return cls(labels)
+
+
+    @classmethod
+    def from_year_range(cls,
+            start: YearInitializer,
+            stop: YearInitializer,
+            step: int = 1
+            ):
+        '''
+        Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
+        '''
+        labels = np.arange(
+                _to_datetime64(start, _DT64_YEAR),
+                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                step=np.timedelta64(step, 'M'),
+                dtype=_DT64_MONTH)
+        labels.flags.writeable = False
+        return cls(labels)
+
+    #---------------------------------------------------------------------------
+    def to_pandas(self):
+        '''Return a Pandas Index.
+        '''
+        raise NotImplementedError('Pandas does not support a year month type, and it is amiguous if a date proxy should be the first of the month or the last of the month.')
+
+
+@doc_inject(selector='index_init')
+class IndexDate(_IndexDatetime):
+    '''A mapping of dates (via NumPy datetime64[D]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = _DT64_DAY
+
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name'
+            )
+
+    @classmethod
+    def from_date_range(cls,
+            start: DateInitializer,
+            stop: DateInitializer,
+            step: int = 1):
+        '''
+        Get an IndexDate instance over a range of dates, where start and stop is inclusive.
+        '''
+        labels = np.arange(
+                _to_datetime64(start, _DT64_DAY),
+                _to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
+                np.timedelta64(step, 'D'))
+        labels.flags.writeable = False
+        return cls(labels)
+
+    @classmethod
+    def from_year_month_range(cls,
+            start: YearMonthInitializer,
+            stop: YearMonthInitializer,
+            step: int = 1):
+        '''
+        Get an IndexDate instance over a range of months, where start and end are inclusive.
+        '''
+        labels = np.arange(
+                _to_datetime64(start, _DT64_MONTH),
+                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                step=np.timedelta64(step, 'D'),
+                dtype=_DT64_DAY)
+        labels.flags.writeable = False
+        return cls(labels)
+
+    @classmethod
+    def from_year_range(cls,
+            start: YearInitializer,
+            stop: YearInitializer,
+            step: int = 1
+            ):
+        '''
+        Get an IndexDate instance over a range of years, where start and end are inclusive.
+        '''
+        labels = np.arange(
+                _to_datetime64(start, _DT64_YEAR),
+                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                step=np.timedelta64(step, 'D'),
+                dtype=_DT64_DAY)
+        labels.flags.writeable = False
+        return cls(labels)
 
 
 #-------------------------------------------------------------------------------
+@doc_inject(selector='index_init')
 class IndexSecond(_IndexDatetime):
-    '''A mapping of time stamp to positions, immutable and of fixed size.
+    '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
 
-    Args:
-        labels: Iterable of values to be used as the index.
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
+    {args}
     '''
     STATIC = True
     _DTYPE = _DT64_S
@@ -1159,14 +1147,11 @@ class IndexSecond(_IndexDatetime):
             '_name',
             )
 
-
+@doc_inject(selector='index_init')
 class IndexMillisecond(_IndexDatetime):
-    '''A mapping of time stamp to positions, immutable and of fixed size.
+    '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ms]) to positions, immutable and of fixed size.
 
-    Args:
-        labels: Iterable of values to be used as the index.
-        loc_is_iloc: Optimization for when a contiguous integer index is provided as labels. Generally only set by internal clients.
-        dtype: Optional dytpe to be used for labels.
+    {args}
     '''
     STATIC = True
     _DTYPE = _DT64_MS

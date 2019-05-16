@@ -59,6 +59,17 @@ Index mapping classes are used to map labels to ordinal positions on the :py:cla
    :end-before: end_indexgo_a
 
 
+.. autoclass:: static_frame.IndexYear
+
+.. autoclass:: static_frame.IndexYearMonth
+
+.. autoclass:: static_frame.IndexDate
+
+.. autoclass:: static_frame.IndexSecond
+
+.. autoclass:: static_frame.IndexMillisecond
+
+
 .. admonition:: Deviations from Pandas
     :class: Warning
 

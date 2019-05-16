@@ -32,6 +32,14 @@ class DOC_TEMPLATE:
 
     clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
+    index_init = dict(
+            args = '''
+        Args:
+            labels: Iterable of hashable values to be used as the index labels.
+            name: A hashable object to name the Index.
+            loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
+            dtype: Optional dtype to be used for labels.'''
+            )
 
     from_pandas = dict(
             own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',

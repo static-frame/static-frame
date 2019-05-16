@@ -4,10 +4,10 @@ What is New in Static Frame
 ===============================
 
 
-0.3.3-dev
+0.3.3
 --------------
 
-Improvements to all datetime64 based indicies. Added IndexSecond and IndexMillisecond.
+Improvements to all ``datetime64`` based indicies: direct creation from labels now properly parses values into ``datetime64``, and ``loc``-style lookups now handle partial matches on lower-resolution datetimes. Added IndexSecond and IndexMillisecond classes.
 
 Index can now be constructed directly from an IndexHierarchy (resulting in an Index of tuples)
 

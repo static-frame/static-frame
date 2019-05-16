@@ -784,6 +784,25 @@ class TestUnit(TestCase):
                 np.array(['2016-05-01T00:00:33.483'], dtype='datetime64[ms]'))
 
 
+
+
+    def test_index_millisecond_b(self):
+        # integer arguments are interpreted as milliseconds from the epoch
+        idx = IndexMillisecond(range(10))
+        self.assertAlmostEqualValues(idx.loc['1970-01-01T00:00:00.007':].values,
+                np.array(['1970-01-01T00:00:00.007', '1970-01-01T00:00:00.008',
+               '1970-01-01T00:00:00.009'], dtype='datetime64[ms]'))
+
+
+    def test_index_second_a(self):
+        # integer arguments are interpreted as seconds from the epoch
+        idx = IndexSecond(range(10))
+        self.assertAlmostEqualValues(idx.loc['1970-01-01T00:00:07':].values,
+                np.array(['1970-01-01T00:00:07', '1970-01-01T00:00:08',
+               '1970-01-01T00:00:09'], dtype='datetime64[s]')
+                )
+
+
     def test_index_millisecond_series_a(self):
 
         msg = '''2016-04-28 04:22:12.226
