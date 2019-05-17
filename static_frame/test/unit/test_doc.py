@@ -105,7 +105,7 @@ Mars    -65.0       227.9
 Neptune -200.0      4495.1
 <<U7>   <float64>   <float64>
 
->>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diamter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
 <Index>
@@ -435,7 +435,7 @@ Jupiter 11.209156475384132 317.92294807370183
 
 
 #start_frame_math_logic_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -675,11 +675,11 @@ Mars    6792     0.642
 Jupiter 142984   1898.0
 <<U7>   <int64>  <float64>
 
->>> [x for x in f.iter_array(axis=0)]
-[array([ 12756,   6792, 142984]), array([5.970e+00, 6.420e-01, 1.898e+03])]
+>>> [x.tolist() for x in f.iter_array(axis=0)]
+[[12756, 6792, 142984], [5.97, 0.642, 1898.0]]
 
->>> [x for x in f.iter_array(axis=1)]
-[array([1.2756e+04, 5.9700e+00]), array([6.792e+03, 6.420e-01]), array([142984.,   1898.])]
+>>> [x.tolist() for x in f.iter_array(axis=1)]
+[[12756.0, 5.97], [6792.0, 0.642], [142984.0, 1898.0]]
 
 >>> f.iter_array(axis=0).apply(np.sum)
 <Series>

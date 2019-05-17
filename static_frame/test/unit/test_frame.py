@@ -2862,9 +2862,8 @@ class TestUnit(TestCase):
                 columns=['a', 'b', 'c'],
                 dtypes=dtypes)
 
-        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
-                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
-                )
+        self.assertEqual(str(f1.dtypes['b']), 'int64')
+
 
     def test_frame_from_records_h(self):
 
@@ -2874,9 +2873,8 @@ class TestUnit(TestCase):
         dtypes = {'b': np.int64}
         f1 = sf.Frame.from_records(records, dtypes=dtypes)
 
-        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
-                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
-                )
+        self.assertEqual(str(f1.dtypes['b']), 'int64')
+
 
     def test_frame_from_records_i(self):
 
