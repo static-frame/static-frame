@@ -2851,6 +2851,43 @@ class TestUnit(TestCase):
                 (('a', 'int64'), ('b', '<U1'), ('c', '<U1'))
                 )
 
+    def test_frame_from_records_g(self):
+
+        records = [[1,'2',3], [4,'5',6]]
+        dtypes = {'b': np.int64}
+        f1 = sf.Frame.from_records(records,
+                index=('x', 'y'),
+                columns=['a', 'b', 'c'],
+                dtypes=dtypes)
+
+        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
+                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
+                )
+
+    def test_frame_from_records_h(self):
+
+        NT = namedtuple('NT', ('a', 'b', 'c'))
+
+        records = [NT(1,'2',3), NT(4,'5',6)]
+        dtypes = {'b': np.int64}
+        f1 = sf.Frame.from_records(records, dtypes=dtypes)
+
+        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
+                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
+                )
+
+    def test_frame_from_records_i(self):
+
+
+        records = [dict(a=1, b='2', c=3), dict(a=4, b='5', c=6)]
+        dtypes = {'b': np.int64}
+        f1 = sf.Frame.from_records(records, dtypes=dtypes)
+
+        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
+                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
+                )
+
+
     def test_frame_from_json_a(self):
 
         msg = """[

@@ -10,12 +10,7 @@ language: shell
 matrix:
 
   include:
-  
-#     - name: CPython 3.5.2 on Ubuntu Xenial 16.04
-#       python: 3.5.2
-#       dist: xenial
-#       language: python
-      
+
     - name: CPython 3.6.8 on Ubuntu Xenial 16.04
       python: 3.6.8
       dist: xenial
@@ -26,10 +21,6 @@ matrix:
       dist: xenial
       language: python
 
-#     - name: CPython 3.5.2 on Windows Server 1803
-#       os: windows
-#       before_install: choco install python --version 3.5.2.20161029
-#       env: PATH=/c/Python35:/c/Python35/Scripts:$PATH
 
     - name: CPython 3.6.8 on Windows Server 1803
       os: windows
@@ -41,10 +32,6 @@ matrix:
       before_install: choco install python --version 3.7.3
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 
-#     - name: CPython 3.5.2 on macOS 10.13
-#       os: osx
-#       before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
-#       env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.5.2
 
     - name: CPython 3.6.8 on macOS 10.13
       os: osx
@@ -76,7 +63,7 @@ matrix:
 install:
   - pip install codecov pytest-cov
   - pip install -r requirements-test.txt
-  
+
 script:
  - pytest --cov=static_frame
 

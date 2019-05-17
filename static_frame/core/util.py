@@ -85,6 +85,10 @@ FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+# support an iterable of specifiers, or mapping based on column names
+DtypesSpecifier = tp.Optional[
+        tp.Union[tp.Iterable[DtypeSpecifier], tp.Dict[tp.Hashable, DtypeSpecifier]]]
+
 DepthLevelSpecifier = tp.Union[int, tp.Iterable[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]

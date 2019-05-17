@@ -22,6 +22,8 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import FilePathOrFileLike
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
+
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import FrameInitializer
@@ -250,7 +252,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
-            dtypes: tp.Optional[tp.Iterable[DtypeSpecifier]] = None,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ) -> 'Frame':
@@ -260,7 +262,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
             index: Optionally provide an iterable of index labels, equal in length to the number of records.
             columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
-            dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row. If a dtype is given as None, NumPy's default type determination will be used.
+            dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -273,7 +275,17 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
+            if dtypes is not None:
+                raise NotImplementedError('handling of dtypes when using NP records is no yet implemented')
             return cls(records, index=index, columns=columns)
+
+        dtypes_is_map = isinstance(dtypes, dict)
+
+        def get_col_dtype(col_idx):
+            if dtypes_is_map:
+                return dtypes.get(columns[col_idx], None)
+            # assume it is an iterable
+            return dtypes[col_idx]
 
         def blocks():
             if not hasattr(records, '__len__'):
@@ -284,46 +296,46 @@ class Frame(metaclass=MetaOperatorDelegate):
             row_reference = rows[0]
             row_count = len(rows)
             col_count = len(row_reference)
-            if dtypes is not None and len(dtypes) != col_count:
-                raise RuntimeError('length of dtypes does not match rows')
+
+            # if dtypes is not None and len(dtypes) != col_count:
+            #     raise RuntimeError('length of dtypes does not match rows')
 
             column_getter = None
             if isinstance(row_reference, dict):
                 col_idx_iter = (k for k, _ in _dict_to_sorted_items(row_reference))
-                if derive_columns:
-                    # just pass the key back
+                if derive_columns: # just pass the key back
                     column_getter = lambda key: key
             elif isinstance(row_reference, Series):
                 raise RuntimeError('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
             else:
                 # all other iterables
                 col_idx_iter = range(col_count)
-                if hasattr(row_reference, '_fields'):
-                    if derive_columns:
-                        column_getter = row_reference._fields.__getitem__
+                if hasattr(row_reference, '_fields') and derive_columns:
+                    column_getter = row_reference._fields.__getitem__
+
 
             # derive types from first rows
-            for col_idx in col_idx_iter:
+            for col_idx, col_key in enumerate(col_idx_iter):
                 if column_getter: # append as side effect of generator!
-                    columns.append(column_getter(col_idx))
+                    columns.append(column_getter(col_key))
 
                 # for each column, try to get a column_type, or None
                 if dtypes is None:
-                    field_ref = row_reference[col_idx]
+                    field_ref = row_reference[col_key]
                     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
                     column_type = (type(field_ref)
                             if not isinstance(field_ref, (str, np.datetime64))
                             else None)
                     column_type_explicit = False
                 else: # column_type returned here can be None.
-                    column_type = dtypes[col_idx]
+                    column_type = get_col_dtype(col_idx)
                     column_type_explicit = True
 
                 values = None
                 if column_type is not None:
                     try:
                         values = np.fromiter(
-                                (row[col_idx] for row in rows),
+                                (row[col_key] for row in rows),
                                 count=row_count,
                                 dtype=column_type)
                     except ValueError:
@@ -333,7 +345,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                             column_type = None
                 if values is None:
                     # let array constructor determine type if column_type is None
-                    values = np.array([row[col_idx] for row in rows],
+                    values = np.array([row[col_key] for row in rows],
                             dtype=column_type)
 
                 values.flags.writeable = False
