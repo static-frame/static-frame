@@ -1,13 +1,18 @@
 
 import unittest
 import os
+import sys
 from itertools import zip_longest
 
 
 import numpy as np
+import pytest
+
 
 from static_frame import TypeBlocks
 
+
+skip_win = pytest.mark.skipif(sys.platform == 'win32', reason='Windows default dtypes.')
 
 class TestCase(unittest.TestCase):
     '''

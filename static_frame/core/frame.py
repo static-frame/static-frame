@@ -366,7 +366,8 @@ class Frame(metaclass=MetaOperatorDelegate):
     def from_json(cls,
             json_data: str,
             *,
-            name: tp.Hashable = None
+            name: tp.Hashable = None,
+            dtypes: DtypesSpecifier = None
             ) -> 'Frame':
         '''Frame constructor from an in-memory JSON document.
 
@@ -377,13 +378,14 @@ class Frame(metaclass=MetaOperatorDelegate):
             :py:class:`static_frame.Frame`
         '''
         data = json.loads(json_data)
-        return cls.from_records(data, name=name)
+        return cls.from_records(data, name=name, dtypes=dtypes)
 
     @classmethod
     def from_json_url(cls,
             url: str,
             *,
-            name: tp.Hashable = None
+            name: tp.Hashable = None,
+            dtypes: DtypesSpecifier = None
             ) -> 'Frame':
         '''Frame constructor from a JSON documenst provided via a URL.
 
@@ -393,7 +395,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), name=name)
+        return cls.from_json(_read_url(url), name=name, dtypes=dtypes)
 
 
     @classmethod
@@ -461,6 +463,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             *,
             name: tp.Hashable = None,
             index_column: tp.Optional[IndexSpecifier] = None,
+            dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False) -> 'Frame':
         '''
         Convert a NumPy structed array into a Frame.
@@ -484,15 +487,30 @@ class Frame(metaclass=MetaOperatorDelegate):
         # cannot use names of we remove an index; might be a more efficient way as we kmnow the size
         columns = []
 
+        dtypes_is_map = isinstance(dtypes, dict)
+
+        def get_col_dtype(col_idx):
+            if dtypes_is_map:
+                return dtypes.get(columns[col_idx], None)
+            # assume it is an iterable
+            return dtypes[col_idx]
+
         def blocks():
-            for name in names:
+            for col_idx, name in enumerate(names):
                 if name == index_name:
                     nonlocal index_array
                     index_array = array[name]
                     continue
                 columns.append(name)
                 # this is not expected to make a copy
-                yield array[name]
+                if dtypes:
+                    dtype = get_col_dtype(col_idx)
+                    if dtype is not None:
+                        yield array[name].astype(dtype)
+                    else:
+                        yield array[name]
+                else:
+                    yield array[name]
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
@@ -579,7 +597,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_footer: int = 0,
             header_is_columns: bool = True,
             quote_char: str = '"',
-            dtype: DtypeSpecifier = None, # TODO: this should be dtypes, naming type per col
+            dtypes: DtypesSpecifier = None,
             encoding: tp.Optional[str] = None
             ) -> 'Frame':
         '''
@@ -592,7 +610,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_header: Number of leading lines to skip.
             skip_footer: Numver of trailing lines to skip.
             header_is_columns: If True, columns names are read from the first line after the first skip_header lines.
-            dtype: set to None by default to permit discovery
+            dtypes: set to None by default to permit discovery
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -622,7 +640,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 names=header_is_columns,
-                dtype=dtype,
+                dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
                 missing_values={''},
@@ -631,6 +649,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         array.flags.writeable = False
         return cls.from_structured_array(array,
                 index_column=index_column,
+                dtypes=dtypes
                 )
 
     @classmethod
@@ -788,7 +807,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 raise RuntimeError('cannot create columns when no data given')
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
-                    loc_is_iloc=True)
+                    loc_is_iloc=True,
+                    dtype=np.int64)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
 
@@ -798,7 +818,9 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif index is None or (hasattr(index, '__len__') and len(index) == 0):
             if row_count is None:
                 raise RuntimeError('cannot create rows when no data given')
-            self._index = Index(range(row_count), loc_is_iloc=True)
+            self._index = Index(range(row_count),
+                    loc_is_iloc=True,
+                    dtype=np.int64)
         else:
             self._index = Index(index)
 

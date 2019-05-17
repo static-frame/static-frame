@@ -1227,8 +1227,11 @@ class TestUnit(doctest.DocTestCase, TestCase):
         ''' + readme_str
 
         # inject content from local files
-        src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')"
-        dst = ">>> frame = sf.Frame.from_tsv('%s')" % fp_alt
+        src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
+        dst = ">>> frame = sf.Frame.from_tsv('%s', dtypes=dict(albumId=np.int64, id=np.int64))" % fp_alt
+
+        if src not in readme_str:
+            raise RuntimeError('did not find expected string')
 
         readme_str = readme_str.replace(src, dst)
 

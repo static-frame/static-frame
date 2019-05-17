@@ -31,6 +31,7 @@ from static_frame import HLoc
 from static_frame import DisplayConfig
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 
 nan = np.nan
@@ -790,7 +791,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_attrs_a(self):
 
         records = (
@@ -1459,7 +1460,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f1.min(axis=1).items()),
                 (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)))
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_row_dtype_a(self):
         # reindex both axis
         records = (
@@ -2034,7 +2035,7 @@ class TestUnit(TestCase):
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_from_csv_a(self):
         # header, mixed types, no index
 
@@ -2045,8 +2046,10 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('count', 108.0), ('score', 18.9)))
         self.assertEqual(f1.shape, (4, 3))
+
         self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
                 (('count', 'int64'), ('score', 'float64'), ('color', '<U5')))
+
 
         s2 = StringIO('color,count,score\nred,1,1.3\ngreen,3,5.2\nblue,100,3.4\nblack,4,9.0')
 
@@ -2379,7 +2382,7 @@ class TestUnit(TestCase):
                 )
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_from_concat_d(self):
         records = (
                 (2, 2, False),
@@ -2410,7 +2413,7 @@ class TestUnit(TestCase):
                 (('p', (('a', 2), ('b', 30), ('c', 2), ('d', 30))), ('q', (('a', 2), ('b', 34), ('c', 2), ('d', 34))), ('r', (('a', False), ('b', False), ('c', False), ('d', False)))))
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_from_concat_e(self):
 
         f1 = Frame.from_items(zip(
@@ -3343,7 +3346,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_frame_display_a(self):
 
         f1 = Frame(((1,2),(True,False)), name='foo',

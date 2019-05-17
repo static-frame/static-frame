@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 import static_frame as sf
 # assuming located in the same directory
@@ -87,7 +88,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_cell_align_left_b(self):
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
@@ -130,7 +131,7 @@ class TestUnit(TestCase):
                 '  <<U1> <int64> <int64> <<U1> <bool> <bool>'])
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_type_show_a(self):
         config_type_show_true = sf.DisplayConfig.from_default(type_show=True, type_color=False)
         config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
@@ -165,7 +166,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_cell_fill_width_a(self):
 
         config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)
@@ -264,7 +265,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_display_columns_a(self):
 
         config_columns_8 = sf.DisplayConfig.from_default(display_columns=8, type_color=False)
@@ -301,7 +302,7 @@ class TestUnit(TestCase):
 
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_display_columns_b(self):
 
         config_columns_4 = sf.DisplayConfig.from_default(display_columns=4, type_color=False)
@@ -414,7 +415,7 @@ class TestUnit(TestCase):
                 ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'])
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_html_pre_a(self):
         f = Frame(dict(a=(1, 2),
                 b=(1.2, 3.4),
@@ -434,7 +435,7 @@ class TestUnit(TestCase):
         self.assertEqual(html.strip(), str(expected).strip())
 
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason='Windows dtype issues.')
+    @skip_win
     def test_display_html_table_a(self):
         f = sf.Frame(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])

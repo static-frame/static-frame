@@ -62,10 +62,13 @@ Quick-Start Guide
 
 StaticFrame provides numerous methods for loading and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_records()``, ``Frame.from_csv()`` or ``Frame.from_pandas()``.
 
-For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows.
+For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows. (Passing explicit ``dtypes`` is only necessary on Windows.)
 
+>>> import numpy as np
 >>> import static_frame as sf
->>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')
+
+>>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))
+
 >>> frame.head()
 <Frame>
 <Index> albumId id      title                url                  thumbnailUrl         <<U12>

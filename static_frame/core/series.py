@@ -227,8 +227,10 @@ class Series(metaclass=MetaOperatorDelegate):
         # NOTE: this generally must be done after values assignment, as from_items (for example) needs the values generator to be exhausted before looking to index
 
         if index is None or (hasattr(index, '__len__') and len(index) == 0):
-            # create an integer index
-            self._index = Index(range(len(self.values)), loc_is_iloc=True)
+            # create an integer index; we specify dtype for windows
+            self._index = Index(range(len(self.values)),
+                    loc_is_iloc=True,
+                    dtype=np.int64)
         elif own_index:
             self._index = index
         elif hasattr(index, STATIC_ATTR):
