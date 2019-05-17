@@ -1226,7 +1226,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
         # inject content from local files
         src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
 
-        # using a raw string to avoid unicode decoding issues
+        # using a raw string to avoid unicode decoding issues on windows
         dst = ">>> frame = sf.Frame.from_tsv(r'%s', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')" % fp_alt
 
         if src not in readme_str:
