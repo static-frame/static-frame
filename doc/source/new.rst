@@ -11,6 +11,7 @@ Added ``dtypes`` argument to all relevant ``Frame`` constructors; ``dtypes`` can
 
 Deprecated instantiating a ``Frame`` from ``dict``; added ``Frame.from_dict`` for explicit ``Frame`` creation from a ``dict``.
 
+
 0.3.3
 --------------
 

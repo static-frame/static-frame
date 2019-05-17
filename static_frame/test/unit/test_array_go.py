@@ -78,6 +78,29 @@ class TestUnit(TestCase):
         self.assertEqual(ag1[[2,1,1,1]].tolist(),
                 ['c', 'b', 'b', 'b'])
 
+    def test_array_copy_a(self):
+
+        ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
+        ag1.append('e')
+
+        ag2 = ag1.copy()
+        ag1.extend(('f', 'g'))
+
+        self.assertEqual(ag1.values.tolist(),
+                ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+
+        self.assertEqual(ag2.values.tolist(),
+                ['a', 'b', 'c', 'd', 'e'])
+
+
+
+    def test_array_len_a(self):
+
+        ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
+        ag1.append('e')
+
+        self.assertEqual(len(ag1), 5)
+
 
 if __name__ == '__main__':
     unittest.main()

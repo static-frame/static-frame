@@ -300,8 +300,6 @@ class TestUnit(TestCase):
                 '<int64>   <int64> ... <int64>'])
 
 
-
-
     @skip_win
     def test_display_display_columns_b(self):
 
@@ -368,10 +366,16 @@ class TestUnit(TestCase):
                 len(f.display(config_rows_7_cols_5).to_rows()), 9)
 
 
-    def test_display_type_delimiter_a(self):
+    def test_display_type_attributes_a(self):
 
         x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
         self.assertEqual(x, '<int8>')
+
+    def test_display_type_attributes_b(self):
+
+        with self.assertRaises(NotImplementedError):
+            x, z = Display.type_attributes(None, DisplayConfigs.DEFAULT)
+
 
     def test_display_type_category_a(self):
 
@@ -381,7 +385,11 @@ class TestUnit(TestCase):
         x = DisplayTypeCategoryFactory.to_category(np.dtype(object))
         self.assertEqual(x.__name__, 'DisplayTypeObject')
 
-
+    def test_display_type_category_b(self):
+        # force getting the default
+        x = DisplayTypeCategoryFactory.to_category(None)
+        self.assertEqual(x.__name__, 'DisplayTypeCategory')
+        self.assertTrue(x.in_category(None))
 
     def test_display_config_from_json_a(self):
         json_data = json.dumps(dict(type_show=False))

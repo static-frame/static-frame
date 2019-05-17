@@ -8,7 +8,6 @@ import platform
 
 from enum import Enum
 
-from itertools import chain
 from functools import partial
 from collections import namedtuple
 
@@ -114,6 +113,8 @@ class DisplayTypeIndex(DisplayTypeCategory):
     @classmethod
     def in_category(cls, t: type) -> bool:
         from static_frame.core.index_base import IndexBase
+        if not inspect.isclass(t):
+            return False
         return issubclass(t, IndexBase)
 
 class DisplayTypeSeries(DisplayTypeCategory):
@@ -122,6 +123,8 @@ class DisplayTypeSeries(DisplayTypeCategory):
     @classmethod
     def in_category(cls, t: type) -> bool:
         from static_frame import Series
+        if not inspect.isclass(t):
+            return False
         return issubclass(t, Series)
 
 class DisplayTypeFrame(DisplayTypeCategory):
@@ -130,6 +133,8 @@ class DisplayTypeFrame(DisplayTypeCategory):
     @classmethod
     def in_category(cls, t: type) -> bool:
         from static_frame import Frame
+        if not inspect.isclass(t):
+            return False
         return issubclass(t, Frame)
 
 
@@ -612,7 +617,7 @@ class Display:
     CELL_EMPTY = DisplayCell(FORMAT_EMPTY, '')
     ELLIPSIS = '...' # this string is appended to truncated entries
     CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
-    ELLIPSIS_INDICES = (None,)
+    # ELLIPSIS_INDICES = (None,)
     DATA_MARGINS = 2 # columns / rows that seperate data
     ELLIPSIS_CENTER_SENTINEL = object()
 
@@ -637,7 +642,7 @@ class Display:
             type_str = repr(type_input)
             type_ref = type_input.cls
         else:
-            NotImplementedError('no handling for this input', type_input)
+            raise NotImplementedError('no handling for this input', type_input)
 
         type_category = DisplayTypeCategoryFactory.to_category(type_ref)
 
@@ -770,29 +775,29 @@ class Display:
             return 1 # practical floor for all values of 4 or less
         return (count_target - 1) // 2
 
-    @classmethod
-    def _truncate_indices(cls, count_target: int, indices):
+    # @classmethod
+    # def _truncate_indices(cls, count_target: int, indices):
 
-        # if have 5 data cols, 7 total, and target was 6
-        # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
+    #     # if have 5 data cols, 7 total, and target was 6
+    #     # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
 
-        # if have 5 data cols, 7 total, and target was 7
-        # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
+    #     # if have 5 data cols, 7 total, and target was 7
+    #     # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
 
-        # if have 6 data cols, 8 total, and target was 6
-        # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
+    #     # if have 6 data cols, 8 total, and target was 6
+    #     # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
 
-        # if have 6 data cols, 8 total, and target was 7
-        # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
+    #     # if have 6 data cols, 8 total, and target was 7
+    #     # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
 
-        if count_target and len(indices) > count_target:
-            half_count = cls.truncate_half_count(count_target)
-            # replace with array from_iter? with known size?
-            return tuple(chain(
-                    indices[:half_count],
-                    cls.ELLIPSIS_INDICES,
-                    indices[-half_count:]))
-        return indices
+    #     if count_target and len(indices) > count_target:
+    #         half_count = cls.truncate_half_count(count_target)
+    #         # replace with array from_iter? with known size?
+    #         return tuple(chain(
+    #                 indices[:half_count],
+    #                 cls.ELLIPSIS_INDICES,
+    #                 indices[-half_count:]))
+    #     return indices
 
 
     @classmethod
