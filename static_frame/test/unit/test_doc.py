@@ -15,8 +15,9 @@ api_example_str = '''
 #start_immutability
 
 >>> import static_frame as sf
+>>> import numpy as np
 
->>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s = sf.Series((67, 62, 27, 14), index=('Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s #doctest: +NORMALIZE_WHITESPACE
 <Series>
 <Index>
@@ -78,14 +79,14 @@ Neptune  11
 >>> import numpy as np
 >>> import static_frame as sf
 
->>> sf.Series(dict(Mercury=167, Neptune=-200))
+>>> sf.Series(dict(Mercury=167, Neptune=-200), dtype=np.int64)
 <Series>
 <Index>
 Mercury  167
 Neptune  -200
 <<U7>    <int64>
 
->>> sf.Series((167, -200), index=('Mercury', 'Neptune'))
+>>> sf.Series((167, -200), index=('Mercury', 'Neptune'), dtype=np.int64)
 <Series>
 <Index>
 Mercury  167
@@ -162,7 +163,7 @@ Pluto
 
 
 #start_series_from_items_a
->>> sf.Series.from_items(zip(('Mercury', 'Jupiter'), (4879, 12756)))
+>>> sf.Series.from_items(zip(('Mercury', 'Jupiter'), (4879, 12756)), dtype=np.int64)
 <Series>
 <Index>
 Mercury  4879
@@ -180,7 +181,7 @@ Jupiter  12756
 >>> index = ('Mercury', 'Venus', 'Earth', 'Mars')
 >>> columns = ('diameter', 'gravity', 'temperature')
 >>> records = ((4879, 3.7, 167), (12104, 8.9, 464), (12756, 9.8, 15), (6792, 3.7, -65))
->>> sf.Frame.from_records(records, index=index, columns=columns)
+>>> sf.Frame.from_records(records, index=index, columns=columns, dtypes=dict(diameter=np.int64, temperature=np.int64))
 <Frame>
 <Index> diameter gravity   temperature <<U11>
 <Index>
@@ -252,7 +253,7 @@ Neptune  102.0     -200
 #start_frame_from_csv_a
 >>> from io import StringIO
 >>> filelike = StringIO('name,mass,temperature\\nVenus,4.87,464\\nNeptune,102,-200')
->>> sf.Frame.from_csv(filelike, index_column='name')
+>>> sf.Frame.from_csv(filelike, index_column='name', dtypes=dict(temperature=np.int64))
 <Frame>
 <Index> mass      temperature <<U11>
 <Index>
@@ -264,7 +265,7 @@ Neptune 102.0     -200
 
 
 #start_series_dict_like_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s
 <Series>
 <Index>
@@ -508,7 +509,7 @@ NE
 
 
 #start_series_relabel_a
->>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'))
+>>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'), dtype=np.int64)
 
 >>> s.relabel({'Venus': 'Mercury'})
 <Series>
@@ -805,7 +806,7 @@ mass     1904.612
 
 
 #start_series_iter_group_a
->>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
 >>> next(iter(s.iter_group()))
 <Series>
 <Index>
@@ -937,7 +938,7 @@ Jupiter 142984   0.0
 
 
 #start_series_drop_a
->>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
 >>> s
 <Series>
 <Index>
@@ -1006,7 +1007,7 @@ Jupiter 142984
 
 
 #start_series_shape_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s
 <Series>
 <Index>
@@ -1061,7 +1062,7 @@ mass     float64
 
 
 #start_series_selection_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s
 <Series>
 <Index>
@@ -1112,7 +1113,7 @@ Neptune  14
 >>> index = ('Mercury', 'Venus', 'Earth', 'Mars')
 >>> columns = ('diameter', 'gravity', 'temperature')
 >>> records = ((4879, 3.7, 167), (12104, 8.9, 464), (12756, 9.8, 15), (6792, 3.7, -65))
->>> f = sf.Frame.from_records(records, index=index, columns=columns)
+>>> f = sf.Frame.from_records(records, index=index, columns=columns, dtypes=dict(diameter=np.int64, temperature=np.int64))
 >>> f
 <Frame>
 <Index> diameter gravity   temperature <<U11>

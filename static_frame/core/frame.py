@@ -486,21 +486,24 @@ class Frame(metaclass=MetaOperatorDelegate):
         index_array = None
         # cannot use names of we remove an index; might be a more efficient way as we kmnow the size
         columns = []
+        columns_with_index = []
 
         dtypes_is_map = isinstance(dtypes, dict)
 
         def get_col_dtype(col_idx):
             if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            # assume it is an iterable
+                return dtypes.get(columns_with_index[col_idx], None)
             return dtypes[col_idx]
 
         def blocks():
             for col_idx, name in enumerate(names):
+                columns_with_index.append(name)
+
                 if name == index_name:
                     nonlocal index_array
                     index_array = array[name]
                     continue
+
                 columns.append(name)
                 # this is not expected to make a copy
                 if dtypes:
