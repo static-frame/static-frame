@@ -197,7 +197,7 @@ Mars    6792     3.7       -65
 
 
 #start_frame_from_items_a
->>> sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'))
+>>> sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
 <Index>
@@ -284,8 +284,6 @@ Neptune  14
 [None, 14, None]
 >>> 'Pluto' in s
 False
->>> s.values
-array([ 1,  2, 67, 62, 27, 14])
 >>> s.values.flags
   C_CONTIGUOUS : True
   F_CONTIGUOUS : True
@@ -1033,7 +1031,7 @@ dtype('int64')
 
 
 #start_frame_shape_a
->>> f = sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>

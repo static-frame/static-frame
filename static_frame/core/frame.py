@@ -284,7 +284,6 @@ class Frame(metaclass=MetaOperatorDelegate):
         def get_col_dtype(col_idx):
             if dtypes_is_map:
                 return dtypes.get(columns[col_idx], None)
-            # assume it is an iterable
             return dtypes[col_idx]
 
         def blocks():
@@ -405,6 +404,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             fill_value: object = np.nan,
             name: tp.Hashable = None,
+            dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
@@ -425,23 +425,44 @@ class Frame(metaclass=MetaOperatorDelegate):
             index = Index(index)
             own_index = True
 
+        dtypes_is_map = isinstance(dtypes, dict)
+
+        def get_col_dtype(col_idx):
+            if dtypes_is_map:
+                return dtypes.get(columns[col_idx], None)
+            return dtypes[col_idx]
+
         def blocks():
-            for k, v in pairs:
+            for col_idx, (k, v) in enumerate(pairs):
                 columns.append(k) # side effet of generator!
+
+                if dtypes:
+                    column_type = get_col_dtype(col_idx)
+                else:
+                    column_type = None
+
                 if isinstance(v, np.ndarray):
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
-                    yield v
+                    if column_type is not None:
+                        yield v.astype(column_type)
+                    else:
+                        yield v
                 elif isinstance(v, Series):
                     if index is None:
                         raise RuntimeError('can only consume Series in Frame.from_items if an Index is provided.')
+
+                    if column_type is not None:
+                        v = v.astype(column_type)
+
                     if _requires_reindex(v.index, index):
                         yield v.reindex(index, fill_value=fill_value).values
                     else:
                         yield v.values
+
                 elif isinstance(v, Frame):
                     raise NotImplementedError('Frames are not supported in from_items constructor.')
                 else:
-                    values = np.array(v)
+                    values = np.array(v, dtype=column_type)
                     values.flags.writeable = False
                     yield values
 
