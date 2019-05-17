@@ -556,7 +556,7 @@ JU       142984   1898.0
 
 
 #start_frame_reindex_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -754,7 +754,7 @@ Jupiter  0.0
 
 
 #start_frame_iter_series_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 
 >>> next(iter(f.iter_series(axis=0)))
 <Series>
@@ -965,7 +965,7 @@ Venus    0
 #end_series_drop_a
 
 #start_frame_drop_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64, temperature=np.int64))
 >>> f
 <Frame>
 <Index> diameter temperature <<U11>
@@ -1225,7 +1225,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         # inject content from local files
         src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
-        dst = ">>> frame = sf.Frame.from_tsv('%s', dtypes=dict(albumId=np.int64, id=np.int64))" % fp_alt
+        dst = ">>> frame = sf.Frame.from_tsv('%s', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')" % fp_alt
 
         if src not in readme_str:
             raise RuntimeError('did not find expected string')

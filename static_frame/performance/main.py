@@ -140,6 +140,11 @@ def main():
         frame = sf.FrameGO.from_records(records)
         frame = frame.set_index('name', drop=True)
         frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
+        frame['pd_outperform_factor'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
+
+        frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
+        frame['sf_outperform_factor'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
+
 
         config = DisplayConfig(cell_max_width=80, type_show=False, display_rows=200)
         present = frame.iter_element().apply(lambda v: v if not isinstance(v, float) else round(v, 4))
