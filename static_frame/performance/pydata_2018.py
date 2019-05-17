@@ -60,7 +60,7 @@ class SampleData:
         cls._store['pd.FrameFloat'] = pd.DataFrame(data_float, index=index, columns=columns)
 
         data_cols = {i: data_func[i%2]() for i in range(len(columns))}
-        cls._store['sf.FrameMixed'] = sf.Frame(data_cols, index=index)
+        cls._store['sf.FrameMixed'] = sf.Frame.from_dict(data_cols, index=index)
         cls._store['pd.FrameMixed'] = pd.DataFrame(data_cols, index=index)
 
     @classmethod
@@ -206,7 +206,7 @@ class MixedFrameIntLabel_200_Init(PerfTest):
         data_func = SampleData.get('data_func')
         columns = SampleData.get('columns')
         index = SampleData.get('index')
-        post = sf.Frame({i: data_func[i%2]() for i in range(len(columns))}, index=index)
+        post = sf.Frame.from_dict({i: data_func[i%2]() for i in range(len(columns))}, index=index)
         assert post.shape == (10000, 1000)
 
 

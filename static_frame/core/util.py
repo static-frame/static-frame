@@ -156,7 +156,6 @@ def column_1d_filter(array: np.ndarray) -> np.ndarray:
         return np.reshape(array, array.shape[0])
     return array
 
-
 def _gen_skip_middle(
         forward_iter: CallableToIterType,
         forward_count: int,

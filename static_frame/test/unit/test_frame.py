@@ -42,12 +42,12 @@ class TestUnit(TestCase):
 
     def test_frame_init_a(self):
 
-        f = Frame(OrderedDict([('a', (1,2)), ('b', (3,4))]), index=('x', 'y'))
+        f = Frame.from_dict(OrderedDict([('a', (1,2)), ('b', (3,4))]), index=('x', 'y'))
         self.assertEqual(f.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
                 )
 
-        f = Frame(OrderedDict([('b', (3,4)), ('a', (1,2))]), index=('x', 'y'))
+        f = Frame.from_dict(OrderedDict([('b', (3,4)), ('a', (1,2))]), index=('x', 'y'))
         self.assertEqual(f.to_pairs(0),
                 (('b', (('x', 3), ('y', 4))), ('a', (('x', 1), ('y', 2)))))
 
@@ -83,7 +83,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_init_c(self):
-        f = sf.FrameGO(dict(color=('black',)))
+        f = sf.FrameGO.from_dict(dict(color=('black',)))
         s = f['color']
         self.assertEqual(s.to_pairs(),
                 ((0, 'black'),))
@@ -98,14 +98,13 @@ class TestUnit(TestCase):
         a1 = np.array([1, 2, 3])
         a2 = np.array([4, 5, 6])
 
-        with self.assertRaises(RuntimeError):
-            f = sf.Frame(dict(a=a1, b=a2), columns=('x', 'y'))
+        f = sf.Frame.from_dict(dict(a=a1, b=a2))
 
     def test_frame_init_f(self):
         a1 = np.array([1, 2, 3])
         a2 = np.array([4, 5, 6])
 
-        f = sf.Frame(dict(a=a1, b=a2))
+        f = sf.Frame.from_dict(dict(a=a1, b=a2))
 
         self.assertEqual(f.to_pairs(0),
             (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
@@ -2512,8 +2511,8 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_i(self):
 
-        sf1 = sf.Frame(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='A')
-        sf2 = sf.Frame(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='B')
+        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='A')
+        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='B')
 
         f = sf.Frame.from_concat((sf1, sf2), axis=1)
         self.assertEqual(f.to_pairs(0),
@@ -2522,8 +2521,8 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_j(self):
 
-        sf1 = sf.Frame(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='A')
-        sf2 = sf.Frame(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='B')
+        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='A')
+        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='B')
 
         f = sf.Frame.from_concat((sf1, sf2), axis=0)
 
@@ -2886,9 +2885,7 @@ class TestUnit(TestCase):
         dtypes = {'b': np.int64}
         f1 = sf.Frame.from_records(records, dtypes=dtypes)
 
-        self.assertEqual(f1.dtypes.iter_element().apply(str).to_pairs(),
-                (('a', 'int64'), ('b', 'int64'), ('c', 'int64'))
-                )
+        self.assertEqual(str(f1.dtypes['b']), 'int64')
 
 
     def test_frame_from_json_a(self):
@@ -3310,13 +3307,13 @@ class TestUnit(TestCase):
     def test_frame_name_b(self):
 
         with self.assertRaises(TypeError):
-            f = Frame(dict(a=(1,2), b=(3,4)), name=['test'])
+            f = Frame.from_dict(dict(a=(1,2), b=(3,4)), name=['test'])
 
         with self.assertRaises(TypeError):
-            f = Frame(dict(a=(1,2), b=(3,4)), name={'a': 30})
+            f = Frame.from_dict(dict(a=(1,2), b=(3,4)), name={'a': 30})
 
         with self.assertRaises(TypeError):
-            f = Frame(dict(a=(1,2), b=(3,4)), name=('a', [1, 2]))
+            f = Frame.from_dict(dict(a=(1,2), b=(3,4)), name=('a', [1, 2]))
 
 
 

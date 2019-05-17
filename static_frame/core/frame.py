@@ -80,6 +80,14 @@ from static_frame.core.doc_str import doc_inject
 
 
 
+
+def dtypes_mappable(dtypes: DtypesSpecifier):
+    '''
+    Determine if the dtypes argument can be used by name lookup, rather than index.
+    '''
+    return isinstance(dtypes, (dict, Series))
+
+
 @doc_inject(selector='container_init', class_name='Frame')
 class Frame(metaclass=MetaOperatorDelegate):
     '''
@@ -279,8 +287,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 raise NotImplementedError('handling of dtypes when using NP records is no yet implemented')
             return cls(records, index=index, columns=columns)
 
-        dtypes_is_map = isinstance(dtypes, dict)
-
+        dtypes_is_map = dtypes_mappable(dtypes)
         def get_col_dtype(col_idx):
             if dtypes_is_map:
                 return dtypes.get(columns[col_idx], None)
@@ -425,8 +432,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             index = Index(index)
             own_index = True
 
-        dtypes_is_map = isinstance(dtypes, dict)
-
+        dtypes_is_map = dtypes_mappable(dtypes)
         def get_col_dtype(col_idx):
             if dtypes_is_map:
                 return dtypes.get(columns[col_idx], None)
@@ -478,6 +484,27 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True,
                 own_index=own_index)
 
+
+    @classmethod
+    def from_dict(cls,
+            dict: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
+            *,
+            index: IndexInitializer = None,
+            fill_value: object = np.nan,
+            name: tp.Hashable = None,
+            dtypes: DtypesSpecifier = None,
+            consolidate_blocks: bool = False):
+        '''
+        Create a Frame from a dictionary, or any object that has an items() method.
+        '''
+        return cls.from_items(dict.items(),
+                index=index,
+                fill_value=fill_value,
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks)
+
+
     @classmethod
     def from_structured_array(cls,
             array: np.ndarray,
@@ -509,8 +536,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         columns = []
         columns_with_index = []
 
-        dtypes_is_map = isinstance(dtypes, dict)
-
+        dtypes_is_map = dtypes_mappable(dtypes)
         def get_col_dtype(col_idx):
             if dtypes_is_map:
                 return dtypes.get(columns_with_index[col_idx], None)
@@ -784,20 +810,21 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
+            raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
             # if a dictionary is given, it is treated as a dictionary of columns
-            if columns is not None:
-                raise RuntimeError('cannot create Frame from dictionary when columns is defined')
-            columns = []
-            def blocks():
-                for k, v in _dict_to_sorted_items(data):
-                    columns.append(k)
-                    if isinstance(v, np.ndarray):
-                        yield v
-                    else:
-                        values = np.array(v)
-                        values.flags.writeable = False
-                        yield values
-            self._blocks = TypeBlocks.from_blocks(blocks())
+            # if columns is not None:
+            #     raise RuntimeError('cannot create Frame from dictionary when columns is defined')
+            # columns = []
+            # def blocks():
+            #     for k, v in _dict_to_sorted_items(data):
+            #         columns.append(k)
+            #         if isinstance(v, np.ndarray):
+            #             yield v
+            #         else:
+            #             values = np.array(v)
+            #             values.flags.writeable = False
+            #             yield values
+            # self._blocks = TypeBlocks.from_blocks(blocks())
 
         elif data is None and columns is None:
             # will have shape of 0,0

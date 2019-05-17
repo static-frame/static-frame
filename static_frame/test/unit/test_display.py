@@ -417,10 +417,9 @@ class TestUnit(TestCase):
 
     @skip_win
     def test_display_html_pre_a(self):
-        f = Frame(dict(a=(1, 2),
+        f = Frame.from_dict(dict(a=(1, 2),
                 b=(1.2, 3.4),
                 c=(False, True)))
-
 
         expected = f.display(sf.DisplayConfig(
                 display_format='html_pre', type_color=False))
@@ -437,7 +436,8 @@ class TestUnit(TestCase):
 
     @skip_win
     def test_display_html_table_a(self):
-        f = sf.Frame(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
+        f = sf.Frame.from_dict(
+            dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
         f = f.reindex_add_level(columns='I')
         f = f.reindex_add_level(columns='J')
@@ -556,7 +556,7 @@ class TestUnit(TestCase):
         print(f.display(DisplayConfigs.COLOR))
         print(f.loc['x'].display(DisplayConfigs.COLOR))
 
-        f = sf.Frame(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
+        f = sf.Frame.from_dict(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
         f = f.reindex_add_level(columns='I')
         f = f.reindex_add_level(columns='J')

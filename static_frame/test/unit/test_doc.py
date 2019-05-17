@@ -105,7 +105,7 @@ Mars    -65.0       227.9
 Neptune -200.0      4495.1
 <<U7>   <float64>   <float64>
 
->>> sf.Frame(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
 <Frame>
 <Index> diameter mass      <<U8>
 <Index>
@@ -119,7 +119,7 @@ Saturn  120536   568.0
 
 
 #start_framego_a
->>> f = sf.FrameGO(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.FrameGO.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 >>> f['radius'] = f['diameter'] * 0.5
 >>> f
 <FrameGO>
@@ -211,8 +211,8 @@ Saturn  120536   568.0
 
 
 #start_frame_from_concat_a
->>> f1 = sf.Frame(dict(diameter=(12756, 142984), mass=(5.97, 1898)), index=('Earth', 'Jupiter'))
->>> f2 = sf.Frame(dict(mass=(0.642, 102), moons=(2, 14)), index=('Mars', 'Neptune'))
+>>> f1 = sf.Frame.from_dict(dict(diameter=(12756, 142984), mass=(5.97, 1898)), index=('Earth', 'Jupiter'))
+>>> f2 = sf.Frame.from_dict(dict(mass=(0.642, 102), moons=(2, 14)), index=('Mars', 'Neptune'))
 >>> sf.Frame.from_concat((f1, f2))
 <Frame>
 <Index> diameter  mass      moons     <<U8>
@@ -299,7 +299,7 @@ False
 
 
 #start_frame_dict_like_a
->>> f = sf.Frame(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(temperature=np.int64, diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter temperature <<U11>
@@ -410,7 +410,7 @@ Mercury  False
 
 
 #start_frame_operators_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -435,7 +435,7 @@ Jupiter 11.209156475384132 317.92294807370183
 
 
 #start_frame_math_logic_a
->>> f = sf.Frame(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -543,7 +543,7 @@ Neptune  13.0
 
 
 #start_frame_relabel_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 
 >>> f.relabel(index=lambda x: x[:2].upper(), columns={'mass': 'mass(1e24kg)'})
 <Frame>
@@ -558,7 +558,7 @@ JU       142984   1898.0
 
 
 #start_frame_reindex_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -628,7 +628,7 @@ Neptune  14
 
 
 #start_frame_iter_element_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [x for x in f.iter_element()]
 [12756, 5.97, 6792, 0.642, 142984, 1898.0]
@@ -647,7 +647,7 @@ Jupiter 20444424256 3602404.0
 
 
 #start_frame_iter_element_items_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [x for x in f.iter_element_items()]
 [(('Earth', 'diameter'), 12756), (('Earth', 'mass'), 5.97), (('Mars', 'diameter'), 6792), (('Mars', 'mass'), 0.642), (('Jupiter', 'diameter'), 142984), (('Jupiter', 'mass'), 1898.0)]
@@ -665,7 +665,7 @@ Jupiter None     None
 
 
 #start_frame_iter_array_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -692,7 +692,7 @@ mass     1904.612
 
 
 #start_frame_iter_array_items_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [x for x in f.iter_array_items(axis=0)]
 [('diameter', array([ 12756,   6792, 142984])), ('mass', array([5.970e+00, 6.420e-01, 1.898e+03]))]
@@ -713,7 +713,7 @@ Jupiter  0.0
 
 
 #start_frame_iter_tuple_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [x for x in f.iter_tuple(axis=0)]
 [Axis(Earth=12756, Mars=6792, Jupiter=142984), Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0)]
@@ -734,7 +734,7 @@ Jupiter  1.240038755875004...
 
 
 #start_frame_iter_tuple_items_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [x for x in f.iter_tuple_items(axis=0)]
 [('diameter', Axis(Earth=12756, Mars=6792, Jupiter=142984)), ('mass', Axis(Earth=5.97, Mars=0.642, Jupiter=1898.0))]
@@ -756,7 +756,7 @@ Jupiter  0.0
 
 
 #start_frame_iter_series_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> next(iter(f.iter_series(axis=0)))
 <Series>
@@ -785,7 +785,7 @@ mass     634.8706666666667
 
 
 #start_frame_iter_series_items_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
 >>> [(k, v.mean()) for k, v in f.iter_series_items(0)]
 [('diameter', 54177.333333333336), ('mass', 634.8706666666667)]
@@ -826,7 +826,7 @@ Venus    0
 
 
 #start_frame_iter_group_a
->>> f = sf.Frame(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> f = sf.Frame.from_dict(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtypes=dict(moons=np.int64))
 >>> next(iter(f.iter_group('moons')))
 <Frame>
 <Index> mass      moons   <<U5>
@@ -841,7 +841,7 @@ Venus   4.87      0
 
 
 #start_frame_iter_group_items_a
->>> f = sf.Frame(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> f = sf.Frame.from_dict(dict(mass=(0.33, 4.87, 5.97, 0.642), moons=(0, 0, 1, 2)), index=('Mercury', 'Venus', 'Earth', 'Mars'))
 >>> [(k, v.index.values.tolist(), v['mass'].mean()) for k, v in f.iter_group_items('moons')]
 [(0, ['Mercury', 'Venus'], 2.6), (1, ['Earth'], 5.97), (2, ['Mars'], 0.642)]
 
@@ -889,7 +889,7 @@ Saturn   0.0
 #end_series_assign_a
 
 #start_frame_assign_a
->>> f = sf.Frame(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
@@ -967,7 +967,7 @@ Venus    0
 #end_series_drop_a
 
 #start_frame_drop_a
->>> f = sf.Frame(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'))
 >>> f
 <Frame>
 <Index> diameter temperature <<U11>

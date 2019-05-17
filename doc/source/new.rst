@@ -4,12 +4,19 @@ What is New in Static Frame
 ===============================
 
 
+0.3.4-dev
+-------------
+
+Added ``dtypes`` argument to all relevant ``Frame`` constructors; ``dtypes`` can now be specified with a dictionary.
+
+Deprecated instantiating a ``Frame`` from ``dict``; added ``Frame.from_dict`` for explicit ``Frame`` creation from a ``dict``.
+
 0.3.3
 --------------
 
-Improvements to all ``datetime64`` based indicies: direct creation from labels now properly parses values into ``datetime64``, and ``loc``-style lookups now handle partial matches on lower-resolution datetimes. Added IndexSecond and IndexMillisecond classes.
+Improvements to all ``datetime64`` based indicies: direct creation from labels now properly parses values into ``datetime64``, and ``loc``-style lookups now handle partial matches on lower-resolution datetimes. Added ``IndexSecond`` and ``IndexMillisecond`` Index classes.
 
-Index can now be constructed directly from an IndexHierarchy (resulting in an Index of tuples)
+Index can now be constructed directly from an ``IndexHierarchy`` (resulting in an Index of tuples)
 
 Improvements to application of ellipsis when normalizing width in ``Display`` string representations.
 
