@@ -4,7 +4,11 @@ What is New in Static Frame
 ===============================
 
 
-0.3.4-dev
+0.3.5-dev
+------------
+
+
+0.3.4
 -------------
 
 Added ``dtypes`` argument to all relevant ``Frame`` constructors; ``dtypes`` can now be specified with a dictionary.
