@@ -57,6 +57,17 @@ History
 The ideas behind StaticFrame developed out of years of work with Pandas and related tabular data structures by the Investment Systems team at Research Affiliates, LLC. In May of 2017 Christopher Ariza proposed the basic model to the Investment Systems team and began implementation. The first public release was in May 2018.
 
 
+Presentations
+***********************************
+
+The following presentations and interviews describe StaticFrame in greater depth.
+
+- PyData LA 2018: https://pyvideo.org/pydata-la-2018/staticframe-an-immutable-alternative-to-pandas.html
+- PyCon US 2019, lightning talk (starting at 53:00): https://pyvideo.org/pycon-us-2019/friday-lightning-talksbreak-pycon-2019.html
+- Talk Python to Me, interview: https://talkpython.fm/episodes/show/204/staticframe-like-pandas-but-safer
+
+
+
 Contributors
 ***********************************
 

@@ -105,7 +105,7 @@ Mars    -65.0       227.9
 Neptune -200.0      4495.1
 <<U7>   <float64>   <float64>
 
->>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diamter=np.int64))
+>>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
 <Index>
@@ -323,10 +323,8 @@ Saturn             120536
 nan
 >>> 'temperature' in f
 True
->>> f.values
-array([[ 12756,     15],
-       [142984,   -110],
-       [120536,   -140]])
+>>> f.values.tolist()
+[[12756, 15], [142984, -110], [120536, -140]]
 
 >>> f.values.flags
   C_CONTIGUOUS : True
@@ -811,8 +809,8 @@ mass     1904.612
 Mercury  0
 Venus    0
 <<U7>    <int64>
->>> [x.values for x in s.iter_group()]
-[array([0, 0]), array([1]), array([2])]
+>>> [x.values.tolist() for x in s.iter_group()]
+[[0, 0], [1], [2]]
 
 #end_series_iter_group_a
 
@@ -889,7 +887,7 @@ Saturn   0.0
 #end_series_assign_a
 
 #start_frame_assign_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
 <Index> diameter mass      <<U8>
