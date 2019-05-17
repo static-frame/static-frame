@@ -147,15 +147,20 @@ def main():
 
 
         config = DisplayConfig(cell_max_width=80, type_show=False, display_rows=200)
-        present = frame.iter_element().apply(lambda v: v if not isinstance(v, float) else round(v, 4))
+
+        def format(v):
+            if isinstance(v, float):
+                if np.isnan(v):
+                    return ''
+                return str(round(v, 4))
+            return str(v)
+        present = frame.iter_element().apply(format)
+        present = present[[c for c in present.columns if '/' not in c]]
         print(present.display(config))
 
         print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
         print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 
-
-    # df = pd.DataFrame.from_records(records, columns=('name',) + PerfTest.FUNCTION_NAMES)
-    # print(df)
 
 
 if __name__ == '__main__':

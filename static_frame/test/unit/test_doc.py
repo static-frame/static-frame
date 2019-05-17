@@ -626,7 +626,7 @@ Neptune  14
 
 
 #start_frame_iter_element_a
->>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 
 >>> [x for x in f.iter_element()]
 [12756, 5.97, 6792, 0.642, 142984, 1898.0]
@@ -1225,7 +1225,9 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
         # inject content from local files
         src = ">>> frame = sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos', dtypes=dict(albumId=np.int64, id=np.int64))"
-        dst = ">>> frame = sf.Frame.from_tsv('%s', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')" % fp_alt
+
+        # using a raw string to avoid unicode decoding issues
+        dst = ">>> frame = sf.Frame.from_tsv(r'%s', dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')" % fp_alt
 
         if src not in readme_str:
             raise RuntimeError('did not find expected string')
