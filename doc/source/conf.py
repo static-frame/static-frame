@@ -16,12 +16,16 @@ import sys
 import os
 import datetime
 import io
+import inspect
 
 import static_frame as sf
 
 from static_frame.core.operator_delegate import _UFUNC_UNARY_OPERATORS
 from static_frame.core.operator_delegate import _UFUNC_BINARY_OPERATORS
 from static_frame.core.operator_delegate import _UFUNC_AXIS_SKIPNA
+
+from static_frame.performance import core
+from static_frame.performance.perf_test import PerfTest
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -33,6 +37,15 @@ from static_frame.core.operator_delegate import _UFUNC_AXIS_SKIPNA
 def get_jinja_contexts():
 
     post = {}
+
+    performance_cls = []
+    for name in dir(core):
+        obj = getattr(core, name)
+        if inspect.isclass(obj) and issubclass(obj, PerfTest):
+            performance_cls.append(obj.__name__)
+
+    post['performance_cls'] = performance_cls
+
 
     def get_func_doc(cls, func_iter):
         return [(f, getattr(cls, f).__doc__) for f in sorted(func_iter)]

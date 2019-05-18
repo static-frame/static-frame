@@ -10,9 +10,7 @@ from os import path
 # python setup.py sdist
 # python setup.py bdist_wheel
 # twine upload dist/*
-# rm -r build
-# rm -r dist
-# rm -r *.egg-info
+# rm -r build; rm -r dist; rm -r *.egg-info
 
 # in /static-frame-feedstock/recipe
 # update meta.yaml in feedstock: set version and tar sha256 for tar, commit and push

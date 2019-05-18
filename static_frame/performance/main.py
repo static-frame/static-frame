@@ -140,10 +140,10 @@ def main():
         frame = sf.FrameGO.from_records(records)
         frame = frame.set_index('name', drop=True)
         frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
-        frame['pd_outperform_factor'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
+        frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
 
         frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
-        frame['sf_outperform_factor'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
+        frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
 
 
         config = DisplayConfig(cell_max_width=80, type_show=False, display_rows=200)
@@ -158,6 +158,7 @@ def main():
         present = present[[c for c in present.columns if '/' not in c]]
         print(present.display(config))
 
+        import ipdb; ipdb.set_trace()
         print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
         print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 
