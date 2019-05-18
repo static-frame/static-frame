@@ -66,5 +66,7 @@ setup(
     keywords='staticframe pandas numpy immutable array',
     packages=[
             'static_frame',
-            'static_frame.core'],
+            'static_frame.core',
+            'static_frame.performance',
+            ],
 )
