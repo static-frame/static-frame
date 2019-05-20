@@ -1,4 +1,4 @@
-index,pd,sf,pd_outperform,sf_outperform
+test_class,pd,sf,pd_faster,sf_faster
 FrameFloat_H1D_add_series_partial,2.8959,0.6154,,4.7059
 FrameFloat_H2D_add_series_partial,4.6065,3.1625,,1.4566
 FrameFloat_apply_axis0,1.8324,0.8498,,2.1563
