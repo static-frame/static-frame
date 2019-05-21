@@ -27,6 +27,10 @@ from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexDate
+from static_frame import IndexSecond
+from static_frame import IndexYearMonth
+
+from static_frame import HLoc
 
 from static_frame.core.util import _isna
 from static_frame.core.util import _resolve_dtype
@@ -107,11 +111,21 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             s1.values[1] = 23
 
-
     def test_series_init_f(self):
         s1 = Series({'a': 'x', 'b': 'y', 'c': 'z'})
         self.assertEqual(s1.to_pairs(), (('a', 'x'), ('b', 'y'), ('c', 'z')))
 
+    def test_series_init_g(self):
+        with self.assertRaises(RuntimeError):
+            s1 = Series(range(4), own_index=True, index=None)
+
+    def test_series_init_h(self):
+        s1 = Series(range(4), index_constructor=IndexSecond)
+        self.assertEqual(s1.to_pairs(),
+            ((np.datetime64('1970-01-01T00:00:00'), 0),
+            (np.datetime64('1970-01-01T00:00:01'), 1),
+            (np.datetime64('1970-01-01T00:00:02'), 2),
+            (np.datetime64('1970-01-01T00:00:03'), 3)))
 
     def test_series_slice_a(self):
         # create a series from a single value
@@ -475,6 +489,39 @@ class TestUnit(TestCase):
         s1 = Series.from_items(zip(list('abc'), (1,2,3)), dtype=str, name='foo')
         self.assertEqual(s1.name, 'foo')
         self.assertEqual(s1.values.tolist(), ['1', '2', '3'])
+
+    def test_series_from_items_c(self):
+
+        s1 = Series.from_items(zip(
+                ((1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')), range(4)),
+                index_constructor=IndexHierarchy.from_labels)
+        self.assertEqual(s1[HLoc[:, 'b']].to_pairs(),
+                (((1, 'b'), 1), ((2, 'b'), 3))
+                )
+
+    def test_series_from_items_d(self):
+
+        with self.assertRaises(RuntimeError):
+            s1 = Series.from_items(zip(
+                    ((1, 'a'), (1, 'b'), (2, 'a'), (2, 'b')), range(4)),
+                    index_constructor=IndexHierarchyGO.from_labels)
+
+    def test_series_from_items_e(self):
+        s1 = Series.from_items(zip(('2017-11', '2017-12', '2018-01', '2018-02'),
+                range(4)),
+                index_constructor=IndexYearMonth)
+
+        self.assertEqual(s1['2017'].to_pairs(),
+                ((np.datetime64('2017-11'), 0),
+                (np.datetime64('2017-12'), 1))
+                )
+
+        self.assertEqual(s1['2018'].to_pairs(),
+                ((np.datetime64('2018-01'), 2),
+                (np.datetime64('2018-02'), 3))
+                )
+
+
 
     def test_series_contains_a(self):
 

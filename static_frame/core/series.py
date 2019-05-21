@@ -82,7 +82,8 @@ class Series(metaclass=MetaOperatorDelegate):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None
+            name: tp.Hashable = None,
+            index_constructor: tp.Optional[IndexBase] = None
             ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
@@ -103,7 +104,8 @@ class Series(metaclass=MetaOperatorDelegate):
         return cls(values(),
                 index=index,
                 dtype=dtype,
-                name=name)
+                name=name,
+                index_constructor=index_constructor)
 
     @classmethod
     def from_concat(cls,
@@ -164,11 +166,15 @@ class Series(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
+            index_constructor: tp.Optional[IndexBase] = None,
             own_index: bool = False
             ) -> None:
 
         # TODO: support construction from another Series, propagate name attr
         self._name = name if name is None else name_filter(name)
+
+        if own_index and index is None:
+            raise RuntimeError('cannot own_index if no index is provided.')
 
         #-----------------------------------------------------------------------
         # values assignment
@@ -226,24 +232,25 @@ class Series(metaclass=MetaOperatorDelegate):
         # index assignment
         # NOTE: this generally must be done after values assignment, as from_items (for example) needs the values generator to be exhausted before looking to index
 
-        if index is None or (hasattr(index, '__len__') and len(index) == 0):
-            # create an integer index; we specify dtype for windows
-            self._index = Index(range(len(self.values)),
-                    loc_is_iloc=True,
-                    dtype=np.int64)
-        elif own_index:
+        if own_index:
             self._index = index
-        elif hasattr(index, STATIC_ATTR):
-            if index.STATIC:
-                self._index = index
-            else:
-                raise RuntimeError('non-static index cannot be assigned to Series')
-        else: # let index handle instantiation
-            if isinstance(index, (Index, IndexHierarchy)):
-                # call with the class of the passed-in index, in case it is hierarchical
-                self._index = index.__class__(index)
-            else:
-                self._index = Index(index)
+        elif index is None or (hasattr(index, '__len__') and len(index) == 0):
+            if index_constructor:
+                self._index = index_constructor(range(len(self.values)))
+            else: # create a default integer index; we specify dtype for windows
+                self._index = Index(range(len(self.values)),
+                        loc_is_iloc=True,
+                        dtype=np.int64)
+        elif isinstance(index, IndexBase):
+            # call with the class of the passed-in index, in case it is hierarchical
+            self._index = (index_constructor(index)
+                    if index_constructor else index.__class__(index))
+        else:
+            self._index = (index_constructor(index)
+                    if index_constructor else Index(index))
+
+        if not self._index.STATIC:
+            raise RuntimeError('non-static index cannot be assigned to Series')
 
         shape = self._index.__len__()
 
