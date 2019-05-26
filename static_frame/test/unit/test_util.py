@@ -2,10 +2,12 @@
 
 import unittest
 
+import datetime
+
 import numpy as np
 
 from static_frame.core.util import _isna
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
@@ -35,6 +37,7 @@ from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import _slice_to_ascending_slice
 from static_frame.core.util import array_shift
 from static_frame.core.util import ufunc_unique
+from static_frame.core.util import to_timedelta64
 
 from static_frame.test.test_case import TestCase
 
@@ -196,22 +199,22 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again'], dtype='S')
         a6 = np.array([2.3,5.4], dtype='float32')
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a1.dtype), a1.dtype)
+        self.assertEqual(resolve_dtype(a1.dtype, a1.dtype), a1.dtype)
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a2.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a2.dtype, a3.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a2.dtype, a4.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a3.dtype, a4.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a3.dtype, a6.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a1.dtype, a2.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a2.dtype, a3.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a2.dtype, a4.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a3.dtype, a4.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a3.dtype, a6.dtype), np.object_)
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a4.dtype), np.float64)
-        self.assertEqual(_resolve_dtype(a1.dtype, a6.dtype), np.float64)
-        self.assertEqual(_resolve_dtype(a4.dtype, a6.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a1.dtype, a4.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a1.dtype, a6.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a4.dtype, a6.dtype), np.float64)
 
     def test_resolve_dtype_b(self):
 
         self.assertEqual(
-                _resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
+                resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
                 np.dtype(('U', 3))
                 )
 
@@ -669,7 +672,20 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
+    def test_to_timedelta64_a(self):
+        timedelta = datetime.timedelta
 
+        self.assertEqual(
+                to_timedelta64(timedelta(days=4)),
+                np.timedelta64(4, 'D'))
+
+        self.assertEqual(
+                to_timedelta64(timedelta(seconds=4)),
+                np.timedelta64(4, 's'))
+
+        self.assertEqual(
+                to_timedelta64(timedelta(minutes=4)),
+                np.timedelta64(240, 's'))
 
 
 if __name__ == '__main__':

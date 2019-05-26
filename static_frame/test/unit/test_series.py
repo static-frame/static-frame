@@ -33,7 +33,7 @@ from static_frame import IndexYearMonth
 from static_frame import HLoc
 
 from static_frame.core.util import _isna
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 
@@ -465,6 +465,47 @@ class TestUnit(TestCase):
 
         post = s7.fillna(None)
         self.assertEqual(post.dtype, int)
+
+
+
+
+    def test_series_fillna_leading_a(self):
+
+        s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        s2 = Series((np.nan, None, 6, np.nan), index=('a', 'b', 'c', 'd'))
+        s3 = Series((np.nan, np.nan, np.nan, 4), index=('a', 'b', 'c', 'd'))
+        s4 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(s1.fillna_leading(-1).fillna(0).to_pairs(),
+                (('a', 234.3), ('b', 3.2), ('c', 6.4), ('d', 0.0)))
+
+        self.assertEqual(s2.fillna_leading(0).fillna(-1).to_pairs(),
+                (('a', 0), ('b', 0), ('c', 6), ('d', -1)))
+
+        self.assertEqual(s3.fillna_leading('a').to_pairs(),
+                (('a', 'a'), ('b', 'a'), ('c', 'a'), ('d', 4.0)))
+
+        self.assertEqual(s4.fillna_leading('b').to_pairs(),
+                (('a', 'b'), ('b', 'b'), ('c', 'b'), ('d', 'b')))
+
+    def test_series_fillna_trailing_a(self):
+
+        s1 = Series((234.3, 3.2, np.nan, np.nan), index=('a', 'b', 'c', 'd'))
+        s2 = Series((np.nan, None, 6.4, np.nan), index=('a', 'b', 'c', 'd'))
+        s3 = Series((np.nan, 2.3, 6.4, 4), index=('a', 'b', 'c', 'd'))
+        s4 = Series((None, None, None, None), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(s1.fillna_trailing(0).to_pairs(),
+                (('a', 234.3), ('b', 3.2), ('c', 0.0), ('d', 0.0)))
+
+        self.assertEqual(s2.fillna_trailing(0).fillna(-1).to_pairs(),
+                (('a', -1), ('b', -1), ('c', 6.4), ('d', 0)))
+
+        self.assertEqual(s3.fillna_trailing(2).fillna(-1).to_pairs(),
+                (('a', -1.0), ('b', 2.3), ('c', 6.4), ('d', 4.0)))
+
+        self.assertEqual(s4.fillna_trailing('c').to_pairs(),
+                (('a', 'c'), ('b', 'c'), ('c', 'c'), ('d', 'c')))
 
 
     def test_series_from_items_a(self):

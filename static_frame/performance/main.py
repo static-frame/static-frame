@@ -158,7 +158,7 @@ def main():
         present = present[[c for c in present.columns if '/' not in c]]
         print(present.display(config))
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
         print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 

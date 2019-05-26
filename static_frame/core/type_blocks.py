@@ -23,7 +23,7 @@ from static_frame.core.util import column_2d_filter
 from static_frame.core.util import mloc
 from static_frame.core.util import array_shift
 from static_frame.core.util import full_for_fill
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
@@ -1104,7 +1104,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 # from here, we have a target we need to apply
                 if assigned is None:
-                    assigned_dtype = _resolve_dtype(value_dtype, b.dtype)
+                    assigned_dtype = resolve_dtype(value_dtype, b.dtype)
                     if b.dtype == assigned_dtype:
                         assigned = b.copy()
                     else:
@@ -1176,7 +1176,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if not target.any():
                 yield block
             else:
-                assigned_dtype = _resolve_dtype(value_dtype, block.dtype)
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
 
                 if block.dtype == assigned_dtype:
                     assigned = block.copy()
@@ -1570,7 +1570,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if not self._row_dtype: # if never set as shape is empty
             self._row_dtype = block.dtype
         elif block.dtype != self._row_dtype:
-            # we do not use _resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
+            # we do not use resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
             self._row_dtype = object
 
     def extend(self,

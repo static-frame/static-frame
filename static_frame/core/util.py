@@ -1,6 +1,7 @@
 import sys
 import typing as tp
 import os
+import operator
 
 from collections import OrderedDict
 from collections import abc
@@ -10,7 +11,7 @@ from io import BytesIO
 import datetime
 from urllib import request
 import tempfile
-
+from functools import reduce
 
 import numpy as np
 
@@ -41,13 +42,15 @@ DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+DTYPE_DATETIME_KIND = 'M'
 DTYPE_OBJECT = np.dtype(object)
 
 NULL_SLICE = slice(None)
 _UNIT_SLICE = slice(0, 1)
+SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
-SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
+SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 # defaults to float64
@@ -56,7 +59,12 @@ EMPTY_ARRAY.flags.writeable = False
 
 _DICT_STABLE = sys.version_info >= (3, 6)
 
-
+# map from datetime.timedelta attrs to np.timedelta64 codes
+TIME_DELTA_ATTR_MAP = (
+        ('days', 'D'),
+        ('seconds', 's'),
+        ('microseconds', 'us')
+        )
 
 #-------------------------------------------------------------------------------
 # utility
@@ -182,7 +190,7 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
+def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
     '''
@@ -218,7 +226,7 @@ def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
     dtypes = iter(dtypes)
     dt_resolve = next(dtypes)
     for dt in dtypes:
-        dt_resolve = _resolve_dtype(dt_resolve, dt)
+        dt_resolve = resolve_dtype(dt_resolve, dt)
         if dt_resolve == DTYPE_OBJECT:
             return dt_resolve
     return dt_resolve
@@ -246,7 +254,7 @@ def concat_resolved(arrays: tp.Iterable[np.ndarray],
 
     for array in arrays_iter:
         if dt_resolve != DTYPE_OBJECT:
-            dt_resolve = _resolve_dtype(array.dtype, dt_resolve)
+            dt_resolve = resolve_dtype(array.dtype, dt_resolve)
         shape[axis] += array.shape[axis]
 
     out = np.empty(shape=shape, dtype=dt_resolve)
@@ -264,7 +272,7 @@ def full_for_fill(
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value.
     '''
-    dtype = _resolve_dtype(dtype, np.array(fill_value).dtype)
+    dtype = resolve_dtype(dtype, np.array(fill_value).dtype)
     return np.full(shape, fill_value, dtype=dtype)
 
 
@@ -421,7 +429,7 @@ _TD64_MS = np.timedelta64(1, 'ms')
 
 _DT_NOT_FROM_INT = (_DT64_DAY, _DT64_MONTH)
 
-def _to_datetime64(
+def to_datetime64(
         value: DateInitializer,
         dtype: tp.Optional[np.dtype] = None
         ) -> np.datetime64:
@@ -431,7 +439,7 @@ def _to_datetime64(
     # for now, only support creating from a string, as creation from integers is based on offset from epoch
     if not isinstance(value, np.datetime64):
         if dtype is None:
-            # let this constructor figure it out
+            # let constructor figure it out
             dt = np.datetime64(value)
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
@@ -440,7 +448,7 @@ def _to_datetime64(
                     # convert to string as that is likely what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
-                    raise RuntimeError('attempting to create {} from an integer, which is generally desired as the result will be offset from the epoch.'.format(dtype))
+                    raise RuntimeError('attempting to create {} from an integer, which is generally not desired as the result will be offset from the epoch.'.format(dtype))
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
@@ -451,13 +459,23 @@ def _to_datetime64(
             raise RuntimeError('not supported dtype', dt, dtype)
     return dt
 
-def _slice_to_datetime_slice_args(key, dtype=None):
+def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
+    '''
+    Convert a datetime.timedelta into a NumPy timedelta64. This approach is better than using np.timedelta64(value), as that reduces all values to microseconds.
+    '''
+    return reduce(operator.add,
+        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
+
+def _slice_to_datetime_slice_args(key: slice, dtype=None):
+    '''
+    Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
+    '''
     for attr in SLICE_ATTRS:
         value = getattr(key, attr)
         if value is None:
             yield None
         else:
-            yield _to_datetime64(value, dtype=dtype)
+            yield to_datetime64(value, dtype=dtype)
 
 def key_to_datetime_key(
         key: GetItemKeyType,
@@ -472,7 +490,7 @@ def key_to_datetime_key(
         return key
 
     if isinstance(key, str):
-        return _to_datetime64(key, dtype=dtype)
+        return to_datetime64(key, dtype=dtype)
 
     if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
@@ -480,7 +498,7 @@ def key_to_datetime_key(
         return key.astype(dtype)
 
     if hasattr(key, '__len__'):
-        # use array constructor to determine type
+        # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representationn
         return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like
@@ -742,7 +760,7 @@ def _ufunc2d(
 
     assert array.shape[1] == other.shape[1]
     # this does will work if dyptes are differently sized strings, such as U2 and U3
-    dtype = _resolve_dtype(array.dtype, other.dtype)
+    dtype = resolve_dtype(array.dtype, other.dtype)
     if array.dtype != dtype:
         array = array.astype(dtype)
     if other.dtype != dtype:
@@ -771,7 +789,7 @@ def intersect1d(array: np.ndarray,
     except TypeError:
         result = set(array) & set(other)
 
-    dtype = _resolve_dtype(array.dtype, other.dtype)
+    dtype = resolve_dtype(array.dtype, other.dtype)
     if dtype.kind == 'O':
         # np fromiter does not work with object types
         return np.array(tuple(result), dtype=dtype)

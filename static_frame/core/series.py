@@ -7,7 +7,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import _BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import _isna
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
@@ -502,10 +502,12 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return self.__class__(values,
                 index=self._index.loc[sel],
-                name=self._name)
+                name=self._name,
+                own_index=True)
+
 
     def fillna(self, value) -> 'Series':
-        '''Return a new Series after replacing NaN or None values with the supplied value.
+        '''Return a new ``Series`` after replacing null (NaN or None) with the supplied value.
         '''
         sel = _isna(self.values)
         if not np.any(sel):
@@ -514,13 +516,12 @@ class Series(metaclass=MetaOperatorDelegate):
         if isinstance(value, np.ndarray):
             raise Exception('cannot assign an array to fillna')
 
-        value_dtype = np.array(value).dtype
-        assigned_dtype = _resolve_dtype(value_dtype, self.values.dtype)
+        assignable_dtype = resolve_dtype(np.array(value).dtype, self.values.dtype)
 
-        if self.values.dtype == assigned_dtype:
+        if self.values.dtype == assignable_dtype:
             assigned = self.values.copy()
         else:
-            assigned = self.values.astype(assigned_dtype)
+            assigned = self.values.astype(assignable_dtype)
 
         assigned[sel] = value
         assigned.flags.writeable = False
@@ -528,6 +529,84 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.__class__(assigned,
                 index=self._index,
                 name=self._name)
+
+
+    def fillna_forward(self) -> 'Series':
+        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+        '''
+        pass
+
+    def fillna_backward(self) -> 'Series':
+        '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
+        '''
+        pass
+
+
+
+    def fillna_leading(self, value) -> 'Series':
+        '''Return a new ``Series`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        '''
+        sel = _isna(self.values)
+        if not len(sel) or sel[0] == False: # leading value must be null to make change
+            return self
+
+        if isinstance(value, np.ndarray):
+            raise Exception('cannot assign an array to fillna')
+
+        assignable_dtype = resolve_dtype(np.array(value).dtype, self.values.dtype)
+
+        if self.values.dtype == assignable_dtype:
+            assigned = self.values.copy()
+        else:
+            assigned = self.values.astype(assignable_dtype)
+
+        # index of last value that is null from the beginning of the  array; add 1 for inclusive
+        idx_delta = np.flatnonzero(sel ^ np.roll(sel, -1))
+        if len(idx_delta):
+            sel_leading = slice(None, idx_delta[0] + 1)
+        else: # all are null
+            sel_leading = sel
+
+        assigned[sel_leading] = value
+        assigned.flags.writeable = False
+
+        return self.__class__(assigned,
+                index=self._index,
+                name=self._name)
+
+    def fillna_trailing(self, value) -> 'Series':
+        '''Return a new ``Series`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        '''
+        sel = _isna(self.values)
+        if not len(sel) or sel[-1] == False: # trailing value must be null to make change
+            return self
+
+        if isinstance(value, np.ndarray):
+            raise Exception('cannot assign an array to fillna')
+
+        assignable_dtype = resolve_dtype(np.array(value).dtype, self.values.dtype)
+
+        if self.values.dtype == assignable_dtype:
+            assigned = self.values.copy()
+        else:
+            assigned = self.values.astype(assignable_dtype)
+
+        # index of first value that is null from the end of the  array; add 1 for inclusive
+        idx_delta = np.flatnonzero(sel ^ np.roll(sel, 1))
+        if len(idx_delta):
+            sel_trailing = slice(idx_delta[-1], None)
+        else: # all are null
+            sel_trailing = sel
+
+        assigned[sel_trailing] = value
+        assigned.flags.writeable = False
+
+        return self.__class__(assigned,
+                index=self._index,
+                name=self._name)
+
+
+
 
     #---------------------------------------------------------------------------
     # operators
@@ -1223,7 +1302,7 @@ class SeriesAssign:
         else:
             value_dtype = np.array(value).dtype
 
-        dtype = _resolve_dtype(self.container.dtype, value_dtype)
+        dtype = resolve_dtype(self.container.dtype, value_dtype)
 
         # create or copy the array to return
         if dtype == self.container.dtype:

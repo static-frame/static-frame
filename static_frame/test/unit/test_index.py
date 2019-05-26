@@ -355,6 +355,88 @@ class TestUnit(TestCase):
         self.assertEqual(index.loc['2018-02-19'],
                 np.datetime64('2018-02-19'))
 
+    def test_index_date_e(self):
+        index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
+
+        post = index + np.timedelta64(2, 'D')
+
+        self.assertEqual(post[0], np.datetime64('2017-12-17'))
+
+
+    def test_index_date_f(self):
+        index = IndexDate.from_date_range('2017-12-15', '2018-01-15')
+
+        post = index + datetime.timedelta(days=10)
+
+        self.assertEqual(post[0], np.datetime64('2017-12-25'))
+        self.assertEqual(post[-1], np.datetime64('2018-01-25'))
+
+
+    def test_index_date_g(self):
+        index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
+
+        post = index.loc['2018':'2018-01']
+        self.assertEqual(len(post), 31)
+        self.assertEqual(post[0], np.datetime64('2018-01-01'))
+        self.assertEqual(post[-1], np.datetime64('2018-01-31'))
+
+
+    def test_index_date_h(self):
+        index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
+
+        post = index.loc['2018':'2018-01-15']
+        self.assertEqual(len(post), 15)
+        self.assertEqual(post[0], np.datetime64('2018-01-01'))
+        self.assertEqual(post[-1], np.datetime64('2018-01-15'))
+
+
+    def test_index_date_i(self):
+        index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
+
+        post = index.loc['2017-12': '2018-01']
+        self.assertEqual(len(post), 62)
+        self.assertEqual(post[0], np.datetime64('2017-12-01'))
+        self.assertEqual(post[-1], np.datetime64('2018-01-31'))
+
+
+    def test_index_date_j(self):
+        index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
+
+        post = index.loc['2017-12': '2018']
+        self.assertEqual(len(post), 77)
+        self.assertEqual(post[0], np.datetime64('2017-12-01'))
+        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+
+
+    def test_index_date_k(self):
+        index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
+        post = index.loc[['2017-12-10', '2018-02-06']]
+        self.assertEqual(len(post), 2)
+        self.assertEqual(post[0], np.datetime64('2017-12-10'))
+        self.assertEqual(post[-1], np.datetime64('2018-02-06'))
+
+
+    def test_index_date_m(self):
+        index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
+        # NOTE: this type of selection should possibly not be permitted
+        post = index.loc[['2017', '2018']]
+        self.assertEqual(len(post), 93)
+        self.assertEqual(post[0], np.datetime64('2017-11-15'))
+        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+
+    def test_index_date_n(self):
+        index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
+        # NOTE: this type of selection should possibly not be permitted
+        post = index.loc[['2017-12', '2018-02']]
+        self.assertEqual(len(post), 46)
+        self.assertEqual(post[0], np.datetime64('2017-12-01'))
+        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+        self.assertEqual(
+            set(post.values.astype('datetime64[M]')),
+            {np.datetime64('2018-02'), np.datetime64('2017-12')}
+            )
+
+
     def test_index_date_from_year_month_range_a(self):
         index = IndexDate.from_year_month_range('2017-12', '2018-03')
 
@@ -476,7 +558,6 @@ class TestUnit(TestCase):
                 41)
 
         self.assertEqual(index.loc_to_iloc('2018-02-11'), 41)
-
 
         self.assertEqual(
                 index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
@@ -866,6 +947,9 @@ class TestUnit(TestCase):
         f2 = f.set_index(1, index_constructor=IndexMillisecond)
         self.assertEqual(f2.loc['2016-05', 0].values.tolist(),
                 [4, 5, 6, 7, 8])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

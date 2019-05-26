@@ -7,6 +7,12 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+Index objects based on ``np.datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.
+
+Index objects based on ``np.datetime64`` now support transformations from both ``datetime.timedelta`` as well as ``np.timedelta64``.
+
+Index objects based on ``np.datetime64`` now support selection with slices with ``np.datetime64`` units different than those used in the ``Index``.
+
 
 0.3.4
 -------------
