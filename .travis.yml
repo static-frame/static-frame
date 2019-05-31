@@ -49,6 +49,7 @@ matrix:
 install:
   - pip install codecov pytest-cov
   - pip install -r requirements-test.txt
+  - pip install setuptools wheel
 
 before_script:
   - python setup.py develop
