@@ -2758,6 +2758,38 @@ class TestUnit(TestCase):
             self.assertEqual(f2.index.name, col)
 
 
+    def test_frame_set_index_c(self):
+        records = (
+                (2, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                )
+
+    def test_frame_set_index_d(self):
+
+        a1 = np.array([[1, 2, 3], [10, 20, 30], [100, 200, 300]])
+        a2 = np.array([[4], [5], [6]])
+        a3 = np.array([[None, 'a', None], ['q', 'b', 'c'], ['f', 'd', 'e']])
+        a4 = np.array([[10, 11], [12, 13], [14, 15]])
+
+        f1 = Frame(TypeBlocks.from_blocks((a1, a2, a3, a4)))
+        # f1.set_index(3, drop=True)
+
+        # for arrays in it.permutations((a1, a2, a3, a4)):
+        #     tb1 = TypeBlocks.from_blocks(arrays)
+
+        #     f1 = FrameGO(tb1)
+        #     f1[tb1.shape[1]] = range(tb1.shape[0])
+
+        #     for i in range(f1.shape[1]):
+        #         try:
+        #             f2 = f1.set_index(i, drop=True)
+        #         except:
+        #             import ipdb; ipdb.set_trace()
+        #         self.assertTrue(f2.shape == (3, f1.shape[1] - 1))
+
 
     def test_frame_head_tail_a(self):
 

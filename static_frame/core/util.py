@@ -575,6 +575,23 @@ def _isna(array: np.ndarray) -> np.ndarray:
     #             count=array.size,
     #             dtype=bool).reshape(array.shape)
 
+def binary_transition(array: np.ndarray) -> np.ndarray:
+    '''
+    Given a Boolean array, return the index positions (integers) at False values where that False was previously True, or will be True
+    '''
+
+    not_array = ~array
+
+    # non-nan values that go (from left to right) to NaN
+    target_sel_leading = (array ^ np.roll(array, -1)) & not_array
+    target_sel_leading[-1] = False # wrap around observation invalid
+    # non-nan values that were previously NaN (from left to right
+    # )
+    target_sel_trailing = (array ^ np.roll(array, 1)) & not_array
+    target_sel_trailing[0] = False # wrap around observation invalid
+
+    return np.nonzero(target_sel_leading | target_sel_trailing)[0]
+
 
 def _array_to_duplicated(
         array: np.ndarray,

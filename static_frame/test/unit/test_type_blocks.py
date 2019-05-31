@@ -1,7 +1,9 @@
 import unittest
 import pickle
+import itertools as it
 
 import numpy as np
+
 
 import static_frame as sf
 # assuming located in the same directory
@@ -1324,9 +1326,17 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
 
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 4))
         self.assertTrue(tb1.mloc[1] == tb2.mloc[1])
+
+        tb4 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[0, 2, 4]))
+        self.assertTypeBlocksArrayEqual(tb4,
+                [[2, False, True],
+                [5, True, True],
+                [0, True, True]]
+                )
 
         self.assertTypeBlocksArrayEqual(tb2,
                 [[3, False, False, True],
@@ -1340,12 +1350,6 @@ class TestUnit(TestCase):
                 [0, True, False, True]]
                 )
 
-        tb4 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[0, 2, 4]))
-        self.assertTypeBlocksArrayEqual(tb4,
-                [[2, False, True],
-                [5, True, True],
-                [0, True, True]]
-                )
 
         tb5 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[4, 2, 0]))
         self.assertTypeBlocksArrayEqual(tb4,
@@ -1411,7 +1415,6 @@ class TestUnit(TestCase):
                 )
 
 
-
     def test_type_blocks_drop_blocks_d(self):
 
         a1 = np.array([1, 2, 3])
@@ -1434,6 +1437,49 @@ class TestUnit(TestCase):
                 [[1, 4, False, True],
                 [3, 6, True, True]]
                 )
+
+
+    def test_type_blocks_drop_blocks_e(self):
+
+        a1 = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
+        a2 = np.array([[4], [5], [6]])
+        a3 = np.array([[None, 'a', None], [None, 'b', 'c'], [None, 'd', 'e']])
+        a4 = np.array([True, False, True])
+
+        for arrays in it.permutations((a1, a2, a3, a4)):
+            tb1 = TypeBlocks.from_blocks(arrays)
+
+            for i in range(tb1.shape[1]):
+                tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=i))
+                self.assertTrue(tb2.shape == (3, tb1.shape[1] - 1))
+
+
+
+    def test_type_blocks_drop_blocks_f(self):
+        a1 = np.array([[1], [5], [0]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb1.shape, (3, 4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 2))
+        self.assertTrue((tb1[2:].values == tb2.values).all())
+
+
+    def test_type_blocks_drop_blocks_g(self):
+        a1 = np.array([[1], [5], [0]])
+        a2 = np.array([[2], [6], [10]])
+        a3 = np.array([[3], [7], [11]])
+        a4 = np.array([[4], [8], [2]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
+        self.assertEqual(tb1.shape, (3, 4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 2))
+        self.assertTrue((tb1[2:].values == tb2.values).all())
+
 
 
     def test_type_blocks_pickle_a(self):

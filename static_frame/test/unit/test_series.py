@@ -467,6 +467,11 @@ class TestUnit(TestCase):
         self.assertEqual(post.dtype, int)
 
 
+    def test_series_fillna_b(self):
+
+        s1 = Series(())
+        s2 = s1.fillna(0)
+        self.assertTrue(len(s2) == 0)
 
 
     def test_series_fillna_leading_a(self):
@@ -506,6 +511,100 @@ class TestUnit(TestCase):
 
         self.assertEqual(s4.fillna_trailing('c').to_pairs(),
                 (('a', 'c'), ('b', 'c'), ('c', 'c'), ('d', 'c')))
+
+
+
+    def test_series_fillna_forward_a(self):
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, None, None, 4, None, None, 5, 6), index=index)
+        self.assertEqual(s1.fillna_forward().to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', 4), ('e', 4), ('f', 4), ('g', 5), ('h', 6)))
+
+        # target_index [3]
+        s2 = Series((None, None, None, 4, None, None, None, None), index=index)
+        self.assertEqual(s2.fillna_forward().to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
+
+        # target_index [0 6]
+        s3 = Series((1, None, None, None, None, None, 4, None), index=index)
+        self.assertEqual(s3.fillna_forward().to_pairs(),
+                (('a', 1), ('b', 1), ('c', 1), ('d', 1), ('e', 1), ('f', 1), ('g', 4), ('h', 4)))
+
+        # target_index [0 7]
+        s4 = Series((1, None, None, None, None, None, None, 4), index=index)
+        self.assertEqual(s4.fillna_forward().to_pairs(),
+                (('a', 1), ('b', 1), ('c', 1), ('d', 1), ('e', 1), ('f', 1), ('g', 1), ('h', 4)))
+
+        # target_index [7]
+        s5 = Series((None, None, None, None, None, None, None, 4), index=index)
+        self.assertEqual(s5.fillna_forward().to_pairs(),
+                (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None), ('g', None), ('h', 4)))
+
+        # target index = array([0, 3, 6])
+        s6 = Series((2, None, None, 3, 4, 5, 6, None), index=index)
+        self.assertEqual(s6.fillna_forward().to_pairs(),
+                (('a', 2), ('b', 2), ('c', 2), ('d', 3), ('e', 4), ('f', 5), ('g', 6), ('h', 6))
+                )
+        # target_index [6]
+        s7 = Series((2, 1, 0, 3, 4, 5, 6, None), index=index)
+        self.assertEqual(s7.fillna_forward().to_pairs(),
+                (('a', 2), ('b', 1), ('c', 0), ('d', 3), ('e', 4), ('f', 5), ('g', 6), ('h', 6)))
+
+        s8 = Series((2, None, None, None, 4, None, 6, None), index=index)
+        self.assertEqual(s8.fillna_forward().to_pairs(),
+                (('a', 2), ('b', 2), ('c', 2), ('d', 2), ('e', 4), ('f', 4), ('g', 6), ('h', 6)))
+
+        s9 = Series((None, 2, 3, None, 4, None, 6, 7), index=index)
+        self.assertEqual(s9.fillna_forward().to_pairs(),
+                (('a', None), ('b', 2), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 6), ('h', 7)))
+
+
+
+    def test_series_fillna_backward_a(self):
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, None, None, 4, None, None, 5, 6), index=index)
+        self.assertEqual(s1.fillna_backward().to_pairs(),
+                (('a', 3), ('b', 4), ('c', 4), ('d', 4), ('e', 5), ('f', 5), ('g', 5), ('h', 6)))
+
+        s2 = Series((None, None, None, 4, None, None, None, None), index=index)
+        self.assertEqual(s2.fillna_backward().to_pairs(),
+                (('a', 4), ('b', 4), ('c', 4), ('d', 4), ('e', None), ('f', None), ('g', None), ('h', None)))
+
+        s3 = Series((1, None, None, None, None, None, 4, None), index=index)
+        self.assertEqual(s3.fillna_backward().to_pairs(),
+                (('a', 1), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', None)))
+
+
+
+        s4 = Series((1, None, None, None, None, None, None, 4), index=index)
+        self.assertEqual(s4.fillna_backward().to_pairs(),
+                (('a', 1), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
+
+        s5 = Series((None, None, None, None, None, None, None, 4), index=index)
+        self.assertEqual(s5.fillna_backward().to_pairs(),
+                (('a', 4), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
+
+        s6 = Series((2, None, None, 3, 4, 5, 6, None), index=index)
+        self.assertEqual(s6.fillna_backward().to_pairs(),
+                (('a', 2), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 5), ('g', 6), ('h', None)))
+
+        s7 = Series((None, 1, 0, 3, 4, 5, 6, 7), index=index)
+        self.assertEqual(s7.fillna_backward().to_pairs(),
+            (('a', 1), ('b', 1), ('c', 0), ('d', 3), ('e', 4), ('f', 5), ('g', 6), ('h', 7)))
+
+        s8 = Series((2, None, None, None, 4, None, 6, None), index=index)
+        self.assertEqual(s8.fillna_backward().to_pairs(),
+            (('a', 2), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 6), ('g', 6), ('h', None)))
+
+        s9 = Series((None, 2, 3, None, 4, None, 6, 7), index=index)
+        self.assertEqual(s9.fillna_backward().to_pairs(),
+                (('a', 2), ('b', 2), ('c', 3), ('d', 4), ('e', 4), ('f', 6), ('g', 6), ('h', 7)))
 
 
     def test_series_from_items_a(self):

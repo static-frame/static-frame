@@ -950,12 +950,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
+            # for each block, we evaluate if we have any targets in that block and update the block accordingly; otherwise, we yield the block unchanged
+
             parts = []
-            drop_block = False
-            part_start_last = 0
+            drop_block = False # indicate entire block is dropped
+            part_start_last = 0 # within this block, keep track of where our last change was started
 
             while targets_remain:
-                # get target block and slice
+                # get target block and slice; this is what we want to remove
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
@@ -966,7 +968,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if block_idx != target_block_idx:
                     break # need to advance blocks
 
-                if b.ndim == 1: # given 1D array
+                if b.ndim == 1 or b.shape[1] == 1: # given 1D array or 2D, 1 col array
                     part_start_last = 1
                     target_block_idx = target_slice = None
                     drop_block = True
@@ -977,19 +979,23 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         target_start = target_slice.start
                         target_stop = target_slice.stop
                     else: # it is an integer
-                        target_start = target_slice
+                        target_start = target_slice # can be zero
                         target_stop = target_slice + 1
 
+                    # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
                     if target_start > part_start_last:
                         # yield retained components before and after
                         parts.append(b[:, slice(part_start_last, target_start)])
 
                     part_start_last = target_stop
 
+                # reset target block index, forcing fetchin next target info
                 target_block_idx = target_slice = None
 
-            # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
-            if b.ndim != 1 and part_start_last < b.shape[1]:
+            # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
+
+            if b.ndim != 1 and 0 < part_start_last < b.shape[1]:
+                # if a 2D block, and part_start_last is less than the shape, collect the remaining slice
                 parts.append(b[:, slice(part_start_last, None)])
 
             # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors

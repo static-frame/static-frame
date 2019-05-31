@@ -338,11 +338,21 @@ class SeriesIntFloat_fillna(PerfTest):
         post = SampleData.get('sfs_int_float_10k').fillna(0.0)
 
 
+class SeriesIntFloat_fillna_forward(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_int_float_10k').fillna(method='ffill')
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_int_float_10k').fillna_forward()
 
 
 
 
-class SeriesStrFloat_isnull(PerfTest):
+
+class SeriesStrFloat_isna(PerfTest):
 
     @staticmethod
     def pd():
@@ -374,6 +384,16 @@ class SeriesStrFloat_fillna(PerfTest):
     def sf():
         post = SampleData.get('sfs_str_float_10k').fillna(0.0)
 
+
+class SeriesStrFloat_fillna_forward(PerfTest):
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_str_float_10k').fillna(method='ffill')
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_str_float_10k').fillna_forward()
 
 
 
@@ -410,7 +430,14 @@ class SeriesIntObj_fillna(PerfTest):
         post = SampleData.get('sfs_obj_10k').fillna(0.0)
 
 
+class SeriesIntObj_fillna_forward(PerfTest):
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_obj_10k').fillna(method='ffill')
 
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_obj_10k').fillna_forward()
 
 
 
@@ -423,7 +450,6 @@ class SeriesIntObjStr_isnull(PerfTest):
     def sf():
         post = SampleData.get('sfs_objstr_10k').isna()
 
-
 class SeriesIntObjStr_dropna(PerfTest):
     @staticmethod
     def pd():
@@ -433,16 +459,25 @@ class SeriesIntObjStr_dropna(PerfTest):
     def sf():
         post = SampleData.get('sfs_objstr_10k').dropna()
 
-
 class SeriesIntObjStr_fillna(PerfTest):
 
     @staticmethod
     def pd():
-        post = SampleData.get('pds_obj_10k').fillna('wrong')
+        post = SampleData.get('pds_objstr_10k').fillna('wrong')
 
     @staticmethod
     def sf():
-        post = SampleData.get('sfs_obj_10k').fillna('wrong')
+        post = SampleData.get('sfs_objstr_10k').fillna('wrong')
+
+
+class SeriesIntObjStr_fillna_forward(PerfTest):
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_objstr_10k').fillna(method='ffill')
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_objstr_10k').fillna_forward()
 
 
 

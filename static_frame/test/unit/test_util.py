@@ -38,6 +38,7 @@ from static_frame.core.util import _slice_to_ascending_slice
 from static_frame.core.util import array_shift
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import binary_transition
 
 from static_frame.test.test_case import TestCase
 
@@ -686,6 +687,34 @@ class TestUnit(TestCase):
         self.assertEqual(
                 to_timedelta64(timedelta(minutes=4)),
                 np.timedelta64(240, 's'))
+
+    def test_transition_indices_a(self):
+        a1 = np.array([False, True, True, False, False, True, True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [0, 3, 4, 7])
+
+        a1 = np.array([False, False, True, False, True, True, True, True])
+        self.assertEqual(binary_transition(a1).tolist(), [1, 3])
+
+
+        a1 = np.array([True, False, True])
+        self.assertEqual(binary_transition(a1).tolist(), [1])
+
+        a1 = np.array([False, True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [0, 2])
+
+        a1 = np.array([True])
+        self.assertEqual(binary_transition(a1).tolist(), [])
+
+        a1 = np.array([False])
+        self.assertEqual(binary_transition(a1).tolist(), [])
+
+        a1 = np.array([False, True])
+        self.assertEqual(binary_transition(a1).tolist(), [0])
+
+        a1 = np.array([True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [1])
+
+
 
 
 if __name__ == '__main__':

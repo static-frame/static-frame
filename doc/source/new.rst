@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+Fixed flaw in dropping columns from a ``Frame`` (via ``Frame.set_index`` or the ``Frame.drop`` interface), whereby sometimes (depending on ``TypeBlocks`` structure) the drop would not be executed.
+
 Index objects based on ``np.datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.
 
 Index objects based on ``np.datetime64`` now support transformations from both ``datetime.timedelta`` as well as ``np.timedelta64``.
