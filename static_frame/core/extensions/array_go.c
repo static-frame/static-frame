@@ -244,7 +244,7 @@ static PyMappingMethods ArrayGO_as_mapping = {
 
 
 static PyTypeObject ArrayGOType = {
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
     "ArrayGO",                      /* tp_name */
     sizeof(ArrayGOObject),          /* tp_basicsize */
     0,                              /* tp_itemsize */
