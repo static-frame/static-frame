@@ -1,64 +1,96 @@
-# Taken from: https://github.com/brandtbucher/travis-python-matrix
+# https://github.com/brandtbucher/travis-python-matrix
 
-# CPython 3.5.2 / CPython 3.6.8 / CPython 3.7.3
-# Ubuntu Xenial 16.04 / Windows Server 1803 / macOS 10.13
+# CPython 3.7.3 / CPython 3.6.8
+# Ubuntu 16.04 (Xenial Xerus) / Windows 10 / macOS 10.14 (Mojave)
 
-# Just comment out any matrix entries you don't need.
-
-language: shell
 
 matrix:
 
   include:
 
-    - name: CPython 3.6.8 on Ubuntu Xenial 16.04
-      python: 3.6.8
-      dist: xenial
+    - name: CPython 3.7.3 on Ubuntu 16.04 (Xenial Xerus)
       language: python
-
-    - name: CPython 3.7.3 on Ubuntu Xenial 16.04
+      os: linux
+      dist: xenial
       python: 3.7.3
-      dist: xenial
+
+    - name: CPython 3.6.8 on Ubuntu 16.04 (Xenial Xerus)
       language: python
+      os: linux
+      dist: xenial
+      python: 3.6.8
 
-
-    - name: CPython 3.6.8 on Windows Server 1803
+    - name: CPython 3.7.3 on Windows 10 (64-bit)
+      language: shell
       os: windows
-      before_install: choco install python --version 3.6.8
-      env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
+      before_install:
+        - export PATH=/c/Python37:/c/Python37/Scripts:$PATH
+        - choco install python --version 3.7.3
 
-    - name: CPython 3.7.3 on Windows Server 1803
+    - name: CPython 3.6.8 on Windows 10 (64-bit)
+      language: shell
       os: windows
-      before_install: choco install python --version 3.7.3
-      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      before_install:
+        - export PATH=/c/Python36:/c/Python36/Scripts:$PATH
+        - choco install python --version 3.6.8
 
+    - name: CPython 3.7.3 on Windows 10 (32-bit)
+      language: shell
+      os: windows
+      before_install:
+        - export PATH=/c/Python37:/c/Python37/Scripts:$PATH
+        - choco install python --version 3.7.3 --x86
 
-    - name: CPython 3.6.8 on macOS 10.13
+    - name: CPython 3.6.8 on Windows 10 (32-bit)
+      language: shell
+      os: windows
+      before_install:
+        - export PATH=/c/Python36:/c/Python36/Scripts:$PATH
+        - choco install python --version 3.6.8 --x86
+
+    - name: CPython 3.7.3 on macOS 10.14 (Mojave)
+      language: shell
       os: osx
-      before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
-      env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
+      osx_image: xcode10.2
+      before_install:
+        # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
+        - export MACOSX_DEPLOYMENT_TARGET=10.6
+        # Include dirs are broken on Mojave, so fix them here:
+        - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
+        # Build a fat 32/64 binary (needed for Python.org wheel installs):
+        - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
+        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
+        - pyenv install $PYENV_VERSION
 
-    - name: CPython 3.7.3 on macOS 10.13
+    - name: CPython 3.6.8 on macOS 10.14 (Mojave)
+      language: shell
       os: osx
-      before_install: brew upgrade pyenv; pyenv install $PYENV_VERSION
-      env: PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
+      osx_image: xcode10.2
+      before_install:
+        # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
+        - export MACOSX_DEPLOYMENT_TARGET=10.6
+        # Include dirs are broken on Mojave, so fix them here:
+        - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
+        # Build a fat 32/64 binary (needed for Python.org wheel installs):
+        - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
+        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
+        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.5.2
+        - pyenv install $PYENV_VERSION
+
 
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
 
+
 install:
-  - pip install codecov pytest-cov
+  - pip install codecov pytest-cov setuptools wheel
   - pip install -r requirements-test.txt
-  - pip install setuptools wheel
 
 before_script:
   - python setup.py develop
 
 script:
-  - pytest --cov=static_frame
-
-after_script:
-  - python setup.py sdist bdist_wheel
+  - pytest --cov=static_frame && python setup.py sdist bdist_wheel
 
 after_success:
   - codecov
