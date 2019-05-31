@@ -54,7 +54,10 @@ before_script:
   - python setup.py develop
 
 script:
- - pytest --cov=static_frame
+  - pytest --cov=static_frame
+
+ after_script:
+  - python setup.py sdist bdist_wheel
 
 after_success:
   - codecov
