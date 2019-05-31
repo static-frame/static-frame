@@ -42,6 +42,8 @@ def get_version():
                     l = l.split('#')[0].strip()
                 return l.split('=')[-1].strip()[1:-1]
 
+include_dirs = [np.get_include(), 'static_frame/core/include']
+
 setup(
     name='static-frame',
     version=get_version(),
@@ -76,8 +78,11 @@ setup(
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.util',
-                    ['static_frame/core/extensions/util.c'],
-                    include_dirs=[np.get_include(), 'static_frame/core/include'],
+                    [
+                            'static_frame/core/extensions/util.c',
+                            'static_frame/core/extensions/SF.c'
+                    ],
+                    include_dirs=include_dirs,
             ),
     ],
 )
