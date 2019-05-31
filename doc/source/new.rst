@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+Implemented ``Series.fillna_forward``, ``Series.fillna_backward``, ``Series.fillna_leading``, ``Series.fillna_trailing``.
+
 Fixed flaw in dropping columns from a ``Frame`` (via ``Frame.set_index`` or the ``Frame.drop`` interface), whereby sometimes (depending on ``TypeBlocks`` structure) the drop would not be executed.
 
 Index objects based on ``np.datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.

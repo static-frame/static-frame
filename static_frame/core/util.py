@@ -352,6 +352,59 @@ def ufunc_unique(array: np.ndarray,
     # all other types, use the main ufunc
     return np.unique(array, axis=axis)
 
+def roll_1d(array, shift: int) -> np.ndarray:
+    '''
+    Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
+    '''
+    size = len(array)
+    shift = shift % size
+    if shift == 0:
+        return array.copy()
+    post = np.empty(size, dtype=array.dtype)
+    if shift > 0:
+        post[0:shift] = array[-shift:]
+        post[shift:] = array[0:-shift]
+        return post
+    # shift is negative, negate to flip
+    post[0:size+shift] = array[-shift:]
+    post[size+shift:None] = array[:-shift]
+    return post
+
+def roll_2d(array, shift: int, axis: int) -> np.ndarray:
+    '''
+    Specialized form of np.roll that, by focusing on the 2D solution
+    '''
+    post = np.empty(array.shape, dtype=array.dtype)
+
+    if axis == 0: # roll rows
+        size = array.shape[0]
+        shift = shift % size
+        if shift == 0:
+            return array.copy()
+        if shift > 0:
+            post[0:shift, :] = array[-shift:, :]
+            post[shift:, :] = array[0:-shift, :]
+            return post
+        # shift is negative, negate to flip
+        post[0:size+shift, :] = array[-shift:, :]
+        post[size+shift:None, :] = array[:-shift, :]
+
+    elif axis == 1: # roll columns
+        size = array.shape[1]
+        shift = shift % size
+        if shift == 0:
+            return array.copy()
+        if shift > 0:
+            post[:, 0:shift] = array[:, -shift:]
+            post[:, shift:] = array[:, 0:-shift]
+            return post
+        # shift is negative, negate to flip
+        post[:, 0:size+shift] = array[:, -shift:]
+        post[:, size+shift:None] = array[:, :-shift]
+        return post
+
+
+    raise NotImplementedError()
 
 def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
     '''Utility method to take arbitary, heterogenous typed iterables and realize them as an NP array. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
@@ -414,6 +467,7 @@ def _slice_to_ascending_slice(key: slice, size: int) -> slice:
     return slice(start, stop, -key.step)
 
 #-------------------------------------------------------------------------------
+# dates
 
 _DT64_DAY = np.dtype('datetime64[D]')
 _DT64_MONTH = np.dtype('datetime64[M]')
@@ -583,11 +637,10 @@ def binary_transition(array: np.ndarray) -> np.ndarray:
     not_array = ~array
 
     # non-nan values that go (from left to right) to NaN
-    target_sel_leading = (array ^ np.roll(array, -1)) & not_array
+    target_sel_leading = (array ^ roll_1d(array, -1)) & not_array
     target_sel_leading[-1] = False # wrap around observation invalid
-    # non-nan values that were previously NaN (from left to right
-    # )
-    target_sel_trailing = (array ^ np.roll(array, 1)) & not_array
+    # non-nan values that were previously NaN (from left to right)
+    target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
     target_sel_trailing[0] = False # wrap around observation invalid
 
     return np.nonzero(target_sel_leading | target_sel_trailing)[0]
@@ -613,7 +666,7 @@ def _array_to_duplicated(
         o_idx = np.argsort(array, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
         array_sorted = array[o_idx]
         opposite_axis = 0
-        f_flags = array_sorted == np.roll(array_sorted, 1)
+        f_flags = array_sorted == roll_1d(array_sorted, 1)
 
     else:
         if axis == 0: # sort rows
@@ -629,7 +682,7 @@ def _array_to_duplicated(
             raise NotImplementedError('no handling for axis')
         opposite_axis = int(not bool(axis))
         # rolling axis 1 rotates columns; roll axis 0 rotates rows
-        match = array_sorted == np.roll(array_sorted, 1, axis=axis)
+        match = array_sorted == roll_2d(array_sorted, 1, axis=axis)
         f_flags = match.all(axis=opposite_axis)
 
     if not f_flags.any():
@@ -645,7 +698,7 @@ def _array_to_duplicated(
         dupes = f_flags
     else:
         # non-LAST duplicates is a left roll of the non-first flags.
-        l_flags = np.roll(f_flags, -1)
+        l_flags = roll_1d(f_flags, -1)
 
         if not exclude_first and exclude_last:
             dupes = l_flags
@@ -683,9 +736,11 @@ def array_shift(array: np.ndarray,
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement
         return array.copy()
+
     if wrap:
-        # standard np roll works fine
-        return np.roll(array, shift_mod, axis=axis)
+        if array.ndim == 1:
+            return roll_1d(array, shift_mod)
+        return roll_2d(array, shift_mod, axis=axis)
 
     # will insure that the result can contain the fill and the original values
     result = full_for_fill(array.dtype, array.shape, fill_value)

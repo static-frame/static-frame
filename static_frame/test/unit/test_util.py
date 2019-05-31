@@ -40,6 +40,11 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import to_timedelta64
 from static_frame.core.util import binary_transition
 
+from static_frame.core.util import roll_1d
+from static_frame.core.util import roll_2d
+
+
+
 from static_frame.test.test_case import TestCase
 
 
@@ -715,6 +720,34 @@ class TestUnit(TestCase):
         self.assertEqual(binary_transition(a1).tolist(), [1])
 
 
+    def test_roll_1d_a(self):
+
+        a1 = np.arange(12)
+
+        for i in range(len(a1) + 1):
+            post = roll_1d(a1, i)
+            self.assertEqual(post.tolist(), np.roll(a1, i).tolist())
+
+            post = roll_1d(a1, -i)
+            self.assertEqual(post.tolist(), np.roll(a1, -i).tolist())
+
+    def  test_roll_2d_a(self):
+
+        a1 = np.arange(12).reshape((3,4))
+
+        for i in range(a1.shape[0] + 1):
+            post = roll_2d(a1, i, axis=0)
+            self.assertEqual(post.tolist(), np.roll(a1, i, axis=0).tolist())
+
+            post = roll_2d(a1, -i, axis=0)
+            self.assertEqual(post.tolist(), np.roll(a1, -i, axis=0).tolist())
+
+        for i in range(a1.shape[1] + 1):
+            post = roll_2d(a1, i, axis=1)
+            self.assertEqual(post.tolist(), np.roll(a1, i, axis=1).tolist())
+
+            post = roll_2d(a1, -i, axis=1)
+            self.assertEqual(post.tolist(), np.roll(a1, -i, axis=1).tolist())
 
 
 if __name__ == '__main__':

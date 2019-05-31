@@ -560,6 +560,7 @@ class Series(metaclass=MetaOperatorDelegate):
                     or target_slice.start == target_slice.stop):
                 # slice from 2 to 3 can become a slice from 3 to 3, which has no length
                 continue
+            # NOTE: no performance benefit using target_slice.start when it is not None
             if sel[target_slice][0]:
                 assigned[target_slice] = value
 

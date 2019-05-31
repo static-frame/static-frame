@@ -4,8 +4,6 @@ import datetime
 import operator
 from functools import partial
 from functools import reduce
-from itertools import tee
-from itertools import zip_longest
 
 import numpy as np
 
