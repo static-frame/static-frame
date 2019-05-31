@@ -114,30 +114,32 @@ DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
-def mloc(array: np.ndarray) -> int:
-    '''Return the memory location of an array.
-    '''
-    return array.__array_interface__['data'][0]
+from static_frame.core.extensions.util import mloc
+# def mloc(array: np.ndarray) -> int:
+#     '''Return the memory location of an array.
+#     '''
+#     return array.__array_interface__['data'][0]
 
+from static_frame.core.extensions.util import immutable_filter
+# def immutable_filter(src_array: np.ndarray) -> np.ndarray:
+#     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
+#     '''
+#     if src_array.flags.writeable:
+#         dst_array = src_array.copy()
+#         dst_array.flags.writeable = False
+#         return dst_array
+#     return src_array # keep it as is
 
-def immutable_filter(src_array: np.ndarray) -> np.ndarray:
-    '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
-    '''
-    if src_array.flags.writeable:
-        dst_array = src_array.copy()
-        dst_array.flags.writeable = False
-        return dst_array
-    return src_array # keep it as is
-
-def name_filter(name: tp.Hashable) -> tp.Hashable:
-    '''
-    For name attributes on containers, only permit recursively hashable objects.
-    '''
-    try:
-        hash(name)
-    except TypeError:
-        raise TypeError('unhashable name attribute', name)
-    return name
+from static_frame.core.extensions.util import name_filter
+# def _name_filter(name: tp.Hashable) -> tp.Hashable:
+#     '''
+#     For name attributes on containers, only permit recursively hashable objects.
+#     '''
+#     try:
+#         hash(name)
+#     except TypeError:
+#         raise TypeError('unhashable name attribute', name)
+#     return name
 
 def column_2d_filter(array: np.ndarray) -> np.ndarray:
     '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
@@ -181,47 +183,48 @@ def _gen_skip_middle(
             break
     yield from reversed(values)
 
+from static_frame.core.extensions.util import _resolve_dtype
+# def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
+#     '''
+#     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
+#     '''
+#     # NOTE: np.dtype(object) == np.object_, so we can return np.object_
+#     # if the same, return that detype
+#     if dt1 == dt2:
+#         return dt1
 
-def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
-    '''
-    Given two dtypes, return a compatible dtype that can hold both contents without truncation.
-    '''
-    # NOTE: np.dtype(object) == np.object_, so we can return np.object_
-    # if the same, return that detype
-    if dt1 == dt2:
-        return dt1
+#     # if either is object, we go to object
+#     if dt1.kind == 'O' or dt2.kind == 'O':
+#         return DTYPE_OBJECT
 
-    # if either is object, we go to object
-    if dt1.kind == 'O' or dt2.kind == 'O':
-        return DTYPE_OBJECT
+#     dt1_is_str = dt1.kind in _DTYPE_STR_KIND
+#     dt2_is_str = dt2.kind in _DTYPE_STR_KIND
 
-    dt1_is_str = dt1.kind in _DTYPE_STR_KIND
-    dt2_is_str = dt2.kind in _DTYPE_STR_KIND
+#     # if both are string or string-like, we can use result type to get the longest string
+#     if dt1_is_str and dt2_is_str:
+#         return np.result_type(dt1, dt2)
 
-    # if both are string or string-like, we can use result type to get the longest string
-    if dt1_is_str and dt2_is_str:
-        return np.result_type(dt1, dt2)
+#     dt1_is_bool = dt1.type is np.bool_
+#     dt2_is_bool = dt2.type is np.bool_
 
-    dt1_is_bool = dt1.type is np.bool_
-    dt2_is_bool = dt2.type is np.bool_
+#     # if any one is a string or a bool, we have to go to object; result_type gives a string in mixed cases
+#     if dt1_is_str or dt2_is_str or dt1_is_bool or dt2_is_bool:
+#         return DTYPE_OBJECT
 
-    # if any one is a string or a bool, we have to go to object; result_type gives a string in mixed cases
-    if dt1_is_str or dt2_is_str or dt1_is_bool or dt2_is_bool:
-        return DTYPE_OBJECT
+#     # if not a string or an object, can use result type
+#     return np.result_type(dt1, dt2)
 
-    # if not a string or an object, can use result type
-    return np.result_type(dt1, dt2)
-
-def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
-    '''Given an iterable of dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object
-    '''
-    dtypes = iter(dtypes)
-    dt_resolve = next(dtypes)
-    for dt in dtypes:
-        dt_resolve = _resolve_dtype(dt_resolve, dt)
-        if dt_resolve == DTYPE_OBJECT:
-            return dt_resolve
-    return dt_resolve
+from static_frame.core.extensions.util import resolve_dtype_iter
+# def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
+#     '''Given an iterable of dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object
+#     '''
+#     dtypes = iter(dtypes)
+#     dt_resolve = next(dtypes)
+#     for dt in dtypes:
+#         dt_resolve = _resolve_dtype(dt_resolve, dt)
+#         if dt_resolve == DTYPE_OBJECT:
+#             return dt_resolve
+#     return dt_resolve
 
 def concat_resolved(arrays: tp.Iterable[np.ndarray],
         axis=0):
