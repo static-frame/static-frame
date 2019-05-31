@@ -56,6 +56,8 @@ matrix:
         # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
         - export MACOSX_DEPLOYMENT_TARGET=10.6
         # Include dirs are broken on Mojave, so fix them here:
+        - mkdir /tmp/includes
+        - brew doctor 2>&1 | grep "/usr/local/include" | awk '{$1=$1;print}' | xargs -I _ mv _ /tmp/includes
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
         # Build a fat 32/64 binary (needed for Python.org wheel installs):
         - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
@@ -70,10 +72,11 @@ matrix:
         # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
         - export MACOSX_DEPLOYMENT_TARGET=10.6
         # Include dirs are broken on Mojave, so fix them here:
+        - mkdir /tmp/includes
+        - brew doctor 2>&1 | grep "/usr/local/include" | awk '{$1=$1;print}' | xargs -I _ mv _ /tmp/includes
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
         # Build a fat 32/64 binary (needed for Python.org wheel installs):
         - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
-        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
         - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.5.2
         - pyenv install $PYENV_VERSION
 
