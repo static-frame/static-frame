@@ -77,6 +77,14 @@ setup(
             ],
     ext_modules=[
             Extension(
+                    'static_frame.core.extensions.array_go',
+                    [
+                            'static_frame/core/extensions/array_go.c',
+                            'static_frame/core/extensions/SF.c'
+                    ],
+                    include_dirs=include_dirs,
+            ),
+            Extension(
                     'static_frame.core.extensions.util',
                     [
                             'static_frame/core/extensions/util.c',
