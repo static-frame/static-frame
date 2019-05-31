@@ -75,6 +75,7 @@ setup(
             'static_frame.core.extensions',
             'static_frame.performance',
             ],
+    package_data={'static_frame.core.extensions': ['*.pyi']},
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.array_go',
