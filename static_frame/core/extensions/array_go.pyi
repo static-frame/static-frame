@@ -3,7 +3,7 @@
 
 import typing
 
-import numpy
+import numpy  # type: ignore
 
 
 class ArrayGO:

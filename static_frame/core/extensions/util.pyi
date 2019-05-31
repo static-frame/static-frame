@@ -3,7 +3,7 @@
 
 import typing
 
-import numpy
+import numpy  # type: ignore
 
 
 def immutable_filter(__array: numpy.array) -> numpy.array: ...
