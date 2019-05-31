@@ -56,7 +56,7 @@ before_script:
 script:
   - pytest --cov=static_frame
 
- after_script:
+after_script:
   - python setup.py sdist bdist_wheel
 
 after_success:
