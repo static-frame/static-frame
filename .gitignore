@@ -1,5 +1,11 @@
 .hypothesis
 .mypy_cache
 .pytest_cache
+.vscode
 
 __pycache__
+build
+dist
+
+*.egg-info
+*.so

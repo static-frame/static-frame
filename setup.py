@@ -1,12 +1,15 @@
 # Always prefer setuptools over distutils
+from setuptools import Extension
 from setuptools import setup
 # To use a consistent encoding
 from codecs import open
 from os import path
 
+import numpy as np
+
 # https://packaging.python.org/distributing/
 # to deploy:
-# pip install wheel, twine
+# pip install wheel twine
 # python setup.py sdist
 # python setup.py bdist_wheel
 # twine upload dist/*
@@ -67,6 +70,14 @@ setup(
     packages=[
             'static_frame',
             'static_frame.core',
+            'static_frame.core.extensions',
             'static_frame.performance',
             ],
+    ext_modules=[
+            Extension(
+                    'static_frame.core.extensions.util',
+                    ['static_frame/core/extensions/util.c'],
+                    include_dirs=[np.get_include(), 'static_frame/core/include'],
+            ),
+    ],
 )
