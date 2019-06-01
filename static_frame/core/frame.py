@@ -811,20 +811,6 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         elif isinstance(data, dict):
             raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
-            # if a dictionary is given, it is treated as a dictionary of columns
-            # if columns is not None:
-            #     raise RuntimeError('cannot create Frame from dictionary when columns is defined')
-            # columns = []
-            # def blocks():
-            #     for k, v in _dict_to_sorted_items(data):
-            #         columns.append(k)
-            #         if isinstance(v, np.ndarray):
-            #             yield v
-            #         else:
-            #             values = np.array(v)
-            #             values.flags.writeable = False
-            #             yield values
-            # self._blocks = TypeBlocks.from_blocks(blocks())
 
         elif data is None and columns is None:
             # will have shape of 0,0
@@ -1955,7 +1941,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self.__class__(blocks,
                 index=index_values,
                 columns=self._columns,
-                own_data=True)
+                own_data=True,
+                name=self._name)
 
     def sort_columns(self,
             ascending: bool = True,
@@ -1974,7 +1961,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self.__class__(blocks,
                 index=self._index,
                 columns=columns_values,
-                own_data=True)
+                own_data=True,
+                name=self._name)
 
     def sort_values(self,
             key: KeyOrKeys,
@@ -2025,7 +2013,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             return self.__class__(blocks,
                     index=self._index,
                     columns=column_values,
-                    own_data=True)
+                    own_data=True,
+                    name=self._name)
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
@@ -2033,7 +2022,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self.__class__(blocks,
                 index=index_values,
                 columns=self._columns,
-                own_data=True)
+                own_data=True,
+                name=self._name)
 
     def isin(self, other) -> 'Frame':
         '''
@@ -2091,7 +2081,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return self.__class__(self._blocks.transpose(),
                 index=self._columns,
                 columns=self._index,
-                own_data=True)
+                own_data=True,
+                name=self.name)
 
     @property
     def T(self) -> 'Frame':
@@ -2487,7 +2478,9 @@ class FrameGO(Frame):
         # TODO: support assignment from iterables of keys, values?
 
         if key in self._columns:
-            raise Exception('key already defined in columns; use .assign to get new Frame')
+            raise RuntimeError('key already defined in columns; use .assign to get new Frame')
+
+        row_count = len(self._index)
 
         if isinstance(value, Series):
             # TODO: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
@@ -2495,23 +2488,24 @@ class FrameGO(Frame):
             self._blocks.append(
                     value.reindex(
                     self.index, fill_value=fill_value).values)
-        else: # unindexed array
-            if not isinstance(value, np.ndarray):
-                if isinstance(value, GeneratorType):
-                    value = np.array(list(value))
-                elif not hasattr(value, '__len__') or isinstance(value, str):
-                    value = np.full(self._blocks._shape[0], value)
-                else:
-                    # for now, we assume all values make sense to covnert to NP array
-                    value = np.array(value)
-                value.flags.writeable = False
-
-            # NOTE: this permits unaligned assignment as no index is used, possibly remove
-            if value.ndim != 1 or (
-                    self._blocks._shape[0] > 0 and
-                    len(value) != self._blocks._shape[0]):
+        elif isinstance(value, np.ndarray): # is numpy array
+            # this permits unaligned assignment as no index is used, possibly remove
+            if value.ndim != 1 or len(value) != row_count:
                 # block may have zero shape if created without columns
-                raise Exception('incorrectly sized, unindexed value')
+                raise RuntimeError('incorrectly sized, unindexed value')
+            self._blocks.append(value)
+        else:
+            if isinstance(value, GeneratorType):
+                value = np.array(tuple(value))
+            elif not hasattr(value, '__len__') or isinstance(value, str):
+                value = np.full(row_count, value)
+            else:
+                # for now, we assume all values make sense to convert to NP array
+                value = np.array(value)
+                if value.ndim != 1 or len(value) != row_count:
+                    raise RuntimeError('incorrectly sized, unindexed value')
+
+            value.flags.writeable = False
             self._blocks.append(value)
 
         # this might fail if key is a sequence

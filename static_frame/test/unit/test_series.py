@@ -562,6 +562,24 @@ class TestUnit(TestCase):
                 (('a', None), ('b', 2), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 6), ('h', 7)))
 
 
+    def test_series_fillna_forward_b(self):
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, None, None, None, 4, None, None, None), index=index)
+        s2 = s1.fillna_forward(limit=2)
+
+        self.assertEqual(s2.to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', None), ('e', 4), ('f', 4), ('g', 4), ('h', None))
+                )
+
+        self.assertEqual(s1.fillna_forward(limit=1).to_pairs(),
+                (('a', 3), ('b', 3), ('c', None), ('d', None), ('e', 4), ('f', 4), ('g', None), ('h', None)))
+
+        self.assertEqual(s1.fillna_forward(limit=10).to_pairs(),
+                (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
+
 
     def test_series_fillna_backward_a(self):
 
@@ -927,13 +945,18 @@ class TestUnit(TestCase):
 
         s1 = Series((10, 3, 28, 21, 15),
                 index=('a', 'c', 'b', 'e', 'd'),
-                dtype=object)
+                dtype=object,
+                name='foo')
 
-        self.assertEqual(s1.sort_index().to_pairs(),
+        s2 = s1.sort_index()
+        self.assertEqual(s2.to_pairs(),
                 (('a', 10), ('b', 28), ('c', 3), ('d', 15), ('e', 21)))
+        self.assertEqual(s2.name, s1.name)
 
-        self.assertEqual(s1.sort_values().to_pairs(),
+        s3 = s1.sort_values()
+        self.assertEqual(s3.to_pairs(),
                 (('c', 3), ('a', 10), ('d', 15), ('e', 21), ('b', 28)))
+        self.assertEqual(s3.name, s1.name)
 
 
     def test_series_relabel_a(self):

@@ -534,8 +534,11 @@ class Series(metaclass=MetaOperatorDelegate):
                 name=self._name)
 
 
-    def fillna_forward(self) -> 'Series':
+    def fillna_forward(self, limit: int = 0) -> 'Series':
         '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+
+        Args:
+            count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
         '''
         sel = _isna(self.values)
         if not np.any(sel):
@@ -548,7 +551,7 @@ class Series(metaclass=MetaOperatorDelegate):
         # the first target is inclusive of the value, so add one to slice
         # start of len-1 will be length, a zero slice
         target_slices = (slice(start+1, stop) for start, stop in
-                zip_longest(target_index, target_index[1:], fillvalue=None)
+                zip_longest(target_index, target_index[1:], fillvalue=len(self))
                 )
 
         target_values = self.values[target_index]
@@ -558,10 +561,15 @@ class Series(metaclass=MetaOperatorDelegate):
             # only assume if all values are NaN, which will be given by first value
             if (target_slice.start >= start_invalid
                     or target_slice.start == target_slice.stop):
-                # slice from 2 to 3 can become a slice from 3 to 3, which has no length
+                # slice from 2 to 3 can become a     slice from 3 to 3, which has no length
                 continue
             # NOTE: no performance benefit using target_slice.start when it is not None
             if sel[target_slice][0]:
+                if limit > 0:
+                    # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+                    shift = len(range(*target_slice.indices(len(self)))) - limit
+                    if shift > 0:
+                        target_slice = slice(target_slice.start, target_slice.stop - shift)
                 assigned[target_slice] = value
 
         assigned.flags.writeable = False
@@ -572,7 +580,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
 
     def fillna_backward(self) -> 'Series':
-        '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new ``Series`` after feeding backward the last   non-null (NaN or None) observation across contiguous nulls.
         '''
         sel = _isna(self.values)
         if not np.any(sel):
@@ -1042,7 +1050,7 @@ class Series(metaclass=MetaOperatorDelegate):
         index_values.flags.writeable = False
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values)
+        return self.__class__(values, index=index_values, name=self._name)
 
     def sort_values(self,
             ascending: bool = True,
@@ -1059,7 +1067,7 @@ class Series(metaclass=MetaOperatorDelegate):
         index_values.flags.writeable = False
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values)
+        return self.__class__(values, index=index_values, name=self._name)
 
 
     def isin(self, other) -> 'Series':
@@ -1095,7 +1103,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
         array = np.clip(self.values, *args)
         array.flags.writeable = False
-        return self.__class__(array, index=self._index)
+        return self.__class__(array, index=self._index, name=self._name)
 
     def transpose(self) -> 'Series':
         '''The transpositon of a Series is itself.

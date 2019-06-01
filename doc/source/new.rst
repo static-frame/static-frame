@@ -7,6 +7,10 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+``Frame`` and ``Series`` sort methods now propagate ``name`` attributes.
+
+``Index.from_pandas()`` now correctly collects ``name`` / ``names`` attributes from Pandas indexes.
+
 Implemented ``Series.fillna_forward``, ``Series.fillna_backward``, ``Series.fillna_leading``, ``Series.fillna_trailing``.
 
 Fixed flaw in dropping columns from a ``Frame`` (via ``Frame.set_index`` or the ``Frame.drop`` interface), whereby sometimes (depending on ``TypeBlocks`` structure) the drop would not be executed.
