@@ -104,3 +104,16 @@ script:
 
 after_success:
   - codecov
+
+deploy:
+  server: https://test.pypi.org/legacy/  # XXX
+  username: brandtbucher
+  password:
+    secure: CTCE49q/EuvPkWBSfVfN0Kl5mvT/CNpntDAGSBnl2Nd+gFVrpM0Gmc5BkzPNMgjJE9pP64tJeiFkcpzq4EH/l5TgmKiAZPRDTIeuKLFPnrax1Li9uOgiWfzwSS7xc5kI8qQ4qrPI7g1EG1g6TWXgmzG7FHpd7oVtUoL3uXHCDqfSHQc70J4hYJqiUYmZ6AsISYR1s98zmYo31f6xZnHRGhOljkWEFzlFxLMpo6FwP30QCQn0qHtLVss4dOuSDnqRhA6KJMMRfDtLZDLkG/vYLevLzCC9bV+18ODxj3ivQAx9FeYBkdbSFB+yXKH2i5gSXj6gAVs6oJPsBhp+Zzu+0uwSarRQSGtO6gt0Gs9UY5tYdk8JlGuCiHm0BvctVisJMclW/4vWp/7MBa0F0oehTmje2EI81xeP3iM3KFaVFJFfZPQvEjGUHmTevaMZDwen43nJWm9OTd8fLCYfOsXw73FWgq1/urTeVa3+TJqzA0df/RaqL2KLr2zzGsITr2G5WMOfxkgbAq+qEHV+lkHJVQJtW1ddbSb0Jrkta+6/KvJncyfXnYgfWfMjrkTzSAe94IsdINOWgDYr1mRH6E94w3OnmGOnI88ztZOu+0uyOT9I0yKbTcjo9AGKbFmy9cjp2lO3NOD+RLef7l5TYt6ck0/PVjWL8jcFAzYVT68cxZA=
+  distributions: sdist
+  skip_existing: true
+  skip_cleanup: true
+  on:
+    repo: InvestmentSystems/static-frame
+    branch: c  # XXX master
+    # tags: true  # XXX
