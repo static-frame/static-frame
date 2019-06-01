@@ -23,12 +23,16 @@ matrix:
       os: linux
       dist: xenial
       python: 3.7.3
+      before_install:
+        - sudo apt-get install -y patchelf
 
     - name: CPython 3.6.8 on Ubuntu 16.04 (Xenial Xerus)
       language: python
       os: linux
       dist: xenial
       python: 3.6.8
+      before_install:
+        - sudo apt-get install -y patchelf
 
     - name: CPython 3.7.3 on Windows 10 (64-bit)
       language: shell
