@@ -3,6 +3,16 @@
 # CPython 3.7.3 / CPython 3.6.8
 # Ubuntu 16.04 (Xenial Xerus) / Windows 10 / macOS 10.14 (Mojave)
 
+# Builds the following wheels:
+# - cp36-cp36m-linux-x86-64.whl -> cp36-cp36m-manylinux1-x86-64.whl
+# - cp37-cp37m-linux-x86-64.whl -> cp37-cp37m-manylinux1-x86-64.whl
+# - cp36-cp36m-win_amd64.whl
+# - cp37-cp37m-win_amd64.whl
+# - cp36-cp36m-win32.whl
+# - cp37-cp37m-win32.whl
+# - cp36-cp36m-macosx_10_9_x86_64.whl -> cp36-cp36m-macosx_10_6_intel.whl
+# - cp37-cp37m-macosx_10_9_x86_64.whl -> cp37-cp37m-macosx_10_6_intel.whl
+
 
 matrix:
 
@@ -53,14 +63,10 @@ matrix:
       os: osx
       osx_image: xcode10.2
       before_install:
-        # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
-        - export MACOSX_DEPLOYMENT_TARGET=10.6
+        # Build using the ancient 10.9 SDK (needed for Anaconda/Python.org wheel installs):
+        - export MACOSX_DEPLOYMENT_TARGET=10.9
         # Include dirs are broken on Mojave, so fix them here:
-        - mkdir /tmp/includes
-        - brew doctor 2>&1 | grep "/usr/local/include" | awk '{$1=$1;print}' | xargs -I _ mv _ /tmp/includes
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
-        # Build a fat 32/64 binary (needed for Python.org wheel installs):
-        - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
         - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
         - pyenv install $PYENV_VERSION
 
@@ -69,31 +75,24 @@ matrix:
       os: osx
       osx_image: xcode10.2
       before_install:
-        # Build using the ancient 10.6 SDK (needed for Anaconda/Python.org wheel installs):
-        - export MACOSX_DEPLOYMENT_TARGET=10.6
+        # Build using the ancient 10.9 SDK (needed for Anaconda/Python.org wheel installs):
+        - export MACOSX_DEPLOYMENT_TARGET=10.9
         # Include dirs are broken on Mojave, so fix them here:
-        - mkdir /tmp/includes
-        - brew doctor 2>&1 | grep "/usr/local/include" | awk '{$1=$1;print}' | xargs -I _ mv _ /tmp/includes
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
-        # Build a fat 32/64 binary (needed for Python.org wheel installs):
-        - export PYTHON_CONFIGURE_OPTS="--enable-universalsdk=/ --with-universal-archs=intel"
-        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.5.2
+        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
         - pyenv install $PYENV_VERSION
-
 
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
 
-
 install:
-  - pip install codecov pytest-cov setuptools wheel
   - pip install -r requirements-test.txt
-
-before_script:
-  - python setup.py develop
+  - pip install auditwheel codecov pytest-cov setuptools wheel
+  - python setup.py install sdist bdist_wheel
+  - python wheels.py
 
 script:
-  - pytest --cov=static_frame && python setup.py sdist bdist_wheel
+  - pytest --cov=static_frame
 
 after_success:
   - codecov
