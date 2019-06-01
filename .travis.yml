@@ -87,8 +87,8 @@ matrix:
 
 install:
   - pip install -r requirements-test.txt
-  - pip install auditwheel codecov pytest-cov setuptools wheel
-  - python setup.py install sdist bdist_wheel
+  - pip install auditwheel codecov pytest-cov setuptools wheel==0.31.1
+  - python setup.py develop sdist bdist_wheel
   - python wheels.py
 
 script:
