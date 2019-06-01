@@ -550,24 +550,23 @@ class Series(metaclass=MetaOperatorDelegate):
 
         # the first target is inclusive of the value, so add one to slice
         # start of len-1 will be length, a zero slice
+        length = len(self.values)
         target_slices = (slice(start+1, stop) for start, stop in
-                zip_longest(target_index, target_index[1:], fillvalue=len(self))
+                zip_longest(target_index, target_index[1:], fillvalue=length)
                 )
 
         target_values = self.values[target_index]
-        start_invalid = len(self.values)
 
         for target_slice, value in zip(target_slices, target_values):
-            # only assume if all values are NaN, which will be given by first value
-            if (target_slice.start >= start_invalid
+            if (target_slice.start >= length
                     or target_slice.start == target_slice.stop):
-                # slice from 2 to 3 can become a     slice from 3 to 3, which has no length
                 continue
-            # NOTE: no performance benefit using target_slice.start when it is not None
+
+            # only assume if all values are NaN, which will be given by first value
             if sel[target_slice][0]:
                 if limit > 0:
                     # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
-                    shift = len(range(*target_slice.indices(len(self)))) - limit
+                    shift = len(range(*target_slice.indices(length))) - limit
                     if shift > 0:
                         target_slice = slice(target_slice.start, target_slice.stop - shift)
                 assigned[target_slice] = value
@@ -579,7 +578,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 name=self._name)
 
 
-    def fillna_backward(self) -> 'Series':
+    def fillna_backward(self, limit: int = 0) -> 'Series':
         '''Return a new ``Series`` after feeding backward the last   non-null (NaN or None) observation across contiguous nulls.
         '''
         sel = _isna(self.values)
@@ -590,6 +589,7 @@ class Series(metaclass=MetaOperatorDelegate):
         assigned = self.values.copy()
         target_index = binary_transition(sel)
 
+        length = len(self.values)
         # the first target is inclusive of the value, so add one to slice
         # start of len-1 will be length, a zero slice
         target_slices = (
@@ -600,12 +600,18 @@ class Series(metaclass=MetaOperatorDelegate):
         target_values = self.values[target_index]
 
         for target_slice, value in zip(target_slices, target_values):
-            # only assume if all values are NaN, which will be given by first value
             if ((target_slice.start == None and target_slice.stop == 0)
                     or (target_slice.start == target_slice.stop)):
                 # nothing to fill, as the first values is non-nan
                 continue
+
+            # only assume if all values are NaN, which will be given by first value
             if sel[target_slice][0]:
+                if limit > 0:
+                    # get the length of the range resulting from the slice; if bigger than limit, reduce the start by that amount
+                    shift = len(range(*target_slice.indices(length))) - limit
+                    if shift > 0:
+                        target_slice = slice(target_slice.start + shift, target_slice.stop)
                 assigned[target_slice] = value
 
         assigned.flags.writeable = False

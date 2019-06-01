@@ -598,8 +598,6 @@ class TestUnit(TestCase):
         self.assertEqual(s3.fillna_backward().to_pairs(),
                 (('a', 1), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', None)))
 
-
-
         s4 = Series((1, None, None, None, None, None, None, 4), index=index)
         self.assertEqual(s4.fillna_backward().to_pairs(),
                 (('a', 1), ('b', 4), ('c', 4), ('d', 4), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
@@ -623,6 +621,25 @@ class TestUnit(TestCase):
         s9 = Series((None, 2, 3, None, 4, None, 6, 7), index=index)
         self.assertEqual(s9.fillna_backward().to_pairs(),
                 (('a', 2), ('b', 2), ('c', 3), ('d', 4), ('e', 4), ('f', 6), ('g', 6), ('h', 7)))
+
+
+    def test_series_fillna_backward_b(self):
+
+        index = tuple(string.ascii_lowercase[:8])
+
+        # target_index [0 3 6]
+        s1 = Series((3, None, None, 4, None, None, 5, 6), index=index)
+        self.assertEqual(s1.fillna_backward(1).to_pairs(),
+                (('a', 3), ('b', None), ('c', 4), ('d', 4), ('e', None), ('f', 5), ('g', 5), ('h', 6)))
+
+        s2 = Series((3, None, None, None, 4, None, None, None), index=index)
+        self.assertEqual(s2.fillna_backward(2).to_pairs(),
+                (('a', 3), ('b', None), ('c', 4), ('d', 4), ('e', 4), ('f', None), ('g', None), ('h', None)))
+
+        s3 = Series((None, 1, None, None, None, None, None, 5), index=index)
+        self.assertEqual(s3.fillna_backward(4).to_pairs(),
+                (('a', 1), ('b', 1), ('c', None), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
+
 
 
     def test_series_from_items_a(self):
