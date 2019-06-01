@@ -67,9 +67,9 @@ matrix:
       os: osx
       osx_image: xcode10.2
       before_install:
-        # Build using the ancient 10.9 SDK (needed for Anaconda/Python.org wheel installs):
+        # Build using the ancient 10.9 SDK (Anaconda/Python.org compatibility):
         - export MACOSX_DEPLOYMENT_TARGET=10.9
-        # Include dirs are broken on Mojave, so fix them here:
+        # Includes are broken on Mojave, so fix them here:
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
         - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.3
         - pyenv install $PYENV_VERSION
@@ -79,9 +79,9 @@ matrix:
       os: osx
       osx_image: xcode10.2
       before_install:
-        # Build using the ancient 10.9 SDK (needed for Anaconda/Python.org wheel installs):
+        # Build using the ancient 10.9 SDK (Anaconda/Python.org compatibility):
         - export MACOSX_DEPLOYMENT_TARGET=10.9
-        # Include dirs are broken on Mojave, so fix them here:
+        # Includes are broken on Mojave, so fix them here:
         - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
         - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
         - pyenv install $PYENV_VERSION
@@ -92,8 +92,12 @@ matrix:
 install:
   - pip install -r requirements-test.txt
   - pip install auditwheel codecov pytest-cov setuptools wheel==0.31.1
+  # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
   - python wheels.py
+  - pip install --force-reinstall .
+  - pip install --force-reinstall dist/*.tar.gz
+  - pip install --force-reinstall dist/*.whl
 
 script:
   - pytest --cov=static_frame
