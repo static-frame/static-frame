@@ -73,9 +73,13 @@ setup(
             'static_frame',
             'static_frame.core',
             'static_frame.core.extensions',
+            'static_frame.core.include',
             'static_frame.performance',
             ],
-    package_data={'static_frame.core.extensions': ['*.pyi']},
+    package_data={
+            'static_frame.core.extensions': ['*.pyi'],
+            'static_frame.core.include': ['*.h'],
+    },
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.array_go',
