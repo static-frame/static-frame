@@ -1183,7 +1183,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 yield block
             else:
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
-
                 if block.dtype == assigned_dtype:
                     assigned = block.copy()
                 else:
@@ -1191,6 +1190,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 assert assigned.shape == target.shape
                 assigned[target] = value
+                assigned.flags.writeable = False
                 yield assigned
 
 
@@ -1498,6 +1498,104 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 yield bool_block
 
         return self.from_blocks(blocks())
+
+
+
+
+
+    @staticmethod
+    def _fillna_sided_axis_0(
+            blocks: tp.Iterable[np.ndarray],
+            value: tp.Any,
+            sided_leading: bool) -> tp.Generator[np.ndarray, None, None]:
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0.
+
+        Args:
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+
+        '''
+        sided_index = 0 if sided_leading else -1
+
+        for b in blocks:
+            sel = _isna(b) # True for is NaN
+            ndim = sel.ndim
+
+            if ndim == 1 and not sel[sided_index]:
+                # if last value (bottom row) is not NaN, we can return block
+                yield b
+            elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
+                # can use this last-row observation below
+                yield b
+            else:
+                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                if b.dtype == assignable_dtype:
+                    assigned = b.copy()
+                else:
+                    assigned = b.astype(assignable_dtype)
+
+                # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
+                if ndim == 1:
+                    sels_nonzero = ((0, sel),)
+                else:
+                    # only colluct columns for sided NaNs
+                    is_leading = (i for i, j in enumerate(sel[sided_index]) if j == True)
+                    sels_nonzero = ((i, sel[:, i]) for i in is_leading)
+
+                for idx, sel_nonzero in sels_nonzero:
+                    # indices of not-nan values
+                    targets = np.nonzero(~sel_nonzero)[0]
+                    if len(targets):
+                        if sided_leading:
+                            sel_trailing = slice(0, targets[0])
+                        else: # trailing
+                            sel_trailing = slice(targets[-1]+1, None)
+                    else: # all are NaN
+                        sel_trailing = NULL_SLICE
+
+                    if ndim == 1:
+                        assigned[sel_trailing] = value
+                    else:
+                        assigned[sel_trailing, idx] = value
+
+                # done writing
+                assigned.flags.writeable = False
+                yield assigned
+
+
+
+    def fillna_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''
+
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
+        if axis == 0:
+            return self.from_blocks(self._fillna_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=False))
+
+        raise NotImplementedError()
+
+
+    def fillna_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fillna_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=True))
+
+        raise NotImplementedError()
+
 
 
     def dropna_to_keep_locations(self,

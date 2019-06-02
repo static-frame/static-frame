@@ -3,7 +3,8 @@ import unittest
 import os
 import sys
 from itertools import zip_longest
-
+import typing as tp
+import itertools as it
 
 import numpy as np
 import pytest
@@ -21,6 +22,52 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         pass
+
+
+
+    @staticmethod
+    def get_arrays_a() -> tp.Generator[np.ndarray, None , None]:
+        '''
+        Return sample array suitable for TypeBlock creation, testing. Unique values required.
+        '''
+
+        a1 = np.array([[1, 2, 3], [10, 20, 30], [100, 200, 300]])
+        a1.flags.writeable = False
+
+        a2 = np.array([[4], [5], [6]])
+        a2.flags.writeable = False
+
+        a3 = np.array([[None, 'a', None], ['q', 'x', 'c'], ['f', 'y', 'e']])
+        a3.flags.writeable = False
+
+        a4 = np.array([1.2, np.nan, 30.5])
+        a4.flags.writeable = False
+
+        for arrays in it.permutations((a1, a2, a3, a4)):
+            yield arrays
+
+
+    @staticmethod
+    def get_arrays_b() -> tp.Generator[np.ndarray, None , None]:
+        '''
+        Return sample array suitable for TypeBlock creation, testing. Many NaNs.
+        '''
+
+        a1 = np.array([[1, 2, 3], [10, 20, 30], [100, 200, 300]])
+        a1.flags.writeable = False
+
+        a2 = np.array([[4], [5], [6]])
+        a2.flags.writeable = False
+
+        a3 = np.array([[None, 'a', None], [None, None, 'c'], ['f', None, 'e']])
+        a3.flags.writeable = False
+
+        a4 = np.array([np.nan, np.nan, np.nan])
+        a4.flags.writeable = False
+
+        for arrays in it.permutations((a1, a2, a3, a4)):
+            yield arrays
+
 
     @staticmethod
     def get_test_input(file_name: str):

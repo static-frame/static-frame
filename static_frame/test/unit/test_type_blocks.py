@@ -1189,6 +1189,60 @@ class TestUnit(TestCase):
         self.assertEqual(tb3.isna().values.any(), True)
 
 
+
+    def test_type_blocks_fillna_trailing_a(self):
+
+        for arrays in self.get_arrays_b():
+            tb = TypeBlocks.from_blocks(arrays)
+            post = tb.fillna_trailing(-1)
+            self.assertEqual(tb.shape, post.shape)
+
+
+    def test_type_blocks_fillna_trailing_b(self):
+
+        a1 = np.array([
+                [nan, nan,3, 4],
+                [nan, nan, 6, nan],
+                [5, nan, nan, nan]
+                ], dtype=float)
+        a2 = np.array([nan, nan, nan], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.fillna_trailing(0)
+
+        self.assertAlmostEqualValues(
+                list(tb2.values.flat),
+                [nan, 0.0, 3.0, 4.0, 0, nan, 0.0, 6.0, 0.0, 0, 5.0, 0.0, 0.0, 0.0, 0])
+
+        # import ipdb; ipdb.set_trace()
+
+
+    def test_type_blocks_fillna_leading_a(self):
+
+        for arrays in self.get_arrays_b():
+            tb = TypeBlocks.from_blocks(arrays)
+            post = tb.fillna_leading(-1)
+            self.assertEqual(tb.shape, post.shape)
+
+
+    def test_type_blocks_fillna_leading_b(self):
+
+        a1 = np.array([
+                [nan, nan,3, 4],
+                [nan, nan, 6, nan],
+                [5, nan, nan, nan]
+                ], dtype=float)
+        a2 = np.array([nan, nan, nan], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.fillna_leading(0)
+
+        self.assertAlmostEqualValues(list(tb2.values.flat),
+                [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
+
+
     def test_type_blocks_from_none_a(self):
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -1441,12 +1495,8 @@ class TestUnit(TestCase):
 
     def test_type_blocks_drop_blocks_e(self):
 
-        a1 = np.array([[1, 2, 3], [1, 2, 3], [1, 2, 3]])
-        a2 = np.array([[4], [5], [6]])
-        a3 = np.array([[None, 'a', None], [None, 'b', 'c'], [None, 'd', 'e']])
-        a4 = np.array([True, False, True])
 
-        for arrays in it.permutations((a1, a2, a3, a4)):
+        for arrays in self.get_arrays_a():
             tb1 = TypeBlocks.from_blocks(arrays)
 
             for i in range(tb1.shape[1]):
