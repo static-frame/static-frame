@@ -13,7 +13,6 @@
 # - cp36-cp36m-macosx_10_9_x86_64.whl -> cp36-cp36m-macosx_10_6_intel.whl
 # - cp37-cp37m-macosx_10_9_x86_64.whl -> cp37-cp37m-macosx_10_6_intel.whl
 
-
 matrix:
 
   include:
@@ -89,9 +88,17 @@ matrix:
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
 
+env:
+  global:
+    - TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/  # XXX
+    - TWINE_USERNAME=brandtbucher  # XXX Below: $ travis encrypt 'TWINE_PASSWORD=<password>'
+    - secure: S+q2hvrhpWGVvrfwtIT6CRWZ2Zde6sYPHKvvIuu4VRuaS7Z+TXOfNNOPyk9A+Vw0DjdUz2gTj7XtP73mLXyBuAI2KYSxCEc1/g072eF8w82QQcKteRvwc2oNLYlVdxUBS0GCiUWNaDHrQppUTH9+m10w5AXIVZMW466MBeBqjg9r8Sh4brzpDAm7Ruf4mggX48IuE4y5bg7L04dh27ucOOFCLBFAti2GqnWmW18cmEyvdinJSSjljMzBTImj097oPUthxlQ2ci2GXqt4jUAn4RVgCLEBcy2qyT29h4G19E+6Rpj4JUrgckPqRfqRhSxqxUUIJOuTFdifV759lIYkrcO1teP3cqpg+yXTjHC5m09K3m+tRll8A5tDqenOfc8BwdPF37jUcyxj9qRD9aQBR5HRdaO2faMORxqGgNZrEFlFkT1Vm99aT5Pc2vOSgR8lZoFOHZr4xNvVtNw0dX07+lnHdyVhJD9yVChU6kFdMTd/ZT8g4lmVb8FTkNOEBn2GuvvrXioT7MJq32eYYDVLlhzLv6Too9et9hNnj+1joy3AG70xFxSAK8qUvzbRH0TD5am4AKKkJ0w9avjf/TtUq4sQ4GQegoYQvohUesUytTaqwhmLpHTShg0yi6gJEHq7lAPLyXFOwrdqAoRaXgt8uDpou9yYz582TPHXXJ0yqaA=
+
+filter_secrets: false
+
 install:
   - pip install -r requirements-test.txt
-  - pip install auditwheel codecov pytest-cov setuptools wheel==0.31.1
+  - pip install auditwheel codecov pytest-cov setuptools twine wheel==0.31.1
   # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
   - python wheels.py
@@ -106,13 +113,9 @@ after_success:
   - codecov
 
 deploy:
-  server: https://test.pypi.org/legacy/  # XXX
-  username: brandtbucher
-  password:
-    secure: CTCE49q/EuvPkWBSfVfN0Kl5mvT/CNpntDAGSBnl2Nd+gFVrpM0Gmc5BkzPNMgjJE9pP64tJeiFkcpzq4EH/l5TgmKiAZPRDTIeuKLFPnrax1Li9uOgiWfzwSS7xc5kI8qQ4qrPI7g1EG1g6TWXgmzG7FHpd7oVtUoL3uXHCDqfSHQc70J4hYJqiUYmZ6AsISYR1s98zmYo31f6xZnHRGhOljkWEFzlFxLMpo6FwP30QCQn0qHtLVss4dOuSDnqRhA6KJMMRfDtLZDLkG/vYLevLzCC9bV+18ODxj3ivQAx9FeYBkdbSFB+yXKH2i5gSXj6gAVs6oJPsBhp+Zzu+0uwSarRQSGtO6gt0Gs9UY5tYdk8JlGuCiHm0BvctVisJMclW/4vWp/7MBa0F0oehTmje2EI81xeP3iM3KFaVFJFfZPQvEjGUHmTevaMZDwen43nJWm9OTd8fLCYfOsXw73FWgq1/urTeVa3+TJqzA0df/RaqL2KLr2zzGsITr2G5WMOfxkgbAq+qEHV+lkHJVQJtW1ddbSb0Jrkta+6/KvJncyfXnYgfWfMjrkTzSAe94IsdINOWgDYr1mRH6E94w3OnmGOnI88ztZOu+0uyOT9I0yKbTcjo9AGKbFmy9cjp2lO3NOD+RLef7l5TYt6ck0/PVjWL8jcFAzYVT68cxZA=
-  distributions: sdist
-  skip_existing: true
+  provider: script
   skip_cleanup: true
+  script: twine upload --skip-existing dist/* 
   on:
     repo: InvestmentSystems/static-frame
     branch: c  # XXX master
