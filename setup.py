@@ -42,7 +42,7 @@ def get_version():
                     l = l.split('#')[0].strip()
                 return l.split('=')[-1].strip()[1:-1]
 
-include_dirs = [np.get_include(), 'static_frame/core/include']
+include_dirs = [np.get_include(), 'static_frame/core/extensions']
 
 setup(
     name='C-SF',  # XXX 'static-frame',
@@ -73,13 +73,9 @@ setup(
             'static_frame',
             'static_frame.core',
             'static_frame.core.extensions',
-            'static_frame.core.include',
             'static_frame.performance',
             ],
-    package_data={
-            'static_frame.core.extensions': ['*.pyi'],
-            'static_frame.core.include': ['*.h'],
-    },
+    package_data={'static_frame.core.extensions': ['*.h', '*.pyi']},
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.array_go',
