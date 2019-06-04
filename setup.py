@@ -45,7 +45,7 @@ def get_version():
 include_dirs = [np.get_include(), 'static_frame/core/extensions']
 
 setup(
-    name='C-SF',  # XXX 'static-frame',
+    name='static-frame',
     version=get_version(),
     description='Immutable structures for one- and two-dimensional calculations with labelled axes',
     long_description=get_long_description(),

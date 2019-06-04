@@ -90,14 +90,21 @@ matrix:
 
 env:
   global:
-    - TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/  # XXX
-    - TWINE_USERNAME=brandtbucher  # XXX Below: $ travis encrypt 'TWINE_PASSWORD=<password>'
+    - TWINE_USERNAME=ariza
+    # XXX Below (from inside the SF repo):
+    # $ sudo apt-get install ruby-dev
+    # $ sudo gem install travis
+    # $ travis encrypt 'TWINE_PASSWORD=<password>'
     - secure: S+q2hvrhpWGVvrfwtIT6CRWZ2Zde6sYPHKvvIuu4VRuaS7Z+TXOfNNOPyk9A+Vw0DjdUz2gTj7XtP73mLXyBuAI2KYSxCEc1/g072eF8w82QQcKteRvwc2oNLYlVdxUBS0GCiUWNaDHrQppUTH9+m10w5AXIVZMW466MBeBqjg9r8Sh4brzpDAm7Ruf4mggX48IuE4y5bg7L04dh27ucOOFCLBFAti2GqnWmW18cmEyvdinJSSjljMzBTImj097oPUthxlQ2ci2GXqt4jUAn4RVgCLEBcy2qyT29h4G19E+6Rpj4JUrgckPqRfqRhSxqxUUIJOuTFdifV759lIYkrcO1teP3cqpg+yXTjHC5m09K3m+tRll8A5tDqenOfc8BwdPF37jUcyxj9qRD9aQBR5HRdaO2faMORxqGgNZrEFlFkT1Vm99aT5Pc2vOSgR8lZoFOHZr4xNvVtNw0dX07+lnHdyVhJD9yVChU6kFdMTd/ZT8g4lmVb8FTkNOEBn2GuvvrXioT7MJq32eYYDVLlhzLv6Too9et9hNnj+1joy3AG70xFxSAK8qUvzbRH0TD5am4AKKkJ0w9avjf/TtUq4sQ4GQegoYQvohUesUytTaqwhmLpHTShg0yi6gJEHq7lAPLyXFOwrdqAoRaXgt8uDpou9yYz582TPHXXJ0yqaA=
 
+# Needed for Windows. Remove once Travis fixes this:
+# https://travis-ci.community/t/current-known-issues-please-read-this-before-posting-a-new-topic/264/10
+# Not a dealbreaker, since secrets are disabled on forks/PRs. Just nice to have.
 filter_secrets: false
 
 install:
   - pip install -r requirements-test.txt
+  # We need to pin wheel (ha) for auditwheel to work properly:
   - pip install auditwheel codecov pytest-cov setuptools twine wheel==0.31.1
   # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
@@ -115,8 +122,8 @@ after_success:
 deploy:
   provider: script
   skip_cleanup: true
-  script: twine upload --skip-existing dist/* 
+  script: twine upload --skip-existing dist/*
   on:
     repo: InvestmentSystems/static-frame
-    branch: c  # XXX master
+    branch: master
     # tags: true  # XXX?
