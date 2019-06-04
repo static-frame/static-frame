@@ -66,16 +66,16 @@ setup(
             'Operating System :: POSIX',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
-            ],
-
+    ],
     keywords='staticframe pandas numpy immutable array',
     packages=[
             'static_frame',
             'static_frame.core',
             'static_frame.core.extensions',
             'static_frame.performance',
-            ],
+    ],
     package_data={'static_frame.core.extensions': ['*.h', '*.pyi']},
+    data_files=[('', ['LICENSE.txt'])],
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.array_go',
