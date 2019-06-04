@@ -101,7 +101,7 @@ install:
   - pip install auditwheel codecov pytest-cov setuptools twine wheel==0.31.1
   # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
-  - python wheels.py
+  - python fix_wheels.py
   - pip install --force-reinstall .
   - pip install --force-reinstall dist/*.tar.gz
   - pip install --force-reinstall dist/*.whl
@@ -119,4 +119,4 @@ deploy:
   on:
     repo: InvestmentSystems/static-frame
     branch: c  # XXX master
-    # tags: true  # XXX
+    # tags: true  # XXX?

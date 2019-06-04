@@ -48,9 +48,11 @@ if __name__ == '__main__':
             replace(wheel, fake)
 
             assert wheel != fake, 'We expected a macOS 10.9 x86_64 build!'
+    
+    # Windows is fine.
 
     FIXED = glob('dist/*.whl')
 
     print('\nAfter:', *glob('dist/*.whl'), sep='\n - ', end='\n\n')
 
-    assert len(WHEELS) == len(FIXED), 'We lost a wheel!'
+    assert len(WHEELS) == len(FIXED), 'We gained or lost a wheel!'
