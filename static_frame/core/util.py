@@ -1,6 +1,7 @@
 import sys
 import typing as tp
 import os
+import operator
 
 from collections import OrderedDict
 from collections import abc
@@ -10,7 +11,7 @@ from io import BytesIO
 import datetime
 from urllib import request
 import tempfile
-
+from functools import reduce
 
 import numpy as np
 
@@ -41,13 +42,15 @@ DEFAULT_SORT_KIND = 'mergesort'
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+DTYPE_DATETIME_KIND = 'M'
 DTYPE_OBJECT = np.dtype(object)
 
 NULL_SLICE = slice(None)
 _UNIT_SLICE = slice(0, 1)
+SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
-SLICE_ATTRS = ('start', SLICE_STOP_ATTR, SLICE_STEP_ATTR)
+SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 # defaults to float64
@@ -56,7 +59,12 @@ EMPTY_ARRAY.flags.writeable = False
 
 _DICT_STABLE = sys.version_info >= (3, 6)
 
-
+# map from datetime.timedelta attrs to np.timedelta64 codes
+TIME_DELTA_ATTR_MAP = (
+        ('days', 'D'),
+        ('seconds', 's'),
+        ('microseconds', 'us')
+        )
 
 #-------------------------------------------------------------------------------
 # utility
@@ -183,8 +191,8 @@ def _gen_skip_middle(
             break
     yield from reversed(values)
 
-from static_frame.core.extensions.util import _resolve_dtype
-# def _resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
+from static_frame.core.extensions.util import resolve_dtype
+# def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
 #     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
 #     '''
@@ -221,7 +229,7 @@ from static_frame.core.extensions.util import resolve_dtype_iter
 #     dtypes = iter(dtypes)
 #     dt_resolve = next(dtypes)
 #     for dt in dtypes:
-#         dt_resolve = _resolve_dtype(dt_resolve, dt)
+#         dt_resolve = resolve_dtype(dt_resolve, dt)
 #         if dt_resolve == DTYPE_OBJECT:
 #             return dt_resolve
 #     return dt_resolve
@@ -249,7 +257,7 @@ def concat_resolved(arrays: tp.Iterable[np.ndarray],
 
     for array in arrays_iter:
         if dt_resolve != DTYPE_OBJECT:
-            dt_resolve = _resolve_dtype(array.dtype, dt_resolve)
+            dt_resolve = resolve_dtype(array.dtype, dt_resolve)
         shape[axis] += array.shape[axis]
 
     out = np.empty(shape=shape, dtype=dt_resolve)
@@ -267,7 +275,7 @@ def full_for_fill(
     Args:
         dtype: target dtype, which may or may not be possible given the fill_value.
     '''
-    dtype = _resolve_dtype(dtype, np.array(fill_value).dtype)
+    dtype = resolve_dtype(dtype, np.array(fill_value).dtype)
     return np.full(shape, fill_value, dtype=dtype)
 
 
@@ -347,6 +355,59 @@ def ufunc_unique(array: np.ndarray,
     # all other types, use the main ufunc
     return np.unique(array, axis=axis)
 
+def roll_1d(array, shift: int) -> np.ndarray:
+    '''
+    Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
+    '''
+    size = len(array)
+    shift = shift % size
+    if shift == 0:
+        return array.copy()
+    post = np.empty(size, dtype=array.dtype)
+    if shift > 0:
+        post[0:shift] = array[-shift:]
+        post[shift:] = array[0:-shift]
+        return post
+    # shift is negative, negate to flip
+    post[0:size+shift] = array[-shift:]
+    post[size+shift:None] = array[:-shift]
+    return post
+
+def roll_2d(array, shift: int, axis: int) -> np.ndarray:
+    '''
+    Specialized form of np.roll that, by focusing on the 2D solution
+    '''
+    post = np.empty(array.shape, dtype=array.dtype)
+
+    if axis == 0: # roll rows
+        size = array.shape[0]
+        shift = shift % size
+        if shift == 0:
+            return array.copy()
+        if shift > 0:
+            post[0:shift, :] = array[-shift:, :]
+            post[shift:, :] = array[0:-shift, :]
+            return post
+        # shift is negative, negate to flip
+        post[0:size+shift, :] = array[-shift:, :]
+        post[size+shift:None, :] = array[:-shift, :]
+
+    elif axis == 1: # roll columns
+        size = array.shape[1]
+        shift = shift % size
+        if shift == 0:
+            return array.copy()
+        if shift > 0:
+            post[:, 0:shift] = array[:, -shift:]
+            post[:, shift:] = array[:, 0:-shift]
+            return post
+        # shift is negative, negate to flip
+        post[:, 0:size+shift] = array[:, -shift:]
+        post[:, size+shift:None] = array[:, :-shift]
+        return post
+
+
+    raise NotImplementedError()
 
 def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
     '''Utility method to take arbitary, heterogenous typed iterables and realize them as an NP array. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
@@ -409,6 +470,7 @@ def _slice_to_ascending_slice(key: slice, size: int) -> slice:
     return slice(start, stop, -key.step)
 
 #-------------------------------------------------------------------------------
+# dates
 
 _DT64_DAY = np.dtype('datetime64[D]')
 _DT64_MONTH = np.dtype('datetime64[M]')
@@ -424,7 +486,7 @@ _TD64_MS = np.timedelta64(1, 'ms')
 
 _DT_NOT_FROM_INT = (_DT64_DAY, _DT64_MONTH)
 
-def _to_datetime64(
+def to_datetime64(
         value: DateInitializer,
         dtype: tp.Optional[np.dtype] = None
         ) -> np.datetime64:
@@ -434,7 +496,7 @@ def _to_datetime64(
     # for now, only support creating from a string, as creation from integers is based on offset from epoch
     if not isinstance(value, np.datetime64):
         if dtype is None:
-            # let this constructor figure it out
+            # let constructor figure it out
             dt = np.datetime64(value)
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
@@ -443,7 +505,7 @@ def _to_datetime64(
                     # convert to string as that is likely what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
-                    raise RuntimeError('attempting to create {} from an integer, which is generally desired as the result will be offset from the epoch.'.format(dtype))
+                    raise RuntimeError('attempting to create {} from an integer, which is generally not desired as the result will be offset from the epoch.'.format(dtype))
             # cannot use the datetime directly
             if dtype != np.datetime64:
                 dt = np.datetime64(value, np.datetime_data(dtype)[0])
@@ -454,13 +516,23 @@ def _to_datetime64(
             raise RuntimeError('not supported dtype', dt, dtype)
     return dt
 
-def _slice_to_datetime_slice_args(key, dtype=None):
+def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
+    '''
+    Convert a datetime.timedelta into a NumPy timedelta64. This approach is better than using np.timedelta64(value), as that reduces all values to microseconds.
+    '''
+    return reduce(operator.add,
+        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
+
+def _slice_to_datetime_slice_args(key: slice, dtype=None):
+    '''
+    Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
+    '''
     for attr in SLICE_ATTRS:
         value = getattr(key, attr)
         if value is None:
             yield None
         else:
-            yield _to_datetime64(value, dtype=dtype)
+            yield to_datetime64(value, dtype=dtype)
 
 def key_to_datetime_key(
         key: GetItemKeyType,
@@ -475,7 +547,7 @@ def key_to_datetime_key(
         return key
 
     if isinstance(key, str):
-        return _to_datetime64(key, dtype=dtype)
+        return to_datetime64(key, dtype=dtype)
 
     if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
@@ -483,7 +555,7 @@ def key_to_datetime_key(
         return key.astype(dtype)
 
     if hasattr(key, '__len__'):
-        # use array constructor to determine type
+        # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representationn
         return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like
@@ -560,6 +632,22 @@ def _isna(array: np.ndarray) -> np.ndarray:
     #             count=array.size,
     #             dtype=bool).reshape(array.shape)
 
+def binary_transition(array: np.ndarray) -> np.ndarray:
+    '''
+    Given a Boolean array, return the index positions (integers) at False values where that False was previously True, or will be True
+    '''
+
+    not_array = ~array
+
+    # non-nan values that go (from left to right) to NaN
+    target_sel_leading = (array ^ roll_1d(array, -1)) & not_array
+    target_sel_leading[-1] = False # wrap around observation invalid
+    # non-nan values that were previously NaN (from left to right)
+    target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
+    target_sel_trailing[0] = False # wrap around observation invalid
+
+    return np.nonzero(target_sel_leading | target_sel_trailing)[0]
+
 
 def _array_to_duplicated(
         array: np.ndarray,
@@ -581,7 +669,7 @@ def _array_to_duplicated(
         o_idx = np.argsort(array, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
         array_sorted = array[o_idx]
         opposite_axis = 0
-        f_flags = array_sorted == np.roll(array_sorted, 1)
+        f_flags = array_sorted == roll_1d(array_sorted, 1)
 
     else:
         if axis == 0: # sort rows
@@ -597,7 +685,7 @@ def _array_to_duplicated(
             raise NotImplementedError('no handling for axis')
         opposite_axis = int(not bool(axis))
         # rolling axis 1 rotates columns; roll axis 0 rotates rows
-        match = array_sorted == np.roll(array_sorted, 1, axis=axis)
+        match = array_sorted == roll_2d(array_sorted, 1, axis=axis)
         f_flags = match.all(axis=opposite_axis)
 
     if not f_flags.any():
@@ -613,7 +701,7 @@ def _array_to_duplicated(
         dupes = f_flags
     else:
         # non-LAST duplicates is a left roll of the non-first flags.
-        l_flags = np.roll(f_flags, -1)
+        l_flags = roll_1d(f_flags, -1)
 
         if not exclude_first and exclude_last:
             dupes = l_flags
@@ -651,9 +739,11 @@ def array_shift(array: np.ndarray,
     if (not wrap and shift == 0) or (wrap and shift_mod == 0):
         # must copy so as not let caller mutate arguement
         return array.copy()
+
     if wrap:
-        # standard np roll works fine
-        return np.roll(array, shift_mod, axis=axis)
+        if array.ndim == 1:
+            return roll_1d(array, shift_mod)
+        return roll_2d(array, shift_mod, axis=axis)
 
     # will insure that the result can contain the fill and the original values
     result = full_for_fill(array.dtype, array.shape, fill_value)
@@ -745,7 +835,7 @@ def _ufunc2d(
 
     assert array.shape[1] == other.shape[1]
     # this does will work if dyptes are differently sized strings, such as U2 and U3
-    dtype = _resolve_dtype(array.dtype, other.dtype)
+    dtype = resolve_dtype(array.dtype, other.dtype)
     if array.dtype != dtype:
         array = array.astype(dtype)
     if other.dtype != dtype:
@@ -774,7 +864,7 @@ def intersect1d(array: np.ndarray,
     except TypeError:
         result = set(array) & set(other)
 
-    dtype = _resolve_dtype(array.dtype, other.dtype)
+    dtype = resolve_dtype(array.dtype, other.dtype)
     if dtype.kind == 'O':
         # np fromiter does not work with object types
         return np.array(tuple(result), dtype=dtype)

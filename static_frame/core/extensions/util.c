@@ -32,14 +32,14 @@ static PyObject* resolve_dtype_iter(PyObject* Py_UNUSED(util), PyObject* arg) {
 }
 
 
-static PyObject* _resolve_dtype(PyObject* Py_UNUSED(util), PyObject* args) {
+static PyObject* resolve_dtype(PyObject* Py_UNUSED(util), PyObject* args) {
 
     PyArray_Descr *d1;
     PyArray_Descr *d2;
 
     if (
         !PyArg_ParseTuple(
-            args, "O!O!:_resolve_dtype",
+            args, "O!O!:resolve_dtype",
             &PyArrayDescr_Type, &d1, &PyArrayDescr_Type, &d2
         )
     ) {
@@ -70,7 +70,7 @@ static PyMethodDef UtilMethods[] =  {
     {"mloc", mloc, METH_O, NULL},
     {"name_filter", name_filter, METH_O, NULL},
     {"resolve_dtype_iter", resolve_dtype_iter, METH_O, NULL},
-    {"_resolve_dtype", _resolve_dtype, METH_VARARGS, NULL},
+    {"resolve_dtype", resolve_dtype, METH_VARARGS, NULL},
 
     {NULL, NULL, 0, NULL},
 

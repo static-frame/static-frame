@@ -7,6 +7,20 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+``Frame`` and ``Series`` sort methods now propagate ``name`` attributes.
+
+``Index.from_pandas()`` now correctly collects ``name`` / ``names`` attributes from Pandas indexes.
+
+Implemented ``Series.fillna_forward``, ``Series.fillna_backward``, ``Series.fillna_leading``, ``Series.fillna_trailing``.
+
+Fixed flaw in dropping columns from a ``Frame`` (via ``Frame.set_index`` or the ``Frame.drop`` interface), whereby sometimes (depending on ``TypeBlocks`` structure) the drop would not be executed.
+
+Index objects based on ``np.datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.
+
+Index objects based on ``np.datetime64`` now support transformations from both ``datetime.timedelta`` as well as ``np.timedelta64``.
+
+Index objects based on ``np.datetime64`` now support selection with slices with ``np.datetime64`` units different than those used in the ``Index``.
+
 
 0.3.4
 -------------

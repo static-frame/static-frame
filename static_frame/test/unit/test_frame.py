@@ -12,6 +12,7 @@ import sys
 
 import numpy as np
 import pytest
+import typing as tp
 
 import static_frame as sf
 
@@ -439,6 +440,16 @@ class TestUnit(TestCase):
 
         with self.assertRaises(Exception):
             f1['w'] = [[1,2], [4,5]]
+
+
+    def test_frame_setitem_c(self):
+
+
+        f1 = FrameGO(index=sf.Index(tuple('abcde')))
+        f1['a'] = 30
+        self.assertEqual(f1.to_pairs(0),
+                (('a', (('a', 30), ('b', 30), ('c', 30), ('d', 30), ('e', 30))),))
+
 
 
 
@@ -1611,13 +1622,15 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('w', 'x', 'y', 'z'))
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
 
         f2 = f1.transpose()
 
         self.assertEqual(f2.to_pairs(0),
                 (('w', (('p', 2), ('q', 2), ('r', 'a'), ('s', False), ('t', False))), ('x', (('p', 30), ('q', 34), ('r', 'b'), ('s', True), ('t', False))), ('y', (('p', 2), ('q', 95), ('r', 'c'), ('s', False), ('t', False))), ('z', (('p', 30), ('q', 73), ('r', 'd'), ('s', True), ('t', True)))))
 
+        self.assertEqual(f2.name, f1.name)
 
 
     def test_frame_from_element_iloc_items_a(self):
@@ -1801,11 +1814,13 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=('z', 'x', 'w', 'y'))
+                index=('z', 'x', 'w', 'y'),
+                name='foo')
 
-        self.assertEqual(f1.sort_index().to_pairs(0),
+        f2 = f1.sort_index()
+        self.assertEqual(f2.to_pairs(0),
                 (('p', (('w', 2), ('x', 30), ('y', 30), ('z', 2))), ('q', (('w', 95), ('x', 34), ('y', 73), ('z', 2))), ('r', (('w', 'c'), ('x', 'b'), ('y', 'd'), ('z', 'a'))), ('s', (('w', False), ('x', True), ('y', True), ('z', False))), ('t', (('w', False), ('x', False), ('y', True), ('z', False)))))
-
+        self.assertEqual(f1.name, f2.name)
 
         self.assertEqual(f1.sort_index(ascending=False).to_pairs(0),
                 (('p', (('z', 2), ('y', 30), ('x', 30), ('w', 2))), ('q', (('z', 2), ('y', 73), ('x', 34), ('w', 95))), ('r', (('z', 'a'), ('y', 'd'), ('x', 'b'), ('w', 'c'))), ('s', (('z', False), ('y', True), ('x', True), ('w', False))), ('t', (('z', False), ('y', True), ('x', False), ('w', False)))))
@@ -1822,13 +1837,15 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('t', 's', 'r', 'q', 'p'),
-                index=('z', 'x', 'w', 'y'))
+                index=('z', 'x', 'w', 'y'),
+                name='foo')
 
+        f2 = f1.sort_columns()
         self.assertEqual(
-                f1.sort_columns().to_pairs(0),
+                f2.to_pairs(0),
                 (('p', (('z', False), ('x', False), ('w', False), ('y', True))), ('q', (('z', False), ('x', True), ('w', False), ('y', True))), ('r', (('z', 'a'), ('x', 'b'), ('w', 'c'), ('y', 'd'))), ('s', (('z', 2), ('x', 34), ('w', 95), ('y', 73))), ('t', (('z', 2), ('x', 30), ('w', 2), ('y', 30)))))
 
-
+        self.assertEqual(f2.name, f1.name)
 
     def test_frame_sort_values_a(self):
         # reindex both axis
@@ -1841,10 +1858,11 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'r', 'q', 't', 's'),
-                index=('z', 'x', 'w', 'y'))
+                index=('z', 'x', 'w', 'y'),
+                name='foo')
 
         post = f1.sort_values('q')
-
+        self.assertEqual(post.name, f1.name)
 
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', 2), ('y', 30), ('z', 2), ('x', 30))), ('r', (('w', 95), ('y', 73), ('z', 2), ('x', 34))), ('q', (('w', 'a'), ('y', 'b'), ('z', 'c'), ('x', 'd'))), ('t', (('w', False), ('y', True), ('z', False), ('x', True))), ('s', (('w', False), ('y', True), ('z', False), ('x', False)))))
@@ -1885,11 +1903,14 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
-                index=('w', 'x', 'y', 'z'))
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
 
-        self.assertEqual(f1.sort_values('y', axis=0).to_pairs(0),
+        f2 = f1.sort_values('y', axis=0)
+        self.assertEqual(f2.to_pairs(0),
                 (('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))), ('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73)))))
 
+        self.assertEqual(f2.name, 'foo')
 
 
     def test_frame_relabel_a(self):
@@ -2757,6 +2778,27 @@ class TestUnit(TestCase):
             f2 = f1.set_index(col)
             self.assertEqual(f2.index.name, col)
 
+
+    def test_frame_set_index_c(self):
+        records = (
+                (2, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                )
+
+    def test_frame_set_index_d(self):
+
+        for arrays in self.get_arrays_a():
+            tb1 = TypeBlocks.from_blocks(arrays)
+
+            f1 = FrameGO(tb1)
+            f1[tb1.shape[1]] = range(tb1.shape[0])
+
+            for i in range(f1.shape[1]):
+                f2 = f1.set_index(i, drop=True)
+                self.assertTrue(f2.shape == (3, f1.shape[1] - 1))
 
 
     def test_frame_head_tail_a(self):

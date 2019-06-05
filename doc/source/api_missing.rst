@@ -16,6 +16,14 @@ Series
 
 .. automethod:: static_frame.Series.fillna
 
+.. automethod:: static_frame.Series.fillna_forward
+
+.. automethod:: static_frame.Series.fillna_backward
+
+.. automethod:: static_frame.Series.fillna_leading
+
+.. automethod:: static_frame.Series.fillna_trailing
+
 
 
 Frame

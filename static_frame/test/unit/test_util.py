@@ -2,10 +2,12 @@
 
 import unittest
 
+import datetime
+
 import numpy as np
 
 from static_frame.core.util import _isna
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
@@ -35,6 +37,13 @@ from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import _slice_to_ascending_slice
 from static_frame.core.util import array_shift
 from static_frame.core.util import ufunc_unique
+from static_frame.core.util import to_timedelta64
+from static_frame.core.util import binary_transition
+
+from static_frame.core.util import roll_1d
+from static_frame.core.util import roll_2d
+
+
 
 from static_frame.test.test_case import TestCase
 
@@ -196,22 +205,22 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again'], dtype='S')
         a6 = np.array([2.3,5.4], dtype='float32')
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a1.dtype), a1.dtype)
+        self.assertEqual(resolve_dtype(a1.dtype, a1.dtype), a1.dtype)
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a2.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a2.dtype, a3.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a2.dtype, a4.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a3.dtype, a4.dtype), np.object_)
-        self.assertEqual(_resolve_dtype(a3.dtype, a6.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a1.dtype, a2.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a2.dtype, a3.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a2.dtype, a4.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a3.dtype, a4.dtype), np.object_)
+        self.assertEqual(resolve_dtype(a3.dtype, a6.dtype), np.object_)
 
-        self.assertEqual(_resolve_dtype(a1.dtype, a4.dtype), np.float64)
-        self.assertEqual(_resolve_dtype(a1.dtype, a6.dtype), np.float64)
-        self.assertEqual(_resolve_dtype(a4.dtype, a6.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a1.dtype, a4.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a1.dtype, a6.dtype), np.float64)
+        self.assertEqual(resolve_dtype(a4.dtype, a6.dtype), np.float64)
 
     def test_resolve_dtype_b(self):
 
         self.assertEqual(
-                _resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
+                resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
                 np.dtype(('U', 3))
                 )
 
@@ -669,7 +678,76 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
+    def test_to_timedelta64_a(self):
+        timedelta = datetime.timedelta
 
+        self.assertEqual(
+                to_timedelta64(timedelta(days=4)),
+                np.timedelta64(4, 'D'))
+
+        self.assertEqual(
+                to_timedelta64(timedelta(seconds=4)),
+                np.timedelta64(4, 's'))
+
+        self.assertEqual(
+                to_timedelta64(timedelta(minutes=4)),
+                np.timedelta64(240, 's'))
+
+    def test_transition_indices_a(self):
+        a1 = np.array([False, True, True, False, False, True, True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [0, 3, 4, 7])
+
+        a1 = np.array([False, False, True, False, True, True, True, True])
+        self.assertEqual(binary_transition(a1).tolist(), [1, 3])
+
+
+        a1 = np.array([True, False, True])
+        self.assertEqual(binary_transition(a1).tolist(), [1])
+
+        a1 = np.array([False, True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [0, 2])
+
+        a1 = np.array([True])
+        self.assertEqual(binary_transition(a1).tolist(), [])
+
+        a1 = np.array([False])
+        self.assertEqual(binary_transition(a1).tolist(), [])
+
+        a1 = np.array([False, True])
+        self.assertEqual(binary_transition(a1).tolist(), [0])
+
+        a1 = np.array([True, False])
+        self.assertEqual(binary_transition(a1).tolist(), [1])
+
+
+    def test_roll_1d_a(self):
+
+        a1 = np.arange(12)
+
+        for i in range(len(a1) + 1):
+            post = roll_1d(a1, i)
+            self.assertEqual(post.tolist(), np.roll(a1, i).tolist())
+
+            post = roll_1d(a1, -i)
+            self.assertEqual(post.tolist(), np.roll(a1, -i).tolist())
+
+    def  test_roll_2d_a(self):
+
+        a1 = np.arange(12).reshape((3,4))
+
+        for i in range(a1.shape[0] + 1):
+            post = roll_2d(a1, i, axis=0)
+            self.assertEqual(post.tolist(), np.roll(a1, i, axis=0).tolist())
+
+            post = roll_2d(a1, -i, axis=0)
+            self.assertEqual(post.tolist(), np.roll(a1, -i, axis=0).tolist())
+
+        for i in range(a1.shape[1] + 1):
+            post = roll_2d(a1, i, axis=1)
+            self.assertEqual(post.tolist(), np.roll(a1, i, axis=1).tolist())
+
+            post = roll_2d(a1, -i, axis=1)
+            self.assertEqual(post.tolist(), np.roll(a1, -i, axis=1).tolist())
 
 
 if __name__ == '__main__':

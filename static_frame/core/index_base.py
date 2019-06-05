@@ -35,24 +35,24 @@ class IndexBase:
         import pandas
         from static_frame import Index
         from static_frame import IndexGO
-
         from static_frame import IndexDate
-
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
 
         if isinstance(value, pandas.MultiIndex):
             # iterating over a hierarchucal index will iterate over labels
+            name = tuple(value.names)
             if is_go:
-                return IndexHierarchyGO.from_labels(value)
-            return IndexHierarchy.from_labels(value)
+                return IndexHierarchyGO.from_labels(value, name=name)
+            return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
             if is_go:
                 raise NotImplementedError('No grow-only version of IndexDate yet exists')
-            return IndexDate(value)
+            return IndexDate(value, name=value.name)
+
         if is_go:
-            return IndexGO(value)
-        return Index(value)
+            return IndexGO(value, name=value.name)
+        return Index(value, name=value.name)
 
     #---------------------------------------------------------------------------
     # name interface

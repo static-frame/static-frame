@@ -1,5 +1,9 @@
 import typing as tp
 from collections import KeysView
+import datetime
+import operator
+from functools import partial
+from functools import reduce
 
 import numpy as np
 
@@ -7,10 +11,12 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.util import SLICE_ATTRS
+from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
 
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import DTYPE_DATETIME_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import CallableOrMapping
@@ -32,7 +38,8 @@ from static_frame.core.util import DateInitializer
 from static_frame.core.util import YearMonthInitializer
 from static_frame.core.util import YearInitializer
 
-from static_frame.core.util import _to_datetime64
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import to_timedelta64
 
 from static_frame.core.util import _DT64_DAY
 from static_frame.core.util import _DT64_MONTH
@@ -91,8 +98,10 @@ class LocMap:
     def map_slice_args(
             label_to_pos: tp.Callable[[tp.Hashable], int],
             key: slice,
-            offset: tp.Optional[int] = 0):
-        '''Given a slice and a label-to-position mapping, yield each argument necessary to create a new slice.
+            labels: tp.Optional[np.ndarray] = None,
+            offset: tp.Optional[int] = 0
+            ):
+        '''Given a log slice and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice.
 
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
@@ -103,8 +112,27 @@ class LocMap:
             attr = getattr(key, field)
             if attr is None:
                 yield None
+            elif isinstance(attr, np.datetime64):
+                if attr.dtype == labels.dtype:
+                    pos = label_to_pos(attr)
+                    if field == SLICE_STOP_ATTR:
+                        pos += 1 # stop is inclusive
+                elif field == SLICE_START_ATTR:
+                    # convert to the type of the atrs; this should get the relevant start
+                    pos = label_to_pos(attr.astype(labels.dtype))
+                elif field == SLICE_STOP_ATTR:
+                    # convert labels to the slice attr value, compare, then get last
+                    # add one, as this is an inclusive stop
+                    pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
+
+                if offset_apply:
+                    pos += offset
+                yield pos
             else:
                 pos = label_to_pos(attr)
+                if pos is None:
+                    raise RuntimeError('cannot map loc to iloc', attr, field)
+
                 if offset_apply:
                     pos += offset
                 if field is SLICE_STOP_ATTR:
@@ -141,10 +169,11 @@ class LocMap:
                         len(positions) + offset,
                         )
             return slice(*cls.map_slice_args(
-                label_to_pos.get,
-                key,
-                offset)
-                )
+                    label_to_pos.get,
+                    key,
+                    labels,
+                    offset)
+                    )
 
         if isinstance(key, np.datetime64):
             # convert this to the target representation, do a Boolean selection
@@ -152,11 +181,22 @@ class LocMap:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        # handles only lists and arrays
-        if isinstance(key, KEY_ITERABLE_TYPES):
-            # can be an iterable of labels (keys) or an iterable of Booleans
-            # if len(key) == len(label_to_pos) and isinstance(key[0], (bool, np.bool_)):
-            if isinstance(key, np.ndarray) and key.dtype == bool:
+        # handles only lists and arrays; break out comparisons to avoid multiple
+        # if isinstance(key, KEY_ITERABLE_TYPES):
+        is_array = isinstance(key, np.ndarray)
+        is_list = isinstance(key, list)
+
+        # can be an iterable of labels (keys) or an iterable of Booleans
+        if is_array or is_list:
+            if is_array and key.dtype.kind == DTYPE_DATETIME_KIND:
+                if labels.dtype != key.dtype:
+                    labels_ref = labels.astype(key.dtype)
+                    # let Boolean key hit next branch
+                    key = reduce(operator.or_, (labels_ref == k for k in key))
+                    # NOTE: may want to raise instead of support this
+                    # raise NotImplementedError(f'selecting {labels.dtype} with {key.dtype} is not presently supported')
+
+            if is_array and key.dtype == bool:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
@@ -310,7 +350,7 @@ class Index(IndexBase,
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
         if dtype is None:
-            dtype_extract = self._DTYPE # set in specialized Index classes
+            dtype_extract = self._DTYPE # set in some specialized Index classes
         else: # passed dtype is not None
             if self._DTYPE is not None and dtype != self._DTYPE:
                 raise RuntimeError('invalid dtype argument for this Index',
@@ -319,6 +359,7 @@ class Index(IndexBase,
             dtype_extract = dtype
 
         # handle all Index subclasses
+        # check isinstance(labels, IndexBase)
         if issubclass(labels.__class__, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
@@ -344,13 +385,11 @@ class Index(IndexBase,
                 labels = array2d_to_tuples(array)
 
         if self._DTYPE is not None:
+            # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not isinstance(labels, np.ndarray):
-                # do not need to look further at labels from IndexBase
-                # do not need to look at array, as will be typed and checked to match dtype_extract in _extract_labels
-                # import ipdb; ipdb.set_trace()
-                labels = (_to_datetime64(v, dtype_extract) for v in labels)
-            else:
-                # coerce to target type
+                # for now, assume that if _DTYPE is defined, we have a date
+                labels = (to_datetime64(v, dtype_extract) for v in labels)
+            else: # coerce to target type
                 labels = labels.astype(dtype_extract)
 
         self._name = name if name is None else name_filter(name)
@@ -840,6 +879,9 @@ class IndexGO(Index):
 # Specialized index for dates
 
 class _IndexDatetime(Index):
+    '''
+    Derivation of Index to support Datetime operations. Derived classes must define _DTYPE.
+    '''
 
     STATIC = True
     _DTYPE = None # define in base class
@@ -853,13 +895,21 @@ class _IndexDatetime(Index):
             '_name'
             )
 
+    def __init__(self,
+            labels: IndexInitializer,
+            *,
+            name: tp.Hashable = None
+            ):
+        # reduce to arguments relevant for these derived classes
+        Index.__init__(self, labels=labels, name=name)
+
     #---------------------------------------------------------------------------
     # dict like interface
 
     def __contains__(self, value) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
-        return self._map.__contains__(_to_datetime64(value))
+        return self._map.__contains__(to_datetime64(value))
 
     #---------------------------------------------------------------------------
     # operators
@@ -873,12 +923,14 @@ class _IndexDatetime(Index):
             other = other.values # operate on labels to labels
         elif isinstance(other, str):
             # do not pass dtype, as want to coerce to this parsed type, not the type of sled
-            other = _to_datetime64(other)
-
+            other = to_datetime64(other)
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
             array = operator(self._labels.astype(other.dtype), other)
+        elif isinstance(other, datetime.timedelta):
+            array = operator(self._labels, to_timedelta64(other))
         else:
+            # np.timedelta64 should work fine here
             array = operator(self._labels, other)
 
         array.flags.writeable = False
@@ -889,7 +941,7 @@ class _IndexDatetime(Index):
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
         '''
-        # not passing self.dtype to key_to_datetime_key so as to allow of translation to a foreign datetime for comparison
+        # not passing self.dtype to key_to_datetime_key so as to allow translation to a foreign datetime; slice comparison will be handled by map_slice_args
         return Index.loc_to_iloc(self,
                 key=key,
                 key_transform=key_to_datetime_key)
@@ -904,10 +956,8 @@ class _IndexDatetime(Index):
                 name=self._name)
 
 
-
-
 #-------------------------------------------------------------------------------
-@doc_inject(selector='index_init')
+@doc_inject(selector='index_date_time_init')
 class IndexYear(_IndexDatetime):
     '''A mapping of years (via NumPy datetime64[Y]) to positions, immutable and of fixed size.
 
@@ -925,7 +975,6 @@ class IndexYear(_IndexDatetime):
             '_name',
             )
 
-
     @classmethod
     def from_date_range(cls,
             start: DateInitializer,
@@ -935,11 +984,10 @@ class IndexYear(_IndexDatetime):
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_DAY),
-                _to_datetime64(stop, _DT64_DAY).astype(_DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, _DT64_DAY),
+                to_datetime64(stop, _DT64_DAY).astype(_DT64_YEAR) + _TD64_YEAR,
                 np.timedelta64(step, 'Y'),
                 dtype=_DT64_YEAR)
-
         labels.flags.writeable = False
         return cls(labels)
 
@@ -953,8 +1001,8 @@ class IndexYear(_IndexDatetime):
         '''
 
         labels = np.arange(
-                _to_datetime64(start, _DT64_MONTH),
-                _to_datetime64(stop, _DT64_MONTH).astype(_DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, _DT64_MONTH),
+                to_datetime64(stop, _DT64_MONTH).astype(_DT64_YEAR) + _TD64_YEAR,
                 np.timedelta64(step, 'Y'),
                 dtype=_DT64_YEAR)
         labels.flags.writeable = False
@@ -971,8 +1019,8 @@ class IndexYear(_IndexDatetime):
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_YEAR),
-                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, _DT64_YEAR),
+                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
                 step=np.timedelta64(step, 'Y'),
                 )
         labels.flags.writeable = False
@@ -984,7 +1032,7 @@ class IndexYear(_IndexDatetime):
         '''
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
 
-@doc_inject(selector='index_init')
+@doc_inject(selector='index_date_time_init')
 class IndexYearMonth(_IndexDatetime):
     '''A mapping of year months (via NumPy datetime64[M]) to positions, immutable and of fixed size.
 
@@ -1011,8 +1059,8 @@ class IndexYearMonth(_IndexDatetime):
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_DAY),
-                _to_datetime64(stop, _DT64_DAY).astype(_DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, _DT64_DAY),
+                to_datetime64(stop, _DT64_DAY).astype(_DT64_MONTH) + _TD64_MONTH,
                 np.timedelta64(step, 'M'),
                 dtype=_DT64_MONTH)
 
@@ -1029,8 +1077,8 @@ class IndexYearMonth(_IndexDatetime):
         '''
 
         labels = np.arange(
-                _to_datetime64(start, _DT64_MONTH),
-                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, _DT64_MONTH),
+                to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
                 np.timedelta64(step, 'M'),
                 dtype=_DT64_MONTH)
         labels.flags.writeable = False
@@ -1047,8 +1095,8 @@ class IndexYearMonth(_IndexDatetime):
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_YEAR),
-                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, _DT64_YEAR),
+                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
                 step=np.timedelta64(step, 'M'),
                 dtype=_DT64_MONTH)
         labels.flags.writeable = False
@@ -1061,7 +1109,7 @@ class IndexYearMonth(_IndexDatetime):
         raise NotImplementedError('Pandas does not support a year month type, and it is amiguous if a date proxy should be the first of the month or the last of the month.')
 
 
-@doc_inject(selector='index_init')
+@doc_inject(selector='index_date_time_init')
 class IndexDate(_IndexDatetime):
     '''A mapping of dates (via NumPy datetime64[D]) to positions, immutable and of fixed size.
 
@@ -1088,8 +1136,8 @@ class IndexDate(_IndexDatetime):
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_DAY),
-                _to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
+                to_datetime64(start, _DT64_DAY),
+                to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
                 np.timedelta64(step, 'D'))
         labels.flags.writeable = False
         return cls(labels)
@@ -1103,8 +1151,8 @@ class IndexDate(_IndexDatetime):
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_MONTH),
-                _to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, _DT64_MONTH),
+                to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
                 step=np.timedelta64(step, 'D'),
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
@@ -1120,8 +1168,8 @@ class IndexDate(_IndexDatetime):
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                _to_datetime64(start, _DT64_YEAR),
-                _to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, _DT64_YEAR),
+                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
                 step=np.timedelta64(step, 'D'),
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
@@ -1129,7 +1177,7 @@ class IndexDate(_IndexDatetime):
 
 
 #-------------------------------------------------------------------------------
-@doc_inject(selector='index_init')
+@doc_inject(selector='index_date_time_init')
 class IndexSecond(_IndexDatetime):
     '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
 
@@ -1147,7 +1195,7 @@ class IndexSecond(_IndexDatetime):
             '_name',
             )
 
-@doc_inject(selector='index_init')
+@doc_inject(selector='index_date_time_init')
 class IndexMillisecond(_IndexDatetime):
     '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ms]) to positions, immutable and of fixed size.
 

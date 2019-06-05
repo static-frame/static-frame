@@ -41,6 +41,14 @@ class DOC_TEMPLATE:
             dtype: Optional dtype to be used for labels.'''
             )
 
+    index_date_time_init = dict(
+            args = '''
+        Args:
+            labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
+            name: A hashable object to name the Index.
+            '''
+            )
+
     from_pandas = dict(
             own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
             own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',

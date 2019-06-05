@@ -23,7 +23,7 @@ from static_frame.core.util import column_2d_filter
 from static_frame.core.util import mloc
 from static_frame.core.util import array_shift
 from static_frame.core.util import full_for_fill
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
@@ -950,12 +950,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         targets_remain = True
 
         for block_idx, b in enumerate(self._blocks):
+            # for each block, we evaluate if we have any targets in that block and update the block accordingly; otherwise, we yield the block unchanged
+
             parts = []
-            drop_block = False
-            part_start_last = 0
+            drop_block = False # indicate entire block is dropped
+            part_start_last = 0 # within this block, keep track of where our last change was started
 
             while targets_remain:
-                # get target block and slice
+                # get target block and slice; this is what we want to remove
                 if target_block_idx is None: # can be zero
                     try:
                         target_block_idx, target_slice = next(block_slices)
@@ -966,7 +968,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if block_idx != target_block_idx:
                     break # need to advance blocks
 
-                if b.ndim == 1: # given 1D array
+                if b.ndim == 1 or b.shape[1] == 1: # given 1D array or 2D, 1 col array
                     part_start_last = 1
                     target_block_idx = target_slice = None
                     drop_block = True
@@ -977,19 +979,23 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                         target_start = target_slice.start
                         target_stop = target_slice.stop
                     else: # it is an integer
-                        target_start = target_slice
+                        target_start = target_slice # can be zero
                         target_stop = target_slice + 1
 
+                    # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
                     if target_start > part_start_last:
                         # yield retained components before and after
                         parts.append(b[:, slice(part_start_last, target_start)])
 
                     part_start_last = target_stop
 
+                # reset target block index, forcing fetchin next target info
                 target_block_idx = target_slice = None
 
-            # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
-            if b.ndim != 1 and part_start_last < b.shape[1]:
+            # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
+
+            if b.ndim != 1 and 0 < part_start_last < b.shape[1]:
+                # if a 2D block, and part_start_last is less than the shape, collect the remaining slice
                 parts.append(b[:, slice(part_start_last, None)])
 
             # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors
@@ -1104,7 +1110,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 # from here, we have a target we need to apply
                 if assigned is None:
-                    assigned_dtype = _resolve_dtype(value_dtype, b.dtype)
+                    assigned_dtype = resolve_dtype(value_dtype, b.dtype)
                     if b.dtype == assigned_dtype:
                         assigned = b.copy()
                     else:
@@ -1176,8 +1182,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if not target.any():
                 yield block
             else:
-                assigned_dtype = _resolve_dtype(value_dtype, block.dtype)
-
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
                     assigned = block.copy()
                 else:
@@ -1185,6 +1190,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 assert assigned.shape == target.shape
                 assigned[target] = value
+                assigned.flags.writeable = False
                 yield assigned
 
 
@@ -1494,6 +1500,104 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return self.from_blocks(blocks())
 
 
+
+
+
+    @staticmethod
+    def _fillna_sided_axis_0(
+            blocks: tp.Iterable[np.ndarray],
+            value: tp.Any,
+            sided_leading: bool) -> tp.Generator[np.ndarray, None, None]:
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0.
+
+        Args:
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+
+        '''
+        sided_index = 0 if sided_leading else -1
+
+        for b in blocks:
+            sel = _isna(b) # True for is NaN
+            ndim = sel.ndim
+
+            if ndim == 1 and not sel[sided_index]:
+                # if last value (bottom row) is not NaN, we can return block
+                yield b
+            elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
+                # can use this last-row observation below
+                yield b
+            else:
+                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                if b.dtype == assignable_dtype:
+                    assigned = b.copy()
+                else:
+                    assigned = b.astype(assignable_dtype)
+
+                # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
+                if ndim == 1:
+                    sels_nonzero = ((0, sel),)
+                else:
+                    # only colluct columns for sided NaNs
+                    is_leading = (i for i, j in enumerate(sel[sided_index]) if j == True)
+                    sels_nonzero = ((i, sel[:, i]) for i in is_leading)
+
+                for idx, sel_nonzero in sels_nonzero:
+                    # indices of not-nan values
+                    targets = np.nonzero(~sel_nonzero)[0]
+                    if len(targets):
+                        if sided_leading:
+                            sel_trailing = slice(0, targets[0])
+                        else: # trailing
+                            sel_trailing = slice(targets[-1]+1, None)
+                    else: # all are NaN
+                        sel_trailing = NULL_SLICE
+
+                    if ndim == 1:
+                        assigned[sel_trailing] = value
+                    else:
+                        assigned[sel_trailing, idx] = value
+
+                # done writing
+                assigned.flags.writeable = False
+                yield assigned
+
+
+
+    def fillna_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''
+
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
+        if axis == 0:
+            return self.from_blocks(self._fillna_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=False))
+
+        raise NotImplementedError()
+
+
+    def fillna_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fillna_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=True))
+
+        raise NotImplementedError()
+
+
+
     def dropna_to_keep_locations(self,
             axis: int = 0,
             condition: tp.Callable[[np.ndarray], bool] = np.all) -> 'TypeBlocks':
@@ -1570,7 +1674,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if not self._row_dtype: # if never set as shape is empty
             self._row_dtype = block.dtype
         elif block.dtype != self._row_dtype:
-            # we do not use _resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
+            # we do not use resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
             self._row_dtype = object
 
     def extend(self,

@@ -1,5 +1,6 @@
 import typing as tp
-
+from itertools import zip_longest
+from itertools import chain
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -7,7 +8,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import _BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import _resolve_dtype
+from static_frame.core.util import resolve_dtype
 from static_frame.core.util import _isna
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import _array_to_groups_and_locations
@@ -24,6 +25,8 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import concat_resolved
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import binary_transition
 
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
@@ -502,25 +505,26 @@ class Series(metaclass=MetaOperatorDelegate):
 
         return self.__class__(values,
                 index=self._index.loc[sel],
-                name=self._name)
+                name=self._name,
+                own_index=True)
+
 
     def fillna(self, value) -> 'Series':
-        '''Return a new Series after replacing NaN or None values with the supplied value.
+        '''Return a new ``Series`` after replacing null (NaN or None) with the supplied value.
         '''
         sel = _isna(self.values)
         if not np.any(sel):
             return self
 
         if isinstance(value, np.ndarray):
-            raise Exception('cannot assign an array to fillna')
+            raise RuntimeError('cannot assign an array to fillna')
 
-        value_dtype = np.array(value).dtype
-        assigned_dtype = _resolve_dtype(value_dtype, self.values.dtype)
+        assignable_dtype = resolve_dtype(np.array(value).dtype, self.values.dtype)
 
-        if self.values.dtype == assigned_dtype:
+        if self.values.dtype == assignable_dtype:
             assigned = self.values.copy()
         else:
-            assigned = self.values.astype(assigned_dtype)
+            assigned = self.values.astype(assignable_dtype)
 
         assigned[sel] = value
         assigned.flags.writeable = False
@@ -528,6 +532,159 @@ class Series(metaclass=MetaOperatorDelegate):
         return self.__class__(assigned,
                 index=self._index,
                 name=self._name)
+
+
+
+    @staticmethod
+    def _fillna_directional(
+            array: np.ndarray,
+            directional_forward: bool,
+            limit: int = 0) -> np.ndarray:
+        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+
+        Args:
+            count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
+        '''
+        sel = _isna(array)
+        if not np.any(sel):
+            return array # assume immutable
+
+        # type is already compatible, no need for check
+        assigned = array.copy()
+        target_index = binary_transition(sel)
+        target_values = array[target_index]
+        length = len(array)
+
+        if directional_forward:
+            target_slices = (
+                    slice(start+1, stop)
+                    for start, stop in
+                    zip_longest(target_index, target_index[1:], fillvalue=length)
+                    )
+        else:
+            target_slices = (
+                    slice((start+1 if start is not None else start), stop)
+                    for start, stop in
+                    zip(chain((None,), target_index[:-1]), target_index)
+                    )
+
+        for target_slice, value in zip(target_slices, target_values):
+            if target_slice.start == target_slice.stop:
+                continue
+
+            if directional_forward and target_slice.start >= length:
+                continue
+            elif (not directional_forward
+                    and target_slice.start == None
+                    and target_slice.stop == 0):
+                continue
+
+            # only assume if all values are NaN, which will be given by first value
+            if sel[target_slice][0]:
+                if limit > 0:
+                    # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+                    shift = len(range(*target_slice.indices(length))) - limit
+                    if shift > 0:
+                        if directional_forward:
+                            target_slice = slice(target_slice.start, target_slice.stop - shift)
+                        else:
+                            target_slice = slice(target_slice.start + shift, target_slice.stop)
+                assigned[target_slice] = value
+
+        assigned.flags.writeable = False
+        return assigned
+
+
+    def fillna_forward(self, limit: int = 0) -> 'Series':
+        '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
+
+        Args:
+            count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
+        '''
+        return self.__class__(self._fillna_directional(
+                    array=self.values,
+                    directional_forward=True,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+    def fillna_backward(self, limit: int = 0) -> 'Series':
+        '''Return a new ``Series`` after feeding backward the last   non-null (NaN or None) observation across contiguous nulls.
+        '''
+        return self.__class__(self._fillna_directional(
+                    array=self.values,
+                    directional_forward=False,
+                    limit=limit),
+                index=self._index,
+                name=self._name)
+
+
+    @staticmethod
+    def _fillna_sided(array: np.ndarray,
+            value: tp.Any,
+            sided_leading: bool):
+        '''
+        Args:
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+        '''
+        sel = _isna(array)
+
+        if not len(sel):
+            return array
+
+        sided_index = 0 if sided_leading else -1
+
+        if sel[sided_index] == False:
+            # sided value is not null: nothing to do
+            return array # assume immutable
+
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
+        assignable_dtype = resolve_dtype(np.array(value).dtype, array.dtype)
+
+        if array.dtype == assignable_dtype:
+            assigned = array.copy()
+        else:
+            assigned = array.astype(assignable_dtype)
+
+        targets = np.nonzero(~sel)[0] # as 1D, can just take index 0 resuilts
+        if len(targets):
+            if sided_leading:
+                sel_sided = slice(0, targets[0])
+            else: # trailing
+                sel_sided = slice(targets[-1]+1, None)
+        else: # all are NaN
+            sel_sided = NULL_SLICE
+
+        assigned[sel_sided] = value
+        assigned.flags.writeable = False
+        return assigned
+
+
+    def fillna_leading(self, value) -> 'Series':
+        '''Return a new ``Series`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._fillna_sided(
+                    array=self.values,
+                    value=value,
+                    sided_leading=True),
+                index=self._index,
+                name=self._name)
+
+    def fillna_trailing(self, value) -> 'Series':
+        '''Return a new ``Series`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._fillna_sided(
+                    array=self.values,
+                    value=value,
+                    sided_leading=False),
+                index=self._index,
+                name=self._name)
+
+
+
+
 
     #---------------------------------------------------------------------------
     # operators
@@ -899,7 +1056,7 @@ class Series(metaclass=MetaOperatorDelegate):
         index_values.flags.writeable = False
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values)
+        return self.__class__(values, index=index_values, name=self._name)
 
     def sort_values(self,
             ascending: bool = True,
@@ -916,7 +1073,7 @@ class Series(metaclass=MetaOperatorDelegate):
         index_values.flags.writeable = False
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values)
+        return self.__class__(values, index=index_values, name=self._name)
 
 
     def isin(self, other) -> 'Series':
@@ -952,7 +1109,7 @@ class Series(metaclass=MetaOperatorDelegate):
 
         array = np.clip(self.values, *args)
         array.flags.writeable = False
-        return self.__class__(array, index=self._index)
+        return self.__class__(array, index=self._index, name=self._name)
 
     def transpose(self) -> 'Series':
         '''The transpositon of a Series is itself.
@@ -1223,7 +1380,7 @@ class SeriesAssign:
         else:
             value_dtype = np.array(value).dtype
 
-        dtype = _resolve_dtype(self.container.dtype, value_dtype)
+        dtype = resolve_dtype(self.container.dtype, value_dtype)
 
         # create or copy the array to return
         if dtype == self.container.dtype:

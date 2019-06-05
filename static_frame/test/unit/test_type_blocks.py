@@ -1,7 +1,9 @@
 import unittest
 import pickle
+import itertools as it
 
 import numpy as np
+
 
 import static_frame as sf
 # assuming located in the same directory
@@ -1187,6 +1189,60 @@ class TestUnit(TestCase):
         self.assertEqual(tb3.isna().values.any(), True)
 
 
+
+    def test_type_blocks_fillna_trailing_a(self):
+
+        for arrays in self.get_arrays_b():
+            tb = TypeBlocks.from_blocks(arrays)
+            post = tb.fillna_trailing(-1)
+            self.assertEqual(tb.shape, post.shape)
+
+
+    def test_type_blocks_fillna_trailing_b(self):
+
+        a1 = np.array([
+                [nan, nan,3, 4],
+                [nan, nan, 6, nan],
+                [5, nan, nan, nan]
+                ], dtype=float)
+        a2 = np.array([nan, nan, nan], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.fillna_trailing(0)
+
+        self.assertAlmostEqualValues(
+                list(tb2.values.flat),
+                [nan, 0.0, 3.0, 4.0, 0, nan, 0.0, 6.0, 0.0, 0, 5.0, 0.0, 0.0, 0.0, 0])
+
+        # import ipdb; ipdb.set_trace()
+
+
+    def test_type_blocks_fillna_leading_a(self):
+
+        for arrays in self.get_arrays_b():
+            tb = TypeBlocks.from_blocks(arrays)
+            post = tb.fillna_leading(-1)
+            self.assertEqual(tb.shape, post.shape)
+
+
+    def test_type_blocks_fillna_leading_b(self):
+
+        a1 = np.array([
+                [nan, nan,3, 4],
+                [nan, nan, 6, nan],
+                [5, nan, nan, nan]
+                ], dtype=float)
+        a2 = np.array([nan, nan, nan], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.fillna_leading(0)
+
+        self.assertAlmostEqualValues(list(tb2.values.flat),
+                [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
+
+
     def test_type_blocks_from_none_a(self):
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -1324,9 +1380,17 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
 
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 4))
         self.assertTrue(tb1.mloc[1] == tb2.mloc[1])
+
+        tb4 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[0, 2, 4]))
+        self.assertTypeBlocksArrayEqual(tb4,
+                [[2, False, True],
+                [5, True, True],
+                [0, True, True]]
+                )
 
         self.assertTypeBlocksArrayEqual(tb2,
                 [[3, False, False, True],
@@ -1340,12 +1404,6 @@ class TestUnit(TestCase):
                 [0, True, False, True]]
                 )
 
-        tb4 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[0, 2, 4]))
-        self.assertTypeBlocksArrayEqual(tb4,
-                [[2, False, True],
-                [5, True, True],
-                [0, True, True]]
-                )
 
         tb5 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=[4, 2, 0]))
         self.assertTypeBlocksArrayEqual(tb4,
@@ -1411,7 +1469,6 @@ class TestUnit(TestCase):
                 )
 
 
-
     def test_type_blocks_drop_blocks_d(self):
 
         a1 = np.array([1, 2, 3])
@@ -1434,6 +1491,45 @@ class TestUnit(TestCase):
                 [[1, 4, False, True],
                 [3, 6, True, True]]
                 )
+
+
+    def test_type_blocks_drop_blocks_e(self):
+
+
+        for arrays in self.get_arrays_a():
+            tb1 = TypeBlocks.from_blocks(arrays)
+
+            for i in range(tb1.shape[1]):
+                tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=i))
+                self.assertTrue(tb2.shape == (3, tb1.shape[1] - 1))
+
+
+
+    def test_type_blocks_drop_blocks_f(self):
+        a1 = np.array([[1], [5], [0]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb1.shape, (3, 4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 2))
+        self.assertTrue((tb1[2:].values == tb2.values).all())
+
+
+    def test_type_blocks_drop_blocks_g(self):
+        a1 = np.array([[1], [5], [0]])
+        a2 = np.array([[2], [6], [10]])
+        a3 = np.array([[3], [7], [11]])
+        a4 = np.array([[4], [8], [2]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
+        self.assertEqual(tb1.shape, (3, 4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(column_key=slice(0, 2)))
+        self.assertEqual(tb2.shape, (3, 2))
+        self.assertTrue((tb1[2:].values == tb2.values).all())
+
 
 
     def test_type_blocks_pickle_a(self):
