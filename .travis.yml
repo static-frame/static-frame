@@ -109,9 +109,9 @@ install:
   # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
   - python fix_wheels.py
-  - pip install --force-reinstall .
-  - pip install --force-reinstall dist/*.tar.gz
-  - pip install --force-reinstall dist/*.whl
+  - pip install --force-reinstall --no-cache-dir .
+  - pip install --force-reinstall --no-cache-dir dist/*.tar.gz
+  - pip install --force-reinstall --no-cache-dir dist/*.whl
 
 script:
   - pytest --cov=static_frame

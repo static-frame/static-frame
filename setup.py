@@ -75,7 +75,6 @@ setup(
             'static_frame.performance',
     ],
     package_data={'static_frame.core.extensions': ['*.h', '*.pyi']},
-    data_files=[('', ['LICENSE.txt'])],
     ext_modules=[
             Extension(
                     'static_frame.core.extensions.array_go',
