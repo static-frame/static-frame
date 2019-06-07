@@ -57,7 +57,7 @@ class IndexHierarchy(IndexBase,
     A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
     '''
     __slots__ = (
-            '_levels', # IndexLevel
+            '_levels',
             '_labels',
             '_depth',
             '_keys',
@@ -65,14 +65,19 @@ class IndexHierarchy(IndexBase,
             '_recache',
             '_name'
             )
+    _levels: IndexLevel
+    _lables: np.ndarray
+    _depth: int
+    _leys: KeysView
+    _length: int
+    _recache: bool
+    _name: tp.Hashable
 
     # _IMMUTABLE_CONSTRUCTOR = None
     _INDEX_CONSTRUCTOR = Index
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
-
     _LEVEL_CONSTRUCTOR = IndexLevel
-
 
     #---------------------------------------------------------------------------
     # constructors
@@ -577,7 +582,7 @@ class IndexHierarchy(IndexBase,
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
-        else: # select a single label value
+        else: # select a single label value: NOTE: covnert to tuple
             values = self._labels[key]
             if values.ndim == 1:
                 return tuple(values)

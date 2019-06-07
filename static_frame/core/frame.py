@@ -67,6 +67,8 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.series import Series
 
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_base import index_from_optional_constructor
+
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _requires_reindex
@@ -109,6 +111,11 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_name'
             )
 
+    _blocks: TypeBlocks
+    _columns: IndexBase
+    _index: IndexBase
+    _name: tp.Hashable
+
     _COLUMN_CONSTRUCTOR = Index
 
     @classmethod
@@ -123,11 +130,11 @@ class Frame(metaclass=MetaOperatorDelegate):
             consolidate_blocks: bool = False
             ):
         '''
-        Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will have those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
+        Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
 
         Args:
             frames: Iterable of Frames.
-            axis: Integer specifying 0 to concatenate vertically, 1 to concatenate horizontally.
+            axis: Integer specifying 0 to concatenate supplied frames vertically (aligning on columns), 1 to concatenate horizontally (aligning on rows).
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
@@ -147,7 +154,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         own_columns = False
         own_index = False
 
-        if axis == 1: # stacks columns (extends rows)
+        if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
             if columns is None:
                 # returns immutable array
@@ -171,7 +178,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                     for block in frame._blocks._blocks:
                         yield block
 
-        elif axis == 0: # stacks rows (extends columns)
+        elif axis == 0: # stacks rows (extends columns vertically)
             if index is None:
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])
@@ -593,6 +600,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         index = Index(index)
         columns = cls._COLUMN_CONSTRUCTOR(columns)
+
         tb = TypeBlocks.from_element_items(items,
                 shape=(len(index), len(columns)),
                 dtype=dtype)
@@ -614,11 +622,18 @@ class Frame(metaclass=MetaOperatorDelegate):
             name: tp.Hashable = None
             ) -> 'Frame':
         '''
+        This function is partialed (seeting the index and columns) and used by ``IterNodeDelegate`` as as the apply constructor for doing application on iteration.
+
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        index = Index(index)
-        columns = cls._COLUMN_CONSTRUCTOR(columns)
+
+        # index = Index(index)
+        # columns = cls._COLUMN_CONSTRUCTOR(columns)
+
+        index = index_from_optional_constructor(index, Index)
+        columns = index_from_optional_constructor(columns, cls._COLUMN_CONSTRUCTOR)
+
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)
 
@@ -626,6 +641,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         tb = TypeBlocks.from_element_items(items,
                 shape=(len(index), len(columns)),
                 dtype=dtype)
+
         return cls(tb,
                 index=index,
                 columns=columns,
@@ -1277,6 +1293,34 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
 
+    def fillna_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0):
+        '''
+        Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._blocks.fillna_leading(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
+    def fillna_trailing(self,
+            value: tp.Any,
+            *,
+            axis: int = 0):
+        '''
+        Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._blocks.fillna_trailing(value, axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+
     #---------------------------------------------------------------------------
 
     def __len__(self) -> int:
@@ -1912,10 +1956,15 @@ class Frame(metaclass=MetaOperatorDelegate):
     def _iter_element_iloc(self):
         yield from (x for _, x in self._iter_element_iloc_items())
 
-    def _iter_element_loc_items(self):
+    def _iter_element_loc_items(self) -> tp.Iterator[
+            tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
+        '''
+        Generator of pairs of (index, column), value.
+        '''
         yield from (
-                ((self._index._labels[k[0]], self._columns._labels[k[1]]), v)
-                for k, v in self._blocks.element_items())
+                ((self._index[k[0]], self._columns[k[1]]), v)
+                for k, v in self._blocks.element_items()
+                )
 
     def _iter_element_loc(self):
         yield from (x for _, x in self._iter_element_loc_items())
@@ -2314,6 +2363,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument.
         '''
+        # TODO: find a common interfave on IndexHierarchy that cna give hashables
         if isinstance(self._index, IndexHierarchy):
             index_values = list(array2d_to_tuples(self._index.values))
         else:
@@ -2357,7 +2407,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         # copying blocks does not copy underlying data
         return FrameGO(self._blocks.copy(),
                 index=self.index,
-                columns=self.columns.values,
+                columns=self.columns.values, # NOTE: does not support IndexHierarchy
                 name=self._name,
                 own_data=True,
                 own_index=True,

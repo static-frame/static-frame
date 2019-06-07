@@ -270,6 +270,15 @@ class TestUnit(TestCase):
         self.assertEqual((s1 == (False, True, False, True, False)).to_pairs(),
                 (('a', False), ('b', False), ('c', False), ('d', False)))
 
+    def test_series_binary_operator_f(self):
+        r = Series(['100312', '101376', '100828', '101214', '100185'])
+        c = Series(['100312', '101376', '101092', '100828', '100185'],
+                index=['100312', '101376', '101092', '100828', '100185'])
+        post = r == c
+        # the string ordering here unstable!
+        self.assertEqual(set(post.to_pairs()),
+                set(((0, False), (1, False), (2, False), (3, False), (4, False), ('101376', False), ('101092', False), ('100828', False), ('100312', False), ('100185', False)))
+                )
 
 
     def test_series_reindex_a(self):
@@ -318,9 +327,12 @@ class TestUnit(TestCase):
         s1 = Series(('a', 'b', 'c', 'd'), index=((0, x) for x in range(4)))
         self.assertEqual(s1.loc[(0, 2)], 'c')
 
+        s1.reindex(((0, 1), (0, 3), (4,5)))
+
         self.assertEqual(
                 s1.reindex(((0, 1), (0, 3), (4,5)), fill_value=None).to_pairs(),
                 (((0, 1), 'b'), ((0, 3), 'd'), ((4, 5), None)))
+
 
         s2 = s1.reindex(('c', 'd', 'a'))
         self.assertEqual(sorted(s2.index.values.tolist()), ['a', 'c', 'd'])
@@ -956,6 +968,17 @@ class TestUnit(TestCase):
                 s1.iter_element_items().apply(lambda k, v: v * 20 if k == 'b' else 0).to_pairs(),
                 (('a', 0), ('b', 60), ('c', 0), ('d', 0), ('e', 0)))
 
+
+    def test_series_iter_element_b(self):
+
+        s1 = Series((10, 3, 15, 21, 28, 50),
+                index=IndexHierarchy.from_product(tuple('ab'), tuple('xyz')),
+                dtype=object)
+        s2 = s1.iter_element().apply(str)
+        self.assertEqual(s2.index.__class__, IndexHierarchy)
+
+        self.assertEqual(s2.to_pairs(),
+                ((('a', 'x'), '10'), (('a', 'y'), '3'), (('a', 'z'), '15'), (('b', 'x'), '21'), (('b', 'y'), '28'), (('b', 'z'), '50')))
 
 
     def test_series_sort_index_a(self):

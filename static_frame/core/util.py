@@ -39,6 +39,8 @@ import numpy as np
 #     V 	void
 
 DEFAULT_SORT_KIND = 'mergesort'
+DEFAULT_INT_DTYPE = np.int64 # necessary for windows
+
 _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
@@ -70,7 +72,8 @@ TIME_DELTA_ATTR_MAP = (
 # utility
 
 INT_TYPES = (int, np.int_)
-_BOOL_TYPES = (bool, np.bool_)
+BOOL_TYPES = (bool, np.bool_)
+DICTLIKE_TYPES = (abc.Set, dict)
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -105,6 +108,8 @@ IndexSpecifier = tp.Union[int, str]
 IndexInitializer = tp.Union[
         tp.Iterable[tp.Hashable],
         tp.Generator[tp.Hashable, None, None]]
+IndexConstructor = tp.Callable[[IndexInitializer], 'IndexBase']
+
 
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
@@ -403,11 +408,13 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
         post[:, size+shift:None] = array[:, :-shift]
         return post
 
-
     raise NotImplementedError()
 
-def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
-    '''Utility method to take arbitary, heterogenous typed iterables and realize them as an NP array. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
+
+#-------------------------------------------------------------------------------
+def iterable_to_array(other: tp.Iterable[tp.Any]
+        ) -> tp.Tuple[np.ndarray, bool]:
+    '''Utility method to take arbitary, heterogenous typed iterables (including dict-like and generators) and realize them as an NP array when we do not already know what dtype is appropriate. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
     '''
     v_iter = None
 
@@ -418,7 +425,7 @@ def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
 
     else: # must determine if we need an object type
         # we can use assume_unique if `other` is a set, keys view, frozen set, another index, as our _labels is always unique
-        if isinstance(other, (abc.Set, dict)): # mathches set, frozenset, keysview
+        if isinstance(other, DICTLIKE_TYPES): # mathches set, frozenset, keysview
             v_iter = iter(other)
             assume_unique = True
         else: # generators and other iteraables, lists, etc
@@ -446,6 +453,45 @@ def iterable_to_array(other) -> tp.Tuple[np.ndarray, bool]:
         assume_unique = True
 
     return v, assume_unique
+
+def collection_and_dtype_to_1darray(
+        other: tp.Collection[tp.Any],
+        dtype: np.dtype) -> np.ndarray:
+    '''
+    If dtype is known, create a new 1D (and only 1D array); this is different than iterable_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create.
+    '''
+    if not hasattr(other, '__len__'):
+        raise NotImplementedError('this function only works with non-generators')
+
+    if dtype.kind == 'O':
+        # we advance the iterator and then use the source; this is only safe is this not a generator
+        v_iter = iter(other)
+        try:
+            x = next(v_iter)
+        except StopIteration:
+            return EMPTY_ARRAY
+
+        if not isinstance(x, tuple):
+            # np fromiter does not work with object types
+            if isinstance(other, DICTLIKE_TYPES):
+                # must creat tuple first of dictlike
+                return np.array(tuple(other), dtype=dtype)
+            return np.array(other, dtype)
+
+        # contains tuples: must create empty and assign
+        # see this for potential optimization paths:
+        # https://wesmckinney.com/blog/performance-quirk-making-a-1d-object-ndarray-of-tuples
+
+        array = np.empty(len(other), dtype=dtype)
+        if isinstance(other, DICTLIKE_TYPES):
+            # must convert to sequence
+            array[:] = tuple(other)
+            return array
+        array[:] = other
+        return array
+
+    return np.fromiter(other, count=len(other), dtype=dtype)
+
 
 
 def _slice_to_ascending_slice(key: slice, size: int) -> slice:
@@ -629,6 +675,7 @@ def _isna(array: np.ndarray) -> np.ndarray:
     #             count=array.size,
     #             dtype=bool).reshape(array.shape)
 
+
 def binary_transition(array: np.ndarray) -> np.ndarray:
     '''
     Given a Boolean array, return the index positions (integers) at False values where that False was previously True, or will be True
@@ -803,7 +850,47 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
-def _ufunc2d(
+def union1d(array: np.ndarray, other: np.ndarray):
+
+    set_compare = False
+    array_is_str = array.dtype.kind in _DTYPE_STR_KIND
+    other_is_str = other.dtype.kind in _DTYPE_STR_KIND
+
+    if array_is_str ^ other_is_str:
+        # if only one is string
+        set_compare = True
+
+    if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
+        result = set(array) | set(other)
+        dtype = resolve_dtype(array.dtype, other.dtype)
+        return collection_and_dtype_to_1darray(result, dtype)
+
+    return np.union1d(array, other)
+
+
+def intersect1d(
+        array: np.ndarray,
+        other: np.ndarray) -> np.ndarray:
+    '''
+    Extend ufunc version to handle cases where types cannot be sorted.
+    '''
+    set_compare = False
+    array_is_str = array.dtype.kind in _DTYPE_STR_KIND
+    other_is_str = other.dtype.kind in _DTYPE_STR_KIND
+
+    if array_is_str ^ other_is_str:
+        # if only one is string
+        set_compare = True
+
+    if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
+        # if a 2D array gets here, a hashability error will be raised
+        result = set(array) & set(other)
+        dtype = resolve_dtype(array.dtype, other.dtype)
+        return collection_and_dtype_to_1darray(result, dtype)
+
+    return np.intersect1d(array, other)
+
+def set_ufunc2d(
         func: tp.Callable[[np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray):
@@ -825,7 +912,7 @@ def _ufunc2d(
         elif func is np.intersect1d:
             result = array_set & other_set
         else:
-            raise Exception('unexpected func', func)
+            raise NotImplementedError('unexpected func', func)
         # sort so as to duplicate results from NP functions
         # NOTE: this sort may not always be necssary
         return np.array(sorted(result), dtype=object)
@@ -846,26 +933,10 @@ def _ufunc2d(
 
 def intersect2d(array: np.ndarray,
         other: np.ndarray) -> np.ndarray:
-    return _ufunc2d(np.intersect1d, array, other)
+    return set_ufunc2d(np.intersect1d, array, other)
 
 def union2d(array, other) -> np.ndarray:
-    return _ufunc2d(np.union1d, array, other)
-
-def intersect1d(array: np.ndarray,
-        other: np.ndarray) -> np.ndarray:
-    '''
-    Extend ufunc version to handle cases where types cannot be sorted.
-    '''
-    try:
-        return np.intersect1d(array, other)
-    except TypeError:
-        result = set(array) & set(other)
-
-    dtype = resolve_dtype(array.dtype, other.dtype)
-    if dtype.kind == 'O':
-        # np fromiter does not work with object types
-        return np.array(tuple(result), dtype=dtype)
-    return np.fromiter(result, count=len(result), dtype=dtype)
+    return set_ufunc2d(np.union1d, array, other)
 
 
 
@@ -1030,6 +1101,12 @@ class IndexCorrespondence:
             'size',
             )
 
+    has_common: bool
+    is_subset: bool
+    iloc_src: tp.Iterable[int]
+    iloc_dst: tp.Iterable[int]
+    size: int
+
     @classmethod
     def from_correspondence(cls,
             src_index: 'Index',
@@ -1071,6 +1148,7 @@ class IndexCorrespondence:
 
         # either a reordering or a subset
         if has_common:
+
             if len(common_labels) == len(dst_index):
                 # use new index to retain order
                 iloc_src = src_index.loc_to_iloc(dst_index.values)
@@ -1086,6 +1164,8 @@ class IndexCorrespondence:
             iloc_src = src_index.loc_to_iloc(common_labels)
             iloc_dst = dst_index.loc_to_iloc(common_labels)
 
+            # if iloc_src.dtype != int:
+            #     import ipdb; ipdb.set_trace()
             return cls(has_common=has_common,
                     is_subset=False,
                     iloc_src=iloc_src,

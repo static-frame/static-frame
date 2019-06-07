@@ -135,6 +135,7 @@ _UFUNC_AXIS_SKIPNA = {
         'min': (np.min, np.nanmin, None),
         'max': (np.max, np.nanmax, None),
         'mean': (np.mean, np.nanmean, None),
+        'median': (np.median, np.nanmedian, None),
         'std': (np.std, np.nanstd, None),
         'var': (np.var, np.nanvar, None),
         'prod': (np.prod, np.nanprod, None),

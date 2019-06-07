@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+Added ``median`` method to all ``MetaOperatorDelegate`` classes, inlcuding ``Series``, ``Index``, and ``Frame``.
+
 ``Frame`` and ``Series`` sort methods now propagate ``name`` attributes.
 
 ``Index.from_pandas()`` now correctly collects ``name`` / ``names`` attributes from Pandas indexes.

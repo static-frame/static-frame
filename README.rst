@@ -382,7 +382,7 @@ Unlike with Pandas, StaticFrame ``Index`` objects always enforce uniqueness (the
 
 >>> frame_go.set_index('albumId')
 Traceback (most recent call last):
-KeyError: 'labels have non-unique values'
+KeyError: 'labels (5000) have non-unique values (100)'
 
 
 For a data set such as the one used in this example, a hierarchical index, by "albumId" and "track", is practical. StaticFrame implements hierarchical indices as ``IndexHierarchy`` objects. The ``Frame.set_index_hierarchy()`` method, given columns in a ``Frame``, can be used to create a hierarchical index:

@@ -31,6 +31,10 @@ class IndexLevel:
             'offset'
             )
 
+    _index: Index
+    _targets: tp.Optional[ArrayGO]
+    _offset: int
+
     def __init__(self,
             index: Index,
             targets: tp.Optional[ArrayGO] = None, # np.ndarray[IndexLevel]
@@ -68,7 +72,7 @@ class IndexLevel:
         cls = cls if cls else self.__class__
         return cls(index=index, targets=targets, offset=offset)
 
-    def __len__(self):
+    def __len__(self) -> int:
         '''
         The length is the sum of all leaves
         '''
@@ -85,7 +89,7 @@ class IndexLevel:
                 levels.extend(level.targets)
         return count
 
-    def depths(self) -> tp.Generator[int, None, None]:
+    def depths(self) -> tp.Iterator[int]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None:
             yield 1
@@ -99,7 +103,7 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    def dtypes(self) -> tp.Generator[int, None, None]:
+    def dtypes(self) -> tp.Iterator[int]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None:
             yield self.index.values.dtype
@@ -127,7 +131,7 @@ class IndexLevel:
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
 
-    def iter(self, depth_level: int) -> tp.Generator[tp.Hashable, None, None]:
+    def iter(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
         '''Given a depth position, return labels at that depth.
         '''
         if depth_level == 0:
@@ -146,15 +150,18 @@ class IndexLevel:
 
     def leaf_loc_to_iloc(self, key: tp.Iterable[tp.Hashable]) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
+
+        Note that key components (level selectors) cannot be slices, lists, or np.ndarray.
         '''
         if isinstance(key, ILoc):
             return key.key
 
         node = self
         pos = 0
+
         for k in key:
             if isinstance(k, KEY_MULTIPLE_TYPES):
-                raise RuntimeError('slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{}].'.format(key))
+                raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
                 node = node.targets[node.index.loc_to_iloc(k)]
                 pos += node.offset
@@ -162,10 +169,11 @@ class IndexLevel:
                 # assume that k returns an integer
                 return pos + node.index.loc_to_iloc(k)
 
-
     def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
         '''
         This is the low-level loc_to_iloc, analagous to LocMap.loc_to_iloc as used by Index. As such, the key at this point should not be a Series or Index object.
+
+        If key is an np.ndarray, a Boolean array will be passed through; otherwise, it will be treated as an iterable of values to be passed to leaf_loc_to_iloc.
         '''
         if isinstance(key, slice):
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
@@ -174,12 +182,8 @@ class IndexLevel:
         # this should not match tuples that are leaf-locs
         if isinstance(key, KEY_ITERABLE_TYPES):
             if isinstance(key, np.ndarray) and key.dtype == bool:
-                return key # keep as Boolean?
+                return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
-
-        # elif isinstance(key, IndexHierarchy):
-        #     # values will give an iterable if rows, where rows are iloc selectors
-        #     return [self.leaf_loc_to_iloc(tuple(x)) for x in key.values]
 
         if not isinstance(key, HLoc):
             # assume it is a leaf loc tuple
@@ -285,6 +289,10 @@ class IndexLevelGO(IndexLevel):
             'targets',
             'offset'
             )
+
+    index: IndexGO
+    targets: tp.Optional[np.ndarray]
+    offset: int
 
     def __init__(self,
             index: IndexGO,

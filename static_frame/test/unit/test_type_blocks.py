@@ -1192,10 +1192,11 @@ class TestUnit(TestCase):
 
     def test_type_blocks_fillna_trailing_a(self):
 
-        for arrays in self.get_arrays_b():
-            tb = TypeBlocks.from_blocks(arrays)
-            post = tb.fillna_trailing(-1)
-            self.assertEqual(tb.shape, post.shape)
+        for axis in (0, 1):
+            for arrays in self.get_arrays_b():
+                tb = TypeBlocks.from_blocks(arrays)
+                post = tb.fillna_trailing(-1, axis=axis)
+                self.assertEqual(tb.shape, post.shape)
 
 
     def test_type_blocks_fillna_trailing_b(self):
@@ -1209,21 +1210,70 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        tb2 = tb1.fillna_trailing(0)
+        tb2 = tb1.fillna_trailing(0, axis=0)
 
         self.assertAlmostEqualValues(
                 list(tb2.values.flat),
                 [nan, 0.0, 3.0, 4.0, 0, nan, 0.0, 6.0, 0.0, 0, 5.0, 0.0, 0.0, 0.0, 0])
 
-        # import ipdb; ipdb.set_trace()
+
+    def test_type_blocks_fillna_trailing_c(self):
+
+        a2 = np.array([
+                [None, None, None, None],
+                [None, 1, None, 6],
+                [None, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, None, None], dtype=object)
+        a3 = np.array([
+                [None, 4],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        tb2 = tb1.fillna_trailing(0, axis=1)
+
+        # no change as no leading values are NaN
+        self.assertEqual(tb1.values.tolist(), tb2.values.tolist())
+
+
+    def test_type_blocks_fillna_trailing_d(self):
+
+        a2 = np.array([
+                [None, None, None, None],
+                [None, 1, None, 6],
+                [None, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, None, None], dtype=object)
+        a3 = np.array([
+                [None, None],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a3, a2, a1))
+        tb2 = tb1.fillna_trailing(0, axis=1)
+
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 0, 0, 0, 0, 0, 0],
+                [None, 1, None, 1, None, 6, 0],
+                [None, 5, None, 5, 0, 0, 0]])
+
+
+    def test_type_blocks_fillna_trailing_e(self):
+
+        a1 = np.array([None, None, None], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1,))
+        with self.assertRaises(NotImplementedError):
+            tb1.fillna_trailing(value=3, axis=2)
 
 
     def test_type_blocks_fillna_leading_a(self):
 
-        for arrays in self.get_arrays_b():
-            tb = TypeBlocks.from_blocks(arrays)
-            post = tb.fillna_leading(-1)
-            self.assertEqual(tb.shape, post.shape)
+        for axis in (0, 1):
+            for arrays in self.get_arrays_b():
+                tb = TypeBlocks.from_blocks(arrays)
+                post = tb.fillna_leading(-1, axis=axis)
+                self.assertEqual(tb.shape, post.shape)
 
 
     def test_type_blocks_fillna_leading_b(self):
@@ -1241,6 +1291,71 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualValues(list(tb2.values.flat),
                 [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
+
+
+
+    def test_type_blocks_fillna_leading_c(self):
+
+        a2 = np.array([
+                [None, None, 3, 4],
+                [1, None, None, 6],
+                [5, None, None, None]
+                ], dtype=object)
+        a1 = np.array([1, None, None], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a2, a1))
+
+        tb2 = tb1.fillna_leading(-1, axis=1)
+        self.assertEqual(tb2.values.tolist(),
+                [[-1, -1, 3, 4, 1],
+                [1, None, None, 6, None],
+                [5, None, None, None, None]])
+
+    def test_type_blocks_fillna_leading_d(self):
+
+        a2 = np.array([
+                [None, None, 3, 4],
+                [None, None, None, 6],
+                [None, None, None, None]
+                ], dtype=object)
+        a1 = np.array([1, None, None], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_leading(0, axis=1)
+
+        self.assertEqual(tb2.values.tolist(),
+                [[1, None, None, 3, 4],
+                [0, 0, 0, 0, 6],
+                [0, 0, 0, 0, 0]])
+
+    def test_type_blocks_fillna_leading_e(self):
+
+        a2 = np.array([
+                [None, None, None, None],
+                [None, 1, None, 6],
+                [None, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, None, None], dtype=object)
+        a3 = np.array([
+                [None, 4],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+        tb2 = tb1.fillna_leading(0, axis=1)
+
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 0, 0, 0, 0, 0, 4],
+                [0, 0, 1, None, 6, None, 1],
+                [0, 0, 5, None, None, None, 5]])
+
+
+    def test_type_blocks_fillna_leading_f(self):
+
+        a1 = np.array([None, None, None], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1,))
+        with self.assertRaises(NotImplementedError):
+            tb1.fillna_leading(value=3, axis=2)
+
 
 
     def test_type_blocks_from_none_a(self):

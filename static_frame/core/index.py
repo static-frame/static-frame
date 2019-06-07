@@ -13,7 +13,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-
+from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -53,12 +53,13 @@ from static_frame.core.util import _TD64_YEAR
 from static_frame.core.util import _TD64_S
 from static_frame.core.util import _TD64_MS
 
-from static_frame.core.doc_str import doc_inject
-
+from static_frame.core.util import DEFAULT_INT_DTYPE
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
+from static_frame.core.util import union1d
 
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
 from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeType
@@ -241,7 +242,7 @@ class Index(IndexBase,
             '_name'
             )
 
-    _UFUNC_UNION = np.union1d
+    _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = np.intersect1d
 
     _DTYPE = None # for specialized indices requiring a typed labels
@@ -265,7 +266,7 @@ class Index(IndexBase,
             labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
-        if isinstance(labels, np.ndarray): # if an np array can handle directly
+        if isinstance(labels, np.ndarray):
             if dtype is not None and dtype != labels.dtype:
                 raise RuntimeError('invalid label dtype for this Index')
             return immutable_filter(labels)
@@ -282,9 +283,13 @@ class Index(IndexBase,
             else:
                 labels = np.array(labels, dtype)
         else: # labels may be an expired generator
-            # until all Python dictionaries are ordered, we cannot just take keys()
-            # labels = np.array(tuple(mapping.keys()))
-            # assume object type so as to not create a temporary list
+
+            # TODO: explore why this does not work
+            # if dtype is None:
+            #     labels = np.array(list(mapping.keys()), dtype=object)
+            # else:
+            #     labels = np.fromiter(mapping.keys(), count=len(mapping), dtype=dtype)
+
             labels = np.empty(len(mapping), dtype=dtype if dtype else object)
             for k, v in mapping.items():
                 labels[v] = k
@@ -365,7 +370,6 @@ class Index(IndexBase,
                 labels._update_array_cache()
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
-
             if labels.depth == 1: # not an IndexHierarchy
                 if labels.STATIC: # can take the map
                     self._map = labels._map
@@ -405,7 +409,7 @@ class Index(IndexBase,
             raise RuntimeError('invalid label dtype for this Index',
                     self._labels.dtype, self._DTYPE)
         if len(self._map) != len(self._labels):
-            raise KeyError('labels have non-unique values')
+            raise KeyError(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
 
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
@@ -585,6 +589,13 @@ class Index(IndexBase,
                 key = key.values
 
         if self._loc_is_iloc:
+            # if loc_is_iloc, we can assume the key consists of integers and can be used directly, however, if it is an np.array, we need to ensure we have an int type
+            if isinstance(key, np.ndarray):
+                if key.dtype == bool:
+                    return key
+                if key.dtype != DEFAULT_INT_DTYPE:
+                    # could use tolist(), but we expect all keys to be integers
+                    return key.astype(DEFAULT_INT_DTYPE)
             return key
 
         if key_transform:
@@ -678,9 +689,17 @@ class Index(IndexBase,
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
 
-        array = operator(self._labels, other)
-        array.flags.writeable = False
-        return array
+        result = operator(self._labels, other)
+
+        # see Series._ufunc_binary_operator for notes on why
+        if not isinstance(result, np.ndarray):
+            if isinstance(result, BOOL_TYPES):
+                result = np.full(len(self._labels), result)
+            else:
+                raise RuntimeError('unexpected branch from non-array result of operator application to array')
+
+        result.flags.writeable = False
+        return result
 
 
     def _ufunc_axis_skipna(self, *,

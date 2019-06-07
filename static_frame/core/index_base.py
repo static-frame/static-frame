@@ -4,6 +4,8 @@ import numpy as np
 from static_frame.core.util import mloc
 from static_frame.core.util import FilePathOrFileLike
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IndexConstructor
 
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayActive
@@ -19,7 +21,6 @@ class IndexBase:
     _UFUNC_INTERSECTION = None
 
     __slots__ = () # defined in dervied classes
-
 
     #---------------------------------------------------------------------------
     # constructors
@@ -53,6 +54,9 @@ class IndexBase:
         if is_go:
             return IndexGO(value, name=value.name)
         return Index(value, name=value.name)
+
+
+
 
     #---------------------------------------------------------------------------
     # name interface
@@ -216,3 +220,27 @@ class IndexBase:
             webbrowser.open_new_tab(fp)
         return fp
 
+
+
+def index_from_optional_constructor(
+        value: tp.Union[IndexInitializer, IndexBase],
+        default_constructor: IndexConstructor,
+        ) -> IndexBase:
+    '''
+    Given a value that might be an Index or and IndexInitializer, determine if that value is an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor
+    '''
+    if isinstance(value, IndexBase):
+        # if default is STATIC, use value is not STATIC, get an immutabel
+        if default_constructor.STATIC:
+            if not value.STATIC:
+                # use the immutabel alternative
+                return value._IMMUTABLE_CONSTRUCTOR(value)
+            return value # immutable, can reuse
+        else: # default constructor is mutable
+            if not value.STATIC: # both are mutable
+                return value.copy()
+            # need to return a mutable version of something that is not mutabel
+            # TODO: not sure how to do this
+            return default_constructor(value)
+
+    return default_constructor(value)

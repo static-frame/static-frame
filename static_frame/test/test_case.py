@@ -5,6 +5,7 @@ import sys
 from itertools import zip_longest
 import typing as tp
 import itertools as it
+import string
 
 import numpy as np
 import pytest
@@ -68,6 +69,11 @@ class TestCase(unittest.TestCase):
         for arrays in it.permutations((a1, a2, a3, a4)):
             yield arrays
 
+
+    @staticmethod
+    def get_letters(*slice_args) -> tp.Generator[str, None, None]:
+        for letter in string.ascii_lowercase[slice(*slice_args)]:
+            yield letter
 
     @staticmethod
     def get_test_input(file_name: str):
