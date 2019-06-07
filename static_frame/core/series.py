@@ -1296,10 +1296,12 @@ class Series(metaclass=MetaOperatorDelegate):
             index = None if self._name is None else (self._name,)
             own_index = False
             columns = self._index
-            own_columns = True # index is immutable
+            # if column constuctor is static, we can own the static index
+            own_columns = constructor._COLUMN_CONSTRUCTOR.STATIC
         else:
-            raise NotImplementedError('no handling for axis', axis)
+            raise NotImplementedError(f'no handling for axis {axis}')
 
+        # import ipdb; ipdb.set_trace()
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,

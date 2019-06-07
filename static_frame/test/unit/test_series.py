@@ -1501,6 +1501,15 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             s1.to_frame(axis=None)
 
+
+    def test_series_to_frame_go_a(self):
+        a = sf.Series((1, 2, 3), name='a')
+        f = a.to_frame_go(axis=0)
+        f['b'] = 'b'
+        self.assertEqual(f.to_pairs(0),
+                (('0', (('a', 1),)), ('1', (('a', 2),)), ('2', (('a', 3),)), ('b', (('a', 'b'),))))
+
+
     def test_series_from_concat_a(self):
         s1 = Series((2, 3, 0,), index=list('abc'))
         s2 = Series((10, 20), index=list('de'))

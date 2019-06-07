@@ -852,7 +852,10 @@ class Frame(metaclass=MetaOperatorDelegate):
         #-----------------------------------------------------------------------
         # index assignment
 
-        if own_columns or (hasattr(columns, STATIC_ATTR) and columns.STATIC):
+        if own_columns or (
+                hasattr(columns, STATIC_ATTR)
+                and columns.STATIC
+                and self._COLUMN_CONSTRUCTOR.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
         elif columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
@@ -864,7 +867,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                     dtype=np.int64)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
-
 
         if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
             self._index = index

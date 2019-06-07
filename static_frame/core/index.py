@@ -589,11 +589,11 @@ class Index(IndexBase,
                 key = key.values
 
         if self._loc_is_iloc:
-            # if loc_is_iloc, we can assume the key consists of integers and can be used directly, however, if it is an np.array, we need to ensure we have an int type
             if isinstance(key, np.ndarray):
                 if key.dtype == bool:
                     return key
                 if key.dtype != DEFAULT_INT_DTYPE:
+                    # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DEFAULT_INT_DTYPE)
             return key
