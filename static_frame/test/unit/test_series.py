@@ -1506,8 +1506,10 @@ class TestUnit(TestCase):
         a = sf.Series((1, 2, 3), name='a')
         f = a.to_frame_go(axis=0)
         f['b'] = 'b'
+
         self.assertEqual(f.to_pairs(0),
-                (('0', (('a', 1),)), ('1', (('a', 2),)), ('2', (('a', 3),)), ('b', (('a', 'b'),))))
+                ((0, (('a', 1),)), (1, (('a', 2),)), (2, (('a', 3),)), ('b', (('a', 'b'),)))
+                )
 
 
     def test_series_from_concat_a(self):

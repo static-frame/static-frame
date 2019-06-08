@@ -59,6 +59,9 @@ from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
 from static_frame.core.util import union1d
 
+from static_frame.core.util import resolve_dtype
+
+
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
 from static_frame.core.iter_node import IterNode
@@ -255,7 +258,7 @@ class Index(IndexBase,
     def _extract_labels(
             mapping,
             labels,
-            dtype=None) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
+            dtype=None) -> np.ndarray:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -832,17 +835,33 @@ class IndexGO(Index):
             '_loc_is_iloc',
             '_name',
             '_labels_mutable',
+            '_labels_mutable_dtype',
             '_positions_mutable_count',
             )
+
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    _labels: np.ndarray
+    _positions: np.ndarray
+    _recache: bool
+    _loc_is_iloc: bool
+    _name: tp.Hashable
+    _labels_mutable: tp.List[tp.Hashable]
+    _labels_mutable_dtype: np.dtype
+    _positions_mutable_count: int
 
     def _extract_labels(self,
             mapping,
             labels,
             dtype) -> tp.Iterable[tp.Any]:
-        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
+        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
         self._labels_mutable = labels.tolist()
+        if len(labels):
+            self._labels_mutable_dtype = labels.dtype
+        else:
+            # avoid setting to float default when labels is empty
+            self._labels_mutable_dtype = None
         return labels
 
     def _extract_positions(self, mapping, positions) -> tp.Iterable[tp.Any]:
@@ -852,10 +871,15 @@ class IndexGO(Index):
         self._positions_mutable_count = len(positions)
         return positions
 
-
     def _update_array_cache(self):
-        # this might fail if a sequence is given as a label
-        self._labels = np.array(self._labels_mutable)
+
+        if self._labels_mutable_dtype is not None and len(self._labels):
+            # only update if _labels_mutable_dtype has been set and _labels exist
+            self._labels_mutable_dtype = resolve_dtype(
+                    self._labels.dtype,
+                    self._labels_mutable_dtype)
+
+        self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
         self._labels.flags.writeable = False
         self._positions = np.arange(self._positions_mutable_count)
         self._positions.flags.writeable = False
@@ -868,11 +892,19 @@ class IndexGO(Index):
         '''append a value
         '''
         if value in self._map:
-            raise KeyError('duplicate key append attempted', value)
+            raise KeyError(f'duplicate key append attempted: {value}')
+
         # the new value is the count
         self._map[value] = self._positions_mutable_count
-        self._labels_mutable.append(value)
 
+        if self._labels_mutable_dtype is not None:
+            self._labels_mutable_dtype = resolve_dtype(
+                    np.array(value).dtype,
+                    self._labels_mutable_dtype)
+        else:
+            self._labels_mutable_dtype = np.array(value).dtype
+
+        self._labels_mutable.append(value)
         # check value before incrementing
         if self._loc_is_iloc:
             if isinstance(value, int) and value == self._positions_mutable_count:
