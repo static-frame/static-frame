@@ -2195,6 +2195,16 @@ class TestUnit(TestCase):
 '2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True')
 
 
+    def test_frame_to_csv_b(self):
+
+        f = sf.Frame([1, 2, 3],
+                columns=['a'],
+                index=sf.Index(range(3), name='Important Name'))
+        file = StringIO()
+        f.to_csv(file)
+        file.seek(0)
+        self.assertEqual(file.read(), 'Important Name,a\n0,1\n1,2\n2,3')
+
     def test_frame_to_tsv_a(self):
         records = (
                 (2, 2, 'a', False, False),

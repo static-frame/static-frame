@@ -2427,7 +2427,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         Given a file path or file-like object, write the Frame as delimited text.
         '''
-        to_str = str
+        # to_str = str
 
         if isinstance(fp, str):
             f = open(fp, 'w', encoding=encoding)
@@ -2438,9 +2438,12 @@ class Frame(metaclass=MetaOperatorDelegate):
         try:
             if include_columns:
                 if include_index:
-                    f.write('index' + sep)
+                    if self._index.name is not None:
+                        f.write(f'{self._index.name}{sep}')
+                    else:
+                        f.write(f'index{sep}')
                 # iter directly over columns in case it is an IndexGO and needs to update cache
-                f.write(sep.join(to_str(x) for x in self._columns))
+                f.write(sep.join(f'{x}' for x in self._columns))
                 f.write(line_terminator)
 
             col_idx_last = self._blocks._shape[1] - 1
@@ -2451,9 +2454,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        f.write(to_str(self._index._labels[row_idx]) + sep)
+                        f.write(f'{self._index._labels[row_idx]}{sep}')
+                        # f.write(to_str(self._index._labels[row_idx]) + sep)
                     row_current_idx = row_idx
-                f.write(to_str(element))
+                # f.write(to_str(element))
+                f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(sep)
             # not sure if we need a final line terminator

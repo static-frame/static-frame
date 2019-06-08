@@ -245,6 +245,13 @@ class Index(IndexBase,
             '_name'
             )
 
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    _labels: np.ndarray
+    _positions: np.ndarray
+    _recache: bool
+    _loc_is_iloc: bool
+    _name: tp.Hashable
+
     _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = np.intersect1d
 
