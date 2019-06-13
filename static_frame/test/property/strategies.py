@@ -37,16 +37,21 @@ def get_labels(min_size: int = 0):
     '''
     Labels are suitable for creating non-date Indices.
     '''
+    # 55203 is just before "high surrogates", and avoids this exception
+    # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
+
+    codepoint_limits = dict(min_codepoint=1, max_codepoint=55203)
+
     list_integers = st.lists(st.integers(), min_size=min_size, unique=True)
     list_floats = st.lists(st.floats(), min_size=min_size, unique=True)
 
     list_text = st.lists(
-            st.text(st.characters(min_codepoint=1)),
+            st.text(st.characters(**codepoint_limits)),
             min_size=min_size,
             unique=True)
 
     list_mixed = st.lists(st.one_of(
-            st.integers(), st.floats(), st.characters(min_codepoint=1)),
+            st.integers(), st.floats(), st.characters(**codepoint_limits)),
             min_size=min_size, unique=True)
 
     return st.one_of(list_mixed, list_integers, list_floats, list_text)

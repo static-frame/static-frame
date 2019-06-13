@@ -99,23 +99,10 @@ class TestCase(unittest.TestCase):
 
     def assertAlmostEqualValues(self, values1, values2):
 
-        np_compare = False
-
-        try:
-            for v1, v2 in zip_longest(values1, values2):
-                if isinstance(v1, float) and np.isnan(v1) and isinstance(v2, float) and np.isnan(v2):
-                    continue
-                self.assertEqual(v1, v2)
-        except UnicodeDecodeError:
-            # for this case
-            #UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
-            if isinstance(values1, np.ndarray) and isinstance(values2, np.ndarray):
-                np_compare = True
-            else:
-                raise
-
-        if np_compare:
-            self.assertTrue((values1 == values2).all())
+        for v1, v2 in zip_longest(values1, values2):
+            if isinstance(v1, float) and np.isnan(v1) and isinstance(v2, float) and np.isnan(v2):
+                continue
+            self.assertEqual(v1, v2)
 
     def assertAlmostEqualItems(self, pairs1, pairs2):
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
