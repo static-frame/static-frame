@@ -141,9 +141,9 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
-            blocks: tp.Iterable[np.ndarray],
-            dtypes: tp.Iterable[np.dtype],
-            index: tp.Iterable[tp.Tuple[int, int]],
+            blocks: tp.Sequence[np.ndarray],
+            dtypes: tp.Sequence[np.dtype],
+            index: tp.Sequence[tp.Tuple[int, int]],
             shape: tp.Tuple[int, int] # could be derived
             ) -> None:
         '''
@@ -1501,20 +1501,109 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
 
+    @staticmethod
+    def _fillna_sided_axis_1(
+            blocks: tp.Iterable[np.ndarray],
+            value: tp.Any,
+            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 1.
 
+        NOTE: blocks are generated in reverse order when sided_leading is False.
+
+        Args:
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+
+        '''
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
+        sided_index = 0 if sided_leading else -1
+
+        # will need to re-reverse blocks coming out of this
+        block_iter = blocks if sided_leading else reversed(blocks)
+
+        isna_exit_previous = None
+
+        # iterate over blocks to observe NaNs contiguous horizontally
+        for b in block_iter:
+            sel = _isna(b) # True for is NaN
+            ndim = sel.ndim
+
+            if isna_exit_previous is None:
+                # for first block, model as all True
+                isna_exit_previous = np.full(sel.shape[0], True, dtype=bool)
+
+            # to contunue nan propagation, the exit previous musy be NaN, as well as this start
+            if ndim == 1:
+                isna_entry = sel & isna_exit_previous
+            else:
+                isna_entry = sel[:, sided_index] & isna_exit_previous
+
+            if not isna_entry.any():
+                yield b
+            # elif ndim == 1 and not sel.any():
+            #     yield b
+            # elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
+            #     yield b
+            else:
+                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                if b.dtype == assignable_dtype:
+                    assigned = b.copy()
+                else:
+                    assigned = b.astype(assignable_dtype)
+
+                if ndim == 1:
+                    # if one dim, we simply fill nan values
+                    assigned[isna_entry] = value
+                else:
+                    # only collect rows that have a sided NaN
+                    # could use np.nonzero()
+                    is_leading = (i for i, j in enumerate(isna_entry) if j == True)
+                    sels_nonzero = ((i, sel[i]) for i in is_leading)
+
+                    for idx, sel_nonzero in sels_nonzero:
+                        # indices of not-nan values, per row
+                        targets = np.nonzero(~sel_nonzero)[0]
+                        if len(targets):
+                            if sided_leading:
+                                sel_trailing = slice(0, targets[0])
+                            else: # trailing
+                                sel_trailing = slice(targets[-1]+1, None)
+                        else: # all are NaN
+                            sel_trailing = NULL_SLICE
+
+                        if ndim == 1:
+                            assigned[sel_trailing] = value
+                        else:
+                            assigned[idx, sel_trailing] = value
+
+                assigned.flags.writeable = False
+                yield assigned
+
+            # always execute these lines after each yield
+            # return True for next block only if all values are NaN in the row
+            if ndim == 1:
+                isna_exit_previous = isna_entry
+            else:
+                isna_exit_previous = sel.all(axis=1) & isna_exit_previous
 
     @staticmethod
     def _fillna_sided_axis_0(
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
-            sided_leading: bool) -> tp.Generator[np.ndarray, None, None]:
+            sided_leading: bool) -> tp.Iterator[np.ndarray]:
         '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0.
 
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
 
         '''
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
         sided_index = 0 if sided_leading else -1
+
+        # store flag for when non longer need to check blocks, yield immediately
 
         for b in blocks:
             sel = _isna(b) # True for is NaN
@@ -1537,15 +1626,18 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if ndim == 1:
                     sels_nonzero = ((0, sel),)
                 else:
-                    # only colluct columns for sided NaNs
-                    is_leading = (i for i, j in enumerate(sel[sided_index]) if j == True)
-                    sels_nonzero = ((i, sel[:, i]) for i in is_leading)
+                    # only collect columns for sided NaNs
+                    sels_nonzero = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
+
+                    # is_leading = (i for i, j in enumerate(sel[sided_index]) if j)
+                    # sels_nonzero = ((i, sel[:, i]) for i in is_leading)
 
                 for idx, sel_nonzero in sels_nonzero:
-                    # indices of not-nan values
+                    # indices of not-nan values, per column
                     targets = np.nonzero(~sel_nonzero)[0]
                     if len(targets):
                         if sided_leading:
+                            # update this variable name
                             sel_trailing = slice(0, targets[0])
                         else: # trailing
                             sel_trailing = slice(targets[-1]+1, None)
@@ -1567,34 +1659,41 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             value: tp.Any,
             *,
             axis: int = 0) -> 'TypeBlocks':
-        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`.
         '''
-
-        if isinstance(value, np.ndarray):
-            raise RuntimeError('cannot assign an array to fillna')
-
         if axis == 0:
             return self.from_blocks(self._fillna_sided_axis_0(
                     blocks=self._blocks,
                     value=value,
                     sided_leading=False))
+        elif axis == 1:
+            # must reverse when not leading
+            blocks = reversed(tuple(self._fillna_sided_axis_1(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=False)))
+            return self.from_blocks(blocks)
 
-        raise NotImplementedError()
+        raise NotImplementedError(f'no support for axis {axis}')
 
 
     def fillna_leading(self,
             value: tp.Any,
             *,
             axis: int = 0) -> 'TypeBlocks':
-        '''Return a Boolean TypeBlocks where True is NaN or None.
+        '''Return a TypeBlocks instance replacing leading values with the passed `value`.
         '''
         if axis == 0:
             return self.from_blocks(self._fillna_sided_axis_0(
                     blocks=self._blocks,
                     value=value,
                     sided_leading=True))
-
-        raise NotImplementedError()
+        elif axis == 1:
+            return self.from_blocks(self._fillna_sided_axis_1(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=True))
+        raise NotImplementedError(f'no support for axis {axis}')
 
 
 

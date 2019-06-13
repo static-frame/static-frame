@@ -24,13 +24,14 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
-from static_frame.core.util import _ufunc2d
+from static_frame.core.util import set_ufunc2d
 
 from static_frame import Index
 
-# TODO test
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import collection_and_dtype_to_1darray
+
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
@@ -43,6 +44,10 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
 
+from static_frame.core.util import union1d
+from static_frame.core.util import intersect1d
+
+from static_frame.core.util import to_datetime64
 
 
 from static_frame.test.test_case import TestCase
@@ -223,6 +228,28 @@ class TestUnit(TestCase):
                 resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
                 np.dtype(('U', 3))
                 )
+
+
+
+    def test_resolve_dtype_c(self):
+
+
+        a1 = np.array(['2019-01', '2019-02'], dtype=np.datetime64)
+        a2 = np.array(['2019-01-01', '2019-02-01'], dtype=np.datetime64)
+        a3 = np.array([0, 1], dtype='datetime64[ns]')
+        a4 = np.array([0, 1])
+
+        self.assertEqual(str(resolve_dtype(a1.dtype, a2.dtype)),
+                'datetime64[D]')
+        self.assertEqual(resolve_dtype(a1.dtype, a3.dtype),
+                np.dtype('<M8[ns]'))
+
+        self.assertEqual(resolve_dtype(a1.dtype, a4.dtype),
+                np.dtype('O'))
+
+
+
+
 
     def test_resolve_dtype_iter_a(self):
 
@@ -422,6 +449,63 @@ class TestUnit(TestCase):
         post = array_set_ufunc_many((a1, a2), union=False)
         self.assertEqual(post.tolist(), [])
 
+
+    def test_union1d_a(self):
+        a1 = np.array([3, 2, 1])
+        a2 = np.array(['3', '2', '1'])
+
+        # need to avoid this
+        # ipdb> np.union1d(a1, a2)                                                             # array(['1', '2', '3'], dtype='<U21')
+        self.assertEqual(set(union1d(a1, a2)),
+                {1, 2, 3, '2', '1', '3'}
+                )
+
+        self.assertEqual(
+                union1d(np.array(['a', 'b', 'c']), np.array(['aaa', 'bbb', 'ccc'])).tolist(),
+                ['a', 'aaa', 'b', 'bbb', 'c', 'ccc']
+                )
+
+        self.assertEqual(
+                set(union1d(np.array([1, 2, 3]), np.array([None, False]))),
+                {False, 2, 3, None, 1}
+                )
+
+        self.assertEqual(
+                set(union1d(np.array([False, True]), np.array([None, 'a']))),
+                {False, True, None, 'a'}
+                )
+
+        self.assertEqual(set(union1d(np.array([None, 1, 'd']), np.array([None, 3, 'ff']))),
+                {'d', 1, 3, None, 'ff'}
+                )
+
+    def test_intersect1d_a(self):
+
+        a1 = np.array([3, 2, 1])
+        a2 = np.array(['3', '2', '1'])
+
+        self.assertEqual(len(intersect1d(a1, a2)), 0)
+
+        self.assertEqual(
+                len(intersect1d(np.array([1, 2, 3]), np.array([None, False]))), 0)
+
+        self.assertEqual(
+                set(intersect1d(np.array(['a', 'b', 'c']), np.array(['aa', 'bbb', 'c']))),
+                {'c'}
+                )
+
+    def test_intersect1d_b(self):
+        # long way of
+        a1 = np.empty(4, dtype=object)
+        a1[:] = [(0, 0), (0, 1), (0, 2), (0, 3)]
+
+        a2 = np.empty(3, dtype=object)
+        a2[:] = [(0, 1), (0, 3), (4, 5)]
+
+        # must get an array of tuples back
+        post = intersect1d(a1, a2)
+        self.assertEqual(post.tolist(),
+                [(0, 1), (0, 3)])
 
     def test_intersect2d_a(self):
         a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
@@ -659,10 +743,10 @@ class TestUnit(TestCase):
 
 
     def test_ufunc2d_a(self):
-
+        # fails due to wrong dimensionality, not wrong function
         a1 = np.array([1, 1, 1])
-        with self.assertRaises(Exception):
-            _ufunc2d(np.sum, a1, a1)
+        with self.assertRaises(IndexError):
+            set_ufunc2d(np.sum, a1, a1)
 
 
     def test_ufunc2d_b(self):
@@ -670,11 +754,11 @@ class TestUnit(TestCase):
         a1 = np.array([['a', 'b'], ['b', 'c']])
         a2 = np.array([['b', 'cc'], ['dd', 'ee']])
 
-        post = _ufunc2d(np.union1d, a1, a2)
+        post = set_ufunc2d(np.union1d, a1, a2)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
-        post = _ufunc2d(np.union1d, a2, a1)
+        post = set_ufunc2d(np.union1d, a2, a1)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
@@ -731,7 +815,11 @@ class TestUnit(TestCase):
             post = roll_1d(a1, -i)
             self.assertEqual(post.tolist(), np.roll(a1, -i).tolist())
 
-    def  test_roll_2d_a(self):
+    def test_roll_1d_b(self):
+        post = roll_1d(np.array([]), -4)
+        self.assertEqual(len(post), 0)
+
+    def test_roll_2d_a(self):
 
         a1 = np.arange(12).reshape((3,4))
 
@@ -748,6 +836,69 @@ class TestUnit(TestCase):
 
             post = roll_2d(a1, -i, axis=1)
             self.assertEqual(post.tolist(), np.roll(a1, -i, axis=1).tolist())
+
+    def test_roll_2d_b(self):
+        post = roll_2d(np.array([[]]), -4, axis=1)
+        self.assertEqual(post.shape, (1, 0))
+
+
+
+    def test_iterable_to_array_a(self):
+        a1, is_unique = iterable_to_array({3,4,5})
+        self.assertTrue(is_unique)
+        self.assertEqual(set(a1.tolist()), {3,4,5})
+
+        a2, is_unique = iterable_to_array({None: 3, 'f': 4, 39: 0})
+        self.assertTrue(is_unique)
+        self.assertEqual(set(a2.tolist()), {None, 'f', 39})
+
+        a3, is_unique = iterable_to_array((x*10 for x in range(1,4)))
+        self.assertFalse(is_unique)
+        self.assertEqual(a3.tolist(), [10, 20, 30])
+
+    def test_collection_and_dtype_to_1darray_a(self):
+        a1 = collection_and_dtype_to_1darray({3,4,5}, dtype=np.dtype(int))
+        self.assertEqual(set(a1.tolist()), {3,4,5})
+
+        a1 = collection_and_dtype_to_1darray((3,4,5), dtype=np.dtype(object))
+        self.assertTrue(a1.dtype == object)
+        self.assertEqual(a1.tolist(), [3,4,5])
+
+    def test_collection_and_dtype_to_1darray_b(self):
+        x = [(0, 0), (0, 1), (0, 2), (0, 3)]
+        a1 = collection_and_dtype_to_1darray(x, np.dtype(object))
+        self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
+        # must get an array of tuples back
+
+
+    def test_index_correspondence_a(self):
+        idx0 = Index([0, 1, 2, 3, 4], loc_is_iloc=True)
+        idx1 = Index([0, 1, 2, 3, 4, '100185', '100828', '101376', '100312', '101092'], dtype=object)
+        ic = IndexCorrespondence.from_correspondence(idx0, idx1)
+        self.assertFalse(ic.is_subset)
+        self.assertTrue(ic.has_common)
+        # this is an array, due to loc_is_iloc being True
+        self.assertEqual(ic.iloc_src.tolist(),
+                [0, 1, 2, 3, 4]
+                )
+        self.assertEqual(ic.iloc_dst,
+                [0, 1, 2, 3, 4]
+                )
+
+    def test_to_datetime64_a(self):
+
+        dt = to_datetime64('2019')
+        self.assertEqual(dt, np.datetime64('2019'))
+
+        dt = to_datetime64('2019', dtype=np.dtype('datetime64[D]'))
+        self.assertEqual(dt, np.datetime64('2019-01-01'))
+
+        dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[Y]'))
+        self.assertEqual(dt, np.datetime64('2019'))
+
+        with self.assertRaises(RuntimeError):
+            dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
+
 
 
 if __name__ == '__main__':

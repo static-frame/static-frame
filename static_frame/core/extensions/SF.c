@@ -19,6 +19,8 @@ PyArrayObject* SFUtil_ImmutableFilter(PyArrayObject* src_array) {
 
 PyArray_Descr* SFUtil_ResolveDTypes(PyArray_Descr* d1, PyArray_Descr* d2) {
 
+    PyArray_Descr* result;
+
     if (PyArray_EquivTypes(d1, d2)) {
         Py_INCREF(d1);
         return d1;
@@ -28,11 +30,19 @@ PyArray_Descr* SFUtil_ResolveDTypes(PyArray_Descr* d1, PyArray_Descr* d2) {
         PyDataType_ISOBJECT(d1) || PyDataType_ISOBJECT(d2)
         || PyDataType_ISBOOL(d1) || PyDataType_ISBOOL(d2)
         || (PyDataType_ISSTRING(d1) != PyDataType_ISSTRING(d2))
+        || (PyDataType_ISDATETIME(d1) != PyDataType_ISDATETIME(d2))
     ) {
         return PyArray_DescrFromType(NPY_OBJECT);
     }
 
-    return PyArray_PromoteTypes(d1, d2);
+    result = PyArray_PromoteTypes(d1, d2);
+
+    if (!result) {
+        PyErr_Clear();
+        return PyArray_DescrFromType(NPY_OBJECT);
+    }
+
+    return result;
 }
 
 

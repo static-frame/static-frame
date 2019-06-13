@@ -14,8 +14,9 @@ from static_frame.core.util import CallableOrMapping
 
 class IterNodeApplyType(Enum):
     SERIES_ITEMS = 1
-    FRAME_ELEMENTS = 2
-    INDEX_LABELS = 3
+    SERIES_ITEMS_FLAT = 2 # do not use index class on container
+    FRAME_ELEMENTS = 3
+    INDEX_LABELS = 4
 
 
 class IterNodeType(Enum):
@@ -60,12 +61,14 @@ class IterNodeDelegate:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
+        yt_is_values = self._yield_type is IterNodeType.VALUES
+
         if not callable(func):
             func = getattr(func, '__getitem__')
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
-        if self._yield_type is IterNodeType.VALUES:
+        if yt_is_values:
             def arg_gen():
                 for k, v in self._func_items():
                     func_keys.append(k)
@@ -93,23 +96,27 @@ class IterNodeDelegate:
         Args:
             func: A function or a mapping object that defines ``__getitem__`` and ``__contains__``. If a mpping is given and a value is not found in the mapping, the value is returned unchanged (this deviates from Pandas ``Series.map``, which inserts NaNs)
         '''
-        condition = None
+        # depend on yield type, we determine what the passed in function expects to take
+        yt_is_values = self._yield_type is IterNodeType.VALUES
+
+        # condition = None
         if not callable(func):
             # if the key is not in the map, we return the value unaltered
             condition = getattr(func, '__contains__')
             func = getattr(func, '__getitem__')
+        else:
+            condition = None
 
         # apply always calls the items function
         for k, v in self._func_items():
             # with IndexHierarchy, k might be an unhashable np array
             if condition and not condition(v):
-                if self._yield_type is IterNodeType.VALUES:
+                if yt_is_values:
                     yield k, v
                 else: # items, give both keys and values to function
                     yield k, (k, v)
             else:
-                # depend on yield type, we determine what the passed in function expects to take
-                if self._yield_type is IterNodeType.VALUES:
+                if yt_is_values:
                     yield k, func(v)
                 else: # items, give both keys and values to function
                     yield k, func(k, v)
@@ -129,6 +136,7 @@ class IterNodeDelegate:
 
     def apply(self,
             func: CallableOrMapping,
+            *,
             dtype=None
             ):
         '''
@@ -145,6 +153,7 @@ class IterNodeDelegate:
 
     def apply_pool(self,
             func: CallableOrMapping,
+            *,
             dtype=None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
@@ -199,6 +208,7 @@ class IterNode:
             yield_type: IterNodeType,
             apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
             ) -> None:
+
         self._container = container
         self._func_values = function_values
         self._func_items = function_items
@@ -216,14 +226,25 @@ class IterNode:
         func_values = partial(self._func_values, *args, **kwargs)
         func_items = partial(self._func_items, *args, **kwargs)
 
+
         if self._apply_type is IterNodeApplyType.SERIES_ITEMS:
+            # always return a Series
+            apply_constructor = partial(
+                    Series.from_items,
+                    index_constructor=self._container.index.from_labels
+                    )
+        elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
+            # use default index constructor
             apply_constructor = Series.from_items
+
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
-            apply_constructor = partial(Frame.from_element_loc_items,
+            apply_constructor = partial(
+                    Frame.from_element_loc_items,
                     index=self._container._index,
                     columns=self._container._columns)
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
+            # import ipdb; ipdb.set_trace()
             apply_constructor = Series.from_items
         else:
             raise NotImplementedError()

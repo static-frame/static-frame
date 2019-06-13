@@ -349,6 +349,20 @@ class SeriesIntFloat_fillna_forward(PerfTest):
         post = SampleData.get('sfs_int_float_10k').fillna_forward()
 
 
+class SeriesIntFloat_apply(PerfTest):
+
+    NUMBER = 50
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_int_float_10k').apply(str)
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_int_float_10k').iter_element().apply(str)
+
+
+
 
 
 
@@ -397,6 +411,19 @@ class SeriesStrFloat_fillna_forward(PerfTest):
 
 
 
+class SeriesStrFloat_apply(PerfTest):
+
+    NUMBER = 50
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_str_float_10k').apply(str)
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_str_float_10k').iter_element().apply(str)
+
+
 
 
 class SeriesIntObj_isnull(PerfTest):
@@ -440,6 +467,22 @@ class SeriesIntObj_fillna_forward(PerfTest):
         post = SampleData.get('sfs_obj_10k').fillna_forward()
 
 
+class SeriesIntObj_apply(PerfTest):
+
+    NUMBER = 50
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_obj_10k').apply(str)
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_obj_10k').iter_element().apply(str)
+
+
+
+
+
 
 class SeriesIntObjStr_isnull(PerfTest):
     @staticmethod
@@ -478,6 +521,20 @@ class SeriesIntObjStr_fillna_forward(PerfTest):
     @staticmethod
     def sf():
         post = SampleData.get('sfs_objstr_10k').fillna_forward()
+
+
+class SeriesIntObjStr_apply(PerfTest):
+
+    NUMBER = 50
+
+    @staticmethod
+    def pd():
+        post = SampleData.get('pds_objstr_10k').apply(str)
+
+    @staticmethod
+    def sf():
+        post = SampleData.get('sfs_objstr_10k').iter_element().apply(str)
+
 
 
 
@@ -696,7 +753,7 @@ class FrameFloat_isna(PerfTest):
 
 class FrameFloat_apply_axis0(PerfTest):
 
-    NUMBER = 100
+    NUMBER = 50
 
     @staticmethod
     def pd():

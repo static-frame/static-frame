@@ -13,7 +13,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
-
+from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -27,6 +27,7 @@ from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import collection_to_array
 from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.util import immutable_filter
@@ -53,12 +54,16 @@ from static_frame.core.util import _TD64_YEAR
 from static_frame.core.util import _TD64_S
 from static_frame.core.util import _TD64_MS
 
-from static_frame.core.doc_str import doc_inject
-
+from static_frame.core.util import DEFAULT_INT_DTYPE
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
+from static_frame.core.util import union1d
 
+from static_frame.core.util import resolve_dtype
+
+
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
 from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeType
@@ -241,7 +246,14 @@ class Index(IndexBase,
             '_name'
             )
 
-    _UFUNC_UNION = np.union1d
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    _labels: np.ndarray
+    _positions: np.ndarray
+    _recache: bool
+    _loc_is_iloc: bool
+    _name: tp.Hashable
+
+    _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = np.intersect1d
 
     _DTYPE = None # for specialized indices requiring a typed labels
@@ -254,7 +266,7 @@ class Index(IndexBase,
     def _extract_labels(
             mapping,
             labels,
-            dtype=None) -> tp.Tuple[tp.Iterable[int], tp.Iterable[tp.Any]]:
+            dtype=None) -> np.ndarray:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -265,26 +277,35 @@ class Index(IndexBase,
             labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
-        if isinstance(labels, np.ndarray): # if an np array can handle directly
+        if isinstance(labels, np.ndarray):
             if dtype is not None and dtype != labels.dtype:
                 raise RuntimeError('invalid label dtype for this Index')
             return immutable_filter(labels)
 
         if hasattr(labels, '__len__'): # not a generator, not an array
-            if not len(labels):
-                return EMPTY_ARRAY # already immutable
+            # resolving the detype is expensive
+            labels = collection_to_array(labels, dtype=dtype, discover_dtype=True)
 
-            if isinstance(labels[0], tuple):
-                assert dtype is None or dtype == object
-                array = np.empty(len(labels), object)
-                array[:] = labels
-                labels = array # rename
-            else:
-                labels = np.array(labels, dtype)
-        else: # labels may be an expired generator
-            # until all Python dictionaries are ordered, we cannot just take keys()
-            # labels = np.array(tuple(mapping.keys()))
-            # assume object type so as to not create a temporary list
+            # if not len(labels):
+            #     return EMPTY_ARRAY # already immutable
+
+            # if isinstance(labels[0], tuple):
+            #     # special handling for iterables of
+            #     assert dtype is None or dtype == object
+            #     array = np.empty(len(labels), object)
+            #     array[:] = labels
+            #     labels = array # rename
+            # else:
+            #     labels = np.array(labels, dtype)
+
+        else: # labels may be an expired generator, must use the mapping
+
+            # TODO: explore why this does not work
+            # if dtype is None:
+            #     labels = np.array(list(mapping.keys()), dtype=object)
+            # else:
+            #     labels = np.fromiter(mapping.keys(), count=len(mapping), dtype=dtype)
+
             labels = np.empty(len(mapping), dtype=dtype if dtype else object)
             for k, v in mapping.items():
                 labels[v] = k
@@ -365,7 +386,6 @@ class Index(IndexBase,
                 labels._update_array_cache()
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
-
             if labels.depth == 1: # not an IndexHierarchy
                 if labels.STATIC: # can take the map
                     self._map = labels._map
@@ -405,7 +425,7 @@ class Index(IndexBase,
             raise RuntimeError('invalid label dtype for this Index',
                     self._labels.dtype, self._DTYPE)
         if len(self._map) != len(self._labels):
-            raise KeyError('labels have non-unique values')
+            raise KeyError(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
 
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
@@ -585,6 +605,13 @@ class Index(IndexBase,
                 key = key.values
 
         if self._loc_is_iloc:
+            if isinstance(key, np.ndarray):
+                if key.dtype == bool:
+                    return key
+                if key.dtype != DEFAULT_INT_DTYPE:
+                    # if key is an np.array, it must be an int or bool type
+                    # could use tolist(), but we expect all keys to be integers
+                    return key.astype(DEFAULT_INT_DTYPE)
             return key
 
         if key_transform:
@@ -678,9 +705,17 @@ class Index(IndexBase,
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
 
-        array = operator(self._labels, other)
-        array.flags.writeable = False
-        return array
+        result = operator(self._labels, other)
+
+        # see Series._ufunc_binary_operator for notes on why
+        if not isinstance(result, np.ndarray):
+            if isinstance(result, BOOL_TYPES):
+                result = np.full(len(self._labels), result)
+            else:
+                raise RuntimeError('unexpected branch from non-array result of operator application to array')
+
+        result.flags.writeable = False
+        return result
 
 
     def _ufunc_axis_skipna(self, *,
@@ -813,17 +848,33 @@ class IndexGO(Index):
             '_loc_is_iloc',
             '_name',
             '_labels_mutable',
+            '_labels_mutable_dtype',
             '_positions_mutable_count',
             )
+
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    _labels: np.ndarray
+    _positions: np.ndarray
+    _recache: bool
+    _loc_is_iloc: bool
+    _name: tp.Hashable
+    _labels_mutable: tp.List[tp.Hashable]
+    _labels_mutable_dtype: np.dtype
+    _positions_mutable_count: int
 
     def _extract_labels(self,
             mapping,
             labels,
             dtype) -> tp.Iterable[tp.Any]:
-        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation.
+        '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
         self._labels_mutable = labels.tolist()
+        if len(labels):
+            self._labels_mutable_dtype = labels.dtype
+        else:
+            # avoid setting to float default when labels is empty
+            self._labels_mutable_dtype = None
         return labels
 
     def _extract_positions(self, mapping, positions) -> tp.Iterable[tp.Any]:
@@ -833,10 +884,15 @@ class IndexGO(Index):
         self._positions_mutable_count = len(positions)
         return positions
 
-
     def _update_array_cache(self):
-        # this might fail if a sequence is given as a label
-        self._labels = np.array(self._labels_mutable)
+
+        if self._labels_mutable_dtype is not None and len(self._labels):
+            # only update if _labels_mutable_dtype has been set and _labels exist
+            self._labels_mutable_dtype = resolve_dtype(
+                    self._labels.dtype,
+                    self._labels_mutable_dtype)
+
+        self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
         self._labels.flags.writeable = False
         self._positions = np.arange(self._positions_mutable_count)
         self._positions.flags.writeable = False
@@ -849,11 +905,19 @@ class IndexGO(Index):
         '''append a value
         '''
         if value in self._map:
-            raise KeyError('duplicate key append attempted', value)
+            raise KeyError(f'duplicate key append attempted: {value}')
+
         # the new value is the count
         self._map[value] = self._positions_mutable_count
-        self._labels_mutable.append(value)
 
+        if self._labels_mutable_dtype is not None:
+            self._labels_mutable_dtype = resolve_dtype(
+                    np.array(value).dtype,
+                    self._labels_mutable_dtype)
+        else:
+            self._labels_mutable_dtype = np.array(value).dtype
+
+        self._labels_mutable.append(value)
         # check value before incrementing
         if self._loc_is_iloc:
             if isinstance(value, int) and value == self._positions_mutable_count:

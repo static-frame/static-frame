@@ -6,7 +6,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import _BOOL_TYPES
+from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import _isna
@@ -40,6 +40,7 @@ from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import IndexCorrespondence
+from static_frame.core.util import DEFAULT_INT_DTYPE
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -51,6 +52,7 @@ from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import HLoc
@@ -243,7 +245,7 @@ class Series(metaclass=MetaOperatorDelegate):
             else: # create a default integer index; we specify dtype for windows
                 self._index = Index(range(len(self.values)),
                         loc_is_iloc=True,
-                        dtype=np.int64)
+                        dtype=DEFAULT_INT_DTYPE)
         elif isinstance(index, IndexBase):
             # call with the class of the passed-in index, in case it is hierarchical
             self._index = (index_constructor(index)
@@ -358,7 +360,8 @@ class Series(metaclass=MetaOperatorDelegate):
                 container=self,
                 function_items=self._axis_group_index_items,
                 function_values=self._axis_group_index,
-                yield_type=IterNodeType.VALUES
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
                 )
 
     @property
@@ -367,7 +370,8 @@ class Series(metaclass=MetaOperatorDelegate):
                 container=self,
                 function_items=self._axis_group_index_items,
                 function_values=self._axis_group_index,
-                yield_type=IterNodeType.ITEMS
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
                 )
 
 
@@ -416,6 +420,7 @@ class Series(metaclass=MetaOperatorDelegate):
             index = Index(index)
 
         ic = IndexCorrespondence.from_correspondence(self.index, index)
+
 
         if ic.is_subset: # must have some common
             return self.__class__(self.values[ic.iloc_src],
@@ -707,7 +712,8 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if isinstance(other, Series):
             # if indices are the same, we can simply set other to values and fallback on NP
-            if len(self.index) != len(other.index) or (self.index != other.index).any():
+            if len(self.index) != len(other.index) or (
+                    self.index != other.index).any():
                 index = self.index.union(other.index)
                 # now need to reindex the Series
                 values = self.reindex(index).values
@@ -726,11 +732,11 @@ class Series(metaclass=MetaOperatorDelegate):
 
         if not isinstance(result, np.ndarray):
             # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-            if isinstance(result, _BOOL_TYPES):
+            if isinstance(result, BOOL_TYPES):
                 # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equalt to an erray, NP will perform element wise comparison; bit if the arguemtn is a tuple of length greater or eqial, each value in value will be compared to that tuple
                 result = np.full(len(values), result)
             else:
-                raise Exception('unexpected branch from non-array result of operator application to array')
+                raise RuntimeError('unexpected branch from non-array result of operator application to array')
 
         result.flags.writeable = False
         return self.__class__(result, index=index)
@@ -857,6 +863,7 @@ class Series(metaclass=MetaOperatorDelegate):
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
         # iterable selection should be handled by NP (but maybe not if a tuple)
         values = self.values[key]
+
         if not isinstance(values, np.ndarray): # if we have a single element
             return values
         return self.__class__(
@@ -966,13 +973,21 @@ class Series(metaclass=MetaOperatorDelegate):
     def _axis_group(self, *, axis=0):
         yield from (x for _, x in self._axis_group_items(axis=axis))
 
-    def _axis_element_items(self, *, axis=0):
+    def _axis_element_items(self, *,
+            axis=0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
         '''
-        return zip(self._index.values, self.values)
+        if self._index.depth > 1:
+            # use getutem to ensure we get a hashaable back
+            yield from ((self._index[j], k) for j, k in enumerate(self.values))
+        else:
+            yield from zip(self._index.values, self.values)
 
-    def _axis_element(self, *, axis=0):
-        yield from (x for _, x in self._axis_element_items(axis=axis))
+    def _axis_element(self, *, axis=0) -> tp.Iterator[tp.Any]:
+        yield from self.values
+
+        # yield from (x for _, x in self._axis_element_items(axis=axis))
 
 
     def _axis_group_index_items(self,
@@ -1281,10 +1296,12 @@ class Series(metaclass=MetaOperatorDelegate):
             index = None if self._name is None else (self._name,)
             own_index = False
             columns = self._index
-            own_columns = True # index is immutable
+            # if column constuctor is static, we can own the static index
+            own_columns = constructor._COLUMN_CONSTRUCTOR.STATIC
         else:
-            raise NotImplementedError('no handling for axis', axis)
+            raise NotImplementedError(f'no handling for axis {axis}')
 
+        # import ipdb; ipdb.set_trace()
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,

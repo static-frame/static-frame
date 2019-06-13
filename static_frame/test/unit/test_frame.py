@@ -1802,6 +1802,33 @@ class TestUnit(TestCase):
                 (('p', (('w', 200), ('x', 30), ('y', 200), ('z', 30))), ('q', (('w', 200), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', 200), ('x', True), ('y', 200), ('z', True))), ('t', (('w', 200), ('x', 200), ('y', 200), ('z', True))))
                 )
 
+    # @unittest.skip('in development')
+    def test_frame_iter_element_c(self):
+
+        a2 = np.array([
+                [None, None],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        a1 = np.array([True, False, True])
+        a3 = np.array([['a'], ['b'], ['c']])
+
+        tb1 = TypeBlocks.from_blocks((a3, a1, a2))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=IndexHierarchy.from_product(('i', 'ii'), ('a', 'b'))
+                )
+        values = list(f1.iter_element())
+        self.assertEqual(values,
+                ['a', True, None, None, 'b', False, None, 1, 'c', True, None, 5]
+                )
+
+        f2 = f1.iter_element().apply(lambda x: str(x).lower().replace('e', ''))
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
+                )
 
     def test_frame_sort_index_a(self):
         # reindex both axis
@@ -2017,6 +2044,8 @@ class TestUnit(TestCase):
         f2 = f1.dropna()
         self.assertEqual(f2.shape, (0, 2))
 
+
+
     def test_frame_fillna_a(self):
         dtype = np.dtype
 
@@ -2041,6 +2070,33 @@ class TestUnit(TestCase):
         post = f3.dtypes
         self.assertEqual(post.to_pairs(),
                 (('A', dtype('O')), ('B', dtype('O')), ('C', dtype('O')), ('D', dtype('O'))))
+
+
+
+    def test_frame_fillna_leading_a(self):
+        a2 = np.array([
+                [None, None, None, None],
+                [None, 1, None, 6],
+                [None, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, None, None], dtype=object)
+        a3 = np.array([
+                [None, 4],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(f1.fillna_leading(0, axis=0).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', 0), ('c', 0))), ('x', (('a', 0), ('b', 6), ('c', None))), ('y', (('a', 0), ('b', 0), ('c', 0))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
+
+        self.assertEqual(f1.fillna_leading(0, axis=1).to_pairs(0),
+                (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', None), ('c', None))), ('x', (('a', 0), ('b', 6), ('c', None))), ('y', (('a', 0), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
 
 
     def test_frame_empty_a(self):
@@ -2138,6 +2194,16 @@ class TestUnit(TestCase):
         self.assertEqual(file.read(),
 '2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True')
 
+
+    def test_frame_to_csv_b(self):
+
+        f = sf.Frame([1, 2, 3],
+                columns=['a'],
+                index=sf.Index(range(3), name='Important Name'))
+        file = StringIO()
+        f.to_csv(file)
+        file.seek(0)
+        self.assertEqual(file.read(), 'Important Name,a\n0,1\n1,2\n2,3')
 
     def test_frame_to_tsv_a(self):
         records = (
@@ -3528,7 +3594,19 @@ class TestUnit(TestCase):
             (('a', (('x', 3.0), ('y', 5.0), ('z', 3.0))), ('b', (('x', 3.0), ('y', 4.0), ('z', 10.0))))
             )
 
+    def test_frame_loc_e(self):
+        fp = self.get_test_input('jph_photos.txt')
+        # using a raw string to avoid unicode decoding issues on windows
+        f = sf.Frame.from_tsv(fp, dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')
+        post = f.loc[f['albumId'] >= 98]
+        self.assertEqual(post.shape, (150, 5))
 
+
+    @unittest.skip('needs investigation')
+    def test_frame_from_concat_x(self):
+        # this fails; figure out why
+        a = sf.Series(('a', 'b', 'c'), index=range(3, 6))
+        sf.Frame.from_concat((a, sf.Series(a.index.values, index=a.index)), axis=0, columns=('a','b','c'), index=(1,2))
 
 if __name__ == '__main__':
     unittest.main()

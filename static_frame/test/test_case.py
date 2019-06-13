@@ -5,6 +5,7 @@ import sys
 from itertools import zip_longest
 import typing as tp
 import itertools as it
+import string
 
 import numpy as np
 import pytest
@@ -70,6 +71,11 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
+    def get_letters(*slice_args) -> tp.Generator[str, None, None]:
+        for letter in string.ascii_lowercase[slice(*slice_args)]:
+            yield letter
+
+    @staticmethod
     def get_test_input(file_name: str):
         # input dir should be a sibling of this module
         fp_module = os.path.join(os.getcwd(), __file__)
@@ -92,6 +98,7 @@ class TestCase(unittest.TestCase):
 
 
     def assertAlmostEqualValues(self, values1, values2):
+
         for v1, v2 in zip_longest(values1, values2):
             if isinstance(v1, float) and np.isnan(v1) and isinstance(v2, float) and np.isnan(v2):
                 continue

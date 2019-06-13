@@ -10,11 +10,13 @@
 # include "numpy/arrayobject.h"
 
 
-/* Bug in numpy < 1.16: https://github.com/numpy/numpy/pull/12131 */
+/* Bug in NumPy < 1.16: https://github.com/numpy/numpy/pull/12131 */
 
 # undef PyDataType_ISBOOL
 # define PyDataType_ISBOOL(obj) PyTypeNum_ISBOOL(((PyArray_Descr*)(obj))->type_num)
 
+
+/* SF APIs: */
 
 PyArrayObject* SFUtil_ImmutableFilter(PyArrayObject*);
 

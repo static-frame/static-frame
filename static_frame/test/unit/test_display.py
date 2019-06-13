@@ -205,10 +205,13 @@ class TestUnit(TestCase):
         row_count = 2
         index = [str(chr(x)) for x in range(97, 97+row_count)]
         f = FrameGO(index=index)
+
         for i in range(4):
             chunker = iter(chunks(10, row_count))
             s = Series((x for x in chunker), index=index)
             f[i] = s
+
+        f.columns._update_array_cache()
 
         self.assertEqual(f.display(config=config).to_rows(),
                 ['<FrameGO>',
