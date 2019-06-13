@@ -23,7 +23,8 @@
 .. image:: https://img.shields.io/pypi/status/static-frame.svg
     :target: https://pypi.org/project/static-frame
 
-
+.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg
+   :target: https://hypothesis.readthedocs.io
 
 
 

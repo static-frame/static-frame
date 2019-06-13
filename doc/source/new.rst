@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.5-dev
 ------------
 
+Improved type handling of ``np.datetime64`` typed columns in ``Frame``.
+
 Added ``median`` method to all ``MetaOperatorDelegate`` classes, inlcuding ``Series``, ``Index``, and ``Frame``.
 
 ``Frame`` and ``Series`` sort methods now propagate ``name`` attributes.

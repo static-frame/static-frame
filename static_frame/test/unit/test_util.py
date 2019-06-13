@@ -28,7 +28,6 @@ from static_frame.core.util import set_ufunc2d
 
 from static_frame import Index
 
-# TODO test
 from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import collection_and_dtype_to_1darray
@@ -47,6 +46,8 @@ from static_frame.core.util import roll_2d
 
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
+
+from static_frame.core.util import to_datetime64
 
 
 from static_frame.test.test_case import TestCase
@@ -227,6 +228,28 @@ class TestUnit(TestCase):
                 resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
                 np.dtype(('U', 3))
                 )
+
+
+
+    def test_resolve_dtype_c(self):
+
+
+        a1 = np.array(['2019-01', '2019-02'], dtype=np.datetime64)
+        a2 = np.array(['2019-01-01', '2019-02-01'], dtype=np.datetime64)
+        a3 = np.array([0, 1], dtype='datetime64[ns]')
+        a4 = np.array([0, 1])
+
+        self.assertEqual(str(resolve_dtype(a1.dtype, a2.dtype)),
+                'datetime64[D]')
+        self.assertEqual(resolve_dtype(a1.dtype, a3.dtype),
+                np.dtype('<M8[ns]'))
+
+        self.assertEqual(resolve_dtype(a1.dtype, a4.dtype),
+                np.dtype('O'))
+
+
+
+
 
     def test_resolve_dtype_iter_a(self):
 
@@ -792,7 +815,11 @@ class TestUnit(TestCase):
             post = roll_1d(a1, -i)
             self.assertEqual(post.tolist(), np.roll(a1, -i).tolist())
 
-    def  test_roll_2d_a(self):
+    def test_roll_1d_b(self):
+        post = roll_1d(np.array([]), -4)
+        self.assertEqual(len(post), 0)
+
+    def test_roll_2d_a(self):
 
         a1 = np.arange(12).reshape((3,4))
 
@@ -809,6 +836,12 @@ class TestUnit(TestCase):
 
             post = roll_2d(a1, -i, axis=1)
             self.assertEqual(post.tolist(), np.roll(a1, -i, axis=1).tolist())
+
+    def test_roll_2d_b(self):
+        post = roll_2d(np.array([[]]), -4, axis=1)
+        self.assertEqual(post.shape, (1, 0))
+
+
 
     def test_iterable_to_array_a(self):
         a1, is_unique = iterable_to_array({3,4,5})
@@ -851,6 +884,22 @@ class TestUnit(TestCase):
         self.assertEqual(ic.iloc_dst,
                 [0, 1, 2, 3, 4]
                 )
+
+    def test_to_datetime64_a(self):
+
+        dt = to_datetime64('2019')
+        self.assertEqual(dt, np.datetime64('2019'))
+
+        dt = to_datetime64('2019', dtype=np.dtype('datetime64[D]'))
+        self.assertEqual(dt, np.datetime64('2019-01-01'))
+
+        dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[Y]'))
+        self.assertEqual(dt, np.datetime64('2019'))
+
+        with self.assertRaises(RuntimeError):
+            dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
+
+
 
 if __name__ == '__main__':
     unittest.main()

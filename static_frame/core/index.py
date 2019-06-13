@@ -27,6 +27,7 @@ from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import collection_to_array
 from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.util import immutable_filter
@@ -282,17 +283,22 @@ class Index(IndexBase,
             return immutable_filter(labels)
 
         if hasattr(labels, '__len__'): # not a generator, not an array
-            if not len(labels):
-                return EMPTY_ARRAY # already immutable
+            # resolving the detype is expensive
+            labels = collection_to_array(labels, dtype=dtype, discover_dtype=True)
 
-            if isinstance(labels[0], tuple):
-                assert dtype is None or dtype == object
-                array = np.empty(len(labels), object)
-                array[:] = labels
-                labels = array # rename
-            else:
-                labels = np.array(labels, dtype)
-        else: # labels may be an expired generator
+            # if not len(labels):
+            #     return EMPTY_ARRAY # already immutable
+
+            # if isinstance(labels[0], tuple):
+            #     # special handling for iterables of
+            #     assert dtype is None or dtype == object
+            #     array = np.empty(len(labels), object)
+            #     array[:] = labels
+            #     labels = array # rename
+            # else:
+            #     labels = np.array(labels, dtype)
+
+        else: # labels may be an expired generator, must use the mapping
 
             # TODO: explore why this does not work
             # if dtype is None:

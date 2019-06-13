@@ -45,6 +45,8 @@ _DEFAULT_STABLE_SORT_KIND = 'mergesort'
 _DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 _DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_DATETIME_KIND = 'M'
+DTYPE_TIMEDELTA_KIND = 'm'
+
 DTYPE_OBJECT = np.dtype(object)
 
 NULL_SLICE = slice(None)
@@ -74,6 +76,7 @@ TIME_DELTA_ATTR_MAP = (
 INT_TYPES = (int, np.int_)
 BOOL_TYPES = (bool, np.bool_)
 DICTLIKE_TYPES = (abc.Set, dict)
+NON_STR_TYPES = {int, float, bool}
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -210,16 +213,36 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 
     dt1_is_str = dt1.kind in _DTYPE_STR_KIND
     dt2_is_str = dt2.kind in _DTYPE_STR_KIND
-
-    # if both are string or string-like, we can use result type to get the longest string
     if dt1_is_str and dt2_is_str:
+        # if both are string or string-like, we can use result type to get the longest string
         return np.result_type(dt1, dt2)
+
+    dt1_is_dt = dt1.kind == DTYPE_DATETIME_KIND
+    dt2_is_dt = dt2.kind == DTYPE_DATETIME_KIND
+    if dt1_is_dt and dt2_is_dt:
+        # if both are datetime, result type will work
+        return np.result_type(dt1, dt2)
+
+    dt1_is_tdelta = dt1.kind == DTYPE_TIMEDELTA_KIND
+    dt2_is_tdelta = dt2.kind == DTYPE_TIMEDELTA_KIND
+    if dt1_is_tdelta and dt2_is_tdelta:
+        # this may or may not work
+        # TypeError: Cannot get a common metadata divisor for NumPy datetime metadata [D] and [Y] because they have incompatible nonlinear base time units
+        try:
+            return np.result_type(dt1, dt2)
+        except TypeError:
+            return DTYPE_OBJECT
+
 
     dt1_is_bool = dt1.type is np.bool_
     dt2_is_bool = dt2.type is np.bool_
 
-    # if any one is a string or a bool, we have to go to object; result_type gives a string in mixed cases
-    if dt1_is_str or dt2_is_str or dt1_is_bool or dt2_is_bool:
+    # if any one is a string or a bool, we have to go to object; we handle both cases being the same above; result_type gives a string in mixed cases
+    if (dt1_is_str or dt2_is_str
+            or dt1_is_bool or dt2_is_bool
+            or dt1_is_dt or dt2_is_dt
+            or dt1_is_tdelta or dt2_is_tdelta
+            ):
         return DTYPE_OBJECT
 
     # if not a string or an object, can use result type
@@ -235,6 +258,34 @@ def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
         if dt_resolve == DTYPE_OBJECT:
             return dt_resolve
     return dt_resolve
+
+
+def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
+    '''Given arbitrary iterable, determine compatible dtype for array construction. Will return one of object, str, or None (the later when defailt array init should give the correct result.
+
+    Will exhaust a generator if used.
+    '''
+    count_str = 0
+    count_non_str = 0
+
+    for v in iterable:
+        t = type(v)
+        if t == str:
+            count_str += 1
+        elif t in NON_STR_TYPES:
+            count_non_str += 1
+
+        if count_str and count_non_str:
+            # if we have both str and non_str have to be object
+            return object
+
+    if count_str == len(iterable):
+        return str
+    elif count_str: # if greater than one, but not all, we have to use object
+        return object
+    # cannot determine, so fall back on NP auto discovery
+    return None
+
 
 def concat_resolved(arrays: tp.Iterable[np.ndarray],
         axis=0):
@@ -362,9 +413,13 @@ def roll_1d(array, shift: int) -> np.ndarray:
     Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
     '''
     size = len(array)
+    if size == 0:
+        return array.copy()
+
     shift = shift % size
     if shift == 0:
         return array.copy()
+
     post = np.empty(size, dtype=array.dtype)
     if shift > 0:
         post[0:shift] = array[-shift:]
@@ -383,9 +438,13 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 
     if axis == 0: # roll rows
         size = array.shape[0]
+        if size == 0: # cannot mod zero
+            return array.copy()
+
         shift = shift % size
         if shift == 0:
             return array.copy()
+
         if shift > 0:
             post[0:shift, :] = array[-shift:, :]
             post[shift:, :] = array[0:-shift, :]
@@ -396,9 +455,13 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 
     elif axis == 1: # roll columns
         size = array.shape[1]
+        if size == 0: # cannot mod zero
+            return array.copy()
+
         shift = shift % size
         if shift == 0:
             return array.copy()
+
         if shift > 0:
             post[:, 0:shift] = array[:, -shift:]
             post[:, shift:] = array[:, 0:-shift]
@@ -412,6 +475,43 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 
 
 #-------------------------------------------------------------------------------
+# array constructors
+
+def collection_to_array(
+        values: tp.Collection[tp.Any],
+        dtype: tp.Optional[np.dtype] = None,
+        discover_dtype: bool = False
+        ) -> np.ndarray:
+    '''
+    For creating an array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction will cause everything to go to characters.
+    '''
+    if not len(values):
+        return EMPTY_ARRAY # already immutable
+
+    if isinstance(values, DICTLIKE_TYPES): # mathches set, frozenset, keysview
+        sample = next(iter(values))
+        # assume_unique = True
+    else:
+        sample = values[0]
+        # assume_unique = False
+
+    if isinstance(sample, tuple):
+        # special handling for iterables of
+        assert dtype is None or dtype == object
+        array = np.empty(len(values), object)
+        array[:] = values
+    elif dtype is not None:
+        # we can creat it from the sequence if dtype is known
+        array = np.array(values, dtype=dtype)
+    else: # no dtype, have to be careful of mixed types
+        if discover_dtype:
+            # this is slow
+            dtype = resolve_type_object_iter(values)
+        array = np.array(values, dtype=dtype)
+
+    return array
+
+
 def iterable_to_array(other: tp.Iterable[tp.Any]
         ) -> tp.Tuple[np.ndarray, bool]:
     '''Utility method to take arbitary, heterogenous typed iterables (including dict-like and generators) and realize them as an NP array when we do not already know what dtype is appropriate. As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
@@ -454,6 +554,7 @@ def iterable_to_array(other: tp.Iterable[tp.Any]
 
     return v, assume_unique
 
+
 def collection_and_dtype_to_1darray(
         other: tp.Collection[tp.Any],
         dtype: np.dtype) -> np.ndarray:
@@ -492,7 +593,7 @@ def collection_and_dtype_to_1darray(
 
     return np.fromiter(other, count=len(other), dtype=dtype)
 
-
+#-------------------------------------------------------------------------------
 
 def _slice_to_ascending_slice(key: slice, size: int) -> slice:
     '''
@@ -555,6 +656,8 @@ def to_datetime64(
             else: # cannot use a generic datetime type
                 dt = np.datetime64(value)
     else: # if a dtype was explicitly given, check it
+        # value is a dt64
+        dt = value
         if dtype and dt.dtype != dtype:
             raise RuntimeError('not supported dtype', dt, dtype)
     return dt

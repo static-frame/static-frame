@@ -47,12 +47,19 @@ class TestUnit(TestCase):
 
     def test_index_init_c(self):
 
-
         s1 = Series(('a', 'b', 'c'))
         idx2 = Index(s1)
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c']
                 )
+
+    def test_index_init_d(self):
+        idx = Index((0, '1', 2))
+        self.assertEqual(idx.values.tolist(),
+                [0, '1', 2]
+                )
+
+
 
     def test_index_loc_to_iloc_a(self):
 
