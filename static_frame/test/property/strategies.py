@@ -10,8 +10,12 @@ import numpy as np
 def get_dtype_pairs() -> tp.Tuple[np.dtype]:
     return st.tuples(hypo_np.scalar_dtypes(), hypo_np.scalar_dtypes())
 
-def get_array_1d(min_size: int = 0, unique: bool = False):
-    shape = st.integers(min_value=min_size)
+def get_array_1d(
+        min_size: int = 0,
+        max_size: int = 10,
+        unique: bool = False):
+    shape = st.integers(min_value=min_size, max_value=max_size)
+
     return hypo_np.arrays(
             hypo_np.scalar_dtypes(),
             shape,
@@ -19,11 +23,34 @@ def get_array_1d(min_size: int = 0, unique: bool = False):
             fill=None,
             unique=False)
 
-def get_array_2d():
-    shape = hypo_np.array_shapes(min_dims=2, max_dims=2)
+
+def get_shape_2d(
+        min_rows=1,
+        max_rows=10,
+        min_columns=1,
+        max_columns=10,
+        ):
+    return st.tuples(
+            st.integers(min_value=min_rows, max_value=max_rows),
+            st.integers(min_value=min_columns, max_value=max_columns)
+            )
+
+def get_array_2d(
+        min_rows=1,
+        max_rows=10,
+        min_columns=1,
+        max_columns=10,
+        ):
+
+    shape = get_shape_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns)
+
     return hypo_np.arrays(
             hypo_np.scalar_dtypes(),
-            shape, # shape
+            shape=shape,
             elements=None,
             fill=None,
             unique=False)
@@ -58,8 +85,13 @@ def get_labels(min_size: int = 0):
 
 
 if __name__ == '__main__':
+    from static_frame.core.display_color import HexColor
+
     local_items = tuple(locals().items())
     for v in (v for k, v in local_items if callable(v) and k.startswith('get')):
-        print(v)
-        for x in range(10):
-            print('\t', v().example())
+
+        print(HexColor.format_terminal('hotpink', str(v)))
+
+
+        for x in range(4    ):
+            print(v().example())
