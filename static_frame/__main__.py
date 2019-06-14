@@ -52,10 +52,10 @@ if __name__ == '__main__':
         ipython = get_ipython()
 
         print()  # Spacer.
-        
+
         for command in commands:
             ipython.auto_rewrite_input(command)
-            
+
         print()  # Spacer.
 
         embed(user_ns=imports, colors='neutral')
@@ -66,4 +66,4 @@ if __name__ == '__main__':
                 f'>>> {command}' for command in commands
         )
 
-        interact(banner=banner, local=imports)
+        interact(banner=banner, local=imports, exitmsg='')
