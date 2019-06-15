@@ -6,6 +6,7 @@ from itertools import zip_longest
 import typing as tp
 import itertools as it
 import string
+import cmath
 
 import numpy as np
 import pytest
@@ -100,7 +101,11 @@ class TestCase(unittest.TestCase):
     def assertAlmostEqualValues(self, values1, values2):
 
         for v1, v2 in zip_longest(values1, values2):
-            if isinstance(v1, float) and np.isnan(v1) and isinstance(v2, float) and np.isnan(v2):
+            if (isinstance(v1, float) and np.isnan(v1) and
+                    isinstance(v2, float) and np.isnan(v2)):
+                continue
+            if (isinstance(v1, complex) and cmath.isnan(v1) and
+                    isinstance(v2, complex) and cmath.isnan(v2)):
                 continue
             self.assertEqual(v1, v2)
 

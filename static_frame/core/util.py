@@ -249,10 +249,14 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     return np.result_type(dt1, dt2)
 
 def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
-    '''Given an iterable of dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object
+    '''Given an iterable of one or more dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object.
+
+    Args:
+        dtypes: iterable of one or more dtypes.
     '''
     dtypes = iter(dtypes)
     dt_resolve = next(dtypes)
+
     for dt in dtypes:
         dt_resolve = resolve_dtype(dt_resolve, dt)
         if dt_resolve == DTYPE_OBJECT:
@@ -287,14 +291,15 @@ def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
     return None
 
 
-def concat_resolved(arrays: tp.Iterable[np.ndarray],
+def concat_resolved(
+        arrays: tp.Iterable[np.ndarray],
         axis=0):
     '''
-    Concatenation that uses resolved dtypes to avoid truncation.
+    Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
 
     Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
 
-    Now shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
+    No shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
     '''
     #all the input array dimensions except for the concatenation axis must match exactly
     if axis is None:
