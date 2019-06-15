@@ -8,10 +8,14 @@ from hypothesis import given
 from hypothesis import example
 from hypothesis import reproduce_failure
 
+from static_frame.test.property.strategies import get_shape_1d2d
 from static_frame.test.property.strategies import get_array_1d
 from static_frame.test.property.strategies import get_array_1d2d
 from static_frame.test.property.strategies import get_dtype_pairs
+
+from static_frame.test.property.strategies import get_dtype
 from static_frame.test.property.strategies import get_dtypes
+from static_frame.test.property.strategies import get_label
 from static_frame.test.property.strategies import get_labels
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
@@ -60,6 +64,15 @@ class TestUnit(TestCase):
         self.assertEqual(array.ndim, 2)
         self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
 
+    @given(get_dtype(), get_shape_1d2d(), get_label())
+    def test_full_or_fill(self, dtype, shape, label):
+        array = util.full_for_fill(dtype, shape, fill_value=label)
+        self.assertTrue(array.shape == shape)
+        # import ipdb; ipdb.set_trace()
+        if isinstance(label, (float, complex)) and np.isnan(label):
+            pass
+        else:
+            self.assertTrue(label in array)
 
 if __name__ == '__main__':
     unittest.main()
