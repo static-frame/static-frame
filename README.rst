@@ -2,30 +2,31 @@
    :width: 340px
    :align: center
 
-.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg
-    :target: https://pypi.org/project/static-frame
+|
 
-.. image:: https://travis-ci.org/InvestmentSystems/static-frame.svg?branch=master
-    :target: https://travis-ci.org/InvestmentSystems/static-frame
+.. image:: https://img.shields.io/pypi/status/static-frame.svg?style=flat-square
+  :target: https://pypi.org/project/static-frame
 
-.. image:: https://readthedocs.org/projects/static-frame/badge/?version=latest
-    :target: https://static-frame.readthedocs.io/en/latest/?badge=latest
+.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg?style=flat-square
+  :target: https://pypi.org/project/static-frame
 
-.. image:: https://badge.fury.io/py/static-frame.svg
-    :target: https://badge.fury.io/py/static-frame
+.. image:: https://img.shields.io/pypi/v/static-frame.svg?style=flat-square
+  :target: https://pypi.org/project/static-frame
 
-.. image:: https://anaconda.org/conda-forge/static-frame/badges/version.svg
-    :target: https://anaconda.org/conda-forge/static-frame
+.. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg?style=flat-square
+  :target: https://anaconda.org/conda-forge/static-frame
 
-.. image:: https://codecov.io/gh/InvestmentSystems/static-frame/branch/master/graph/badge.svg
+.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame.svg?style=flat-square
+  :target: https://travis-ci.org/InvestmentSystems/static-frame
+
+.. image:: https://img.shields.io/readthedocs/static-frame.svg?style=flat-square
+  :target: https://static-frame.readthedocs.io/en/latest
+
+.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg?style=flat-square
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
-.. image:: https://img.shields.io/pypi/status/static-frame.svg
-    :target: https://pypi.org/project/static-frame
-
-.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg
-   :target: https://hypothesis.readthedocs.io
-
+.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg?style=flat-square
+  :target: https://hypothesis.readthedocs.io
 
 
 static-frame
@@ -437,6 +438,3 @@ Just as a hierarchical selection can reside in a ``loc`` expression with an ``HL
 While StaticFrame offers many of the features of Pandas and similar data structures, exporting directly to NumPy arrays (via the ``.values`` attribute) or to Pandas is supported for functionality not found in StaticFrame or compatibility with other libraries. For example, a ``Frame`` can export to a Pandas ``DataFrame`` with ``Frame.to_pandas()``.
 
 >>> df = frame_go.to_pandas()
-
-
-
