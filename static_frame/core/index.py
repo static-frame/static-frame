@@ -430,6 +430,12 @@ class Index(IndexBase,
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc
 
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the index labels.
+        '''
+        return reversed(self.values)
+
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''
