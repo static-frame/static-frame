@@ -16,6 +16,7 @@ from static_frame.test.property.strategies import get_dtype_pairs
 from static_frame.test.property.strategies import get_dtype
 from static_frame.test.property.strategies import get_dtypes
 from static_frame.test.property.strategies import get_label
+from static_frame.test.property.strategies import get_value
 from static_frame.test.property.strategies import get_labels
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
@@ -64,15 +65,14 @@ class TestUnit(TestCase):
         self.assertEqual(array.ndim, 2)
         self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
 
-    @given(get_dtype(), get_shape_1d2d(), get_label())
-    def test_full_or_fill(self, dtype, shape, label):
-        array = util.full_for_fill(dtype, shape, fill_value=label)
+    @given(get_dtype(), get_shape_1d2d(), get_value())
+    def test_full_or_fill(self, dtype, shape, value):
+        array = util.full_for_fill(dtype, shape, fill_value=value)
         self.assertTrue(array.shape == shape)
-        # import ipdb; ipdb.set_trace()
-        if isinstance(label, (float, complex)) and np.isnan(label):
+        if isinstance(value, (float, complex)) and np.isnan(value):
             pass
         else:
-            self.assertTrue(label in array)
+            self.assertTrue(value in array)
 
 if __name__ == '__main__':
     unittest.main()
