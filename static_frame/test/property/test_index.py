@@ -65,30 +65,18 @@ class TestUnit(TestCase):
         property_loc_to_iloc_element(Index, values)
         property_loc_to_iloc_element(IndexGO, values)
 
-
-    @given(get_labels())
+    @given(get_labels(min_size=1))
     def test_index_loc_to_iloc_slice(self, values):
 
         def property_loc_to_iloc_slice(cls, values):
             # Property: that the key translates to the appropriate slice.
             index = cls(values)
             for i, v in enumerate(values):
-                self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))
-
-        property_loc_to_iloc_slice(Index, values)
-        property_loc_to_iloc_slice(IndexGO, values)
-
-
-    @given(get_labels(min_size=1))
-    def test_index_loc_to_iloc_slice(self, values):
-
-        def property_loc_to_iloc_slice(cls, values):
-            '''
-            Property: that the key translates to the appropriate slice.
-            '''
-            index = cls(values)
-            for i, v in enumerate(values):
-                self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))
+                # insure that we get teh same slice going through loc that we would get by direct iloc
+                if v is None:
+                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(None))
+                else:
+                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))
 
         property_loc_to_iloc_slice(Index, values)
         property_loc_to_iloc_slice(IndexGO, values)
