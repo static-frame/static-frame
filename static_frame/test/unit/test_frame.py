@@ -1830,6 +1830,20 @@ class TestUnit(TestCase):
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
 
+    def test_frame_reversed(self):
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = ((2, 2, 'a', False, False),
+                   (30, 34, 'b', True, False),
+                   (2, 95, 'c', False, False),
+                   (30, 73, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+
+        self.assertTrue(tuple(reversed(f)) == tuple(reversed(columns)))
+
+
     def test_frame_sort_index_a(self):
         # reindex both axis
         records = (

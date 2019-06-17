@@ -265,6 +265,13 @@ class Series(metaclass=MetaOperatorDelegate):
         if len(self.values) != shape:
             raise RuntimeError('values and index do not match length')
 
+    # ---------------------------------------------------------------------------
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the series' index.
+        '''
+        return reversed(self._index)
+
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''

@@ -999,6 +999,13 @@ class TestUnit(TestCase):
         self.assertEqual(s3.name, s1.name)
 
 
+    def test_series_reversed(self):
+
+        idx = tuple('abcd')
+        s = Series(range(4), index=idx)
+        self.assertTrue(tuple(reversed(s)) == tuple(reversed(idx)))
+
+
     def test_series_relabel_a(self):
 
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))

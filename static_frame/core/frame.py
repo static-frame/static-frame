@@ -1975,6 +1975,12 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the frame's columns.
+        '''
+        return reversed(self._columns)
+
     def sort_index(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Frame':
