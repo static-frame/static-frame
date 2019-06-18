@@ -286,18 +286,6 @@ class Index(IndexBase,
             # resolving the detype is expensive
             labels = collection_to_array(labels, dtype=dtype, discover_dtype=True)
 
-            # if not len(labels):
-            #     return EMPTY_ARRAY # already immutable
-
-            # if isinstance(labels[0], tuple):
-            #     # special handling for iterables of
-            #     assert dtype is None or dtype == object
-            #     array = np.empty(len(labels), object)
-            #     array[:] = labels
-            #     labels = array # rename
-            # else:
-            #     labels = np.array(labels, dtype)
-
         else: # labels may be an expired generator, must use the mapping
 
             # TODO: explore why this does not work
@@ -744,12 +732,6 @@ class Index(IndexBase,
         '''
         return self._map.keys()
 
-    def __iter__(self):
-        '''Iterate over labels.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return self._labels.__iter__()
 
     def __contains__(self, value) -> bool:
         '''Return True if value in the labels.
