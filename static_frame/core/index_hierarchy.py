@@ -648,14 +648,6 @@ class IndexHierarchy(IndexBase,
             self._update_array_cache()
         return self._keys
 
-    def __iter__(self):
-        '''Iterate over labels.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        # TODO: replace with iter of self._keys on 3.6
-        return self._labels.__iter__()
-
     def __contains__(self, value) -> bool:
         '''Determine if a leaf loc is contained in this Index.
         '''

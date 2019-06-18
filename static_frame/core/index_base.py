@@ -164,6 +164,15 @@ class IndexBase:
         cls = self.__class__
         return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
 
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def __iter__(self):
+        '''Iterate over labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels.__iter__()
 
     #---------------------------------------------------------------------------
     # common display
