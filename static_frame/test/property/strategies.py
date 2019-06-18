@@ -20,6 +20,9 @@ from static_frame import IndexYearMonth
 from static_frame import IndexSecond
 from static_frame import IndexMillisecond
 
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+
 from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
@@ -320,7 +323,8 @@ def get_index(
         min_size: int = 0,
         max_size: int = MAX_ROWS,
         dtype_group=None,
-        cls=Index):
+        cls=Index
+        ):
     # using get_labels here forces Index construction from lists, rather than from arrays
     if dtype_group is not None:
         return st.builds(cls, get_array_1d(
@@ -342,6 +346,15 @@ get_index_go = partial(get_index, cls=IndexGO)
 get_index_go.__name__ = 'get_index_go'
 
 
+def get_index_hierarchy(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        min_depth: int = 2,
+        max_depth: int = 4,
+        dtype_group=None,
+        cls=IndexHierarchy.from_labels
+        ):
+    pass
 
 #-------------------------------------------------------------------------------
 # series objects
