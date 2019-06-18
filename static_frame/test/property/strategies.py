@@ -3,6 +3,7 @@ from enum import Enum
 
 from functools import partial
 from itertools import chain
+from itertools import repeat
 
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
@@ -347,14 +348,65 @@ get_index_go.__name__ = 'get_index_go'
 
 
 def get_index_hierarchy(
-        min_size: int = 0,
+        min_size: int = 1,
         max_size: int = MAX_ROWS,
         min_depth: int = 2,
-        max_depth: int = 4,
+        max_depth: int = 5,
         dtype_group=None,
         cls=IndexHierarchy.from_labels
         ):
-    pass
+
+    def constructor(labels_spacings):
+        # returns an iterable of labels
+        labels_proto, spacings = labels_spacings
+        depth = len(labels_proto)
+        size = len(labels_proto[0])
+
+        # update all labels (except the deepest) by repeating values a number of times, as determined by spacings
+        labels = [None for _ in range(depth)]
+        for d in range(depth):
+            if d >= depth - 1:
+                labels[d] = labels_proto[d]
+            else:
+                spacing = spacings[d]
+
+                def spans():
+                    idx = 0
+                    for count in spacing:
+                        yield repeat(labels_proto[d][idx], count)
+                        idx += count
+
+                labels[d] = list(chain.from_iterable(spans()))
+
+        def label_gen():
+            for i in range(size):
+                yield [labels[d][i] for d in range(depth)]
+
+        return st.builds(
+                cls,
+                st.just(label_gen())
+                )
+
+    def get_labels(depth_size):
+        depth, size = depth_size
+
+        level = st.lists(get_label(), unique=True, min_size=size, max_size=size)
+        labels = st.lists(level, min_size=depth, max_size=depth)
+
+        # get spacings as integers
+        spacing = st.lists(
+                st.integers(min_value=1, max_value=size),
+                min_size=1,
+                max_size=size
+                ).filter(lambda x: sum(x) == size)
+        spacings = st.lists(spacing, min_size=depth, max_size=depth)
+
+        return st.tuples(labels, spacings).flatmap(constructor)
+
+    return st.tuples(
+            st.integers(min_value=min_depth, max_value=max_depth),
+            st.integers(min_value=min_size, max_value=max_size)
+            ).flatmap(get_labels)
 
 #-------------------------------------------------------------------------------
 # series objects
