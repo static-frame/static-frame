@@ -205,6 +205,17 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return a
 
     @property
+    def shapes(self) -> np.ndarray:
+        '''
+        Return an immutable array that, for each block, reports the shape as a tuple.
+        '''
+        a = np.empty(len(self._blocks), dtype=object)
+        a[:] = [b.shape for b in self._blocks]
+        a.flags.writeable = False
+        return a
+
+
+    @property
     def mloc(self) -> np.ndarray:
         '''Return an immutable ndarray of NP array memory location integers.
         '''
