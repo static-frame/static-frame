@@ -293,6 +293,15 @@ class TestUnit(TestCase):
                 [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
+    def test_index_reversed(self):
+
+        labels = tuple('acdeb')
+        index = Index(labels=labels)
+        index_reversed_generator = reversed(index)
+        self.assertEqual(
+            tuple(index_reversed_generator),
+            tuple(reversed(labels))
+        )
 
     def test_index_relable(self):
 

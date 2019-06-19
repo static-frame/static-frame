@@ -411,6 +411,15 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_hierarchy_reversed(self):
+        labels = (('a', 1), ('a', 2), ('b', 1), ('b', 2))
+        hier_idx = IndexHierarchy.from_labels(labels)
+        self.assertTrue(
+            all(tuple(hidx_1) == hidx_2
+                for hidx_1, hidx_2 in zip(reversed(hier_idx), reversed(labels)))
+        )
+
+
     def test_hierarchy_keys_a(self):
         OD = OrderedDict
         tree = OD([
