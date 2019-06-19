@@ -434,20 +434,15 @@ def get_series(
     def constructor(shape):
         size = shape[0] # tuple len 1
 
-        if index_cls in (IndexHierarchy, IndexHierarchyGO):
-            index = get_index_hierarchy(
+        index_kwargs = dict(
                     min_size=size,
                     max_size=size,
-                    cls=index_cls.from_labels,
-                    dtype_group=index_dtype_group
-                    )
+                    dtype_group=index_dtype_group)
+
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
         else:
-            index = get_index(
-                    min_size=size,
-                    max_size=size,
-                    cls=index_cls,
-                    dtype_group=index_dtype_group,
-                    )
+            index = get_index(cls=index_cls, **index_kwargs)
 
         return st.builds(cls,
             get_array_1d(
@@ -477,6 +472,14 @@ get_series_str_dgt1_numeric = partial(get_series,
         )
 get_series_str_dgt1_numeric.__name__ = 'get_series_str_dgt1_numeric'
 
+get_series_obj_dgt1_numeric = partial(get_series,
+        min_size=1,
+        dtype_group=DTGroup.NUMERIC,
+        index_cls=IndexHierarchy,
+        index_dtype_group=DTGroup.OBJECT
+        )
+get_series_obj_dgt1_numeric.__name__ = 'get_series_obj_dgt1_numeric'
+
 
 #-------------------------------------------------------------------------------
 # frames
@@ -498,19 +501,28 @@ def get_frame(
 
         row_count, column_count = shape
 
-        index = get_index(
+            # if issubclass(index_cls, IndexHierarchy):
+        index_kwargs = dict(
                 min_size=row_count,
                 max_size=row_count,
-                cls=index_cls,
                 dtype_group=index_dtype_group,
                 )
 
-        columns = get_index(
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
+        else:
+            index = get_index(cls=index_cls, **index_kwargs)
+
+        columns_kwargs = dict(
                 min_size=column_count,
                 max_size=column_count,
-                cls=columns_cls,
                 dtype_group=columns_dtype_group,
                 )
+
+        if issubclass(index_cls, IndexHierarchy):
+            columns = get_index_hierarchy(cls=columns_cls.from_labels, **columns_kwargs)
+        else:
+            columns = get_index(cls=columns_cls, **columns_kwargs)
 
         return st.builds(cls,
                 get_type_blocks(
