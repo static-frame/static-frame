@@ -27,10 +27,17 @@ PyArray_Descr* SFUtil_ResolveDTypes(PyArray_Descr* d1, PyArray_Descr* d2) {
     }
 
     if (
-        PyDataType_ISOBJECT(d1) || PyDataType_ISOBJECT(d2)
-        || PyDataType_ISBOOL(d1) || PyDataType_ISBOOL(d2)
+        PyDataType_ISOBJECT(d1)
+        || PyDataType_ISOBJECT(d2)
+        || PyDataType_ISBOOL(d1)
+        || PyDataType_ISBOOL(d2)
         || (PyDataType_ISSTRING(d1) != PyDataType_ISSTRING(d2))
-        || (PyDataType_ISDATETIME(d1) != PyDataType_ISDATETIME(d2))
+        || (
+            /* PyDataType_ISDATETIME matches both NPY_DATETIME *and* NPY_TIMEDELTA,
+            So we need the PyArray_EquivTypenums check too: */
+            (PyDataType_ISDATETIME(d1) || PyDataType_ISDATETIME(d2))
+            && !PyArray_EquivTypenums(d1->type_num, d2->type_num)
+        )
     ) {
         return PyArray_DescrFromType(NPY_OBJECT);
     }
