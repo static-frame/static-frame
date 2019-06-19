@@ -185,7 +185,13 @@ class IndexHierarchy(IndexBase,
             :py:class:`static_frame.IndexHierarchy`
         '''
         labels_iter = iter(labels)
-        first = next(labels_iter)
+        try:
+            first = next(labels_iter)
+        except StopIteration:
+            # if iterable is empty, return empty index
+            return cls(levels=cls._LEVEL_CONSTRUCTOR(
+                    cls._INDEX_CONSTRUCTOR(())
+                    ), name=name)
 
         # minimum permitted depth is 2
         if len(first) < 2:

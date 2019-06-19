@@ -373,6 +373,8 @@ def get_index_hierarchy(
                 def spans():
                     idx = 0
                     for count in spacing:
+                        if count == 0:
+                            continue
                         yield repeat(labels_proto[d][idx], count)
                         idx += count
 
@@ -390,13 +392,22 @@ def get_index_hierarchy(
     def get_labels(depth_size):
         depth, size = depth_size
 
-        level = st.lists(get_label(), unique=True, min_size=size, max_size=size)
+        if dtype_group is not None:
+            level = get_array_1d(min_size=size,
+                    max_size=size,
+                    unique=True,
+                    dtype_group=dtype_group)
+        else:
+            level = st.lists(get_label(),
+                    min_size=size,
+                    max_size=size,
+                    unique=True)
         labels = st.lists(level, min_size=depth, max_size=depth)
 
         # get spacings as integers
         spacing = st.lists(
-                st.integers(min_value=1, max_value=size),
-                min_size=1,
+                st.integers(min_value=0, max_value=size),
+                min_size=0,
                 max_size=size
                 ).filter(lambda x: sum(x) == size)
         spacings = st.lists(spacing, min_size=depth, max_size=depth)
@@ -411,7 +422,8 @@ def get_index_hierarchy(
 #-------------------------------------------------------------------------------
 # series objects
 
-def get_series(min_size: int = 0,
+def get_series(
+        min_size: int = 0,
         max_size: int = MAX_ROWS,
         cls=Series,
         dtype_group=DTGroup.ALL,
@@ -422,12 +434,20 @@ def get_series(min_size: int = 0,
     def constructor(shape):
         size = shape[0] # tuple len 1
 
-        index = get_index(
-                min_size=size,
-                max_size=size,
-                cls=index_cls,
-                dtype_group=index_dtype_group,
-                )
+        if index_cls in (IndexHierarchy, IndexHierarchyGO):
+            index = get_index_hierarchy(
+                    min_size=size,
+                    max_size=size,
+                    cls=index_cls.from_labels,
+                    dtype_group=index_dtype_group
+                    )
+        else:
+            index = get_index(
+                    min_size=size,
+                    max_size=size,
+                    cls=index_cls,
+                    dtype_group=index_dtype_group,
+                    )
 
         return st.builds(cls,
             get_array_1d(
@@ -438,7 +458,7 @@ def get_series(min_size: int = 0,
             index=index
             )
 
-    return get_shape_1d().flatmap(constructor)
+    return get_shape_1d(min_size=min_size, max_size=max_size).flatmap(constructor)
 
 # label index, values
 get_series_date_numeric = partial(get_series,
@@ -447,6 +467,15 @@ get_series_date_numeric = partial(get_series,
         index_dtype_group=DTGroup.DATE
         )
 get_series_date_numeric.__name__ = 'get_series_date_numeric'
+
+# depth greater than 1 index
+get_series_str_dgt1_numeric = partial(get_series,
+        min_size=1,
+        dtype_group=DTGroup.NUMERIC,
+        index_cls=IndexHierarchy,
+        index_dtype_group=DTGroup.STRING
+        )
+get_series_str_dgt1_numeric.__name__ = 'get_series_str_dgt1_numeric'
 
 
 #-------------------------------------------------------------------------------
