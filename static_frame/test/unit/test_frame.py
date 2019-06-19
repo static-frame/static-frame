@@ -70,17 +70,33 @@ class TestUnit(TestCase):
                 )
 
         # with columns and index defined, we fill the value even if None
-        f3 = Frame(None, index=(1,2), columns=(3,4,5))
-        self.assertEqual(f3.to_pairs(0),
-                ((3, ((1, None), (2, None))), (4, ((1, None), (2, None))), (5, ((1, None), (2, None)))))
+        f3 = Frame(None, index=(1, 2), columns=(3, 4, 5))
+        self.assertEqual(f3.fillna(None).to_pairs(0),
+                ((3, ((1, None), (2, None))),
+                 (4, ((1, None), (2, None))),
+                 (5, ((1, None), (2, None)))))
+
+        # with only columns defined, we fill the value even if None
+        f4 = Frame(None, columns=(3, 4, 5))
+        self.assertEqual(
+            f4.to_pairs(0),
+            ((3, ()), (4, ()), (5, ()))
+        )
+
+        # with only columns defined & empty index, we fill the value even if None
+        f5 = Frame(None, index=[], columns=(3, 4, 5))
+        self.assertEqual(
+            f5.to_pairs(0),
+            ((3, ()), (4, ()), (5, ()))
+        )
 
         # auto populated index/columns based on shape
-        f4 = Frame([[1,2], [3,4], [5,6]])
-        self.assertEqual(f4.to_pairs(0),
+        f6 = Frame([[1,2], [3,4], [5,6]])
+        self.assertEqual(f6.to_pairs(0),
                 ((0, ((0, 1), (1, 3), (2, 5))), (1, ((0, 2), (1, 4), (2, 6))))
                 )
-        self.assertTrue(f4._index._loc_is_iloc)
-        self.assertTrue(f4._columns._loc_is_iloc)
+        self.assertTrue(f6._index._loc_is_iloc)
+        self.assertTrue(f6._columns._loc_is_iloc)
 
 
     def test_frame_init_c(self):
@@ -110,6 +126,19 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
             (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
             )
+
+    def test_frame_init_iter(self):
+        f1 = Frame(None, index=iter(range(3)), columns=("A",))
+        self.assertEqual(
+            f1.fillna(None).to_pairs(0),
+            (('A', ((0, None), (1, None), (2, None))),)
+        )
+
+        f2 = Frame(None, index=("A",), columns=iter(range(3)))
+        self.assertEqual(
+            f2.fillna(None).to_pairs(0),
+            ((0, (('A', None),)), (1, (('A', None),)), (2, (('A', None),)))
+        )
 
     def test_frame_values_a(self):
         f = sf.Frame([[3]])
@@ -2036,7 +2065,12 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 4))
 
         f3 = f1.dropna(axis=1, condition=np.any)
-        self.assertEqual(f3.shape, (0, 0))
+        # Dropping all columns leaves an empty frame with the index.
+        self.assertEqual(f3.shape, (3, 0))
+
+        f4 = f1.dropna(axis=0, condition=np.any).dropna(axis=1)
+        # Dropping all rows and columns leaves an empty frame.
+        self.assertEqual(f4.shape, (0, 0))
 
     def test_frame_dropna_b(self):
         f1 = FrameGO([

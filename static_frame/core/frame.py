@@ -828,8 +828,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif isinstance(data, dict):
             raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
 
-        elif data is None and columns is None:
-            # will have shape of 0,0
+        elif data is None:
+            # Shape is initially (0, 0), but could be resized after index construction.
             self._blocks = TypeBlocks.from_none()
 
         elif not hasattr(data, '__len__') and not isinstance(data, str):
@@ -878,6 +878,16 @@ class Frame(metaclass=MetaOperatorDelegate):
                     dtype=np.int64)
         else:
             self._index = Index(index)
+
+        # Resize blocks if any axis is length 0, i.e. empty.
+        if hasattr(self, '_blocks') and not all(self._blocks.shape):
+            row_count = len(self._index)
+            col_count = len(self._columns)
+            if row_count or col_count:
+                # Will have shape (len of index, length of columns).
+                a = np.full((row_count, col_count), np.nan)
+                a.flags.writeable = False
+                self._blocks = TypeBlocks.from_blocks(a)
 
         # permit bypassing this check if the
 
