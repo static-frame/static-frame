@@ -9,6 +9,7 @@ import numpy as np
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import _UNIT_SLICE
+from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -161,6 +162,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if self._blocks:
             self._row_dtype = resolve_dtype_iter(b.dtype for b in self._blocks)
         else:
+            # TODO: this violates the type and may break something downstream
             self._row_dtype = None
 
         # assert len(self._dtypes) == len(self._index) == self._shape[1]
@@ -201,6 +203,17 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         a = np.array(self._dtypes, dtype=np.dtype)
         a.flags.writeable = False
         return a
+
+    @property
+    def shapes(self) -> np.ndarray:
+        '''
+        Return an immutable array that, for each block, reports the shape as a tuple.
+        '''
+        a = np.empty(len(self._blocks), dtype=object)
+        a[:] = [b.shape for b in self._blocks]
+        a.flags.writeable = False
+        return a
+
 
     @property
     def mloc(self) -> np.ndarray:
@@ -1774,7 +1787,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             self._row_dtype = block.dtype
         elif block.dtype != self._row_dtype:
             # we do not use resolve_dtype here as we want to preserve types, not safely cooerce them (i.e., int to float)
-            self._row_dtype = object
+            self._row_dtype = DTYPE_OBJECT
 
     def extend(self,
             other: tp.Union['TypeBlocks', tp.Iterable[np.ndarray]]

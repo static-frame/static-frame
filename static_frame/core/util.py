@@ -294,14 +294,15 @@ def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
     return None
 
 
-def concat_resolved(arrays: tp.Iterable[np.ndarray],
+def concat_resolved(
+        arrays: tp.Iterable[np.ndarray],
         axis=0):
     '''
-    Concatenation that uses resolved dtypes to avoid truncation.
+    Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
 
     Axis 0 stacks rows (extends columns); axis 1 stacks columns (extends rows).
 
-    Now shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
+    No shape manipulation will happen, so it is always assumed that all dimensionalities will be common.
     '''
     #all the input array dimensions except for the concatenation axis must match exactly
     if axis is None:
