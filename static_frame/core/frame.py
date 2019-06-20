@@ -551,23 +551,23 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         def blocks():
             for col_idx, name in enumerate(names):
+                # append here as we iterate for usage in get_col_dtype
                 columns_with_index.append(name)
 
-                if name == index_name:
-                    nonlocal index_array
-                    index_array = array[name]
-                    continue
-
-                columns.append(name)
                 # this is not expected to make a copy
+                array_final = array[name]
                 if dtypes:
                     dtype = get_col_dtype(col_idx)
                     if dtype is not None:
-                        yield array[name].astype(dtype)
-                    else:
-                        yield array[name]
-                else:
-                    yield array[name]
+                        array_final = array_final.astype(dtype)
+
+                if name == index_name:
+                    nonlocal index_array
+                    index_array = array_final
+                    continue
+
+                columns.append(name)
+                yield array_final
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())

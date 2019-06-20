@@ -2,6 +2,7 @@ import typing as tp
 from enum import Enum
 
 from functools import partial
+from functools import lru_cache
 from itertools import chain
 from itertools import repeat
 
@@ -29,12 +30,51 @@ from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 
-MAX_ROWS = 10
-MAX_COLUMNS = 20
-
+MAX_ROWS = 8
+MAX_COLUMNS = 10
 
 
 #-------------------------------------------------------------------------------
+# spacings
+
+@lru_cache(maxsize=32)
+def subset_contiguous_sum(target):
+    '''
+    Return an iterabel of integers that sum to the target. This does not find all combinations or permutations, just all combintation of the range from 1 to the number (inclusive).
+    '''
+    # based on https://stackoverflow.com/questions/4632322/finding-all-possible-combinations-of-numbers-to-reach-a-given-sum
+
+    if not (0 < target <= 32):
+        # over sizes of 60 or so performance is noticieable
+        raise RuntimeError(f'target is too large: {target}')
+
+    def subset_sum(numbers, partial=(), partial_sum=0):
+        if partial_sum == target:
+            yield partial
+        if partial_sum > target:
+            return
+        for i, n in enumerate(numbers, start=1):
+            yield from subset_sum(numbers[i:], partial + (n,), partial_sum + n)
+
+    return tuple(subset_sum(range(1, target+1)))
+
+
+def get_spacing(size: int = MAX_COLUMNS):
+    # generate permutations of the orderings of the integers
+    return st.one_of((st.permutations(c) for c in subset_contiguous_sum(size)))
+
+
+# NOTE: this approach fails health check
+# def get_spacing(size: int = MAX_COLUMNS):
+#     return st.lists(st.integers(min_value=1, max_value=size),
+#             min_size=1,
+#             max_size=size,
+#             ).filter(lambda x: sum(x) == size)
+
+
+#-------------------------------------------------------------------------------
+# values
+
 # 55203 is just before "high surrogates", and avoids this exception
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
@@ -51,7 +91,6 @@ ST_LABEL = (st.dates,
     )
 
 ST_VALUE = ST_LABEL + (st.booleans, st.none)
-
 
 def get_value():
     '''
@@ -91,9 +130,10 @@ def get_labels(
 #-------------------------------------------------------------------------------
 # dtypes
 
+
 class DTGroup(Enum):
+    OBJECT = (partial(st.just, DTYPE_OBJECT),) # strategy constantly generating object dtype
     ALL = (hypo_np.scalar_dtypes,)
-    OBJECT = (partial(st.just, DTYPE_OBJECT), ) # strategy constantly generating object dtype
 
     NUMERIC = (hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
@@ -117,6 +157,7 @@ def get_dtype(dtype_group: DTGroup = DTGroup.ALL):
 
 def get_dtypes(
         min_size: int = 0,
+        max_size: int = MAX_COLUMNS,
         dtype_group: DTGroup = DTGroup.ALL,
         ) -> tp.Iterable[np.dtype]:
     return st.lists(get_dtype(dtype_group), min_size=min_size)
@@ -163,6 +204,23 @@ def get_shape_1d2d(
 #-------------------------------------------------------------------------------
 # array generation
 
+def get_array_object(shape, unique: bool):
+        if unique:
+            # if unique, cannot use fill
+            return hypo_np.arrays(
+                    shape=shape,
+                    dtype=get_dtype(DTGroup.OBJECT),
+                    elements=get_value(),
+                    fill=st.nothing(),
+                    unique=unique
+                    )
+        return hypo_np.arrays(
+                shape=shape,
+                dtype=get_dtype(DTGroup.OBJECT),
+                elements=get_value(),
+                fill=st.none(),
+                unique=unique
+                )
 
 def get_array_1d(
         min_size: int = 0,
@@ -171,18 +229,14 @@ def get_array_1d(
         dtype_group: DTGroup = DTGroup.ALL
         ):
 
+    shape = get_shape_1d(min_size=min_size, max_size=max_size)
+
     if dtype_group == DTGroup.OBJECT:
-        return hypo_np.arrays(
-                get_dtype(dtype_group),
-                get_shape_1d(min_size=min_size, max_size=max_size),
-                elements=get_value(),
-                fill=st.nothing(), # force all values from elements
-                unique=unique
-                )
+        return get_array_object(shape=shape, unique=unique)
 
     return hypo_np.arrays(
             get_dtype(dtype_group),
-            get_shape_1d(min_size=min_size, max_size=max_size),
+            shape,
             unique=unique
             )
 
@@ -203,14 +257,17 @@ def get_array_2d(
             min_rows=min_rows,
             max_rows=max_rows,
             min_columns=min_columns,
-            max_columns=max_columns)
+            max_columns=max_columns
+            )
 
-    # TODO: identify object dtypes and populate with values
+    if dtype_group == DTGroup.OBJECT:
+        return get_array_object(shape=shape, unique=unique)
 
     return hypo_np.arrays(
             get_dtype(dtype_group),
             shape=shape,
-            unique=unique)
+            unique=unique
+            )
 
 def get_array_1d2d(
         min_rows=1,
@@ -222,18 +279,25 @@ def get_array_1d2d(
     '''
     For convenience in building blocks, treat row constraints as 1d size constraints.
     '''
-    return st.one_of(
-            get_array_2d(min_rows=min_rows,
-                    max_rows=max_rows,
-                    min_columns=min_columns,
-                    max_columns=max_columns,
-                    dtype_group=dtype_group
-                    ),
-            get_array_1d(min_size=min_rows,
-                    max_size=max_rows,
-                    dtype_group=dtype_group
-                    )
-    )
+    array_2d = get_array_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            dtype_group=dtype_group
+            )
+
+    if 1 in range(min_columns, max_columns + 1):
+        # if min/max columns are given, and column of 1 is not supported, it is incorrect to give back a 1D array (in the context of the usage of this in blocks)
+        return st.one_of(
+                array_2d,
+                get_array_1d(
+                        min_size=min_rows,
+                        max_size=max_rows,
+                        dtype_group=dtype_group
+                        )
+                )
+    return array_2d
 
 #-------------------------------------------------------------------------------
 # aligend arrays for concatenation and type blocks
@@ -252,7 +316,10 @@ def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10):
 
     return st.integers(min_value=1, max_value=MAX_ROWS).flatmap(
         lambda rows: st.lists(
-            get_array_2d(min_rows=rows, max_rows=rows),
+            get_array_2d(
+                min_rows=rows,
+                max_rows=rows,
+                ),
             min_size=min_size,
             max_size=max_size
             )
@@ -270,31 +337,39 @@ def get_blocks(
         min_columns: number of resultant columns in combination of all arrays.
     '''
 
-    def get_arrays(shape):
+    def constructor(shape_column_widths):
+        rows, column_widths = shape_column_widths
+
+        def array_gen():
+            for width in column_widths:
+                if width == 1:
+                    yield get_array_1d2d(
+                        min_rows=rows,
+                        max_rows=rows,
+                        min_columns=width,
+                        max_columns=width,
+                        dtype_group=dtype_group
+                        )
+                else: # has to be 2D
+                    yield get_array_2d(
+                        min_rows=rows,
+                        max_rows=rows,
+                        min_columns=width,
+                        max_columns=width,
+                        dtype_group=dtype_group
+                        )
+
+        return st.tuples(*array_gen())
+
+    def get_column_widths(shape):
         rows, columns = shape
-
-        def is_valid(blocks):
-            '''Filter to block combinations that sum to targetted columns
-            '''
-            return sum(1 if b.ndim == 1 else b.shape[1] for b in blocks) == columns
-
-        # have to use lists instead of iterables, as filter does an iteration
-        return st.lists(get_array_1d2d(
-                    min_rows=rows,
-                    max_rows=rows,
-                    min_columns=1,
-                    max_columns=columns,
-                    dtype_group=dtype_group
-                    ),
-                min_size=1,
-                max_size=columns
-                ).filter(is_valid)
+        return st.tuples(st.just(rows), get_spacing(columns)).flatmap(constructor)
 
     return get_shape_2d(
             min_rows=min_rows,
             max_rows=max_rows,
             min_columns=min_columns,
-            max_columns=max_columns).flatmap(get_arrays)
+            max_columns=max_columns).flatmap(get_column_widths)
 
 
 def get_type_blocks(
@@ -405,12 +480,13 @@ def get_index_hierarchy(
         labels = st.lists(level, min_size=depth, max_size=depth)
 
         # get spacings as integers
-        spacing = st.lists(
-                st.integers(min_value=0, max_value=size),
-                min_size=0,
-                max_size=size
-                ).filter(lambda x: sum(x) == size)
-        spacings = st.lists(spacing, min_size=depth, max_size=depth)
+        # spacing = st.lists(
+        #         st.integers(min_value=0, max_value=size),
+        #         min_size=0,
+        #         max_size=size
+        #         ).filter(lambda x: sum(x) == size)
+
+        spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
 
         return st.tuples(labels, spacings).flatmap(constructor)
 
