@@ -143,6 +143,20 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
             (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
 
+    def test_frame_init_iter(self):
+
+        f1 = Frame(None, index=iter(range(3)), columns=("A",))
+        self.assertEqual(
+            f1.to_pairs(0),
+            (('A', ((0, None), (1, None), (2, None))),)
+        )
+
+        f2 = Frame(None, index=("A",), columns=iter(range(3)))
+        self.assertEqual(
+            f2.to_pairs(0),
+            ((0, (('A', None),)), (1, (('A', None),)), (2, (('A', None),)))
+        )
+
     def test_frame_values_a(self):
         f = sf.Frame([[3]])
         self.assertEqual(f.values.tolist(), [[3]])
