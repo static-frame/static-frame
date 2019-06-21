@@ -27,6 +27,7 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import FrameInitializer
+from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import column_2d_filter
 from static_frame.core.util import column_1d_filter
@@ -793,7 +794,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def __init__(self,
-            data: FrameInitializer = None,
+            data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
             index: IndexInitializer = None,
             columns: IndexInitializer = None,
@@ -804,10 +805,17 @@ class Frame(metaclass=MetaOperatorDelegate):
             ) -> None:
         '''
         Args:
+            data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
             own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
             own_index: if True, the index is taken as is and is not passed to an Index initializer.
         '''
         self._name = name if name is None else name_filter(name)
+
+        columns_empty = columns is None or (
+                hasattr(columns, '__len__') and len(columns) == 0)
+
+        index_empty = index is None or (
+                hasattr(index, '__len__') and len(index) == 0)
 
         #-----------------------------------------------------------------------
         # blocks assignment
@@ -820,32 +828,45 @@ class Frame(metaclass=MetaOperatorDelegate):
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
+
         elif isinstance(data, np.ndarray):
             if own_data:
                 data.flags.writeable = False
+            # from_blocks will apply immutable filter
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
             raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
 
-        elif data is None and (columns is None or index is None):
+        elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
+
             def blocks_constructor(shape):
                 self._blocks = TypeBlocks.from_none(shape)
 
-        elif not hasattr(data, '__len__') and not isinstance(data, str):
-            # data is not None, single element to scale to size of index and columns
+        elif data is FRAME_INITIALIZER_DEFAULT:
+            # data can only be default initializer if one or both indexs are empty
+            raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')
+
+        elif not hasattr(data, '__len__') or isinstance(data, str):
+            # data is not None, and data is a single element to scale to size of index and columns; must defer until after index realization
+
+            if columns_empty or index_empty:
+                raise RuntimeError('cannot supply a single element to Frame constructor when index or columns is empty')
+
             def blocks_constructor(shape):
                 a = np.full(shape, data)
                 a.flags.writeable = False
                 self._blocks = TypeBlocks.from_blocks(a)
+
         else:
-            # could be list of lists to be made into an array
+            # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame.
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
 
         # counts can be zero (not None) if _block was created but is empty
-        row_count, col_count = self._blocks._shape if not blocks_constructor else (None, None)
+        row_count, col_count = (self._blocks._shape
+                if not blocks_constructor else (None, None))
 
         #-----------------------------------------------------------------------
         # index assignment
@@ -856,7 +877,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 and self._COLUMN_CONSTRUCTOR.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
-        elif columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
+        elif columns_empty:
             col_count = 0 if col_count is None else col_count
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
@@ -867,7 +888,7 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
             self._index = index
-        elif index is None or (hasattr(index, '__len__') and len(index) == 0):
+        elif index_empty:
             row_count = 0 if row_count is None else row_count
             self._index = Index(range(row_count),
                     loc_is_iloc=True,
@@ -875,22 +896,22 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             self._index = Index(index)
 
-        # permit bypassing this check if the
-
         if blocks_constructor:
+            # must update the row/col counts, sets self._blocks
             row_count = self._index.__len__()
             col_count = self._columns.__len__()
             blocks_constructor((row_count, col_count))
 
+        # final check of block/index coherence
         if row_count and len(self._index) != row_count:
             # row count might be 0 for an empty DF
             raise RuntimeError(
-                    'Index has incorrect size (got {}, expected {})'.format(
-                    len(self._index), row_count))
+                f'Index has incorrect size (got {len(self._index)}, expected {row_count})'
+            )
         if len(self._columns) != col_count:
             raise RuntimeError(
-                    'Columns has incorrect size (got {}, expected {})'.format(
-                    len(self._columns), col_count))
+                f'Columns has incorrect size (got {len(self._columns)}, expected {col_count})'
+            )
 
     #---------------------------------------------------------------------------
     # name interface

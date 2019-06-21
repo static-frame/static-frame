@@ -55,6 +55,7 @@ SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
 SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
+
 STATIC_ATTR = 'STATIC'
 
 # defaults to float64
@@ -120,11 +121,13 @@ SeriesInitializer = tp.Union[
         tp.Mapping[tp.Hashable, tp.Any],
         int, float, str, bool]
 
+# support single items, or numpy arrays, or values that can be made into a 2D array
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
         np.ndarray,
-        tp.Mapping[tp.Hashable, tp.Iterable[tp.Any]]
         ]
+
+FRAME_INITIALIZER_DEFAULT = object()
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]

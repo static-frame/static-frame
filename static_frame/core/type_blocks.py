@@ -101,6 +101,9 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                     raise Exception('cannot include array with more than 2 dimensions')
 
                 r, c = cls.shape_filter(block)
+
+                # TODO: should we fail if r, c is zero?
+
                 # check number of rows is the same for all blocks
                 if row_count:
                     assert r == row_count, 'mismatched row count: %s: %s' % (r, row_count)

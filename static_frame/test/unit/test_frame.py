@@ -63,7 +63,7 @@ class TestUnit(TestCase):
                 )
 
         # with columns not defined, we create a DF with just an index
-        f2 = FrameGO(None, index=(1,2))
+        f2 = FrameGO(index=(1,2))
         f2['a'] = (-1, -1)
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((1, -1), (2, -1))),)
@@ -142,6 +142,32 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.to_pairs(0),
             (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
+
+    def test_frame_init_j(self):
+        f1 = sf.Frame('q', index=tuple('ab'), columns=tuple('xy'))
+        self.assertEqual(f1.to_pairs(0),
+            (('x', (('a', 'q'), ('b', 'q'))), ('y', (('a', 'q'), ('b', 'q'))))
+            )
+
+    def test_frame_init_k(self):
+        # check that we got autoincrement indices if no col/index provided
+        f1 = Frame([[0, 1], [2, 3]])
+        self.assertEqual(f1.to_pairs(0), ((0, ((0, 0), (1, 2))), (1, ((0, 1), (1, 3)))))
+
+    def test_frame_init_m(self):
+        # cannot create a single element filled Frame specifying a shape (with index and columns) but not specifying a data value
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(index=(3,4,5), columns=list('abv'))
+
+    def test_frame_init_n(self):
+        # cannot supply a single value to unfillabe sized Frame
+
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(None, index=(3,4,5), columns=())
+
+    def test_frame_init_o(self):
+        f1 = Frame()
+        self.assertEqual(f1.shape, (0, 0))
 
     def test_frame_init_iter(self):
 
