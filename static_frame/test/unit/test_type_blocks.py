@@ -1377,6 +1377,24 @@ class TestUnit(TestCase):
         tb1.append(a1)
         self.assertEqual(tb1.shape, (3, 4))
 
+    def test_type_blocks_from_none_b(self):
+
+        with self.assertRaises(RuntimeError):
+            tb1 = TypeBlocks.from_none((1, 5))
+
+        with self.assertRaises(RuntimeError):
+            tb1 = TypeBlocks.from_none((5, 1))
+
+    def test_type_blocks_from_none_c(self):
+
+        for shape in ((0, 3), (3, 0), (0, 0)):
+            tb1 = TypeBlocks.from_none(shape)
+            self.assertEqual(tb1.shape, shape)
+            self.assertEqual(tb1.values.shape, shape)
+            self.assertEqual(tb1.size, 0)
+            self.assertEqual(tb1.nbytes, 0)
+            self.assertEqual(len(tb1), tb1.shape[0])
+
 
     def test_type_blocks_datetime64_a(self):
 

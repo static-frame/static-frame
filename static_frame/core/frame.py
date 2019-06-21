@@ -828,9 +828,9 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif isinstance(data, dict):
             raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
 
-        elif data is None and columns is None:
-            # will have shape of 0,0
-            self._blocks = TypeBlocks.from_none()
+        elif data is None and (columns is None or index is None):
+            def blocks_constructor(shape):
+                self._blocks = TypeBlocks.from_none(shape)
 
         elif not hasattr(data, '__len__') and not isinstance(data, str):
             # data is not None, single element to scale to size of index and columns
@@ -838,13 +838,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                 a = np.full(shape, data)
                 a.flags.writeable = False
                 self._blocks = TypeBlocks.from_blocks(a)
-
         else:
             # could be list of lists to be made into an array
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
-
 
         # counts can be zero (not None) if _block was created but is empty
         row_count, col_count = self._blocks._shape if not blocks_constructor else (None, None)
@@ -859,8 +857,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             # if it is a STATIC index we can assign directly
             self._columns = columns
         elif columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
-            if col_count is None:
-                raise RuntimeError('cannot create columns when no data given')
+            col_count = 0 if col_count is None else col_count
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
                     loc_is_iloc=True,
@@ -871,8 +868,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
             self._index = index
         elif index is None or (hasattr(index, '__len__') and len(index) == 0):
-            if row_count is None:
-                raise RuntimeError('cannot create rows when no data given')
+            row_count = 0 if row_count is None else row_count
             self._index = Index(range(row_count),
                     loc_is_iloc=True,
                     dtype=np.int64)

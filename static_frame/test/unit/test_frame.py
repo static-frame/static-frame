@@ -111,6 +111,38 @@ class TestUnit(TestCase):
             (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
             )
 
+    def test_frame_init_g(self):
+
+        f1 = sf.Frame(index=tuple('abc'))
+        self.assertEqual(f1.shape, (3, 0))
+
+        f2 = sf.Frame(columns=tuple('abc'))
+        self.assertEqual(f2.shape, (0, 3))
+
+        f3 = sf.Frame()
+        self.assertEqual(f3.shape, (0, 0))
+
+    def test_frame_init_h(self):
+
+        f1 = sf.Frame(index=tuple('abc'), columns=())
+        self.assertEqual(f1.shape, (3, 0))
+
+        f2 = sf.Frame(columns=tuple('abc'), index=())
+        self.assertEqual(f2.shape, (0, 3))
+
+        f3 = sf.Frame(columns=(), index=())
+        self.assertEqual(f3.shape, (0, 0))
+
+
+    def test_frame_init_i(self):
+
+        f1 = sf.FrameGO(index=tuple('abc'))
+        f1['x'] = (3, 4, 5)
+        f1['y'] = Series(dict(b=10, c=11, a=12))
+
+        self.assertEqual(f1.to_pairs(0),
+            (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
+
     def test_frame_values_a(self):
         f = sf.Frame([[3]])
         self.assertEqual(f.values.tolist(), [[3]])

@@ -125,7 +125,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
-    def from_element_items(cls, items, shape, dtype):
+    def from_element_items(cls, items, shape, dtype) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
         a = np.full(shape, fill_value=_dtype_to_na(dtype), dtype=dtype)
@@ -136,8 +136,13 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
-    def from_none(cls):
-        return cls(blocks=list(), dtypes=list(), index=list(), shape=(0, 0))
+    def from_none(cls, shape: tp.Tuple[int, int] = (0, 0)) -> 'TypeBlocks':
+        '''
+        Given a shape where one or both axis is 0, return a TypeBlocks instance.
+        '''
+        if not (shape[0] == 0 or shape[1] == 0):
+            raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
+        return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
 
     #---------------------------------------------------------------------------
 
@@ -145,7 +150,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             blocks: tp.Sequence[np.ndarray],
             dtypes: tp.Sequence[np.dtype],
             index: tp.Sequence[tp.Tuple[int, int]],
-            shape: tp.Tuple[int, int] # could be derived
+            shape: tp.Tuple[int, int]
             ) -> None:
         '''
         Args:
@@ -165,9 +170,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             # TODO: this violates the type and may break something downstream
             self._row_dtype = None
 
-        # assert len(self._dtypes) == len(self._index) == self._shape[1]
-
-        # set up callbacks
         self.iloc = GetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
@@ -257,7 +259,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def _blocks_to_array(*,
             blocks: tp.Iterable[np.ndarray],
             shape: tp.Tuple[int, int],
-            row_dtype,
+            row_dtype: tp.Optional[np.dtype],
             row_multiple: bool
             ) -> np.ndarray:
         '''
@@ -271,7 +273,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
-        if not row_multiple: # and shape[0] == 1:
+        # NOTE: row_dtype may be None if a unfillable array; defaults to NP default
+        if not row_multiple:
             # return 1 row TypeBlock as a 1D array with length equal to the number of columns
             array = np.empty(shape[1], dtype=row_dtype)
         else: # get ndim 2 shape array
@@ -691,10 +694,9 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     def __len__(self):
-        '''Length, as with NumPy and Pandas, is the number of rows.
+        '''Length, as with NumPy and Pandas, is the number of rows. Note that A shape of (3, 0) will return a length of 3, even though there is no data.
         '''
         return self._shape[0]
-
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None
@@ -718,7 +720,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def __repr__(self) -> str:
         return repr(self. display())
-
 
     #---------------------------------------------------------------------------
     # extraction utilities
