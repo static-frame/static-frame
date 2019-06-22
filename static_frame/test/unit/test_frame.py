@@ -746,6 +746,23 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_extract_b(self):
+        # examining cases where shape goes to zero in one dimension
+
+        f1 = Frame(None, index=tuple('ab'), columns=('c',))
+        f2 = f1[[]]
+        self.assertEqual(len(f2.columns), 0)
+        self.assertEqual(len(f2.index), 2)
+        self.assertEqual(f2.shape, (2, 0))
+
+
+    def test_frame_extract_c(self):
+        # examining cases where shape goes to zero in one dimension
+        f1 = Frame(None, columns=tuple('ab'), index=('c',))
+        f2 = f1.loc[[]]
+        self.assertEqual(f2.shape, (0, 2))
+        self.assertEqual(len(f2.columns), 2)
+        self.assertEqual(len(f2.index), 0)
 
 
     def test_frame_loc_a(self):
@@ -2108,7 +2125,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 4))
 
         f3 = f1.dropna(axis=1, condition=np.any)
-        self.assertEqual(f3.shape, (0, 0))
+        self.assertEqual(f3.shape, (3, 0))
 
     def test_frame_dropna_b(self):
         f1 = FrameGO([

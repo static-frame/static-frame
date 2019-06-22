@@ -73,12 +73,16 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     @classmethod
     def from_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray]) -> 'TypeBlocks':
+            raw_blocks: tp.Iterable[np.ndarray],
+            shape_reference: tp.Optional[tp.Tuple[int, int]] = None
+            ) -> 'TypeBlocks':
         '''
-        The order of the blocks defines the order of the columns contained.
+        Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
 
         Args:
             raw_blocks: iterable (generator compatible) of NDArrays.
+            shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns.
+
         '''
         blocks = [] # ordered blocks
         index = [] # columns position to blocks key
@@ -92,21 +96,24 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             for i in range(column_count):
                 index.append((block_count, i))
                 dtypes.append(raw_blocks.dtype)
+
         else: # an iterable of blocks
-            row_count = 0
+            row_count = None
             column_count = 0
+
             for block in raw_blocks:
-                assert isinstance(block, np.ndarray), 'found non array block: %s' % block
+                if not isinstance(block, np.ndarray):
+                    raise RuntimeError(f'found non array block: {block}')
+
                 if block.ndim > 2:
-                    raise Exception('cannot include array with more than 2 dimensions')
+                    raise RuntimeError(f'cannot include array with {block.ndim} dimensions')
 
                 r, c = cls.shape_filter(block)
 
-                # TODO: should we fail if r, c is zero?
-
                 # check number of rows is the same for all blocks
-                if row_count:
-                    assert r == row_count, 'mismatched row count: %s: %s' % (r, row_count)
+                if row_count is not None:
+                    if r != row_count:
+                        raise RuntimeError(f'mismatched row count: {f}: {row_count}')
                 else: # assign on first
                     row_count = r
 
@@ -116,10 +123,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 for i in range(c):
                     index.append((block_count, i))
                     dtypes.append(block.dtype)
+
                 column_count += c
                 block_count += 1
 
         # blocks cam be empty
+        if row_count is None and shape_reference is not None:
+            # if columns have gone to zero, and this was created from a TB that had rows, continue to reprsent those rows
+            row_count = shape_reference[0]
+
         return cls(blocks=blocks,
                 dtypes=dtypes,
                 index=index,
@@ -802,6 +814,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         if key is None or (isinstance(key, slice) and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
+
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
@@ -1353,9 +1366,12 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             return TypeBlocks.from_blocks(b[row_key, column])
 
         # pass a generator to from_block; will return a TypeBlocks or a single element
-        return self.from_blocks(self._slice_blocks(
-                row_key=row_key,
-                column_key=column_key))
+        return self.from_blocks(
+                self._slice_blocks(
+                        row_key=row_key,
+                        column_key=column_key),
+                shape_reference=self._shape
+                )
 
 
     def _extract_iloc(self,
