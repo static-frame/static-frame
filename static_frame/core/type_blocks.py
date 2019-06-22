@@ -45,7 +45,7 @@ from static_frame.core.operator_delegate import MetaOperatorDelegate
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(metaclass=MetaOperatorDelegate):
-    '''An ordered collection of potentially heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :py:class:`Frame` for core, unindexed array management.
+    '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :py:class:`Frame` for core, unindexed array management.
     '''
     # related to Pandas BlockManager
     __slots__ = (
@@ -79,6 +79,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
 
+        It is acceptable to construct blocks with a 0-sided shape.
+
         Args:
             raw_blocks: iterable (generator compatible) of NDArrays.
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns.
@@ -110,6 +112,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 r, c = cls.shape_filter(block)
 
+                # NOTE: the presence of blocks with a 0 shape can happen through construction or through slicing.
+
                 # check number of rows is the same for all blocks
                 if row_count is not None:
                     if r != row_count:
@@ -138,7 +142,6 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 shape=(row_count, column_count),
                 )
 
-
     @classmethod
     def from_element_items(cls, items, shape, dtype) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
@@ -149,14 +152,22 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         a.flags.writeable = False
         return cls.from_blocks(a)
 
-
     @classmethod
     def from_none(cls, shape: tp.Tuple[int, int] = (0, 0)) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0, return a TypeBlocks instance.
         '''
-        if not (shape[0] == 0 or shape[1] == 0):
+        rows, columns = shape
+        if not (rows == 0 or columns == 0):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
+
+        # as types are organized vertically, storing an array with 0 rows but > 0 columns is appropriate as it takes type space
+        if rows == 0 and columns > 0:
+            a = np.empty(shape)
+            a.flags.writeable = False
+            return cls.from_blocks(a)
+
+        # for arrays with no width, favor storing shape alone and not creating an array object; the shape will be binding for future appending
         return cls(blocks=list(), dtypes=list(), index=list(), shape=shape)
 
     #---------------------------------------------------------------------------
@@ -326,8 +337,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 row_dtype=self._row_dtype,
                 row_multiple=True)
 
-    def axis_values(self, axis=0, reverse=False) -> tp.Generator[
-            np.ndarray, None, None]:
+    def axis_values(self, axis=0, reverse=False) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays produced along an axis.
 
         Args:
@@ -716,12 +726,20 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''
+        Return a ``Display`` instance.
+        '''
         config = config or DisplayActive.get()
         d = None
         outermost = True # only for the first
-        for idx, block in enumerate(self._blocks):
+        idx = 0
+        for block in self._blocks:
             block = column_2d_filter(block)
+            if block.shape[1] == 0:
+                continue
+
             h = '' if idx > 0 else self.__class__
+
             display = Display.from_values(block,
                     h,
                     config=config,
@@ -731,6 +749,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 outermost = False
             else:
                 d.extend_display(display)
+
+            # explicitly enumerate so as to not count no-width blocks
+            idx += 1
+
         return d
 
     def __repr__(self) -> str:
@@ -1773,22 +1795,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def append(self, block: np.ndarray):
         '''Add a block; an array copy will not be made unless the passed in block is not immutable'''
-        # shape can be 0, 0 if empty
+        # NOTE: shape can be 0, 0 if empty, or any one dimension can be 0. if columns is 0 and rows is non-zero, that row count is binding for appending; if columns is > 0 and rows is zero, that row is binding for appending.
+
         row_count = self._shape[0]
 
         # update shape
-        if block.ndim == 1:
-            if row_count:
-                assert len(block) == row_count, 'mismatched row count'
-            else:
-                row_count = len(block)
-            block_columns = 1
-        else:
-            if row_count:
-                assert block.shape[0] == row_count, 'mismatched row count'
-            else:
-                row_count = block.shape[0]
-            block_columns = block.shape[1]
+        if block.shape[0] != row_count:
+            raise RuntimeError(f'appended block shape {block.shape} does not align with shape {self._shape}')
+
+        block_columns = 1 if block.ndim == 1 else block.shape[1]
 
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)

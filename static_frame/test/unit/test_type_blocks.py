@@ -143,13 +143,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.shape, (3, 4))
 
         self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 'c', 'cd']])
-        #tb1.iloc[0:2]
-
-        #tb1.iloc[0:2, 0:2]
-
-        #tb1.iloc[0,2]
-
-        #tb1.iloc[0, 0:2]
 
         self.assertEqual(tb1.iloc[0, 0:2].shape, (1, 2))
         self.assertEqual(tb1.iloc[0:2, 0:2].shape, (2, 2))
@@ -167,7 +160,6 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.iloc[0:2].shape, (2, 8))
         self.assertEqual(tb1.iloc[1:3].shape, (2, 8))
 
-        #tb1.iloc[0, 1:5]
 
 
     def test_type_blocks_indices_to_contiguous_pairs(self):
@@ -184,14 +176,6 @@ class TestUnit(TestCase):
             [(1, slice(0, 1, None)), (1, slice(2, 3, None)), (2, slice(0, 1, None))]
             )
 
-        # for rows, all areg grouped by 0
-        #self.assertEqual(list(tb1._key_to_block_slices(1, axis=0)), [(0, 1)])
-        #self.assertEqual(list(tb1._key_to_block_slices((0,2), axis=0)),
-            #[(0, slice(0, 1, None)), (0, slice(2, 3, None))]
-            #)
-        #self.assertEqual(list(tb1._key_to_block_slices((0,1), axis=0)),
-            #[(0, slice(0, 2, None))]
-            #)
 
 
 
@@ -1365,13 +1349,13 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
 
-        tb1 = TypeBlocks.from_none()
+        tb1 = TypeBlocks.from_none((3, 0))
         tb1.append(a1)
         self.assertEqual(tb1.shape, (3, 3))
         tb1.append(a4)
         self.assertEqual(tb1.shape, (3, 4))
 
-        tb1 = TypeBlocks.from_none()
+        tb1 = TypeBlocks.from_none((3, 0))
         tb1.append(a4)
         self.assertEqual(tb1.shape, (3, 1))
         tb1.append(a1)
@@ -1404,7 +1388,7 @@ class TestUnit(TestCase):
         a3 = np.array([d('2016-01-01'), d('2016-01-02'), d('2018-01-03')])
 
 
-        tb1 = TypeBlocks.from_none()
+        tb1 = TypeBlocks.from_none((3, 0))
         tb1.append(a1)
         tb1.append(a2)
         tb1.append(a3)
@@ -1737,6 +1721,65 @@ class TestUnit(TestCase):
                 [3, 'a', 'b', None, 10, 10]],
                 match_dtype=object
                 )
+
+
+    def test_type_blocks_from_blocks_a(self):
+
+        a1 = np.full((3, 0), False)
+        a2 = np.full((3, 4), 'x')
+        tb = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb.shape, (3, 4))
+        self.assertEqual(tb.values.tolist(),
+            [['x', 'x', 'x', 'x'],
+            ['x', 'x', 'x', 'x'],
+            ['x', 'x', 'x', 'x']])
+
+        a3 = next(tb.axis_values(0))
+        self.assertEqual(a3.tolist(),
+            ['x', 'x', 'x']
+            )
+
+    def test_type_blocks_from_blocks_b(self):
+
+        a1 = np.full((3, 0), False)
+        a2 = np.full((3, 2), 'x')
+        a3 = np.full((3, 0), False)
+        a4 = np.full((3, 2), 'y')
+        a5 = np.full((3, 0), False)
+
+        tb = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+        self.assertEqual(tb.shape, (3, 4))
+        self.assertEqual(tb.values.tolist(),
+            [['x', 'x', 'y', 'y'],
+            ['x', 'x', 'y', 'y'],
+            ['x', 'x', 'y', 'y']])
+
+        a3 = next(tb.axis_values(0, reverse=True))
+        self.assertEqual(a3.tolist(),
+            ['y', 'y', 'y']
+            )
+
+
+    def test_type_blocks_from_blocks_c(self):
+
+        a1 = np.full((0, 2), False)
+        a2 = np.full((0, 1), 'x')
+
+        tb = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb.shape, (0, 3))
+        self.assertEqual(len(tb), 0)
+
+        self.assertEqual(tb.dtypes.tolist(),
+            [np.dtype('bool'), np.dtype('bool'), np.dtype('<U1')])
+
+        tb.append(np.empty((0, 2)))
+        self.assertEqual(tb.shape, (0, 5))
+        self.assertEqual(len(tb), 0)
+
+        with self.assertRaises(RuntimeError):
+            tb.append(np.empty((3, 0)))
+
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
