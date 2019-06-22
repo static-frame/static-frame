@@ -1349,13 +1349,13 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         a4 = np.array([None, None, None])
 
-        tb1 = TypeBlocks.from_none((3, 0))
+        tb1 = TypeBlocks.from_zero_size_shape((3, 0))
         tb1.append(a1)
         self.assertEqual(tb1.shape, (3, 3))
         tb1.append(a4)
         self.assertEqual(tb1.shape, (3, 4))
 
-        tb1 = TypeBlocks.from_none((3, 0))
+        tb1 = TypeBlocks.from_zero_size_shape((3, 0))
         tb1.append(a4)
         self.assertEqual(tb1.shape, (3, 1))
         tb1.append(a1)
@@ -1364,15 +1364,15 @@ class TestUnit(TestCase):
     def test_type_blocks_from_none_b(self):
 
         with self.assertRaises(RuntimeError):
-            tb1 = TypeBlocks.from_none((1, 5))
+            tb1 = TypeBlocks.from_zero_size_shape((1, 5))
 
         with self.assertRaises(RuntimeError):
-            tb1 = TypeBlocks.from_none((5, 1))
+            tb1 = TypeBlocks.from_zero_size_shape((5, 1))
 
     def test_type_blocks_from_none_c(self):
 
         for shape in ((0, 3), (3, 0), (0, 0)):
-            tb1 = TypeBlocks.from_none(shape)
+            tb1 = TypeBlocks.from_zero_size_shape(shape)
             self.assertEqual(tb1.shape, shape)
             self.assertEqual(tb1.values.shape, shape)
             self.assertEqual(tb1.size, 0)
@@ -1388,7 +1388,7 @@ class TestUnit(TestCase):
         a3 = np.array([d('2016-01-01'), d('2016-01-02'), d('2018-01-03')])
 
 
-        tb1 = TypeBlocks.from_none((3, 0))
+        tb1 = TypeBlocks.from_zero_size_shape((3, 0))
         tb1.append(a1)
         tb1.append(a2)
         tb1.append(a3)

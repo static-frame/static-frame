@@ -153,9 +153,9 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return cls.from_blocks(a)
 
     @classmethod
-    def from_none(cls, shape: tp.Tuple[int, int] = (0, 0)) -> 'TypeBlocks':
+    def from_zero_size_shape(cls, shape: tp.Tuple[int, int] = (0, 0)) -> 'TypeBlocks':
         '''
-        Given a shape where one or both axis is 0, return a TypeBlocks instance.
+        Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
         '''
         rows, columns = shape
         if not (rows == 0 or columns == 0):

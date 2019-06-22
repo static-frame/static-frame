@@ -841,7 +841,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
 
             def blocks_constructor(shape):
-                self._blocks = TypeBlocks.from_none(shape)
+                self._blocks = TypeBlocks.from_zero_size_shape(shape)
 
         elif data is FRAME_INITIALIZER_DEFAULT:
             # data can only be default initializer if one or both indexs are empty
