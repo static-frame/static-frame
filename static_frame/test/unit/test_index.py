@@ -965,6 +965,10 @@ class TestUnit(TestCase):
                 [4, 5, 6, 7, 8])
 
 
+    def test_index_empty_a(self):
+        idx1 = Index(())
+        idx2 = Index(iter(()))
+        self.assertEqual(idx1.dtype, idx2.dtype)
 
 
 if __name__ == '__main__':

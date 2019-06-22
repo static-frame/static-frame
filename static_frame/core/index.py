@@ -294,9 +294,13 @@ class Index(IndexBase,
             # else:
             #     labels = np.fromiter(mapping.keys(), count=len(mapping), dtype=dtype)
 
-            labels = np.empty(len(mapping), dtype=dtype if dtype else object)
-            for k, v in mapping.items():
-                labels[v] = k
+            labels_len = len(mapping)
+            if labels_len == 0:
+                labels = np.empty(labels_len) # get defualt NP dtype
+            else:
+                labels = np.empty(labels_len, dtype=dtype if dtype else object)
+                for k, v in mapping.items():
+                    labels[v] = k
 
         labels.flags.writeable = False
         return labels
