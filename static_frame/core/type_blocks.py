@@ -46,6 +46,8 @@ from static_frame.core.operator_delegate import MetaOperatorDelegate
 #-------------------------------------------------------------------------------
 class TypeBlocks(metaclass=MetaOperatorDelegate):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :py:class:`Frame` for core, unindexed array management.
+
+    A TypeBlocks instance can have a zero size shape (where the length of one axis is zero). Internally, when axis 0 (rows) is of size 0, we store similarly sized arrays. When axis 1 (columns) is of size 0, we do not store arrays, as such arrays do not define a type (as tyupes are defined by columns).
     '''
     # related to Pandas BlockManager
     __slots__ = (
@@ -87,13 +89,20 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         '''
         blocks = [] # ordered blocks
-        index = [] # columns position to blocks key
         dtypes = [] # column position to dtype
+        index = [] # columns position to blocks key
         block_count = 0
 
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
             row_count, column_count = cls.shape_filter(raw_blocks)
+            if column_count == 0:
+                # set shape but do not store array
+                return cls(blocks=blocks,
+                        dtypes=dtypes,
+                        index=index,
+                        shape=(row_count, column_count)
+                        )
             blocks.append(immutable_filter(raw_blocks))
             for i in range(column_count):
                 index.append((block_count, i))
@@ -112,14 +121,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 r, c = cls.shape_filter(block)
 
-                # NOTE: the presence of blocks with a 0 shape can happen through construction or through slicing.
-
                 # check number of rows is the same for all blocks
-                if row_count is not None:
-                    if r != row_count:
-                        raise RuntimeError(f'mismatched row count: {f}: {row_count}')
+                if row_count is not None and r != row_count:
+                    raise RuntimeError(f'mismatched row count: {f}: {row_count}')
                 else: # assign on first
                     row_count = r
+
+                # we keep array with 0 rows but > 0 columns, as they take type spce in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
+                if c == 0:
+                    continue
 
                 blocks.append(immutable_filter(block))
 
@@ -193,7 +203,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if self._blocks:
             self._row_dtype = resolve_dtype_iter(b.dtype for b in self._blocks)
         else:
-            # TODO: this violates the type and may break something downstream
+            # NOTE: this violates the type and may break something downstream; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
         self.iloc = GetItem(self._extract_iloc)
