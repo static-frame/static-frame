@@ -44,6 +44,9 @@ def subset_contiguous_sum(target):
     '''
     # based on https://stackoverflow.com/questions/4632322/finding-all-possible-combinations-of-numbers-to-reach-a-given-sum
 
+    if target == 0:
+        return ()
+
     if not (0 < target <= 32):
         # over sizes of 60 or so performance is noticieable
         raise RuntimeError(f'target is too large: {target}')
@@ -100,9 +103,19 @@ def get_value():
 
 def get_label():
     '''
-    A hashable suitable for use in an Index.
+    A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs
     '''
-    return st.one_of(strat() for strat in ST_LABEL)
+    # return st.one_of(strat() for strat in ST_LABEL)
+
+    def strategies():
+        for strat in ST_LABEL:
+            if strat in (st.floats, st.complex_numbers):
+                yield strat().filter(lambda x: not np.isnan(x))
+            else:
+                yield strat()
+
+    return st.one_of(strategies())
+
 
 def get_labels(
         min_size: int = 0,
@@ -111,18 +124,26 @@ def get_labels(
     Labels are suitable for creating non-date Indices (though they might include dates)
     '''
     # drawing from value so as to include None and booleans
-    list_mixed = st.lists(get_value(),
+    list_mixed = st.lists(get_label(),
             min_size=min_size,
             max_size=max_size,
             unique=True)
 
-    lists = chain(
-            (list_mixed,),
-            (st.lists(
-                    strat(),
+    def lists_homogenous():
+        for strat in ST_LABEL:
+            if strat in (st.floats, st.complex_numbers):
+                strat = strat().filter(lambda x: not np.isnan(x))
+            else:
+                strat = strat()
+            yield st.lists(
+                    strat,
                     min_size=min_size,
                     max_size=max_size,
-                    unique=True) for strat in ST_LABEL),
+                    unique=True)
+
+    lists = chain(
+            (list_mixed,),
+            lists_homogenous(),
             )
     return st.one_of(lists)
 
@@ -376,9 +397,9 @@ def get_blocks(
 
 
 def get_type_blocks(
-        min_rows=1,
+        min_rows=0,
         max_rows=MAX_ROWS,
-        min_columns=1,
+        min_columns=0,
         max_columns=MAX_COLUMNS,
         dtype_group=DTGroup.ALL
         ):

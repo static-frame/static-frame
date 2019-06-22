@@ -97,6 +97,20 @@ class TestUnit(TestCase):
         self.assertEqual(col_count, cols)
 
 
+    @given(sfst.get_index())
+    def test_get_index(self, idx):
+        self.assertTrue(isinstance(idx, Index))
+        self.assertEqual(len(idx), len(idx.values))
+
+
+
+
+    @given(sfst.get_index_hierarchy())
+    def test_get_index(self, idx):
+        self.assertTrue(isinstance(idx, IndexHierarchy))
+        self.assertTrue(idx.depth > 1)
+        self.assertEqual(len(idx), len(idx.values))
+
 
 if __name__ == '__main__':
     unittest.main()
