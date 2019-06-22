@@ -57,6 +57,22 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(array, np.ndarray))
         self.assertTrue(array.ndim in (1, 2))
 
+    @given(sfst.get_arrays_2d_aligned_columns(min_size=2))
+    def test_get_arrays_2s_aligned_columns(self, arrays):
+        array_iter = iter(arrays)
+        a1 = next(array_iter)
+        match = a1.shape[1]
+        for array in array_iter:
+            self.assertEqual(array.shape[1], match)
+
+    @given(sfst.get_arrays_2d_aligned_rows(min_size=2))
+    def test_get_arrays_2s_aligned_rows(self, arrays):
+        array_iter = iter(arrays)
+        a1 = next(array_iter)
+        match = a1.shape[0]
+        for array in array_iter:
+            self.assertEqual(array.shape[0], match)
+
     @given(sfst.get_blocks())
     def test_get_blocks(self, blocks):
         self.assertTrue(isinstance(blocks, tuple))

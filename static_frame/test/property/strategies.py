@@ -306,7 +306,10 @@ def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10):
 
     return st.integers(min_value=1, max_value=MAX_COLUMNS).flatmap(
         lambda columns: st.lists(
-            get_array_2d(min_columns=columns, max_columns=columns),
+            get_array_2d(
+                min_columns=columns,
+                max_columns=columns
+                ),
             min_size=min_size,
             max_size=max_size
             )
@@ -478,13 +481,6 @@ def get_index_hierarchy(
                     max_size=size,
                     unique=True)
         labels = st.lists(level, min_size=depth, max_size=depth)
-
-        # get spacings as integers
-        # spacing = st.lists(
-        #         st.integers(min_value=0, max_value=size),
-        #         min_size=0,
-        #         max_size=size
-        #         ).filter(lambda x: sum(x) == size)
 
         spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
 
