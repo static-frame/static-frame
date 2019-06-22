@@ -403,23 +403,6 @@ class TestUnit(TestCase):
         self.assertTrue((tb1.mloc[:2] == tb1.iloc[0:2, 0:2].mloc).all())
 
 
-    def test_type_blocks_append(self):
-        a1 = np.array([1, 2, 3])
-        a2 = np.array([False, True, False])
-        tb1 = TypeBlocks.from_blocks((a1, a2))
-        self.assertTrue(tb1.shape, (3, 2))
-
-        tb1.append(np.array((3,5,4)))
-        self.assertTrue(tb1.shape, (3, 3))
-
-        tb1.append(np.array([(3,5),(4,6),(5,10)]))
-        self.assertTrue(tb1.shape, (3, 5))
-
-        self.assertEqual(tb1.iloc[0].values.tolist(), [[1, False, 3, 3, 5]])
-        self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 5, 4, 6]])
-        self.assertEqual(tb1.iloc[:, 3].values.tolist(), [[3], [4], [5]])
-
-
 
 
     def test_type_blocks_unary_operator_a(self):
@@ -1780,6 +1763,94 @@ class TestUnit(TestCase):
             tb.append(np.empty((3, 0)))
 
         # import ipdb; ipdb.set_trace()
+
+
+    def test_type_blocks_from_blocks_d(self):
+
+        a1 = np.full(0, False)
+        a2 = np.full(0, 'x')
+
+        # if the row lentgh is defined as 0, adding 1D arrays, even if empty, count as adding a column, as a 1D array is by definition shape (0, 1)
+        tb = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb.shape, (0, 2))
+        self.assertEqual(len(tb), 0)
+        self.assertEqual(len(tb.shapes), 2)
+
+        tb.append(np.empty((0, 2)))
+        self.assertEqual(tb.shape, (0, 4))
+        self.assertEqual(len(tb.shapes), 3)
+
+        tb.append(np.empty((0, 0)))
+        self.assertEqual(tb.shape, (0, 4))
+        self.assertEqual(len(tb.shapes), 3)
+
+        tb.append(np.empty(0))
+        self.assertEqual(tb.shape, (0, 5))
+        self.assertEqual(len(tb.shapes), 4)
+
+
+    def test_type_blocks_append_a(self):
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertTrue(tb1.shape, (3, 2))
+
+        tb1.append(np.array((3,5,4)))
+        self.assertTrue(tb1.shape, (3, 3))
+
+        tb1.append(np.array([(3,5),(4,6),(5,10)]))
+        self.assertTrue(tb1.shape, (3, 5))
+
+        self.assertEqual(tb1.iloc[0].values.tolist(), [[1, False, 3, 3, 5]])
+        self.assertEqual(tb1.iloc[1].values.tolist(), [[2, True, 5, 4, 6]])
+        self.assertEqual(tb1.iloc[:, 3].values.tolist(), [[3], [4], [5]])
+
+
+    def test_type_blocks_append_b(self):
+
+        a1 = np.full((2, 3), False)
+
+        tb = TypeBlocks.from_blocks(a1)
+        tb.append(np.empty((2, 0)))
+
+        self.assertEqual(tb.shape, (2, 3))
+        # array was not added
+        self.assertEqual(len(tb.shapes), 1)
+
+
+    def test_type_blocks_append_c(self):
+
+        a1 = np.full((0, 3), False)
+
+        tb = TypeBlocks.from_blocks(a1)
+        tb.append(np.empty((0, 0)))
+
+        self.assertEqual(tb.shape, (0, 3))
+        # array was not added
+        self.assertEqual(len(tb.shapes), 1)
+
+
+
+    def test_type_blocks_append_d(self):
+
+        tb = TypeBlocks.from_zero_size_shape((0, 0))
+        tb.append(np.empty((0, 0)))
+
+        self.assertEqual(tb.shape, (0, 0))
+        # array was not added
+        self.assertEqual(len(tb.shapes), 0)
+
+
+    def test_type_blocks_append_e(self):
+
+        # given a zero row TB, appending a zero length array could mean changing the shape, as the row aligns
+        tb = TypeBlocks.from_zero_size_shape((0, 0))
+        tb.append(np.empty(0))
+
+        self.assertEqual(tb.shape, (0, 1))
+        # array was not added
+        self.assertEqual(len(tb.shapes), 1)
+
 
 
 if __name__ == '__main__':

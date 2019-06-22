@@ -1805,7 +1805,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def append(self, block: np.ndarray):
         '''Add a block; an array copy will not be made unless the passed in block is not immutable'''
-        # NOTE: shape can be 0, 0 if empty, or any one dimension can be 0. if columns is 0 and rows is non-zero, that row count is binding for appending; if columns is > 0 and rows is zero, that row is binding for appending.
+        # NOTE: shape can be 0, 0 if empty, or any one dimension can be 0. if columns is 0 and rows is non-zero, that row count is binding for appending (though the array need no tbe appended); if columns is > 0 and rows is zero, that row is binding for appending (and the array should be appended).
 
         row_count = self._shape[0]
 
@@ -1813,7 +1813,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         if block.shape[0] != row_count:
             raise RuntimeError(f'appended block shape {block.shape} does not align with shape {self._shape}')
 
-        block_columns = 1 if block.ndim == 1 else block.shape[1]
+        if block.ndim == 1:
+            # length already confirmed to match row count; even if this is a zero length 1D array, we keep it as it (by definition) defines a column (if the existing row_count is zero). said another way, a zero length, 1D array always has a shape of (0, 1)
+            block_columns = 1
+        else:
+            block_columns = block.shape[1]
+            if block_columns == 0:
+                # do not append 0 width arrays
+                return
 
         # extend shape, or define it if not yet set
         self._shape = (row_count, self._shape[1] + block_columns)
