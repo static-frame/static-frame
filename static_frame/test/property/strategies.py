@@ -82,18 +82,33 @@ def get_spacing(size: int = MAX_COLUMNS):
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
 
-ST_LABEL = (st.dates,
-        st.datetimes,
-        st.integers,
+
+ST_TYPES_FLOAT_NAN = (
         st.floats,
         st.complex_numbers,
-        # st.decimals,
-        st.fractions,
-        partial(st.characters, **ST_CODEPOINT_LIMIT),
-        partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))
     )
 
-ST_VALUE = ST_LABEL + (st.booleans, st.none)
+ST_TYPES_FLOAT_NO_NAN = (
+        lambda *args, **kwargs: st.floats(*args, **kwargs).filter(
+                lambda x: not np.isnan(x)),
+
+        lambda *args, **kwargs: st.complex_numbers(*args, **kwargs).filter(
+                lambda x: not np.isnan(x)),
+    )
+
+
+ST_TYPES_COMMON = (
+        st.integers,
+        # st.decimals,
+        st.fractions,
+        st.dates,
+        st.datetimes,
+        partial(st.characters, **ST_CODEPOINT_LIMIT),
+        partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))
+        )
+
+ST_TYPES_FOR_UNIQUE = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON
+ST_VALUE = ST_TYPES_FLOAT_NAN + ST_TYPES_COMMON + (st.booleans, st.none)
 
 def get_value():
     '''
@@ -105,16 +120,9 @@ def get_label():
     '''
     A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs
     '''
-    # return st.one_of(strat() for strat in ST_LABEL)
+    # return st.one_of(strat() for strat in ST_TYPES_FOR_UNIQUE)
 
-    def strategies():
-        for strat in ST_LABEL:
-            if strat in (st.floats, st.complex_numbers):
-                yield strat().filter(lambda x: not np.isnan(x))
-            else:
-                yield strat()
-
-    return st.one_of(strategies())
+    return st.one_of((strat() for strat in ST_TYPES_FOR_UNIQUE))
 
 
 def get_labels(
@@ -123,29 +131,22 @@ def get_labels(
     '''
     Labels are suitable for creating non-date Indices (though they might include dates)
     '''
-    # drawing from value so as to include None and booleans
-    list_mixed = st.lists(get_label(),
-            min_size=min_size,
-            max_size=max_size,
-            unique=True)
+    def gen():
 
-    def lists_homogenous():
-        for strat in ST_LABEL:
-            if strat in (st.floats, st.complex_numbers):
-                strat = strat().filter(lambda x: not np.isnan(x))
-            else:
-                strat = strat()
+        # drawing from value so as to include None and booleans
+        yield st.lists(get_value(),
+                min_size=min_size,
+                max_size=max_size,
+                unique=True)
+
+        for strat in ST_TYPES_FOR_UNIQUE:
             yield st.lists(
-                    strat,
+                    strat(),
                     min_size=min_size,
                     max_size=max_size,
                     unique=True)
 
-    lists = chain(
-            (list_mixed,),
-            lists_homogenous(),
-            )
-    return st.one_of(lists)
+    return st.one_of(gen())
 
 
 #-------------------------------------------------------------------------------
