@@ -226,7 +226,7 @@ def get_shape_1d2d(
 #-------------------------------------------------------------------------------
 # array generation
 
-def get_array_object(shape, unique: bool):
+def get_array_object(shape=(MAX_ROWS, MAX_COLUMNS), unique: bool = True):
         if unique:
             # if unique, cannot use fill
             return hypo_np.arrays(
