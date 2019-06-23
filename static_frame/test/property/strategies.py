@@ -82,21 +82,6 @@ def get_spacing(size: int = MAX_COLUMNS):
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
 
-
-ST_TYPES_FLOAT_NAN = (
-        st.floats,
-        st.complex_numbers,
-    )
-
-ST_TYPES_FLOAT_NO_NAN = (
-        lambda *args, **kwargs: st.floats(*args, **kwargs).filter(
-                lambda x: not np.isnan(x)),
-
-        lambda *args, **kwargs: st.complex_numbers(*args, **kwargs).filter(
-                lambda x: not np.isnan(x)),
-    )
-
-
 ST_TYPES_COMMON = (
         st.integers,
         # st.decimals,
@@ -105,6 +90,18 @@ ST_TYPES_COMMON = (
         st.datetimes,
         partial(st.characters, **ST_CODEPOINT_LIMIT),
         partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))
+        )
+
+ST_TYPES_FLOAT_NAN = (
+        st.floats,
+        st.complex_numbers,
+        )
+
+filter_nan = lambda x: not np.isnan(x)
+
+ST_TYPES_FLOAT_NO_NAN = (
+        lambda: st.floats().filter(filter_nan),
+        lambda: st.complex_numbers().filter(filter_nan)
         )
 
 ST_TYPES_FOR_UNIQUE = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON
@@ -226,23 +223,50 @@ def get_shape_1d2d(
 #-------------------------------------------------------------------------------
 # array generation
 
-def get_array_object(shape=(MAX_ROWS, MAX_COLUMNS), unique: bool = True):
-        if unique:
-            # if unique, cannot use fill
-            return hypo_np.arrays(
-                    shape=shape,
-                    dtype=get_dtype(DTGroup.OBJECT),
-                    elements=get_value(),
-                    fill=st.nothing(),
-                    unique=unique
-                    )
+def get_array_object(
+        shape=(MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True):
+    if unique:
+        # if unique, cannot use fill
         return hypo_np.arrays(
                 shape=shape,
                 dtype=get_dtype(DTGroup.OBJECT),
                 elements=get_value(),
-                fill=st.none(),
+                fill=st.nothing(),
                 unique=unique
                 )
+    return hypo_np.arrays(
+            shape=shape,
+            dtype=get_dtype(DTGroup.OBJECT),
+            elements=get_value(),
+            fill=st.none(),
+            unique=unique
+            )
+
+
+def get_array_from_dtype_group(
+        dtype_group: DTGroup = DTGroup.ALL,
+        shape=(MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True):
+    '''
+    Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
+    '''
+    array_object = get_array_object(
+            shape=shape,
+            unique=unique
+            )
+    array_non_object = hypo_np.arrays(
+            get_dtype(dtype_group),
+            shape,
+            unique=unique
+            )
+
+    if dtype_group == DTGroup.OBJECT:
+        return array_object
+    if dtype_group == DTGroup.ALL:
+        return st.one_of(array_non_object, array_non_object, array_object)
+    return array_non_object
+
 
 def get_array_1d(
         min_size: int = 0,
@@ -252,18 +276,11 @@ def get_array_1d(
         ):
 
     shape = get_shape_1d(min_size=min_size, max_size=max_size)
-
-    if dtype_group == DTGroup.OBJECT:
-        return get_array_object(shape=shape, unique=unique)
-
-    return hypo_np.arrays(
-            get_dtype(dtype_group),
-            shape,
+    return get_array_from_dtype_group(
+            dtype_group=dtype_group,
+            shape=shape,
             unique=unique
             )
-
-get_array_1d_object = partial(get_array_1d, dtype_group=DTGroup.OBJECT)
-get_array_1d_object.__name__ = 'get_array_1d_object'
 
 
 def get_array_2d(
@@ -282,14 +299,12 @@ def get_array_2d(
             max_columns=max_columns
             )
 
-    if dtype_group == DTGroup.OBJECT:
-        return get_array_object(shape=shape, unique=unique)
-
-    return hypo_np.arrays(
-            get_dtype(dtype_group),
+    return get_array_from_dtype_group(
+            dtype_group=dtype_group,
             shape=shape,
             unique=unique
             )
+
 
 def get_array_1d2d(
         min_rows=1,
@@ -367,22 +382,13 @@ def get_blocks(
 
         def array_gen():
             for width in column_widths:
-                if width == 1:
-                    yield get_array_1d2d(
-                        min_rows=rows,
-                        max_rows=rows,
-                        min_columns=width,
-                        max_columns=width,
-                        dtype_group=dtype_group
-                        )
-                else: # has to be 2D
-                    yield get_array_2d(
-                        min_rows=rows,
-                        max_rows=rows,
-                        min_columns=width,
-                        max_columns=width,
-                        dtype_group=dtype_group
-                        )
+                yield get_array_1d2d(
+                    min_rows=rows,
+                    max_rows=rows,
+                    min_columns=width,
+                    max_columns=width,
+                    dtype_group=dtype_group
+                    )
 
         return st.tuples(*array_gen())
 
@@ -489,6 +495,7 @@ def get_index_hierarchy(
                 st.just(label_gen())
                 )
 
+    # generate depth-sized lists of candidate leabels and spacings
     def get_labels(depth_size):
         depth, size = depth_size
 
@@ -502,12 +509,12 @@ def get_index_hierarchy(
                     min_size=size,
                     max_size=size,
                     unique=True)
+
         labels = st.lists(level, min_size=depth, max_size=depth)
-
         spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
-
         return st.tuples(labels, spacings).flatmap(constructor)
 
+    # generate depth and size, pass to get get_labels
     return st.tuples(
             st.integers(min_value=min_depth, max_value=max_depth),
             st.integers(min_value=min_size, max_value=max_size)

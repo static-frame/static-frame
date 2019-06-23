@@ -103,13 +103,34 @@ class TestUnit(TestCase):
         self.assertEqual(len(idx), len(idx.values))
 
 
-
-
     @given(sfst.get_index_hierarchy())
     def test_get_index(self, idx):
         self.assertTrue(isinstance(idx, IndexHierarchy))
         self.assertTrue(idx.depth > 1)
         self.assertEqual(len(idx), len(idx.values))
+
+
+
+    @given(sfst.get_series())
+    def test_get_series(self, series):
+        self.assertTrue(isinstance(series, Series))
+        self.assertEqual(len(series), len(series.values))
+
+
+
+    @given(sfst.get_frame())
+    def test_get_frame(self, frame):
+        self.assertTrue(isinstance(frame, Frame))
+        self.assertEqual(frame.shape, frame.values.shape)
+
+
+
+    @given(sfst.get_frame(index_cls=IndexHierarchy, columns_cls=IndexHierarchy))
+    def test_get_frame_hierarchy(self, frame):
+        self.assertTrue(isinstance(frame, Frame))
+        self.assertTrue(frame.index.depth > 1)
+        self.assertTrue(frame.columns.depth > 1)
+        self.assertEqual(frame.shape, frame.values.shape)
 
 
 if __name__ == '__main__':
