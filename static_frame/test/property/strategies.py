@@ -255,7 +255,8 @@ def get_array_from_dtype_group(
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
 
-    # TODO: apply when necessary with .map call on array generators
+    # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
+
     def fill_na(array):
         if array.dtype.kind in DTYPE_NAN_KIND:
             is_nan = np.isnan(array)
