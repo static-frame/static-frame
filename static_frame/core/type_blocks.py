@@ -123,7 +123,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
                 # check number of rows is the same for all blocks
                 if row_count is not None and r != row_count:
-                    raise RuntimeError(f'mismatched row count: {f}: {row_count}')
+                    raise RuntimeError(f'mismatched row count: {r}: {row_count}')
                 else: # assign on first
                     row_count = r
 

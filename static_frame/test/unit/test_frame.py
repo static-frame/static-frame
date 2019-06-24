@@ -2906,6 +2906,19 @@ class TestUnit(TestCase):
             sf.Frame.from_concat((frame1, frame2))
 
 
+    def test_frame_from_concat_u(self):
+        # this fails; figure out why
+        a = sf.Series(('a', 'b', 'c'), index=range(3, 6))
+        f = sf.Frame.from_concat((
+                a,
+                sf.Series(a.index.values, index=a.index)),
+                axis=0,
+                columns=(3, 4, 5), index=(1,2))
+
+        self.assertEqual(f.to_pairs(0),
+                ((3, ((1, 'a'), (2, 3))), (4, ((1, 'b'), (2, 4))), (5, ((1, 'c'), (2, 5))))
+                )
+
     def test_frame_set_index_a(self):
         records = (
                 (2, 2, 'a', False, False),
@@ -3705,11 +3718,15 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, (150, 5))
 
 
-    @unittest.skip('needs investigation')
-    def test_frame_from_concat_x(self):
-        # this fails; figure out why
-        a = sf.Series(('a', 'b', 'c'), index=range(3, 6))
-        sf.Frame.from_concat((a, sf.Series(a.index.values, index=a.index)), axis=0, columns=('a','b','c'), index=(1,2))
+    def test_frame_from_dict_a(self):
+
+        with self.assertRaises(RuntimeError):
+            # mismatched length
+            sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
