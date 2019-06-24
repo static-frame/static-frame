@@ -8,7 +8,7 @@ import numpy as np
 
 
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import _UNIT_SLICE
+from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import INT_TYPES
@@ -826,7 +826,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         for idx, b in enumerate(self._blocks):
             if b.ndim == 1:
-                yield (idx, _UNIT_SLICE) # cannot give an integer here instead of a slice
+                yield (idx, UNIT_SLICE) # cannot give an integer here instead of a slice
             else:
                 yield (idx, slice(0, b.shape[1]))
 

@@ -12,6 +12,7 @@ from hypothesis.extra import numpy as hypo_np
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame import TypeBlocks
 from static_frame import Index
@@ -104,8 +105,13 @@ ST_TYPES_FLOAT_NO_NAN = (
         lambda: st.complex_numbers().filter(filter_nan)
         )
 
+ST_TYPES_UNARY_BINARY = (st.booleans, st.none)
+
+# common collections
+
 ST_TYPES_FOR_UNIQUE = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON
-ST_VALUE = ST_TYPES_FLOAT_NAN + ST_TYPES_COMMON + (st.booleans, st.none)
+ST_TYPES_FOR_UNIQUE_MIXED = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
+ST_VALUE = ST_TYPES_FLOAT_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
 
 def get_value():
     '''
@@ -115,11 +121,9 @@ def get_value():
 
 def get_label():
     '''
-    A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs
+    A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs, and thus we must filter out NaNs in advance.
     '''
-    # return st.one_of(strat() for strat in ST_TYPES_FOR_UNIQUE)
-
-    return st.one_of((strat() for strat in ST_TYPES_FOR_UNIQUE))
+    return st.one_of((strat() for strat in ST_TYPES_FOR_UNIQUE_MIXED))
 
 
 def get_labels(
@@ -130,8 +134,7 @@ def get_labels(
     '''
     def gen():
 
-        # drawing from value so as to include None and booleans
-        yield st.lists(get_value(),
+        yield st.lists(get_label(),
                 min_size=min_size,
                 max_size=max_size,
                 unique=True)
@@ -251,6 +254,17 @@ def get_array_from_dtype_group(
     '''
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
+
+    # TODO: apply when necessary with .map call on array generators
+    def fill_na(array):
+        if array.dtype.kind in DTYPE_NAN_KIND:
+            is_nan = np.isnan(array)
+            if is_nan.any():
+                fill = np.empty(array.shape, dtype=array.dtype)
+                array[is_nan] = fill[is_nan]
+                return array
+        return array
+
     array_object = get_array_object(
             shape=shape,
             unique=unique
@@ -496,7 +510,7 @@ def get_index_hierarchy(
                 )
 
     # generate depth-sized lists of candidate leabels and spacings
-    def get_labels(depth_size):
+    def get_labels_spacings(depth_size):
         depth, size = depth_size
 
         if dtype_group is not None:
@@ -505,10 +519,7 @@ def get_index_hierarchy(
                     unique=True,
                     dtype_group=dtype_group)
         else:
-            level = st.lists(get_label(),
-                    min_size=size,
-                    max_size=size,
-                    unique=True)
+            level = get_labels(min_size=size, max_size=size)
 
         labels = st.lists(level, min_size=depth, max_size=depth)
         spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
@@ -518,7 +529,7 @@ def get_index_hierarchy(
     return st.tuples(
             st.integers(min_value=min_depth, max_value=max_depth),
             st.integers(min_value=min_size, max_value=max_size)
-            ).flatmap(get_labels)
+            ).flatmap(get_labels_spacings)
 
 #-------------------------------------------------------------------------------
 # series objects

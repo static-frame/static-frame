@@ -41,16 +41,17 @@ import numpy as np
 DEFAULT_SORT_KIND = 'mergesort'
 DEFAULT_INT_DTYPE = np.int64 # necessary for windows
 
-_DEFAULT_STABLE_SORT_KIND = 'mergesort'
-_DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
-_DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+DEFAULT_STABLE_SORT_KIND = 'mergesort'
+DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
+DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
+DTYPE_NAN_KIND = ('f', 'c') # kinds taht support NaN values
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 
 DTYPE_OBJECT = np.dtype(object)
 
 NULL_SLICE = slice(None)
-_UNIT_SLICE = slice(0, 1)
+UNIT_SLICE = slice(0, 1)
 SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
@@ -214,8 +215,8 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     if dt1.kind == 'O' or dt2.kind == 'O':
         return DTYPE_OBJECT
 
-    dt1_is_str = dt1.kind in _DTYPE_STR_KIND
-    dt2_is_str = dt2.kind in _DTYPE_STR_KIND
+    dt1_is_str = dt1.kind in DTYPE_STR_KIND
+    dt2_is_str = dt2.kind in DTYPE_STR_KIND
     if dt1_is_str and dt2_is_str:
         # if both are string or string-like, we can use result type to get the longest string
         return np.result_type(dt1, dt2)
@@ -347,7 +348,7 @@ def _dtype_to_na(dtype: np.dtype):
         # we permit things like object, float, etc.
         dtype = np.dtype(dtype)
 
-    if dtype.kind in _DTYPE_INT_KIND:
+    if dtype.kind in DTYPE_INT_KIND:
         return 0 # cannot support NaN
     elif dtype.kind == 'b':
         return False
@@ -355,11 +356,11 @@ def _dtype_to_na(dtype: np.dtype):
         return np.nan
     elif dtype.kind == 'O':
         return None
-    elif dtype.kind in _DTYPE_STR_KIND:
+    elif dtype.kind in DTYPE_STR_KIND:
         return ''
     raise NotImplementedError('no support for this dtype', dtype.kind)
 
-# ufunc functions that will not work with _DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
+# ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
 _UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
@@ -376,7 +377,7 @@ def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     elif array.dtype.kind == 'M':
         # dates do not support skipna functions
         return ufunc(array)
-    elif array.dtype.kind in _DTYPE_STR_KIND and ufunc in _UFUNC_AXIS_STR_TO_OBJ:
+    elif array.dtype.kind in DTYPE_STR_KIND and ufunc in _UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:
         v = array
@@ -821,7 +822,7 @@ def _array_to_duplicated(
     # a right roll on the sorted array, comparing to the original sorted array. creates a boolean array, with all non-first duplicates marked as True
 
     if array.ndim == 1:
-        o_idx = np.argsort(array, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
+        o_idx = np.argsort(array, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
         array_sorted = array[o_idx]
         opposite_axis = 0
         f_flags = array_sorted == roll_1d(array_sorted, 1)
@@ -868,7 +869,7 @@ def _array_to_duplicated(
             dupes = f_flags & l_flags
 
     # undo the sort: get the indices to extract Booleans from dupes; in some cases r_idx is the same as o_idx, but not all
-    r_idx = np.argsort(o_idx, axis=None, kind=_DEFAULT_STABLE_SORT_KIND)
+    r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
 def array_shift(array: np.ndarray,
@@ -964,8 +965,8 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
 def union1d(array: np.ndarray, other: np.ndarray):
 
     set_compare = False
-    array_is_str = array.dtype.kind in _DTYPE_STR_KIND
-    other_is_str = other.dtype.kind in _DTYPE_STR_KIND
+    array_is_str = array.dtype.kind in DTYPE_STR_KIND
+    other_is_str = other.dtype.kind in DTYPE_STR_KIND
 
     if array_is_str ^ other_is_str:
         # if only one is string
@@ -986,8 +987,8 @@ def intersect1d(
     Extend ufunc version to handle cases where types cannot be sorted.
     '''
     set_compare = False
-    array_is_str = array.dtype.kind in _DTYPE_STR_KIND
-    other_is_str = other.dtype.kind in _DTYPE_STR_KIND
+    array_is_str = array.dtype.kind in DTYPE_STR_KIND
+    other_is_str = other.dtype.kind in DTYPE_STR_KIND
 
     if array_is_str ^ other_is_str:
         # if only one is string

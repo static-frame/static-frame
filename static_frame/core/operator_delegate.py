@@ -9,8 +9,8 @@ import operator as operator_mod
 
 import numpy as np
 
-from static_frame.core.util import _DTYPE_INT_KIND
-from static_frame.core.util import _DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_INT_KIND
+from static_frame.core.util import DTYPE_STR_KIND
 
 
 _UFUNC_UNARY_OPERATORS = (
@@ -88,11 +88,11 @@ def _ufunc_logical_skipna(array: np.ndarray,
             return ufunc(v, axis=axis, out=out)
         return ufunc(array, axis=axis, out=out)
 
-    if array.dtype.kind in _DTYPE_INT_KIND:
+    if array.dtype.kind in DTYPE_INT_KIND:
         return ufunc(array, axis=axis, out=out)
 
     # all types other than strings or objects" assume truthy
-    if array.dtype.kind != 'O' and array.dtype.kind not in _DTYPE_STR_KIND:
+    if array.dtype.kind != 'O' and array.dtype.kind not in DTYPE_STR_KIND:
         if array.ndim == 1:
             return True
         return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
