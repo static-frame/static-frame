@@ -58,6 +58,7 @@ class TestUnit(TestCase):
         count = 0
         for k, v in tb.element_items():
             count += 1
-            # tb.iloc[list(k)]
+            v_extract = tb.iloc[k]
+            # self.assertEqual(v, v_extract)
 
         self.assertEqual(count, tb.size)

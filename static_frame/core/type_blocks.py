@@ -1382,7 +1382,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
             row_key_null = (row_key is None or
-                    (isinstance(row_key, slice) and row_key == NULL_SLICE))
+                    (isinstance(row_key, slice)
+                    and row_key == NULL_SLICE))
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)
@@ -1407,9 +1408,10 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
     def _extract_iloc(self,
             key: GetItemKeyTypeCompound) -> 'TypeBlocks':
-        if self.unified:
-            # perform slicing directly on block if possible
-            return self.from_blocks(self._blocks[0][key])
+        # NOTE: this optimization does not handle all types of keys correctly (such as when a key is an integer on a 1D array and returns a single value to a block constructor)
+        # if self.unified:
+        #     # perform slicing directly on block if possible
+        #     return self.from_blocks(self._blocks[0][key])
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
