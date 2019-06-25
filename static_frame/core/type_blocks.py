@@ -1846,13 +1846,12 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def extend(self,
             other: tp.Union['TypeBlocks', tp.Iterable[np.ndarray]]
             ):
-        '''Extend this TypeBlock with the contents of another.
+        '''Extend this TypeBlock with the contents of another TypeBlocks instance, or an iterable of arrays. Note that an iterable of TypeBlocks is not currently supported.
         '''
-
         if isinstance(other, TypeBlocks):
             if self._shape[0]:
                 if self._shape[0] != other._shape[0]:
-                    raise Exception('cannot extend unaligned shapes')
+                    raise RuntimeError('cannot extend unaligned shapes')
             blocks = other._blocks
         else: # accept iterables of np.arrays
             blocks = other

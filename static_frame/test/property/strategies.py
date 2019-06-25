@@ -472,7 +472,36 @@ def get_type_blocks_aligned_array(
             max_columns=max_columns,
             ).flatmap(constructor)
 
+def get_type_blocks_aligned_type_blocks(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        min_rows=0,
+        max_rows=MAX_ROWS,
+        min_columns=0,
+        max_columns=MAX_COLUMNS,
+        dtype_group=DTGroup.ALL
+        ):
+    '''
+    Return an iterable of TypeBlocks instances, all alligned by row count
+    '''
+    def constructor(shape):
+        rows, columns = shape
+        return st.lists(
+                get_type_blocks(
+                        min_rows=rows,
+                        max_rows=rows,
+                        dtype_group=dtype_group
+                        ),
+                min_size=min_size,
+                max_size=max_size
+                )
 
+    return get_shape_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            ).flatmap(constructor)
 
 #-------------------------------------------------------------------------------
 # index objects

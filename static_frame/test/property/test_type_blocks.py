@@ -48,7 +48,6 @@ class TestUnit(TestCase):
     @given(sfst.get_type_blocks())
     def test_values(self, tb):
         values = tb.values
-
         self.assertEqual(values.shape, tb.shape)
         self.assertEqual(values.dtype, tb._row_dtype)
 
@@ -68,14 +67,30 @@ class TestUnit(TestCase):
         self.assertEqual(count, tb.size)
 
 
-    @unittest.skip('needs examination')
     @given(sfst.get_type_blocks_aligned_array())
     def test_append(self, tb_aligned_array):
         tb, aa = tb_aligned_array
-        post = tb.append(aa)
+        shape_original = tb.shape
+        tb.append(aa)
         if aa.ndim == 1:
-            self.assertEqual(post.shape[1], tb.shape[1] + 1)
+            self.assertEqual(tb.shape[1], shape_original[1] + 1)
         else:
-            self.assertEqual(post.shape[1], tb.shape[1] + aa.shape[1])
+            self.assertEqual(tb.shape[1], shape_original[1] + aa.shape[1])
+
+    @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))
+    def test_extend(self, tbs):
+        front = tbs[0]
+        back = tbs[1]
+        shape_original = front.shape
+        # extend with type blocks
+        front.extend(back)
+        self.assertEqual(front.shape,
+                (shape_original[0], shape_original[1] + back.shape[1]))
+
+        # extend with iterable of arrays
+        front.extend(back._blocks)
+        self.assertEqual(front.shape,
+                (shape_original[0], shape_original[1] + back.shape[1] * 2))
+
 
 
