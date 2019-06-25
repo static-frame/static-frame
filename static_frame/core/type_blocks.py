@@ -1407,7 +1407,8 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
 
     def _extract_iloc(self,
-            key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+            key: GetItemKeyTypeCompound
+            ) -> 'TypeBlocks':
         # NOTE: this optimization does not handle all types of keys correctly (such as when a key is an integer on a 1D array and returns a single value to a block constructor)
         # if self.unified:
         #     # perform slicing directly on block if possible

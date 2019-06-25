@@ -55,10 +55,14 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks())
     def test_element_items(self, tb):
+
+        # NOTE: this found a flaw in _extract_iloc where we tried to optimize selection with a unified array
+
         count = 0
         for k, v in tb.element_items():
             count += 1
             v_extract = tb.iloc[k]
-            # self.assertEqual(v, v_extract)
+
+            self.assertEqual(v, v_extract)
 
         self.assertEqual(count, tb.size)
