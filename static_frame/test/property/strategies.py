@@ -38,7 +38,7 @@ MAX_COLUMNS = 10
 #-------------------------------------------------------------------------------
 # spacings
 
-@lru_cache(maxsize=32)
+# @lru_cache(maxsize=32)
 def subset_contiguous_sum(target):
     '''
     Return an iterabel of integers that sum to the target. This does not find all combinations or permutations, just all combintation of the range from 1 to the number (inclusive).
@@ -52,12 +52,14 @@ def subset_contiguous_sum(target):
         # over sizes of 60 or so performance is noticieable
         raise RuntimeError(f'target is too large: {target}')
 
+    @lru_cache()
     def subset_sum(numbers, partial=(), partial_sum=0):
         if partial_sum == target:
             yield partial
         if partial_sum > target:
             return
         for i, n in enumerate(numbers, start=1):
+            # get pairs of index (starting at 1) and n (the value at each position)
             yield from subset_sum(numbers[i:], partial + (n,), partial_sum + n)
 
     return tuple(subset_sum(range(1, target+1)))
@@ -392,8 +394,8 @@ def get_blocks(
         min_columns: number of resultant columns in combination of all arrays.
     '''
 
-    def constructor(shape_column_widths):
-        rows, column_widths = shape_column_widths
+    def constructor(rows_column_widths):
+        rows, column_widths = rows_column_widths
 
         def array_gen():
             for width in column_widths:
@@ -572,7 +574,7 @@ def get_index_hierarchy(
 
         return st.builds(
                 cls,
-                st.just(label_gen())
+                st.just(label_gen()) # can just handle a generator
                 )
 
     # generate depth-sized lists of candidate leabels and spacings
@@ -588,6 +590,7 @@ def get_index_hierarchy(
             level = get_labels(min_size=size, max_size=size)
 
         labels = st.lists(level, min_size=depth, max_size=depth)
+        # could do depth minus 1
         spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
         return st.tuples(labels, spacings).flatmap(constructor)
 

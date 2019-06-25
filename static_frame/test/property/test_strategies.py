@@ -110,19 +110,16 @@ class TestUnit(TestCase):
         self.assertEqual(len(idx), len(idx.values))
 
 
-
     @given(sfst.get_series())
     def test_get_series(self, series):
         self.assertTrue(isinstance(series, Series))
         self.assertEqual(len(series), len(series.values))
 
 
-
     @given(sfst.get_frame())
     def test_get_frame(self, frame):
         self.assertTrue(isinstance(frame, Frame))
         self.assertEqual(frame.shape, frame.values.shape)
-
 
 
     @given(sfst.get_frame(index_cls=IndexHierarchy, columns_cls=IndexHierarchy))
