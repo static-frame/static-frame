@@ -63,6 +63,19 @@ class TestUnit(TestCase):
             count += 1
             v_extract = tb.iloc[k]
 
-            self.assertEqual(v, v_extract)
+            self.assertEqualWithNaN (v, v_extract)
 
         self.assertEqual(count, tb.size)
+
+
+    @unittest.skip('needs examination')
+    @given(sfst.get_type_blocks_aligned_array())
+    def test_append(self, tb_aligned_array):
+        tb, aa = tb_aligned_array
+        post = tb.append(aa)
+        if aa.ndim == 1:
+            self.assertEqual(post.shape[1], tb.shape[1] + 1)
+        else:
+            self.assertEqual(post.shape[1], tb.shape[1] + aa.shape[1])
+
+

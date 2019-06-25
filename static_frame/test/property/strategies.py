@@ -438,6 +438,42 @@ get_type_blocks_numeric = partial(get_type_blocks, dtype_group=DTGroup.NUMERIC)
 get_type_blocks_numeric.__name__ = 'get_type_blocks_numeric'
 
 
+def get_type_blocks_aligned_array(
+        min_rows=0,
+        max_rows=MAX_ROWS,
+        min_columns=0,
+        max_columns=MAX_COLUMNS,
+        dtype_group=DTGroup.ALL
+        ):
+    '''
+    Return TypeBlocks instance, as well as an array aligned by row size.
+    '''
+    def constructor(shape):
+        rows, columns = shape
+        return st.tuples(
+                get_type_blocks(
+                        min_rows=rows,
+                        max_rows=rows,
+                        min_columns=columns,
+                        max_columns=columns,
+                        dtype_group=dtype_group
+                        ),
+                get_array_1d2d( # let columns be variable3
+                        min_rows=rows,
+                        max_rows=rows,
+                        dtype_group=dtype_group
+                        )
+                )
+
+    return get_shape_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            ).flatmap(constructor)
+
+
+
 #-------------------------------------------------------------------------------
 # index objects
 
