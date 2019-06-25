@@ -397,8 +397,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             raise NotImplementedError()
 
 
-    def element_items(self) -> tp.Generator[
-            tp.Tuple[tp.Tuple[int, int], tp.Any], None, None]:
+    def element_items(self) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
         '''
         Generator of pairs of iloc locations, values accross entire TypeBlock.
         '''
