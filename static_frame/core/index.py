@@ -294,9 +294,13 @@ class Index(IndexBase,
             # else:
             #     labels = np.fromiter(mapping.keys(), count=len(mapping), dtype=dtype)
 
-            labels = np.empty(len(mapping), dtype=dtype if dtype else object)
-            for k, v in mapping.items():
-                labels[v] = k
+            labels_len = len(mapping)
+            if labels_len == 0:
+                labels = np.empty(labels_len) # get defualt NP dtype
+            else:
+                labels = np.empty(labels_len, dtype=dtype if dtype else object)
+                for k, v in mapping.items():
+                    labels[v] = k
 
         labels.flags.writeable = False
         return labels
@@ -711,17 +715,24 @@ class Index(IndexBase,
             skipna,
             ufunc,
             ufunc_skipna,
-            dtype=None):
-        '''Axis argument is required but is irrelevant.
+            dtype=None) -> np.ndarray:
+        '''
 
         Args:
             dtype: Not used in 1D application, but collected here to provide a uniform signature.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         return ufunc_skipna_1d(
                 array=self._labels,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna)
+
+
+    # _ufunc_shape_skipna defined in IndexBase
+
 
     #---------------------------------------------------------------------------
     # dictionary-like interface

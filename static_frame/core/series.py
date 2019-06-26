@@ -265,6 +265,13 @@ class Series(metaclass=MetaOperatorDelegate):
         if len(self.values) != shape:
             raise RuntimeError('values and index do not match length')
 
+    # ---------------------------------------------------------------------------
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the series' index.
+        '''
+        return reversed(self._index)
+
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
         '''
@@ -741,17 +748,45 @@ class Series(metaclass=MetaOperatorDelegate):
         result.flags.writeable = False
         return self.__class__(result, index=index)
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
-        '''For a Series, all functions of this type reduce the single axis of the Series to 1d, so Index has no use here.
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> np.ndarray:
+        '''
+        For a Series, all functions of this type reduce the single axis of the Series to a single element, so Index has no use here.
 
         Args:
-            dtype: not used, part of signature for a commin interface
+            dtype: not used, part of signature for a common interface
         '''
         return ufunc_skipna_1d(
                 array=self.values,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna)
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> 'Series':
+        '''
+        NumPy ufunc proccessors that retain the shape of the processed.
+
+        Args:
+            dtype: not used, part of signature for a common interface
+        '''
+        values = ufunc_skipna_1d(
+                array=self.values,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna)
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index)
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:

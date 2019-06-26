@@ -27,6 +27,7 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import FrameInitializer
+from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import column_2d_filter
 from static_frame.core.util import column_1d_filter
@@ -551,23 +552,23 @@ class Frame(metaclass=MetaOperatorDelegate):
 
         def blocks():
             for col_idx, name in enumerate(names):
+                # append here as we iterate for usage in get_col_dtype
                 columns_with_index.append(name)
 
-                if name == index_name:
-                    nonlocal index_array
-                    index_array = array[name]
-                    continue
-
-                columns.append(name)
                 # this is not expected to make a copy
+                array_final = array[name]
                 if dtypes:
                     dtype = get_col_dtype(col_idx)
                     if dtype is not None:
-                        yield array[name].astype(dtype)
-                    else:
-                        yield array[name]
-                else:
-                    yield array[name]
+                        array_final = array_final.astype(dtype)
+
+                if name == index_name:
+                    nonlocal index_array
+                    index_array = array_final
+                    continue
+
+                columns.append(name)
+                yield array_final
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
@@ -793,7 +794,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def __init__(self,
-            data: FrameInitializer = None,
+            data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
             index: IndexInitializer = None,
             columns: IndexInitializer = None,
@@ -804,10 +805,18 @@ class Frame(metaclass=MetaOperatorDelegate):
             ) -> None:
         '''
         Args:
+            data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
             own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
             own_index: if True, the index is taken as is and is not passed to an Index initializer.
         '''
         self._name = name if name is None else name_filter(name)
+
+        # we can determin if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
+        columns_empty = columns is None or (
+                hasattr(columns, '__len__') and len(columns) == 0)
+
+        index_empty = index is None or (
+                hasattr(index, '__len__') and len(index) == 0)
 
         #-----------------------------------------------------------------------
         # blocks assignment
@@ -820,34 +829,44 @@ class Frame(metaclass=MetaOperatorDelegate):
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
+
         elif isinstance(data, np.ndarray):
             if own_data:
                 data.flags.writeable = False
+            # from_blocks will apply immutable filter
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
-            raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
+            raise RuntimeError('use Frame.from_dict to create a Frame from a dict')
 
-        elif data is None and columns is None:
-            # will have shape of 0,0
-            self._blocks = TypeBlocks.from_none()
+        elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
+            # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
 
-        elif not hasattr(data, '__len__') and not isinstance(data, str):
-            # data is not None, single element to scale to size of index and columns
             def blocks_constructor(shape):
+                self._blocks = TypeBlocks.from_zero_size_shape(shape)
+
+        elif not hasattr(data, '__len__') or isinstance(data, str):
+            # data is not None, and data is a single element to scale to size of index and columns; must defer until after index realization
+            # or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
+
+            def blocks_constructor(shape):
+                if shape[0] > 0 and shape[1] > 0 and data is FRAME_INITIALIZER_DEFAULT:
+                    # if fillable and we still have default initializer, this is a problem
+                    raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')
+
                 a = np.full(shape, data)
                 a.flags.writeable = False
                 self._blocks = TypeBlocks.from_blocks(a)
 
         else:
-            # could be list of lists to be made into an array
+            # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame.
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
 
-
         # counts can be zero (not None) if _block was created but is empty
-        row_count, col_count = self._blocks._shape if not blocks_constructor else (None, None)
+        row_count, col_count = (self._blocks._shape
+                if not blocks_constructor else (None, None))
 
         #-----------------------------------------------------------------------
         # index assignment
@@ -858,43 +877,52 @@ class Frame(metaclass=MetaOperatorDelegate):
                 and self._COLUMN_CONSTRUCTOR.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
-        elif columns is None or (hasattr(columns, '__len__') and len(columns) == 0):
-            if col_count is None:
-                raise RuntimeError('cannot create columns when no data given')
+            col_count = len(self._columns)
+        elif columns_empty:
+            col_count = 0 if col_count is None else col_count
             self._columns = self._COLUMN_CONSTRUCTOR(
                     range(col_count),
                     loc_is_iloc=True,
                     dtype=np.int64)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
+            col_count = len(self._columns)
+
 
         if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
             self._index = index
-        elif index is None or (hasattr(index, '__len__') and len(index) == 0):
-            if row_count is None:
-                raise RuntimeError('cannot create rows when no data given')
+            row_count = len(self._index)
+        elif index_empty:
+            row_count = 0 if row_count is None else row_count
             self._index = Index(range(row_count),
                     loc_is_iloc=True,
                     dtype=np.int64)
         else:
             self._index = Index(index)
+            row_count = len(self._index)
 
-        # permit bypassing this check if the
+        # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
+        columns_empty = col_count == 0
+        index_empty = row_count == 0
 
         if blocks_constructor:
-            row_count = self._index.__len__()
-            col_count = self._columns.__len__()
+            # if we have a blocks_constructor, we are determining final size from index and/or columns; we might have a legitamate single value for data, but it cannot be FRAME_INITIALIZER_DEFAULT
+            if data is not FRAME_INITIALIZER_DEFAULT and (
+                    columns_empty or index_empty):
+                raise RuntimeError('cannot supply a data argument to Frame constructor when index or columns is empty')
+            # must update the row/col counts, sets self._blocks
             blocks_constructor((row_count, col_count))
 
-        if row_count and len(self._index) != row_count:
+        # final check of block/index coherence
+        if self._blocks.shape[0] != row_count:
             # row count might be 0 for an empty DF
             raise RuntimeError(
-                    'Index has incorrect size (got {}, expected {})'.format(
-                    len(self._index), row_count))
-        if len(self._columns) != col_count:
+                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})'
+            )
+        if self._blocks.shape[1] != col_count:
             raise RuntimeError(
-                    'Columns has incorrect size (got {}, expected {})'.format(
-                    len(self._columns), col_count))
+                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
+            )
 
     #---------------------------------------------------------------------------
     # name interface
@@ -1152,14 +1180,18 @@ class Frame(metaclass=MetaOperatorDelegate):
             columns_ic = None
 
         return self.__class__(
-                TypeBlocks.from_blocks(self._blocks.resize_blocks(
-                        index_ic=index_ic,
-                        columns_ic=columns_ic,
-                        fill_value=fill_value)),
+                TypeBlocks.from_blocks(
+                        self._blocks.resize_blocks(
+                                index_ic=index_ic,
+                                columns_ic=columns_ic,
+                                fill_value=fill_value),
+                        shape_reference=(len(index), len(columns))
+                        ),
                 index=index,
                 columns=columns,
                 name=self._name,
-                own_data=True)
+                own_data=True
+                )
 
 
     def relabel(self,
@@ -1798,9 +1830,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             skipna,
             ufunc,
             ufunc_skipna,
-            dtype):
-        # axis 0 sums ros, deliveres column index
-        # axis 1 sums cols, delivers row index
+            dtype) -> 'Series':
+        # axis 0 processes ros, deliveres column index
+        # axis 1 processes cols, delivers row index
         assert axis < 2
 
         # TODO: need to handle replacing None with nan in object blocks!
@@ -1812,6 +1844,33 @@ class Frame(metaclass=MetaOperatorDelegate):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype) -> 'Frame':
+        # axis 0 processes ros, deliveres column index
+        # axis 1 processes cols, delivers row index
+        assert axis < 2
+
+        # full-shape processing requires processing contiguous values
+        v = self.values
+        if skipna:
+            post = ufunc_skipna(v, axis=axis, dtype=dtype)
+        else:
+            post = ufunc(v, axis=axis, dtype=dtype)
+
+        post.flags.writeable = False
+
+        return self.__class__(
+                TypeBlocks.from_blocks(post),
+                index=self._index,
+                columns=self._columns,
+                own_data=True,
+                own_index=True
+                )
 
     #---------------------------------------------------------------------------
     # axis iterators
@@ -1974,6 +2033,12 @@ class Frame(metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
+
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the frame's columns.
+        '''
+        return reversed(self._columns)
 
     def sort_index(self,
             ascending: bool = True,

@@ -2,15 +2,20 @@ import typing as tp
 from enum import Enum
 
 from functools import partial
+from functools import lru_cache
 from itertools import chain
 from itertools import repeat
 
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
+from hypothesis import settings as hypo_settings
+from hypothesis import HealthCheck
+
 
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame import TypeBlocks
 from static_frame import Index
@@ -29,29 +34,93 @@ from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 
-MAX_ROWS = 10
-MAX_COLUMNS = 20
+MAX_ROWS = 8
+MAX_COLUMNS = 10
 
+
+hypo_settings.register_profile("sf",
+        suppress_health_check=[HealthCheck.too_slow])
+hypo_settings.load_profile("sf")
+
+#-------------------------------------------------------------------------------
+# spacings
+
+# @lru_cache(maxsize=32)
+def subset_contiguous_sum(target):
+    '''
+    Return an iterabel of integers that sum to the target. This does not find all combinations or permutations, just all combintation of the range from 1 to the number (inclusive).
+    '''
+    # based on https://stackoverflow.com/questions/4632322/finding-all-possible-combinations-of-numbers-to-reach-a-given-sum
+
+    if target == 0:
+        return ()
+
+    if not (0 < target <= 32):
+        # over sizes of 60 or so performance is noticieable
+        raise RuntimeError(f'target is too large: {target}')
+
+    @lru_cache()
+    def subset_sum(numbers, partial=(), partial_sum=0):
+        if partial_sum == target:
+            yield partial
+        if partial_sum > target:
+            return
+        for i, n in enumerate(numbers, start=1):
+            # get pairs of index (starting at 1) and n (the value at each position)
+            yield from subset_sum(numbers[i:], partial + (n,), partial_sum + n)
+
+    return tuple(subset_sum(range(1, target+1)))
+
+
+def get_spacing(size: int = MAX_COLUMNS):
+    # generate permutations of the orderings of the integers
+    return st.one_of((st.permutations(c) for c in subset_contiguous_sum(size)))
+
+
+# NOTE: this approach fails health check
+# def get_spacing(size: int = MAX_COLUMNS):
+#     return st.lists(st.integers(min_value=1, max_value=size),
+#             min_size=1,
+#             max_size=size,
+#             ).filter(lambda x: sum(x) == size)
 
 
 #-------------------------------------------------------------------------------
+# values
+
 # 55203 is just before "high surrogates", and avoids this exception
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
 
-ST_LABEL = (st.dates,
-        st.datetimes,
+ST_TYPES_COMMON = (
         st.integers,
-        st.floats,
-        st.complex_numbers,
         # st.decimals,
         st.fractions,
+        st.dates,
+        st.datetimes,
         partial(st.characters, **ST_CODEPOINT_LIMIT),
         partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))
-    )
+        )
 
-ST_VALUE = ST_LABEL + (st.booleans, st.none)
+ST_TYPES_FLOAT_NAN = (
+        st.floats,
+        st.complex_numbers,
+        )
 
+filter_nan = lambda x: not np.isnan(x)
+
+ST_TYPES_FLOAT_NO_NAN = (
+        lambda: st.floats().filter(filter_nan),
+        lambda: st.complex_numbers().filter(filter_nan)
+        )
+
+ST_TYPES_UNARY_BINARY = (st.booleans, st.none)
+
+# common collections
+
+ST_TYPES_FOR_UNIQUE = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON
+ST_TYPES_FOR_UNIQUE_MIXED = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
+ST_VALUE = ST_TYPES_FLOAT_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
 
 def get_value():
     '''
@@ -61,9 +130,10 @@ def get_value():
 
 def get_label():
     '''
-    A hashable suitable for use in an Index.
+    A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs, and thus we must filter out NaNs in advance.
     '''
-    return st.one_of(strat() for strat in ST_LABEL)
+    return st.one_of((strat() for strat in ST_TYPES_FOR_UNIQUE_MIXED))
+
 
 def get_labels(
         min_size: int = 0,
@@ -71,29 +141,30 @@ def get_labels(
     '''
     Labels are suitable for creating non-date Indices (though they might include dates)
     '''
-    # drawing from value so as to include None and booleans
-    list_mixed = st.lists(get_value(),
-            min_size=min_size,
-            max_size=max_size,
-            unique=True)
+    def gen():
 
-    lists = chain(
-            (list_mixed,),
-            (st.lists(
+        yield st.lists(get_label(),
+                min_size=min_size,
+                max_size=max_size,
+                unique=True)
+
+        for strat in ST_TYPES_FOR_UNIQUE:
+            yield st.lists(
                     strat(),
                     min_size=min_size,
                     max_size=max_size,
-                    unique=True) for strat in ST_LABEL),
-            )
-    return st.one_of(lists)
+                    unique=True)
+
+    return st.one_of(gen())
 
 
 #-------------------------------------------------------------------------------
 # dtypes
 
+
 class DTGroup(Enum):
+    OBJECT = (partial(st.just, DTYPE_OBJECT),) # strategy constantly generating object dtype
     ALL = (hypo_np.scalar_dtypes,)
-    OBJECT = (partial(st.just, DTYPE_OBJECT), ) # strategy constantly generating object dtype
 
     NUMERIC = (hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
@@ -117,6 +188,7 @@ def get_dtype(dtype_group: DTGroup = DTGroup.ALL):
 
 def get_dtypes(
         min_size: int = 0,
+        max_size: int = MAX_COLUMNS,
         dtype_group: DTGroup = DTGroup.ALL,
         ) -> tp.Iterable[np.dtype]:
     return st.lists(get_dtype(dtype_group), min_size=min_size)
@@ -163,6 +235,62 @@ def get_shape_1d2d(
 #-------------------------------------------------------------------------------
 # array generation
 
+def get_array_object(
+        shape=(MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True):
+    if unique:
+        # if unique, cannot use fill
+        return hypo_np.arrays(
+                shape=shape,
+                dtype=get_dtype(DTGroup.OBJECT),
+                elements=get_value(),
+                fill=st.nothing(),
+                unique=unique
+                )
+    return hypo_np.arrays(
+            shape=shape,
+            dtype=get_dtype(DTGroup.OBJECT),
+            elements=get_value(),
+            fill=st.none(),
+            unique=unique
+            )
+
+
+def get_array_from_dtype_group(
+        dtype_group: DTGroup = DTGroup.ALL,
+        shape=(MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True):
+    '''
+    Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
+    '''
+
+    # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
+
+    def fill_na(array):
+        if array.dtype.kind in DTYPE_NAN_KIND:
+            is_nan = np.isnan(array)
+            if is_nan.any():
+                fill = np.empty(array.shape, dtype=array.dtype)
+                array[is_nan] = fill[is_nan]
+                return array
+        return array
+
+    array_object = get_array_object(
+            shape=shape,
+            unique=unique
+            )
+    array_non_object = hypo_np.arrays(
+            get_dtype(dtype_group),
+            shape,
+            unique=unique
+            )
+
+    if dtype_group == DTGroup.OBJECT:
+        return array_object
+    if dtype_group == DTGroup.ALL:
+        return st.one_of(array_non_object, array_non_object, array_object)
+    return array_non_object
+
 
 def get_array_1d(
         min_size: int = 0,
@@ -171,23 +299,12 @@ def get_array_1d(
         dtype_group: DTGroup = DTGroup.ALL
         ):
 
-    if dtype_group == DTGroup.OBJECT:
-        return hypo_np.arrays(
-                get_dtype(dtype_group),
-                get_shape_1d(min_size=min_size, max_size=max_size),
-                elements=get_value(),
-                fill=st.nothing(), # force all values from elements
-                unique=unique
-                )
-
-    return hypo_np.arrays(
-            get_dtype(dtype_group),
-            get_shape_1d(min_size=min_size, max_size=max_size),
+    shape = get_shape_1d(min_size=min_size, max_size=max_size)
+    return get_array_from_dtype_group(
+            dtype_group=dtype_group,
+            shape=shape,
             unique=unique
             )
-
-get_array_1d_object = partial(get_array_1d, dtype_group=DTGroup.OBJECT)
-get_array_1d_object.__name__ = 'get_array_1d_object'
 
 
 def get_array_2d(
@@ -203,14 +320,15 @@ def get_array_2d(
             min_rows=min_rows,
             max_rows=max_rows,
             min_columns=min_columns,
-            max_columns=max_columns)
+            max_columns=max_columns
+            )
 
-    # TODO: identify object dtypes and populate with values
-
-    return hypo_np.arrays(
-            get_dtype(dtype_group),
+    return get_array_from_dtype_group(
+            dtype_group=dtype_group,
             shape=shape,
-            unique=unique)
+            unique=unique
+            )
+
 
 def get_array_1d2d(
         min_rows=1,
@@ -222,18 +340,25 @@ def get_array_1d2d(
     '''
     For convenience in building blocks, treat row constraints as 1d size constraints.
     '''
-    return st.one_of(
-            get_array_2d(min_rows=min_rows,
-                    max_rows=max_rows,
-                    min_columns=min_columns,
-                    max_columns=max_columns,
-                    dtype_group=dtype_group
-                    ),
-            get_array_1d(min_size=min_rows,
-                    max_size=max_rows,
-                    dtype_group=dtype_group
-                    )
-    )
+    array_2d = get_array_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            dtype_group=dtype_group
+            )
+
+    if 1 in range(min_columns, max_columns + 1):
+        # if min/max columns are given, and column of 1 is not supported, it is incorrect to give back a 1D array (in the context of the usage of this in blocks)
+        return st.one_of(
+                array_2d,
+                get_array_1d(
+                        min_size=min_rows,
+                        max_size=max_rows,
+                        dtype_group=dtype_group
+                        )
+                )
+    return array_2d
 
 #-------------------------------------------------------------------------------
 # aligend arrays for concatenation and type blocks
@@ -242,7 +367,10 @@ def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10):
 
     return st.integers(min_value=1, max_value=MAX_COLUMNS).flatmap(
         lambda columns: st.lists(
-            get_array_2d(min_columns=columns, max_columns=columns),
+            get_array_2d(
+                min_columns=columns,
+                max_columns=columns
+                ),
             min_size=min_size,
             max_size=max_size
             )
@@ -252,7 +380,10 @@ def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10):
 
     return st.integers(min_value=1, max_value=MAX_ROWS).flatmap(
         lambda rows: st.lists(
-            get_array_2d(min_rows=rows, max_rows=rows),
+            get_array_2d(
+                min_rows=rows,
+                max_rows=rows,
+                ),
             min_size=min_size,
             max_size=max_size
             )
@@ -270,37 +401,36 @@ def get_blocks(
         min_columns: number of resultant columns in combination of all arrays.
     '''
 
-    def get_arrays(shape):
-        rows, columns = shape
+    def constructor(rows_column_widths):
+        rows, column_widths = rows_column_widths
 
-        def is_valid(blocks):
-            '''Filter to block combinations that sum to targetted columns
-            '''
-            return sum(1 if b.ndim == 1 else b.shape[1] for b in blocks) == columns
-
-        # have to use lists instead of iterables, as filter does an iteration
-        return st.lists(get_array_1d2d(
+        def array_gen():
+            for width in column_widths:
+                yield get_array_1d2d(
                     min_rows=rows,
                     max_rows=rows,
-                    min_columns=1,
-                    max_columns=columns,
+                    min_columns=width,
+                    max_columns=width,
                     dtype_group=dtype_group
-                    ),
-                min_size=1,
-                max_size=columns
-                ).filter(is_valid)
+                    )
+
+        return st.tuples(*array_gen())
+
+    def get_column_widths(shape):
+        rows, columns = shape
+        return st.tuples(st.just(rows), get_spacing(columns)).flatmap(constructor)
 
     return get_shape_2d(
             min_rows=min_rows,
             max_rows=max_rows,
             min_columns=min_columns,
-            max_columns=max_columns).flatmap(get_arrays)
+            max_columns=max_columns).flatmap(get_column_widths)
 
 
 def get_type_blocks(
-        min_rows=1,
+        min_rows=0,
         max_rows=MAX_ROWS,
-        min_columns=1,
+        min_columns=0,
         max_columns=MAX_COLUMNS,
         dtype_group=DTGroup.ALL
         ):
@@ -316,6 +446,71 @@ def get_type_blocks(
 get_type_blocks_numeric = partial(get_type_blocks, dtype_group=DTGroup.NUMERIC)
 get_type_blocks_numeric.__name__ = 'get_type_blocks_numeric'
 
+
+def get_type_blocks_aligned_array(
+        min_rows=0,
+        max_rows=MAX_ROWS,
+        min_columns=0,
+        max_columns=MAX_COLUMNS,
+        dtype_group=DTGroup.ALL
+        ):
+    '''
+    Return TypeBlocks instance, as well as an array aligned by row size.
+    '''
+    def constructor(shape):
+        rows, columns = shape
+        return st.tuples(
+                get_type_blocks(
+                        min_rows=rows,
+                        max_rows=rows,
+                        min_columns=columns,
+                        max_columns=columns,
+                        dtype_group=dtype_group
+                        ),
+                get_array_1d2d( # let columns be variable3
+                        min_rows=rows,
+                        max_rows=rows,
+                        dtype_group=dtype_group
+                        )
+                )
+
+    return get_shape_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            ).flatmap(constructor)
+
+def get_type_blocks_aligned_type_blocks(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        min_rows=0,
+        max_rows=MAX_ROWS,
+        min_columns=0,
+        max_columns=MAX_COLUMNS,
+        dtype_group=DTGroup.ALL
+        ):
+    '''
+    Return an iterable of TypeBlocks instances, all alligned by row count
+    '''
+    def constructor(shape):
+        rows, columns = shape
+        return st.lists(
+                get_type_blocks(
+                        min_rows=rows,
+                        max_rows=rows,
+                        dtype_group=dtype_group
+                        ),
+                min_size=min_size,
+                max_size=max_size
+                )
+
+    return get_shape_2d(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            ).flatmap(constructor)
 
 #-------------------------------------------------------------------------------
 # index objects
@@ -373,6 +568,8 @@ def get_index_hierarchy(
                 def spans():
                     idx = 0
                     for count in spacing:
+                        if count == 0:
+                            continue
                         yield repeat(labels_proto[d][idx], count)
                         idx += count
 
@@ -384,34 +581,37 @@ def get_index_hierarchy(
 
         return st.builds(
                 cls,
-                st.just(label_gen())
+                st.just(label_gen()) # can just handle a generator
                 )
 
-    def get_labels(depth_size):
+    # generate depth-sized lists of candidate leabels and spacings
+    def get_labels_spacings(depth_size):
         depth, size = depth_size
 
-        level = st.lists(get_label(), unique=True, min_size=size, max_size=size)
+        if dtype_group is not None:
+            level = get_array_1d(min_size=size,
+                    max_size=size,
+                    unique=True,
+                    dtype_group=dtype_group)
+        else:
+            level = get_labels(min_size=size, max_size=size)
+
         labels = st.lists(level, min_size=depth, max_size=depth)
-
-        # get spacings as integers
-        spacing = st.lists(
-                st.integers(min_value=1, max_value=size),
-                min_size=1,
-                max_size=size
-                ).filter(lambda x: sum(x) == size)
-        spacings = st.lists(spacing, min_size=depth, max_size=depth)
-
+        # could do depth minus 1
+        spacings = st.lists(get_spacing(size), min_size=depth, max_size=depth)
         return st.tuples(labels, spacings).flatmap(constructor)
 
+    # generate depth and size, pass to get get_labels
     return st.tuples(
             st.integers(min_value=min_depth, max_value=max_depth),
             st.integers(min_value=min_size, max_value=max_size)
-            ).flatmap(get_labels)
+            ).flatmap(get_labels_spacings)
 
 #-------------------------------------------------------------------------------
 # series objects
 
-def get_series(min_size: int = 0,
+def get_series(
+        min_size: int = 0,
         max_size: int = MAX_ROWS,
         cls=Series,
         dtype_group=DTGroup.ALL,
@@ -422,12 +622,15 @@ def get_series(min_size: int = 0,
     def constructor(shape):
         size = shape[0] # tuple len 1
 
-        index = get_index(
-                min_size=size,
-                max_size=size,
-                cls=index_cls,
-                dtype_group=index_dtype_group,
-                )
+        index_kwargs = dict(
+                    min_size=size,
+                    max_size=size,
+                    dtype_group=index_dtype_group)
+
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
+        else:
+            index = get_index(cls=index_cls, **index_kwargs)
 
         return st.builds(cls,
             get_array_1d(
@@ -438,7 +641,7 @@ def get_series(min_size: int = 0,
             index=index
             )
 
-    return get_shape_1d().flatmap(constructor)
+    return get_shape_1d(min_size=min_size, max_size=max_size).flatmap(constructor)
 
 # label index, values
 get_series_date_numeric = partial(get_series,
@@ -447,6 +650,23 @@ get_series_date_numeric = partial(get_series,
         index_dtype_group=DTGroup.DATE
         )
 get_series_date_numeric.__name__ = 'get_series_date_numeric'
+
+# depth greater than 1 index
+get_series_str_dgt1_numeric = partial(get_series,
+        min_size=1,
+        dtype_group=DTGroup.NUMERIC,
+        index_cls=IndexHierarchy,
+        index_dtype_group=DTGroup.STRING
+        )
+get_series_str_dgt1_numeric.__name__ = 'get_series_str_dgt1_numeric'
+
+get_series_obj_dgt1_numeric = partial(get_series,
+        min_size=1,
+        dtype_group=DTGroup.NUMERIC,
+        index_cls=IndexHierarchy,
+        index_dtype_group=DTGroup.OBJECT
+        )
+get_series_obj_dgt1_numeric.__name__ = 'get_series_obj_dgt1_numeric'
 
 
 #-------------------------------------------------------------------------------
@@ -469,19 +689,28 @@ def get_frame(
 
         row_count, column_count = shape
 
-        index = get_index(
+            # if issubclass(index_cls, IndexHierarchy):
+        index_kwargs = dict(
                 min_size=row_count,
                 max_size=row_count,
-                cls=index_cls,
                 dtype_group=index_dtype_group,
                 )
 
-        columns = get_index(
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
+        else:
+            index = get_index(cls=index_cls, **index_kwargs)
+
+        columns_kwargs = dict(
                 min_size=column_count,
                 max_size=column_count,
-                cls=columns_cls,
                 dtype_group=columns_dtype_group,
                 )
+
+        if issubclass(index_cls, IndexHierarchy):
+            columns = get_index_hierarchy(cls=columns_cls.from_labels, **columns_kwargs)
+        else:
+            columns = get_index(cls=columns_cls, **columns_kwargs)
 
         return st.builds(cls,
                 get_type_blocks(

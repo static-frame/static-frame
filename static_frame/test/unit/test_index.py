@@ -293,6 +293,15 @@ class TestUnit(TestCase):
                 [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
 
+    def test_index_reversed(self):
+
+        labels = tuple('acdeb')
+        index = Index(labels=labels)
+        index_reversed_generator = reversed(index)
+        self.assertEqual(
+            tuple(index_reversed_generator),
+            tuple(reversed(labels))
+        )
 
     def test_index_relable(self):
 
@@ -954,6 +963,24 @@ class TestUnit(TestCase):
         f2 = f.set_index(1, index_constructor=IndexMillisecond)
         self.assertEqual(f2.loc['2016-05', 0].values.tolist(),
                 [4, 5, 6, 7, 8])
+
+
+    def test_index_empty_a(self):
+        idx1 = Index(())
+        idx2 = Index(iter(()))
+        self.assertEqual(idx1.dtype, idx2.dtype)
+
+    def test_index_cumprod_a(self):
+        idx1 = IndexGO(range(1, 11, 2))
+
+        # sum applies to the labels
+        self.assertEqual(idx1.sum(), 25)
+
+        self.assertEqual(
+                idx1.cumprod().tolist(),
+                [1, 3, 15, 105, 945]
+                )
+
 
 
 

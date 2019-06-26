@@ -7,6 +7,11 @@ What is New in Static Frame
 0.3.6-dev
 ------------
 
+Frame now supports shapes of all zero and non-zero combinations of index and column lengths; Frame construction will raise an exception if attempting to set a value in an unfillable Frame shape.
+
+``Frame``, ``Series``, ``Index``, and ``IndexHierarchy`` all have improved implementations of ``cumprod`` and ``cumsum`` methods.
+
+
 
 0.3.5
 ------------

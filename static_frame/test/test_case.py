@@ -13,6 +13,8 @@ import pytest
 
 
 from static_frame import TypeBlocks
+from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import COMPLEX_TYPES
 
 
 skip_win = pytest.mark.skipif(sys.platform == 'win32', reason='Windows default dtypes.')
@@ -24,7 +26,6 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         pass
-
 
 
     @staticmethod
@@ -86,6 +87,17 @@ class TestCase(unittest.TestCase):
         return fp
 
 
+    #---------------------------------------------------------------------------
+
+    def assertEqualWithNaN(self, v1, v2):
+        if (isinstance(v1, FLOAT_TYPES) and np.isnan(v1) and
+                isinstance(v2, FLOAT_TYPES) and np.isnan(v2)):
+            return
+        if (isinstance(v1, COMPLEX_TYPES) and cmath.isnan(v1) and
+                isinstance(v2, COMPLEX_TYPES) and cmath.isnan(v2)):
+            return
+        return self.assertEqual(v1, v2)
+
     def assertTypeBlocksArrayEqual(self, tb: TypeBlocks, match, match_dtype=None):
         '''
         Args:
@@ -101,13 +113,7 @@ class TestCase(unittest.TestCase):
     def assertAlmostEqualValues(self, values1, values2):
 
         for v1, v2 in zip_longest(values1, values2):
-            if (isinstance(v1, float) and np.isnan(v1) and
-                    isinstance(v2, float) and np.isnan(v2)):
-                continue
-            if (isinstance(v1, complex) and cmath.isnan(v1) and
-                    isinstance(v2, complex) and cmath.isnan(v2)):
-                continue
-            self.assertEqual(v1, v2)
+            self.assertEqualWithNaN(v1, v2)
 
     def assertAlmostEqualItems(self, pairs1, pairs2):
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):

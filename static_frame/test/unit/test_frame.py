@@ -63,7 +63,7 @@ class TestUnit(TestCase):
                 )
 
         # with columns not defined, we create a DF with just an index
-        f2 = FrameGO(None, index=(1,2))
+        f2 = FrameGO(index=(1,2))
         f2['a'] = (-1, -1)
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((1, -1), (2, -1))),)
@@ -110,6 +110,110 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
             (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
             )
+
+    def test_frame_init_g(self):
+
+        f1 = sf.Frame(index=tuple('abc'))
+        self.assertEqual(f1.shape, (3, 0))
+
+        f2 = sf.Frame(columns=tuple('abc'))
+        self.assertEqual(f2.shape, (0, 3))
+
+        f3 = sf.Frame()
+        self.assertEqual(f3.shape, (0, 0))
+
+    def test_frame_init_h(self):
+
+        f1 = sf.Frame(index=tuple('abc'), columns=())
+        self.assertEqual(f1.shape, (3, 0))
+
+        f2 = sf.Frame(columns=tuple('abc'), index=())
+        self.assertEqual(f2.shape, (0, 3))
+
+        f3 = sf.Frame(columns=(), index=())
+        self.assertEqual(f3.shape, (0, 0))
+
+
+    def test_frame_init_i(self):
+
+        f1 = sf.FrameGO(index=tuple('abc'))
+        f1['x'] = (3, 4, 5)
+        f1['y'] = Series(dict(b=10, c=11, a=12))
+
+        self.assertEqual(f1.to_pairs(0),
+            (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
+
+    def test_frame_init_j(self):
+        f1 = sf.Frame('q', index=tuple('ab'), columns=tuple('xy'))
+        self.assertEqual(f1.to_pairs(0),
+            (('x', (('a', 'q'), ('b', 'q'))), ('y', (('a', 'q'), ('b', 'q'))))
+            )
+
+    def test_frame_init_k(self):
+        # check that we got autoincrement indices if no col/index provided
+        f1 = Frame([[0, 1], [2, 3]])
+        self.assertEqual(f1.to_pairs(0), ((0, ((0, 0), (1, 2))), (1, ((0, 1), (1, 3)))))
+
+    def test_frame_init_m(self):
+        # cannot create a single element filled Frame specifying a shape (with index and columns) but not specifying a data value
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(index=(3,4,5), columns=list('abv'))
+
+    def test_frame_init_n(self):
+        # cannot supply a single value to unfillabe sized Frame
+
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(None, index=(3,4,5), columns=())
+
+    def test_frame_init_o(self):
+        f1 = Frame()
+        self.assertEqual(f1.shape, (0, 0))
+
+
+    def test_frame_init_p(self):
+
+        # raise when a data values ir provided but an axis is size zero
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('x', index=(1,2,3), columns=iter(()))
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame(None, index=(1,2,3), columns=iter(()))
+
+
+    def test_frame_init_q(self):
+
+        f1 = sf.Frame(index=(1,2,3), columns=iter(()))
+        self.assertEqual(f1.shape, (3, 0))
+        self.assertEqual(f1.to_pairs(0), ())
+
+
+    def test_frame_init_r(self):
+
+        f1 = sf.Frame(index=(), columns=iter(range(3)))
+
+        self.assertEqual(f1.shape, (0, 3))
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ()), (1, ()), (2, ())))
+
+        with self.assertRaises(RuntimeError):
+            # cannot create an unfillable array with a data value
+            f1 = sf.Frame('x', index=(), columns=iter(range(3)))
+
+
+    def test_frame_init_iter(self):
+
+        f1 = Frame(None, index=iter(range(3)), columns=("A",))
+        self.assertEqual(
+            f1.to_pairs(0),
+            (('A', ((0, None), (1, None), (2, None))),)
+        )
+
+        f2 = Frame(None, index=("A",), columns=iter(range(3)))
+        self.assertEqual(
+            f2.to_pairs(0),
+            ((0, (('A', None),)), (1, (('A', None),)), (2, (('A', None),)))
+        )
 
     def test_frame_values_a(self):
         f = sf.Frame([[3]])
@@ -613,6 +717,8 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         f2 = FrameGO(index=('w', 'x', 'y', 'z'))
+
+        # import ipdb; ipdb.set_trace()
         f1.extend(f2)
         self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
 
@@ -674,6 +780,23 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_extract_b(self):
+        # examining cases where shape goes to zero in one dimension
+
+        f1 = Frame(None, index=tuple('ab'), columns=('c',))
+        f2 = f1[[]]
+        self.assertEqual(len(f2.columns), 0)
+        self.assertEqual(len(f2.index), 2)
+        self.assertEqual(f2.shape, (2, 0))
+
+
+    def test_frame_extract_c(self):
+        # examining cases where shape goes to zero in one dimension
+        f1 = Frame(None, columns=tuple('ab'), index=('c',))
+        f2 = f1.loc[[]]
+        self.assertEqual(f2.shape, (0, 2))
+        self.assertEqual(len(f2.columns), 2)
+        self.assertEqual(len(f2.index), 0)
 
 
     def test_frame_loc_a(self):
@@ -1451,6 +1574,72 @@ class TestUnit(TestCase):
         assert f1.sum().sum() == 9900.0
 
 
+    def test_frame_prod_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(
+            f1.prod(axis=0).to_pairs(),
+            (('p', 3600), ('q', 471580), ('r', 9000))
+            )
+
+        self.assertEqual(f1.prod(axis=1).to_pairs(),
+            (('w', 12), ('x', 61200), ('y', 190), ('z', 109500))
+            )
+
+
+
+    def test_frame_cumsum_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        f2 = f1.cumsum()
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('p', (('w', 2), ('x', 32), ('y', 34), ('z', 64))), ('q', (('w', 2), ('x', 36), ('y', 131), ('z', 204))), ('r', (('w', 3), ('x', 63), ('y', 64), ('z', 114))))
+                )
+        self.assertEqual(f1.cumsum(1).to_pairs(0),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 4), ('x', 64), ('y', 97), ('z', 103))), ('r', (('w', 7), ('x', 124), ('y', 98), ('z', 153))))
+                )
+
+
+
+    def test_frame_cumprod_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(f1.cumprod(0).to_pairs(0),
+                (('p', (('w', 2), ('x', 60), ('y', 120), ('z', 3600))), ('q', (('w', 2), ('x', 68), ('y', 6460), ('z', 471580))), ('r', (('w', 3), ('x', 180), ('y', 180), ('z', 9000))))
+                )
+
+        self.assertEqual(f1.cumprod(1).to_pairs(0),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 4), ('x', 1020), ('y', 190), ('z', 2190))), ('r', (('w', 12), ('x', 61200), ('y', 190), ('z', 109500))))
+                )
 
     def test_frame_min_a(self):
         # reindex both axis
@@ -1830,6 +2019,20 @@ class TestUnit(TestCase):
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
 
+    def test_frame_reversed(self):
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = ((2, 2, 'a', False, False),
+                   (30, 34, 'b', True, False),
+                   (2, 95, 'c', False, False),
+                   (30, 73, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+
+        self.assertTrue(tuple(reversed(f)) == tuple(reversed(columns)))
+
+
     def test_frame_sort_index_a(self):
         # reindex both axis
         records = (
@@ -2022,7 +2225,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 4))
 
         f3 = f1.dropna(axis=1, condition=np.any)
-        self.assertEqual(f3.shape, (0, 0))
+        self.assertEqual(f3.shape, (3, 0))
 
     def test_frame_dropna_b(self):
         f1 = FrameGO([
@@ -2802,6 +3005,19 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             sf.Frame.from_concat((frame1, frame2))
 
+
+    def test_frame_from_concat_u(self):
+        # this fails; figure out why
+        a = sf.Series(('a', 'b', 'c'), index=range(3, 6))
+        f = sf.Frame.from_concat((
+                a,
+                sf.Series(a.index.values, index=a.index)),
+                axis=0,
+                columns=(3, 4, 5), index=(1,2))
+
+        self.assertEqual(f.to_pairs(0),
+                ((3, ((1, 'a'), (2, 3))), (4, ((1, 'b'), (2, 4))), (5, ((1, 'c'), (2, 5))))
+                )
 
     def test_frame_set_index_a(self):
         records = (
@@ -3602,11 +3818,15 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, (150, 5))
 
 
-    @unittest.skip('needs investigation')
-    def test_frame_from_concat_x(self):
-        # this fails; figure out why
-        a = sf.Series(('a', 'b', 'c'), index=range(3, 6))
-        sf.Frame.from_concat((a, sf.Series(a.index.values, index=a.index)), axis=0, columns=('a','b','c'), index=(1,2))
+    def test_frame_from_dict_a(self):
+
+        with self.assertRaises(RuntimeError):
+            # mismatched length
+            sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

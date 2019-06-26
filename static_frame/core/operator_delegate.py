@@ -9,8 +9,8 @@ import operator as operator_mod
 
 import numpy as np
 
-from static_frame.core.util import _DTYPE_INT_KIND
-from static_frame.core.util import _DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_INT_KIND
+from static_frame.core.util import DTYPE_STR_KIND
 
 
 _UFUNC_UNARY_OPERATORS = (
@@ -46,8 +46,6 @@ _UFUNC_OPERATORS_MAP = {k: getattr(operator_mod, k)
         for k in chain(_UFUNC_UNARY_OPERATORS, _UFUNC_BINARY_OPERATORS)
         }
 
-
-
 # all reverse are binary
 # should be RIGHT, not REVERSE
 _REVERSE_OPERATOR_MAP = {
@@ -57,7 +55,6 @@ _REVERSE_OPERATOR_MAP = {
         '__rtruediv__': '__truediv__',
         '__rfloordiv__': '__floordiv__',
         }
-
 
 def _ufunc_logical_skipna(array: np.ndarray,
         ufunc: tp.Callable,
@@ -88,11 +85,11 @@ def _ufunc_logical_skipna(array: np.ndarray,
             return ufunc(v, axis=axis, out=out)
         return ufunc(array, axis=axis, out=out)
 
-    if array.dtype.kind in _DTYPE_INT_KIND:
+    if array.dtype.kind in DTYPE_INT_KIND:
         return ufunc(array, axis=axis, out=out)
 
     # all types other than strings or objects" assume truthy
-    if array.dtype.kind != 'O' and array.dtype.kind not in _DTYPE_STR_KIND:
+    if array.dtype.kind != 'O' and array.dtype.kind not in DTYPE_STR_KIND:
         if array.ndim == 1:
             return True
         return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
@@ -127,7 +124,7 @@ def _nanany(array, axis=0, out=None):
 
 
 
-
+# ufuncs that are applied along an axis, reducing dimensionality
 _UFUNC_AXIS_SKIPNA = {
         'all': (_all, _nanall, bool),
         'any': (_any, _nanany, bool),
@@ -139,8 +136,12 @@ _UFUNC_AXIS_SKIPNA = {
         'std': (np.std, np.nanstd, None),
         'var': (np.var, np.nanvar, None),
         'prod': (np.prod, np.nanprod, None),
+        }
+
+# ufuncs that retain the shape and dimensionality
+_UFUNC_SHAPE_SKIPNA = {
         'cumsum': (np.cumsum, np.nancumsum, None),
-        'cumprod': (np.cumprod, np.nancumprod, None)
+        'cumprod': (np.cumprod, np.nancumprod, None),
         }
 
 class MetaOperatorDelegate(type):
@@ -193,6 +194,25 @@ class MetaOperatorDelegate(type):
         f.__name__ = func_name
         return f
 
+
+    @staticmethod
+    def create_ufunc_shape_skipna(func_name):
+        ufunc, ufunc_skipna, dtype = _UFUNC_SHAPE_SKIPNA[func_name]
+
+        # these become the common defaults for all of these functions
+        def func(self, axis=0, skipna=True, **_):
+            return self._ufunc_shape_skipna(
+                    axis=axis,
+                    skipna=skipna,
+                    ufunc=ufunc,
+                    ufunc_skipna=ufunc_skipna,
+                    dtype=dtype)
+
+        f = wraps(ufunc)(func) # not sure if this is correct
+        f.__name__ = func_name
+        return f
+
+
     def __new__(mcs, name, bases, attrs):
         '''
         Create and assign all autopopulated functions.
@@ -213,6 +233,10 @@ class MetaOperatorDelegate(type):
 
         for func_name in _UFUNC_AXIS_SKIPNA:
             attrs[func_name] = mcs.create_ufunc_axis_skipna(func_name)
+
+        for func_name in _UFUNC_SHAPE_SKIPNA:
+            attrs[func_name] = mcs.create_ufunc_shape_skipna(func_name)
+
 
         return type.__new__(mcs, name, bases, attrs)
 

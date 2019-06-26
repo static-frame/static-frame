@@ -174,6 +174,39 @@ class IndexBase:
             self._update_array_cache()
         return self._labels.__iter__()
 
+    def __reversed__(self) -> tp.Iterable[tp.Hashable]:
+        '''
+        Returns a reverse iterator on the index labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return reversed(self._labels)
+
+    #---------------------------------------------------------------------------
+    # metaclass-applied functions
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> np.ndarray:
+        '''
+        For Index and IndexHierarchy, _ufunc_shape_skipna and _ufunc_axis_skipna are defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        return self._ufunc_axis_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                dtype=dtype
+                )
+
+
     #---------------------------------------------------------------------------
     # common display
 

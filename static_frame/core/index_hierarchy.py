@@ -185,7 +185,13 @@ class IndexHierarchy(IndexBase,
             :py:class:`static_frame.IndexHierarchy`
         '''
         labels_iter = iter(labels)
-        first = next(labels_iter)
+        try:
+            first = next(labels_iter)
+        except StopIteration:
+            # if iterable is empty, return empty index
+            return cls(levels=cls._LEVEL_CONSTRUCTOR(
+                    cls._INDEX_CONSTRUCTOR(())
+                    ), name=name)
 
         # minimum permitted depth is 2
         if len(first) < 2:
@@ -625,17 +631,30 @@ class IndexHierarchy(IndexBase,
         return array
 
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
-        '''Axis argument is required but is irrelevant.
-
-        Args:
-            dtype: Not used in 1D application, but collected here to provide a uniform signature.
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> np.ndarray:
         '''
-        return ufunc_skipna_1d(
-                array=self._labels,
-                skipna=skipna,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
+        Returns:
+            immutable NumPy array.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if skipna:
+            post = ufunc_skipna(self._labels, axis=axis, dtype=dtype)
+        else:
+            post = ufunc(self._labels, axis=axis, dtype=dtype)
+
+        post.flags.writeable = False
+        return post
+
+
+    # _ufunc_shape_skipna defined in IndexBase
 
     #---------------------------------------------------------------------------
     # dictionary-like interface

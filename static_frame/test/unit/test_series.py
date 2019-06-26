@@ -742,6 +742,22 @@ class TestUnit(TestCase):
 
 
 
+    def test_series_cumsum_a(self):
+
+        s1 = Series.from_items(zip('abc', (10, 20, 30)))
+
+        self.assertEqual(s1.cumsum().to_pairs(),
+                (('a', 10), ('b', 30), ('c', 60))
+                )
+
+    def test_series_cumprod_a(self):
+
+        s1 = Series.from_items(zip('abc', (10, 20, 30)))
+        self.assertEqual(
+                s1.cumprod().to_pairs(),
+                (('a', 10), ('b', 200), ('c', 6000))
+                )
+
     def test_series_mask_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 
@@ -997,6 +1013,13 @@ class TestUnit(TestCase):
         self.assertEqual(s3.to_pairs(),
                 (('c', 3), ('a', 10), ('d', 15), ('e', 21), ('b', 28)))
         self.assertEqual(s3.name, s1.name)
+
+
+    def test_series_reversed(self):
+
+        idx = tuple('abcd')
+        s = Series(range(4), index=idx)
+        self.assertTrue(tuple(reversed(s)) == tuple(reversed(idx)))
 
 
     def test_series_relabel_a(self):
