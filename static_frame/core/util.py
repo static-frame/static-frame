@@ -368,9 +368,6 @@ _UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
     '''
-    # if len(array) == 0:
-    #     # np returns 0 for sum of an empty array
-    #     return 0.0
     if array.dtype.kind == 'O':
         # replace None with nan
         v = array[np.not_equal(array, None)]

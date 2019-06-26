@@ -1816,8 +1816,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             ufunc,
             ufunc_skipna,
             dtype):
-        # axis 0 sums ros, deliveres column index
-        # axis 1 sums cols, delivers row index
+        # axis 0 processes ros, deliveres column index
+        # axis 1 processes cols, delivers row index
         assert axis < 2
 
         # TODO: need to handle replacing None with nan in object blocks!
@@ -1829,6 +1829,33 @@ class Frame(metaclass=MetaOperatorDelegate):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype):
+        # axis 0 processes ros, deliveres column index
+        # axis 1 processes cols, delivers row index
+        assert axis < 2
+
+        # full-shape processing requires processing contiguous values
+        v = self.values
+        if skipna:
+            post = ufunc_skipna(v, axis=axis, dtype=dtype)
+        else:
+            post = ufunc(v, axis=axis, dtype=dtype)
+
+        post.flags.writeable = False
+
+        return self.__class__(
+                TypeBlocks.from_blocks(post),
+                index=self._index,
+                columns=self._columns,
+                own_data=True,
+                own_index=True
+                )
 
     #---------------------------------------------------------------------------
     # axis iterators

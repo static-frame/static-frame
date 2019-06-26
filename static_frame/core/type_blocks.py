@@ -1526,6 +1526,11 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
 
+    def _ufunc_shape_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype):
+        # not sure if these make sense on TypeBlocks, as they reduce dimensionality
+        raise NotImplementedError()
+
+
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 

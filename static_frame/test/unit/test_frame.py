@@ -1540,6 +1540,72 @@ class TestUnit(TestCase):
         assert f1.sum().sum() == 9900.0
 
 
+    def test_frame_prod_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(
+            f1.prod(axis=0).to_pairs(),
+            (('p', 3600), ('q', 471580), ('r', 9000))
+            )
+
+        self.assertEqual(f1.prod(axis=1).to_pairs(),
+            (('w', 12), ('x', 61200), ('y', 190), ('z', 109500))
+            )
+
+
+
+    def test_frame_cumsum_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        f2 = f1.cumsum()
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('p', (('w', 2), ('x', 32), ('y', 34), ('z', 64))), ('q', (('w', 2), ('x', 36), ('y', 131), ('z', 204))), ('r', (('w', 3), ('x', 63), ('y', 64), ('z', 114))))
+                )
+        self.assertEqual(f1.cumsum(1).to_pairs(0),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 4), ('x', 64), ('y', 97), ('z', 103))), ('r', (('w', 7), ('x', 124), ('y', 98), ('z', 153))))
+                )
+
+
+
+    def test_frame_cumprod_a(self):
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, 95, 1),
+                (30, 73, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual(f1.cumprod(0).to_pairs(0),
+                (('p', (('w', 2), ('x', 60), ('y', 120), ('z', 3600))), ('q', (('w', 2), ('x', 68), ('y', 6460), ('z', 471580))), ('r', (('w', 3), ('x', 180), ('y', 180), ('z', 9000))))
+                )
+
+        self.assertEqual(f1.cumprod(1).to_pairs(0),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 4), ('x', 1020), ('y', 190), ('z', 2190))), ('r', (('w', 12), ('x', 61200), ('y', 190), ('z', 109500))))
+                )
 
     def test_frame_min_a(self):
         # reindex both axis

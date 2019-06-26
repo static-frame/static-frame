@@ -748,8 +748,26 @@ class Series(metaclass=MetaOperatorDelegate):
         result.flags.writeable = False
         return self.__class__(result, index=index)
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ):
         '''For a Series, all functions of this type reduce the single axis of the Series to 1d, so Index has no use here.
+
+        Args:
+            dtype: not used, part of signature for a commin interface
+        '''
+        return ufunc_skipna_1d(
+                array=self.values,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna)
+
+    def _ufunc_shape_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
+        '''
 
         Args:
             dtype: not used, part of signature for a commin interface

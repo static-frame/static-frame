@@ -631,8 +631,14 @@ class IndexHierarchy(IndexBase,
         return array
 
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
-        '''Axis argument is required but is irrelevant.
+    def _ufunc_axis_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ):
+        '''
 
         Args:
             dtype: Not used in 1D application, but collected here to provide a uniform signature.
@@ -642,6 +648,25 @@ class IndexHierarchy(IndexBase,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna)
+
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None):
+        '''
+
+        Args:
+            dtype: Not used in 1D application, but collected here to provide a uniform signature.
+        '''
+        return ufunc_skipna_1d(
+                array=self._labels,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna)
+
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
