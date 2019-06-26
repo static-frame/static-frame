@@ -169,6 +169,19 @@ class TestUnit(TestCase):
         f1 = Frame()
         self.assertEqual(f1.shape, (0, 0))
 
+
+    def test_frame_init_p(self):
+
+        # raise when a data values ir provided but an axis is size zero
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('x', index=(1,2,3), columns=iter(()))
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame(None, index=(1,2,3), columns=iter(()))
+
+
+
     def test_frame_init_iter(self):
 
         f1 = Frame(None, index=iter(range(3)), columns=("A",))
@@ -685,6 +698,8 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         f2 = FrameGO(index=('w', 'x', 'y', 'z'))
+
+        # import ipdb; ipdb.set_trace()
         f1.extend(f2)
         self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
 

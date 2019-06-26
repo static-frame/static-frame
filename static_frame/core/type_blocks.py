@@ -142,11 +142,15 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 block_count += 1
 
         # blocks cam be empty
-        if row_count is None and shape_reference is not None:
-            # if columns have gone to zero, and this was created from a TB that had rows, continue to reprsent those rows
-            row_count = shape_reference[0]
+        if row_count is None:
+            if shape_reference is not None:
+                # if columns have gone to zero, and this was created from a TB that had rows, continue to represent those rows
+                row_count = shape_reference[0]
+            else:
+                raise Exception()
 
-        return cls(blocks=blocks,
+        return cls(
+                blocks=blocks,
                 dtypes=dtypes,
                 index=index,
                 shape=(row_count, column_count),
@@ -163,11 +167,14 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         return cls.from_blocks(a)
 
     @classmethod
-    def from_zero_size_shape(cls, shape: tp.Tuple[int, int] = (0, 0)) -> 'TypeBlocks':
+    def from_zero_size_shape(cls,
+            shape: tp.Tuple[int, int] = (0, 0)
+            ) -> 'TypeBlocks':
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
         '''
         rows, columns = shape
+
         if not (rows == 0 or columns == 0):
             raise RuntimeError(f'invalid shape for empty TypeBlocks: {shape}')
 

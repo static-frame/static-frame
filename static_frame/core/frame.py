@@ -811,6 +811,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         self._name = name if name is None else name_filter(name)
 
+        # we can determin if columns or index are empty only if they are not iterators
         columns_empty = columns is None or (
                 hasattr(columns, '__len__') and len(columns) == 0)
 
@@ -836,7 +837,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
-            raise RuntimeError('use Frame.from_dict to create a Frmae from a dict')
+            raise RuntimeError('use Frame.from_dict to create a Frame from a dict')
 
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
 
@@ -877,6 +878,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 and self._COLUMN_CONSTRUCTOR.STATIC):
             # if it is a STATIC index we can assign directly
             self._columns = columns
+            col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
             self._columns = self._COLUMN_CONSTRUCTOR(
@@ -885,9 +887,12 @@ class Frame(metaclass=MetaOperatorDelegate):
                     dtype=np.int64)
         else:
             self._columns = self._COLUMN_CONSTRUCTOR(columns)
+            col_count = len(self._columns)
+
 
         if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
             self._index = index
+            row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
             self._index = Index(range(row_count),
@@ -895,22 +900,29 @@ class Frame(metaclass=MetaOperatorDelegate):
                     dtype=np.int64)
         else:
             self._index = Index(index)
+            row_count = len(self._index)
+
+        # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
+        columns_empty = col_count == 0
+        index_empty = row_count == 0
 
         if blocks_constructor:
+            # if we have a blocks_constructor, we are determining final size from index and/or columns; we might have a legitamate single value for data, but it cannot be FRAME_INITIALIZER_DEFAULT
+            if data is not FRAME_INITIALIZER_DEFAULT and (
+                    columns_empty or index_empty):
+                raise RuntimeError('cannot supply a single element to Frame constructor when index or columns is empty')
             # must update the row/col counts, sets self._blocks
-            row_count = self._index.__len__()
-            col_count = self._columns.__len__()
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
-        if row_count and len(self._index) != row_count:
+        if self._blocks.shape[0] != row_count:
             # row count might be 0 for an empty DF
             raise RuntimeError(
-                f'Index has incorrect size (got {len(self._index)}, expected {row_count})'
+                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})'
             )
-        if len(self._columns) != col_count:
+        if self._blocks.shape[1] != col_count:
             raise RuntimeError(
-                f'Columns has incorrect size (got {len(self._columns)}, expected {col_count})'
+                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
             )
 
     #---------------------------------------------------------------------------
@@ -1169,14 +1181,18 @@ class Frame(metaclass=MetaOperatorDelegate):
             columns_ic = None
 
         return self.__class__(
-                TypeBlocks.from_blocks(self._blocks.resize_blocks(
-                        index_ic=index_ic,
-                        columns_ic=columns_ic,
-                        fill_value=fill_value)),
+                TypeBlocks.from_blocks(
+                        self._blocks.resize_blocks(
+                                index_ic=index_ic,
+                                columns_ic=columns_ic,
+                                fill_value=fill_value),
+                        shape_reference=(len(index), len(columns))
+                        ),
                 index=index,
                 columns=columns,
                 name=self._name,
-                own_data=True)
+                own_data=True
+                )
 
 
     def relabel(self,
