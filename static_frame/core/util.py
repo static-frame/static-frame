@@ -83,7 +83,11 @@ if hasattr(np, 'float128'):
 else:
     FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
 
-COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
+if hasattr(np, 'complex256'):
+    COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
+else:
+    COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
+
 DICTLIKE_TYPES = (abc.Set, dict)
 NON_STR_TYPES = {int, float, bool}
 
