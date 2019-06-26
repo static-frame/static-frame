@@ -181,6 +181,25 @@ class TestUnit(TestCase):
             f1 = sf.Frame(None, index=(1,2,3), columns=iter(()))
 
 
+    def test_frame_init_q(self):
+
+        f1 = sf.Frame(index=(1,2,3), columns=iter(()))
+        self.assertEqual(f1.shape, (3, 0))
+        self.assertEqual(f1.to_pairs(0), ())
+
+
+    def test_frame_init_r(self):
+
+        f1 = sf.Frame(index=(), columns=iter(range(3)))
+
+        self.assertEqual(f1.shape, (0, 3))
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ()), (1, ()), (2, ())))
+
+        with self.assertRaises(RuntimeError):
+            # cannot create an unfillable array with a data value
+            f1 = sf.Frame('x', index=(), columns=iter(range(3)))
+
 
     def test_frame_init_iter(self):
 

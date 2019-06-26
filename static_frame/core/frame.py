@@ -811,7 +811,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
         self._name = name if name is None else name_filter(name)
 
-        # we can determin if columns or index are empty only if they are not iterators
+        # we can determin if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
         columns_empty = columns is None or (
                 hasattr(columns, '__len__') and len(columns) == 0)
 
@@ -840,21 +840,20 @@ class Frame(metaclass=MetaOperatorDelegate):
             raise RuntimeError('use Frame.from_dict to create a Frame from a dict')
 
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
+            # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
 
             def blocks_constructor(shape):
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)
 
-        elif data is FRAME_INITIALIZER_DEFAULT:
-            # data can only be default initializer if one or both indexs are empty
-            raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')
-
         elif not hasattr(data, '__len__') or isinstance(data, str):
             # data is not None, and data is a single element to scale to size of index and columns; must defer until after index realization
-
-            if columns_empty or index_empty:
-                raise RuntimeError('cannot supply a single element to Frame constructor when index or columns is empty')
+            # or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
             def blocks_constructor(shape):
+                if shape[0] > 0 and shape[1] > 0 and data is FRAME_INITIALIZER_DEFAULT:
+                    # if fillable and we still have default initializer, this is a problem
+                    raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')
+
                 a = np.full(shape, data)
                 a.flags.writeable = False
                 self._blocks = TypeBlocks.from_blocks(a)
@@ -910,7 +909,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             # if we have a blocks_constructor, we are determining final size from index and/or columns; we might have a legitamate single value for data, but it cannot be FRAME_INITIALIZER_DEFAULT
             if data is not FRAME_INITIALIZER_DEFAULT and (
                     columns_empty or index_empty):
-                raise RuntimeError('cannot supply a single element to Frame constructor when index or columns is empty')
+                raise RuntimeError('cannot supply a data argument to Frame constructor when index or columns is empty')
             # must update the row/col counts, sets self._blocks
             blocks_constructor((row_count, col_count))
 
