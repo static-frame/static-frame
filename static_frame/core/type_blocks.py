@@ -303,6 +303,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         Args:
             shape: used in construting returned array; not ussed as a constraint.
+            row_multiple: if False, a single row reduces to a 1D
         '''
         # assume column_mutltiple is True, as this routine is called after handling extraction of single columns
         if len(blocks) == 1:

@@ -742,6 +742,17 @@ class TestUnit(TestCase):
 
 
 
+    def test_series_cumsum_a(self):
+
+        s1 = Series.from_items(zip('abc', (10, 20, 30)))
+
+        self.assertEqual(s1.cumsum().to_pairs(),
+                (('a', 10), ('b', 30), ('c', 60))
+                )
+
+
+
+
     def test_series_mask_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 

@@ -8,6 +8,9 @@ from itertools import repeat
 
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
+from hypothesis import settings as hypo_settings
+from hypothesis import HealthCheck
+
 
 import numpy as np
 
@@ -34,6 +37,10 @@ from static_frame import FrameGO
 MAX_ROWS = 8
 MAX_COLUMNS = 10
 
+
+hypo_settings.register_profile("sf",
+        suppress_health_check=[HealthCheck.too_slow])
+hypo_settings.load_profile("sf")
 
 #-------------------------------------------------------------------------------
 # spacings

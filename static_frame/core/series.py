@@ -754,11 +754,12 @@ class Series(metaclass=MetaOperatorDelegate):
             ufunc,
             ufunc_skipna,
             dtype=None
-            ):
-        '''For a Series, all functions of this type reduce the single axis of the Series to 1d, so Index has no use here.
+            ) -> np.ndarray:
+        '''
+        For a Series, all functions of this type reduce the single axis of the Series to a single element, so Index has no use here.
 
         Args:
-            dtype: not used, part of signature for a commin interface
+            dtype: not used, part of signature for a common interface
         '''
         return ufunc_skipna_1d(
                 array=self.values,
@@ -766,17 +767,26 @@ class Series(metaclass=MetaOperatorDelegate):
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna)
 
-    def _ufunc_shape_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype=None):
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> 'Series':
         '''
+        NumPy ufunc proccessors that retain the shape of the processed.
 
         Args:
-            dtype: not used, part of signature for a commin interface
+            dtype: not used, part of signature for a common interface
         '''
-        return ufunc_skipna_1d(
+        values = ufunc_skipna_1d(
                 array=self.values,
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna)
+        values.flags.writeable = False
+        return self.__class__(values, index=self._index)
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:
