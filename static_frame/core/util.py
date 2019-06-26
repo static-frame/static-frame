@@ -77,7 +77,12 @@ TIME_DELTA_ATTR_MAP = (
 
 INT_TYPES = (int, np.int_)
 BOOL_TYPES = (bool, np.bool_)
-FLOAT_TYPES = (float, np.float64, np.float16, np.float32, np.float128)
+
+if hasattr(np, 'float128'):
+    FLOAT_TYPES = (float, np.float64, np.float16, np.float32, np.float128)
+else:
+    FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
+
 COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
 DICTLIKE_TYPES = (abc.Set, dict)
 NON_STR_TYPES = {int, float, bool}
