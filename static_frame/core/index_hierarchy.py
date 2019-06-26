@@ -637,36 +637,24 @@ class IndexHierarchy(IndexBase,
             ufunc,
             ufunc_skipna,
             dtype=None
-            ):
+            ) -> np.ndarray:
         '''
-
-        Args:
-            dtype: Not used in 1D application, but collected here to provide a uniform signature.
+        Returns:
+            immutable NumPy array.
         '''
-        return ufunc_skipna_1d(
-                array=self._labels,
-                skipna=skipna,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
+        if self._recache:
+            self._update_array_cache()
+
+        if skipna:
+            post = ufunc_skipna(self._labels, axis=axis, dtype=dtype)
+        else:
+            post = ufunc(self._labels, axis=axis, dtype=dtype)
+
+        post.flags.writeable = False
+        return post
 
 
-    def _ufunc_shape_skipna(self, *,
-            axis,
-            skipna,
-            ufunc,
-            ufunc_skipna,
-            dtype=None):
-        '''
-
-        Args:
-            dtype: Not used in 1D application, but collected here to provide a uniform signature.
-        '''
-        return ufunc_skipna_1d(
-                array=self._labels,
-                skipna=skipna,
-                ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
-
+    # _ufunc_shape_skipna defined in IndexBase
 
     #---------------------------------------------------------------------------
     # dictionary-like interface

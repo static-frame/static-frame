@@ -970,6 +970,20 @@ class TestUnit(TestCase):
         idx2 = Index(iter(()))
         self.assertEqual(idx1.dtype, idx2.dtype)
 
+    def test_index_cumprod_a(self):
+        idx1 = IndexGO(range(1, 11, 2))
+
+        # sum applies to the labels
+        self.assertEqual(idx1.sum(), 25)
+
+        self.assertEqual(
+                idx1.cumprod().tolist(),
+                [1, 3, 15, 105, 945]
+                )
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

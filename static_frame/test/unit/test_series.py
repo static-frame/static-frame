@@ -750,8 +750,13 @@ class TestUnit(TestCase):
                 (('a', 10), ('b', 30), ('c', 60))
                 )
 
+    def test_series_cumprod_a(self):
 
-
+        s1 = Series.from_items(zip('abc', (10, 20, 30)))
+        self.assertEqual(
+                s1.cumprod().to_pairs(),
+                (('a', 10), ('b', 200), ('c', 6000))
+                )
 
     def test_series_mask_a(self):
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))

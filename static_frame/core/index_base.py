@@ -183,6 +183,31 @@ class IndexBase:
         return reversed(self._labels)
 
     #---------------------------------------------------------------------------
+    # metaclass-applied functions
+
+    def _ufunc_shape_skipna(self, *,
+            axis,
+            skipna,
+            ufunc,
+            ufunc_skipna,
+            dtype=None
+            ) -> np.ndarray:
+        '''
+        For Index and IndexHierarchy, _ufunc_shape_skipna and _ufunc_axis_skipna are defined the same.
+
+        Returns:
+            immutable NumPy array.
+        '''
+        return self._ufunc_axis_skipna(
+                axis=axis,
+                skipna=skipna,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                dtype=dtype
+                )
+
+
+    #---------------------------------------------------------------------------
     # common display
 
     def __repr__(self) -> str:

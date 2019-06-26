@@ -1815,7 +1815,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skipna,
             ufunc,
             ufunc_skipna,
-            dtype):
+            dtype) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2
@@ -1835,7 +1835,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             skipna,
             ufunc,
             ufunc_skipna,
-            dtype):
+            dtype) -> 'Frame':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2

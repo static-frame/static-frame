@@ -937,6 +937,20 @@ class TestUnit(TestCase):
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
             )
 
+
+    def test_hierarchy_cumprod_a(self):
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+
+        # sum applies to the labels
+        self.assertEqual(ih1.sum().tolist(),
+                [60, 20]
+                )
+
+        self.assertEqual(ih1.cumprod().tolist(),
+                [[10, 3], [100, 21], [2000, 63], [40000, 441]]
+                )
+
 if __name__ == '__main__':
     unittest.main()
 
