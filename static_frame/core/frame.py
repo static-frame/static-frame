@@ -274,8 +274,10 @@ class Frame(metaclass=MetaOperatorDelegate):
             ) -> 'Frame':
         '''Frame constructor from an iterable of rows.
 
+        Note that defining rows with an iterable of dictionaries is supported; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
+
         Args:
-            records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
+            records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
             index: Optionally provide an iterable of index labels, equal in length to the number of records.
             columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
             dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
@@ -301,18 +303,29 @@ class Frame(metaclass=MetaOperatorDelegate):
                 return dtypes.get(columns[col_idx], None)
             return dtypes[col_idx]
 
+
         def blocks():
+
             if not hasattr(records, '__len__'):
+                # might be a generator; must convert to sequence
                 rows = list(records)
             else:
+                # could be a sequence, or something like a dict view
                 rows = records
 
-            row_reference = rows[0]
+            if hasattr(rows, '__getitem__'):
+                rows_to_iter = False
+                row_reference = rows[0]
+            else:
+                # dict view, or other sized iterable that does not suppor getitem
+                rows_to_iter = True
+                row_reference = next(iter(rows))
+
+
+            # import ipdb; ipdb.set_trace()
+
             row_count = len(rows)
             col_count = len(row_reference)
-
-            # if dtypes is not None and len(dtypes) != col_count:
-            #     raise RuntimeError('length of dtypes does not match rows')
 
             column_getter = None
             if isinstance(row_reference, dict):

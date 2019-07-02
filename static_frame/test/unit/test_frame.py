@@ -3210,6 +3210,15 @@ class TestUnit(TestCase):
         self.assertEqual(str(f1.dtypes['b']), 'int64')
 
 
+    def test_frame_from_records_j(self):
+        # handle case of dict views
+        a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
+
+        post = Frame.from_records(a.values(), index=list(a.keys()))
+
+        self.assertEqual(post.to_pairs(0),
+                (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
+
     def test_frame_from_json_a(self):
 
         msg = """[
