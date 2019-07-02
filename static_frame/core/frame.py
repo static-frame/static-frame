@@ -360,9 +360,10 @@ class Frame(metaclass=MetaOperatorDelegate):
 
                 values = None
                 if column_type is not None:
+                    rows_iter = rows if not rows_to_iter else iter(rows)
                     try:
                         values = np.fromiter(
-                                (row[col_key] for row in rows),
+                                (row[col_key] for row in rows_iter),
                                 count=row_count,
                                 dtype=column_type)
                     except ValueError:
@@ -371,8 +372,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                             # reset to None if not explicit and failued in fromiter
                             column_type = None
                 if values is None:
+                    rows_iter = rows if not rows_to_iter else iter(rows)
                     # let array constructor determine type if column_type is None
-                    values = np.array([row[col_key] for row in rows],
+                    values = np.array([row[col_key] for row in rows_iter],
                             dtype=column_type)
 
                 values.flags.writeable = False
