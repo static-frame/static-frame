@@ -2368,6 +2368,43 @@ class TestUnit(TestCase):
                 (('count', (('red', 1), ('green', 3), ('blue', 100), ('black', 4))), ('score', (('red', 1.3), ('green', 5.2), ('blue', 3.4), ('black', 9.0)))))
 
 
+    def test_frame_from_csv_d(self):
+
+        input_stream = StringIO('''
+        196412	0.0
+        196501	0.0
+        196502	0.0
+        196503	0.0
+        196504	0.0
+        196505	0.0''')
+
+
+        f1 = sf.Frame.from_tsv(
+                input_stream,
+                index_column=0,
+                header_is_columns=False)
+
+        self.assertEqual(f1.to_pairs(0),
+                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))),))
+
+        input_stream = StringIO('''
+        196412	0.0	0.1
+        196501	0.0	0.1
+        196502	0.0	0.1
+        196503	0.0	0.1
+        196504	0.0	0.1
+        196505	0.0	0.1''')
+
+
+        f2 = sf.Frame.from_tsv(
+                input_stream,
+                index_column=0,
+                header_is_columns=False)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), ('f2', ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
+
+
     def test_frame_to_csv_a(self):
         records = (
                 (2, 2, 'a', False, False),

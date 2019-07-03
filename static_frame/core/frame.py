@@ -120,6 +120,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     _COLUMN_CONSTRUCTOR = Index
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_concat(cls,
             frames: tp.Iterable[tp.Union['Frame', Series]],
             *,
@@ -139,6 +140,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -263,6 +266,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=own_index)
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_records(cls,
             records: tp.Iterable[tp.Any],
             *,
@@ -280,7 +284,9 @@ class Frame(metaclass=MetaOperatorDelegate):
             records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
             index: Optionally provide an iterable of index labels, equal in length to the number of records.
             columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
-            dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -392,57 +398,79 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True)
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_json(cls,
             json_data: str,
             *,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            dtypes: DtypesSpecifier = None
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''Frame constructor from an in-memory JSON document.
 
         Args:
             json_data: a string of JSON, encoding a table as an array of JSON objects.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
         data = json.loads(json_data)
-        return cls.from_records(data, name=name, dtypes=dtypes)
+        return cls.from_records(data,
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
             url: str,
             *,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            dtypes: DtypesSpecifier = None
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''Frame constructor from a JSON documenst provided via a URL.
 
         Args:
             url: URL to the JSON resource.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), name=name, dtypes=dtypes)
+        return cls.from_json(_read_url(url),
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer = None,
             fill_value: object = np.nan,
-            name: tp.Hashable = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False):
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
             index: Iterable of values to create an Index.
             fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
-            consoidate_blocks: If True, same typed adjacent columns will be consolidated into a contiguous array.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -509,16 +537,23 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_dict(cls,
             dict: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
             *,
             index: IndexInitializer = None,
             fill_value: object = np.nan,
-            name: tp.Hashable = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False):
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ):
         '''
         Create a Frame from a dictionary, or any object that has an items() method.
+
+        Args:
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
         return cls.from_items(dict.items(),
                 index=index,
@@ -529,19 +564,24 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_structured_array(cls,
             array: np.ndarray,
             *,
-            name: tp.Hashable = None,
             index_column: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False) -> 'Frame':
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
         '''
         Convert a NumPy structed array into a Frame.
 
         Args:
             array: Structured NumPy array.
             index_column: Optionally provide the name or position offset of the column to use as the index.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -609,7 +649,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             name: tp.Hashable = None
             ) -> 'Frame':
         '''
-        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. Dtype must be specified.
+        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -654,7 +694,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 for k, v in items)
 
         dtype = dtype if dtype is not None else object
-        tb = TypeBlocks.from_element_items(items,
+        tb = TypeBlocks.from_element_items(
+                items,
                 shape=(len(index), len(columns)),
                 dtype=dtype)
 
@@ -670,6 +711,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     # file, data format loaders
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_csv(cls,
             fp: FilePathOrFileLike,
             *,
@@ -679,8 +721,10 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_footer: int = 0,
             header_is_columns: bool = True,
             quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            encoding: tp.Optional[str] = None
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -691,8 +735,10 @@ class Frame(metaclass=MetaOperatorDelegate):
             index_column: Optionally specify a column, by position or name, to become the index.
             skip_header: Number of leading lines to skip.
             skip_footer: Numver of trailing lines to skip.
-            header_is_columns: If True, columns names are read from the first line after the first skip_header lines.
-            dtypes: set to None by default to permit discovery
+            header_is_columns: If True, the header, the first line after the skip_header count of lines, is used to create the column labels.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -717,6 +763,9 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             file_like = fp
 
+        # strange NP convention for this parameter: False it no supported, must convert to None
+        header_is_columns = header_is_columns if header_is_columns is True else None
+
         array = np.genfromtxt(file_like,
                 delimiter=delimiter_native,
                 skip_header=skip_header,
@@ -731,11 +780,16 @@ class Frame(metaclass=MetaOperatorDelegate):
         array.flags.writeable = False
         return cls.from_structured_array(array,
                 index_column=index_column,
-                dtypes=dtypes
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks
                 )
 
     @classmethod
-    def from_tsv(cls, fp, **kwargs) -> 'Frame':
+    def from_tsv(cls,
+            fp,
+            **kwargs
+            ) -> 'Frame':
         '''
         Specialized version of :py:meth:`Frame.from_csv` for TSV files.
 
@@ -804,7 +858,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                 name=name,
                 own_data=True,
                 own_index=True,
-                own_columns=True)
+                own_columns=True
+                )
+
 
     #---------------------------------------------------------------------------
 

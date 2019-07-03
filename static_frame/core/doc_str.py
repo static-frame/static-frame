@@ -26,11 +26,14 @@ class DOC_TEMPLATE:
         Absolute file path to the file written.
     '''
 
-    reindex = dict(
-        count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
-    )
-
     clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+
+    #---------------------------------------------------------------------------
+    # dict entries
+
+    reindex = dict(
+            count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
+            )
 
     index_init = dict(
             args = '''
@@ -64,9 +67,19 @@ class DOC_TEMPLATE:
             own_columns='''own_columns: Flag passed columns as ownable by this {class_name}. Primarily used by internal clients.'''
     )
 
+    constructor_frame = dict(
+            dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
+            ''',
+            name='name: A hashable object to name the Frame.',
+            consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+    )
+
 
 def doc_inject(*, selector=None, **kwargs):
-
+    '''
+    Args:
+        selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
+    '''
     def decorator(f):
 
         nonlocal selector
