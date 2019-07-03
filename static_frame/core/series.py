@@ -259,7 +259,7 @@ class Series(metaclass=MetaOperatorDelegate):
                 self._index = index_constructor(index)
             else:
                 if isinstance(index, IndexBase):
-                    # we call with the class of the passed-in index to get a new instance (and in case it is hierarchical)
+                    # we call with the class of the passed-in index to get a new instance (and in case it is hierarchical); this may no be needed now that we takk index_cosntructor classes, and might be remove, as it is not done in Frame
                     self._index = index.__class__(index)
                 else:
                     # index argument is an iterable of labels
@@ -1343,7 +1343,7 @@ class Series(metaclass=MetaOperatorDelegate):
             own_index = False
             columns = self._index
             # if column constuctor is static, we can own the static index
-            own_columns = constructor._COLUMN_CONSTRUCTOR.STATIC
+            own_columns = constructor._COLUMNS_CONSTRUCTOR.STATIC
         else:
             raise NotImplementedError(f'no handling for axis {axis}')
 

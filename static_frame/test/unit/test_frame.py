@@ -201,6 +201,47 @@ class TestUnit(TestCase):
             f1 = sf.Frame('x', index=(), columns=iter(range(3)))
 
 
+    def test_frame_init_index_constructor_a(self):
+
+        f1 = sf.Frame('q',
+                index=[('a', 'b'), (1, 2)],
+                columns=tuple('xy'),
+                index_constructor=IndexHierarchy.from_labels
+                )
+        self.assertTrue(isinstance(f1.index, IndexHierarchy))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', ((('a', 'b'), 'q'), ((1, 2), 'q'))), ('y', ((('a', 'b'), 'q'), ((1, 2), 'q'))))
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('q',
+                    index=[('a', 'b'), (1, 2)],
+                    columns=tuple('xy'),
+                    index_constructor=IndexHierarchyGO.from_labels
+                    )
+
+
+    def test_frame_init_columns_constructor_a(self):
+
+        # using from_priduct is awkard, as it does not take a single iterable of products, but multiple args; we can get around this with a simple lambda
+        f1 = sf.Frame('q',
+                index=tuple('xy'),
+                columns=[('a', 'b'), (1, 2)],
+                columns_constructor=lambda args: IndexHierarchy.from_product(*args)
+                )
+        self.assertTrue(isinstance(f1.columns, IndexHierarchy))
+        self.assertEqual(f1.to_pairs(0),
+                ((('a', 1), (('x', 'q'), ('y', 'q'))), (('a', 2), (('x', 'q'), ('y', 'q'))), (('b', 1), (('x', 'q'), ('y', 'q'))), (('b', 2), (('x', 'q'), ('y', 'q'))))
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('q',
+                index=tuple('xy'),
+                columns=[('a', 'b'), (1, 2)],
+                columns_constructor=lambda args: IndexHierarchyGO.from_product(*args)
+                )
+
+
     def test_frame_init_iter(self):
 
         f1 = Frame(None, index=iter(range(3)), columns=("A",))

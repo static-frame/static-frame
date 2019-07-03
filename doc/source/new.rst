@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.6-dev
 ------------
 
+``Frame`` initializer now exposes ``index_constructor`` and ``columns_constructor`` arguments.
+
 ``Frame.from_records`` now efficiently uses ``dict_view`` objects containing row records.
 
 ``Frame`` now supports shapes of all zero and non-zero combinations of index and column lengths; ``Frame`` construction will raise an exception if attempting to set a value in an unfillable Frame shape.

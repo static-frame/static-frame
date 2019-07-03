@@ -118,7 +118,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     _index: IndexBase
     _name: tp.Hashable
 
-    _COLUMN_CONSTRUCTOR = Index
+    _COLUMNS_CONSTRUCTOR = Index
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -244,7 +244,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         if from_array_columns:
             if columns.ndim == 2: # we have a hierarchical index
                 column_cls = (IndexHierarchy
-                        if cls._COLUMN_CONSTRUCTOR.STATIC else IndexHierarchyGO)
+                        if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
                 columns = column_cls.from_labels(columns)
                 own_columns = True
 
@@ -656,7 +656,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             :py:class:`static_frame.Frame`
         '''
         index = Index(index)
-        columns = cls._COLUMN_CONSTRUCTOR(columns)
+        columns = cls._COLUMNS_CONSTRUCTOR(columns)
 
         tb = TypeBlocks.from_element_items(items,
                 shape=(len(index), len(columns)),
@@ -686,7 +686,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         '''
 
         index = index_from_optional_constructor(index, Index)
-        columns = index_from_optional_constructor(columns, cls._COLUMN_CONSTRUCTOR)
+        columns = index_from_optional_constructor(columns, cls._COLUMNS_CONSTRUCTOR)
 
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)
@@ -848,7 +848,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             name = None
 
-        is_go = not cls._COLUMN_CONSTRUCTOR.STATIC
+        is_go = not cls._COLUMNS_CONSTRUCTOR.STATIC
 
         return cls(blocks,
                 index=IndexBase.from_pandas(value.index),
@@ -937,14 +937,11 @@ class Frame(metaclass=MetaOperatorDelegate):
         #-----------------------------------------------------------------------
         # columns assignment
 
-        if columns_constructor:
-            if self._COLUMN_CONSTRUCTOR.STATIC != columns_constructor.STATIC:
-                raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMN_CONSTRUCTOR.STATIC}')
 
         if own_columns:
             self._columns = columns
             col_count = len(self._columns)
-        elif (self._COLUMN_CONSTRUCTOR.STATIC
+        elif (self._COLUMNS_CONSTRUCTOR.STATIC
                 and not columns_constructor
                 and hasattr(columns, STATIC_ATTR)
                 and columns.STATIC
@@ -957,7 +954,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             if columns_constructor:
                 self._columns = columns_constructor(range(col_count))
             else:
-                self._columns = self._COLUMN_CONSTRUCTOR(
+                self._columns = self._COLUMNS_CONSTRUCTOR(
                         range(col_count),
                         loc_is_iloc=True,
                         dtype=DEFAULT_INT_DTYPE)
@@ -966,9 +963,11 @@ class Frame(metaclass=MetaOperatorDelegate):
             if columns_constructor:
                 self._columns = columns_constructor(columns)
             else:
-                self._columns = self._COLUMN_CONSTRUCTOR(columns)
+                self._columns = self._COLUMNS_CONSTRUCTOR(columns)
             col_count = len(self._columns)
 
+        if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
+            raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
         #-----------------------------------------------------------------------
         # index assignment
 
@@ -1271,11 +1270,11 @@ class Frame(metaclass=MetaOperatorDelegate):
         if columns is not None:
             if isinstance(columns, (Index, IndexHierarchy)):
                 # always use the Index constructor for safe reuse when possible
-                if columns.STATIC != self._COLUMN_CONSTRUCTOR.STATIC:
+                if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
                     raise Exception('static status of index does not match expected column static status')
                 columns = columns.__class__(columns)
             else: # create the Index if not already an columns, assume 1D
-                columns = self._COLUMN_CONSTRUCTOR(columns)
+                columns = self._COLUMNS_CONSTRUCTOR(columns)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
         else:
             columns = self._columns
@@ -1658,11 +1657,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if self._index.depth > 1:
                     name_row = tuple(name_row)
 
-        # can only own columns if _COLUMN_CONSTRUCTOR is static
+        # can only own columns if _COLUMNS_CONSTRUCTOR is static
         column_key_is_slice = isinstance(column_key, slice)
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
-            own_columns = self._COLUMN_CONSTRUCTOR.STATIC
+            own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
         else:
             columns = self._columns._extract_iloc(column_key)
             own_columns = True
@@ -2691,7 +2690,7 @@ class FrameGO(Frame):
             '_name'
             )
 
-    _COLUMN_CONSTRUCTOR = IndexGO
+    _COLUMNS_CONSTRUCTOR = IndexGO
 
 
     def __setitem__(self,
