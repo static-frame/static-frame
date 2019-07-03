@@ -7,6 +7,10 @@ What is New in Static Frame
 0.3.6-dev
 ------------
 
+``Frame.to_frame_go`` now properly handles ``IndexHierarchy`` columns.
+
+Improved creation of ``IndexHierarchy`` from other ``IndexHierarchy`` or ``IndexHierarchyGO``.
+
 ``Frame`` initializer now exposes ``index_constructor`` and ``columns_constructor`` arguments.
 
 ``Frame.from_records`` now efficiently uses ``dict_view`` objects containing row records.

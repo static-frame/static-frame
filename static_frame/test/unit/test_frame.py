@@ -3446,7 +3446,14 @@ class TestUnit(TestCase):
 
         f2 = f1.to_frame_go()
 
-        # import ipdb; ipdb.set_trace()
+        self.assertTrue(isinstance(f2.columns, IndexHierarchyGO))
+
+        f2[(3, 'a')] = 10
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (((1, 'a'), (('w', 1), ('x', 1), ('y', 2), ('z', 2))), ((1, 'b'), (('w', 'a'), ('x', 'b'), ('y', 'a'), ('z', 'b'))), ((2, 'a'), (('w', False), ('x', False), ('y', False), ('z', False))), ((2, 'b'), (('w', True), ('x', False), ('y', True), ('z', False))), ((3, 'a'), (('w', 10), ('x', 10), ('y', 10), ('z', 10))))
+        )
 
 
 

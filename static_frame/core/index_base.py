@@ -15,12 +15,16 @@ from static_frame.core.doc_str import doc_inject
 
 class IndexBase:
 
+    __slots__ = () # defined in dervied classes
+
     STATIC = True
+
     _IMMUTABLE_CONSTRUCTOR = None
+    _MUTABLE_CONSTRUCTOR = None
+
     _UFUNC_UNION = None
     _UFUNC_INTERSECTION = None
 
-    __slots__ = () # defined in dervied classes
 
     #---------------------------------------------------------------------------
     # constructors

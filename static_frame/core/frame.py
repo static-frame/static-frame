@@ -2568,7 +2568,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             df.name = self._name
         return df
 
-    def to_frame_go(self):
+    def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
         '''
@@ -2576,7 +2576,8 @@ class Frame(metaclass=MetaOperatorDelegate):
         return FrameGO(
                 self._blocks.copy(),
                 index=self.index, # can reuse
-                columns=self.columns, # NOTE: does not support IndexHierarchy
+                columns=self.columns,
+                columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
                 name=self._name,
                 own_data=True,
                 own_index=True,

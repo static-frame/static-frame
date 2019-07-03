@@ -73,11 +73,14 @@ class IndexHierarchy(IndexBase,
     _recache: bool
     _name: tp.Hashable
 
-    # _IMMUTABLE_CONSTRUCTOR = None
+    # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
+    # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
+
     _INDEX_CONSTRUCTOR = Index
+    _LEVEL_CONSTRUCTOR = IndexLevel
+
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
-    _LEVEL_CONSTRUCTOR = IndexLevel
 
     #---------------------------------------------------------------------------
     # constructors
@@ -356,15 +359,18 @@ class IndexHierarchy(IndexBase,
         '''
 
         if issubclass(levels.__class__, IndexHierarchy):
-            if levels.STATIC:
+            if self.STATIC and levels.STATIC:
                 self._levels = levels._levels
-            else: # must deepcopy labels if not static
-                self._levels = levels._levels.to_index_level()
+            else:
+                # must deepcopy labels if not static; passing level constructor ensures we get a mutable if the parent is mutable
+                self._levels = levels._levels.to_index_level(
+                        cls=self._LEVEL_CONSTRUCTOR
+                        )
 
             self._labels = levels.values
             self._depth = levels.depth
             self._keys = levels.keys() # immutable keys view can be shared
-            self._length = self._labels.__len__() #levels.__len__()
+            self._length = self._labels.__len__()
             self._recache = False
 
             if name is None and levels.name is not None:
@@ -380,7 +386,7 @@ class IndexHierarchy(IndexBase,
             self._recache = True
 
         else:
-            raise NotImplementedError('no handling for creation from', levels)
+            raise NotImplementedError(f'no handling for creation from {levels}')
 
         self._name = name if name is None else name_filter(name)
 
@@ -796,6 +802,7 @@ class IndexHierarchyGO(IndexHierarchy):
     '''
 
     STATIC = False
+
     _IMMUTABLE_CONSTRUCTOR = IndexHierarchy
 
     _LEVEL_CONSTRUCTOR = IndexLevelGO
@@ -837,3 +844,7 @@ class IndexHierarchyGO(IndexHierarchy):
         Return a new IndexHierarchy. This is not a deep copy.
         '''
         return self.__class__(levels=self._levels.to_index_level())
+
+
+# update class attr on Index after class initialziation
+IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
