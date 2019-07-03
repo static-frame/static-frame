@@ -818,7 +818,6 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         return IndexBase.from_pandas(value, is_go=True)
 
-
     def append(self, value: tuple):
         '''
         Append a single label to this index.
@@ -832,7 +831,6 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         self._levels.extend(other._levels)
         self._recache = True
-
 
     def copy(self) -> 'IndexHierarchy':
         '''

@@ -684,9 +684,6 @@ class Frame(metaclass=MetaOperatorDelegate):
             :py:class:`static_frame.Frame`
         '''
 
-        # index = Index(index)
-        # columns = cls._COLUMN_CONSTRUCTOR(columns)
-
         index = index_from_optional_constructor(index, Index)
         columns = index_from_optional_constructor(columns, cls._COLUMN_CONSTRUCTOR)
 
@@ -860,7 +857,6 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=True,
                 own_columns=True
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -2543,9 +2539,10 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
         '''
         # copying blocks does not copy underlying data
-        return FrameGO(self._blocks.copy(),
-                index=self.index,
-                columns=self.columns.values, # NOTE: does not support IndexHierarchy
+        return FrameGO(
+                self._blocks.copy(),
+                index=self.index, # can reuse
+                columns=self.columns, # NOTE: does not support IndexHierarchy
                 name=self._name,
                 own_data=True,
                 own_index=True,
