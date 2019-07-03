@@ -395,6 +395,7 @@ class Index(IndexBase,
                 labels = array
             else:
                 labels = array2d_to_tuples(array)
+        # else: assume an iterable suitable for labels usage
 
         if self._DTYPE is not None:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels

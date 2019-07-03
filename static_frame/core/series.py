@@ -174,8 +174,7 @@ class Series(metaclass=MetaOperatorDelegate):
             index_constructor: tp.Optional[IndexBase] = None,
             own_index: bool = False
             ) -> None:
-
-        # TODO: support construction from another Series, propagate name attr
+        # doc string at class definition
         self._name = name if name is None else name_filter(name)
 
         if own_index and index is None:
@@ -235,24 +234,36 @@ class Series(metaclass=MetaOperatorDelegate):
 
         #-----------------------------------------------------------------------
         # index assignment
-        # NOTE: this generally must be done after values assignment, as from_items (for example) needs the values generator to be exhausted before looking to index
 
         if own_index:
             self._index = index
-        elif index is None or (hasattr(index, '__len__') and len(index) == 0):
+        elif (hasattr(index, STATIC_ATTR)
+                and index.STATIC
+                and not index_constructor
+                ):
+            # if it is a static index, and we have no constructor, own it
+            self._index = index
+        elif index is None or (
+                hasattr(index, '__len__')
+                and len(index) == 0):
             if index_constructor:
+                # use index_constructor if povided
                 self._index = index_constructor(range(len(self.values)))
             else: # create a default integer index; we specify dtype for windows
                 self._index = Index(range(len(self.values)),
                         loc_is_iloc=True,
                         dtype=DEFAULT_INT_DTYPE)
-        elif isinstance(index, IndexBase):
-            # call with the class of the passed-in index, in case it is hierarchical
-            self._index = (index_constructor(index)
-                    if index_constructor else index.__class__(index))
-        else:
-            self._index = (index_constructor(index)
-                    if index_constructor else Index(index))
+        else: # an iterable of labels, or an index subclass
+            if index_constructor:
+                # always use constructor if provided
+                self._index = index_constructor(index)
+            else:
+                if isinstance(index, IndexBase):
+                    # we call with the class of the passed-in index to get a new instance (and in case it is hierarchical)
+                    self._index = index.__class__(index)
+                else:
+                    # index argument is an iterable of labels
+                    self._index = Index(index)
 
         if not self._index.STATIC:
             raise RuntimeError('non-static index cannot be assigned to Series')
@@ -1336,7 +1347,6 @@ class Series(metaclass=MetaOperatorDelegate):
         else:
             raise NotImplementedError(f'no handling for axis {axis}')
 
-        # import ipdb; ipdb.set_trace()
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,

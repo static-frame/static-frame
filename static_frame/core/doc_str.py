@@ -38,7 +38,7 @@ class DOC_TEMPLATE:
     index_init = dict(
             args = '''
         Args:
-            labels: Iterable of hashable values to be used as the index labels.
+            labels: Iterable of hashable values to be used as the index labels. If an Index or IndexHierarchy class is passed, values will be appropriately extracted.
             name: A hashable object to name the Index.
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
             dtype: Optional dtype to be used for labels.'''

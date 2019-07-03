@@ -3391,21 +3391,21 @@ class TestUnit(TestCase):
 
 
 
-    # TODO
-    # def test_frame_to_frame_go_c(self):
-    #     records = (
-    #             (1, 'a', False, True),
-    #             (1, 'b', False, False),
-    #             (2, 'a', False, True),
-    #             (2, 'b', False, False),
-    #             )
-    #     f1 = Frame.from_records(records,
-    #             columns=IndexHierarchy.from_product((1, 2), ('a', 'b')),
-    #             index=('w', 'x', 'y', 'z'),
-    #             name='foo')
+    def test_frame_to_frame_go_c(self):
+        records = (
+                (1, 'a', False, True),
+                (1, 'b', False, False),
+                (2, 'a', False, True),
+                (2, 'b', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((1, 2), ('a', 'b')),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
 
-    #     f2 = f1.to_frame_go()
+        f2 = f1.to_frame_go()
 
+        # import ipdb; ipdb.set_trace()
 
 
 

@@ -14,6 +14,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
@@ -97,7 +98,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
     Args:
-        data: An iterable of row iterables, a 2D numpy array, or dictionary mapping column names to column values.
+        data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
         {index}
         {columns}
         {own_data}
@@ -866,16 +867,14 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             columns: IndexInitializer = None,
             name: tp.Hashable = None,
+            index_constructor: tp.Optional[IndexBase] = None,
+            columns_constructor: tp.Optional[IndexBase] = None,
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False
             ) -> None:
-        '''
-        Args:
-            data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
-            own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
-            own_index: if True, the index is taken as is and is not passed to an Index initializer.
-        '''
+        # doc string at class def
+
         self._name = name if name is None else name_filter(name)
 
         # we can determin if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
@@ -936,37 +935,73 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if not blocks_constructor else (None, None))
 
         #-----------------------------------------------------------------------
-        # index assignment
+        # columns assignment
 
-        if own_columns or (
-                hasattr(columns, STATIC_ATTR)
+        if columns_constructor:
+            if self._COLUMN_CONSTRUCTOR.STATIC != columns_constructor.STATIC:
+                raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMN_CONSTRUCTOR.STATIC}')
+
+        if own_columns:
+            self._columns = columns
+            col_count = len(self._columns)
+        elif (self._COLUMN_CONSTRUCTOR.STATIC
+                and not columns_constructor
+                and hasattr(columns, STATIC_ATTR)
                 and columns.STATIC
-                and self._COLUMN_CONSTRUCTOR.STATIC):
-            # if it is a STATIC index we can assign directly
+                ):
+            # if it is a STATIC index, and we do not have a columns_constructor, we can assign directly
             self._columns = columns
             col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
-            self._columns = self._COLUMN_CONSTRUCTOR(
-                    range(col_count),
-                    loc_is_iloc=True,
-                    dtype=np.int64)
+            if columns_constructor:
+                self._columns = columns_constructor(range(col_count))
+            else:
+                self._columns = self._COLUMN_CONSTRUCTOR(
+                        range(col_count),
+                        loc_is_iloc=True,
+                        dtype=DEFAULT_INT_DTYPE)
         else:
-            self._columns = self._COLUMN_CONSTRUCTOR(columns)
+            # columns could be a mutable index here
+            if columns_constructor:
+                self._columns = columns_constructor(columns)
+            else:
+                self._columns = self._COLUMN_CONSTRUCTOR(columns)
             col_count = len(self._columns)
 
+        #-----------------------------------------------------------------------
+        # index assignment
 
-        if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
+        if own_index:
+            self._index = index
+            row_count = len(self._index)
+        elif (hasattr(index, STATIC_ATTR)
+                and index.STATIC
+                and not index_constructor
+                ):
+            # if it is a static index, we have no constructor, own it
             self._index = index
             row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
-            self._index = Index(range(row_count),
-                    loc_is_iloc=True,
-                    dtype=np.int64)
+            if index_constructor:
+                self._index = index_constructor(range(row_count))
+            else:
+                self._index = Index(range(row_count),
+                        loc_is_iloc=True,
+                        dtype=DEFAULT_INT_DTYPE)
         else:
-            self._index = Index(index)
+            if index_constructor:
+                self._index = index_constructor(index)
+            else:
+                self._index = Index(index)
             row_count = len(self._index)
+
+        if not self._index.STATIC:
+            raise RuntimeError('non-static index cannot be assigned to Frame')
+
+        #-----------------------------------------------------------------------
+        # final evaluation
 
         # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
         columns_empty = col_count == 0
