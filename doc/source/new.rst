@@ -4,7 +4,11 @@ What is New in Static Frame
 ===============================
 
 
-0.3.6-dev
+0.3.7-dev
+------------
+
+
+0.3.6
 ------------
 
 ``Frame.to_frame_go`` now properly handles ``IndexHierarchy`` columns.
