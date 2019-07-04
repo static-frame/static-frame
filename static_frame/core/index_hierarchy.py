@@ -102,8 +102,9 @@ class IndexHierarchy(IndexBase,
             if not isinstance(lvl, Index):
                 lvl = cls._INDEX_CONSTRUCTOR(lvl)
             indices.append(lvl)
+
         if len(indices) == 1:
-            raise NotImplementedError('only one level given')
+            raise RuntimeError('only one level given')
 
         targets_previous = None
 
