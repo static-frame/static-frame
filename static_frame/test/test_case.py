@@ -16,6 +16,9 @@ from static_frame import TypeBlocks
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import COMPLEX_TYPES
 
+# for running with coverage
+# pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
+
 
 skip_win = pytest.mark.skipif(sys.platform == 'win32', reason='Windows default dtypes.')
 
