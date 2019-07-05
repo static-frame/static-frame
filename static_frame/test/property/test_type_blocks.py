@@ -78,7 +78,7 @@ class TestUnit(TestCase):
             self.assertEqual(tb.shape[1], shape_original[1] + aa.shape[1])
 
     @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))  # type: ignore
-    def test_extend(self, tbs: tp.List[TypeBlocks]) -> None:
+    def test_extend(self, tbs: tp.Sequence[TypeBlocks]) -> None:
         front = tbs[0]
         back = tbs[1]
         shape_original = front.shape
