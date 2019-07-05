@@ -391,7 +391,7 @@ class TestUnit(TestCase):
     def test_array_to_duplicated_c(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         with self.assertRaises(Exception):
-            _array_to_duplicated(a, axis=None)
+            _array_to_duplicated(a, axis=None)  # type: ignore  # Testing bad type here.
 
 
 
@@ -538,7 +538,7 @@ class TestUnit(TestCase):
 
         a1 = np.arange(10)
 
-        def compare(slc):
+        def compare(slc: slice) -> None:
             slc_asc = _slice_to_ascending_slice(slc, len(a1))
             self.assertEqual(sorted(a1[slc]), list(a1[slc_asc]))
         #     print(slc, a1[slc])
@@ -624,10 +624,12 @@ class TestUnit(TestCase):
 
         a1 = np.array([1, 1, 1, 2, 2])
         post = ufunc_unique(a1)
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 2])
 
         a2 = np.array([1, 1, 1, 2, 2], dtype=object)
         post = ufunc_unique(a2)
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 2])
 
         a3 = np.array([1, 'x', 1, None, 2], dtype=object)
@@ -639,12 +641,15 @@ class TestUnit(TestCase):
 
         a1 = np.array([[1, 1], [1, 2], [1, 2]])
         post = ufunc_unique(a1)
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 2])
 
         post = ufunc_unique(a1, axis=0)
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [[1, 1], [1, 2]])
 
         post = ufunc_unique(a1, axis=1)
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [[1, 1], [1, 2], [1, 2]])
 
 
@@ -706,7 +711,7 @@ class TestUnit(TestCase):
 
     def test_key_to_datetime_key_a(self) -> None:
 
-        post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
+        post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(post,
                 slice(np.datetime64('2018-01-01'),
                 np.datetime64('2019-01-01'), None))
@@ -723,19 +728,23 @@ class TestUnit(TestCase):
 
         post = key_to_datetime_key(np.array(['2018-01-01', '2019-01-01']))
         a2 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), a2.tolist())
 
         post = key_to_datetime_key(['2018-01-01', '2019-01-01'])
         a3 = np.array(['2018-01-01', '2019-01-01'], dtype='datetime64[D]')
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), a3.tolist())
 
         post = key_to_datetime_key(['2018-01', '2019-01'])
         a4 = np.array(['2018-01', '2019-01'], dtype='datetime64[M]')
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), a4.tolist())
 
 
         post = key_to_datetime_key(str(x) for x in range(2012, 2015))
         a5 = np.array(['2012', '2013', '2014'], dtype='datetime64[Y]')
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), a5.tolist())
 
         post = key_to_datetime_key(None)
@@ -878,6 +887,7 @@ class TestUnit(TestCase):
         self.assertFalse(ic.is_subset)
         self.assertTrue(ic.has_common)
         # this is an array, due to loc_is_iloc being True
+        assert isinstance(ic.iloc_src, np.ndarray)
         self.assertEqual(ic.iloc_src.tolist(),
                 [0, 1, 2, 3, 4]
                 )
