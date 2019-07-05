@@ -1,6 +1,6 @@
 
 import unittest
-import numpy as np
+import numpy as np  # type: ignore
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -19,7 +19,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
-    def test_array_append_a(self):
+    def test_array_append_a(self) -> None:
 
         ag1 = ArrayGO(('a', 'b', 'c', 'd'))
 
@@ -40,7 +40,7 @@ class TestUnit(TestCase):
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
 
-    def test_array_append_b(self):
+    def test_array_append_b(self) -> None:
 
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
 
@@ -61,7 +61,7 @@ class TestUnit(TestCase):
             ['a', 'b', 'c', 'd', 'e', 'f', 'g'])
 
 
-    def test_array_getitem_a(self):
+    def test_array_getitem_a(self) -> None:
 
         a = np.array(('a', 'b', 'c', 'd'), object)
         a.flags.writeable = False
@@ -78,7 +78,7 @@ class TestUnit(TestCase):
         self.assertEqual(ag1[[2,1,1,1]].tolist(),
                 ['c', 'b', 'b', 'b'])
 
-    def test_array_copy_a(self):
+    def test_array_copy_a(self) -> None:
 
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
         ag1.append('e')
@@ -94,7 +94,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_array_len_a(self):
+    def test_array_len_a(self) -> None:
 
         ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
         ag1.append('e')
