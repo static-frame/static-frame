@@ -63,6 +63,9 @@ STATIC_ATTR = 'STATIC'
 EMPTY_ARRAY = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
+NAT = np.datetime64('nat')
+NATD = np.timedelta64(0)
+
 _DICT_STABLE = sys.version_info >= (3, 6)
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
@@ -352,24 +355,31 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def _dtype_to_na(dtype: np.dtype):
+def dtype_to_na(dtype: np.dtype):
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
         # we permit things like object, float, etc.
         dtype = np.dtype(dtype)
 
-    if dtype.kind in DTYPE_INT_KIND:
+    kind = dtype.kind
+
+    if kind in DTYPE_INT_KIND:
         return 0 # cannot support NaN
-    elif dtype.kind == 'b':
+    elif kind == 'b':
         return False
-    elif dtype.kind == 'f':
+    elif kind in DTYPE_NAN_KIND:
         return np.nan
-    elif dtype.kind == 'O':
+    elif kind == 'O':
         return None
-    elif dtype.kind in DTYPE_STR_KIND:
+    elif kind in DTYPE_STR_KIND:
         return ''
-    raise NotImplementedError('no support for this dtype', dtype.kind)
+    elif kind in DTYPE_DATETIME_KIND:
+        return NAT
+    elif kind in DTYPE_TIMEDELTA_KIND:
+        return NATD
+
+    raise NotImplementedError('no support for this dtype', kind)
 
 # ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
 _UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}

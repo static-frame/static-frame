@@ -18,7 +18,7 @@ from static_frame.core.util import concat_resolved
 
 
 from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import _dtype_to_na
+from static_frame.core.util import dtype_to_na
 from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.operator_delegate import _ufunc_logical_skipna
@@ -697,11 +697,11 @@ class TestUnit(TestCase):
 
     def test_dtype_to_na_a(self):
 
-        self.assertEqual(_dtype_to_na(np.dtype(int)), 0)
-        self.assertTrue(np.isnan(_dtype_to_na(np.dtype(float))))
-        self.assertEqual(_dtype_to_na(np.dtype(bool)), False)
-        self.assertEqual(_dtype_to_na(np.dtype(object)), None)
-        self.assertEqual(_dtype_to_na(np.dtype(str)), '')
+        self.assertEqual(dtype_to_na(np.dtype(int)), 0)
+        self.assertTrue(np.isnan(dtype_to_na(np.dtype(float))))
+        self.assertEqual(dtype_to_na(np.dtype(bool)), False)
+        self.assertEqual(dtype_to_na(np.dtype(object)), None)
+        self.assertEqual(dtype_to_na(np.dtype(str)), '')
 
 
     def test_key_to_datetime_key_a(self):

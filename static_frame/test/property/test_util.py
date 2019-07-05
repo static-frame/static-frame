@@ -74,5 +74,11 @@ class TestUnit(TestCase):
         else:
             self.assertTrue(value in array)
 
+    @given(get_dtype())
+    def test_dtype_to_na(self, dtype):
+        post = util.dtype_to_na(dtype)
+        self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
+
+
 if __name__ == '__main__':
     unittest.main()

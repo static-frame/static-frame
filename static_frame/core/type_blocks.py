@@ -26,7 +26,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import _dtype_to_na
+from static_frame.core.util import dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _isna
 from static_frame.core.util import _slice_to_ascending_slice
@@ -160,7 +160,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def from_element_items(cls, items, shape, dtype) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
-        a = np.full(shape, fill_value=_dtype_to_na(dtype), dtype=dtype)
+        a = np.full(shape, fill_value=dtype_to_na(dtype), dtype=dtype)
         for iloc, v in items:
             a[iloc] = v
         a.flags.writeable = False
