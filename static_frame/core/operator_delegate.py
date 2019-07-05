@@ -7,8 +7,10 @@ from functools import wraps
 import operator as operator_mod
 
 
-import numpy as np
+import numpy as np  # type: ignore
 
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import UFunc
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 
@@ -57,7 +59,7 @@ _REVERSE_OPERATOR_MAP = {
         }
 
 def _ufunc_logical_skipna(array: np.ndarray,
-        ufunc: tp.Callable,
+        ufunc: AnyCallable,
         skipna: bool,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
@@ -106,20 +108,20 @@ def _ufunc_logical_skipna(array: np.ndarray,
     return ufunc(v, axis=axis, out=out)
 
 
-def _all(array, axis=0, out=None):
+def _all(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = None) -> np.ndarray:
     return _ufunc_logical_skipna(array, ufunc=np.all, skipna=False, axis=axis, out=out)
 
 _all.__doc__ = np.all.__doc__
 
-def _any(array, axis=0, out=None):
+def _any(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = None) -> np.ndarray:
     return _ufunc_logical_skipna(array, ufunc=np.any, skipna=False, axis=axis, out=out)
 
 _any.__doc__ = np.any.__doc__
 
-def _nanall(array, axis=0, out=None):
+def _nanall(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = None) -> np.ndarray:
     return _ufunc_logical_skipna(array, ufunc=np.all, skipna=True, axis=axis, out=out)
 
-def _nanany(array, axis=0, out=None):
+def _nanany(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = None) -> np.ndarray:
     return _ufunc_logical_skipna(array, ufunc=np.any, skipna=True, axis=axis, out=out)
 
 
@@ -149,9 +151,10 @@ class MetaOperatorDelegate(type):
     '''
 
     @staticmethod
-    def create_ufunc_operator(func_name,
+    def create_ufunc_operator(func_name: str,
             opperand_count: int = 1,
-            reverse: bool = False):
+            reverse: bool = False,
+            ) -> tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]:
         # operator module defines alias to funcs with names like __add__, etc
         if not reverse:
             operator_func = getattr(operator_mod, func_name)
@@ -163,12 +166,14 @@ class MetaOperatorDelegate(type):
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
             func_wrapper = unreversed_operator_func
 
+        func: tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]
+
         if opperand_count == 1:
             assert not reverse # cannot reverse a single opperand
-            def func(self):
+            def func(self: tp.Any) -> tp.Any:
                 return self._ufunc_unary_operator(operator_func)
         elif opperand_count == 2:
-            def func(self, other):
+            def func(self: tp.Any, other: tp.Any) -> tp.Any:
                 return self._ufunc_binary_operator(operator=operator_func, other=other)
         else:
             raise NotImplementedError()
@@ -178,11 +183,11 @@ class MetaOperatorDelegate(type):
         return f
 
     @staticmethod
-    def create_ufunc_axis_skipna(func_name):
+    def create_ufunc_axis_skipna(func_name: str) -> AnyCallable:
         ufunc, ufunc_skipna, dtype = _UFUNC_AXIS_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
-        def func(self, axis=0, skipna=True, **_):
+        def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
             return self._ufunc_axis_skipna(
                     axis=axis,
                     skipna=skipna,
@@ -196,11 +201,11 @@ class MetaOperatorDelegate(type):
 
 
     @staticmethod
-    def create_ufunc_shape_skipna(func_name):
+    def create_ufunc_shape_skipna(func_name: str) -> AnyCallable:
         ufunc, ufunc_skipna, dtype = _UFUNC_SHAPE_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
-        def func(self, axis=0, skipna=True, **_):
+        def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
             return self._ufunc_shape_skipna(
                     axis=axis,
                     skipna=skipna,
@@ -213,7 +218,7 @@ class MetaOperatorDelegate(type):
         return f
 
 
-    def __new__(mcs, name, bases, attrs):
+    def __new__(mcs, name: str, bases: tp.Tuple[type], attrs: tp.Dict[str, object]) -> type:
         '''
         Create and assign all autopopulated functions.
         '''
@@ -239,4 +244,3 @@ class MetaOperatorDelegate(type):
 
 
         return type.__new__(mcs, name, bases, attrs)
-

@@ -1,5 +1,6 @@
 import doctest
 import os
+import typing as tp
 
 api_example_str = '''
 
@@ -1242,11 +1243,11 @@ class TestUnit(doctest.DocTestCase, TestCase):
         return readme_str
 
     @staticmethod
-    def update_readme(source) -> str:
+    def update_readme(source: object) -> None:
         target = "sf.Frame.from_json_url('https://jsonplaceholder.typicode.com/photos')"
 
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
 
         doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
 
@@ -1257,7 +1258,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
                 filename=None,
                 lineno=None)
 
-        super().__init__(sample, *kwargs)
+        super().__init__(sample, **kwargs)
 
 
 if __name__ == "__main__":

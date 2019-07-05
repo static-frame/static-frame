@@ -2,6 +2,12 @@
 Storage for common doc strings and templates shared in non-related classes and methods.
 '''
 
+
+import typing as tp
+
+from static_frame.core.util import AnyCallable
+
+
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
@@ -75,12 +81,14 @@ class DOC_TEMPLATE:
     )
 
 
-def doc_inject(*, selector=None, **kwargs):
+def doc_inject(*, selector: tp.Optional[str] = None, **kwargs: object) -> tp.Callable[[AnyCallable], AnyCallable]:
     '''
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
     '''
-    def decorator(f):
+    def decorator(f: AnyCallable) -> AnyCallable:
+
+        assert f.__doc__ is not None, f'{f} must have a docstring!'
 
         nonlocal selector
         selector = f.__name__ if selector is None else selector
@@ -91,8 +99,8 @@ def doc_inject(*, selector=None, **kwargs):
             f.__doc__ = f.__doc__.format(doc)
         else: # assume it is a dictionary
             # try to format each value
-            doc = {k: v.format(**kwargs) for k, v in doc_src.items()}
-            f.__doc__ = f.__doc__.format(**doc)
+            doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
+            f.__doc__ = f.__doc__.format(**doc_dict)
 
         return f
 

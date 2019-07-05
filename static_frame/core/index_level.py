@@ -112,7 +112,7 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    def dtypes(self) -> tp.Iterator[int]:
+    def dtypes(self) -> tp.Iterator[np.dtype]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None:
             yield self.index.values.dtype
@@ -383,7 +383,3 @@ class IndexLevelGO(IndexLevel):
                             offset=0,
                             targets=targets
                             )
-
-
-
-

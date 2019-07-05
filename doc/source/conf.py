@@ -17,12 +17,14 @@ import os
 import datetime
 import io
 import inspect
+import typing as tp
 
 import static_frame as sf
 
 from static_frame.core.operator_delegate import _UFUNC_UNARY_OPERATORS
 from static_frame.core.operator_delegate import _UFUNC_BINARY_OPERATORS
 from static_frame.core.operator_delegate import _UFUNC_AXIS_SKIPNA
+from static_frame.core.util import AnyCallable
 
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
@@ -34,7 +36,7 @@ from static_frame.performance.perf_test import PerfTest
 
 
 
-def get_jinja_contexts():
+def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
 
     post = {}
 
@@ -47,7 +49,7 @@ def get_jinja_contexts():
     post['performance_cls'] = performance_cls
 
 
-    def get_func_doc(cls, func_iter):
+    def get_func_doc(cls: type, func_iter: tp.Iterable[str]) -> tp.List[tp.Tuple[str, str]]:
         return [(f, getattr(cls, f).__doc__) for f in sorted(func_iter)]
 
     for label, cls in (
@@ -60,10 +62,13 @@ def get_jinja_contexts():
         post[label + '_operator_binary'] = get_func_doc(cls,
                 _UFUNC_BINARY_OPERATORS)
 
-    def get_ufunc_doc(cls, func_map):
+    def get_ufunc_doc(cls: type,
+            func_map: tp.Mapping[str, tp.Tuple[AnyCallable, AnyCallable, tp.Optional[type]]],
+        ) -> tp.List[tp.Tuple[str, str, type]]:
         # doc here is a complex string, just take the first line
         post = []
         for label, funcs in sorted(func_map.items()):
+            assert funcs[0].__doc__ is not None
             doc_str = funcs[0].__doc__.strip().split('\n')[0]
             return_type = funcs[2] if funcs[2] is not None else float
             post.append((label, doc_str, return_type))
@@ -135,7 +140,7 @@ release = sf.__version__
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns: tp.List[str] = []
 
 add_module_names = False
 # The reST default role (used for this markup: `text`) to use for all documents.
@@ -170,7 +175,7 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 if on_rtd:
     html_theme = 'default'
 else:
-    import sphinx_rtd_theme
+    import sphinx_rtd_theme  # type: ignore
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
@@ -250,7 +255,7 @@ htmlhelp_basename = 'static-frame'
 
 # -- Options for LaTeX output --------------------------------------------------
 
-latex_elements = {
+latex_elements: tp.Dict[str, str] = {
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
 
@@ -290,7 +295,7 @@ latex_elements = {
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = []
+man_pages: tp.List[tp.Tuple[str, str, str, str, str]] = []
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
@@ -301,7 +306,7 @@ man_pages = []
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = []
+texinfo_documents: tp.List[tp.Tuple[str, str, str, str, str, str, str]] = []
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []
