@@ -358,7 +358,7 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def dtype_to_na(dtype: np.dtype):
+def dtype_to_na(dtype: DtypeSpecifier):
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
