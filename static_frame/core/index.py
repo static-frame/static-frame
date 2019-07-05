@@ -900,7 +900,7 @@ class IndexGO(Index):
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value):
+    def append(self, value: object) -> None:
         '''append a value
         '''
         if value in self._map:
