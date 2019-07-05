@@ -89,6 +89,7 @@ matrix:
       python: 3.7
       dist: xenial
       language: python
+      install: pip install -r requirements-test.txt
       script: mypy --strict
 
 # Change anything below to suit your CI needs.
@@ -128,5 +129,6 @@ deploy:
   script: twine upload --skip-existing dist/*
   on:
     repo: InvestmentSystems/static-frame
+    condition: $TRAVIS_JOB_NAME != mypy
     branch: master
     # tags: true  # XXX?
