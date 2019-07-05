@@ -6,6 +6,7 @@ import numpy as np  # type: ignore
 from static_frame.core.util import immutable_filter
 
 
+from static_frame.core.extensions.array_go import ArrayGO as ArrayGO
 # class ArrayGO:
 #     '''
 #     A grow only, one-dimensional, object type array, specifically for usage in IndexHierarchy IndexLevel objects.

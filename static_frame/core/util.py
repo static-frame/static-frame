@@ -148,14 +148,14 @@ YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
-from static_frame.core.extensions.util import mloc
+from static_frame.core.extensions.util import mloc as mloc
 # def mloc(array: np.ndarray) -> int:
 #     '''Return the memory location of an array.
 #     '''
 #     return array.__array_interface__['data'][0]
 
 
-from static_frame.core.extensions.util import immutable_filter
+from static_frame.core.extensions.util import immutable_filter as immutable_filter
 # def immutable_filter(src_array: np.ndarray) -> np.ndarray:
 #     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
 #     '''
@@ -166,7 +166,7 @@ from static_frame.core.extensions.util import immutable_filter
 #     return src_array # keep it as is
 
 
-from static_frame.core.extensions.util import name_filter
+from static_frame.core.extensions.util import name_filter as name_filter
 # def _name_filter(name: tp.Hashable) -> tp.Hashable:
 #     '''
 #     For name attributes on containers, only permit recursively hashable objects.
@@ -220,7 +220,7 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
-from static_frame.core.extensions.util import resolve_dtype
+from static_frame.core.extensions.util import resolve_dtype as resolve_dtype
 # def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
 #     '''
 #     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
@@ -272,7 +272,7 @@ from static_frame.core.extensions.util import resolve_dtype
 #     return np.result_type(dt1, dt2)
 
 
-from static_frame.core.extensions.util import resolve_dtype_iter
+from static_frame.core.extensions.util import resolve_dtype_iter as resolve_dtype_iter
 # def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
 #     '''Given an iterable of dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object
 #     '''

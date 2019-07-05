@@ -1,11 +1,11 @@
 # Always prefer setuptools over distutils
-from setuptools import Extension
+from setuptools import Extension  # type: ignore
 from setuptools import setup
 # To use a consistent encoding
 from codecs import open
 from os import path
 
-import numpy as np
+import numpy as np  # type: ignore
 
 # https://packaging.python.org/distributing/
 # to deploy:
