@@ -201,6 +201,47 @@ class TestUnit(TestCase):
             f1 = sf.Frame('x', index=(), columns=iter(range(3)))
 
 
+    def test_frame_init_index_constructor_a(self):
+
+        f1 = sf.Frame('q',
+                index=[('a', 'b'), (1, 2)],
+                columns=tuple('xy'),
+                index_constructor=IndexHierarchy.from_labels
+                )
+        self.assertTrue(isinstance(f1.index, IndexHierarchy))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', ((('a', 'b'), 'q'), ((1, 2), 'q'))), ('y', ((('a', 'b'), 'q'), ((1, 2), 'q'))))
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('q',
+                    index=[('a', 'b'), (1, 2)],
+                    columns=tuple('xy'),
+                    index_constructor=IndexHierarchyGO.from_labels
+                    )
+
+
+    def test_frame_init_columns_constructor_a(self):
+
+        # using from_priduct is awkard, as it does not take a single iterable of products, but multiple args; we can get around this with a simple lambda
+        f1 = sf.Frame('q',
+                index=tuple('xy'),
+                columns=[('a', 'b'), (1, 2)],
+                columns_constructor=lambda args: IndexHierarchy.from_product(*args)
+                )
+        self.assertTrue(isinstance(f1.columns, IndexHierarchy))
+        self.assertEqual(f1.to_pairs(0),
+                ((('a', 1), (('x', 'q'), ('y', 'q'))), (('a', 2), (('x', 'q'), ('y', 'q'))), (('b', 1), (('x', 'q'), ('y', 'q'))), (('b', 2), (('x', 'q'), ('y', 'q'))))
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1 = sf.Frame('q',
+                index=tuple('xy'),
+                columns=[('a', 'b'), (1, 2)],
+                columns_constructor=lambda args: IndexHierarchyGO.from_product(*args)
+                )
+
+
     def test_frame_init_iter(self):
 
         f1 = Frame(None, index=iter(range(3)), columns=("A",))
@@ -2368,6 +2409,43 @@ class TestUnit(TestCase):
                 (('count', (('red', 1), ('green', 3), ('blue', 100), ('black', 4))), ('score', (('red', 1.3), ('green', 5.2), ('blue', 3.4), ('black', 9.0)))))
 
 
+    def test_frame_from_csv_d(self):
+
+        input_stream = StringIO('''
+        196412	0.0
+        196501	0.0
+        196502	0.0
+        196503	0.0
+        196504	0.0
+        196505	0.0''')
+
+
+        f1 = sf.Frame.from_tsv(
+                input_stream,
+                index_column=0,
+                header_is_columns=False)
+
+        self.assertEqual(f1.to_pairs(0),
+                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))),))
+
+        input_stream = StringIO('''
+        196412	0.0	0.1
+        196501	0.0	0.1
+        196502	0.0	0.1
+        196503	0.0	0.1
+        196504	0.0	0.1
+        196505	0.0	0.1''')
+
+
+        f2 = sf.Frame.from_tsv(
+                input_stream,
+                index_column=0,
+                header_is_columns=False)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), ('f2', ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
+
+
     def test_frame_to_csv_a(self):
         records = (
                 (2, 2, 'a', False, False),
@@ -3210,6 +3288,15 @@ class TestUnit(TestCase):
         self.assertEqual(str(f1.dtypes['b']), 'int64')
 
 
+    def test_frame_from_records_j(self):
+        # handle case of dict views
+        a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
+
+        post = Frame.from_records(a.values(), index=list(a.keys()))
+
+        self.assertEqual(post.to_pairs(0),
+                (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
+
     def test_frame_from_json_a(self):
 
         msg = """[
@@ -3342,6 +3429,33 @@ class TestUnit(TestCase):
         self.assertTrue(f1.name, 'foo')
         self.assertTrue(f2.name, 'foo')
         self.assertTrue(f3.name, 'foo')
+
+
+
+    def test_frame_to_frame_go_c(self):
+        records = (
+                (1, 'a', False, True),
+                (1, 'b', False, False),
+                (2, 'a', False, True),
+                (2, 'b', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((1, 2), ('a', 'b')),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        f2 = f1.to_frame_go()
+
+        self.assertTrue(isinstance(f2.columns, IndexHierarchyGO))
+
+        f2[(3, 'a')] = 10
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (((1, 'a'), (('w', 1), ('x', 1), ('y', 2), ('z', 2))), ((1, 'b'), (('w', 'a'), ('x', 'b'), ('y', 'a'), ('z', 'b'))), ((2, 'a'), (('w', False), ('x', False), ('y', False), ('z', False))), ((2, 'b'), (('w', True), ('x', False), ('y', True), ('z', False))), ((3, 'a'), (('w', 10), ('x', 10), ('y', 10), ('z', 10))))
+        )
+
+
 
 
     def test_frame_astype_a(self):

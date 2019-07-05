@@ -2,6 +2,12 @@
 Storage for common doc strings and templates shared in non-related classes and methods.
 '''
 
+
+import typing as tp
+
+from static_frame.core.util import AnyCallable
+
+
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
@@ -26,16 +32,19 @@ class DOC_TEMPLATE:
         Absolute file path to the file written.
     '''
 
-    reindex = dict(
-        count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
-    )
-
     clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+
+    #---------------------------------------------------------------------------
+    # dict entries
+
+    reindex = dict(
+            count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
+            )
 
     index_init = dict(
             args = '''
         Args:
-            labels: Iterable of hashable values to be used as the index labels.
+            labels: Iterable of hashable values to be used as the index labels. If an Index or IndexHierarchy class is passed, values will be appropriately extracted.
             name: A hashable object to name the Index.
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
             dtype: Optional dtype to be used for labels.'''
@@ -64,10 +73,22 @@ class DOC_TEMPLATE:
             own_columns='''own_columns: Flag passed columns as ownable by this {class_name}. Primarily used by internal clients.'''
     )
 
+    constructor_frame = dict(
+            dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
+            ''',
+            name='name: A hashable object to name the Frame.',
+            consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+    )
 
-def doc_inject(*, selector=None, **kwargs):
 
-    def decorator(f):
+def doc_inject(*, selector: tp.Optional[str] = None, **kwargs: object) -> tp.Callable[[AnyCallable], AnyCallable]:
+    '''
+    Args:
+        selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
+    '''
+    def decorator(f: AnyCallable) -> AnyCallable:
+
+        assert f.__doc__ is not None, f'{f} must have a docstring!'
 
         nonlocal selector
         selector = f.__name__ if selector is None else selector
@@ -78,8 +99,8 @@ def doc_inject(*, selector=None, **kwargs):
             f.__doc__ = f.__doc__.format(doc)
         else: # assume it is a dictionary
             # try to format each value
-            doc = {k: v.format(**kwargs) for k, v in doc_src.items()}
-            f.__doc__ = f.__doc__.format(**doc)
+            doc_dict = {k: v.format(**kwargs) for k, v in doc_src.items()}
+            f.__doc__ = f.__doc__.format(**doc_dict)
 
         return f
 

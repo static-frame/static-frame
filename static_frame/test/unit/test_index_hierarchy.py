@@ -1,5 +1,6 @@
 
 import unittest
+import pickle
 import numpy as np
 
 from collections import OrderedDict
@@ -26,7 +27,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
-    def test_hierarhcy_init_a(self):
+    def test_hierarchy_init_a(self):
 
         labels = (('I', 'A'),
                 ('I', 'B'),
@@ -38,7 +39,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.name, 'foo')
 
 
-    def test_hierarhcy_init_b(self):
+    def test_hierarchy_init_b(self):
 
         labels = (
                 ('I', 'A'),
@@ -50,7 +51,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarhcy_init_c(self):
+    def test_hierarchy_init_c(self):
 
         labels = (
                 ('I', 'A'),
@@ -65,7 +66,7 @@ class TestUnit(TestCase):
             [['I', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['III', 'A']])
 
 
-    def test_hierarhcy_init_d(self):
+    def test_hierarchy_init_d(self):
 
         labels = (
                 ('I', 'A'),
@@ -77,7 +78,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarhcy_init_e(self):
+    def test_hierarchy_init_e(self):
 
         labels = (
                 ('I', 'A'),
@@ -92,7 +93,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarhcy_init_f(self):
+    def test_hierarchy_init_f(self):
 
         labels = (
                 ('I', 'A'),
@@ -105,7 +106,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarhcy_init_g(self):
+    def test_hierarchy_init_g(self):
 
         labels = (
                 ('I', 'A', 1),
@@ -117,7 +118,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarhcy_init_h(self):
+    def test_hierarchy_init_h(self):
 
         labels = (
                 ('I', 'A', 1),
@@ -129,6 +130,11 @@ class TestUnit(TestCase):
                 )
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
+
+
+    def test_hierarchy_init_i(self):
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy((3,))
 
 
     def test_hierarchy_loc_to_iloc_a(self):
@@ -218,6 +224,12 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product(groups, dates, observations)
 
 
+    def test_hierarchy_from_product_b(self):
+
+        with self.assertRaises(RuntimeError):
+            IndexHierarchy.from_product((1, 2))
+
+
     def test_hierarchy_from_tree_a(self):
 
         OD = OrderedDict
@@ -295,6 +307,20 @@ class TestUnit(TestCase):
 
         self.assertEqual(ih.to_frame().to_pairs(0),
                 ((0, ((0, 'I'), (1, 'I'))), (1, ((0, 'A'), (1, 'B')))))
+
+
+    def test_hierarchy_from_labels_c(self):
+
+        ih = IndexHierarchy.from_labels(tuple())
+        self.assertEqual(len(ih), 0)
+
+
+    def test_hierarchy_from_labels_d(self):
+
+        with self.assertRaises(RuntimeError):
+            ih = IndexHierarchy.from_labels([(3,), (4,)])
+
+
 
     def test_hierarchy_loc_to_iloc_b(self):
         OD = OrderedDict
@@ -433,11 +459,17 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        ih = IndexHierarchy.from_tree(tree)
+        ih = IndexHierarchyGO.from_tree(tree)
 
         # NOTE: for now, __iter__ return arrays, so we have convert to a tuple
         self.assertEqual([tuple(k) in ih.keys() for k in ih],
                 [True, True, True, True, True, True, True, True]
+                )
+
+        ih.append(('III', 'A', 1))
+
+        self.assertEqual(ih.keys(),
+                {('I', 'B', 1), ('I', 'A', 2), ('II', 'B', 2), ('II', 'A', 2), ('I', 'A', 1), ('III', 'A', 1), ('II', 'B', 1), ('II', 'A', 1), ('I', 'B', 2)}
                 )
 
 
@@ -950,6 +982,31 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.cumprod().tolist(),
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
+
+    def test_index_hierarchy_pickle_a(self):
+
+        a = IndexHierarchy.from_product((10, 20), (3, 7))
+        b = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'))
+
+        for index in (a, b):
+            # force creating of ._labels
+            self.assertTrue(len(index.values), len(index))
+
+            pbytes = pickle.dumps(index)
+            index_new = pickle.loads(pbytes)
+
+            for v in index: # iter labels (arrays here)
+                self.assertFalse(index_new._labels.flags.writeable)
+                self.assertEqual(index_new.loc[tuple(v)], index.loc[tuple(v)])
+
+
+    def test_index_hierarchy_get_a(self):
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+        self.assertEqual(ih1.get((20, 3)), 2)
+        self.assertEqual(ih1.get((20, 7)), 3)
+        self.assertEqual(ih1.get((20, 200)), None)
+
 
 if __name__ == '__main__':
     unittest.main()

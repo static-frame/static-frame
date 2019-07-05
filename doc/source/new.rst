@@ -4,13 +4,24 @@ What is New in Static Frame
 ===============================
 
 
-0.3.6-dev
+0.3.7-dev
 ------------
 
-Frame now supports shapes of all zero and non-zero combinations of index and column lengths; Frame construction will raise an exception if attempting to set a value in an unfillable Frame shape.
+
+0.3.6
+------------
+
+``Frame.to_frame_go`` now properly handles ``IndexHierarchy`` columns.
+
+Improved creation of ``IndexHierarchy`` from other ``IndexHierarchy`` or ``IndexHierarchyGO``.
+
+``Frame`` initializer now exposes ``index_constructor`` and ``columns_constructor`` arguments.
+
+``Frame.from_records`` now efficiently uses ``dict_view`` objects containing row records.
+
+``Frame`` now supports shapes of all zero and non-zero combinations of index and column lengths; ``Frame`` construction will raise an exception if attempting to set a value in an unfillable Frame shape.
 
 ``Frame``, ``Series``, ``Index``, and ``IndexHierarchy`` all have improved implementations of ``cumprod`` and ``cumsum`` methods.
-
 
 
 0.3.5

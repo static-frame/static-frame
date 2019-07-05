@@ -30,10 +30,11 @@ class IndexLevel:
             'targets',
             'offset'
             )
+    index: Index
+    targets: tp.Optional[ArrayGO]
+    offset: int
 
-    _index: Index
-    _targets: tp.Optional[ArrayGO]
-    _offset: int
+    _INDEX_CONSTRUCTOR = Index
 
     def __init__(self,
             index: Index,
@@ -45,7 +46,14 @@ class IndexLevel:
             offset: integer offset for this level.
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
         '''
-        self.index = index
+        if self._INDEX_CONSTRUCTOR.STATIC != index.STATIC:
+            raise RuntimeError('incorrect static state in supplied index')
+
+        if self._INDEX_CONSTRUCTOR.STATIC:
+            self.index = index # can reuse
+        else:
+            self.index = self._INDEX_CONSTRUCTOR(index)
+
         self.targets = targets
         self.offset = offset
 
@@ -54,12 +62,14 @@ class IndexLevel:
             cls: tp.Type['IndexLevel'] = None,
             ) -> 'IndexLevel':
         '''
-        A deepcopy with optional adjustments, such as a different offset and possibly a different class.
+        A deepcopy with optional adjustments, such as a different offset and possibly a different class. The supplied class will be used to construct the IndexLevel instance (as well as internal indices), permitting the production of an IndexLevelGO.
 
         Args:
             offset: optionally provide a new offset for the copy. This is not applied recursively
         '''
-        index = self.index.copy()
+        cls = cls if cls else self.__class__
+
+        index = cls._INDEX_CONSTRUCTOR(self.index)
 
         if self.targets is not None:
             targets = ArrayGO(
@@ -69,7 +79,6 @@ class IndexLevel:
             targets = None
 
         offset = self.offset if offset is None else offset
-        cls = cls if cls else self.__class__
         return cls(index=index, targets=targets, offset=offset)
 
     def __len__(self) -> int:
@@ -103,7 +112,7 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    def dtypes(self) -> tp.Iterator[int]:
+    def dtypes(self) -> tp.Iterator[np.dtype]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None:
             yield self.index.values.dtype
@@ -289,20 +298,11 @@ class IndexLevelGO(IndexLevel):
             'targets',
             'offset'
             )
-
     index: IndexGO
     targets: tp.Optional[np.ndarray]
     offset: int
 
-    def __init__(self,
-            index: IndexGO,
-            targets: tp.Optional[np.ndarray] = None,
-            offset: int = 0
-            ):
-        assert isinstance(index, IndexGO)
-        # assume that we must copy this index as it is mutable; possibly add an own_index option if this can be optimized
-        index = index.copy()
-        IndexLevel.__init__(self, index=index, targets=targets, offset=offset)
+    _INDEX_CONSTRUCTOR = IndexGO
 
     #---------------------------------------------------------------------------
     # grow only mutation
@@ -383,7 +383,3 @@ class IndexLevelGO(IndexLevel):
                             offset=0,
                             targets=targets
                             )
-
-
-
-

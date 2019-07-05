@@ -14,6 +14,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
@@ -97,7 +98,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
     Args:
-        data: An iterable of row iterables, a 2D numpy array, or dictionary mapping column names to column values.
+        data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
         {index}
         {columns}
         {own_data}
@@ -112,14 +113,16 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_name'
             )
 
+    sum: tp.Callable[['Frame'], Series]
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
     _name: tp.Hashable
 
-    _COLUMN_CONSTRUCTOR = Index
+    _COLUMNS_CONSTRUCTOR = Index
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_concat(cls,
             frames: tp.Iterable[tp.Union['Frame', Series]],
             *,
@@ -139,6 +142,8 @@ class Frame(metaclass=MetaOperatorDelegate):
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -240,7 +245,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         if from_array_columns:
             if columns.ndim == 2: # we have a hierarchical index
                 column_cls = (IndexHierarchy
-                        if cls._COLUMN_CONSTRUCTOR.STATIC else IndexHierarchyGO)
+                        if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
                 columns = column_cls.from_labels(columns)
                 own_columns = True
 
@@ -263,6 +268,7 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_index=own_index)
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_records(cls,
             records: tp.Iterable[tp.Any],
             *,
@@ -274,11 +280,15 @@ class Frame(metaclass=MetaOperatorDelegate):
             ) -> 'Frame':
         '''Frame constructor from an iterable of rows.
 
+        Note that defining rows with an iterable of dictionaries is supported; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
+
         Args:
-            records: Iterable of row values, provided either as arrays, tuples, lists, or namedtuples.
+            records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
             index: Optionally provide an iterable of index labels, equal in length to the number of records.
             columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
-            dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -301,18 +311,29 @@ class Frame(metaclass=MetaOperatorDelegate):
                 return dtypes.get(columns[col_idx], None)
             return dtypes[col_idx]
 
+
         def blocks():
+
             if not hasattr(records, '__len__'):
+                # might be a generator; must convert to sequence
                 rows = list(records)
             else:
+                # could be a sequence, or something like a dict view
                 rows = records
 
-            row_reference = rows[0]
+            if hasattr(rows, '__getitem__'):
+                rows_to_iter = False
+                row_reference = rows[0]
+            else:
+                # dict view, or other sized iterable that does not suppor getitem
+                rows_to_iter = True
+                row_reference = next(iter(rows))
+
+
+            # import ipdb; ipdb.set_trace()
+
             row_count = len(rows)
             col_count = len(row_reference)
-
-            # if dtypes is not None and len(dtypes) != col_count:
-            #     raise RuntimeError('length of dtypes does not match rows')
 
             column_getter = None
             if isinstance(row_reference, dict):
@@ -347,9 +368,10 @@ class Frame(metaclass=MetaOperatorDelegate):
 
                 values = None
                 if column_type is not None:
+                    rows_iter = rows if not rows_to_iter else iter(rows)
                     try:
                         values = np.fromiter(
-                                (row[col_key] for row in rows),
+                                (row[col_key] for row in rows_iter),
                                 count=row_count,
                                 dtype=column_type)
                     except ValueError:
@@ -358,8 +380,9 @@ class Frame(metaclass=MetaOperatorDelegate):
                             # reset to None if not explicit and failued in fromiter
                             column_type = None
                 if values is None:
+                    rows_iter = rows if not rows_to_iter else iter(rows)
                     # let array constructor determine type if column_type is None
-                    values = np.array([row[col_key] for row in rows],
+                    values = np.array([row[col_key] for row in rows_iter],
                             dtype=column_type)
 
                 values.flags.writeable = False
@@ -377,57 +400,79 @@ class Frame(metaclass=MetaOperatorDelegate):
                 own_data=True)
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_json(cls,
             json_data: str,
             *,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            dtypes: DtypesSpecifier = None
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''Frame constructor from an in-memory JSON document.
 
         Args:
             json_data: a string of JSON, encoding a table as an array of JSON objects.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
         data = json.loads(json_data)
-        return cls.from_records(data, name=name, dtypes=dtypes)
+        return cls.from_records(data,
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
             url: str,
             *,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            dtypes: DtypesSpecifier = None
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''Frame constructor from a JSON documenst provided via a URL.
 
         Args:
             url: URL to the JSON resource.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url), name=name, dtypes=dtypes)
+        return cls.from_json(_read_url(url),
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             index: IndexInitializer = None,
             fill_value: object = np.nan,
-            name: tp.Hashable = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False):
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ):
         '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
             index: Iterable of values to create an Index.
             fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
-            consoidate_blocks: If True, same typed adjacent columns will be consolidated into a contiguous array.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -494,16 +539,23 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_dict(cls,
             dict: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
             *,
             index: IndexInitializer = None,
             fill_value: object = np.nan,
-            name: tp.Hashable = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False):
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ):
         '''
         Create a Frame from a dictionary, or any object that has an items() method.
+
+        Args:
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
         return cls.from_items(dict.items(),
                 index=index,
@@ -514,19 +566,24 @@ class Frame(metaclass=MetaOperatorDelegate):
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_structured_array(cls,
             array: np.ndarray,
             *,
-            name: tp.Hashable = None,
             index_column: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
-            consolidate_blocks: bool = False) -> 'Frame':
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
         '''
         Convert a NumPy structed array into a Frame.
 
         Args:
             array: Structured NumPy array.
             index_column: Optionally provide the name or position offset of the column to use as the index.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -594,13 +651,13 @@ class Frame(metaclass=MetaOperatorDelegate):
             name: tp.Hashable = None
             ) -> 'Frame':
         '''
-        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. Dtype must be specified.
+        Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
         index = Index(index)
-        columns = cls._COLUMN_CONSTRUCTOR(columns)
+        columns = cls._COLUMNS_CONSTRUCTOR(columns)
 
         tb = TypeBlocks.from_element_items(items,
                 shape=(len(index), len(columns)),
@@ -629,17 +686,15 @@ class Frame(metaclass=MetaOperatorDelegate):
             :py:class:`static_frame.Frame`
         '''
 
-        # index = Index(index)
-        # columns = cls._COLUMN_CONSTRUCTOR(columns)
-
         index = index_from_optional_constructor(index, Index)
-        columns = index_from_optional_constructor(columns, cls._COLUMN_CONSTRUCTOR)
+        columns = index_from_optional_constructor(columns, cls._COLUMNS_CONSTRUCTOR)
 
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)
 
         dtype = dtype if dtype is not None else object
-        tb = TypeBlocks.from_element_items(items,
+        tb = TypeBlocks.from_element_items(
+                items,
                 shape=(len(index), len(columns)),
                 dtype=dtype)
 
@@ -655,6 +710,7 @@ class Frame(metaclass=MetaOperatorDelegate):
     # file, data format loaders
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_csv(cls,
             fp: FilePathOrFileLike,
             *,
@@ -664,8 +720,10 @@ class Frame(metaclass=MetaOperatorDelegate):
             skip_footer: int = 0,
             header_is_columns: bool = True,
             quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            encoding: tp.Optional[str] = None
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -676,8 +734,10 @@ class Frame(metaclass=MetaOperatorDelegate):
             index_column: Optionally specify a column, by position or name, to become the index.
             skip_header: Number of leading lines to skip.
             skip_footer: Numver of trailing lines to skip.
-            header_is_columns: If True, columns names are read from the first line after the first skip_header lines.
-            dtypes: set to None by default to permit discovery
+            header_is_columns: If True, the header, the first line after the skip_header count of lines, is used to create the column labels.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
 
         Returns:
             :py:class:`static_frame.Frame`
@@ -702,6 +762,9 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             file_like = fp
 
+        # strange NP convention for this parameter: False it no supported, must convert to None
+        header_is_columns = header_is_columns if header_is_columns is True else None
+
         array = np.genfromtxt(file_like,
                 delimiter=delimiter_native,
                 skip_header=skip_header,
@@ -716,11 +779,16 @@ class Frame(metaclass=MetaOperatorDelegate):
         array.flags.writeable = False
         return cls.from_structured_array(array,
                 index_column=index_column,
-                dtypes=dtypes
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks
                 )
 
     @classmethod
-    def from_tsv(cls, fp, **kwargs) -> 'Frame':
+    def from_tsv(cls,
+            fp,
+            **kwargs
+            ) -> 'Frame':
         '''
         Specialized version of :py:meth:`Frame.from_csv` for TSV files.
 
@@ -781,7 +849,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         else:
             name = None
 
-        is_go = not cls._COLUMN_CONSTRUCTOR.STATIC
+        is_go = not cls._COLUMNS_CONSTRUCTOR.STATIC
 
         return cls(blocks,
                 index=IndexBase.from_pandas(value.index),
@@ -789,7 +857,8 @@ class Frame(metaclass=MetaOperatorDelegate):
                 name=name,
                 own_data=True,
                 own_index=True,
-                own_columns=True)
+                own_columns=True
+                )
 
     #---------------------------------------------------------------------------
 
@@ -799,16 +868,14 @@ class Frame(metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             columns: IndexInitializer = None,
             name: tp.Hashable = None,
+            index_constructor: tp.Optional[IndexBase] = None,
+            columns_constructor: tp.Optional[IndexBase] = None,
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False
             ) -> None:
-        '''
-        Args:
-            data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
-            own_data: if True, assume that the data being based in can be owned entirely by this Frame; that is, that a copy does not need to made.
-            own_index: if True, the index is taken as is and is not passed to an Index initializer.
-        '''
+        # doc string at class def
+
         self._name = name if name is None else name_filter(name)
 
         # we can determin if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
@@ -869,37 +936,72 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if not blocks_constructor else (None, None))
 
         #-----------------------------------------------------------------------
-        # index assignment
+        # columns assignment
 
-        if own_columns or (
-                hasattr(columns, STATIC_ATTR)
+
+        if own_columns:
+            self._columns = columns
+            col_count = len(self._columns)
+        elif (self._COLUMNS_CONSTRUCTOR.STATIC
+                and not columns_constructor
+                and hasattr(columns, STATIC_ATTR)
                 and columns.STATIC
-                and self._COLUMN_CONSTRUCTOR.STATIC):
-            # if it is a STATIC index we can assign directly
+                ):
+            # if it is a STATIC index, and we do not have a columns_constructor, we can assign directly
             self._columns = columns
             col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
-            self._columns = self._COLUMN_CONSTRUCTOR(
-                    range(col_count),
-                    loc_is_iloc=True,
-                    dtype=np.int64)
+            if columns_constructor:
+                self._columns = columns_constructor(range(col_count))
+            else:
+                self._columns = self._COLUMNS_CONSTRUCTOR(
+                        range(col_count),
+                        loc_is_iloc=True,
+                        dtype=DEFAULT_INT_DTYPE)
         else:
-            self._columns = self._COLUMN_CONSTRUCTOR(columns)
+            # columns could be a mutable index here
+            if columns_constructor:
+                self._columns = columns_constructor(columns)
+            else:
+                self._columns = self._COLUMNS_CONSTRUCTOR(columns)
             col_count = len(self._columns)
 
+        if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
+            raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
+        #-----------------------------------------------------------------------
+        # index assignment
 
-        if own_index or (hasattr(index, STATIC_ATTR) and index.STATIC):
+        if own_index:
+            self._index = index
+            row_count = len(self._index)
+        elif (hasattr(index, STATIC_ATTR)
+                and index.STATIC
+                and not index_constructor
+                ):
+            # if it is a static index, we have no constructor, own it
             self._index = index
             row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
-            self._index = Index(range(row_count),
-                    loc_is_iloc=True,
-                    dtype=np.int64)
+            if index_constructor:
+                self._index = index_constructor(range(row_count))
+            else:
+                self._index = Index(range(row_count),
+                        loc_is_iloc=True,
+                        dtype=DEFAULT_INT_DTYPE)
         else:
-            self._index = Index(index)
+            if index_constructor:
+                self._index = index_constructor(index)
+            else:
+                self._index = Index(index)
             row_count = len(self._index)
+
+        if not self._index.STATIC:
+            raise RuntimeError('non-static index cannot be assigned to Frame')
+
+        #-----------------------------------------------------------------------
+        # final evaluation
 
         # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
         columns_empty = col_count == 0
@@ -1169,11 +1271,11 @@ class Frame(metaclass=MetaOperatorDelegate):
         if columns is not None:
             if isinstance(columns, (Index, IndexHierarchy)):
                 # always use the Index constructor for safe reuse when possible
-                if columns.STATIC != self._COLUMN_CONSTRUCTOR.STATIC:
+                if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
                     raise Exception('static status of index does not match expected column static status')
                 columns = columns.__class__(columns)
             else: # create the Index if not already an columns, assume 1D
-                columns = self._COLUMN_CONSTRUCTOR(columns)
+                columns = self._COLUMNS_CONSTRUCTOR(columns)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
         else:
             columns = self._columns
@@ -1556,11 +1658,11 @@ class Frame(metaclass=MetaOperatorDelegate):
                 if self._index.depth > 1:
                     name_row = tuple(name_row)
 
-        # can only own columns if _COLUMN_CONSTRUCTOR is static
+        # can only own columns if _COLUMNS_CONSTRUCTOR is static
         column_key_is_slice = isinstance(column_key, slice)
         if column_key is None or (column_key_is_slice and column_key == NULL_SLICE):
             columns = self._columns
-            own_columns = self._COLUMN_CONSTRUCTOR.STATIC
+            own_columns = self._COLUMNS_CONSTRUCTOR.STATIC
         else:
             columns = self._columns._extract_iloc(column_key)
             own_columns = True
@@ -2467,14 +2569,16 @@ class Frame(metaclass=MetaOperatorDelegate):
             df.name = self._name
         return df
 
-    def to_frame_go(self):
+    def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
         '''
         # copying blocks does not copy underlying data
-        return FrameGO(self._blocks.copy(),
-                index=self.index,
-                columns=self.columns.values, # NOTE: does not support IndexHierarchy
+        return FrameGO(
+                self._blocks.copy(),
+                index=self.index, # can reuse
+                columns=self.columns,
+                columns_constructor=self.columns._MUTABLE_CONSTRUCTOR,
                 name=self._name,
                 own_data=True,
                 own_index=True,
@@ -2588,7 +2692,7 @@ class FrameGO(Frame):
             '_name'
             )
 
-    _COLUMN_CONSTRUCTOR = IndexGO
+    _COLUMNS_CONSTRUCTOR = IndexGO
 
 
     def __setitem__(self,
@@ -2760,8 +2864,3 @@ class FrameAsType:
                 index=self.container.index,
                 name=self.container._name,
                 own_data=True)
-
-
-
-
-

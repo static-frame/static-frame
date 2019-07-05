@@ -22,7 +22,7 @@ import numpy as np
 
 root_dir_fp = path.abspath(path.dirname(__file__))
 
-def get_long_description():
+def get_long_description() -> str:
 #     with open(path.join(root_dir_fp, 'README.rst'), encoding='utf-8') as f:
 #         return f.read()
     return '''The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame offers an alternative to Pandas. While many interfaces for data extraction and manipulation are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices must be unique; all vector processing uses NumPy, and the full range of NumPy data types is preserved; the implementation is concise and lightweight; consistent naming and interfaces are used throughout; and flexible approaches to iteration and function application, with built-in options for parallelization, are provided.
@@ -34,13 +34,14 @@ Docs: http://static-frame.readthedocs.io
 Packages: https://pypi.org/project/static-frame
 '''
 
-def get_version():
+def get_version() -> str:
     with open(path.join(root_dir_fp, 'static_frame', '__init__.py'), encoding='utf-8') as f:
         for l in f:
             if l.startswith('__version__'):
                 if '#' in l:
                     l = l.split('#')[0].strip()
                 return l.split('=')[-1].strip()[1:-1]
+    raise ValueError("__version__ not found!")
 
 include_dirs = [np.get_include(), 'static_frame/core/extensions']
 

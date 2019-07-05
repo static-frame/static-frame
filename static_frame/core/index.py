@@ -253,6 +253,9 @@ class Index(IndexBase,
     _loc_is_iloc: bool
     _name: tp.Hashable
 
+    # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
+    # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
+
     _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = np.intersect1d
 
@@ -395,6 +398,7 @@ class Index(IndexBase,
                 labels = array
             else:
                 labels = array2d_to_tuples(array)
+        # else: assume an iterable suitable for labels usage
 
         if self._DTYPE is not None:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
@@ -830,7 +834,9 @@ class IndexGO(Index):
 
     {args}
     '''
+
     STATIC = False
+
     _IMMUTABLE_CONSTRUCTOR = Index
 
     __slots__ = (
@@ -931,6 +937,11 @@ class IndexGO(Index):
                 raise KeyError('duplicate key append attempted', value)
             # might bet better performance by calling extend() on _positions and _labels
             self.append(value)
+
+
+# update class attr on Index after class initialziation
+Index._MUTABLE_CONSTRUCTOR = IndexGO
+
 
 #-------------------------------------------------------------------------------
 # Specialized index for dates

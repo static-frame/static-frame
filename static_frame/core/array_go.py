@@ -1,14 +1,18 @@
 
-import numpy as np
+import typing as tp
+
+import numpy as np  # type: ignore
 
 from static_frame.core.util import immutable_filter
 
 
-from static_frame.core.extensions.array_go import ArrayGO
 # class ArrayGO:
 #     '''
 #     A grow only, one-dimensional, object type array, specifically for usage in IndexHierarchy IndexLevel objects.
 #     '''
+
+#     _array: tp.Optional[np.ndarray]
+#     _array_mutable: tp.Optional[tp.List[tp.Any]]
 
 #     __slots__ = (
 #             '_dtype',
@@ -20,10 +24,10 @@ from static_frame.core.extensions.array_go import ArrayGO
 #     # NOTE: this can be implemented with one array, where we overallocate for growth, then grow as needed, or with an array and list. Since most instaces will not need to grow (only edge nodes), overall efficiency might be greater with a list
 
 #     def __init__(self,
-#             iterable,
+#             iterable: tp.Union[np.ndarray, tp.List[object]],
 #             *,
-#             dtype=object,
-#             own_iterable=False):
+#             dtype: object = object,
+#             own_iterable: bool = False) -> None:
 #         '''
 #         Args:
 #             own_iterable: flag iterable as ownable by this instance.
@@ -49,7 +53,7 @@ from static_frame.core.extensions.array_go import ArrayGO
 #             else:
 #                 self._array_mutable = list(iterable)
 
-#     def _update_array_cache(self):
+#     def _update_array_cache(self) -> None:
 #         if self._array_mutable is not None:
 #             if self._array is not None:
 #                 len_base = len(self._array)
@@ -67,28 +71,31 @@ from static_frame.core.extensions.array_go import ArrayGO
 #                 self._array_mutable = None
 #         self._recache = False
 
-#     def __iter__(self):
+#     def __iter__(self) -> tp.Iterator[tp.Any]:
 #         if self._recache:
 #             self._update_array_cache()
-#         return self._array.__iter__()
+#         assert self._array is not None
+#         return iter(self._array)
 
-#     def __getitem__(self, key):
+#     def __getitem__(self, key: tp.Any) -> tp.Any:
 #         if self._recache:
 #             self._update_array_cache()
+#         assert self._array is not None
 #         return self._array.__getitem__(key)
 
-#     def __len__(self):
+#     def __len__(self) -> int:
 #         if self._recache:
 #             self._update_array_cache()
-#         return self._array.__len__()
+#         assert self._array is not None
+#         return len(self._array)
 
-#     def append(self, value):
+#     def append(self, value: tp.Iterable[object]) -> None:
 #         if self._array_mutable is None:
 #             self._array_mutable = []
 #         self._array_mutable.append(value)
 #         self._recache = True
 
-#     def extend(self, values):
+#     def extend(self, values: tp.Iterable[object]) -> None:
 #         if self._array_mutable is None:
 #             self._array_mutable = []
 #         self._array_mutable.extend(values)
@@ -108,4 +115,5 @@ from static_frame.core.extensions.array_go import ArrayGO
 #         '''
 #         if self._recache:
 #             self._update_array_cache()
+#         assert self._array is not None
 #         return self.__class__(self._array, dtype=self._dtype)

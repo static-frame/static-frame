@@ -174,20 +174,20 @@ _COLOR_NAME_X11 = {
 class HexColor:
 
     _ANSI_TO_HEX = None
-    _HEX_TO_ANSI_CACHE = {}
+    _HEX_TO_ANSI_CACHE: tp.Dict[int, int] = {}
 
     @staticmethod
-    def _rgb(color):
+    def _rgb(color: int) -> tp.Tuple[int, int, int]:
         return ((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff)
 
     @classmethod
-    def _diff(cls, color1, color2):
+    def _diff(cls, color1: int, color2: int) -> int:
         (r1, g1, b1) = cls._rgb(color1)
         (r2, g2, b2) = cls._rgb(color2)
         return abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2)
 
     @staticmethod
-    def _get_ansi_to_hex_map() -> dict:
+    def _get_ansi_to_hex_map() -> tp.Dict[int, int]:
         '''
         Called once (lazzily) to get the ANSI to hex color mapping. This will return a dictionary mapping integers 0 to 255 to corresponding hex values (as integers).
         '''
