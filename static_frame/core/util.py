@@ -64,7 +64,8 @@ EMPTY_ARRAY = np.array((), dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
 NAT = np.datetime64('nat')
-NATD = np.timedelta64(0)
+# define missing for timedelta as an untyped 0
+EMPTY_TIMEDELTA = np.timedelta64(0)
 
 _DICT_STABLE = sys.version_info >= (3, 6)
 
@@ -377,7 +378,7 @@ def dtype_to_na(dtype: np.dtype):
     elif kind in DTYPE_DATETIME_KIND:
         return NAT
     elif kind in DTYPE_TIMEDELTA_KIND:
-        return NATD
+        return EMPTY_TIMEDELTA
 
     raise NotImplementedError('no support for this dtype', kind)
 
