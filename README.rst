@@ -16,8 +16,8 @@
 .. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg?style=flat-square
   :target: https://anaconda.org/conda-forge/static-frame
 
-.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame.svg?style=flat-square
-  :target: https://travis-ci.org/InvestmentSystems/static-frame
+.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg?style=flat-square
+  :target: https://travis-ci.org/InvestmentSystems/static-frame/branches
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg?style=flat-square
   :target: https://static-frame.readthedocs.io/en/latest
