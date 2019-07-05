@@ -82,6 +82,8 @@ class Series(metaclass=MetaOperatorDelegate):
             '_name',
             )
 
+    sum: tp.Callable[['Series'], tp.Any]
+
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
@@ -1456,6 +1458,3 @@ class SeriesAssign:
         return self.container.__class__(array,
                 index=self.container._index,
                 name=self.container._name)
-
-
-

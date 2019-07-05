@@ -18,7 +18,7 @@ from static_frame.core.display_color import HexColor
 
 class TestUnit(TestCase):
 
-    def test_hex_color_format_a(self):
+    def test_hex_color_format_a(self) -> None:
 
         msg = HexColor.format_terminal('#4b006e', 'test')
         self.assertEqual(msg, '\x1b[38;5;53mtest\x1b[0m')

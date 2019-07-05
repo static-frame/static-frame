@@ -1,6 +1,6 @@
 
 import unittest
-import numpy as np
+import numpy as np  # type: ignore
 
 from collections import OrderedDict
 
@@ -26,7 +26,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
-    def test_index_level_a(self):
+    def test_index_level_a(self) -> None:
         groups = IndexGO(('A', 'B'))
         observations = IndexGO(('x', 'y'))
         targets = np.array(
@@ -48,6 +48,8 @@ class TestUnit(TestCase):
         self.assertEqual(len(level1.get_labels()), 4)
         self.assertEqual(len(level2.get_labels()), 6)
 
+        assert level0.targets is not None
+
         # import ipdb; ipdb.set_trace()
         self.assertEqual([lvl.offset for lvl in level0.targets], [0, 2, 4, 7])
 
@@ -55,7 +57,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_index_level_dtypes_a(self):
+    def test_index_level_dtypes_a(self) -> None:
         groups = IndexGO(('A', 'B'))
         observations = IndexGO(('x', 'y'))
         targets = ArrayGO(
@@ -67,7 +69,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_index_level_get_labels_a(self):
+    def test_index_level_get_labels_a(self) -> None:
         groups = IndexGO(('A', 'B'))
         observations = IndexGO(('x', 'y'))
         targets = ArrayGO(
@@ -88,7 +90,7 @@ class TestUnit(TestCase):
         self.assertEqual(level1.get_labels().dtype.kind, 'i')
 
 
-    def test_index_level_leaf_loc_to_iloc_a(self):
+    def test_index_level_leaf_loc_to_iloc_a(self) -> None:
 
         groups = Index(('A', 'B', 'C'))
         dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
@@ -116,7 +118,7 @@ class TestUnit(TestCase):
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
 
 
-    def test_index_level_append_a(self):
+    def test_index_level_append_a(self) -> None:
 
         category = IndexGO(('I', 'II'))
         groups = IndexGO(('A', 'B'))
@@ -171,7 +173,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_index_level_iter_a(self):
+    def test_index_level_iter_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -194,9 +196,3 @@ class TestUnit(TestCase):
 
         post = list(levels.iter(2))
         self.assertEqual(post, [1, 2, 1, 2, 3, 2, 3, 1, 2, 3, 1])
-
-
-
-
-
-

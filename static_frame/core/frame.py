@@ -113,6 +113,7 @@ class Frame(metaclass=MetaOperatorDelegate):
             '_name'
             )
 
+    sum: tp.Callable[['Frame'], Series]
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase
@@ -2863,8 +2864,3 @@ class FrameAsType:
                 index=self.container.index,
                 name=self.container._name,
                 own_data=True)
-
-
-
-
-

@@ -9,7 +9,7 @@ from code import interact
 from sys import platform
 from sys import version
 
-import numpy as np
+import numpy as np  # type: ignore
 
 import static_frame as sf
 
@@ -18,7 +18,7 @@ imports = {'np': np, 'sf': sf}
 
 
 try:  # Import pandas, if it's installed:
-    import pandas as pd
+    import pandas as pd  # type: ignore
 except ImportError:
     pass
 else:
@@ -35,7 +35,7 @@ try:  # This lets us play nicely with IPython:
 
     from builtins import __IPYTHON__  # type: ignore
 
-    from IPython import embed
+    from IPython import embed  # type: ignore
     from IPython import get_ipython
 
 except ImportError:

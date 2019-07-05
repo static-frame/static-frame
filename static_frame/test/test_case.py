@@ -8,8 +8,8 @@ import itertools as it
 import string
 import cmath
 
-import numpy as np
-import pytest
+import numpy as np  # type: ignore
+import pytest  # type: ignore
 
 
 from static_frame import TypeBlocks
@@ -27,7 +27,7 @@ class TestCase(unittest.TestCase):
     TestCase specialized for usage with StaticFrame
     '''
 
-    def setUp(self):
+    def setUp(self) -> None:
         pass
 
 
@@ -76,12 +76,12 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_letters(*slice_args) -> tp.Generator[str, None, None]:
+    def get_letters(*slice_args: tp.Optional[int]) -> tp.Generator[str, None, None]:
         for letter in string.ascii_lowercase[slice(*slice_args)]:
             yield letter
 
     @staticmethod
-    def get_test_input(file_name: str):
+    def get_test_input(file_name: str) -> str:
         # input dir should be a sibling of this module
         fp_module = os.path.join(os.getcwd(), __file__)
         fp = os.path.join(os.path.dirname(fp_module), 'input', file_name)
@@ -92,7 +92,7 @@ class TestCase(unittest.TestCase):
 
     #---------------------------------------------------------------------------
 
-    def assertEqualWithNaN(self, v1, v2):
+    def assertEqualWithNaN(self, v1: tp.Union[float, complex], v2: tp.Union[float, complex]) -> None:
         if (isinstance(v1, FLOAT_TYPES) and np.isnan(v1) and
                 isinstance(v2, FLOAT_TYPES) and np.isnan(v2)):
             return
@@ -101,7 +101,9 @@ class TestCase(unittest.TestCase):
             return
         return self.assertEqual(v1, v2)
 
-    def assertTypeBlocksArrayEqual(self, tb: TypeBlocks, match, match_dtype=None):
+    def assertTypeBlocksArrayEqual(self,
+            tb: TypeBlocks, match: tp.Iterable[object],
+            match_dtype: tp.Optional[tp.Union[type, np.dtype, str]] = None) -> None:
         '''
         Args:
             tb: a TypeBlocks instance
@@ -113,12 +115,16 @@ class TestCase(unittest.TestCase):
         self.assertTrue((tb.values == match).all())
 
 
-    def assertAlmostEqualValues(self, values1, values2):
+    def assertAlmostEqualValues(self,
+            values1: tp.Iterable[object], values2: tp.Iterable[object]) -> None:
 
         for v1, v2 in zip_longest(values1, values2):
             self.assertEqualWithNaN(v1, v2)
 
-    def assertAlmostEqualItems(self, pairs1, pairs2):
+    def assertAlmostEqualItems(self,
+            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, object]],
+            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, object]]) -> None:
+
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
 
@@ -128,7 +134,9 @@ class TestCase(unittest.TestCase):
             self.assertEqual(v1, v2)
 
 
-    def assertAlmostEqualFramePairs(self, pairs1, pairs2):
+    def assertAlmostEqualFramePairs(self,
+            pairs1: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[object]]],
+            pairs2: tp.Iterable[tp.Tuple[tp.Hashable, tp.Iterable[object]]]) -> None:
         '''
         For comparing nested tuples returned by Frame.to_pairs()
         '''

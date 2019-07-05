@@ -100,13 +100,15 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 # for type hinting
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
-        int, slice, list, None, 'Index', 'Series', np.ndarray]
+        int, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[
-        tuple, int, slice, list, None, 'Index', 'Series', np.ndarray]
+        tp.Tuple[tp.Any, ...], int, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
-CallableOrMapping = tp.Union[tp.Callable, tp.Mapping]
+UFunc = tp.Callable[[np.ndarray, int, np.dtype], np.ndarray]
+AnyCallable = tp.Callable[..., tp.Any]
+CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any]]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
 
@@ -341,7 +343,7 @@ def concat_resolved(
 
 def full_for_fill(
         dtype: np.dtype,
-        shape: tp.Union[int, tp.Tuple[int, int]],
+        shape: tp.Union[int, tp.Tuple[int, ...]],
         fill_value: object) -> np.ndarray:
     '''
     Return a "full" NP array for the given fill_value

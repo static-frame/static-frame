@@ -10,8 +10,8 @@ import pstats
 import sys
 import datetime
 
-import numpy as np
-import pandas as pd
+import numpy as np  # type: ignore
+import pandas as pd  # type: ignore
 import static_frame as sf
 
 
@@ -20,7 +20,7 @@ from static_frame.performance.perf_test import PerfTest
 
 #-------------------------------------------------------------------------------
 
-def get_arg_parser():
+def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
             description='Performance testing and profiling',
             formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -57,7 +57,7 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
     return p
 
 
-def yield_classes(module: types.ModuleType, pattern: str):
+def yield_classes(module: types.ModuleType, pattern: str) -> tp.Iterator[tp.Type[PerfTest]]:
     # this will not find children of children
     for attr_name, attr in vars(module).items():
         if attr_name.startswith('_'):
@@ -66,7 +66,7 @@ def yield_classes(module: types.ModuleType, pattern: str):
             if fnmatch.fnmatch(attr_name.lower(), pattern.lower()):
                 yield attr
 
-def profile(cls, function='sf'):
+def profile(cls: tp.Type[PerfTest], function: str = 'sf') -> None:
     '''
     Profile the `sf` function from the supplied class.
     '''
@@ -84,9 +84,9 @@ def profile(cls, function='sf'):
     ps.print_stats()
     print(s.getvalue())
 
-def performance(module, cls) -> tp.Tuple[str, float, float, float]:
+def performance(module: types.ModuleType, cls: tp.Type[PerfTest]) -> tp.MutableMapping[str, tp.Union[str, float]]:
     #row = []
-    row = collections.OrderedDict()
+    row: tp.MutableMapping[str, tp.Union[str, float]] = collections.OrderedDict()
     row['name'] = cls.__name__
     for f in PerfTest.FUNCTION_NAMES:
         if hasattr(cls, f):
@@ -99,7 +99,7 @@ def performance(module, cls) -> tp.Tuple[str, float, float, float]:
     return row
 
 
-def main():
+def main() -> None:
 
     options = get_arg_parser().parse_args()
 
@@ -148,7 +148,7 @@ def main():
 
         config = DisplayConfig(cell_max_width=80, type_show=False, display_rows=200)
 
-        def format(v):
+        def format(v: object) -> str:
             if isinstance(v, float):
                 if np.isnan(v):
                     return ''
@@ -166,4 +166,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

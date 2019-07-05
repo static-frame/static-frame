@@ -14,7 +14,7 @@ class HLocMeta(type):
             ) -> tp.Iterable[GetItemKeyType]:
         if not isinstance(key, tuple):
             key = (key,)
-        return cls(key)
+        return tp.cast(tp.Iterable[GetItemKeyType], cls(key))
 
 class HLoc(metaclass=HLocMeta):
     '''A wrapper for embedding hierarchical specificiations for :py:class:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
@@ -29,10 +29,10 @@ class HLoc(metaclass=HLocMeta):
     def __init__(self, key: tp.Sequence[GetItemKeyType]):
         self.key = key
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterator[GetItemKeyType]:
         return self.key.__iter__()
 
-    def __getitem__(self, key: int):
+    def __getitem__(self, key: int) -> GetItemKeyType:
         '''
         Each key reprsents a hierarchical level; if a key is not specified, the default should be to return the null slice.
         '''
