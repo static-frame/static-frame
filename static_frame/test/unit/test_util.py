@@ -4,7 +4,7 @@ import unittest
 
 import datetime
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from static_frame.core.util import _isna
 from static_frame.core.util import resolve_dtype
@@ -55,7 +55,7 @@ from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
-    def test_gen_skip_middle_a(self):
+    def test_gen_skip_middle_a(self) -> None:
 
         forward = lambda: [3, 2, 5]
         reverse = lambda: [3, 2, 5]
@@ -81,7 +81,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_ufunc_logical_skipna_a(self):
+    def test_ufunc_logical_skipna_a(self) -> None:
 
         # empty arrays
         a1 = np.array([], dtype=float)
@@ -138,7 +138,7 @@ class TestUnit(TestCase):
                 [True, True, False])
 
 
-    def test_ufunc_logical_skipna_b(self):
+    def test_ufunc_logical_skipna_b(self) -> None:
         # object arrays
 
         a1 = np.array([['sdf', '', 'wer'], [True, False, True]], dtype=object)
@@ -177,21 +177,21 @@ class TestUnit(TestCase):
                 [True, True])
 
 
-    def test_ufunc_logical_skipna_c(self):
+    def test_ufunc_logical_skipna_c(self) -> None:
 
         a1 = np.array([], dtype=float)
         with self.assertRaises(NotImplementedError):
             _ufunc_logical_skipna(a1, np.sum, skipna=True)
 
 
-    def test_ufunc_logical_skipna_d(self):
+    def test_ufunc_logical_skipna_d(self) -> None:
 
         a1 = np.array(['2018-01-01', '2018-02-01'], dtype=np.datetime64)
         post = _ufunc_logical_skipna(a1, np.all, skipna=True)
         self.assertTrue(post)
 
 
-    def test_ufunc_logical_skipna_e(self):
+    def test_ufunc_logical_skipna_e(self) -> None:
 
         a1 = np.array([['2018-01-01', '2018-02-01'],
                 ['2018-01-01', '2018-02-01']], dtype=np.datetime64)
@@ -201,7 +201,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_resolve_dtype_a(self):
+    def test_resolve_dtype_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -222,7 +222,7 @@ class TestUnit(TestCase):
         self.assertEqual(resolve_dtype(a1.dtype, a6.dtype), np.float64)
         self.assertEqual(resolve_dtype(a4.dtype, a6.dtype), np.float64)
 
-    def test_resolve_dtype_b(self):
+    def test_resolve_dtype_b(self) -> None:
 
         self.assertEqual(
                 resolve_dtype(np.array('a').dtype, np.array('aaa').dtype),
@@ -231,7 +231,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_resolve_dtype_c(self):
+    def test_resolve_dtype_c(self) -> None:
 
 
         a1 = np.array(['2019-01', '2019-02'], dtype=np.datetime64)
@@ -251,7 +251,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_resolve_dtype_iter_a(self):
+    def test_resolve_dtype_iter_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -280,7 +280,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_isna_array_a(self):
+    def test_isna_array_a(self) -> None:
 
         a1 = np.array([1, 2, 3])
         a2 = np.array([False, True, False])
@@ -325,7 +325,7 @@ class TestUnit(TestCase):
         self.assertEqual(_isna(a6).tolist(), [False, False, True])
 
 
-    def test_isna_array_b(self):
+    def test_isna_array_b(self) -> None:
 
         a1 = np.array([[1, 2], [3, 4]])
         a2 = np.array([[False, True, False], [False, True, False]])
@@ -354,7 +354,7 @@ class TestUnit(TestCase):
                 [[False, False, True], [False, False, True]])
 
 
-    def test_array_to_duplicated_a(self):
+    def test_array_to_duplicated_a(self) -> None:
         a = _array_to_duplicated(
                 np.array([0,1,2,2,1,4,5,3,4,5,5,6]),
                 exclude_first=False,
@@ -372,7 +372,7 @@ class TestUnit(TestCase):
                 [False, False, False, True, True, False, False, False, True, True, True, False])
 
 
-    def test_array_to_duplicated_b(self):
+    def test_array_to_duplicated_b(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         # find duplicate rows
         post = _array_to_duplicated(a, axis=0)
@@ -388,14 +388,14 @@ class TestUnit(TestCase):
                 [False, True, False, False, True])
 
 
-    def test_array_to_duplicated_c(self):
+    def test_array_to_duplicated_c(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         with self.assertRaises(Exception):
             _array_to_duplicated(a, axis=None)
 
 
 
-    def test_array_set_ufunc_many_a(self):
+    def test_array_set_ufunc_many_a(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([3, 2, 1])
         a3 = np.array([3, 2, 1])
@@ -408,7 +408,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [3, 2, 1])
 
 
-    def test_array_set_ufunc_many_b(self):
+    def test_array_set_ufunc_many_b(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([3, 2])
         a3 = np.array([5, 3, 2, 1])
@@ -421,7 +421,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
 
-    def test_array_set_ufunc_many_c(self):
+    def test_array_set_ufunc_many_c(self) -> None:
         a1 = np.array([[3, 2, 1], [1, 2, 3]])
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
         a3 = np.array([[10, 20, 30], [1, 2, 3]])
@@ -434,7 +434,7 @@ class TestUnit(TestCase):
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
 
-    def test_array_set_ufunc_many_d(self):
+    def test_array_set_ufunc_many_d(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
 
@@ -442,7 +442,7 @@ class TestUnit(TestCase):
             post = array_set_ufunc_many((a1, a2), union=False)
 
 
-    def test_array_set_ufunc_many_e(self):
+    def test_array_set_ufunc_many_e(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([30, 20])
 
@@ -450,7 +450,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [])
 
 
-    def test_union1d_a(self):
+    def test_union1d_a(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
 
@@ -479,7 +479,7 @@ class TestUnit(TestCase):
                 {'d', 1, 3, None, 'ff'}
                 )
 
-    def test_intersect1d_a(self):
+    def test_intersect1d_a(self) -> None:
 
         a1 = np.array([3, 2, 1])
         a2 = np.array(['3', '2', '1'])
@@ -494,7 +494,7 @@ class TestUnit(TestCase):
                 {'c'}
                 )
 
-    def test_intersect1d_b(self):
+    def test_intersect1d_b(self) -> None:
         # long way of
         a1 = np.empty(4, dtype=object)
         a1[:] = [(0, 0), (0, 1), (0, 2), (0, 3)]
@@ -507,7 +507,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [(0, 1), (0, 3)])
 
-    def test_intersect2d_a(self):
+    def test_intersect2d_a(self) -> None:
         a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
         b = np.array([('a', 'g'), ('c', 'd'), ('e', 'f')])
 
@@ -529,12 +529,12 @@ class TestUnit(TestCase):
                 )
 
     @unittest.skip('requires network')
-    def test_read_url(self):
+    def test_read_url(self) -> None:
         url = 'https://jsonplaceholder.typicode.com/todos'
         post = _read_url(url)
 
 
-    def test_slice_to_ascending_slice_a(self):
+    def test_slice_to_ascending_slice_a(self) -> None:
 
         a1 = np.arange(10)
 
@@ -552,7 +552,7 @@ class TestUnit(TestCase):
         compare(slice(None, 1, -1))
 
 
-    def test_array_shift_a(self):
+    def test_array_shift_a(self) -> None:
         a1 = np.arange(6)
 
 
@@ -578,7 +578,7 @@ class TestUnit(TestCase):
                 [2, 3, 4, 5, 1.5, 1.5])
 
 
-    def test_array_shift_b(self):
+    def test_array_shift_b(self) -> None:
         a1 = np.array([('a', 'b', 'e', 'd'),
                 ('c', 'd', 'f', 'w'),
                 ('e', 'f', 's', 'q')])
@@ -614,13 +614,13 @@ class TestUnit(TestCase):
                 ['s', 'q', 'XX', 'XX']])
 
 
-    def test_array_shift_c(self):
+    def test_array_shift_c(self) -> None:
         a1 = np.arange(6)
         post = array_shift(a1, 0, axis=0, wrap=False)
         self.assertEqual(a1.tolist(), post.tolist())
 
 
-    def test_ufunc_unique_a(self):
+    def test_ufunc_unique_a(self) -> None:
 
         a1 = np.array([1, 1, 1, 2, 2])
         post = ufunc_unique(a1)
@@ -635,7 +635,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, {None, 1, 2, 'x'})
 
 
-    def test_ufunc_unique_b(self):
+    def test_ufunc_unique_b(self) -> None:
 
         a1 = np.array([[1, 1], [1, 2], [1, 2]])
         post = ufunc_unique(a1)
@@ -648,7 +648,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [[1, 1], [1, 2], [1, 2]])
 
 
-    def test_ufunc_unique_c(self):
+    def test_ufunc_unique_c(self) -> None:
 
         a1 = np.array([[1, 'x', 1], [1, None, 1], [1, 'x', 1]], dtype=object)
 
@@ -662,7 +662,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, {(1, 1, 1), ('x', None, 'x')})
 
 
-    def test_concat_resolved_a(self):
+    def test_concat_resolved_a(self) -> None:
         a1 = np.array([[3,4,5],[0,0,0]])
         a2 = np.array([1,2,3]).reshape((1,3))
         a3 = np.array([('3', '4', '5'),('1','1','1')])
@@ -687,7 +687,7 @@ class TestUnit(TestCase):
                 ['3', '5', 1, 1, 1])
 
 
-    def test_concat_resolved_b(self):
+    def test_concat_resolved_b(self) -> None:
         a1 = np.array([[3,4,5],[0,0,0]])
         a2 = np.array([1,2,3]).reshape((1,3))
 
@@ -695,7 +695,7 @@ class TestUnit(TestCase):
             concat_resolved((a1, a2), axis=None)
 
 
-    def test_dtype_to_na_a(self):
+    def test_dtype_to_na_a(self) -> None:
 
         self.assertEqual(dtype_to_na(np.dtype(int)), 0)
         self.assertTrue(np.isnan(dtype_to_na(np.dtype(float))))
@@ -704,7 +704,7 @@ class TestUnit(TestCase):
         self.assertEqual(dtype_to_na(np.dtype(str)), '')
 
 
-    def test_key_to_datetime_key_a(self):
+    def test_key_to_datetime_key_a(self) -> None:
 
         post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
         self.assertEqual(post,
@@ -742,14 +742,14 @@ class TestUnit(TestCase):
         self.assertEqual(post, None)
 
 
-    def test_ufunc2d_a(self):
+    def test_ufunc2d_a(self) -> None:
         # fails due to wrong dimensionality, not wrong function
         a1 = np.array([1, 1, 1])
         with self.assertRaises(IndexError):
             set_ufunc2d(np.sum, a1, a1)
 
 
-    def test_ufunc2d_b(self):
+    def test_ufunc2d_b(self) -> None:
 
         a1 = np.array([['a', 'b'], ['b', 'c']])
         a2 = np.array([['b', 'cc'], ['dd', 'ee']])
@@ -762,7 +762,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
-    def test_to_timedelta64_a(self):
+    def test_to_timedelta64_a(self) -> None:
         timedelta = datetime.timedelta
 
         self.assertEqual(
@@ -777,7 +777,7 @@ class TestUnit(TestCase):
                 to_timedelta64(timedelta(minutes=4)),
                 np.timedelta64(240, 's'))
 
-    def test_transition_indices_a(self):
+    def test_transition_indices_a(self) -> None:
         a1 = np.array([False, True, True, False, False, True, True, False])
         self.assertEqual(binary_transition(a1).tolist(), [0, 3, 4, 7])
 
@@ -804,7 +804,7 @@ class TestUnit(TestCase):
         self.assertEqual(binary_transition(a1).tolist(), [1])
 
 
-    def test_roll_1d_a(self):
+    def test_roll_1d_a(self) -> None:
 
         a1 = np.arange(12)
 
@@ -815,11 +815,11 @@ class TestUnit(TestCase):
             post = roll_1d(a1, -i)
             self.assertEqual(post.tolist(), np.roll(a1, -i).tolist())
 
-    def test_roll_1d_b(self):
+    def test_roll_1d_b(self) -> None:
         post = roll_1d(np.array([]), -4)
         self.assertEqual(len(post), 0)
 
-    def test_roll_2d_a(self):
+    def test_roll_2d_a(self) -> None:
 
         a1 = np.arange(12).reshape((3,4))
 
@@ -837,13 +837,13 @@ class TestUnit(TestCase):
             post = roll_2d(a1, -i, axis=1)
             self.assertEqual(post.tolist(), np.roll(a1, -i, axis=1).tolist())
 
-    def test_roll_2d_b(self):
+    def test_roll_2d_b(self) -> None:
         post = roll_2d(np.array([[]]), -4, axis=1)
         self.assertEqual(post.shape, (1, 0))
 
 
 
-    def test_iterable_to_array_a(self):
+    def test_iterable_to_array_a(self) -> None:
         a1, is_unique = iterable_to_array({3,4,5})
         self.assertTrue(is_unique)
         self.assertEqual(set(a1.tolist()), {3,4,5})
@@ -856,7 +856,7 @@ class TestUnit(TestCase):
         self.assertFalse(is_unique)
         self.assertEqual(a3.tolist(), [10, 20, 30])
 
-    def test_collection_and_dtype_to_1darray_a(self):
+    def test_collection_and_dtype_to_1darray_a(self) -> None:
         a1 = collection_and_dtype_to_1darray({3,4,5}, dtype=np.dtype(int))
         self.assertEqual(set(a1.tolist()), {3,4,5})
 
@@ -864,14 +864,14 @@ class TestUnit(TestCase):
         self.assertTrue(a1.dtype == object)
         self.assertEqual(a1.tolist(), [3,4,5])
 
-    def test_collection_and_dtype_to_1darray_b(self):
+    def test_collection_and_dtype_to_1darray_b(self) -> None:
         x = [(0, 0), (0, 1), (0, 2), (0, 3)]
         a1 = collection_and_dtype_to_1darray(x, np.dtype(object))
         self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
         # must get an array of tuples back
 
 
-    def test_index_correspondence_a(self):
+    def test_index_correspondence_a(self) -> None:
         idx0 = Index([0, 1, 2, 3, 4], loc_is_iloc=True)
         idx1 = Index([0, 1, 2, 3, 4, '100185', '100828', '101376', '100312', '101092'], dtype=object)
         ic = IndexCorrespondence.from_correspondence(idx0, idx1)
@@ -885,7 +885,7 @@ class TestUnit(TestCase):
                 [0, 1, 2, 3, 4]
                 )
 
-    def test_to_datetime64_a(self):
+    def test_to_datetime64_a(self) -> None:
 
         dt = to_datetime64('2019')
         self.assertEqual(dt, np.datetime64('2019'))
