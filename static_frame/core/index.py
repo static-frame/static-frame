@@ -1,5 +1,5 @@
 import typing as tp
-from collections import KeysView
+from collections.abc import KeysView
 import datetime
 import operator
 from functools import partial
