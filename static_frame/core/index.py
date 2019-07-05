@@ -486,7 +486,7 @@ class Index(IndexBase,
 
     #---------------------------------------------------------------------------
 
-    def _update_array_cache(self):
+    def _update_array_cache(self) -> None:
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
         '''
         pass

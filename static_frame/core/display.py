@@ -157,7 +157,7 @@ class DisplayTypeCategoryFactory:
     _TYPE_TO_CATEGORY_CACHE = {}
 
     @classmethod
-    def to_category(cls, dtype: type):
+    def to_category(cls, dtype: tp.Optional[type]):
         if dtype not in cls._TYPE_TO_CATEGORY_CACHE:
             category = None
             for dtc in cls._DISPLAY_TYPE_CATEGORIES:
@@ -628,7 +628,7 @@ class Display:
     def type_attributes(
             type_input: tp.Union[np.dtype, DisplayHeader],
             config: DisplayConfig
-            ) -> tp.Tuple[str, int, DisplayTypeCategory]:
+            ) -> tp.Tuple[str, DisplayTypeCategory]:
         '''
         Apply delimteres to type, for either numpy types or Python classes.
         '''
