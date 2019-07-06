@@ -1,5 +1,5 @@
 import typing as tp
-from collections import KeysView
+from collections.abc import KeysView
 import datetime
 import operator
 from functools import partial
@@ -486,7 +486,7 @@ class Index(IndexBase,
 
     #---------------------------------------------------------------------------
 
-    def _update_array_cache(self):
+    def _update_array_cache(self) -> None:
         '''Derived classes can use this to set stored arrays, self._labels and self._positions.
         '''
         pass
@@ -900,7 +900,7 @@ class IndexGO(Index):
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value):
+    def append(self, value: object) -> None:
         '''append a value
         '''
         if value in self._map:

@@ -1,7 +1,7 @@
 
 import typing as tp
 from collections import OrderedDict
-from collections import KeysView
+from collections.abc import KeysView
 from collections import deque
 from itertools import chain
 

@@ -368,7 +368,7 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def dtype_to_na(dtype: np.dtype):
+def dtype_to_na(dtype: DtypeSpecifier):
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
@@ -1140,10 +1140,10 @@ def write_optional_file(
 # 316 ns ± 1.29 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
 
-TContainer = tp.TypeVar('Container', 'Index', 'Series', 'Frame')
+TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame')
 
 #TODO: rename InterfaceGetItem
-class GetItem:
+class GetItem(tp.Generic[TContainer]):
     __slots__ = ('_func',)
 
     def __init__(self,

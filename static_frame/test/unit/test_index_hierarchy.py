@@ -1,7 +1,7 @@
 
 import unittest
 import pickle
-import numpy as np
+import numpy as np  # type: ignore
 
 from collections import OrderedDict
 
@@ -27,7 +27,7 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
-    def test_hierarchy_init_a(self):
+    def test_hierarchy_init_a(self) -> None:
 
         labels = (('I', 'A'),
                 ('I', 'B'),
@@ -39,7 +39,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.name, 'foo')
 
 
-    def test_hierarchy_init_b(self):
+    def test_hierarchy_init_b(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -51,7 +51,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarchy_init_c(self):
+    def test_hierarchy_init_c(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -66,7 +66,7 @@ class TestUnit(TestCase):
             [['I', 'A'], ['I', 'B'], ['II', 'B'], ['III', 'B'], ['III', 'A']])
 
 
-    def test_hierarchy_init_d(self):
+    def test_hierarchy_init_d(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -78,7 +78,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarchy_init_e(self):
+    def test_hierarchy_init_e(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -93,7 +93,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_init_f(self):
+    def test_hierarchy_init_f(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -106,7 +106,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarchy_init_g(self):
+    def test_hierarchy_init_g(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
@@ -118,7 +118,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1 = IndexHierarchy.from_labels(labels)
 
-    def test_hierarchy_init_h(self):
+    def test_hierarchy_init_h(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
@@ -132,12 +132,12 @@ class TestUnit(TestCase):
             ih1 = IndexHierarchy.from_labels(labels)
 
 
-    def test_hierarchy_init_i(self):
+    def test_hierarchy_init_i(self) -> None:
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy((3,))
 
 
-    def test_hierarchy_loc_to_iloc_a(self):
+    def test_hierarchy_loc_to_iloc_a(self) -> None:
 
 
         groups = Index(('A', 'B', 'C'))
@@ -200,7 +200,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(post, 21)
 
-        post = ih.loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])
+        post = ih.loc_to_iloc(HLoc['B', '2018-01-03':, 'y'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(post, [13, 15])
 
 
@@ -215,7 +215,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_from_product_a(self):
+    def test_hierarchy_from_product_a(self) -> None:
 
         groups = Index(('A', 'B', 'C'))
         dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
@@ -224,13 +224,13 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product(groups, dates, observations)
 
 
-    def test_hierarchy_from_product_b(self):
+    def test_hierarchy_from_product_b(self) -> None:
 
         with self.assertRaises(RuntimeError):
             IndexHierarchy.from_product((1, 2))
 
 
-    def test_hierarchy_from_tree_a(self):
+    def test_hierarchy_from_tree_a(self) -> None:
 
         OD = OrderedDict
 
@@ -243,7 +243,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_from_tree_b(self):
+    def test_hierarchy_from_tree_b(self) -> None:
 
         OD = OrderedDict
 
@@ -264,7 +264,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_from_labels_a(self):
+    def test_hierarchy_from_labels_a(self) -> None:
 
         labels = (('I', 'A', 1),
                 ('I', 'A', 2),
@@ -297,7 +297,7 @@ class TestUnit(TestCase):
         self.assertEqual([ih.loc_to_iloc(x) for x in labels], [0, 1, 2, 3])
 
 
-    def test_hierarchy_from_labels_b(self):
+    def test_hierarchy_from_labels_b(self) -> None:
 
         labels = (('I', 'A'),
                 ('I', 'B'),
@@ -309,20 +309,20 @@ class TestUnit(TestCase):
                 ((0, ((0, 'I'), (1, 'I'))), (1, ((0, 'A'), (1, 'B')))))
 
 
-    def test_hierarchy_from_labels_c(self):
+    def test_hierarchy_from_labels_c(self) -> None:
 
         ih = IndexHierarchy.from_labels(tuple())
         self.assertEqual(len(ih), 0)
 
 
-    def test_hierarchy_from_labels_d(self):
+    def test_hierarchy_from_labels_d(self) -> None:
 
         with self.assertRaises(RuntimeError):
             ih = IndexHierarchy.from_labels([(3,), (4,)])
 
 
 
-    def test_hierarchy_loc_to_iloc_b(self):
+    def test_hierarchy_loc_to_iloc_b(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -374,7 +374,7 @@ class TestUnit(TestCase):
         # ih.loc_to_iloc((slice(None), slice(None), [1,2]))
 
 
-    def test_hierarchy_loc_to_iloc_c(self):
+    def test_hierarchy_loc_to_iloc_c(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -390,14 +390,14 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_tree(tree)
 
         # TODO: add additional validaton
-        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]
+        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertTrue(len(post), 6)
 
         post = ih.loc[[('I', 'B', 2), ('II', 'A', 2)]]
         self.assertTrue(len(post), 2)
 
 
-    def test_hierarchy_contains_a(self):
+    def test_hierarchy_contains_a(self) -> None:
         labels = (('I', 'A'),
                 ('I', 'B'),
                 )
@@ -406,7 +406,7 @@ class TestUnit(TestCase):
         self.assertTrue(('I', 'A') in ih)
 
 
-    def test_hierarchy_extract_a(self):
+    def test_hierarchy_extract_a(self) -> None:
         idx = IndexHierarchy.from_product(['A', 'B'], [1, 2])
 
         self.assertEqual(idx.iloc[1], ('A', 2))
@@ -416,7 +416,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_iter_a(self):
+    def test_hierarchy_iter_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -437,7 +437,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_reversed(self):
+    def test_hierarchy_reversed(self) -> None:
         labels = (('a', 1), ('a', 2), ('b', 1), ('b', 2))
         hier_idx = IndexHierarchy.from_labels(labels)
         self.assertTrue(
@@ -446,7 +446,7 @@ class TestUnit(TestCase):
         )
 
 
-    def test_hierarchy_keys_a(self):
+    def test_hierarchy_keys_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -473,7 +473,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_display_a(self):
+    def test_hierarchy_display_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -495,7 +495,7 @@ class TestUnit(TestCase):
         post = s.display()
         self.assertEqual(len(post), 11)
 
-    def test_hierarchy_loc_a(self):
+    def test_hierarchy_loc_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -520,7 +520,7 @@ class TestUnit(TestCase):
                 s.loc[HLoc[:, 'A']].values.tolist(),
                 [0, 1, 4, 5])
 
-    def test_hierarchy_series_a(self):
+    def test_hierarchy_series_a(self) -> None:
         f = IndexHierarchy.from_tree
         s1 = Series(23, index=f(dict(a=(1,2,3))))
         self.assertEqual(s1.values.tolist(), [23, 23, 23])
@@ -531,7 +531,7 @@ class TestUnit(TestCase):
                 ((('a', 1), 3), (('a', 2), 3), (('b', 1), 3), (('b', 2), 3)))
 
 
-    def test_hierarchy_frame_a(self):
+    def test_hierarchy_frame_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -559,7 +559,7 @@ class TestUnit(TestCase):
         )
 
 
-        f3 = f1.assign.loc[('I', 'B', 2):, HLoc[:, :, 2]](200)
+        f3 = f1.assign.loc[('I', 'B', 2):, HLoc[:, :, 2]](200)  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
         self.assertEqual(f3.to_pairs(0),
                 ((('I', 'A', 1), ((('I', 'A', 1), 0), (('I', 'B', 1), 6), (('I', 'B', 2), 12), (('II', 'A', 1), 18), (('II', 'B', 1), 24), (('II', 'B', 2), 30))), (('I', 'B', 1), ((('I', 'A', 1), 1), (('I', 'B', 1), 7), (('I', 'B', 2), 13), (('II', 'A', 1), 19), (('II', 'B', 1), 25), (('II', 'B', 2), 31))), (('I', 'B', 2), ((('I', 'A', 1), 2), (('I', 'B', 1), 8), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))), (('II', 'A', 1), ((('I', 'A', 1), 3), (('I', 'B', 1), 9), (('I', 'B', 2), 15), (('II', 'A', 1), 21), (('II', 'B', 1), 27), (('II', 'B', 2), 33))), (('II', 'B', 1), ((('I', 'A', 1), 4), (('I', 'B', 1), 10), (('I', 'B', 2), 16), (('II', 'A', 1), 22), (('II', 'B', 1), 28), (('II', 'B', 2), 34))), (('II', 'B', 2), ((('I', 'A', 1), 5), (('I', 'B', 1), 11), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))))
@@ -567,7 +567,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_frame_b(self):
+    def test_hierarchy_frame_b(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([
@@ -602,7 +602,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_index_go_a(self):
+    def test_hierarchy_index_go_a(self) -> None:
 
         OD = OrderedDict
         tree1 = OD([
@@ -641,7 +641,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_relabel_a(self):
+    def test_hierarchy_relabel_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -670,7 +670,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_intersection_a(self):
+    def test_hierarchy_intersection_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -700,7 +700,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_operators_a(self):
+    def test_hierarchy_operators_a(self) -> None:
 
         labels = (
                 (1, 1),
@@ -717,7 +717,7 @@ class TestUnit(TestCase):
                 [[-1, -1], [-1, -2], [-2, -1], [-2, -2]])
 
 
-    def test_hierarchy_flat_a(self):
+    def test_hierarchy_flat_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -731,7 +731,7 @@ class TestUnit(TestCase):
                 [('I', 'A'), ('I', 'B'), ('II', 'A'), ('II', 'B')]
                 )
 
-    def test_hierarchy_add_level_a(self):
+    def test_hierarchy_add_level_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -750,7 +750,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_drop_level_a(self):
+    def test_hierarchy_drop_level_a(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
@@ -767,7 +767,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_drop_level_b(self):
+    def test_hierarchy_drop_level_b(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
@@ -784,7 +784,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih2.drop_level(1)
 
-    def test_hierarchy_drop_level_c(self):
+    def test_hierarchy_drop_level_c(self) -> None:
 
         labels = (
                 ('I', 'A', 1),
@@ -797,7 +797,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih.drop_level(1).values.tolist(),
                 [['A', 1], ['B', 2], ['C', 3], ['C', 4]])
 
-    def test_hierarchy_drop_level_d(self):
+    def test_hierarchy_drop_level_d(self) -> None:
 
         labels = (
                 ('A', 1),
@@ -811,7 +811,7 @@ class TestUnit(TestCase):
                 [1, 2, 3, 4])
 
 
-    def test_hierarchy_boolean_loc(self):
+    def test_hierarchy_boolean_loc(self) -> None:
         records = (
                 ('a', 999999, 0.1),
                 ('a', 201810, 0.1),
@@ -831,7 +831,7 @@ class TestUnit(TestCase):
                 (('a', ((('b', 201810), 'b'),)), ('b', ((('b', 201810), 201810),)), ('c', ((('b', 201810), 0.4),))))
 
 
-    def test_hierarchy_name_a(self):
+    def test_hierarchy_name_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
         self.assertEqual(idx1.name, 'q')
@@ -840,7 +840,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.name, 'w')
 
 
-    def test_hierarchy_name_b(self):
+    def test_hierarchy_name_b(self) -> None:
 
         idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
         idx2 = idx1.rename('w')
@@ -861,7 +861,7 @@ class TestUnit(TestCase):
                 [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['x', 'x']]
                 )
 
-    def test_hierarchy_display_a(self):
+    def test_hierarchy_display_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
 
@@ -872,7 +872,7 @@ class TestUnit(TestCase):
                 (['<IndexHierarchy: q>', ''], ['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['<<U1>', '<<U1>'])
                 )
 
-    def test_hierarchy_to_pandas_a(self):
+    def test_hierarchy_to_pandas_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
 
@@ -884,8 +884,8 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_from_pandas_a(self):
-        import pandas
+    def test_hierarchy_from_pandas_a(self) -> None:
+        import pandas  # type: ignore
 
         pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
 
@@ -896,7 +896,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_from_pandas_b(self):
+    def test_hierarchy_from_pandas_b(self) -> None:
         import pandas
 
         idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
@@ -911,7 +911,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_from_pandas_c(self):
+    def test_hierarchy_from_pandas_c(self) -> None:
         import pandas
 
         pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
@@ -931,7 +931,7 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
 
 
-    def test_hierarchy_copy_a(self):
+    def test_hierarchy_copy_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -948,7 +948,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_copy_b(self):
+    def test_hierarchy_copy_b(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -970,7 +970,7 @@ class TestUnit(TestCase):
             )
 
 
-    def test_hierarchy_cumprod_a(self):
+    def test_hierarchy_cumprod_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
 
@@ -983,7 +983,7 @@ class TestUnit(TestCase):
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
 
-    def test_index_hierarchy_pickle_a(self):
+    def test_index_hierarchy_pickle_a(self) -> None:
 
         a = IndexHierarchy.from_product((10, 20), (3, 7))
         b = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'))
@@ -1000,7 +1000,7 @@ class TestUnit(TestCase):
                 self.assertEqual(index_new.loc[tuple(v)], index.loc[tuple(v)])
 
 
-    def test_index_hierarchy_get_a(self):
+    def test_index_hierarchy_get_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
         self.assertEqual(ih1.get((20, 3)), 2)

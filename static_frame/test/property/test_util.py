@@ -83,8 +83,8 @@ class TestUnit(TestCase):
         else:
             self.assertTrue(value in array)
 
-    @given(get_dtype())
-    def test_dtype_to_na(self, dtype):
+    @given(get_dtype())  # type: ignore
+    def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
         post = util.dtype_to_na(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 

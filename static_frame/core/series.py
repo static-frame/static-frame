@@ -83,6 +83,7 @@ class Series(metaclass=MetaOperatorDelegate):
             )
 
     sum: tp.Callable[['Series'], tp.Any]
+    values: tp.Sequence[tp.Any]
 
     @classmethod
     def from_items(cls,
