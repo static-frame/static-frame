@@ -164,8 +164,8 @@ class TestUnit(TestCase):
 # to_timedelta64
 # key_to_datetime_key
 
-    @given(get_array_1d2d())
-    def test_array_to_groups_and_locations(self, array: np.ndarray):
+    @given(get_array_1d2d()) # type: ignore
+    def test_array_to_groups_and_locations(self, array: np.ndarray) -> None:
 
         groups, locations = util.array_to_groups_and_locations(array, 0)
 
@@ -177,8 +177,8 @@ class TestUnit(TestCase):
         self.assertTrue(len(np.unique(locations)) == len(groups))
 
 
-    @given(get_array_1d2d())
-    def test_isna_array(self, array: np.ndarray):
+    @given(get_array_1d2d()) # type: ignore
+    def test_isna_array(self, array: np.ndarray) -> None:
 
         post = util.isna_array(array)
         self.assertTrue(post.dtype == bool)
