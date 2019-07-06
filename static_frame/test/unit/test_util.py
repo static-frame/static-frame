@@ -538,7 +538,7 @@ class TestUnit(TestCase):
 
         a1 = np.arange(10)
 
-        def compare(slc):
+        def compare(slc: slice) -> None:
             slc_asc = slice_to_ascending_slice(slc, len(a1))
             self.assertEqual(sorted(a1[slc]), list(a1[slc_asc]))
 

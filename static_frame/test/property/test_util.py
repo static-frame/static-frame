@@ -89,8 +89,8 @@ class TestUnit(TestCase):
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 
 
-    @given(get_array_1d(min_size=1, dtype_group=DTGroup.NUMERIC))
-    def test_ufunc_skipna_1d(self, array):
+    @given(get_array_1d(min_size=1, dtype_group=DTGroup.NUMERIC)) # type: ignore
+    def test_ufunc_skipna_1d(self, array: np.ndarray) -> None:
 
         has_na = util._isna(array).any()
         for ufunc, ufunc_skipna, dtype in UFUNC_AXIS_SKIPNA.values():
@@ -102,19 +102,19 @@ class TestUnit(TestCase):
                 v2 = ufunc(array)
                 self.assertFalse(isinstance(v2, np.ndarray))
 
-    @given(get_array_1d2d())
-    def test_ufunc_unique(self, array):
+    @given(get_array_1d2d()) # type: ignore
+    def test_ufunc_unique(self, array: np.ndarray) -> None:
         post = util.ufunc_unique(array, axis=0)
         self.assertTrue(len(post) <= array.shape[0])
 
-    @given(get_array_1d(min_size=1), st.integers())
-    def test_roll_1d(self, array, shift):
+    @given(get_array_1d(min_size=1), st.integers()) # type: ignore
+    def test_roll_1d(self, array: np.ndarray, shift: int) -> None:
         post = util.roll_1d(array, shift)
         self.assertEqual(len(post), len(array))
         self.assertEqualWithNaN(array[-(shift % len(array))], post[0])
 
-    @given(get_array_2d(min_rows=1, min_columns=1), st.integers())
-    def test_roll_2d(self, array, shift):
+    @given(get_array_2d(min_rows=1, min_columns=1), st.integers()) # type: ignore
+    def test_roll_2d(self, array: np.ndarray, shift: int) -> None:
         for axis in (0, 1):
             post = util.roll_2d(array, shift=shift, axis=axis)
             self.assertEqual(post.shape, array.shape)
@@ -131,27 +131,27 @@ class TestUnit(TestCase):
             self.assertAlmostEqualValues(a, b)
 
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
-    def test_collection_to_array(self, array):
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
+    def test_collection_to_array(self, array: np.ndarray) -> None:
         values = array.tolist()
         post = util.collection_to_array(values, discover_dtype=True)
         self.assertAlmostEqualValues(array, post)
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
-    def test_iterable_to_array(self, array):
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
+    def test_iterable_to_array(self, array: np.ndarray) -> None:
         values = array.tolist()
         post, _ = util.iterable_to_array(values)
         self.assertAlmostEqualValues(post, values)
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
-    def test_collection_and_dtype_to_1darray(self, array):
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
+    def test_collection_and_dtype_to_1darray(self, array: np.ndarray) -> None:
         values = array.tolist()
         post = util.collection_and_dtype_to_1darray(values, dtype=util.DTYPE_OBJECT)
         self.assertAlmostEqualValues(post, values)
 
 
-    @given(st.slices(10))
-    def test_slice_to_ascending_slice(self, key):
+    @given(st.slices(10)) # type: ignore
+    def test_slice_to_ascending_slice(self, key: slice) -> None:
 
         post_key = util.slice_to_ascending_slice(key, size=10)
         self.assertEqual(
