@@ -6,7 +6,7 @@ import datetime
 
 import numpy as np  # type: ignore
 
-from static_frame.core.util import _isna
+from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
@@ -28,11 +28,11 @@ from static_frame.core.util import set_ufunc2d
 
 from static_frame import Index
 
-from static_frame.core.util import _dict_to_sorted_items
+# from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import collection_and_dtype_to_1darray
 
-from static_frame.core.util import _array_to_groups_and_locations
+from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.util import slice_to_ascending_slice
@@ -289,12 +289,12 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again'], dtype='S')
         a6 = np.array([2.3, 5.4], dtype='float32')
 
-        self.assertEqual(_isna(a1).tolist(), [False, False, False])
-        self.assertEqual(_isna(a2).tolist(), [False, False, False])
-        self.assertEqual(_isna(a3).tolist(), [False, False, False])
-        self.assertEqual(_isna(a4).tolist(), [False, False])
-        self.assertEqual(_isna(a5).tolist(), [False, False])
-        self.assertEqual(_isna(a6).tolist(), [False, False])
+        self.assertEqual(isna_array(a1).tolist(), [False, False, False])
+        self.assertEqual(isna_array(a2).tolist(), [False, False, False])
+        self.assertEqual(isna_array(a3).tolist(), [False, False, False])
+        self.assertEqual(isna_array(a4).tolist(), [False, False])
+        self.assertEqual(isna_array(a5).tolist(), [False, False])
+        self.assertEqual(isna_array(a6).tolist(), [False, False])
 
         a1 = np.array([1, 2, 3, None])
         a2 = np.array([False, True, False, None])
@@ -303,12 +303,12 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again', None])
         a6 = np.array([2.3, 5.4, None])
 
-        self.assertEqual(_isna(a1).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a2).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a3).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a4).tolist(), [False, False, True])
-        self.assertEqual(_isna(a5).tolist(), [False, False, True])
-        self.assertEqual(_isna(a6).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a1).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a2).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a3).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a4).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a5).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a6).tolist(), [False, False, True])
 
         a1 = np.array([1, 2, 3, np.nan])
         a2 = np.array([False, True, False, np.nan])
@@ -317,12 +317,12 @@ class TestUnit(TestCase):
         a5 = np.array(['test', 'test again', np.nan], dtype=object)
         a6 = np.array([2.3, 5.4, np.nan], dtype='float32')
 
-        self.assertEqual(_isna(a1).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a2).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a3).tolist(), [False, False, False, True])
-        self.assertEqual(_isna(a4).tolist(), [False, False, True])
-        self.assertEqual(_isna(a5).tolist(), [False, False, True])
-        self.assertEqual(_isna(a6).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a1).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a2).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a3).tolist(), [False, False, False, True])
+        self.assertEqual(isna_array(a4).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a5).tolist(), [False, False, True])
+        self.assertEqual(isna_array(a6).tolist(), [False, False, True])
 
 
     def test_isna_array_b(self) -> None:
@@ -335,22 +335,22 @@ class TestUnit(TestCase):
                 ['test', 'test again', np.nan]], dtype=object)
         a6 = np.array([[2.3, 5.4, np.nan], [2.3, 5.4, np.nan]], dtype='float32')
 
-        self.assertEqual(_isna(a1).tolist(),
+        self.assertEqual(isna_array(a1).tolist(),
                 [[False, False], [False, False]])
 
-        self.assertEqual(_isna(a2).tolist(),
+        self.assertEqual(isna_array(a2).tolist(),
                 [[False, False, False], [False, False, False]])
 
-        self.assertEqual(_isna(a3).tolist(),
+        self.assertEqual(isna_array(a3).tolist(),
                 [[False, False, False], [False, False, False]])
 
-        self.assertEqual(_isna(a4).tolist(),
+        self.assertEqual(isna_array(a4).tolist(),
                 [[False, False, True], [False, False, True]])
 
-        self.assertEqual(_isna(a5).tolist(),
+        self.assertEqual(isna_array(a5).tolist(),
                 [[False, False, True], [False, False, True]])
 
-        self.assertEqual(_isna(a6).tolist(),
+        self.assertEqual(isna_array(a6).tolist(),
                 [[False, False, True], [False, False, True]])
 
 

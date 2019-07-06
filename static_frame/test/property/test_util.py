@@ -92,7 +92,7 @@ class TestUnit(TestCase):
     @given(get_array_1d(min_size=1, dtype_group=DTGroup.NUMERIC)) # type: ignore
     def test_ufunc_skipna_1d(self, array: np.ndarray) -> None:
 
-        has_na = util._isna(array).any()
+        has_na = util.isna_array(array).any()
         for ufunc, ufunc_skipna, dtype in UFUNC_AXIS_SKIPNA.values():
             v1 = ufunc_skipna(array)
             # this should return a single value
@@ -150,6 +150,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(post, values)
 
 
+
     @given(st.slices(10)) # type: ignore
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
@@ -158,6 +159,37 @@ class TestUnit(TestCase):
             set(range(*key.indices(10))),
             set(range(*post_key.indices(10)))
             )
+
+# to_datetime64
+# to_timedelta64
+# key_to_datetime_key
+
+    @given(get_array_1d2d())
+    def test_array_to_groups_and_locations(self, array: np.ndarray):
+
+        groups, locations = util.array_to_groups_and_locations(array, 0)
+
+        if len(array) > 0:
+            self.assertTrue(len(groups) >= 1)
+
+        # always 1dm locations
+        self.assertTrue(locations.ndim == 1)
+        self.assertTrue(len(np.unique(locations)) == len(groups))
+
+
+    @given(get_array_1d2d())
+    def test_isna_array(self, array: np.ndarray):
+
+        post = util.isna_array(array)
+        self.assertTrue(post.dtype == bool)
+
+        values = np.ravel(array)
+        count_na = sum(util.isna_element(x) for x in values)
+
+        self.assertTrue(np.ravel(post).sum() == count_na)
+
+
+
 
 
 if __name__ == '__main__':

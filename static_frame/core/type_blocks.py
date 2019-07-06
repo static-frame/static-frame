@@ -27,8 +27,8 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import dtype_to_na
-from static_frame.core.util import _array_to_groups_and_locations
-from static_frame.core.util import _isna
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import isna_array
 from static_frame.core.util import slice_to_ascending_slice
 
 from static_frame.core.util import GetItem
@@ -663,7 +663,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if group_source.ndim > 1:
                 unique_axis = 1
 
-        groups, locations = _array_to_groups_and_locations(
+        groups, locations = array_to_groups_and_locations(
                 group_source,
                 unique_axis)
 
@@ -1561,7 +1561,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         def blocks():
             for b in self._blocks:
-                bool_block = _isna(b)
+                bool_block = isna_array(b)
                 bool_block.flags.writeable = False
                 yield bool_block
 
@@ -1573,7 +1573,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         def blocks():
             for b in self._blocks:
-                bool_block = np.logical_not(_isna(b))
+                bool_block = np.logical_not(isna_array(b))
                 bool_block.flags.writeable = False
                 yield bool_block
 
@@ -1606,7 +1606,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         # iterate over blocks to observe NaNs contiguous horizontally
         for b in block_iter:
-            sel = _isna(b) # True for is NaN
+            sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
             if isna_exit_previous is None:
@@ -1686,7 +1686,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # store flag for when non longer need to check blocks, yield immediately
 
         for b in blocks:
-            sel = _isna(b) # True for is NaN
+            sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
             if ndim == 1 and not sel[sided_index]:
@@ -1787,7 +1787,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
         '''
         # get a unified boolean array; as iisna will always return a Boolean, we can simply take the firtst block out of consolidation
-        unified = next(self.consolidate_blocks(_isna(b) for b in self._blocks))
+        unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
 
         # flip axis to condition funcion
         condition_axis = 0 if axis else 1
@@ -1810,7 +1810,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         return self.from_blocks(
                 self._assign_blocks_from_boolean_blocks(
-                        targets=(_isna(b) for b in self._blocks),
+                        targets=(isna_array(b) for b in self._blocks),
                         value=value)
                 )
 

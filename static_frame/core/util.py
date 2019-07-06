@@ -47,6 +47,7 @@ DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_NAN_KIND = ('f', 'c') # kinds taht support NaN values
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
+DTYPE_NAT_KIND = ('M', 'm')
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -68,7 +69,7 @@ NAT = np.datetime64('nat')
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
-_DICT_STABLE = sys.version_info >= (3, 6)
+# _DICT_STABLE = sys.version_info >= (3, 6)
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
 TIME_DELTA_ATTR_MAP = (
@@ -97,6 +98,8 @@ if hasattr(np, 'complex256'):
     COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
 else:
     COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
+
+NAN_TYPES = FLOAT_TYPES + COMPLEX_TYPES
 
 DICTLIKE_TYPES = (abc.Set, dict)
 NON_STR_TYPES = {int, float, bool}
@@ -761,22 +764,22 @@ def key_to_datetime_key(
 #-------------------------------------------------------------------------------
 
 
-def _dict_to_sorted_items(
-            mapping: tp.Dict) -> tp.Generator[
-            tp.Tuple[tp.Hashable, tp.Any], None, None]:
-    '''
-    Convert a dict into two arrays. Note that sorting is only necessary in Python 3.5, and should not be done if an ordered dict
-    '''
-    if isinstance(mapping, OrderedDict) or _DICT_STABLE:
-        # cannot use fromiter as do not know type
-        keys = mapping.keys()
-    else:
-        keys = sorted(mapping.keys())
-    for k in keys:
-        yield k, mapping[k]
+# def _dict_to_sorted_items(
+#             mapping: tp.Dict) -> tp.Generator[
+#             tp.Tuple[tp.Hashable, tp.Any], None, None]:
+#     '''
+#     Convert a dict into two arrays. Note that sorting is only necessary in Python 3.5, and should not be done if an ordered dict
+#     '''
+#     if isinstance(mapping, OrderedDict) or _DICT_STABLE:
+#         # cannot use fromiter as do not know type
+#         keys = mapping.keys()
+#     else:
+#         keys = sorted(mapping.keys())
+#     for k in keys:
+#         yield k, mapping[k]
 
 
-def _array_to_groups_and_locations(
+def array_to_groups_and_locations(
         array: np.ndarray,
         unique_axis: int = 0):
     '''Locations are index positions for each group.
@@ -798,14 +801,29 @@ def _array_to_groups_and_locations(
 
     return groups, locations
 
-def _isna(array: np.ndarray) -> np.ndarray:
-    '''Utility function that, given an np.ndarray, returns a bolean arrea setting True nulls. Note: the returned array is not made immutable
+def isna_element(value: tp.Any) -> bool:
+    '''Return Boolean if value is an NA.
     '''
+    if isinstance(value, NAN_TYPES):
+        return np.isnan(value)
+    elif isinstance(value, np.datetime64):
+        return np.isnat(value)
+    return value is None
+
+
+def isna_array(array: np.ndarray) -> np.ndarray:
+    '''Given an np.ndarray, return a bolean array setting True for missing values.
+
+    Note: the returned array is not made immutable.
+    '''
+    kind = array.dtype.kind
     # matches all floating point types
-    if array.dtype.kind == 'f':
+    if kind in DTYPE_NAN_KIND:
         return np.isnan(array)
+    elif kind in DTYPE_NAT_KIND:
+        return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
-    elif array.dtype.kind != 'O':
+    elif kind != 'O':
         return np.full(array.shape, False, dtype=bool)
     # only check for None if we have an object type
     return np.not_equal(array, array) | np.equal(array, None)
@@ -825,6 +843,7 @@ def _isna(array: np.ndarray) -> np.ndarray:
     #     return np.fromiter((x is None or x is np.nan for x in array.flat),
     #             count=array.size,
     #             dtype=bool).reshape(array.shape)
+
 
 
 def binary_transition(array: np.ndarray) -> np.ndarray:

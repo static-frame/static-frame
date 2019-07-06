@@ -32,7 +32,7 @@ from static_frame import IndexYearMonth
 
 from static_frame import HLoc
 
-from static_frame.core.util import _isna
+from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import _array_to_duplicated
