@@ -1,5 +1,5 @@
 Pygments==2.2.0
-hypothesis==3.71.3
+hypothesis==4.26.3
 ipython==7.4.0
 mypy==0.711
 numpy==1.15.4

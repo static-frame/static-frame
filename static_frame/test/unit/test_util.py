@@ -35,7 +35,7 @@ from static_frame.core.util import collection_and_dtype_to_1darray
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
 
-from static_frame.core.util import _slice_to_ascending_slice
+from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import to_timedelta64
@@ -539,7 +539,7 @@ class TestUnit(TestCase):
         a1 = np.arange(10)
 
         def compare(slc):
-            slc_asc = _slice_to_ascending_slice(slc, len(a1))
+            slc_asc = slice_to_ascending_slice(slc, len(a1))
             self.assertEqual(sorted(a1[slc]), list(a1[slc_asc]))
         #     print(slc, a1[slc])
         #     print(slc_asc, a1[slc_asc])

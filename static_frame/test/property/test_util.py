@@ -9,9 +9,12 @@ from hypothesis import given  # type: ignore
 from hypothesis import example  # type: ignore
 from hypothesis import reproduce_failure  # type: ignore
 
+from static_frame.test.property.strategies import DTGroup
+
 from static_frame.test.property.strategies import get_shape_1d2d
 from static_frame.test.property.strategies import get_array_1d
 from static_frame.test.property.strategies import get_array_1d2d
+from static_frame.test.property.strategies import get_array_2d
 from static_frame.test.property.strategies import get_dtype_pairs
 
 from static_frame.test.property.strategies import get_dtype
@@ -21,6 +24,8 @@ from static_frame.test.property.strategies import get_value
 from static_frame.test.property.strategies import get_labels
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
+
+from static_frame.core.operator_delegate import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.test_case import TestCase
 from static_frame.core import util
@@ -82,6 +87,77 @@ class TestUnit(TestCase):
     def test_dtype_to_na(self, dtype):
         post = util.dtype_to_na(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
+
+
+    @given(get_array_1d(min_size=1, dtype_group=DTGroup.NUMERIC))
+    def test_ufunc_skipna_1d(self, array):
+
+        has_na = util._isna(array).any()
+        for ufunc, ufunc_skipna, dtype in UFUNC_AXIS_SKIPNA.values():
+            v1 = ufunc_skipna(array)
+            # this should return a single value
+            self.assertFalse(isinstance(v1, np.ndarray))
+
+            if has_na:
+                v2 = ufunc(array)
+                self.assertFalse(isinstance(v2, np.ndarray))
+
+    @given(get_array_1d2d())
+    def test_ufunc_unique(self, array):
+        post = util.ufunc_unique(array, axis=0)
+        self.assertTrue(len(post) <= array.shape[0])
+
+    @given(get_array_1d(min_size=1), st.integers())
+    def test_roll_1d(self, array, shift):
+        post = util.roll_1d(array, shift)
+        self.assertEqual(len(post), len(array))
+        self.assertEqualWithNaN(array[-(shift % len(array))], post[0])
+
+    @given(get_array_2d(min_rows=1, min_columns=1), st.integers())
+    def test_roll_2d(self, array, shift):
+        for axis in (0, 1):
+            post = util.roll_2d(array, shift=shift, axis=axis)
+            self.assertEqual(post.shape, array.shape)
+
+            start = -(shift % array.shape[axis])
+
+            if axis == 0:
+                a = array[start]
+                b = post[0]
+            else:
+                a = array[:, start]
+                b = post[:, 0]
+
+            self.assertAlmostEqualValues(a, b)
+
+
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
+    def test_collection_to_array(self, array):
+        values = array.tolist()
+        post = util.collection_to_array(values, discover_dtype=True)
+        self.assertAlmostEqualValues(array, post)
+
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
+    def test_iterable_to_array(self, array):
+        values = array.tolist()
+        post, _ = util.iterable_to_array(values)
+        self.assertAlmostEqualValues(post, values)
+
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
+    def test_collection_and_dtype_to_1darray(self, array):
+        values = array.tolist()
+        post = util.collection_and_dtype_to_1darray(values, dtype=util.DTYPE_OBJECT)
+        self.assertAlmostEqualValues(post, values)
+
+
+    @given(st.slices(10))
+    def test_slice_to_ascending_slice(self, key):
+
+        post_key = util.slice_to_ascending_slice(key, size=10)
+        self.assertEqual(
+            set(range(*key.indices(10))),
+            set(range(*post_key.indices(10)))
+            )
 
 
 if __name__ == '__main__':

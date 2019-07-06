@@ -166,9 +166,12 @@ class DTGroup(Enum):
     OBJECT = (partial(st.just, DTYPE_OBJECT),) # strategy constantly generating object dtype
     ALL = (hypo_np.scalar_dtypes,)
 
-    NUMERIC = (hypo_np.floating_dtypes,
+    NUMERIC = (
+            hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
-            hypo_np.complex_number_dtypes)
+            hypo_np.complex_number_dtypes
+            )
+
     STRING = (hypo_np.unicode_string_dtypes,)
 
     DATE = (partial(hypo_np.datetime64_dtypes, min_period='D', max_period='D'),)

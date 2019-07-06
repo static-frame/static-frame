@@ -49,6 +49,7 @@ DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 
 DTYPE_OBJECT = np.dtype(object)
+DTYPE_BOOL = np.dtype(bool)
 
 NULL_SLICE = slice(None)
 UNIT_SLICE = slice(0, 1)
@@ -76,17 +77,22 @@ TIME_DELTA_ATTR_MAP = (
         ('microseconds', 'us')
         )
 
+# ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
+UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
+
 #-------------------------------------------------------------------------------
-# utility
+# utility type groups
 
 INT_TYPES = (int, np.int_)
 BOOL_TYPES = (bool, np.bool_)
 
+# some platforms do not have float128
 if hasattr(np, 'float128'):
     FLOAT_TYPES = (float, np.float64, np.float16, np.float32, np.float128)
 else:
     FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
 
+# some platforms do not have complex256
 if hasattr(np, 'complex256'):
     COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
 else:
@@ -94,6 +100,7 @@ else:
 
 DICTLIKE_TYPES = (abc.Set, dict)
 NON_STR_TYPES = {int, float, bool}
+
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -112,6 +119,7 @@ GetItemKeyTypeCompound = tp.Union[
 
 UFunc = tp.Callable[[np.ndarray, int, np.dtype], np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
+
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any]]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
@@ -150,6 +158,9 @@ FRAME_INITIALIZER_DEFAULT = object()
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
+
+
+#-------------------------------------------------------------------------------
 
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
@@ -253,7 +264,6 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
             return np.result_type(dt1, dt2)
         except TypeError:
             return DTYPE_OBJECT
-
 
     dt1_is_bool = dt1.type is np.bool_
     dt2_is_bool = dt2.type is np.bool_
@@ -384,10 +394,12 @@ def dtype_to_na(dtype: np.dtype):
 
     raise NotImplementedError('no support for this dtype', kind)
 
-# ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see _UFUNC_AXIS_SKIPNA for the matching functions
-_UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
-def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
+def ufunc_skipna_1d(*,
+        array: np.ndarray,
+        skipna: bool,
+        ufunc: UFunc,
+        ufunc_skipna: UFunc):
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
     '''
     if array.dtype.kind == 'O':
@@ -398,7 +410,7 @@ def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     elif array.dtype.kind == 'M':
         # dates do not support skipna functions
         return ufunc(array)
-    elif array.dtype.kind in DTYPE_STR_KIND and ufunc in _UFUNC_AXIS_STR_TO_OBJ:
+    elif array.dtype.kind in DTYPE_STR_KIND and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:
         v = array
@@ -408,7 +420,8 @@ def ufunc_skipna_1d(*, array, skipna, ufunc, ufunc_skipna):
     return ufunc(v)
 
 
-def ufunc_unique(array: np.ndarray,
+def ufunc_unique(
+        array: np.ndarray,
         axis: tp.Optional[int] = None
         ) -> tp.Union[frozenset, np.ndarray]:
     '''
@@ -426,10 +439,9 @@ def ufunc_unique(array: np.ndarray,
             else:
                 array_iter = array
             return frozenset(array_iter)
-            # return np.array(sorted(frozenset(array_iter)), dtype=object)
 
         # ndim == 2 and axis is not None
-        # the normal np.unique will give TypeError: The axis argument to unique is not supported for dtype object
+        # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
         if axis == 0:
             array_iter = array
         else:
@@ -437,6 +449,7 @@ def ufunc_unique(array: np.ndarray,
         return frozenset(tuple(x) for x in array_iter)
     # all other types, use the main ufunc
     return np.unique(array, axis=axis)
+
 
 def roll_1d(array, shift: int) -> np.ndarray:
     '''
@@ -459,6 +472,7 @@ def roll_1d(array, shift: int) -> np.ndarray:
     post[0:size+shift] = array[-shift:]
     post[size+shift:None] = array[:-shift]
     return post
+
 
 def roll_2d(array, shift: int, axis: int) -> np.ndarray:
     '''
@@ -513,7 +527,7 @@ def collection_to_array(
         discover_dtype: bool = False
         ) -> np.ndarray:
     '''
-    For creating an array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction will cause everything to go to characters.
+    For creating a 1D array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction (in the presence of character strings) will cause everything to go to characters.
     '''
     if not len(values):
         return EMPTY_ARRAY # already immutable
@@ -587,7 +601,8 @@ def iterable_to_array(other: tp.Iterable[tp.Any]
 
 def collection_and_dtype_to_1darray(
         other: tp.Collection[tp.Any],
-        dtype: np.dtype) -> np.ndarray:
+        dtype: np.dtype
+        ) -> np.ndarray:
     '''
     If dtype is known, create a new 1D (and only 1D array); this is different than iterable_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create.
     '''
@@ -625,7 +640,10 @@ def collection_and_dtype_to_1darray(
 
 #-------------------------------------------------------------------------------
 
-def _slice_to_ascending_slice(key: slice, size: int) -> slice:
+def slice_to_ascending_slice(
+        key: slice,
+        size: int
+        ) -> slice:
     '''
     Given a slice, return a slice that, with ascending integers, covers the same values.
     '''

@@ -13,6 +13,8 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import UFunc
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_BOOL
+
 
 
 _UFUNC_UNARY_OPERATORS = (
@@ -127,9 +129,9 @@ def _nanany(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = Non
 
 
 # ufuncs that are applied along an axis, reducing dimensionality
-_UFUNC_AXIS_SKIPNA = {
-        'all': (_all, _nanall, bool),
-        'any': (_any, _nanany, bool),
+UFUNC_AXIS_SKIPNA = {
+        'all': (_all, _nanall, DTYPE_BOOL),
+        'any': (_any, _nanany, DTYPE_BOOL),
         'sum': (np.sum, np.nansum, None),
         'min': (np.min, np.nanmin, None),
         'max': (np.max, np.nanmax, None),
@@ -141,7 +143,7 @@ _UFUNC_AXIS_SKIPNA = {
         }
 
 # ufuncs that retain the shape and dimensionality
-_UFUNC_SHAPE_SKIPNA = {
+UFUNC_SHAPE_SKIPNA = {
         'cumsum': (np.cumsum, np.nancumsum, None),
         'cumprod': (np.cumprod, np.nancumprod, None),
         }
@@ -184,7 +186,7 @@ class MetaOperatorDelegate(type):
 
     @staticmethod
     def create_ufunc_axis_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype = _UFUNC_AXIS_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtype = UFUNC_AXIS_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
         def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
@@ -202,7 +204,7 @@ class MetaOperatorDelegate(type):
 
     @staticmethod
     def create_ufunc_shape_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype = _UFUNC_SHAPE_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtype = UFUNC_SHAPE_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
         def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
@@ -236,10 +238,10 @@ class MetaOperatorDelegate(type):
                     opperand_count=2,
                     reverse=True)
 
-        for func_name in _UFUNC_AXIS_SKIPNA:
+        for func_name in UFUNC_AXIS_SKIPNA:
             attrs[func_name] = mcs.create_ufunc_axis_skipna(func_name)
 
-        for func_name in _UFUNC_SHAPE_SKIPNA:
+        for func_name in UFUNC_SHAPE_SKIPNA:
             attrs[func_name] = mcs.create_ufunc_shape_skipna(func_name)
 
 

@@ -29,7 +29,7 @@ from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import _array_to_groups_and_locations
 from static_frame.core.util import _isna
-from static_frame.core.util import _slice_to_ascending_slice
+from static_frame.core.util import slice_to_ascending_slice
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence
@@ -862,7 +862,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if isinstance(key, slice):
                     #  slice the index; null slice already handled
                     if not retain_key_order:
-                        key = _slice_to_ascending_slice(key, self._shape[1])
+                        key = slice_to_ascending_slice(key, self._shape[1])
                     indices = self._index[key]
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
                     # NOTE: if self._index was an array we could use Boolean selection directly
