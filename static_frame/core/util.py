@@ -512,39 +512,39 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 #-------------------------------------------------------------------------------
 # array constructors
 
-def collection_to_array(
-        values: tp.Collection[tp.Any],
-        dtype: tp.Optional[np.dtype] = None,
-        discover_dtype: bool = False
-        ) -> np.ndarray:
-    '''
-    For creating a 1D array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction (in the presence of character strings) will cause everything to go to characters.
-    '''
-    if not len(values):
-        return EMPTY_ARRAY # already immutable
+# def any_to_array(
+#         values: tp.Collection[tp.Any],
+#         dtype: tp.Optional[np.dtype] = None,
+#         discover_dtype: bool = False
+#         ) -> np.ndarray:
+#     '''
+#     For creating a 1D array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction (in the presence of character strings) will cause everything to go to characters.
+#     '''
+#     if not len(values):
+#         return EMPTY_ARRAY # already immutable
 
-    if isinstance(values, DICTLIKE_TYPES): # mathches set, frozenset, keysview
-        sample = next(iter(values))
-        # assume_unique = True
-    else:
-        sample = values[0]
-        # assume_unique = False
+#     if isinstance(values, DICTLIKE_TYPES): # mathches set, frozenset, keysview
+#         sample = next(iter(values))
+#         # assume_unique = True
+#     else:
+#         sample = values[0]
+#         # assume_unique = False
 
-    if isinstance(sample, tuple):
-        # special handling for iterables of
-        assert dtype is None or dtype == object
-        array = np.empty(len(values), object)
-        array[:] = values
-    elif dtype is not None:
-        # we can creat it from the sequence if dtype is known
-        array = np.array(values, dtype=dtype)
-    else: # no dtype, have to be careful of mixed types
-        if discover_dtype:
-            # this is slow
-            dtype = resolve_type_object_iter(values)
-        array = np.array(values, dtype=dtype)
+#     if isinstance(sample, tuple):
+#         # special handling for iterables of
+#         assert dtype is None or dtype == object
+#         array = np.empty(len(values), object)
+#         array[:] = values
+#     elif dtype is not None:
+#         # we can creat it from the sequence if dtype is known
+#         array = np.array(values, dtype=dtype)
+#     else: # no dtype, have to be careful of mixed types
+#         if discover_dtype:
+#             # this is slow
+#             dtype = resolve_type_object_iter(values)
+#         array = np.array(values, dtype=dtype)
 
-    return array
+#     return array
 
 
 # def any_to_array(other: tp.Iterable[tp.Any]

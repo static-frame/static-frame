@@ -27,7 +27,7 @@ from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_skipna_1d
 from static_frame.core.util import any_to_array
-from static_frame.core.util import collection_to_array
+from static_frame.core.util import any_to_array
 from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.util import immutable_filter
@@ -287,7 +287,7 @@ class Index(IndexBase,
 
         if hasattr(labels, '__len__'): # not a generator, not an array
             # resolving the detype is expensive
-            labels = collection_to_array(labels, dtype=dtype, discover_dtype=True)
+            labels = any_to_array(labels, dtype=dtype)
 
         else: # labels may be an expired generator, must use the mapping
 

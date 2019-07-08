@@ -131,11 +131,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualValues(a, b)
 
 
-    # @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
-    # def test_collection_to_array(self, array: np.ndarray) -> None:
-    #     values = array.tolist()
-    #     post = util.collection_to_array(values, discover_dtype=True)
-    #     self.assertAlmostEqualValues(array, post)
+
 
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
     def test_iterable_to_array(self, array: np.ndarray) -> None:
