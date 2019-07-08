@@ -512,163 +512,6 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 #-------------------------------------------------------------------------------
 # array constructors
 
-# def any_to_array(
-#         values: tp.Collection[tp.Any],
-#         dtype: tp.Optional[np.dtype] = None,
-#         discover_dtype: bool = False
-#         ) -> np.ndarray:
-#     '''
-#     For creating a 1D array from a collection (has __len__, not a generator), where the dtype may not be known. Primarily to handle cases of mixed types, where default NP array construction (in the presence of character strings) will cause everything to go to characters.
-#     '''
-#     if not len(values):
-#         return EMPTY_ARRAY # already immutable
-
-#     if isinstance(values, DICTLIKE_TYPES): # mathches set, frozenset, keysview
-#         sample = next(iter(values))
-#         # assume_unique = True
-#     else:
-#         sample = values[0]
-#         # assume_unique = False
-
-#     if isinstance(sample, tuple):
-#         # special handling for iterables of
-#         assert dtype is None or dtype == object
-#         array = np.empty(len(values), object)
-#         array[:] = values
-#     elif dtype is not None:
-#         # we can creat it from the sequence if dtype is known
-#         array = np.array(values, dtype=dtype)
-#     else: # no dtype, have to be careful of mixed types
-#         if discover_dtype:
-#             # this is slow
-#             dtype = resolve_type_object_iter(values)
-#         array = np.array(values, dtype=dtype)
-
-#     return array
-
-
-# def any_to_array(other: tp.Iterable[tp.Any]
-#         ) -> tp.Tuple[np.ndarray, bool]:
-#     '''Utility method to take arbitary, heterogenous typed iterables (including dict-like and generators) and realize them as an NP array when we do not already know what dtype is appropriate.
-
-#     As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
-#     '''
-#     v_iter = None
-
-#     if isinstance(other, np.ndarray):
-#         v = other # not making this immutable; clients can decide
-#         # could look if unique, not sure if too much overhead
-#         assume_unique = False
-
-#     else: # must determine if we need an object type
-#         # we can use assume_unique if `other` is a set, keys view, frozen set, another index, as our _labels is always unique
-#         if isinstance(other, DICTLIKE_TYPES): # mathches set, frozenset, keysview
-#             v_iter = iter(other)
-#             assume_unique = True
-#         else: # generators and other iteraables, lists, etc
-#             v_iter = iter(other)
-#             assume_unique = False
-
-#         # must determine if we have heterogenous types, as if we have string and float, for example, all numbers become quoted
-#         try:
-#             x = next(v_iter)
-#         except StopIteration:
-#             return EMPTY_ARRAY, True
-
-#         dtype = type(x)
-#         array_values = [x]
-#         for x in v_iter:
-#             array_values.append(x)
-#             # if it is not the same as previous, return object
-#             if dtype != object and dtype != type(x):
-#                 dtype = object
-
-#         if dtype == int:
-#             # large python ints can overflow default NumPy int type
-#             try:
-#                 v = np.array(array_values, dtype=dtype)
-#             except OverflowError:
-#                 v = np.array(array_values, dtype=object)
-#         else:
-#             v = np.array(array_values, dtype=dtype)
-
-#         v.flags.writeable = False
-
-#     if len(v) == 1:
-#         assume_unique = True
-
-#     return v, assume_unique
-
-
-# def collection_and_dtype_to_array(
-#         values: tp.Collection[tp.Any],
-#         dtype: np.dtype
-#         ) -> np.ndarray:
-#     '''
-#     If dtype is known, create a new 1D (and only 1D array); this is different than any_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create directly with NumPy.
-#     '''
-#     if not hasattr(values, '__len__'):
-#         raise NotImplementedError('this function only works with non-generators')
-
-#     if dtype.kind == 'O':
-#         # we advance the iterator and then use the source; this is only safe is this not a generator
-#         v_iter = iter(values)
-#         try:
-#             x = next(v_iter)
-#         except StopIteration:
-#             return EMPTY_ARRAY
-
-#         if not isinstance(x, tuple):
-#             # np fromiter does not work with object types
-#             if isinstance(values, DICTLIKE_TYPES):
-#                 # must creat tuple first of dictlike
-#                 return np.array(tuple(values), dtype=dtype)
-#             return np.array(values, dtype)
-
-#         # contains tuples: must create empty and assign
-#         # see this for potential optimization paths:
-#         # https://wesmckinney.com/blog/performance-quirk-making-a-1d-object-ndarray-of-tuples
-
-#         array = np.empty(len(values), dtype=dtype)
-#         if isinstance(values, DICTLIKE_TYPES):
-#             # must convert to sequence
-#             array[:] = tuple(values)
-#             return array
-#         array[:] = values
-#         return array
-
-#     return np.fromiter(values, count=len(values), dtype=dtype)
-
-#-------------------------------------------------------------------------------
-
-
-# DEPRECATED
-# def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
-#     '''Given arbitrary iterable, determine compatible dtype for array construction. Will return one of object, str, or None (the later when default array init should give the correct result.
-
-#     Will exhaust a generator if used.
-#     '''
-#     count_str = 0
-#     count_non_str = 0
-
-#     for v in iterable:
-#         t = type(v)
-#         if t == str:
-#             count_str += 1
-#         elif t in NON_STR_TYPES: # int, float, bool
-#             count_non_str += 1
-
-#         if count_str and count_non_str:
-#             # if we have both str and non_str have to be object
-#             return object
-
-#     if count_str == len(iterable):
-#         return str
-#     elif count_str: # if greater than one, but not all, we have to use object
-#         return object
-#     # cannot determine, so fall back on NP auto discovery
-#     return None
-
 def resolve_type(
         value: tp.Any,
         resolved: tp.Optional[type]=None
@@ -723,7 +566,6 @@ def is_gen_copy_values(values) -> tp.Tuple[bool, bool]:
     return is_gen, copy_values
 
 
-
 def resolve_type_iter(
         values: tp.Iterable[tp.Any]
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Iterable[tp.Any]]:
@@ -775,7 +617,7 @@ def resolve_type_iter(
     return resolved, has_tuple, values
 
 
-def any_to_array(
+def iterable_to_array(
         values: tp.Iterable[tp.Any],
         dtype: DtypeSpecifier=None
         ) -> tp.Tuple[np.ndarray, bool]:
@@ -1245,7 +1087,7 @@ def union1d(array: np.ndarray, other: np.ndarray):
     if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
         result = set(array) | set(other)
         dtype = resolve_dtype(array.dtype, other.dtype)
-        v, _ = any_to_array(result, dtype)
+        v, _ = iterable_to_array(result, dtype)
         return v
 
     return np.union1d(array, other)
@@ -1269,7 +1111,7 @@ def intersect1d(
         # if a 2D array gets here, a hashability error will be raised
         result = set(array) & set(other)
         dtype = resolve_dtype(array.dtype, other.dtype)
-        v, _ = any_to_array(result, dtype)
+        v, _ = iterable_to_array(result, dtype)
         return v
 
     return np.intersect1d(array, other)

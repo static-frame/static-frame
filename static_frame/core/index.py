@@ -26,7 +26,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_skipna_1d
-from static_frame.core.util import any_to_array
+from static_frame.core.util import iterable_to_array
 from static_frame.core.util import key_to_datetime_key
 
 from static_frame.core.util import immutable_filter
@@ -286,7 +286,7 @@ class Index(IndexBase,
 
         if hasattr(labels, '__len__'): # not a generator, not an array
             # resolving the detype is expensive
-            labels, _ = any_to_array(labels, dtype=dtype)
+            labels, _ = iterable_to_array(labels, dtype=dtype)
 
         else: # labels may be an expired generator, must use the mapping
 
@@ -786,7 +786,7 @@ class Index(IndexBase,
         '''
         if self._recache:
             self._update_array_cache()
-        v, assume_unique = any_to_array(other)
+        v, assume_unique = iterable_to_array(other)
         return np.in1d(self._labels, v, assume_unique=assume_unique)
 
     def roll(self, shift: int) -> 'Index':
