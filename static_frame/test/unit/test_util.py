@@ -1004,6 +1004,29 @@ class TestUnit(TestCase):
         self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
         # must get an array of tuples back
 
+        x = [(0, 0), (0, 1), (0, 2), (0, 3)]
+        a1, is_unique = any_to_array(iter(x))
+        self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
+
+
+        self.assertEqual(any_to_array((1, 1.1))[0].dtype,
+                np.dtype('float64'))
+
+        self.assertEqual(any_to_array((1.1, 0, -29))[0].dtype,
+                np.dtype('float64'))
+
+
+    def test_iterable_to_array_b(self):
+
+        for iterable in (
+            [1, 2, 3],
+            dict(a=1, b=2, c=3).values(),
+            {1, 2, 3},
+            frozenset((1, 2, 3)),
+            ):
+            a1, _ = any_to_array(iterable)
+            self.assertEqual(set(a1), set(iterable))
+
 
 if __name__ == '__main__':
     unittest.main()

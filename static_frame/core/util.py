@@ -717,11 +717,13 @@ def resolve_type_iter(
     if is_gen or is_dictlike:
         # NOTE: could next() fist value and try to bail early if get stop iteration
         values_post = []
+
     elif len(values) == 0:
         return None, False, values
 
     resolved = None
-    for v in values:
+    v_iter = iter(values)
+    for v in v_iter:
         if is_gen or is_dictlike:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
@@ -730,7 +732,8 @@ def resolve_type_iter(
                 values_post.append(v)
             else:
                 # extend ramaining values and break
-                values_post.extend(values)
+                values_post.append(v)
+                values_post.extend(v_iter)
                 break
         else:
             resolved, is_tuple = resolve_type(v, resolved=resolved)
@@ -789,7 +792,7 @@ def any_to_array(
     if has_tuple:
         # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set, and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=object)
-        v[:] = values
+        v[:] = values_for_construct
 
     elif dtype == int:
         # large python ints can overflow default NumPy int type
