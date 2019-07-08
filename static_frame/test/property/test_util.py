@@ -140,7 +140,7 @@ class TestUnit(TestCase):
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
     def test_iterable_to_array(self, array: np.ndarray) -> None:
         values = array.tolist()
-        post, _ = util.iterable_to_array(values)
+        post, _ = util.any_to_array(values)
         self.assertAlmostEqualValues(post, values)
 
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore

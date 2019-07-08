@@ -35,7 +35,7 @@ from static_frame.core.util import column_1d_filter
 
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import any_to_array
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
@@ -2249,7 +2249,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Frame that shows if the same-positioned element is in the iterable passed to the function.
         '''
         # cannot use assume_unique because do not know if values is unique
-        v, _ = iterable_to_array(other)
+        v, _ = any_to_array(other)
         # TODO: is it faster to do this at the block level and return blocks?
         array = np.isin(self.values, v)
         array.flags.writeable = False

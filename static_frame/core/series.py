@@ -10,7 +10,7 @@ from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import any_to_array
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import resolve_dtype_iter
@@ -1148,7 +1148,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Series that shows if the same-positoined element is in the iterable passed to the function.
         '''
         # cannot use assume_unique because do not know if values is unique
-        v, _ = iterable_to_array(other)
+        v, _ = any_to_array(other)
         # NOTE: could identify empty iterable and create False array
         array = np.in1d(self.values, v)
         array.flags.writeable = False

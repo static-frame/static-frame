@@ -547,57 +547,57 @@ def collection_to_array(
     return array
 
 
-def iterable_to_array(other: tp.Iterable[tp.Any]
-        ) -> tp.Tuple[np.ndarray, bool]:
-    '''Utility method to take arbitary, heterogenous typed iterables (including dict-like and generators) and realize them as an NP array when we do not already know what dtype is appropriate.
+# def any_to_array(other: tp.Iterable[tp.Any]
+#         ) -> tp.Tuple[np.ndarray, bool]:
+#     '''Utility method to take arbitary, heterogenous typed iterables (including dict-like and generators) and realize them as an NP array when we do not already know what dtype is appropriate.
 
-    As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
-    '''
-    v_iter = None
+#     As this is used in isin() functions, identifying cases where we can assume that this array has only unique values is useful. That is done here by type, where Set-like types are marked as assume_unique.
+#     '''
+#     v_iter = None
 
-    if isinstance(other, np.ndarray):
-        v = other # not making this immutable; clients can decide
-        # could look if unique, not sure if too much overhead
-        assume_unique = False
+#     if isinstance(other, np.ndarray):
+#         v = other # not making this immutable; clients can decide
+#         # could look if unique, not sure if too much overhead
+#         assume_unique = False
 
-    else: # must determine if we need an object type
-        # we can use assume_unique if `other` is a set, keys view, frozen set, another index, as our _labels is always unique
-        if isinstance(other, DICTLIKE_TYPES): # mathches set, frozenset, keysview
-            v_iter = iter(other)
-            assume_unique = True
-        else: # generators and other iteraables, lists, etc
-            v_iter = iter(other)
-            assume_unique = False
+#     else: # must determine if we need an object type
+#         # we can use assume_unique if `other` is a set, keys view, frozen set, another index, as our _labels is always unique
+#         if isinstance(other, DICTLIKE_TYPES): # mathches set, frozenset, keysview
+#             v_iter = iter(other)
+#             assume_unique = True
+#         else: # generators and other iteraables, lists, etc
+#             v_iter = iter(other)
+#             assume_unique = False
 
-        # must determine if we have heterogenous types, as if we have string and float, for example, all numbers become quoted
-        try:
-            x = next(v_iter)
-        except StopIteration:
-            return EMPTY_ARRAY, True
+#         # must determine if we have heterogenous types, as if we have string and float, for example, all numbers become quoted
+#         try:
+#             x = next(v_iter)
+#         except StopIteration:
+#             return EMPTY_ARRAY, True
 
-        dtype = type(x)
-        array_values = [x]
-        for x in v_iter:
-            array_values.append(x)
-            # if it is not the same as previous, return object
-            if dtype != object and dtype != type(x):
-                dtype = object
+#         dtype = type(x)
+#         array_values = [x]
+#         for x in v_iter:
+#             array_values.append(x)
+#             # if it is not the same as previous, return object
+#             if dtype != object and dtype != type(x):
+#                 dtype = object
 
-        if dtype == int:
-            # large python ints can overflow default NumPy int type
-            try:
-                v = np.array(array_values, dtype=dtype)
-            except OverflowError:
-                v = np.array(array_values, dtype=object)
-        else:
-            v = np.array(array_values, dtype=dtype)
+#         if dtype == int:
+#             # large python ints can overflow default NumPy int type
+#             try:
+#                 v = np.array(array_values, dtype=dtype)
+#             except OverflowError:
+#                 v = np.array(array_values, dtype=object)
+#         else:
+#             v = np.array(array_values, dtype=dtype)
 
-        v.flags.writeable = False
+#         v.flags.writeable = False
 
-    if len(v) == 1:
-        assume_unique = True
+#     if len(v) == 1:
+#         assume_unique = True
 
-    return v, assume_unique
+#     return v, assume_unique
 
 
 def collection_and_dtype_to_array(
@@ -605,7 +605,7 @@ def collection_and_dtype_to_array(
         dtype: np.dtype
         ) -> np.ndarray:
     '''
-    If dtype is known, create a new 1D (and only 1D array); this is different than iterable_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create directly with NumPy.
+    If dtype is known, create a new 1D (and only 1D array); this is different than any_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create directly with NumPy.
     '''
     if not hasattr(values, '__len__'):
         raise NotImplementedError('this function only works with non-generators')
