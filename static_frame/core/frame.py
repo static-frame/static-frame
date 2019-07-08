@@ -37,7 +37,7 @@ from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array
 # from static_frame.core.util import _dict_to_sorted_items
-from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
@@ -2316,7 +2316,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return an axis-sized Boolean Series that shows True for all rows (axis 0) or columns (axis 1) duplicated.
         '''
         # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
@@ -2334,7 +2334,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a Frame with duplicated values removed.
         '''
         # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)

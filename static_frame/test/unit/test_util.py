@@ -9,7 +9,7 @@ import numpy as np  # type: ignore
 from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
 
 from static_frame.core.util import intersect2d
@@ -30,7 +30,9 @@ from static_frame import Index
 
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import iterable_to_array
-from static_frame.core.util import collection_and_dtype_to_1darray
+from static_frame.core.util import collection_and_dtype_to_array
+from static_frame.core.util import any_to_array
+
 
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import IndexCorrespondence
@@ -48,6 +50,9 @@ from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 
 from static_frame.core.util import to_datetime64
+
+from static_frame.core.util import resolve_type
+from static_frame.core.util import resolve_type_iter
 
 
 from static_frame.test.test_case import TestCase
@@ -355,7 +360,7 @@ class TestUnit(TestCase):
 
 
     def test_array_to_duplicated_a(self) -> None:
-        a = _array_to_duplicated(
+        a = array_to_duplicated(
                 np.array([0,1,2,2,1,4,5,3,4,5,5,6]),
                 exclude_first=False,
                 exclude_last=False
@@ -363,7 +368,7 @@ class TestUnit(TestCase):
         self.assertEqual(a.tolist(),
                 [False, True, True, True, True, True, True, False, True, True, True, False])
 
-        a = _array_to_duplicated(
+        a = array_to_duplicated(
                 np.array([0,1,2,2,1,4,5,3,4,5,5,6]),
                 exclude_first=True,
                 exclude_last=False
@@ -375,23 +380,46 @@ class TestUnit(TestCase):
     def test_array_to_duplicated_b(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         # find duplicate rows
-        post = _array_to_duplicated(a, axis=0)
+        post = array_to_duplicated(a, axis=0)
         self.assertEqual(post.tolist(),
                 [False, False])
 
-        post = _array_to_duplicated(a, axis=1)
+        post = array_to_duplicated(a, axis=1)
         self.assertEqual(post.tolist(),
                 [True, True, False, True, True])
 
-        post = _array_to_duplicated(a, axis=1, exclude_first=True)
+        post = array_to_duplicated(a, axis=1, exclude_first=True)
         self.assertEqual(post.tolist(),
                 [False, True, False, False, True])
 
 
     def test_array_to_duplicated_c(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
-        with self.assertRaises(Exception):
-            _array_to_duplicated(a, axis=None)  # type: ignore  # Testing bad type here.
+        with self.assertRaises(NotImplementedError):
+            # axis cannot be None
+            array_to_duplicated(a, axis=None)  # type: ignore
+
+    def test_array_to_duplicated_d(self) -> None:
+        c = array_to_duplicated(
+                np.array(['q','q','q', 'a', 'w', 'w'], dtype=object),
+                exclude_first=False,
+                exclude_last=False
+                )
+        self.assertEqual(c.tolist(), [True, True, True, False, True, True])
+
+    # def test_array_to_duplicated_e(self) -> None:
+        # NOTE: these cases fail with hetergenous types as we cannot sort
+        # a = array_to_duplicated(
+        #         np.array([0,0,1,0,None,None,0,1,None], dtype=object),
+        #         exclude_first=False,
+        #         exclude_last=False
+        #         )
+
+        # b = array_to_duplicated(
+        #         np.array([0,0,1,0,'q','q',0,1,'q'], dtype=object),
+        #         exclude_first=False,
+        #         exclude_last=False
+        #         )
 
 
 
@@ -850,34 +878,6 @@ class TestUnit(TestCase):
 
 
 
-    def test_iterable_to_array_a(self) -> None:
-        a1, is_unique = iterable_to_array({3,4,5})
-        self.assertTrue(is_unique)
-        self.assertEqual(set(a1.tolist()), {3,4,5})
-
-        a2, is_unique = iterable_to_array({None: 3, 'f': 4, 39: 0})
-        self.assertTrue(is_unique)
-        self.assertEqual(set(a2.tolist()), {None, 'f', 39})
-
-        a3, is_unique = iterable_to_array((x*10 for x in range(1,4)))
-        self.assertFalse(is_unique)
-        self.assertEqual(a3.tolist(), [10, 20, 30])
-
-    def test_collection_and_dtype_to_1darray_a(self) -> None:
-        a1 = collection_and_dtype_to_1darray({3,4,5}, dtype=np.dtype(int))
-        self.assertEqual(set(a1.tolist()), {3,4,5})
-
-        a1 = collection_and_dtype_to_1darray((3,4,5), dtype=np.dtype(object))
-        self.assertTrue(a1.dtype == object)
-        self.assertEqual(a1.tolist(), [3,4,5])
-
-    def test_collection_and_dtype_to_1darray_b(self) -> None:
-        x = [(0, 0), (0, 1), (0, 2), (0, 3)]
-        a1 = collection_and_dtype_to_1darray(x, np.dtype(object))
-        self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
-        # must get an array of tuples back
-
-
     def test_index_correspondence_a(self) -> None:
         idx0 = Index([0, 1, 2, 3, 4], loc_is_iloc=True)
         idx1 = Index([0, 1, 2, 3, 4, '100185', '100828', '101376', '100312', '101092'], dtype=object)
@@ -907,6 +907,102 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
 
+
+    def test_resolve_type_a(self):
+        self.assertEqual(resolve_type('a', str), (str, False))
+        self.assertEqual(resolve_type('a', int), (object, False))
+        self.assertEqual(resolve_type(3, str), (object, False))
+        self.assertEqual(resolve_type((3,4), str), (object, True))
+        self.assertEqual(resolve_type((3,4), tuple), (object, True))
+
+
+        self.assertEqual(resolve_type(3, float), (float, False))
+        self.assertEqual(resolve_type(False, str), (object, False))
+        self.assertEqual(resolve_type(1.2, int), (float, False))
+
+
+    def test_resolve_type_iter_a(self):
+
+        values_src = ('a', 'b', 'c')
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, str)
+
+        values_src = ('a', 'b', 3)
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+
+        values_src = ('a', 'b', (1, 2))
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+        self.assertTrue(is_tuple)
+
+        values_src = (1, 2, 4.3, 2)
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, float)
+
+
+        values_src = (1, 2, 4.3, 2, None)
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+
+
+
+        values_src = (1, 2, 4.3, 2, 'g')
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+
+        values_src = ()
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, None)
+
+
+
+
+    def test_resolve_type_iter_b(self):
+
+        values_src = iter(('a', 'b', 'c'))
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, str)
+
+        values_src = iter(('a', 'b', 3))
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+
+        values_src = iter(('a', 'b', (1, 2)))
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, object)
+        self.assertTrue(is_tuple)
+
+        values_src = range(4)
+        resolved, is_tuple, values = resolve_type_iter(values_src)
+        self.assertEqual(resolved, int)
+
+
+
+    def test_iterable_to_array_a(self) -> None:
+        a1, is_unique = any_to_array({3,4,5})
+        self.assertTrue(is_unique)
+        self.assertEqual(set(a1.tolist()), {3,4,5})
+
+        a2, is_unique = any_to_array({None: 3, 'f': 4, 39: 0})
+        self.assertTrue(is_unique)
+        self.assertEqual(set(a2.tolist()), {None, 'f', 39})
+
+        a3, is_unique = any_to_array((x*10 for x in range(1,4)))
+        self.assertFalse(is_unique)
+        self.assertEqual(a3.tolist(), [10, 20, 30])
+
+        a1, is_unique = any_to_array({3,4,5}, dtype=np.dtype(int))
+        self.assertEqual(set(a1.tolist()), {3,4,5})
+
+        a1, is_unique = any_to_array((3,4,5), dtype=np.dtype(object))
+        self.assertTrue(a1.dtype == object)
+        self.assertEqual(a1.tolist(), [3,4,5])
+
+        x = [(0, 0), (0, 1), (0, 2), (0, 3)]
+        a1, is_unique = any_to_array(x, np.dtype(object))
+        self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
+        # must get an array of tuples back
 
 
 if __name__ == '__main__':

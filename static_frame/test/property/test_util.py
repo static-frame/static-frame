@@ -131,11 +131,11 @@ class TestUnit(TestCase):
             self.assertAlmostEqualValues(a, b)
 
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
-    def test_collection_to_array(self, array: np.ndarray) -> None:
-        values = array.tolist()
-        post = util.collection_to_array(values, discover_dtype=True)
-        self.assertAlmostEqualValues(array, post)
+    # @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
+    # def test_collection_to_array(self, array: np.ndarray) -> None:
+    #     values = array.tolist()
+    #     post = util.collection_to_array(values, discover_dtype=True)
+    #     self.assertAlmostEqualValues(array, post)
 
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
     def test_iterable_to_array(self, array: np.ndarray) -> None:
@@ -146,7 +146,7 @@ class TestUnit(TestCase):
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
     def test_collection_and_dtype_to_1darray(self, array: np.ndarray) -> None:
         values = array.tolist()
-        post = util.collection_and_dtype_to_1darray(values, dtype=util.DTYPE_OBJECT)
+        post = util.collection_and_dtype_to_array(values, dtype=util.DTYPE_OBJECT)
         self.assertAlmostEqualValues(post, values)
 
 
@@ -189,7 +189,37 @@ class TestUnit(TestCase):
         self.assertTrue(np.ravel(post).sum() == count_na)
 
 
+    @given(get_array_1d(dtype_group=DTGroup.BOOL)) # type: ignore
+    def test_binary_transition(self, array: np.ndarray) -> None:
+        post = util.binary_transition(array)
 
+        self.assertTrue(post.dtype == util.DEFAULT_INT_DTYPE)
+
+        # if no True in original array, result will be empty
+        if array.sum() == 0:
+            self.assertTrue(len(post) == 0)
+        # if all True, result is empty
+        elif array.sum() == len(array):
+            self.assertTrue(len(post) == 0)
+        else:
+            # the post selection shold always be indices that are false
+            self.assertTrue(array[post].sum() == 0)
+
+        # import ipdb; ipdb.set_trace()
+
+    # NOTE: temporarily only using numeric types;
+    # @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
+    # def test_array_to_duplicated(self, array: np.ndarray) -> None:
+    #     if array.ndim == 2:
+    #         for axis in (0, 1):
+    #             post = util.array_to_duplicated(array, axis=axis)
+    #     else:
+    #         post = util.array_to_duplicated(array)
+    #         # if not all value are unique, we must have some duplicated
+    #         if np.unique(array) < len(array):
+    #             self.assertTrue(post.sum() > 0)
+
+    #     self.assertTrue(post.dtype == bool)
 
 
 if __name__ == '__main__':

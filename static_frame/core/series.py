@@ -12,7 +12,7 @@ from static_frame.core.util import resolve_dtype
 from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
@@ -1195,7 +1195,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Series that shows True for all b values that are duplicated.
         '''
         # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
         duplicates.flags.writeable = False
@@ -1208,7 +1208,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a Series with duplicated values removed.
         '''
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
         keep = ~duplicates

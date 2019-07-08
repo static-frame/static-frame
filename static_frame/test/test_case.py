@@ -92,7 +92,10 @@ class TestCase(unittest.TestCase):
 
     #---------------------------------------------------------------------------
 
-    def assertEqualWithNaN(self, v1: tp.Union[float, complex], v2: tp.Union[float, complex]) -> None:
+    def assertEqualWithNaN(self,
+            v1: tp.Union[float, complex],
+            v2: tp.Union[float, complex]
+            ) -> None:
         if (isinstance(v1, FLOAT_TYPES) and np.isnan(v1) and
                 isinstance(v2, FLOAT_TYPES) and np.isnan(v2)):
             return

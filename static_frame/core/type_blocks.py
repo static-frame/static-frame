@@ -361,7 +361,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
-        # NOTE: can add a reverse argument here and iterate in reverse; this could be useful if we need to pass rows/cols to lexsort, as in _array_to_duplicated
+        # NOTE: can add a reverse argument here and iterate in reverse; this could be useful if we need to pass rows/cols to lexsort, as in array_to_duplicated
         if axis == 1: # iterate over rows
             unified = self.unified
             # iterate over rows; might be faster to create entire values
