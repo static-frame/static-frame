@@ -62,13 +62,14 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 # defaults to float64
-EMPTY_ARRAY = np.array((), dtype=None)
+EMPTY_TUPLE = ()
+EMPTY_ARRAY = np.array(EMPTY_TUPLE, dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
-EMPTY_ARRAY_BOOL = np.array((), dtype=DTYPE_BOOL)
+EMPTY_ARRAY_BOOL = np.array(EMPTY_TUPLE, dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT = np.array((), dtype=DEFAULT_INT_DTYPE)
+EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DEFAULT_INT_DTYPE)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 NAT = np.datetime64('nat')
@@ -109,6 +110,9 @@ NAN_TYPES = FLOAT_TYPES + COMPLEX_TYPES
 NAT_TYPES = (np.datetime64, np.timedelta64)
 
 DICTLIKE_TYPES = (abc.Set, dict)
+
+# iterables that cannot be used in NP array constructors
+INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
 NON_STR_TYPES = {int, float, bool}
 
 
@@ -702,33 +706,57 @@ def resolve_type(
     # resolved is not None, and this value_type is not equal to the resolved
     return object, is_tuple
 
+
+def is_gen_copy_values(values) -> tp.Tuple[bool, bool]:
+    '''
+    Returns:
+        copy_values: True if values cannot be used in an np.array constructor.
+    '''
+    is_gen = not hasattr(values, '__len__')
+    copy_values = is_gen
+    if not is_gen:
+        is_dictlike = isinstance(values, DICTLIKE_TYPES)
+        copy_values |= is_dictlike
+        if not is_dictlike:
+            is_iifa = isinstance(values, INVALID_ITERABLE_FOR_ARRAY)
+            copy_values |= is_iifa
+    return is_gen, copy_values
+
+
+
 def resolve_type_iter(
         values: tp.Iterable[tp.Any]
-        ):
+        ) -> tp.Tuple[DtypeSpecifier, bool, tp.Iterable[tp.Any]]:
     '''
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
     Returns:
         resolved, has_tuple, values
     '''
-    is_gen = not hasattr(values, '__len__')
-    is_dictlike = isinstance(values, DICTLIKE_TYPES)
 
-    if is_gen or is_dictlike:
-        # NOTE: could next() fist value and try to bail early if get stop iteration
-        values_post = []
+    is_gen, copy_values = is_gen_copy_values(values)
 
-    elif len(values) == 0:
+    if not is_gen and len(values) == 0:
         return None, False, values
 
-    resolved = None
     v_iter = iter(values)
+    if copy_values:
+        # do not create list unless we are sure we have more than 1 value
+        try:
+            front = next(v_iter)
+        except StopIteration:
+            return None, False, EMPTY_TUPLE
+
+        v_iter = chain((front,), v_iter)
+        values_post = []
+
+    resolved = None
     for v in v_iter:
-        if is_gen or is_dictlike:
+        if copy_values:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
             if resolved != object:
-                resolved, is_tuple = resolve_type(v, resolved=resolved)
+                resolved, has_tuple = resolve_type(v, resolved=resolved)
                 values_post.append(v)
             else:
                 # extend ramaining values and break
@@ -736,14 +764,14 @@ def resolve_type_iter(
                 values_post.extend(v_iter)
                 break
         else:
-            resolved, is_tuple = resolve_type(v, resolved=resolved)
+            resolved, has_tuple = resolve_type(v, resolved=resolved)
             if resolved == object:
                 break
 
-    if is_gen or is_dictlike:
-        return resolved, is_tuple, values_post
+    if copy_values:
+        return resolved, has_tuple, values_post
 
-    return resolved, is_tuple, values
+    return resolved, has_tuple, values
 
 
 def any_to_array(
@@ -759,8 +787,6 @@ def any_to_array(
             raise RuntimeError('supplied dtype not set on supplied array')
         return values, len(values) <= 1
 
-    # id no __len__, assume a generator
-    is_gen = not hasattr(values, '__len__')
     is_dictlike = isinstance(values, DICTLIKE_TYPES)
 
     # values for construct will only be a copy when necessary in iteration to find type
@@ -772,9 +798,11 @@ def any_to_array(
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
     else: # dtype given
+        is_gen, copy_values = is_gen_copy_values(values)
+
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
-        if is_gen or is_dictlike:
+        if copy_values:
             # if we do not know size, we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
         else:

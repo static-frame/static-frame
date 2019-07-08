@@ -1019,13 +1019,37 @@ class TestUnit(TestCase):
     def test_iterable_to_array_b(self):
 
         for iterable in (
-            [1, 2, 3],
-            dict(a=1, b=2, c=3).values(),
-            {1, 2, 3},
-            frozenset((1, 2, 3)),
-            ):
+                [1, 2, 3],
+                dict(a=1, b=2, c=3).values(),
+                dict(a=1, b=2, c=3).keys(),
+                {1, 2, 3},
+                frozenset((1, 2, 3)),
+                ('a', 3, None),
+                (1, 2, 'e', 1.1)
+                ):
             a1, _ = any_to_array(iterable)
             self.assertEqual(set(a1), set(iterable))
+
+            a2, _ = any_to_array(iter(iterable))
+            self.assertEqual(set(a2), set(iterable))
+
+
+    def test_iterable_to_array_c(self):
+
+        for iterable, dtype in (
+                ([1, 2, 3], int),
+                (dict(a=1, b=2, c=3).values(), int),
+                (dict(a=1, b=2, c=3).keys(), str),
+                ({1, 2, 3}, int),
+                (frozenset((1, 2, 3)), int),
+                (('a', 3, None), object),
+                ((1, 2, 'e', 1.1), object),
+                ):
+            a1, _ = any_to_array(iterable, dtype=dtype)
+            self.assertEqual(set(a1), set(iterable))
+
+            a2, _ = any_to_array(iter(iterable), dtype=dtype)
+            self.assertEqual(set(a2), set(iterable))
 
 
 if __name__ == '__main__':
