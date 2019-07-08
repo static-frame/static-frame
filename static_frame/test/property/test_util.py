@@ -1,7 +1,8 @@
 
 import typing as tp
+import datetime
 import unittest
-
+import fractions
 import numpy as np  # type: ignore
 
 from hypothesis import strategies as st
@@ -54,10 +55,25 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(x, np.dtype))
 
     @given(get_labels(min_size=1))  # type: ignore
-    def test_resolve_type_object_iter(self, objects: tp.Iterable[object]) -> None:
+    def test_resolve_type_iter(self, objects: tp.Iterable[object]) -> None:
 
-        x = util.resolve_type_object_iter(objects)
-        self.assertTrue(x in (None, str, object))
+        known_types = set((
+                None,
+                type(None),
+                bool,
+                str,
+                object,
+                int,
+                float,
+                complex,
+                datetime.date,
+                datetime.datetime,
+                fractions.Fraction
+                ))
+        resolved, has_tuple, values_post = util.resolve_type_iter(objects)
+        self.assertTrue(resolved in known_types)
+
+
 
     @given(get_arrays_2d_aligned_columns())  # type: ignore
     def test_concat_resolved_axis_0(self, arrays: tp.List[np.ndarray]) -> None:
@@ -139,10 +155,8 @@ class TestUnit(TestCase):
         post, _ = util.any_to_array(values)
         self.assertAlmostEqualValues(post, values)
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
-    def test_collection_and_dtype_to_1darray(self, array: np.ndarray) -> None:
-        values = array.tolist()
-        post = util.collection_and_dtype_to_array(values, dtype=util.DTYPE_OBJECT)
+        # explicitly giving object dtype
+        post, _ = util.any_to_array(values, dtype=util.DTYPE_OBJECT)
         self.assertAlmostEqualValues(post, values)
 
 

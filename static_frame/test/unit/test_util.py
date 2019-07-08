@@ -30,8 +30,7 @@ from static_frame import Index
 
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import any_to_array
-from static_frame.core.util import collection_and_dtype_to_array
-from static_frame.core.util import any_to_array
+# from static_frame.core.util import collection_and_dtype_to_array
 
 
 from static_frame.core.util import array_to_groups_and_locations

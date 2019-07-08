@@ -600,74 +600,74 @@ def roll_2d(array, shift: int, axis: int) -> np.ndarray:
 #     return v, assume_unique
 
 
-def collection_and_dtype_to_array(
-        values: tp.Collection[tp.Any],
-        dtype: np.dtype
-        ) -> np.ndarray:
-    '''
-    If dtype is known, create a new 1D (and only 1D array); this is different than any_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create directly with NumPy.
-    '''
-    if not hasattr(values, '__len__'):
-        raise NotImplementedError('this function only works with non-generators')
+# def collection_and_dtype_to_array(
+#         values: tp.Collection[tp.Any],
+#         dtype: np.dtype
+#         ) -> np.ndarray:
+#     '''
+#     If dtype is known, create a new 1D (and only 1D array); this is different than any_to_array, as it does not have to discover dtype, and does not have to be generator compatable. This was also created to handle the situation where we need to return a 1D array of tuples, which is awkward to create directly with NumPy.
+#     '''
+#     if not hasattr(values, '__len__'):
+#         raise NotImplementedError('this function only works with non-generators')
 
-    if dtype.kind == 'O':
-        # we advance the iterator and then use the source; this is only safe is this not a generator
-        v_iter = iter(values)
-        try:
-            x = next(v_iter)
-        except StopIteration:
-            return EMPTY_ARRAY
+#     if dtype.kind == 'O':
+#         # we advance the iterator and then use the source; this is only safe is this not a generator
+#         v_iter = iter(values)
+#         try:
+#             x = next(v_iter)
+#         except StopIteration:
+#             return EMPTY_ARRAY
 
-        if not isinstance(x, tuple):
-            # np fromiter does not work with object types
-            if isinstance(values, DICTLIKE_TYPES):
-                # must creat tuple first of dictlike
-                return np.array(tuple(values), dtype=dtype)
-            return np.array(values, dtype)
+#         if not isinstance(x, tuple):
+#             # np fromiter does not work with object types
+#             if isinstance(values, DICTLIKE_TYPES):
+#                 # must creat tuple first of dictlike
+#                 return np.array(tuple(values), dtype=dtype)
+#             return np.array(values, dtype)
 
-        # contains tuples: must create empty and assign
-        # see this for potential optimization paths:
-        # https://wesmckinney.com/blog/performance-quirk-making-a-1d-object-ndarray-of-tuples
+#         # contains tuples: must create empty and assign
+#         # see this for potential optimization paths:
+#         # https://wesmckinney.com/blog/performance-quirk-making-a-1d-object-ndarray-of-tuples
 
-        array = np.empty(len(values), dtype=dtype)
-        if isinstance(values, DICTLIKE_TYPES):
-            # must convert to sequence
-            array[:] = tuple(values)
-            return array
-        array[:] = values
-        return array
+#         array = np.empty(len(values), dtype=dtype)
+#         if isinstance(values, DICTLIKE_TYPES):
+#             # must convert to sequence
+#             array[:] = tuple(values)
+#             return array
+#         array[:] = values
+#         return array
 
-    return np.fromiter(values, count=len(values), dtype=dtype)
+#     return np.fromiter(values, count=len(values), dtype=dtype)
 
 #-------------------------------------------------------------------------------
 
 
 # DEPRECATED
-def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
-    '''Given arbitrary iterable, determine compatible dtype for array construction. Will return one of object, str, or None (the later when default array init should give the correct result.
+# def resolve_type_object_iter(iterable: tp.Iterable[tp.Any]) -> DtypeSpecifier:
+#     '''Given arbitrary iterable, determine compatible dtype for array construction. Will return one of object, str, or None (the later when default array init should give the correct result.
 
-    Will exhaust a generator if used.
-    '''
-    count_str = 0
-    count_non_str = 0
+#     Will exhaust a generator if used.
+#     '''
+#     count_str = 0
+#     count_non_str = 0
 
-    for v in iterable:
-        t = type(v)
-        if t == str:
-            count_str += 1
-        elif t in NON_STR_TYPES: # int, float, bool
-            count_non_str += 1
+#     for v in iterable:
+#         t = type(v)
+#         if t == str:
+#             count_str += 1
+#         elif t in NON_STR_TYPES: # int, float, bool
+#             count_non_str += 1
 
-        if count_str and count_non_str:
-            # if we have both str and non_str have to be object
-            return object
+#         if count_str and count_non_str:
+#             # if we have both str and non_str have to be object
+#             return object
 
-    if count_str == len(iterable):
-        return str
-    elif count_str: # if greater than one, but not all, we have to use object
-        return object
-    # cannot determine, so fall back on NP auto discovery
-    return None
+#     if count_str == len(iterable):
+#         return str
+#     elif count_str: # if greater than one, but not all, we have to use object
+#         return object
+#     # cannot determine, so fall back on NP auto discovery
+#     return None
 
 def resolve_type(
         value: tp.Any,
@@ -745,6 +745,7 @@ def resolve_type_iter(
         try:
             front = next(v_iter)
         except StopIteration:
+            # if no values, can return a float-type array
             return None, False, EMPTY_TUPLE
 
         v_iter = chain((front,), v_iter)
@@ -803,7 +804,7 @@ def any_to_array(
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
         if copy_values:
-            # if we do not know size, we have to realize into sequence for numpy creation
+            # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
         else:
             values_for_construct = values
@@ -1244,7 +1245,8 @@ def union1d(array: np.ndarray, other: np.ndarray):
     if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
         result = set(array) | set(other)
         dtype = resolve_dtype(array.dtype, other.dtype)
-        return collection_and_dtype_to_array(result, dtype)
+        v, _ = any_to_array(result, dtype)
+        return v
 
     return np.union1d(array, other)
 
@@ -1267,7 +1269,8 @@ def intersect1d(
         # if a 2D array gets here, a hashability error will be raised
         result = set(array) & set(other)
         dtype = resolve_dtype(array.dtype, other.dtype)
-        return collection_and_dtype_to_array(result, dtype)
+        v, _ = any_to_array(result, dtype)
+        return v
 
     return np.intersect1d(array, other)
 
