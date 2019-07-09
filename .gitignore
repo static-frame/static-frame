@@ -2,6 +2,7 @@
 .hypothesis
 .mypy_cache
 .pytest_cache
+.tox
 .vscode
 
 __pycache__
@@ -9,3 +10,4 @@ __pycache__
 build
 
 *.egg-info
+*.so
