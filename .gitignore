@@ -6,8 +6,8 @@
 .vscode
 
 __pycache__
-
 build
+dist
 
 *.egg-info
 *.so
