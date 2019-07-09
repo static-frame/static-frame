@@ -78,12 +78,8 @@ matrix:
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
 
-install:
-  - pip install codecov pytest-cov
-  - pip install -r requirements-test.txt
+install: pip install -r requirements-test.txt
 
-script:
- - pytest --cov=static_frame
+script: pytest --cov=static_frame
 
-after_success:
-  - codecov
+after_success: codecov
