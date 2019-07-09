@@ -110,13 +110,15 @@ class TestUnit(TestCase):
 
         has_na = util.isna_array(array).any()
         for ufunc, ufunc_skipna, dtype in UFUNC_AXIS_SKIPNA.values():
-            v1 = ufunc_skipna(array)
-            # this should return a single value
-            self.assertFalse(isinstance(v1, np.ndarray))
 
-            if has_na:
-                v2 = ufunc(array)
-                self.assertFalse(isinstance(v2, np.ndarray))
+            with np.errstate(over='ignore', under='ignore'):
+                v1 = ufunc_skipna(array)
+                # this should return a single value
+                self.assertFalse(isinstance(v1, np.ndarray))
+
+                if has_na:
+                    v2 = ufunc(array)
+                    self.assertFalse(isinstance(v2, np.ndarray))
 
     @given(get_array_1d2d()) # type: ignore
     def test_ufunc_unique(self, array: np.ndarray) -> None:
