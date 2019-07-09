@@ -1,8 +1,8 @@
 
 
 import unittest
-
 import datetime
+import typing as tp
 
 import numpy as np  # type: ignore
 
@@ -907,7 +907,8 @@ class TestUnit(TestCase):
             dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
 
 
-    def test_resolve_type_a(self):
+    def test_resolve_type_a(self) -> None:
+
         self.assertEqual(resolve_type('a', str), (str, False))
         self.assertEqual(resolve_type('a', int), (object, False))
         self.assertEqual(resolve_type(3, str), (object, False))
@@ -920,60 +921,57 @@ class TestUnit(TestCase):
         self.assertEqual(resolve_type(1.2, int), (float, False))
 
 
-    def test_resolve_type_iter_a(self):
+    def test_resolve_type_iter_a(self) -> None:
 
-        values_src = ('a', 'b', 'c')
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v1 = ('a', 'b', 'c')
+        resolved, is_tuple, values = resolve_type_iter(v1)
         self.assertEqual(resolved, str)
 
-        values_src = ('a', 'b', 3)
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v22 = ('a', 'b', 3)
+        resolved, is_tuple, values = resolve_type_iter(v22)
         self.assertEqual(resolved, object)
 
-        values_src = ('a', 'b', (1, 2))
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v3 = ('a', 'b', (1, 2))
+        resolved, is_tuple, values = resolve_type_iter(v3)
         self.assertEqual(resolved, object)
         self.assertTrue(is_tuple)
 
-        values_src = (1, 2, 4.3, 2)
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v4 = (1, 2, 4.3, 2)
+        resolved, is_tuple, values = resolve_type_iter(v4)
         self.assertEqual(resolved, float)
 
 
-        values_src = (1, 2, 4.3, 2, None)
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v5 = (1, 2, 4.3, 2, None)
+        resolved, is_tuple, values = resolve_type_iter(v5)
         self.assertEqual(resolved, object)
 
 
-
-        values_src = (1, 2, 4.3, 2, 'g')
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v6 = (1, 2, 4.3, 2, 'g')
+        resolved, is_tuple, values = resolve_type_iter(v6)
         self.assertEqual(resolved, object)
 
-        values_src = ()
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v7 = ()
+        resolved, is_tuple, values = resolve_type_iter(v7)
         self.assertEqual(resolved, None)
 
 
+    def test_resolve_type_iter_b(self) -> None:
 
-
-    def test_resolve_type_iter_b(self):
-
-        values_src = iter(('a', 'b', 'c'))
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v1 = iter(('a', 'b', 'c'))
+        resolved, is_tuple, values = resolve_type_iter(v1)
         self.assertEqual(resolved, str)
 
-        values_src = iter(('a', 'b', 3))
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v2 = iter(('a', 'b', 3))
+        resolved, is_tuple, values = resolve_type_iter(v2)
         self.assertEqual(resolved, object)
 
-        values_src = iter(('a', 'b', (1, 2)))
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v3 = iter(('a', 'b', (1, 2)))
+        resolved, is_tuple, values = resolve_type_iter(v3)
         self.assertEqual(resolved, object)
         self.assertTrue(is_tuple)
 
-        values_src = range(4)
-        resolved, is_tuple, values = resolve_type_iter(values_src)
+        v4 = range(4)
+        resolved, is_tuple, values = resolve_type_iter(v4)
         self.assertEqual(resolved, int)
 
 
@@ -1015,9 +1013,11 @@ class TestUnit(TestCase):
                 np.dtype('float64'))
 
 
-    def test_iterable_to_array_b(self):
+    def test_iterable_to_array_b(self) -> None:
 
-        for iterable in (
+        iterable: tp.Iterable[tp.Any]
+
+        for iterable in (  # type: ignore
                 [1, 2, 3],
                 dict(a=1, b=2, c=3).values(),
                 dict(a=1, b=2, c=3).keys(),
@@ -1026,6 +1026,7 @@ class TestUnit(TestCase):
                 ('a', 3, None),
                 (1, 2, 'e', 1.1)
                 ):
+
             a1, _ = iterable_to_array(iterable)
             self.assertEqual(set(a1), set(iterable))
 
@@ -1033,9 +1034,11 @@ class TestUnit(TestCase):
             self.assertEqual(set(a2), set(iterable))
 
 
-    def test_iterable_to_array_c(self):
+    def test_iterable_to_array_c(self) -> None:
 
-        for iterable, dtype in (
+        iterable: tp.Iterable[tp.Any]
+
+        for iterable, dtype in (  # type: ignore
                 ([1, 2, 3], int),
                 (dict(a=1, b=2, c=3).values(), int),
                 (dict(a=1, b=2, c=3).keys(), str),

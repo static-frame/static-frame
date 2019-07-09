@@ -622,6 +622,8 @@ def iterable_to_array(
         dtype: DtypeSpecifier=None
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
+    Convert an arbitrary Python iterable to a NumPy array without any type coercion except int to float.
+
     Returns:
         pair of array, boolean, where the Boolean can be used when necessary to establish uniqueness..
     '''
