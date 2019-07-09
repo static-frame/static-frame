@@ -39,8 +39,10 @@ import numpy as np
 
 DEFAULT_SORT_KIND = 'mergesort'
 
+DEFAULT_INT_DTYPE = np.int64 # default for SF construction
+
 ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
-DEFAULT_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
+ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
