@@ -41,8 +41,8 @@ DEFAULT_SORT_KIND = 'mergesort'
 
 DEFAULT_INT_DTYPE = np.int64 # default for SF construction
 
-ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
-ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
+# ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
+# ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
@@ -906,6 +906,7 @@ def binary_transition(array: np.ndarray) -> np.ndarray:
     Given a Boolean 1D array, return the index positions (integers) at False values where that False was previously True, or will be True
     '''
     if len(array) == 0:
+        # NOTE: on some platforms this may not be the same dtype as returned from np.nonzero
         return EMPTY_ARRAY_INT
 
     not_array = ~array
