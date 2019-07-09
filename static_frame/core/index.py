@@ -100,7 +100,7 @@ class LocMap:
 
     @staticmethod
     def map_slice_args(
-            label_to_pos: tp.Callable[[tp.Hashable], int],
+            label_to_pos: tp.Callable[[tp.Iterable[tp.Hashable]], int],
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
             offset: tp.Optional[int] = 0
@@ -1310,4 +1310,3 @@ def _requires_reindex(left: Index, right: Index) -> bool:
         return ne.any() # if any not equal, require reindex
     # assume we have a bool
     return ne # if not equal, require reindex
-
