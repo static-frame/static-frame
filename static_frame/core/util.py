@@ -115,7 +115,7 @@ NAT_TYPES = (np.datetime64, np.timedelta64)
 
 DICTLIKE_TYPES = (abc.Set, dict)
 
-# iterables that cannot be used in NP array constructors
+# iterables that cannot be used in NP array constructors; asumes that dictlike types have already been identified
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
 NON_STR_TYPES = {int, float, bool}
 
@@ -525,15 +525,15 @@ def resolve_type(
         type, is_tuple
     '''
     if resolved == object:
-        # clients should stop iteration once at object is returned
-        raise RuntimeError('alrady resolved to object')
+        # clients should stop iteration once ann object is returned
+        raise RuntimeError('already resolved to object')
 
     value_type = type(value)
     is_tuple = value_type == tuple
 
     # anything that gets converted to object
     if is_tuple:
-        # NOTE: we do not convet other conntainers to object here, as if it is set, list, etc, array constructor will treat that argument the same as object
+        # NOTE: we do not convert other conntainers to object here, as they are not common as elements, and if it is an iterable of set, list, etc, array constructor will treat that argument the same as object
         value_type = object
 
     if resolved is None: # first usage
@@ -546,7 +546,7 @@ def resolve_type(
     if ((resolved == float and value_type == int)
             or (resolved == int and value_type == float)
             ):
-        # if not the same (float or int), promote value if int to float
+        # if not the same (float or int), promote value of int to float
         # if value is float and resolved
         return float, is_tuple
 
@@ -615,6 +615,7 @@ def resolve_type_iter(
             if resolved == object:
                 break
 
+    # NOTE: we have broken before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
         return resolved, has_tuple, values_post
 
@@ -644,6 +645,7 @@ def iterable_to_array(
 
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
+
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
     else: # dtype given
@@ -667,7 +669,7 @@ def iterable_to_array(
 
     # construction
     if has_tuple:
-        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set, and is little slower than creating array directly
+        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=object)
         v[:] = values_for_construct
 
