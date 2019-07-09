@@ -2,6 +2,7 @@ import sys
 import typing as tp
 import os
 import operator
+import struct
 
 from collections import OrderedDict
 from collections import abc
@@ -17,9 +18,7 @@ import numpy as np
 
 
 
-# min/max fail on object arrays
 # handle nan in object blocks with skipna processing on ufuncs
-# allow columns asignment with getitem on FrameGO from an integer
 # bloc() to select / assign into an 2D array with Boolean mask selection
 # roll() on TypeBlocks (can be used in duplicate discovery on blocks)
 
@@ -39,7 +38,9 @@ import numpy as np
 #     V 	void
 
 DEFAULT_SORT_KIND = 'mergesort'
-DEFAULT_INT_DTYPE = np.dtype(int) # necessary for windows
+
+ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
+DEFAULT_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
@@ -61,8 +62,9 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 
 STATIC_ATTR = 'STATIC'
 
-# defaults to float64
 EMPTY_TUPLE = ()
+
+# defaults to float64
 EMPTY_ARRAY = np.array(EMPTY_TUPLE, dtype=None)
 EMPTY_ARRAY.flags.writeable = False
 
