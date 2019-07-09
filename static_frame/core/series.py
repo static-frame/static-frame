@@ -9,17 +9,17 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
-from static_frame.core.util import _isna
+from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array
-from static_frame.core.util import _array_to_groups_and_locations
-from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import ufunc_skipna_1d
-from static_frame.core.util import _dict_to_sorted_items
+# from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
@@ -83,6 +83,7 @@ class Series(metaclass=MetaOperatorDelegate):
             )
 
     sum: tp.Callable[['Series'], tp.Any]
+    values: tp.Sequence[tp.Any]
 
     @classmethod
     def from_items(cls,
@@ -192,12 +193,15 @@ class Series(metaclass=MetaOperatorDelegate):
                 # not sure if we should sort; not sure what to do if index is provided
                 if index is not None:
                     raise Exception('cannot create a Series from a dictionary when an index is defined')
+
                 index = []
                 def values_gen():
-                    for k, v in _dict_to_sorted_items(values):
+                    for k, v in values.items():
+                    # for k, v in _dict_to_sorted_items(values):
                         # populate index as side effect of iterating values
                         index.append(k)
                         yield v
+
                 if dtype and dtype != object:
                     # fromiter does not work with object types
                     self.values = np.fromiter(values_gen(),
@@ -504,7 +508,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a same-indexed, Boolean Series indicating which values are NaN or None.
         '''
         # consider returning self if not values.any()?
-        values = _isna(self.values)
+        values = isna_array(self.values)
         values.flags.writeable = False
         return self.__class__(values, index=self._index)
 
@@ -512,7 +516,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a same-indexed, Boolean Series indicating which values are NaN or None.
         '''
-        values = np.logical_not(_isna(self.values))
+        values = np.logical_not(isna_array(self.values))
         values.flags.writeable = False
         return self.__class__(values, index=self._index)
 
@@ -521,7 +525,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a new Series after removing values of NaN or None.
         '''
         # get positions that we want to keep
-        sel = np.logical_not(_isna(self.values))
+        sel = np.logical_not(isna_array(self.values))
         if not np.any(sel):
             return self.__class__(())
 
@@ -537,7 +541,7 @@ class Series(metaclass=MetaOperatorDelegate):
     def fillna(self, value) -> 'Series':
         '''Return a new ``Series`` after replacing null (NaN or None) with the supplied value.
         '''
-        sel = _isna(self.values)
+        sel = isna_array(self.values)
         if not np.any(sel):
             return self
 
@@ -570,7 +574,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
         '''
-        sel = _isna(array)
+        sel = isna_array(array)
         if not np.any(sel):
             return array # assume immutable
 
@@ -652,7 +656,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
         '''
-        sel = _isna(array)
+        sel = isna_array(array)
 
         if not len(sel):
             return array
@@ -1013,7 +1017,7 @@ class Series(metaclass=MetaOperatorDelegate):
     # axis functions
 
     def _axis_group_items(self, *, axis=0):
-        groups, locations = _array_to_groups_and_locations(self.values)
+        groups, locations = array_to_groups_and_locations(self.values)
         for idx, g in enumerate(groups):
             selection = locations == idx
             yield g, self._extract_iloc(selection)
@@ -1045,7 +1049,7 @@ class Series(metaclass=MetaOperatorDelegate):
         values = self.index.values_at_depth(depth_level)
         group_to_tuple = values.ndim == 2
 
-        groups, locations = _array_to_groups_and_locations(
+        groups, locations = array_to_groups_and_locations(
                 values)
 
         for idx, g in enumerate(groups):
@@ -1191,7 +1195,7 @@ class Series(metaclass=MetaOperatorDelegate):
         Return a same-sized Boolean Series that shows True for all b values that are duplicated.
         '''
         # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
         duplicates.flags.writeable = False
@@ -1204,7 +1208,7 @@ class Series(metaclass=MetaOperatorDelegate):
         '''
         Return a Series with duplicated values removed.
         '''
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
         keep = ~duplicates

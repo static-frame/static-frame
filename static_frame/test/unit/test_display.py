@@ -4,13 +4,14 @@ import unittest
 from collections import OrderedDict
 from io import StringIO
 import string
+import typing as tp
 import hashlib
 import json
 import sys
 
 
-import numpy as np
-import pytest
+import numpy as np  # type: ignore
+import pytest  # type: ignore
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -29,10 +30,10 @@ from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
 
-from static_frame.core.util import _isna
+from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import _array_to_duplicated
+from static_frame.core.util import array_to_duplicated
 
 from static_frame.core.display import DisplayTypeCategoryFactory
 
@@ -51,20 +52,20 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # display tests
 
-    def test_display_config_a(self):
+    def test_display_config_a(self) -> None:
         config = DisplayConfig.from_default(type_color=False)
         d = Display.from_values(np.array([[1, 2], [3, 4]], dtype=np.int64), 'header', config=config)
         self.assertEqual(d.to_rows(),
                 ['header', '1 2', '3 4', '<int64>'])
 
-    def test_display_config_b(self):
+    def test_display_config_b(self) -> None:
         post = sf.DisplayConfig.from_default(cell_align_left=False)
 
         self.assertFalse(post.cell_align_left)
 
 
 
-    def test_display_config_c(self):
+    def test_display_config_c(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True)
 
@@ -72,7 +73,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_display_cell_align_left_a(self):
+    def test_display_cell_align_left_a(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
@@ -88,8 +89,8 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win
-    def test_display_cell_align_left_b(self):
+    @skip_win  # type: ignore
+    def test_display_cell_align_left_b(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
 
@@ -131,8 +132,8 @@ class TestUnit(TestCase):
                 '  <<U1> <int64> <int64> <<U1> <bool> <bool>'])
 
 
-    @skip_win
-    def test_display_type_show_a(self):
+    @skip_win  # type: ignore
+    def test_display_type_show_a(self) -> None:
         config_type_show_true = sf.DisplayConfig.from_default(type_show=True, type_color=False)
         config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
 
@@ -166,13 +167,13 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win
-    def test_display_cell_fill_width_a(self):
+    @skip_win  # type: ignore
+    def test_display_cell_fill_width_a(self) -> None:
 
         config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)
         config_width_6 = sf.DisplayConfig.from_default(cell_max_width=6, cell_max_width_leftmost=6, type_color=False)
 
-        def chunks(size, count):
+        def chunks(size: int, count: int) -> tp.Iterator[str]:
             pos = 0
             for _ in range(count):
                 yield LONG_SAMPLE_STR[pos: pos + size]
@@ -231,7 +232,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_display_display_rows_a(self):
+    def test_display_display_rows_a(self) -> None:
 
         config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
         config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False)
@@ -268,8 +269,8 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win
-    def test_display_display_columns_a(self):
+    @skip_win  # type: ignore
+    def test_display_display_columns_a(self) -> None:
 
         config_columns_8 = sf.DisplayConfig.from_default(display_columns=8, type_color=False)
         config_columns_5 = sf.DisplayConfig.from_default(display_columns=5, type_color=False)
@@ -303,8 +304,8 @@ class TestUnit(TestCase):
                 '<int64>   <int64> ... <int64>'])
 
 
-    @skip_win
-    def test_display_display_columns_b(self):
+    @skip_win  # type: ignore
+    def test_display_display_columns_b(self) -> None:
 
         config_columns_4 = sf.DisplayConfig.from_default(display_columns=4, type_color=False)
         config_columns_5 = sf.DisplayConfig.from_default(display_columns=5, type_color=False)
@@ -342,7 +343,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_display_truncate_a(self):
+    def test_display_truncate_a(self) -> None:
 
         config_rows_12_cols_8 = sf.DisplayConfig.from_default(display_rows=12, display_columns=8)
         config_rows_7_cols_5 = sf.DisplayConfig.from_default(display_rows=7, display_columns=5)
@@ -357,30 +358,30 @@ class TestUnit(TestCase):
 
         index = (hashlib.sha224(str(x).encode('utf-8')).hexdigest()
                 for x in range(size))
-        columns = (hashlib.sha224(str(x).encode('utf-8')).hexdigest()
+        cols = (hashlib.sha224(str(x).encode('utf-8')).hexdigest()
                 for x in range(columns))
 
-        f = Frame(a1, index=index, columns=columns)
+        f = Frame(a1, index=index, columns=cols)
 
         self.assertEqual(
-                len(f.display(config_rows_12_cols_8).to_rows()), 13)
+                len(tuple(f.display(config_rows_12_cols_8).to_rows())), 13)
 
         self.assertEqual(
-                len(f.display(config_rows_7_cols_5).to_rows()), 9)
+                len(tuple(f.display(config_rows_7_cols_5).to_rows())), 9)
 
 
-    def test_display_type_attributes_a(self):
+    def test_display_type_attributes_a(self) -> None:
 
         x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
         self.assertEqual(x, '<int8>')
 
-    def test_display_type_attributes_b(self):
+    def test_display_type_attributes_b(self) -> None:
 
         with self.assertRaises(NotImplementedError):
             x, z = Display.type_attributes(None, DisplayConfigs.DEFAULT)
 
 
-    def test_display_type_category_a(self):
+    def test_display_type_category_a(self) -> None:
 
         x = DisplayTypeCategoryFactory.to_category(np.dtype(int))
         self.assertEqual(x.__name__, 'DisplayTypeInt')
@@ -388,13 +389,13 @@ class TestUnit(TestCase):
         x = DisplayTypeCategoryFactory.to_category(np.dtype(object))
         self.assertEqual(x.__name__, 'DisplayTypeObject')
 
-    def test_display_type_category_b(self):
+    def test_display_type_category_b(self) -> None:
         # force getting the default
         x = DisplayTypeCategoryFactory.to_category(None)
         self.assertEqual(x.__name__, 'DisplayTypeCategory')
         self.assertTrue(x.in_category(None))
 
-    def test_display_config_from_json_a(self):
+    def test_display_config_from_json_a(self) -> None:
         json_data = json.dumps(dict(type_show=False))
         dc = DisplayConfig.from_json(json_data)
         self.assertEqual(dc.type_show, False)
@@ -404,7 +405,7 @@ class TestUnit(TestCase):
         dc = DisplayConfig.from_json(json_data)
         self.assertEqual(dc.type_show, True)
 
-    def test_display_flatten_a(self):
+    def test_display_flatten_a(self) -> None:
         config = DisplayConfig.from_default(type_color=False)
 
         d1 = Display.from_values(np.array([1, 2, 3, 4], dtype=np.int64), 'header', config=config)
@@ -426,8 +427,8 @@ class TestUnit(TestCase):
                 ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'])
 
 
-    @skip_win
-    def test_display_html_pre_a(self):
+    @skip_win  # type: ignore
+    def test_display_html_pre_a(self) -> None:
         f = Frame.from_dict(dict(a=(1, 2),
                 b=(1.2, 3.4),
                 c=(False, True)))
@@ -445,8 +446,8 @@ class TestUnit(TestCase):
         self.assertEqual(html.strip(), str(expected).strip())
 
 
-    @skip_win
-    def test_display_html_table_a(self):
+    @skip_win  # type: ignore
+    def test_display_html_table_a(self) -> None:
         f = sf.Frame.from_dict(
             dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
@@ -463,7 +464,7 @@ class TestUnit(TestCase):
         self.assertEqual(html.strip(), str(expected).strip())
 
 
-    def test_display_html_table_b(self):
+    def test_display_html_table_b(self) -> None:
         records = (
                 (2, 'a', False),
                 (30, 'b', False),
@@ -476,7 +477,7 @@ class TestUnit(TestCase):
             '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Frame&gt;</span></th><th></th><th></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th>p</th><th>q</th><th>r</th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>30</td><td>b</td><td>False</td></tr></tbody></table>')
 
 
-    def test_display_html_series_a(self):
+    def test_display_html_series_a(self) -> None:
         records = (
                 (2, 'a', False),
                 (30, 'b', False),
@@ -487,7 +488,7 @@ class TestUnit(TestCase):
         self.assertEqual(f['q']._repr_html_(),
             '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Series: q&gt;</span></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th></tr></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
 
-    def test_display_html_index_a(self):
+    def test_display_html_index_a(self) -> None:
         records = (
                 (2, 'a', False),
                 (30, 'b', False),
@@ -504,7 +505,7 @@ class TestUnit(TestCase):
                 '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
 
-    def test_display_html_index_b(self):
+    def test_display_html_index_b(self) -> None:
         records = (
                 (2, 'a', False),
                 (30, 'b', False),
@@ -531,7 +532,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_display_max_width_a(self):
+    def test_display_max_width_a(self) -> None:
         records = (
                 (2, 'a', False),
                 (30, 'b', False),
@@ -549,7 +550,7 @@ class TestUnit(TestCase):
 
 
     @unittest.skip('too colorful')
-    def test_display_type_color_a(self):
+    def test_display_type_color_a(self) -> None:
 
         f = Frame(dict(a=(1, 2),
                 b=(1.2, 3.4),
@@ -582,10 +583,10 @@ class TestUnit(TestCase):
         #     index=index, columns=columns)
 
         from itertools import product
-        index = (0x2210, 0x2330)
-        columns = (0x1, 0xe)
+        index: tp.Iterable[tp.Hashable] = (0x2210, 0x2330)
+        columns: tp.Iterable[tp.Hashable] = (0x1, 0xe)
         f = Frame.from_element_loc_items(
-                ((x, chr(sum(x))) for x in product(index, columns)),
+                ((x, chr(sum(x))) for x in product(index, columns)),  # type: ignore  # Should probably open a typeshed issue for this.
                 index=index,
                 columns=columns,
                 dtype=str)

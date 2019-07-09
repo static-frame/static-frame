@@ -15,6 +15,7 @@ from hypothesis import HealthCheck
 import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame import TypeBlocks
@@ -166,9 +167,13 @@ class DTGroup(Enum):
     OBJECT = (partial(st.just, DTYPE_OBJECT),) # strategy constantly generating object dtype
     ALL = (hypo_np.scalar_dtypes,)
 
-    NUMERIC = (hypo_np.floating_dtypes,
+    NUMERIC = (
+            hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
-            hypo_np.complex_number_dtypes)
+            hypo_np.complex_number_dtypes
+            )
+
+    BOOL = (partial(st.just, DTYPE_BOOL),)
     STRING = (hypo_np.unicode_string_dtypes,)
 
     DATE = (partial(hypo_np.datetime64_dtypes, min_period='D', max_period='D'),)

@@ -26,10 +26,10 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import _dtype_to_na
-from static_frame.core.util import _array_to_groups_and_locations
-from static_frame.core.util import _isna
-from static_frame.core.util import _slice_to_ascending_slice
+from static_frame.core.util import dtype_to_na
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import isna_array
+from static_frame.core.util import slice_to_ascending_slice
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence
@@ -160,7 +160,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
     def from_element_items(cls, items, shape, dtype) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
-        a = np.full(shape, fill_value=_dtype_to_na(dtype), dtype=dtype)
+        a = np.full(shape, fill_value=dtype_to_na(dtype), dtype=dtype)
         for iloc, v in items:
             a[iloc] = v
         a.flags.writeable = False
@@ -361,7 +361,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
-        # NOTE: can add a reverse argument here and iterate in reverse; this could be useful if we need to pass rows/cols to lexsort, as in _array_to_duplicated
+        # NOTE: can add a reverse argument here and iterate in reverse; this could be useful if we need to pass rows/cols to lexsort, as in array_to_duplicated
         if axis == 1: # iterate over rows
             unified = self.unified
             # iterate over rows; might be faster to create entire values
@@ -663,7 +663,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             if group_source.ndim > 1:
                 unique_axis = 1
 
-        groups, locations = _array_to_groups_and_locations(
+        groups, locations = array_to_groups_and_locations(
                 group_source,
                 unique_axis)
 
@@ -862,7 +862,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
                 if isinstance(key, slice):
                     #  slice the index; null slice already handled
                     if not retain_key_order:
-                        key = _slice_to_ascending_slice(key, self._shape[1])
+                        key = slice_to_ascending_slice(key, self._shape[1])
                     indices = self._index[key]
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
                     # NOTE: if self._index was an array we could use Boolean selection directly
@@ -1561,7 +1561,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         def blocks():
             for b in self._blocks:
-                bool_block = _isna(b)
+                bool_block = isna_array(b)
                 bool_block.flags.writeable = False
                 yield bool_block
 
@@ -1573,7 +1573,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         def blocks():
             for b in self._blocks:
-                bool_block = np.logical_not(_isna(b))
+                bool_block = np.logical_not(isna_array(b))
                 bool_block.flags.writeable = False
                 yield bool_block
 
@@ -1606,7 +1606,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
 
         # iterate over blocks to observe NaNs contiguous horizontally
         for b in block_iter:
-            sel = _isna(b) # True for is NaN
+            sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
             if isna_exit_previous is None:
@@ -1686,7 +1686,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         # store flag for when non longer need to check blocks, yield immediately
 
         for b in blocks:
-            sel = _isna(b) # True for is NaN
+            sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
             if ndim == 1 and not sel[sided_index]:
@@ -1787,7 +1787,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
             axis: Dimension to drop, where 0 will drop rows and 1 will drop columns based on the condition function applied to a Boolean array.
         '''
         # get a unified boolean array; as iisna will always return a Boolean, we can simply take the firtst block out of consolidation
-        unified = next(self.consolidate_blocks(_isna(b) for b in self._blocks))
+        unified = next(self.consolidate_blocks(isna_array(b) for b in self._blocks))
 
         # flip axis to condition funcion
         condition_axis = 0 if axis else 1
@@ -1810,7 +1810,7 @@ class TypeBlocks(metaclass=MetaOperatorDelegate):
         '''
         return self.from_blocks(
                 self._assign_blocks_from_boolean_blocks(
-                        targets=(_isna(b) for b in self._blocks),
+                        targets=(isna_array(b) for b in self._blocks),
                         value=value)
                 )
 

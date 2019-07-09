@@ -36,8 +36,8 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array
-from static_frame.core.util import _dict_to_sorted_items
-from static_frame.core.util import _array_to_duplicated
+# from static_frame.core.util import _dict_to_sorted_items
+from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_set_ufunc_many
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
@@ -50,7 +50,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import _array_to_groups_and_locations
+from static_frame.core.util import array_to_groups_and_locations
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
 
@@ -337,7 +337,8 @@ class Frame(metaclass=MetaOperatorDelegate):
 
             column_getter = None
             if isinstance(row_reference, dict):
-                col_idx_iter = (k for k, _ in _dict_to_sorted_items(row_reference))
+                col_idx_iter = row_reference.keys()
+                # col_idx_iter = (k for k, _ in _dict_to_sorted_items(row_reference))
                 if derive_columns: # just pass the key back
                     column_getter = lambda key: key
             elif isinstance(row_reference, Series):
@@ -2077,7 +2078,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         values = ref_index.values_at_depth(depth_level)
         group_to_tuple = values.ndim > 1
 
-        groups, locations = _array_to_groups_and_locations(values)
+        groups, locations = array_to_groups_and_locations(values)
 
         for idx, group in enumerate(groups):
             selection = locations == idx
@@ -2315,7 +2316,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return an axis-sized Boolean Series that shows True for all rows (axis 0) or columns (axis 1) duplicated.
         '''
         # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
@@ -2333,7 +2334,7 @@ class Frame(metaclass=MetaOperatorDelegate):
         Return a Frame with duplicated values removed.
         '''
         # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
-        duplicates = _array_to_duplicated(self.values,
+        duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)

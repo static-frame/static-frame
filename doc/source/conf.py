@@ -23,7 +23,7 @@ import static_frame as sf
 
 from static_frame.core.operator_delegate import _UFUNC_UNARY_OPERATORS
 from static_frame.core.operator_delegate import _UFUNC_BINARY_OPERATORS
-from static_frame.core.operator_delegate import _UFUNC_AXIS_SKIPNA
+from static_frame.core.operator_delegate import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import AnyCallable
 
 from static_frame.performance import core
@@ -80,7 +80,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             ('frame', sf.Frame),
             ):
         post[label + '_ufunc_axis'] = get_ufunc_doc(cls,
-                _UFUNC_AXIS_SKIPNA)
+                UFUNC_AXIS_SKIPNA)
 
     return post
 

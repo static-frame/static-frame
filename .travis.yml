@@ -1,7 +1,7 @@
 # https://github.com/brandtbucher/travis-python-matrix
 
 # CPython 3.7.3 / CPython 3.6.8
-# Ubuntu 16.04 (Xenial Xerus) / Windows 10 / macOS 10.14 (Mojave)
+# Ubuntu 16.04 (Xenial Xerus) / Windows 10 (64-bit) / Windows 10 (32-bit) / macOS 10.14 (Mojave)
 
 # Builds the following wheels:
 # - cp36-cp36m-linux-x86-64.whl -> cp36-cp36m-manylinux1-x86-64.whl
@@ -106,8 +106,6 @@ env:
 
 install:
   - pip install -r requirements-test.txt
-  # We need to pin wheel (ha) for auditwheel to work properly:
-  - pip install auditwheel codecov pytest-cov setuptools twine wheel==0.31.1
   # Build and test wheels and source distributions:
   - python setup.py develop sdist bdist_wheel
   - python fix_wheels.py
