@@ -148,9 +148,8 @@ class TestUnit(TestCase):
 
 
 
-
     @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
-    def test_iterable_to_array(self, array: np.ndarray) -> None:
+    def test_iterable_to_array_a(self, array: np.ndarray) -> None:
         values = array.tolist()
         post, _ = util.iterable_to_array(values)
         self.assertAlmostEqualValues(post, values)
@@ -159,6 +158,12 @@ class TestUnit(TestCase):
         post, _ = util.iterable_to_array(values, dtype=util.DTYPE_OBJECT)
         self.assertAlmostEqualValues(post, values)
 
+
+    @given(get_labels()) # type: ignore
+    def test_iterable_to_array_b(self, labels: tp.Iterable[tp.Any]) -> None:
+        post, _ = util.iterable_to_array(labels)
+        self.assertAlmostEqualValues(post, labels)
+        self.assertTrue(isinstance(post, np.ndarray))
 
 
     @given(st.slices(10)) # type: ignore

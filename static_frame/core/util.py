@@ -625,7 +625,7 @@ def iterable_to_array(
     Convert an arbitrary Python iterable to a NumPy array without any type coercion except int to float.
 
     Returns:
-        pair of array, boolean, where the Boolean can be used when necessary to establish uniqueness..
+        pair of array, boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
         if dtype is not None and dtype != values.dtype:

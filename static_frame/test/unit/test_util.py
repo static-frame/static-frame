@@ -1054,6 +1054,28 @@ class TestUnit(TestCase):
             self.assertEqual(set(a2), set(iterable))
 
 
+
+    def test_iterable_to_array_d(self) -> None:
+
+        self.assertEqual(
+                iterable_to_array((True, False, True))[0].dtype,
+                np.dtype('bool')
+        )
+
+        self.assertEqual(
+                iterable_to_array((0, 1, 0), dtype=bool)[0].dtype,
+                np.dtype('bool')
+        )
+
+        self.assertEqual(
+                iterable_to_array((1, 2, 'w'))[0].dtype,
+                np.dtype('O')
+        )
+
+        self.assertEqual(iterable_to_array(((2,3), (3,2)))[0].tolist(),
+                [(2, 3), (3, 2)]
+        )
+
 if __name__ == '__main__':
     unittest.main()
 
