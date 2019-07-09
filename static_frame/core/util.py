@@ -680,6 +680,7 @@ def iterable_to_array(
         except OverflowError:
             v = np.array(values_for_construct, dtype=object)
     else:
+        # if dtype was None, we might have discovered this was object and but no tuples; faster to do this constructor instead of null slice assignment
         v = np.array(values_for_construct, dtype=dtype)
 
     v.flags.writeable = False
