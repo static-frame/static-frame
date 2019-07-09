@@ -208,7 +208,8 @@ class TestUnit(TestCase):
     def test_binary_transition(self, array: np.ndarray) -> None:
         post = util.binary_transition(array)
 
-        self.assertTrue(post.dtype == util.DEFAULT_INT_DTYPE)
+        # trying int32 for compat on win32
+        self.assertTrue(post.dtype in (util.DEFAULT_INT_DTYPE, np.int32))
 
         # if no True in original array, result will be empty
         if array.sum() == 0:
@@ -220,7 +221,6 @@ class TestUnit(TestCase):
             # the post selection shold always be indices that are false
             self.assertTrue(array[post].sum() == 0)
 
-        # import ipdb; ipdb.set_trace()
 
     # NOTE: temporarily only using numeric types;
     # @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
