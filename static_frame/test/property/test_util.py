@@ -208,8 +208,7 @@ class TestUnit(TestCase):
     def test_binary_transition(self, array: np.ndarray) -> None:
         post = util.binary_transition(array)
 
-        # trying int32 for compat on win32
-        self.assertTrue(post.dtype in (util.DEFAULT_INT_DTYPE, np.int32))
+        self.assertTrue(post.dtype == util.DEFAULT_INT_DTYPE)
 
         # if no True in original array, result will be empty
         if array.sum() == 0:

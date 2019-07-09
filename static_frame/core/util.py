@@ -39,7 +39,7 @@ import numpy as np
 #     V 	void
 
 DEFAULT_SORT_KIND = 'mergesort'
-DEFAULT_INT_DTYPE = np.int64 # necessary for windows
+DEFAULT_INT_DTYPE = np.dtype(int) # necessary for windows
 
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
