@@ -1015,7 +1015,7 @@ class TestUnit(TestCase):
 
     def test_resolve_type_iter_f(self) -> None:
 
-        def a():
+        def a() -> tp.Iterator[tp.Any]:
             for i in range(3):
                 yield i
             yield None
@@ -1027,7 +1027,7 @@ class TestUnit(TestCase):
 
     def test_resolve_type_iter_g(self) -> None:
 
-        def a():
+        def a() -> tp.Iterator[tp.Any]:
             yield None
             for i in range(3):
                 yield i
@@ -1037,9 +1037,9 @@ class TestUnit(TestCase):
         self.assertEqual(resolved, object)
         self.assertEqual(has_tuple, False)
 
-    def test_resolve_type_iter_g(self) -> None:
+    def test_resolve_type_iter_h(self) -> None:
 
-        def a():
+        def a() -> tp.Iterator[tp.Any]:
             yield 10
             yield None
             for i in range(3):
