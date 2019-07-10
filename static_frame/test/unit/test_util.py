@@ -1057,7 +1057,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_resolve_type_iter_h(self) -> None:
+    def test_resolve_type_iter_i(self) -> None:
 
 
         a = range(3, 7)
