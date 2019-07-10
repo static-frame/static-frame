@@ -534,7 +534,7 @@ def resolve_type(
     # anything that gets converted to object
     if is_tuple:
         # NOTE: we do not convert other conntainers to object here, as they are not common as elements, and if it is an iterable of set, list, etc, array constructor will treat that argument the same as object
-        value_type = object
+        return object, is_tuple
 
     if resolved is None: # first usage
         return value_type, is_tuple
@@ -605,17 +605,19 @@ def resolve_type_iter(
             if resolved != object:
                 resolved, has_tuple = resolve_type(v, resolved=resolved)
                 values_post.append(v)
-            else:
-                # extend ramaining values and break
+            else: # resolved is object
                 values_post.append(v)
-                values_post.extend(v_iter)
-                break
+                has_tuple = isinstance(v, tuple)
+                if has_tuple:
+                    # can end if we have found a tuple
+                    values_post.extend(v_iter)
+                    break
         else:
             resolved, has_tuple = resolve_type(v, resolved=resolved)
             if resolved == object:
                 break
 
-    # NOTE: we have broken before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
+    # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
         return resolved, has_tuple, values_post
 
@@ -630,14 +632,14 @@ def iterable_to_array(
     Convert an arbitrary Python iterable to a NumPy array without any type coercion except int to float.
 
     Returns:
-        pair of array, boolean, where the Boolean can be used when necessary to establish uniqueness.
+        pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
         if dtype is not None and dtype != values.dtype:
             raise RuntimeError('supplied dtype not set on supplied array')
         return values, len(values) <= 1
 
-    is_dictlike = isinstance(values, DICTLIKE_TYPES)
+    is_unique = isinstance(values, DICTLIKE_TYPES)
 
     # values for construct will only be a copy when necessary in iteration to find type
     if dtype is None:
@@ -648,7 +650,7 @@ def iterable_to_array(
 
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
-    else: # dtype given
+    else: # dtype given, do not do full iteration
         is_gen, copy_values = is_gen_copy_values(values)
 
         dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
@@ -660,31 +662,35 @@ def iterable_to_array(
             values_for_construct = values
 
         if len(values_for_construct) == 0:
+            # dtype was given, return an empty array with that dtype
             v = np.empty(0, dtype=dtype)
             v.flags.writeable = False
             return v, True
 
-        #assume that there might be tuples if the dtype is object
+        #as we have not iterated iterable, assume that there might be tuples if the dtype is object
         has_tuple = dtype_is_object
+
+    if len(values_for_construct) == 1:
+        is_unique = True
 
     # construction
     if has_tuple:
         # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
-        v = np.empty(len(values_for_construct), dtype=object)
-        v[:] = values_for_construct
+        v = np.empty(len(values_for_construct), dtype=DTYPE_OBJECT)
+        v[NULL_SLICE] = values_for_construct
 
     elif dtype == int:
         # large python ints can overflow default NumPy int type
         try:
             v = np.array(values_for_construct, dtype=dtype)
         except OverflowError:
-            v = np.array(values_for_construct, dtype=object)
+            v = np.array(values_for_construct, dtype=DTYPE_OBJECT)
     else:
         # if dtype was None, we might have discovered this was object and but no tuples; faster to do this constructor instead of null slice assignment
         v = np.array(values_for_construct, dtype=dtype)
 
     v.flags.writeable = False
-    return v, is_dictlike
+    return v, is_unique
 
 #-------------------------------------------------------------------------------
 

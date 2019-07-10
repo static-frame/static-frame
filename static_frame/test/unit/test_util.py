@@ -924,56 +924,138 @@ class TestUnit(TestCase):
     def test_resolve_type_iter_a(self) -> None:
 
         v1 = ('a', 'b', 'c')
-        resolved, is_tuple, values = resolve_type_iter(v1)
+        resolved, has_tuple, values = resolve_type_iter(v1)
         self.assertEqual(resolved, str)
 
         v22 = ('a', 'b', 3)
-        resolved, is_tuple, values = resolve_type_iter(v22)
+        resolved, has_tuple, values = resolve_type_iter(v22)
         self.assertEqual(resolved, object)
 
         v3 = ('a', 'b', (1, 2))
-        resolved, is_tuple, values = resolve_type_iter(v3)
+        resolved, has_tuple, values = resolve_type_iter(v3)
         self.assertEqual(resolved, object)
-        self.assertTrue(is_tuple)
+        self.assertTrue(has_tuple)
 
         v4 = (1, 2, 4.3, 2)
-        resolved, is_tuple, values = resolve_type_iter(v4)
+        resolved, has_tuple, values = resolve_type_iter(v4)
         self.assertEqual(resolved, float)
 
 
         v5 = (1, 2, 4.3, 2, None)
-        resolved, is_tuple, values = resolve_type_iter(v5)
+        resolved, has_tuple, values = resolve_type_iter(v5)
         self.assertEqual(resolved, object)
 
 
         v6 = (1, 2, 4.3, 2, 'g')
-        resolved, is_tuple, values = resolve_type_iter(v6)
+        resolved, has_tuple, values = resolve_type_iter(v6)
         self.assertEqual(resolved, object)
 
         v7 = ()
-        resolved, is_tuple, values = resolve_type_iter(v7)
+        resolved, has_tuple, values = resolve_type_iter(v7)
         self.assertEqual(resolved, None)
 
 
     def test_resolve_type_iter_b(self) -> None:
 
         v1 = iter(('a', 'b', 'c'))
-        resolved, is_tuple, values = resolve_type_iter(v1)
+        resolved, has_tuple, values = resolve_type_iter(v1)
         self.assertEqual(resolved, str)
 
         v2 = iter(('a', 'b', 3))
-        resolved, is_tuple, values = resolve_type_iter(v2)
+        resolved, has_tuple, values = resolve_type_iter(v2)
         self.assertEqual(resolved, object)
 
         v3 = iter(('a', 'b', (1, 2)))
-        resolved, is_tuple, values = resolve_type_iter(v3)
+        resolved, has_tuple, values = resolve_type_iter(v3)
         self.assertEqual(resolved, object)
-        self.assertTrue(is_tuple)
+        self.assertTrue(has_tuple)
 
         v4 = range(4)
-        resolved, is_tuple, values = resolve_type_iter(v4)
+        resolved, has_tuple, values = resolve_type_iter(v4)
         self.assertEqual(resolved, int)
 
+
+    def test_resolve_type_iter_c(self) -> None:
+
+        a = [True, False, True]
+        resolved, has_tuple, values = resolve_type_iter(a)
+        self.assertEqual(id(a), id(values))
+
+        resolved, has_tuple, values = resolve_type_iter(iter(a))
+        self.assertNotEqual(id(a), id(values))
+
+        self.assertEqual(resolved, bool)
+        self.assertEqual(has_tuple, False)
+
+
+    def test_resolve_type_iter_d(self) -> None:
+
+        a = [3, 2, (3,4)]
+        resolved, has_tuple, values = resolve_type_iter(a)
+        self.assertEqual(id(a), id(values))
+
+        resolved, has_tuple, values = resolve_type_iter(iter(a))
+        self.assertNotEqual(id(a), id(values))
+
+        self.assertEqual(resolved, object)
+        self.assertEqual(has_tuple, True)
+
+
+    def test_resolve_type_iter_e(self) -> None:
+
+        a = [300000000000000002, 5000000000000000001]
+        resolved, has_tuple, values = resolve_type_iter(a)
+        self.assertEqual(id(a), id(values))
+
+        resolved, has_tuple, values = resolve_type_iter(iter(a))
+        self.assertNotEqual(id(a), id(values))
+
+        self.assertEqual(resolved, int)
+        self.assertEqual(has_tuple, False)
+
+    def test_resolve_type_iter_f(self) -> None:
+
+        def a():
+            for i in range(3):
+                yield i
+            yield None
+
+        resolved, has_tuple, values = resolve_type_iter(a())
+        self.assertEqual(values, [0, 1, 2, None])
+        self.assertEqual(resolved, object)
+        self.assertEqual(has_tuple, False)
+
+    def test_resolve_type_iter_g(self) -> None:
+
+        def a():
+            yield None
+            for i in range(3):
+                yield i
+
+        resolved, has_tuple, values = resolve_type_iter(a())
+        self.assertEqual(values, [None, 0, 1, 2])
+        self.assertEqual(resolved, object)
+        self.assertEqual(has_tuple, False)
+
+    def test_resolve_type_iter_g(self) -> None:
+
+        def a():
+            yield 10
+            yield None
+            for i in range(3):
+                yield i
+            yield (3,4)
+
+        resolved, has_tuple, values = resolve_type_iter(a())
+        self.assertEqual(values, [10, None, 0, 1, 2, (3,4)])
+        self.assertEqual(resolved, object)
+        # we stop evaluation after finding object
+        self.assertEqual(has_tuple, True)
+
+        post = iterable_to_array(a())
+        self.assertEqual(post[0].tolist(),
+                [10, None, 0, 1, 2, (3, 4)]
+                )
 
 
     def test_iterable_to_array_a(self) -> None:
@@ -1075,6 +1157,7 @@ class TestUnit(TestCase):
         self.assertEqual(iterable_to_array(((2,3), (3,2)))[0].tolist(),
                 [(2, 3), (3, 2)]
         )
+
 
 if __name__ == '__main__':
     unittest.main()
