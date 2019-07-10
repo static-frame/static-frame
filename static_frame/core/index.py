@@ -245,13 +245,6 @@ class Index(IndexBase,
             '_name'
             )
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
-    _labels: np.ndarray
-    _positions: np.ndarray
-    _recache: bool
-    _loc_is_iloc: bool
-    _name: tp.Hashable
-
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
@@ -850,12 +843,6 @@ class IndexGO(Index):
             '_positions_mutable_count',
             )
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
-    _labels: np.ndarray
-    _positions: np.ndarray
-    _recache: bool
-    _loc_is_iloc: bool
-    _name: tp.Hashable
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int

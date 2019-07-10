@@ -17,6 +17,10 @@ from functools import reduce
 import numpy as np
 
 
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.index_base import IndexBase
+
 
 # handle nan in object blocks with skipna processing on ufuncs
 # bloc() to select / assign into an 2D array with Boolean mask selection
@@ -1186,12 +1190,12 @@ def _read_url(fp: str):
 def write_optional_file(
         content: str,
         fp: tp.Optional[FilePathOrFileLike] = None,
-        ):
+        ) -> tp.Optional[str]:
 
     fd = f = None
     if not fp: # get a temp file
         fd, fp = tempfile.mkstemp(suffix='.html', text=True)
-    elif isinstance(fp, StringIO):
+    elif isinstance(fp, (StringIO, BytesIO)):
         f = fp
         fp = None
     # nothing to do if we have an fp

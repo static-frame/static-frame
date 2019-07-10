@@ -535,7 +535,7 @@ class DisplayActive:
         _module._display_active = dc
 
     @staticmethod
-    def get(**kwargs):
+    def get(**kwargs: tp.Union[bool, int, str]) -> DisplayConfig:
         config = _module._display_active
         if not kwargs:
             return config
@@ -1102,4 +1102,3 @@ class Display:
             for idx, cell in enumerate(r):
                 rows[idx].append(cell)
         return self.__class__(rows, config=self._config)
-
