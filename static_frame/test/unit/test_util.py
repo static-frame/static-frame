@@ -1009,7 +1009,6 @@ class TestUnit(TestCase):
 
         resolved, has_tuple, values = resolve_type_iter(iter(a))
         self.assertNotEqual(id(a), id(values))
-
         self.assertEqual(resolved, int)
         self.assertEqual(has_tuple, False)
 
@@ -1056,6 +1055,20 @@ class TestUnit(TestCase):
         self.assertEqual(post[0].tolist(),
                 [10, None, 0, 1, 2, (3, 4)]
                 )
+
+
+    def test_resolve_type_iter_h(self) -> None:
+
+
+        a = range(3, 7)
+        resolved, has_tuple, values = resolve_type_iter(a)
+        # a copy is not made
+        self.assertEqual(id(a), id(values))
+        self.assertEqual(resolved, int)
+
+        post = iterable_to_array(a)
+        self.assertEqual(post[0].tolist(),
+                [3, 4, 5, 6])
 
 
     def test_iterable_to_array_a(self) -> None:
