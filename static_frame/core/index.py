@@ -100,7 +100,7 @@ class LocMap:
 
     @staticmethod
     def map_slice_args(
-            label_to_pos: tp.Callable[[tp.Hashable], int],
+            label_to_pos: tp.Callable[[tp.Iterable[tp.Hashable]], int],
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
             offset: tp.Optional[int] = 0
@@ -244,13 +244,6 @@ class Index(IndexBase,
             '_loc_is_iloc',
             '_name'
             )
-
-    _map: tp.Dict[tp.Hashable, tp.Any]
-    _labels: np.ndarray
-    _positions: np.ndarray
-    _recache: bool
-    _loc_is_iloc: bool
-    _name: tp.Hashable
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
@@ -850,12 +843,6 @@ class IndexGO(Index):
             '_positions_mutable_count',
             )
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
-    _labels: np.ndarray
-    _positions: np.ndarray
-    _recache: bool
-    _loc_is_iloc: bool
-    _name: tp.Hashable
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
@@ -1310,4 +1297,3 @@ def _requires_reindex(left: Index, right: Index) -> bool:
         return ne.any() # if any not equal, require reindex
     # assume we have a bool
     return ne # if not equal, require reindex
-

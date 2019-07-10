@@ -8,11 +8,11 @@ from itertools import repeat
 
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
-from hypothesis import settings as hypo_settings
-from hypothesis import HealthCheck
+from hypothesis import settings as hypo_settings  # type: ignore
+from hypothesis import HealthCheck  # type: ignore
 
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
@@ -35,6 +35,7 @@ from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 
+
 MAX_ROWS = 8
 MAX_COLUMNS = 10
 
@@ -47,7 +48,7 @@ hypo_settings.load_profile("sf")
 # spacings
 
 # @lru_cache(maxsize=32)
-def subset_contiguous_sum(target):
+def subset_contiguous_sum(target: int) -> tp.Tuple[tp.Tuple[int, ...], ...]:
     '''
     Return an iterabel of integers that sum to the target. This does not find all combinations or permutations, just all combintation of the range from 1 to the number (inclusive).
     '''
@@ -61,7 +62,9 @@ def subset_contiguous_sum(target):
         raise RuntimeError(f'target is too large: {target}')
 
     @lru_cache()
-    def subset_sum(numbers, partial=(), partial_sum=0):
+    def subset_sum(
+            numbers: tp.Sequence[int], partial: tp.Tuple[int, ...] = (), partial_sum: int = 0,
+        ) -> tp.Iterator[tp.Tuple[int, ...]]:
         if partial_sum == target:
             yield partial
         if partial_sum > target:
@@ -73,7 +76,7 @@ def subset_contiguous_sum(target):
     return tuple(subset_sum(range(1, target+1)))
 
 
-def get_spacing(size: int = MAX_COLUMNS):
+def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
     # generate permutations of the orderings of the integers
     return st.one_of((st.permutations(c) for c in subset_contiguous_sum(size)))
 
@@ -93,24 +96,24 @@ def get_spacing(size: int = MAX_COLUMNS):
 # UnicodeDecodeError: 'utf-32-le' codec can't decode bytes in position 0-3: code point in surrogate code point range(0xd800, 0xe000)
 ST_CODEPOINT_LIMIT = dict(min_codepoint=1, max_codepoint=55203)
 
-ST_TYPES_COMMON = (
+ST_TYPES_COMMON: tp.Tuple[tp.Callable[..., st.SearchStrategy], ...] = (
         st.integers,
         # st.decimals,
         st.fractions,
         st.dates,
         st.datetimes,
         partial(st.characters, **ST_CODEPOINT_LIMIT),
-        partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))
+        partial(st.text, st.characters(**ST_CODEPOINT_LIMIT))  # type: ignore
         )
 
-ST_TYPES_FLOAT_NAN = (
+ST_TYPES_FLOAT_NAN: tp.Tuple[st.SearchStrategy, ...] = (
         st.floats,
         st.complex_numbers,
         )
 
 filter_nan = lambda x: not np.isnan(x)
 
-ST_TYPES_FLOAT_NO_NAN = (
+ST_TYPES_FLOAT_NO_NAN: tp.Tuple[tp.Callable[[], st.SearchStrategy], ...] = (
         lambda: st.floats().filter(filter_nan),
         lambda: st.complex_numbers().filter(filter_nan)
         )
@@ -123,13 +126,13 @@ ST_TYPES_FOR_UNIQUE = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON
 ST_TYPES_FOR_UNIQUE_MIXED = ST_TYPES_FLOAT_NO_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
 ST_VALUE = ST_TYPES_FLOAT_NAN + ST_TYPES_COMMON + ST_TYPES_UNARY_BINARY
 
-def get_value():
+def get_value() -> st.SearchStrategy:
     '''
     Any plausible value.
     '''
     return st.one_of(strat() for strat in ST_VALUE)
 
-def get_label():
+def get_label() -> st.SearchStrategy:
     '''
     A hashable suitable for use in an Index. While NaNs are supported as labels in Index objects, the unique constraint used below does not enforce uniqueness for NaNs, and thus we must filter out NaNs in advance.
     '''
@@ -138,11 +141,11 @@ def get_label():
 
 def get_labels(
         min_size: int = 0,
-        max_size: int = MAX_ROWS):
+        max_size: int = MAX_ROWS) -> st.SearchStrategy:
     '''
     Labels are suitable for creating non-date Indices (though they might include dates)
     '''
-    def gen():
+    def gen() -> tp.Iterator[st.SearchStrategy]:
 
         yield st.lists(get_label(),
                 min_size=min_size,
@@ -183,9 +186,9 @@ class DTGroup(Enum):
     MILLISECOND = (partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),)
 
 
-def get_dtype(dtype_group: DTGroup = DTGroup.ALL):
+def get_dtype(dtype_group: DTGroup = DTGroup.ALL) -> st.SearchStrategy:
 
-    def st_dts():
+    def st_dts() -> tp.Iterator[st.SearchStrategy]:
         for st_dt in dtype_group.value:
             yield st_dt()
 
@@ -195,36 +198,36 @@ def get_dtypes(
         min_size: int = 0,
         max_size: int = MAX_COLUMNS,
         dtype_group: DTGroup = DTGroup.ALL,
-        ) -> tp.Iterable[np.dtype]:
+        ) -> st.SearchStrategy:
     return st.lists(get_dtype(dtype_group), min_size=min_size)
 
 def get_dtype_pairs(
         dtype_group: DTGroup = DTGroup.ALL,
-        ) -> tp.Tuple[np.dtype]:
+        ) -> st.SearchStrategy:
     return st.tuples(get_dtype(dtype_group), get_dtype(dtype_group))
 
 #-------------------------------------------------------------------------------
 # shape generation
 
-def get_shape_1d(min_size: int = 0, max_size: int = MAX_ROWS):
+def get_shape_1d(min_size: int = 0, max_size: int = MAX_ROWS) -> st.SearchStrategy:
     return st.tuples(st.integers(min_value=min_size, max_value=max_size))
 
 def get_shape_2d(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS,
-        ):
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
+        ) -> st.SearchStrategy:
     return st.tuples(
             st.integers(min_value=min_rows, max_value=max_rows),
             st.integers(min_value=min_columns, max_value=max_columns)
             )
 
 def get_shape_1d2d(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS) -> tp.Union[tp.Tuple[int], tp.Tuple[int, int]]:
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS) -> st.SearchStrategy:
 
     return st.one_of(
             get_shape_2d(
@@ -241,8 +244,8 @@ def get_shape_1d2d(
 # array generation
 
 def get_array_object(
-        shape=(MAX_ROWS, MAX_COLUMNS),
-        unique: bool = True):
+        shape: tp.Tuple[int, ...] = (MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True) -> st.SearchStrategy:
     if unique:
         # if unique, cannot use fill
         return hypo_np.arrays(
@@ -263,15 +266,15 @@ def get_array_object(
 
 def get_array_from_dtype_group(
         dtype_group: DTGroup = DTGroup.ALL,
-        shape=(MAX_ROWS, MAX_COLUMNS),
-        unique: bool = True):
+        shape: tp.Tuple[int, ...] = (MAX_ROWS, MAX_COLUMNS),
+        unique: bool = True) -> st.SearchStrategy:
     '''
     Given a dtype group and shape, get array. Handles manually creating and filling object arrays when dtype group is object or ALL.
     '''
 
     # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
 
-    def fill_na(array):
+    def fill_na(array: np.ndarray) -> np.ndarray:
         if array.dtype.kind in DTYPE_NAN_KIND:
             is_nan = np.isnan(array)
             if is_nan.any():
@@ -302,7 +305,7 @@ def get_array_1d(
         max_size: int = MAX_ROWS,
         unique: bool = False,
         dtype_group: DTGroup = DTGroup.ALL
-        ):
+        ) -> st.SearchStrategy:
 
     shape = get_shape_1d(min_size=min_size, max_size=max_size)
     return get_array_from_dtype_group(
@@ -313,13 +316,13 @@ def get_array_1d(
 
 
 def get_array_2d(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS,
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
         unique: bool = False,
         dtype_group: DTGroup = DTGroup.ALL
-        ):
+        ) -> st.SearchStrategy:
 
     shape = get_shape_2d(
             min_rows=min_rows,
@@ -336,12 +339,12 @@ def get_array_2d(
 
 
 def get_array_1d2d(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS,
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
         dtype_group: DTGroup = DTGroup.ALL
-        ):
+        ) -> st.SearchStrategy:
     '''
     For convenience in building blocks, treat row constraints as 1d size constraints.
     '''
@@ -368,7 +371,7 @@ def get_array_1d2d(
 #-------------------------------------------------------------------------------
 # aligend arrays for concatenation and type blocks
 
-def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10):
+def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10) -> st.SearchStrategy:
 
     return st.integers(min_value=1, max_value=MAX_COLUMNS).flatmap(
         lambda columns: st.lists(
@@ -381,7 +384,7 @@ def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10):
             )
     )
 
-def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10):
+def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10) -> st.SearchStrategy:
 
     return st.integers(min_value=1, max_value=MAX_ROWS).flatmap(
         lambda rows: st.lists(
@@ -395,21 +398,21 @@ def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10):
     )
 
 def get_blocks(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS,
-        dtype_group=DTGroup.ALL
-        ):
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
+        dtype_group: DTGroup = DTGroup.ALL
+        ) -> st.SearchStrategy:
     '''
     Args:
         min_columns: number of resultant columns in combination of all arrays.
     '''
 
-    def constructor(rows_column_widths):
+    def constructor(rows_column_widths: tp.Tuple[int, tp.Iterator[int]]) -> st.SearchStrategy:
         rows, column_widths = rows_column_widths
 
-        def array_gen():
+        def array_gen() -> tp.Iterator[st.SearchStrategy]:
             for width in column_widths:
                 yield get_array_1d2d(
                     min_rows=rows,
@@ -421,7 +424,7 @@ def get_blocks(
 
         return st.tuples(*array_gen())
 
-    def get_column_widths(shape):
+    def get_column_widths(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
         rows, columns = shape
         return st.tuples(st.just(rows), get_spacing(columns)).flatmap(constructor)
 
@@ -433,12 +436,12 @@ def get_blocks(
 
 
 def get_type_blocks(
-        min_rows=0,
-        max_rows=MAX_ROWS,
-        min_columns=0,
-        max_columns=MAX_COLUMNS,
-        dtype_group=DTGroup.ALL
-        ):
+        min_rows: int = 0,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 0,
+        max_columns: int = MAX_COLUMNS,
+        dtype_group: DTGroup = DTGroup.ALL
+        ) -> st.SearchStrategy:
     return st.builds(TypeBlocks.from_blocks,
             get_blocks(min_rows=min_rows,
                     max_rows=max_rows,
@@ -448,21 +451,21 @@ def get_type_blocks(
             )
 
 
-get_type_blocks_numeric = partial(get_type_blocks, dtype_group=DTGroup.NUMERIC)
+get_type_blocks_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_type_blocks, dtype_group=DTGroup.NUMERIC)
 get_type_blocks_numeric.__name__ = 'get_type_blocks_numeric'
 
 
 def get_type_blocks_aligned_array(
-        min_rows=0,
-        max_rows=MAX_ROWS,
-        min_columns=0,
-        max_columns=MAX_COLUMNS,
-        dtype_group=DTGroup.ALL
-        ):
+        min_rows: int = 0,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 0,
+        max_columns: int = MAX_COLUMNS,
+        dtype_group: DTGroup = DTGroup.ALL
+        ) -> st.SearchStrategy:
     '''
     Return TypeBlocks instance, as well as an array aligned by row size.
     '''
-    def constructor(shape):
+    def constructor(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
         rows, columns = shape
         return st.tuples(
                 get_type_blocks(
@@ -489,16 +492,16 @@ def get_type_blocks_aligned_array(
 def get_type_blocks_aligned_type_blocks(
         min_size: int = 0,
         max_size: int = MAX_ROWS,
-        min_rows=0,
-        max_rows=MAX_ROWS,
-        min_columns=0,
-        max_columns=MAX_COLUMNS,
-        dtype_group=DTGroup.ALL
-        ):
+        min_rows: int = 0,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 0,
+        max_columns: int = MAX_COLUMNS,
+        dtype_group: DTGroup = DTGroup.ALL
+        ) -> st.SearchStrategy:
     '''
     Return an iterable of TypeBlocks instances, all alligned by row count
     '''
-    def constructor(shape):
+    def constructor(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
         rows, columns = shape
         return st.lists(
                 get_type_blocks(
@@ -523,9 +526,9 @@ def get_type_blocks_aligned_type_blocks(
 def get_index(
         min_size: int = 0,
         max_size: int = MAX_ROWS,
-        dtype_group=None,
-        cls=Index
-        ):
+        dtype_group: tp.Optional[DTGroup] = None,
+        cls: tp.Type[Index] = Index
+        ) -> st.SearchStrategy:
     # using get_labels here forces Index construction from lists, rather than from arrays
     if dtype_group is not None:
         return st.builds(cls, get_array_1d(
@@ -536,14 +539,14 @@ def get_index(
                 ))
     return st.builds(cls, get_labels(min_size=min_size, max_size=max_size))
 
-get_index_date = partial(get_index, cls=IndexDate, dtype_group=DTGroup.DATE)
+get_index_date: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexDate, dtype_group=DTGroup.DATE)
 get_index_date.__name__ = 'get_index_date'
 
-get_index_year = partial(get_index, cls=IndexYear, dtype_group=DTGroup.YEAR)
+get_index_year: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexYear, dtype_group=DTGroup.YEAR)
 get_index_year.__name__ = 'get_index_year'
 
 
-get_index_go = partial(get_index, cls=IndexGO)
+get_index_go: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexGO)
 get_index_go.__name__ = 'get_index_go'
 
 
@@ -552,25 +555,25 @@ def get_index_hierarchy(
         max_size: int = MAX_ROWS,
         min_depth: int = 2,
         max_depth: int = 5,
-        dtype_group=None,
-        cls=IndexHierarchy.from_labels
-        ):
+        dtype_group: tp.Optional[DTGroup] = None,
+        cls: tp.Callable[..., IndexHierarchy] = IndexHierarchy.from_labels
+        ) -> st.SearchStrategy:
 
-    def constructor(labels_spacings):
+    def constructor(labels_spacings: tp.Tuple[tp.Sequence[tp.Sequence[str]], tp.Sequence[tp.Iterable[int]]]) -> st.SearchStrategy:
         # returns an iterable of labels
         labels_proto, spacings = labels_spacings
         depth = len(labels_proto)
         size = len(labels_proto[0])
 
         # update all labels (except the deepest) by repeating values a number of times, as determined by spacings
-        labels = [None for _ in range(depth)]
+        labels: tp.List[tp.Optional[tp.Sequence[str]]] = [None for _ in range(depth)]
         for d in range(depth):
             if d >= depth - 1:
                 labels[d] = labels_proto[d]
             else:
                 spacing = spacings[d]
 
-                def spans():
+                def spans() -> tp.Iterator[tp.Iterator[str]]:
                     idx = 0
                     for count in spacing:
                         if count == 0:
@@ -580,9 +583,9 @@ def get_index_hierarchy(
 
                 labels[d] = list(chain.from_iterable(spans()))
 
-        def label_gen():
+        def label_gen() -> tp.Iterator[tp.List[str]]:
             for i in range(size):
-                yield [labels[d][i] for d in range(depth)]
+                yield [tp.cast(tp.Sequence[str], labels[d])[i] for d in range(depth)]
 
         return st.builds(
                 cls,
@@ -590,7 +593,7 @@ def get_index_hierarchy(
                 )
 
     # generate depth-sized lists of candidate leabels and spacings
-    def get_labels_spacings(depth_size):
+    def get_labels_spacings(depth_size: tp.Tuple[int, int]) -> st.SearchStrategy:
         depth, size = depth_size
 
         if dtype_group is not None:
@@ -618,24 +621,29 @@ def get_index_hierarchy(
 def get_series(
         min_size: int = 0,
         max_size: int = MAX_ROWS,
-        cls=Series,
-        dtype_group=DTGroup.ALL,
-        index_cls=Index,
-        index_dtype_group=None
-        ):
+        cls: tp.Type[Series] = Series,
+        dtype_group: DTGroup = DTGroup.ALL,
+        index_cls: tp.Type[Index] = Index,
+        index_dtype_group: tp.Optional[DTGroup] = None
+        ) -> st.SearchStrategy:
 
-    def constructor(shape):
+    def constructor(shape: tp.Tuple[int]) -> st.SearchStrategy:
         size = shape[0] # tuple len 1
 
-        index_kwargs = dict(
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(
+                    cls=index_cls.from_labels,
                     min_size=size,
                     max_size=size,
-                    dtype_group=index_dtype_group)
-
-        if issubclass(index_cls, IndexHierarchy):
-            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
+                    dtype_group=index_dtype_group,
+            )
         else:
-            index = get_index(cls=index_cls, **index_kwargs)
+            index = get_index(
+                    cls=index_cls,
+                    min_size=size,
+                    max_size=size,
+                    dtype_group=index_dtype_group,
+            )
 
         return st.builds(cls,
             get_array_1d(
@@ -649,7 +657,7 @@ def get_series(
     return get_shape_1d(min_size=min_size, max_size=max_size).flatmap(constructor)
 
 # label index, values
-get_series_date_numeric = partial(get_series,
+get_series_date_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_series,
         dtype_group=DTGroup.NUMERIC,
         index_cls=IndexDate,
         index_dtype_group=DTGroup.DATE
@@ -657,7 +665,7 @@ get_series_date_numeric = partial(get_series,
 get_series_date_numeric.__name__ = 'get_series_date_numeric'
 
 # depth greater than 1 index
-get_series_str_dgt1_numeric = partial(get_series,
+get_series_str_dgt1_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_series,
         min_size=1,
         dtype_group=DTGroup.NUMERIC,
         index_cls=IndexHierarchy,
@@ -665,7 +673,7 @@ get_series_str_dgt1_numeric = partial(get_series,
         )
 get_series_str_dgt1_numeric.__name__ = 'get_series_str_dgt1_numeric'
 
-get_series_obj_dgt1_numeric = partial(get_series,
+get_series_obj_dgt1_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_series,
         min_size=1,
         dtype_group=DTGroup.NUMERIC,
         index_cls=IndexHierarchy,
@@ -678,44 +686,51 @@ get_series_obj_dgt1_numeric.__name__ = 'get_series_obj_dgt1_numeric'
 # frames
 
 def get_frame(
-        min_rows=1,
-        max_rows=MAX_ROWS,
-        min_columns=1,
-        max_columns=MAX_COLUMNS,
-        cls=Frame,
-        dtype_group=DTGroup.ALL,
-        index_cls=Index,
-        index_dtype_group=None,
-        columns_cls=Index,
-        columns_dtype_group=None
-        ):
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
+        cls: tp.Type[Frame] = Frame,
+        dtype_group: DTGroup = DTGroup.ALL,
+        index_cls: tp.Type[Index] = Index,
+        index_dtype_group: tp.Optional[DTGroup] = None,
+        columns_cls: tp.Type[Index] = Index,
+        columns_dtype_group: tp.Optional[DTGroup] = None
+        ) -> st.SearchStrategy:
 
-    def constructor(shape):
+    def constructor(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
 
         row_count, column_count = shape
 
-            # if issubclass(index_cls, IndexHierarchy):
-        index_kwargs = dict(
-                min_size=row_count,
-                max_size=row_count,
-                dtype_group=index_dtype_group,
-                )
+        if issubclass(index_cls, IndexHierarchy):
+            index = get_index_hierarchy(
+                    cls=index_cls.from_labels,
+                    min_size=row_count,
+                    max_size=row_count,
+                    dtype_group=index_dtype_group,
+            )
+        else:
+            index = get_index(
+                    cls=index_cls,
+                    min_size=row_count,
+                    max_size=row_count,
+                    dtype_group=index_dtype_group,
+            )
 
         if issubclass(index_cls, IndexHierarchy):
-            index = get_index_hierarchy(cls=index_cls.from_labels, **index_kwargs)
+            columns = get_index_hierarchy(
+                    cls=columns_cls.from_labels,
+                    min_size=column_count,
+                    max_size=column_count,
+                    dtype_group=columns_dtype_group,
+            )
         else:
-            index = get_index(cls=index_cls, **index_kwargs)
-
-        columns_kwargs = dict(
-                min_size=column_count,
-                max_size=column_count,
-                dtype_group=columns_dtype_group,
-                )
-
-        if issubclass(index_cls, IndexHierarchy):
-            columns = get_index_hierarchy(cls=columns_cls.from_labels, **columns_kwargs)
-        else:
-            columns = get_index(cls=columns_cls, **columns_kwargs)
+            columns = get_index(
+                    cls=columns_cls,
+                    min_size=column_count,
+                    max_size=column_count,
+                    dtype_group=columns_dtype_group,
+            )
 
         return st.builds(cls,
                 get_type_blocks(
@@ -733,7 +748,7 @@ def get_frame(
 
 
 # label index, columns, values
-get_frame_date_str_numeric = partial(get_frame,
+get_frame_date_str_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_frame,
         dtype_group=DTGroup.NUMERIC,
         index_cls=IndexDate,
         index_dtype_group=DTGroup.DATE,
@@ -743,13 +758,8 @@ get_frame_date_str_numeric = partial(get_frame,
 get_frame_date_str_numeric.__name__ = 'get_frame_date_str_numeric'
 
 
-
-
-get_frame_go = partial(get_frame, cls=FrameGO)
+get_frame_go: tp.Callable[..., st.SearchStrategy] = partial(get_frame, cls=FrameGO)
 get_frame_go.__name__ = 'get_frame_go'
-
-
-
 
 
 if __name__ == '__main__':
@@ -778,24 +788,3 @@ if __name__ == '__main__':
             print(HexColor.format_terminal('grey', '.' * 50))
             example = v().example()
             print(repr(example))
-
-
-
-
-
-
-
-
-
-
-
-# columns = st.integers(min_value=1, max_value=MAX_COLUMNS).example()
-
-# return st.lists(
-#         get_array_2d(min_columns=columns, max_columns=columns),
-#         min_size=min_size,
-#         max_size=max_size
-#         )
-
-
-

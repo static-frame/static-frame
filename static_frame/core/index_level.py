@@ -3,7 +3,7 @@
 import typing as tp
 from collections import deque
 
-import numpy as np
+import numpy as np  # type: ignore
 
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import Index
@@ -17,8 +17,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.index import LocMap
 from static_frame.core.util import resolve_dtype_iter
-
-
 
 
 class IndexLevel:
@@ -59,7 +57,7 @@ class IndexLevel:
 
     def to_index_level(self,
             offset: tp.Optional[int] = 0,
-            cls: tp.Type['IndexLevel'] = None,
+            cls: tp.Optional[tp.Type['IndexLevel']] = None,
             ) -> 'IndexLevel':
         '''
         A deepcopy with optional adjustments, such as a different offset and possibly a different class. The supplied class will be used to construct the IndexLevel instance (as well as internal indices), permitting the production of an IndexLevelGO.
@@ -72,7 +70,7 @@ class IndexLevel:
         index = cls._INDEX_CONSTRUCTOR(self.index)
 
         if self.targets is not None:
-            targets = ArrayGO(
+            targets: tp.Optional[ArrayGO] = ArrayGO(
                 [t.to_index_level(offset=None, cls=cls) for t in self.targets],
                 own_iterable=True)
         else:
@@ -140,6 +138,8 @@ class IndexLevel:
                 node.index.loc_to_iloc(k)
                 return True # if above does not raise
 
+        return False
+
     def iter(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
         '''Given a depth position, return labels at that depth.
         '''
@@ -175,10 +175,17 @@ class IndexLevel:
                 node = node.targets[node.index.loc_to_iloc(k)]
                 pos += node.offset
             else: # targets is None, meaning we are done
-                # assume that k returns an integer
-                return pos + node.index.loc_to_iloc(k)
 
-    def loc_to_iloc(self, key: GetItemKeyType) -> GetItemKeyType:
+                # assume that k returns an integer
+                offset = node.index.loc_to_iloc(k)
+                assert isinstance(offset, INT_TYPES)
+
+                return pos + offset
+
+        raise ValueError('Invalid key length.')
+
+    from static_frame.core.util import GetItemKeyTypeCompound
+    def loc_to_iloc(self, key: GetItemKeyTypeCompound) -> GetItemKeyType:
         '''
         This is the low-level loc_to_iloc, analagous to LocMap.loc_to_iloc as used by Index. As such, the key at this point should not be a Series or Index object.
 
@@ -196,6 +203,7 @@ class IndexLevel:
 
         if not isinstance(key, HLoc):
             # assume it is a leaf loc tuple
+            assert isinstance(key, tuple)
             return self.leaf_loc_to_iloc(key)
 
         # everything after this is an HLoc
@@ -241,17 +249,18 @@ class IndexLevel:
             return ilocs[0]
 
         # NOTE: might be able to combine contiguous ilocs into a single slice
-        iloc = [] # combine into one flat iloc
+        iloc_flat: tp.List[GetItemKeyType] = [] # combine into one flat iloc
         length = self.__len__()
         for part in ilocs:
             if isinstance(part, slice):
-                iloc.extend(range(*part.indices(length)))
+                iloc_flat.extend(range(*part.indices(length)))
             # just look for ints
             elif isinstance(part, INT_TYPES):
-                iloc.append(part)
+                iloc_flat.append(part)
             else: # assume it is an iterable
-                iloc.extend(part)
-        return iloc
+                assert part is not None
+                iloc_flat.extend(part)
+        return iloc_flat
 
     def get_labels(self) -> np.ndarray:
         '''
@@ -307,7 +316,7 @@ class IndexLevelGO(IndexLevel):
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def extend(self, level: IndexLevel):
+    def extend(self, level: IndexLevel) -> None:
         # assert isinstance(level, IndexLevelGO)
 
         depth = next(self.depths())
@@ -317,18 +326,19 @@ class IndexLevelGO(IndexLevel):
         # this will raise for duplicates
         self.index.extend(level.index.values)
 
-        def target_gen():
+        def target_gen() -> tp.Iterator[GetItemKeyType]:
             offset_prior = self.__len__()
+            assert level.targets is not None
             for t in level.targets:
                 # only need to update offsets at this level, as lower levels are relative to this
                 target = t.to_index_level(offset_prior, cls=self.__class__)
                 offset_prior += len(target)
                 yield target
 
+        assert self.targets is not None
         self.targets.extend(target_gen())
 
-
-    def append(self, key: tuple):
+    def append(self, key: tp.Sequence[tp.Hashable]) -> None:
         '''Add a single, full-depth leaf loc.
         '''
         # find fist depth that does not contain key
@@ -364,6 +374,7 @@ class IndexLevelGO(IndexLevel):
 
                 # if we have targets, must update them
                 if node.targets is not None:
+                    assert level_previous is not None
                     level_previous.offset = node.__len__()
                     node.targets.append(level_previous)
 
