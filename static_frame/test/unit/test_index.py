@@ -494,13 +494,29 @@ class TestUnit(TestCase):
                 ((np.datetime64('2018-01-28'), 58), (np.datetime64('2018-01-29'), 59), (np.datetime64('2018-01-30'), 60), (np.datetime64('2018-01-31'), 61))
                 )
 
-        # import ipdb; ipdb.set_trace()
 
     def test_index_year_month_a(self) -> None:
         idx1 = IndexYearMonth(('2018-01', '2018-06'))
 
         self.assertEqual(idx1.values.tolist(),
             [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)])
+
+
+    def test_index_year_month_b(self) -> None:
+        idx1 = IndexYearMonth(('2017-12', '2018-01', '2018-02', '2018-03', '2018-04'))
+
+        post1 = idx1.loc[np.datetime64('2018-02'):]
+        self.assertEqual(
+                post1.values.tolist(),
+                [datetime.date(2018, 2, 1), datetime.date(2018, 3, 1), datetime.date(2018, 4, 1)]
+                )
+
+        # a year datetime64
+        post2 = idx1.loc[np.datetime64('2018'):]
+        self.assertEqual(
+                post2.values.tolist(),
+                [datetime.date(2018, 1, 1), datetime.date(2018, 2, 1), datetime.date(2018, 3, 1), datetime.date(2018, 4, 1)]
+                )
 
 
     def test_index_year_month_from_date_range_a(self) -> None:
