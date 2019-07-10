@@ -722,7 +722,7 @@ class TestUnit(TestCase):
         a2 = np.array([1,2,3]).reshape((1,3))
 
         with self.assertRaises(Exception):
-            concat_resolved((a1, a2), axis=None)
+            concat_resolved((a1, a2), axis=None)  # type: ignore
 
 
     def test_dtype_to_na_a(self) -> None:
@@ -1174,4 +1174,3 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

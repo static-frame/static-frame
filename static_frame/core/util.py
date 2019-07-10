@@ -14,12 +14,16 @@ from urllib import request
 import tempfile
 from functools import reduce
 
-import numpy as np
+import numpy as np  # type: ignore
 
 
 if tp.TYPE_CHECKING:
 
     from static_frame.core.index_base import IndexBase
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+    from static_frame.core.frame import Frame
+    from static_frame.core.frame import FrameAsType
 
 
 # handle nan in object blocks with skipna processing on ufuncs
@@ -104,13 +108,13 @@ BOOL_TYPES = (bool, np.bool_)
 
 # some platforms do not have float128
 if hasattr(np, 'float128'):
-    FLOAT_TYPES = (float, np.float64, np.float16, np.float32, np.float128)
+    FLOAT_TYPES: tp.Tuple[type, ...] = (float, np.float64, np.float16, np.float32, np.float128)
 else:
     FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
 
 # some platforms do not have complex256
 if hasattr(np, 'complex256'):
-    COMPLEX_TYPES  = (complex, np.complex128, np.complex64, np.complex256)
+    COMPLEX_TYPES: tp.Tuple[type, ...]  = (complex, np.complex128, np.complex64, np.complex256)
 else:
     COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
 
@@ -139,12 +143,12 @@ GetItemKeyType = tp.Union[
 GetItemKeyTypeCompound = tp.Union[
         tp.Tuple[tp.Any, ...], int, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
-UFunc = tp.Callable[[np.ndarray, int, np.dtype], np.ndarray]
+UFunc = tp.Callable[[np.ndarray], np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any]]
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
-FilePathOrFileLike = tp.Union[str, StringIO, BytesIO]
+FilePathOrFileLike = tp.Union[str, tp.TextIO]
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
@@ -190,7 +194,7 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
     '''
-    return array.__array_interface__['data'][0]
+    return tp.cast(int, array.__array_interface__['data'][0])
 
 
 def immutable_filter(src_array: np.ndarray) -> np.ndarray:
@@ -234,7 +238,7 @@ def _gen_skip_middle(
         forward_count: int,
         reverse_iter: CallableToIterType,
         reverse_count: int,
-        center_sentinel: tp.Any) -> tp.Generator:
+        center_sentinel: tp.Any) -> tp.Iterator[tp.Any]:
     '''
     Provide a generator to yield the count values from each side.
     '''
@@ -304,7 +308,7 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     # if not a string or an object, can use result type
     return np.result_type(dt1, dt2)
 
-def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
+def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]) -> np.dtype:
     '''Given an iterable of one or more dtypes, do pairwise comparisons to determine compatible overall type. Once we get to object we can stop checking and return object.
 
     Args:
@@ -323,7 +327,7 @@ def resolve_dtype_iter(dtypes: tp.Iterable[np.dtype]):
 
 def concat_resolved(
         arrays: tp.Iterable[np.ndarray],
-        axis=0):
+        axis: int = 0) -> np.ndarray:
     '''
     Concatenation of 2D arrays that uses resolved dtypes to avoid truncation.
 
@@ -367,7 +371,7 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def dtype_to_na(dtype: DtypeSpecifier):
+def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
@@ -398,7 +402,7 @@ def ufunc_skipna_1d(*,
         array: np.ndarray,
         skipna: bool,
         ufunc: UFunc,
-        ufunc_skipna: UFunc):
+        ufunc_skipna: UFunc) -> np.ndarray:
     '''For one dimensional ufunc array application. Expected to always reduce to single element.
     '''
     if array.dtype.kind == 'O':
@@ -422,7 +426,7 @@ def ufunc_skipna_1d(*,
 def ufunc_unique(
         array: np.ndarray,
         axis: tp.Optional[int] = None
-        ) -> tp.Union[frozenset, np.ndarray]:
+        ) -> tp.Union[tp.FrozenSet[tp.Any], np.ndarray]:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
     '''
@@ -450,7 +454,7 @@ def ufunc_unique(
     return np.unique(array, axis=axis)
 
 
-def roll_1d(array, shift: int) -> np.ndarray:
+def roll_1d(array: np.ndarray, shift: int) -> np.ndarray:
     '''
     Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
     '''
@@ -473,7 +477,7 @@ def roll_1d(array, shift: int) -> np.ndarray:
     return post
 
 
-def roll_2d(array, shift: int, axis: int) -> np.ndarray:
+def roll_2d(array: np.ndarray, shift: int, axis: int) -> np.ndarray:
     '''
     Specialized form of np.roll that, by focusing on the 2D solution
     '''
@@ -558,7 +562,7 @@ def resolve_type(
     return object, is_tuple
 
 
-def is_gen_copy_values(values) -> tp.Tuple[bool, bool]:
+def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
     '''
     Returns:
         copy_values: True if values cannot be used in an np.array constructor.
@@ -576,7 +580,7 @@ def is_gen_copy_values(values) -> tp.Tuple[bool, bool]:
 
 def resolve_type_iter(
         values: tp.Iterable[tp.Any]
-        ) -> tp.Tuple[DtypeSpecifier, bool, tp.Iterable[tp.Any]]:
+        ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
@@ -586,8 +590,10 @@ def resolve_type_iter(
 
     is_gen, copy_values = is_gen_copy_values(values)
 
-    if not is_gen and len(values) == 0:
-        return None, False, values
+    if not is_gen:
+        values = tp.cast(tp.Sequence[tp.Any], values)
+        if len(values) == 0:
+            return None, False, values
 
     v_iter = iter(values)
     if copy_values:
@@ -625,7 +631,7 @@ def resolve_type_iter(
     if copy_values:
         return resolved, has_tuple, values_post
 
-    return resolved, has_tuple, values
+    return resolved, has_tuple, tp.cast(tp.Sequence[tp.Any], values)
 
 
 def iterable_to_array(
@@ -663,7 +669,7 @@ def iterable_to_array(
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
         else:
-            values_for_construct = values
+            values_for_construct = tp.cast(tp.Sequence[tp.Any], values)
 
         if len(values_for_construct) == 0:
             # dtype was given, return an empty array with that dtype
@@ -775,7 +781,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(operator.add,
         (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
-def _slice_to_datetime_slice_args(key: slice, dtype=None):
+def _slice_to_datetime_slice_args(key: slice, dtype: tp.Optional[np.dtype] = None) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
     '''
@@ -788,7 +794,7 @@ def _slice_to_datetime_slice_args(key: slice, dtype=None):
 
 def key_to_datetime_key(
         key: GetItemKeyType,
-        dtype=np.datetime64) -> GetItemKeyType:
+        dtype: np.dtype = np.datetime64) -> GetItemKeyType:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''
@@ -811,7 +817,7 @@ def key_to_datetime_key(
         return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like
-        return np.array(tuple(key), dtype=dtype)
+        return np.array(tuple(tp.cast(tp.Iterator[tp.Any], key)), dtype=dtype)
 
     # for now, return key unaltered
     return key
@@ -836,7 +842,7 @@ def key_to_datetime_key(
 
 def array_to_groups_and_locations(
         array: np.ndarray,
-        unique_axis: int = 0):
+        unique_axis: int = 0) -> tp.Tuple[np.ndarray, np.ndarray]:
     '''Locations are index positions for each group.
     '''
     try:
@@ -862,11 +868,11 @@ def isna_element(value: tp.Any) -> bool:
     '''
 
     try:
-        return np.isnan(value)
+        return tp.cast(bool, np.isnan(value))
     except TypeError:
         pass
     try:
-        return np.isnat(value)
+        return tp.cast(bool,np.isnat(value))
     except TypeError:
         pass
 
@@ -937,8 +943,8 @@ def binary_transition(array: np.ndarray) -> np.ndarray:
 def array_to_duplicated(
         array: np.ndarray,
         axis: int = 0,
-        exclude_first=False,
-        exclude_last=False):
+        exclude_first: bool = False,
+        exclude_last: bool = False) -> np.ndarray:
     '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
 
     Args:
@@ -1008,7 +1014,7 @@ def array_shift(array: np.ndarray,
         shift: int,
         axis: int, # 0 is rows, 1 is columns
         wrap: bool,
-        fill_value=np.nan) -> np.ndarray:
+        fill_value: tp.Any = np.nan) -> np.ndarray:
     '''
     Apply an np-style roll to an array; if wrap is False, fill values out-shifted values with fill_value.
 
@@ -1052,7 +1058,7 @@ def array_shift(array: np.ndarray,
 
 def array_set_ufunc_many(
         arrays: tp.Iterable[np.ndarray],
-        union: bool = False):
+        union: bool = False) -> np.ndarray:
     '''
     Iteratively apply a set operation unfunc to a arrays; if all are equal, no operation is performed and order is retained.
 
@@ -1087,14 +1093,14 @@ def array_set_ufunc_many(
 
     return result
 
-def array2d_to_tuples(array: np.ndarray) -> tp.Generator[tp.Tuple, None, None]:
+def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     for row in array: # assuming 2d
         yield tuple(row)
 
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
-def union1d(array: np.ndarray, other: np.ndarray):
+def union1d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KIND
@@ -1137,9 +1143,9 @@ def intersect1d(
     return np.intersect1d(array, other)
 
 def set_ufunc2d(
-        func: tp.Callable[[np.ndarray], np.ndarray],
+        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
-        other: np.ndarray):
+        other: np.ndarray) -> np.ndarray:
     '''
     Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
     '''
@@ -1181,7 +1187,7 @@ def intersect2d(array: np.ndarray,
         other: np.ndarray) -> np.ndarray:
     return set_ufunc2d(np.intersect1d, array, other)
 
-def union2d(array, other) -> np.ndarray:
+def union2d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
     return set_ufunc2d(np.union1d, array, other)
 
 
@@ -1189,9 +1195,9 @@ def union2d(array, other) -> np.ndarray:
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
-def _read_url(fp: str):
+def _read_url(fp: str) -> str:
     with request.urlopen(fp) as response:
-        return response.read().decode('utf-8')
+        return tp.cast(str, response.read().decode('utf-8'))
 
 
 def write_optional_file(
@@ -1202,14 +1208,15 @@ def write_optional_file(
     fd = f = None
     if not fp: # get a temp file
         fd, fp = tempfile.mkstemp(suffix='.html', text=True)
-    elif isinstance(fp, (StringIO, BytesIO)):
+    elif isinstance(fp, StringIO):
         f = fp
         fp = None
     # nothing to do if we have an fp
 
     if f is None: # do not have a file object
         try:
-            with open(fp, 'w') as f:
+            assert isinstance(fp, str)
+            with tp.cast(StringIO, open(fp, 'w')) as f:
                 f.write(content)
         finally:
             if fd is not None:
@@ -1217,7 +1224,7 @@ def write_optional_file(
     else: # string IO
         f.write(content)
         f.seek(0)
-    return fp
+    return tp.cast(str, fp)
 
 #-------------------------------------------------------------------------------
 
@@ -1236,22 +1243,22 @@ def write_optional_file(
 
 
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame')
+GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
 
 #TODO: rename InterfaceGetItem
 class GetItem(tp.Generic[TContainer]):
+
     __slots__ = ('_func',)
 
-    def __init__(self,
-            func: tp.Callable[[GetItemKeyType], TContainer]
-            ) -> None:
-        self._func = func
+    def __init__(self, func: GetItemFunc) -> None:
+        self._func: tp.Callable[[GetItemKeyType], TContainer] = func
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:
         return self._func(key)
 
 #-------------------------------------------------------------------------------
 
-class InterfaceSelection1D:
+class InterfaceSelection1D(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc and loc
     '''
 
@@ -1261,24 +1268,24 @@ class InterfaceSelection1D:
             )
 
     def __init__(self, *,
-            func_iloc: str,
-            func_loc: str) -> None:
+            func_iloc: GetItemFunc,
+            func_loc: GetItemFunc) -> None:
 
         self._func_iloc = func_iloc
         self._func_loc = func_loc
 
     @property
-    def iloc(self) -> GetItem:
+    def iloc(self) -> GetItem[TContainer]:
         return GetItem(self._func_iloc)
 
     @property
-    def loc(self) -> GetItem:
+    def loc(self) -> GetItem[TContainer]:
         return GetItem(self._func_loc)
 
 
 #-------------------------------------------------------------------------------
 
-class InterfaceSelection2D:
+class InterfaceSelection2D(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -1289,23 +1296,23 @@ class InterfaceSelection2D:
             )
 
     def __init__(self, *,
-            func_iloc: str,
-            func_loc: str,
-            func_getitem: str) -> None:
+            func_iloc: GetItemFunc,
+            func_loc: GetItemFunc,
+            func_getitem: GetItemFunc) -> None:
 
         self._func_iloc = func_iloc
         self._func_loc = func_loc
         self._func_getitem = func_getitem
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: GetItemKeyType) -> tp.Any:
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> GetItem:
+    def iloc(self) -> GetItem[TContainer]:
         return GetItem(self._func_iloc)
 
     @property
-    def loc(self) -> GetItem:
+    def loc(self) -> GetItem[TContainer]:
         return GetItem(self._func_loc)
 
 #-------------------------------------------------------------------------------
@@ -1323,10 +1330,10 @@ class InterfaceAsType:
         '''
         self._func_getitem = func_getitem
 
-    def __getitem__(self, key) -> 'FrameAsType':
+    def __getitem__(self, key: GetItemKeyType) -> 'FrameAsType':
         return self._func_getitem(key)
 
-    def __call__(self, dtype):
+    def __call__(self, dtype: np.dtype) -> 'Frame':
         return self._func_getitem(NULL_SLICE)(dtype)
 
 
@@ -1349,8 +1356,8 @@ class IndexCorrespondence:
 
     has_common: bool
     is_subset: bool
-    iloc_src: tp.Iterable[int]
-    iloc_dst: tp.Iterable[int]
+    iloc_src: GetItemKeyType
+    iloc_dst: GetItemKeyType
     size: int
 
     @classmethod
@@ -1428,8 +1435,8 @@ class IndexCorrespondence:
     def __init__(self,
             has_common: bool,
             is_subset: bool,
-            iloc_src: tp.Iterable[int],
-            iloc_dst: tp.Iterable[int],
+            iloc_src: GetItemKeyType,
+            iloc_dst: GetItemKeyType,
             size: int) -> None:
         '''
         Args:
@@ -1445,12 +1452,11 @@ class IndexCorrespondence:
         self.iloc_dst = iloc_dst
         self.size = size
 
-    def iloc_src_fancy(self):
+    def iloc_src_fancy(self) -> tp.List[tp.List[int]]:
         '''
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
-        return [[x] for x in self.iloc_src]
-
+        return [[x] for x in tp.cast(tp.Iterable[int], self.iloc_src)]
 
 
 
