@@ -103,7 +103,8 @@ UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 #-------------------------------------------------------------------------------
 # utility type groups
 
-INT_TYPES = (int, np.int64, np.int32, np)
+INT_TYPES = (int, np.int_) # NOTE: this does not cover all NP int types; use np.integer check
+
 BOOL_TYPES = (bool, np.bool_)
 
 # some platforms do not have float128
@@ -543,8 +544,10 @@ def resolve_type(
     # normalize NP types to python types
     if issubclass(value_type, np.integer):
         value_type = int
-    elif issubclass(value_type, np.float):
+    elif issubclass(value_type, np.floating):
         value_type = float
+    elif issubclass(value_type, np.complexfloating):
+        value_type = complex
     elif value_type == tuple:
         is_tuple = True
 
