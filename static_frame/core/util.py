@@ -103,7 +103,7 @@ UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 #-------------------------------------------------------------------------------
 # utility type groups
 
-INT_TYPES = (int, np.int_)
+INT_TYPES = (int, np.int64, np.int32, np)
 BOOL_TYPES = (bool, np.bool_)
 
 # some platforms do not have float128
@@ -538,13 +538,15 @@ def resolve_type(
 
     value_type = type(value)
 
-    # normalize NP types to python types
-    if value_type == np.int_:
-        value_type = int
-    elif value_type == np.float_:
-        value_type = float
+    is_tuple = False
 
-    is_tuple = value_type == tuple
+    # normalize NP types to python types
+    if issubclass(value_type, np.integer):
+        value_type = int
+    elif issubclass(value_type, np.float):
+        value_type = float
+    elif value_type == tuple:
+        is_tuple = True
 
     # anything that gets converted to object
     if is_tuple:
@@ -617,7 +619,7 @@ def resolve_type_iter(
         values_post = []
 
     resolved = None
-    for i, v in enumerate(v_iter):
+    for i, v in enumerate(v_iter, start=1):
         if copy_values:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
