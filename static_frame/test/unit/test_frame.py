@@ -546,6 +546,17 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_iter_array_e(self) -> None:
+
+        f = sf.Frame.from_dict(
+                dict(diameter=(12756, 6792, 142984),
+                mass=(5.97, 0.642, 1898)),
+                index=('Earth', 'Mars', 'Jupiter'),
+                dtypes=dict(diameter=np.int64))
+
+        post = f.iter_array(axis=0).apply(np.sum)
+        self.assertTrue(post.dtype == float)
+
 
     def test_frame_setitem_a(self) -> None:
 

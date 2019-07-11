@@ -533,6 +533,13 @@ def resolve_type(
         raise RuntimeError('already resolved to object')
 
     value_type = type(value)
+
+    # normalize NP types to python types
+    if value_type == np.int_:
+        value_type = int
+    elif value_type == np.float_:
+        value_type = float
+
     is_tuple = value_type == tuple
 
     # anything that gets converted to object

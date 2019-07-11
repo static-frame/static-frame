@@ -127,6 +127,13 @@ class TestUnit(TestCase):
             (np.datetime64('1970-01-01T00:00:02'), 2),
             (np.datetime64('1970-01-01T00:00:03'), 3)))
 
+    def test_series_init_i(self) -> None:
+        s1 = Series((3, 4, 'a'))
+        self.assertEqual(s1.values.tolist(),
+                [3, 4, 'a']
+                )
+
+
     def test_series_slice_a(self) -> None:
         # create a series from a single value
         # s0 = Series(3, index=('a',))

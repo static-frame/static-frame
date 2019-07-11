@@ -27,6 +27,8 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import binary_transition
+from static_frame.core.util import iterable_to_array
+
 
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
@@ -197,32 +199,37 @@ class Series(metaclass=MetaOperatorDelegate):
                 index = []
                 def values_gen():
                     for k, v in values.items():
-                    # for k, v in _dict_to_sorted_items(values):
                         # populate index as side effect of iterating values
                         index.append(k)
                         yield v
 
-                if dtype and dtype != object:
-                    # fromiter does not work with object types
-                    self.values = np.fromiter(values_gen(),
-                            dtype=dtype,
-                            count=len(values))
-                else:
-                    self.values = np.array(tuple(values_gen()), dtype=dtype)
-                self.values.flags.writeable = False
+                self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
 
-            # NOTE: not sure if we need to check __iter__ here
-            elif (dtype and dtype != object and dtype != str
-                    and hasattr(values, '__iter__')
-                    and hasattr(values, '__len__')):
-                self.values = np.fromiter(values, dtype=dtype, count=len(values))
-                self.values.flags.writeable = False
-            elif hasattr(values, '__len__') and not isinstance(values, str):
-                self.values = np.array(values, dtype=dtype)
-                self.values.flags.writeable = False
-            elif hasattr(values, '__next__'): # a generator-like
-                self.values = np.array(tuple(values), dtype=dtype)
-                self.values.flags.writeable = False
+                # if dtype and dtype != object:
+                #     # fromiter does not work with object types
+                #     self.values = np.fromiter(values_gen(),
+                #             dtype=dtype,
+                #             count=len(values))
+                # else:
+                #     self.values = np.array(tuple(values_gen()), dtype=dtype)
+                # self.values.flags.writeable = False
+
+            elif hasattr(values, '__iter__') and not isinstance(values, str):
+                # returned array is already immutable
+                self.values, _ = iterable_to_array(values, dtype=dtype)
+
+            # elif (dtype and dtype != object and dtype != str
+            #         and hasattr(values, '__iter__')
+            #         and hasattr(values, '__len__')):
+            #     self.values = np.fromiter(values, dtype=dtype, count=len(values))
+            #     self.values.flags.writeable = False
+            # elif hasattr(values, '__len__') and not isinstance(values, str):
+            #     self.values = np.array(values, dtype=dtype)
+            #     self.values.flags.writeable = False
+            # elif hasattr(values, '__next__'): # a generator-like
+            #     self.values = np.array(tuple(values), dtype=dtype)
+            #     self.values.flags.writeable = False
+
             else: # it must be a single item
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape):
