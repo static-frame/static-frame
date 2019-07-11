@@ -65,12 +65,14 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
+
     from static_frame import Frame
     from pandas import DataFrame
 
+
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
-class Series(SupportsOps, tp.Mapping[tp.Hashable, tp.Any], metaclass=MetaOperatorDelegate):
+class Series(SupportsOps, metaclass=MetaOperatorDelegate):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
 

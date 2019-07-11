@@ -148,7 +148,7 @@ GetItemKeyTypeCompound = tp.Union[
 UFunc = tp.Callable[[np.ndarray], np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
-CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any]]
+CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, tp.TextIO]
 
