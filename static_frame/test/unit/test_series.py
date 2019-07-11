@@ -7,6 +7,7 @@ from io import StringIO
 import string
 import hashlib
 import pickle
+import typing as tp
 from io import StringIO
 
 import numpy as np  # type: ignore
@@ -117,7 +118,7 @@ class TestUnit(TestCase):
 
     def test_series_init_g(self) -> None:
         with self.assertRaises(RuntimeError):
-            s1 = Series(range(4), own_index=True, index=None)
+            s1 = Series(range(4), own_index=True, index=None)  # type: ignore
 
     def test_series_init_h(self) -> None:
         s1 = Series(range(4), index_constructor=IndexSecond)
@@ -663,7 +664,7 @@ class TestUnit(TestCase):
 
     def test_series_from_items_a(self) -> None:
 
-        def gen():
+        def gen() -> tp.Iterator[tp.Tuple[int, int]]:
             r1 = range(10)
             r2 = iter(range(10, 20))
             for x in r1:
@@ -1079,7 +1080,7 @@ class TestUnit(TestCase):
         self.assertEqual(s2.unique().tolist(), ['b', 'c'])
 
 
-    def test_series_unique_a(self) -> None:
+    def test_series_unique_b(self) -> None:
         s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
 
         self.assertEqual(s1.unique().tolist(), [2, 10])
@@ -1529,7 +1530,7 @@ class TestUnit(TestCase):
 
         s1 = Series((2, 3, 4), index=list('abc'), name='alt')
         with self.assertRaises(NotImplementedError):
-            s1.to_frame(axis=None)
+            s1.to_frame(axis=None)  # type: ignore
 
 
     def test_series_to_frame_go_a(self) -> None:

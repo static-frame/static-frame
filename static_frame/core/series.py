@@ -66,6 +66,7 @@ from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame
+    from pandas import DataFrame
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
@@ -86,7 +87,7 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
             )
 
     sum: tp.Callable[['Series'], tp.Any]
-    values: tp.Sequence[tp.Any]
+    values: np.ndarray
 
     @classmethod
     def from_items(cls,
@@ -94,7 +95,7 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
             *,
             dtype: DtypeSpecifier = None,
             name: tp.Hashable = None,
-            index_constructor: tp.Optional[IndexBase] = None
+            index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
 
@@ -177,7 +178,7 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
             index: IndexInitializer = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
-            index_constructor: tp.Optional[IndexBase] = None,
+            index_constructor: tp.Optional[tp.Type[IndexBase]] = None,
             own_index: bool = False
             ) -> None:
         # doc string at class definition
@@ -1105,7 +1106,7 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
         '''
         return zip(self._index.values, self.values)
 
-    def get(self, key, default=None):
+    def get(self, key: tp.Hashable, default=None) -> tp.Any:
         '''
         Return the value found at the index key, else the default if the key is not found.
         '''
@@ -1210,9 +1211,9 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
         return self.__class__(duplicates, index=self._index)
 
     def drop_duplicated(self,
-            exclude_first=False,
-            exclude_last=False
-            ):
+            exclude_first: bool = False,
+            exclude_last: bool = False
+            ) -> 'Series':
         '''
         Return a Series with duplicated values removed.
         '''
@@ -1385,7 +1386,7 @@ class Series(SupportsOps, metaclass=MetaOperatorDelegate):
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis)
 
-    def to_pandas(self):
+    def to_pandas(self) -> 'DataFrame':
         '''
         Return a Pandas Series.
         '''

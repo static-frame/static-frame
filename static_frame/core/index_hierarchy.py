@@ -31,7 +31,7 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
-from static_frame.core.operator_delegate import SupportsOps
+from static_frame.core.operator_delegate import SupportsOpsIndex
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.display import DisplayConfig
@@ -50,8 +50,18 @@ from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
 
 
+if tp.TYPE_CHECKING:
+
+    from pandas import DataFrame
+
+    from static_frame.core.frame import Frame
+
+
+IH = tp.TypeVar('IH', bound='IndexHierarchy')
+
+
 #-------------------------------------------------------------------------------
-class IndexHierarchy(IndexBase, SupportsOps,
+class IndexHierarchy(IndexBase, SupportsOpsIndex,
         metaclass=MetaOperatorDelegate):
     '''
     A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
@@ -68,10 +78,15 @@ class IndexHierarchy(IndexBase, SupportsOps,
     _levels: IndexLevel
     _lables: np.ndarray
     _depth: int
-    _leys: KeysView
+    _keys: KeysView
     _length: int
     _recache: bool
     _name: tp.Hashable
+
+    # Temporary type overrides, until indices are generic.
+    __getitem__: tp.Callable[['IndexHierarchy', tp.Hashable], tp.Tuple[tp.Hashable, ...]]
+    __iter__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
+    __reversed__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -86,10 +101,10 @@ class IndexHierarchy(IndexBase, SupportsOps,
     # constructors
 
     @classmethod
-    def from_product(cls,
+    def from_product(cls: tp.Type[IH],
             *levels,
             name: tp.Hashable = None
-            ) -> 'IndexHierarchy': # tp.Iterable[tp.Hashable]
+            ) -> IH: # tp.Iterable[tp.Hashable]
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
@@ -159,11 +174,11 @@ class IndexHierarchy(IndexBase, SupportsOps,
 
 
     @classmethod
-    def from_tree(cls,
+    def from_tree(cls: tp.Type[IH],
             tree,
             *,
             name: tp.Hashable = None
-            ) -> 'IndexHierarchy':
+            ) -> IH:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
 
@@ -174,11 +189,11 @@ class IndexHierarchy(IndexBase, SupportsOps,
 
 
     @classmethod
-    def from_labels(cls,
+    def from_labels(cls: tp.Type[IH],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
             name: tp.Hashable = None
-            ) -> 'IndexHierarchy':
+            ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
@@ -406,7 +421,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self, name: tp.Hashable) -> 'Index':
+    def rename(self: IH, name: tp.Hashable) -> IH:
         '''
         Return a new Frame with an updated name attribute.
         '''
@@ -526,7 +541,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
 
     #---------------------------------------------------------------------------
 
-    def copy(self) -> 'IndexHierarchy':
+    def copy(self: IH) -> IH:
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''
@@ -578,7 +593,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
         # if an HLoc, will pass on to loc_to_iloc
         return self._levels.loc_to_iloc(key)
 
-    def _extract_iloc(self, key) -> 'IndexHierarchy':
+    def _extract_iloc(self, key) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key
         '''
         if self._recache:
@@ -603,10 +618,10 @@ class IndexHierarchy(IndexBase, SupportsOps,
 
         return self.__class__.from_labels(labels=labels)
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
+    def _extract_loc(self, key: GetItemKeyType) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         return self._extract_iloc(self.loc_to_iloc(key))
 
-    def __getitem__(self, key: GetItemKeyType) -> 'IndexHierarchy':
+    def __getitem__(self, key: GetItemKeyType) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -680,7 +695,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
         # levels only, no need to recache as this is what has been mutated
         return self._levels.__contains__(value)
 
-    def get(self, key, default=None):
+    def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
         '''
         Return the value found at the index key, else the default if the key is not found.
         '''
@@ -715,7 +730,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
     #---------------------------------------------------------------------------
     # export
 
-    def to_frame(self):
+    def to_frame(self) -> 'Frame':
         '''
         Return the index as a Frame.
         '''
@@ -724,14 +739,14 @@ class IndexHierarchy(IndexBase, SupportsOps,
                 columns=range(self._depth),
                 index=None)
 
-    def to_pandas(self):
+    def to_pandas(self) -> 'DataFrame':
         '''Return a Pandas MultiIndex.
         '''
         # NOTE: cannot set name attribute via from_tuples
         import pandas
         return pandas.MultiIndex.from_tuples(list(map(tuple, self.__iter__())))
 
-    def flat(self):
+    def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
         return self._INDEX_CONSTRUCTOR(array2d_to_tuples(self.__iter__()))
@@ -750,7 +765,7 @@ class IndexHierarchy(IndexBase, SupportsOps,
                 )
         return self.__class__(levels)
 
-    def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHieararchy']:
+    def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
         '''
 
@@ -840,7 +855,7 @@ class IndexHierarchyGO(IndexHierarchy):
         self._levels.extend(other._levels)
         self._recache = True
 
-    def copy(self) -> 'IndexHierarchy':
+    def copy(self: IH) -> IH:
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''

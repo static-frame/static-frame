@@ -16,6 +16,9 @@ from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_BOOL
 
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.index_base import IndexBase
+
 T = tp.TypeVar('T')
 
 
@@ -282,15 +285,71 @@ class SupportsOps:
     __rtruediv__: tp.Callable[[T, object], T]
     __rfloordiv__: tp.Callable[[T, object], T]
 
-    all: tp.Callable[[T], bool]
-    any: tp.Callable[[T], bool]
-    sum: tp.Callable[[T], tp.Any]
-    min: tp.Callable[[T], tp.Any]
-    max: tp.Callable[[T], tp.Any]
-    mean: tp.Callable[[T], tp.Any]
-    median: tp.Callable[[T], tp.Any]
-    std: tp.Callable[[T], tp.Any]
-    var: tp.Callable[[T], tp.Any]
-    prod: tp.Callable[[T], tp.Any]
-    cumsum: tp.Callable[[T], T]
-    cumprod: tp.Callable[[T], T]
+    def all(self, axis: int = 0, skipna: bool = True) -> bool:
+        raise NotImplementedError()
+
+    def any(self, axis: int = 0, skipna: bool = True) -> bool:
+        raise NotImplementedError()
+
+    def sum(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def min(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def max(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def mean(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def median(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def std(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def var(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def prod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def cumsum(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+    def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
+        raise NotImplementedError()
+
+
+class SupportsOpsIndex(SupportsOps):
+
+    __pos__: tp.Callable[['IndexBase'], np.ndarray]
+    __neg__: tp.Callable[['IndexBase'], np.ndarray]
+    __abs__: tp.Callable[['IndexBase'], np.ndarray]
+    __invert__: tp.Callable[['IndexBase'], np.ndarray]
+    __add__: tp.Callable[['IndexBase', object], np.ndarray]
+    __sub__: tp.Callable[['IndexBase', object], np.ndarray]
+    __mul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __matmul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __truediv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __floordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __mod__: tp.Callable[['IndexBase', object], np.ndarray]
+    # __divmod__: tp.Callable[['IndexBase', object], np.ndarray]
+    __pow__: tp.Callable[['IndexBase', object], np.ndarray]
+    __lshift__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rshift__: tp.Callable[['IndexBase', object], np.ndarray]
+    __and__: tp.Callable[['IndexBase', object], np.ndarray]
+    __xor__: tp.Callable[['IndexBase', object], np.ndarray]
+    __or__: tp.Callable[['IndexBase', object], np.ndarray]
+    __lt__: tp.Callable[['IndexBase', object], np.ndarray]
+    __le__: tp.Callable[['IndexBase', object], np.ndarray]
+    __eq__: tp.Callable[['IndexBase', object], np.ndarray]
+    __ne__: tp.Callable[['IndexBase', object], np.ndarray]
+    __gt__: tp.Callable[['IndexBase', object], np.ndarray]
+    __ge__: tp.Callable[['IndexBase', object], np.ndarray]
+    __radd__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rsub__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
