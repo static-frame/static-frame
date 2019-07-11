@@ -292,7 +292,7 @@ class Index(IndexBase, SupportsOps,
 
             labels_len = len(mapping)
             if labels_len == 0:
-                labels = np.empty(labels_len) # get defualt NP dtype
+                labels = EMPTY_ARRAY
             else:
                 labels = np.empty(labels_len, dtype=dtype if dtype else object)
                 for k, v in mapping.items():
