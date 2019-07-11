@@ -592,7 +592,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 
 def resolve_type_iter(
         values: tp.Iterable[tp.Any],
-        iter_limit=10,
+        iter_limit: int = 10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
     Args:
