@@ -3,6 +3,7 @@ import unittest
 import numpy as np  # type: ignore
 import pickle
 import datetime
+import typing as tp
 from io import StringIO
 
 from static_frame import Index
@@ -66,11 +67,11 @@ class TestUnit(TestCase):
         idx = Index(('a', 'b', 'c', 'd'))
 
         self.assertEqual(
-                idx.loc_to_iloc(np.array([True, False, True, False])).tolist(),
+                tp.cast(np.ndarray, idx.loc_to_iloc(np.array([True, False, True, False]))).tolist(),
                 [0, 2])
 
-        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))
-        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))
+        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))  # type: ignore
+        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))  # type: ignore
         self.assertEqual(idx.loc_to_iloc('d'), 3)
 
 
@@ -336,7 +337,7 @@ class TestUnit(TestCase):
     def test_index_date_b(self) -> None:
 
         with self.assertRaises(Exception):
-            IndexDate([3,4,5], dtype=np.int64)
+            IndexDate([3,4,5], dtype=np.int64)  # type: ignore
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
@@ -592,7 +593,7 @@ class TestUnit(TestCase):
         self.assertEqual(index.loc_to_iloc('2018-02-11'), 41)
 
         self.assertEqual(
-                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
+                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),  # type: ignore
                 slice(41, 55, None))
 
 
@@ -654,7 +655,7 @@ class TestUnit(TestCase):
         self.assertEqual(index._drop_loc(['a', 'g']).values.tolist(),
                 ['b', 'c', 'd', 'e', 'f'])
 
-        self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),
+        self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),  # type: ignore
                 ['a'])
 
 
@@ -679,27 +680,30 @@ class TestUnit(TestCase):
 
         # but a Boolean array works
         post = idx.loc_to_iloc(np.array([False, True, False, True]))
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1, 3])
 
 
-    def test_index_loc_to_iloc_boolen_a(self) -> None:
+    def test_index_loc_to_iloc_boolen_b(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
 
         # returns nothing as index does not match anything
         post = idx.loc_to_iloc(Series([False, True, False, True]))
-        self.assertTrue(len(post) == 0)
+        self.assertTrue(len(tp.cast(tp.Sized, post)) == 0)
 
         post = idx.loc_to_iloc(Series([False, True, False, True],
                 index=('b', 'c', 'd', 'a')))
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [0, 2])
 
         post = idx.loc_to_iloc(Series([False, True, False, True],
                 index=list('abcd')))
+        assert isinstance(post, np.ndarray)
         self.assertEqual(post.tolist(), [1,3])
 
 
-    def test_index_drop_a(self) -> None:
+    def test_index_drop_b(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
 
@@ -709,7 +713,7 @@ class TestUnit(TestCase):
                 idx.drop.iloc[np.array([True, False, False, True])].values.tolist(),
                 ['b', 'c'])
 
-    def test_index_drop_b(self) -> None:
+    def test_index_drop_c(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
 
@@ -801,7 +805,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
 
 
-    def test_index_from_pandas_a(self) -> None:
+    def test_index_from_pandas_b(self) -> None:
         import pandas
 
         pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
@@ -957,8 +961,8 @@ class TestUnit(TestCase):
 
         f = Frame.from_records((x, y) for x, y in enumerate(msg.split('\n')))
 
-        idx = IndexMillisecond(f[1])
-        self.assertAlmostEqualValues(idx.values,
+        idx1 = IndexMillisecond(f[1])
+        self.assertAlmostEqualValues(idx1.values,
                 np.array(['2016-04-28T04:22:12.226', '2016-04-28T16:29:21.320',
                '2016-04-28T17:36:13.733', '2016-04-30T20:21:07.848',
                '2016-05-01T00:00:33.483', '2016-05-01T03:02:03.584',
@@ -966,9 +970,9 @@ class TestUnit(TestCase):
                '2016-05-01T15:25:46.150'], dtype='datetime64[ms]'))
 
 
-        idx = IndexSecond(f[1])
+        idx2 = IndexSecond(f[1])
 
-        self.assertAlmostEqualValues(idx.values,
+        self.assertAlmostEqualValues(idx2.values,
             np.array(['2016-04-28T04:22:12', '2016-04-28T16:29:21',
            '2016-04-28T17:36:13', '2016-04-30T20:21:07',
            '2016-05-01T00:00:33', '2016-05-01T03:02:03',
@@ -1003,4 +1007,3 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

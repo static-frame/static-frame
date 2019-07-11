@@ -77,6 +77,14 @@ from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
 
+if tp.TYPE_CHECKING:
+
+    import pandas as pd
+
+
+I = tp.TypeVar('I', bound=IndexBase)
+
+
 class ILocMeta(type):
 
     def __getitem__(cls,
@@ -431,7 +439,7 @@ class Index(IndexBase, SupportsOpsIndex,
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self, name: tp.Hashable) -> 'Index':
+    def rename(self: I, name: tp.Hashable) -> I:
         '''
         Return a new Frame with an updated name attribute.
         '''
@@ -640,7 +648,7 @@ class Index(IndexBase, SupportsOpsIndex,
     def _extract_loc(self, key: GetItemKeyType) -> 'Index':
         return self._extract_iloc(self.loc_to_iloc(key))
 
-    def __getitem__(self, key: GetItemKeyType) -> 'Index':
+    def __getitem__(self: I, key: GetItemKeyType) -> I:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
@@ -812,7 +820,7 @@ class Index(IndexBase, SupportsOpsIndex,
         from static_frame import IndexHierarchy
         return IndexHierarchy.from_tree({level: self.values})
 
-    def to_pandas(self):
+    def to_pandas(self) -> 'pd.Index':
         '''Return a Pandas Index.
         '''
         import pandas
@@ -1002,7 +1010,7 @@ class _IndexDatetime(Index):
                 key_transform=key_to_datetime_key)
 
     #---------------------------------------------------------------------------
-    def to_pandas(self):
+    def to_pandas(self) -> 'pd.DatetimeIndex':
         '''Return a Pandas Index.
         '''
         import pandas

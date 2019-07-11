@@ -70,7 +70,7 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
-class Series(SupportsOps, metaclass=MetaOperatorDelegate):
+class Series(SupportsOps, tp.Mapping[tp.Hashable, tp.Any], metaclass=MetaOperatorDelegate):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
 
