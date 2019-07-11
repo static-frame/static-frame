@@ -586,7 +586,8 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 
 
 def resolve_type_iter(
-        values: tp.Iterable[tp.Any]
+        values: tp.Iterable[tp.Any],
+        iter_limit=10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
     Args:
@@ -603,6 +604,7 @@ def resolve_type_iter(
             return None, False, values
 
     v_iter = iter(values)
+
     if copy_values:
         # do not create list unless we are sure we have more than 1 value
         try:
@@ -615,23 +617,25 @@ def resolve_type_iter(
         values_post = []
 
     resolved = None
-    for v in v_iter:
+    for i, v in enumerate(v_iter):
         if copy_values:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
+            values_post.append(v)
             if resolved != object:
                 resolved, has_tuple = resolve_type(v, resolved=resolved)
-                values_post.append(v)
-            else: # resolved is object
-                values_post.append(v)
-                has_tuple = isinstance(v, tuple)
+            else: # resolved is object, can exit once has_tuple is known
+                has_tuple = has_tuple or isinstance(v, tuple)
                 if has_tuple:
                     # can end if we have found a tuple
                     values_post.extend(v_iter)
                     break
+            if i >= iter_limit:
+                values_post.extend(v_iter)
+                break
         else:
             resolved, has_tuple = resolve_type(v, resolved=resolved)
-            if resolved == object:
+            if resolved == object or i >= iter_limit:
                 break
 
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
