@@ -320,7 +320,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', False), ('y', True))), ('c', (('x', -1), ('y', -1)))))
 
-    def test_frame_from_pandas_a(self) -> None:
+    def test_frame_from_pandas_d(self) -> None:
         import pandas as pd
 
         df = pd.DataFrame(dict(a=(1,2), b=(3,4)))
@@ -976,7 +976,7 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_attrs_a(self) -> None:
 
         records = (
@@ -1464,9 +1464,10 @@ class TestUnit(TestCase):
         self.assertEqual(list(s2.items()),
                 [('w', 3), ('x', 64), ('y', 149), ('z', 138)])
 
-        def sum_if(idx, vals):
+        def sum_if(idx: tp.Hashable, vals: tp.Iterable[int]) -> tp.Optional[int]:
             if idx in ('x', 'z'):
-                return np.sum(vals)
+                return tp.cast(int, np.sum(vals))
+            return None
 
         s3 = f2.iter_array_items(1).apply(sum_if)
         self.assertEqual(list(s3.items()),
@@ -1711,7 +1712,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f1.min(axis=1).items()),
                 (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)))
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_row_dtype_a(self) -> None:
         # reindex both axis
         records = (
@@ -2366,7 +2367,7 @@ class TestUnit(TestCase):
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
 
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_from_csv_a(self) -> None:
         # header, mixed types, no index
 
@@ -2736,20 +2737,20 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_c(self) -> None:
-        records = (
+        records1 = (
                 (2, 2, False),
                 (30, 34, False),
                 )
 
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q', 't'),
                 index=('x', 'a'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('r', 's',),
                 index=('x', 'a'))
 
@@ -2760,7 +2761,7 @@ class TestUnit(TestCase):
                 )
 
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_from_concat_d(self) -> None:
         records = (
                 (2, 2, False),
@@ -2791,7 +2792,7 @@ class TestUnit(TestCase):
                 (('p', (('a', 2), ('b', 30), ('c', 2), ('d', 30))), ('q', (('a', 2), ('b', 34), ('c', 2), ('d', 34))), ('r', (('a', False), ('b', False), ('c', False), ('d', False)))))
 
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_from_concat_e(self) -> None:
 
         f1 = Frame.from_items(zip(
@@ -2848,20 +2849,20 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_g(self) -> None:
-        records = (
+        records1 = (
                 (2, 2, False),
                 (30, 34, False),
                 )
 
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q', 't'),
                 index=('x', 'a'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('r', 's',),
                 index=('x', 'a'))
 
@@ -2879,8 +2880,8 @@ class TestUnit(TestCase):
         data = np.random.rand(len(index), len(columns))
         f1 = Frame(data, index=index, columns=columns)
 
-        f2 = f1[[c for c in f1.columns if c.startswith('D')]]
-        f3 = f1[[c for c in f1.columns if c.startswith('G')]]
+        f2 = f1[[c for c in f1.columns if tp.cast(str, c).startswith('D')]]
+        f3 = f1[[c for c in f1.columns if tp.cast(str, c).startswith('G')]]
         post = sf.Frame.from_concat((f2, f3), axis=1)
 
         # this form of concatenation has no copy
@@ -2911,19 +2912,19 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_k(self) -> None:
-        records = (
+        records1 = (
                 (2, 2, False),
                 (30, 34, False),
                 )
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q', 't'),
                 index=('x', 'a'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('r', 's',),
                 index=('x', 'a'))
 
@@ -2933,19 +2934,19 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_m(self) -> None:
-        records = (
+        records1 = (
                 (2, 2, False),
                 (30, 34, False),
                 )
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q', 't'),
                 index=('x', 'a'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=(3, 4,),
                 index=('x', 'a'))
 
@@ -2958,19 +2959,19 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_concat_n(self) -> None:
-        records = (
+        records1 = (
                 (2, False),
                 (30, False),
                 )
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q'),
                 index=('x', 'a'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('p', 'q'),
                 index=(3, 10))
 
@@ -2984,20 +2985,20 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_o(self) -> None:
-        records = (
+        records1 = (
                 (2, False),
                 (34, False),
                 )
 
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q',),
                 index=('x', 'z'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('r', 's',),
                 index=('x', 'z'))
 
@@ -3063,20 +3064,20 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_from_concat_s(self) -> None:
-        records = (
+        records1 = (
                 (2, False),
                 (34, False),
                 )
 
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(records1,
                 columns=('p', 'q',),
                 index=('x', 'z'))
 
-        records = (
+        records2 = (
                 ('c', False),
                 ('d', True),
                 )
-        f2 = Frame.from_records(records,
+        f2 = Frame.from_records(records2,
                 columns=('r', 's',),
                 index=('x', 'z'))
 
@@ -3532,7 +3533,7 @@ class TestUnit(TestCase):
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
                 )
 
-        f4 = f1.set_index_hierarchy(slice('q', 'r'), drop=True)
+        f4 = f1.set_index_hierarchy(slice('q', 'r'), drop=True)  # type: ignore
         self.assertEqual(f4.index.name, ('q', 'r'))
 
         self.assertEqual(f4.to_pairs(0),
@@ -3764,7 +3765,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_frame_name_b(self) -> None:
+    def test_frame_name_c(self) -> None:
 
         records = (
                 (2, 2, 'a', False, False),
@@ -3790,7 +3791,7 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win
+    @skip_win  # type: ignore
     def test_frame_display_a(self) -> None:
 
         f1 = Frame(((1,2),(True,False)), name='foo',
@@ -3851,9 +3852,9 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         # with axis 1, we are grouping based on columns while maintain the index
-        post = tuple(f1.iter_group_index(1, axis=1))
+        post_tuple = tuple(f1.iter_group_index(1, axis=1))
 
-        self.assertEqual(len(post), 2)
+        self.assertEqual(len(post_tuple), 2)
 
         post = f1[HLoc[f1.columns[0]]]
         self.assertEqual(post.__class__, Series)

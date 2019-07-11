@@ -83,7 +83,7 @@ class TestUnit(TestCase):
         back = tbs[1]
         shape_original = front.shape
         # extend with type blocks
-        front.extend(back) 
+        front.extend(back)
         self.assertEqual(front.shape,
                 (shape_original[0], shape_original[1] + back.shape[1]))
 
@@ -91,6 +91,3 @@ class TestUnit(TestCase):
         front.extend(back._blocks)
         self.assertEqual(front.shape,
                 (shape_original[0], shape_original[1] + back.shape[1] * 2))
-
-
-
