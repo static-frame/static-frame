@@ -16,6 +16,8 @@ from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_BOOL
 
 
+T = tp.TypeVar('T')
+
 
 _UFUNC_UNARY_OPERATORS = (
         '__pos__',
@@ -220,7 +222,7 @@ class MetaOperatorDelegate(type):
         return f
 
 
-    def __new__(mcs, name: str, bases: tp.Tuple[type], attrs: tp.Dict[str, object]) -> type:
+    def __new__(mcs, name: str, bases: tp.Tuple[type, ...], attrs: tp.Dict[str, object]) -> type:
         '''
         Create and assign all autopopulated functions.
         '''
@@ -244,5 +246,51 @@ class MetaOperatorDelegate(type):
         for func_name in UFUNC_SHAPE_SKIPNA:
             attrs[func_name] = mcs.create_ufunc_shape_skipna(func_name)
 
-
         return type.__new__(mcs, name, bases, attrs)
+
+
+class SupportsOps:
+    '''For type checking. Maybe in the future we could factor out a bit of the dynamic-ness of MetaOperatorDelegate.'''
+
+    __pos__: tp.Callable[[T], T]
+    __neg__: tp.Callable[[T], T]
+    __abs__: tp.Callable[[T], T]
+    __invert__: tp.Callable[[T], T]
+    __add__: tp.Callable[[T, object], T]
+    __sub__: tp.Callable[[T, object], T]
+    __mul__: tp.Callable[[T, object], T]
+    __matmul__: tp.Callable[[T, object], T]
+    __truediv__: tp.Callable[[T, object], T]
+    __floordiv__: tp.Callable[[T, object], T]
+    __mod__: tp.Callable[[T, object], T]
+    # __divmod__: tp.Callable[[T, object], T]
+    __pow__: tp.Callable[[T, object], T]
+    __lshift__: tp.Callable[[T, object], T]
+    __rshift__: tp.Callable[[T, object], T]
+    __and__: tp.Callable[[T, object], T]
+    __xor__: tp.Callable[[T, object], T]
+    __or__: tp.Callable[[T, object], T]
+    __lt__: tp.Callable[[T, object], T]
+    __le__: tp.Callable[[T, object], T]
+    __eq__: tp.Callable[[T, object], T]  # type: ignore
+    __ne__: tp.Callable[[T, object], T]  # type: ignore
+    __gt__: tp.Callable[[T, object], T]
+    __ge__: tp.Callable[[T, object], T]
+    __radd__: tp.Callable[[T, object], T]
+    __rsub__: tp.Callable[[T, object], T]
+    __rmul__: tp.Callable[[T, object], T]
+    __rtruediv__: tp.Callable[[T, object], T]
+    __rfloordiv__: tp.Callable[[T, object], T]
+
+    all: tp.Callable[[T], bool]
+    any: tp.Callable[[T], bool]
+    sum: tp.Callable[[T], tp.Any]
+    min: tp.Callable[[T], tp.Any]
+    max: tp.Callable[[T], tp.Any]
+    mean: tp.Callable[[T], tp.Any]
+    median: tp.Callable[[T], tp.Any]
+    std: tp.Callable[[T], tp.Any]
+    var: tp.Callable[[T], tp.Any]
+    prod: tp.Callable[[T], tp.Any]
+    cumsum: tp.Callable[[T], T]
+    cumprod: tp.Callable[[T], T]

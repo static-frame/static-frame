@@ -31,6 +31,7 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
+from static_frame.core.operator_delegate import SupportsOps
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.display import DisplayConfig
@@ -50,7 +51,7 @@ from static_frame.core.index_level import IndexLevelGO
 
 
 #-------------------------------------------------------------------------------
-class IndexHierarchy(IndexBase,
+class IndexHierarchy(IndexBase, SupportsOps,
         metaclass=MetaOperatorDelegate):
     '''
     A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.

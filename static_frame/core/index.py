@@ -69,6 +69,7 @@ from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
+from static_frame.core.operator_delegate import SupportsOps
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -229,7 +230,7 @@ def immutable_index_filter(
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_init')
-class Index(IndexBase,
+class Index(IndexBase, SupportsOps,
         metaclass=MetaOperatorDelegate):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`.
 

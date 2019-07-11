@@ -53,6 +53,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
 
 from static_frame.core.operator_delegate import MetaOperatorDelegate
+from static_frame.core.operator_delegate import SupportsOps
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -93,7 +94,7 @@ def dtypes_mappable(dtypes: DtypesSpecifier):
 
 
 @doc_inject(selector='container_init', class_name='Frame')
-class Frame(metaclass=MetaOperatorDelegate):
+class Frame(SupportsOps, metaclass=MetaOperatorDelegate):
     '''
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
