@@ -24,6 +24,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series
     from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameAsType
+    from static_frame.core.type_blocks import TypeBlocks
 
 
 # handle nan in object blocks with skipna processing on ufuncs
@@ -1260,7 +1261,7 @@ def write_optional_file(
 # 316 ns ± 1.29 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
 
 
-TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame')
+TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks')
 GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
 
 #TODO: rename InterfaceGetItem
@@ -1268,7 +1269,7 @@ class GetItem(tp.Generic[TContainer]):
 
     __slots__ = ('_func',)
 
-    def __init__(self, func: GetItemFunc) -> None:
+    def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
         self._func: tp.Callable[[GetItemKeyType], TContainer] = func
 
     def __getitem__(self, key: GetItemKeyType) -> TContainer:

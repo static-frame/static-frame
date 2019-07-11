@@ -1054,13 +1054,13 @@ class TestUnit(TestCase):
         a4 = np.array([None, None, None])
         tb = TypeBlocks.from_blocks((a1, a2, a4, a3))
 
-        post = [x for x in tb.element_items()]
+        post1 = [x for x in tb.element_items()]
 
-        tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._row_dtype)
+        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._row_dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
-        post = tb == tb2
-        self.assertEqual(post.values.tolist(),
+        post2 = tb == tb2
+        self.assertEqual(post2.values.tolist(),
                 [[True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True]])
 
 
@@ -1118,15 +1118,16 @@ class TestUnit(TestCase):
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
         row_key, column_key = tb1.dropna_to_keep_locations(axis=1)
+        assert column_key is not None
 
         self.assertEqual(column_key.tolist(),
                 [True, False, True, True, True, False, True, True])
         self.assertEqual(row_key, None)
 
         row_key, column_key = tb1.dropna_to_keep_locations(axis=0)
+        assert row_key is not None
         self.assertEqual(row_key.tolist(),
                 [True, True, False])
-
         self.assertEqual(column_key, None)
 
 

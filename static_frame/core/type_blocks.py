@@ -643,7 +643,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def group(self,
             axis,
-            key) -> tp.Generator[tp.Tuple[tp.Hashable, np.ndarray, np.ndarray], None, None]:
+            key) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         '''
         Args:
             key: iloc selector on opposite axis
@@ -1780,7 +1780,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def dropna_to_keep_locations(self,
             axis: int = 0,
-            condition: tp.Callable[[np.ndarray], bool] = np.all) -> 'TypeBlocks':
+            condition: tp.Callable[[np.ndarray], bool] = np.all,
+    ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 
