@@ -14,7 +14,7 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import Display
 
 from static_frame.core.doc_str import doc_inject
-
+from static_frame.core.operator_delegate import ContainerBase
 
 if tp.TYPE_CHECKING:
 
@@ -23,7 +23,7 @@ if tp.TYPE_CHECKING:
 
 I = tp.TypeVar('I', bound='IndexBase')
 
-class IndexBase:
+class IndexBase(ContainerBase):
 
     __slots__ = () # defined in dervied classes
 
@@ -33,8 +33,40 @@ class IndexBase:
     _recache: bool
     _loc_is_iloc: bool
     _name: tp.Hashable
-
     values: np.ndarray
+
+
+    __pos__: tp.Callable[['IndexBase'], np.ndarray]
+    __neg__: tp.Callable[['IndexBase'], np.ndarray]
+    __abs__: tp.Callable[['IndexBase'], np.ndarray]
+    __invert__: tp.Callable[['IndexBase'], np.ndarray]
+    __add__: tp.Callable[['IndexBase', object], np.ndarray]
+    __sub__: tp.Callable[['IndexBase', object], np.ndarray]
+    __mul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __matmul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __truediv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __floordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __mod__: tp.Callable[['IndexBase', object], np.ndarray]
+    # __divmod__: tp.Callable[['IndexBase', object], np.ndarray]
+    __pow__: tp.Callable[['IndexBase', object], np.ndarray]
+    __lshift__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rshift__: tp.Callable[['IndexBase', object], np.ndarray]
+    __and__: tp.Callable[['IndexBase', object], np.ndarray]
+    __xor__: tp.Callable[['IndexBase', object], np.ndarray]
+    __or__: tp.Callable[['IndexBase', object], np.ndarray]
+    __lt__: tp.Callable[['IndexBase', object], np.ndarray]
+    __le__: tp.Callable[['IndexBase', object], np.ndarray]
+    __eq__: tp.Callable[['IndexBase', object], np.ndarray]
+    __ne__: tp.Callable[['IndexBase', object], np.ndarray]
+    __gt__: tp.Callable[['IndexBase', object], np.ndarray]
+    __ge__: tp.Callable[['IndexBase', object], np.ndarray]
+    __radd__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rsub__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+
+
 
     STATIC = True
 
@@ -43,7 +75,6 @@ class IndexBase:
 
     _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
-
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -311,6 +342,8 @@ class IndexBase:
             webbrowser.open_new_tab(fp)
 
         return fp
+
+
 
 
 
