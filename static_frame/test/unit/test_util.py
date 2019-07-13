@@ -1170,5 +1170,12 @@ class TestUnit(TestCase):
         )
 
 
+    def test_iterable_to_array_e(self) -> None:
+
+        a1 = np.array([np.nan, 0j], dtype=object)
+        post, _ = iterable_to_array(a1)
+
+        self.assertAlmostEqualValues(a1, post)
+
 if __name__ == '__main__':
     unittest.main()

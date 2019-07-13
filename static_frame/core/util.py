@@ -108,20 +108,23 @@ INT_TYPES = (int, np.int_) # NOTE: this does not cover all NP int types; use np.
 
 BOOL_TYPES = (bool, np.bool_)
 
+# avoid all this using hierarchy
+# https://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.scalars.html
+
 # some platforms do not have float128
-if hasattr(np, 'float128'):
-    FLOAT_TYPES: tp.Tuple[type, ...] = (float, np.float64, np.float16, np.float32, np.float128)
-else:
-    FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
+# if hasattr(np, 'float128'):
+#     FLOAT_TYPES: tp.Tuple[type, ...] = (float, np.float64, np.float16, np.float32, np.float128)
+# else:
+#     FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
 
-# some platforms do not have complex256
-if hasattr(np, 'complex256'):
-    COMPLEX_TYPES: tp.Tuple[type, ...]  = (complex, np.complex128, np.complex64, np.complex256)
-else:
-    COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
+# # some platforms do not have complex256
+# if hasattr(np, 'complex256'):
+#     COMPLEX_TYPES: tp.Tuple[type, ...]  = (complex, np.complex128, np.complex64, np.complex256)
+# else:
+#     COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
 
-NAN_TYPES = FLOAT_TYPES + COMPLEX_TYPES
-NAT_TYPES = (np.datetime64, np.timedelta64)
+# NAN_TYPES = FLOAT_TYPES + COMPLEX_TYPES
+# NAT_TYPES = (np.datetime64, np.timedelta64)
 
 DICTLIKE_TYPES = (abc.Set, dict)
 
@@ -593,13 +596,14 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 
 def resolve_type_iter(
         values: tp.Iterable[tp.Any],
-        iter_limit: int = 10,
+        sample_size: int = 10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
-    Determine an appropriate DtypeSpecifier for values in an iterable.
+    Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect).
 
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
+        sample_size: number or elements to examine to determine DtypeSpecifier.
     Returns:
         resolved, has_tuple, values
     '''
@@ -656,7 +660,7 @@ def resolve_type_iter(
                     values_post.extend(v_iter)
                 break
 
-        if i >= iter_limit:
+        if i >= sample_size:
             if copy_values:
                 values_post.extend(v_iter)
             break
@@ -912,15 +916,9 @@ def isna_element(value: tp.Any) -> bool:
     except TypeError:
         pass
     try:
-        return tp.cast(bool,np.isnat(value))
+        return tp.cast(bool, np.isnat(value))
     except TypeError:
         pass
-
-    # NOTE: likely slower, explicit approach
-    # if isinstance(value, NAN_TYPES):
-    #     return np.isnan(value)
-    # elif isinstance(value, NAT_TYPES):
-    #     return np.isnat(value)
 
     return value is None
 

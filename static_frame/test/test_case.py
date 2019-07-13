@@ -13,8 +13,6 @@ import pytest  # type: ignore
 
 
 from static_frame import TypeBlocks
-from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import COMPLEX_TYPES
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -96,11 +94,18 @@ class TestCase(unittest.TestCase):
             v1: object,
             v2: object,
             ) -> None:
-        if (isinstance(v1, FLOAT_TYPES) and np.isnan(v1) and
-                isinstance(v2, FLOAT_TYPES) and np.isnan(v2)):
+        if ((isinstance(v1, float) or isinstance(v1, np.floating))
+                and np.isnan(v1)
+                and (isinstance(v2, float) or isinstance(v2, np.floating))
+                and np.isnan(v2)
+                ):
             return
-        if (isinstance(v1, COMPLEX_TYPES) and cmath.isnan(v1) and  # type: ignore
-                isinstance(v2, COMPLEX_TYPES) and cmath.isnan(v2)):  # type: ignore
+         # type: ignore
+        if ((isinstance(v1, complex) or isinstance(v1, np.complexfloating))
+                and cmath.isnan(v1)
+                and (isinstance(v2, complex) or isinstance(v1, np.complexfloating))
+                and cmath.isnan(v2)
+                ):
             return
         return self.assertEqual(v1, v2)
 
