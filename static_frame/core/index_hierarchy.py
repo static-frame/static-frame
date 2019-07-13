@@ -30,7 +30,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 
-# from static_frame.core.operator_delegate import SupportsOpsIndex
+# from static_frame.core.container import SupportsOpsIndex
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.display import DisplayConfig

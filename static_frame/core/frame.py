@@ -52,7 +52,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
 
-from static_frame.core.operator_delegate import ContainerBase
+from static_frame.core.container import ContainerBase
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType

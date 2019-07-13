@@ -21,9 +21,9 @@ import typing as tp
 
 import static_frame as sf
 
-from static_frame.core.operator_delegate import _UFUNC_UNARY_OPERATORS
-from static_frame.core.operator_delegate import _UFUNC_BINARY_OPERATORS
-from static_frame.core.operator_delegate import UFUNC_AXIS_SKIPNA
+from static_frame.core.container import _UFUNC_UNARY_OPERATORS
+from static_frame.core.container import _UFUNC_BINARY_OPERATORS
+from static_frame.core.container import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import AnyCallable
 
 from static_frame.performance import core

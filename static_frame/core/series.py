@@ -44,7 +44,7 @@ from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
-from static_frame.core.operator_delegate import ContainerBase
+from static_frame.core.container import ContainerBase
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive

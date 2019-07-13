@@ -21,7 +21,7 @@ from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import key_to_datetime_key
 
-from static_frame.core.operator_delegate import _ufunc_logical_skipna
+from static_frame.core.container import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
 from static_frame.core.util import set_ufunc2d

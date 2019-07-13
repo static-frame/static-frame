@@ -14,7 +14,7 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import Display
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.operator_delegate import ContainerBase
+from static_frame.core.container import ContainerBase
 
 if tp.TYPE_CHECKING:
 

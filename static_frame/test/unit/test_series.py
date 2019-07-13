@@ -39,10 +39,10 @@ from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import array_to_duplicated
 
 
-from static_frame.core.operator_delegate import _all
-from static_frame.core.operator_delegate import _any
-from static_frame.core.operator_delegate import _nanall
-from static_frame.core.operator_delegate import _nanany
+from static_frame.core.container import _all
+from static_frame.core.container import _any
+from static_frame.core.container import _nanall
+from static_frame.core.container import _nanany
 
 nan = np.nan
 
