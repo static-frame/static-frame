@@ -526,53 +526,53 @@ def roll_2d(array: np.ndarray, shift: int, axis: int) -> np.ndarray:
 #-------------------------------------------------------------------------------
 # array constructors
 
-def resolve_type(
-        value: tp.Any,
-        resolved: tp.Optional[type]=None
-        ) -> tp.Tuple[type, bool]:
-    '''Return a type, suitable for usage as a DtypeSpecifier, that will not truncate when used in array creation.
-    Returns:
-        type, is_tuple
-    '''
-    if resolved == object:
-        # clients should stop iteration once ann object is returned
-        raise RuntimeError('already resolved to object')
+# def resolve_type(
+#         value: tp.Any,
+#         resolved: tp.Optional[type]=None
+#         ) -> tp.Tuple[type, bool]:
+#     '''Return a type, suitable for usage as a DtypeSpecifier, that will not truncate when used in array creation.
+#     Returns:
+#         type, is_tuple
+#     '''
+#     if resolved == object:
+#         # clients should stop iteration once ann object is returned
+#         raise RuntimeError('already resolved to object')
 
-    value_type = type(value)
+#     value_type = type(value)
 
-    is_tuple = False
+#     is_tuple = False
 
-    # normalize NP types to python types
-    if issubclass(value_type, np.integer):
-        value_type = int
-    elif issubclass(value_type, np.floating):
-        value_type = float
-    elif issubclass(value_type, np.complexfloating):
-        value_type = complex
-    elif value_type == tuple:
-        is_tuple = True
+#     # normalize NP types to python types
+#     if issubclass(value_type, np.integer):
+#         value_type = int
+#     elif issubclass(value_type, np.floating):
+#         value_type = float
+#     elif issubclass(value_type, np.complexfloating):
+#         value_type = complex
+#     elif value_type == tuple:
+#         is_tuple = True
 
-    # anything that gets converted to object
-    if is_tuple:
-        # NOTE: we do not convert other conntainers to object here, as they are not common as elements, and if it is an iterable of set, list, etc, array constructor will treat that argument the same as object
-        return object, is_tuple
+#     # anything that gets converted to object
+#     if is_tuple:
+#         # NOTE: we do not convert other conntainers to object here, as they are not common as elements, and if it is an iterable of set, list, etc, array constructor will treat that argument the same as object
+#         return object, is_tuple
 
-    if resolved is None: # first usage
-        return value_type, is_tuple
+#     if resolved is None: # first usage
+#         return value_type, is_tuple
 
-    if value_type == resolved:
-        # fine to return set, list here;
-        return value_type, is_tuple
+#     if value_type == resolved:
+#         # fine to return set, list here;
+#         return value_type, is_tuple
 
-    if ((resolved == float and value_type == int)
-            or (resolved == int and value_type == float)
-            ):
-        # if not the same (float or int), promote value of int to float
-        # if value is float and resolved
-        return float, is_tuple
+#     if ((resolved == float and value_type == int)
+#             or (resolved == int and value_type == float)
+#             ):
+#         # if not the same (float or int), promote value of int to float
+#         # if value is float and resolved
+#         return float, is_tuple
 
-    # resolved is not None, and this value_type is not equal to the resolved
-    return object, is_tuple
+#     # resolved is not None, and this value_type is not equal to the resolved
+#     return object, is_tuple
 
 
 def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
@@ -596,6 +596,8 @@ def resolve_type_iter(
         iter_limit: int = 10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
+    Determine an appropriate DtypeSpecifier for values in an iterable.
+
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
     Returns:
@@ -622,27 +624,47 @@ def resolve_type_iter(
         v_iter = chain((front,), v_iter)
         values_post = []
 
-    resolved = None
+    resolved = None # None is valid specifier if the type is not ambiguous
+    has_tuple = False
+    has_str = False
+    has_non_str = False
+
     for i, v in enumerate(v_iter, start=1):
         if copy_values:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
             values_post.append(v)
-            if resolved != object:
-                resolved, has_tuple = resolve_type(v, resolved=resolved)
-            else: # resolved is object, can exit once has_tuple is known
-                has_tuple = has_tuple or isinstance(v, tuple)
-                if has_tuple:
-                    # can end if we have found a tuple
+
+        if resolved != object:
+
+            value_type = type(v)
+
+            if value_type == tuple:
+                has_tuple = True
+            elif value_type == str:
+                has_str = True
+            else:
+                has_non_str = True
+
+            if has_tuple or (has_str and has_non_str):
+                resolved = object
+
+        else: # resolved is object, can exit once has_tuple is known
+            if has_tuple:
+                # can end if we have found a tuple
+                if copy_values:
                     values_post.extend(v_iter)
-                    break
-            if i >= iter_limit:
+                break
+
+        if i >= iter_limit:
+            if copy_values:
                 values_post.extend(v_iter)
-                break
-        else:
-            resolved, has_tuple = resolve_type(v, resolved=resolved)
-            if resolved == object or i >= iter_limit:
-                break
+            break
+
+        # else:
+        #     resolved, has_tuple = resolve_type(v, resolved=resolved)
+        #     if resolved == object or i >= iter_limit:
+        #         break
 
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
@@ -651,12 +673,14 @@ def resolve_type_iter(
     return resolved, has_tuple, tp.cast(tp.Sequence[tp.Any], values)
 
 
+
+
 def iterable_to_array(
         values: tp.Iterable[tp.Any],
         dtype: DtypeSpecifier=None
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
-    Convert an arbitrary Python iterable to a NumPy array without any type coercion except int to float.
+    Convert an arbitrary Python iterable to a NumPy array without any undesirable type coercion.
 
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
@@ -666,7 +690,6 @@ def iterable_to_array(
             raise RuntimeError('supplied dtype not set on supplied array')
         return values, len(values) <= 1
 
-    is_unique = isinstance(values, DICTLIKE_TYPES)
 
     # values for construct will only be a copy when necessary in iteration to find type
     if dtype is None:
@@ -697,8 +720,11 @@ def iterable_to_array(
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
         has_tuple = dtype_is_object
 
-    if len(values_for_construct) == 1:
+    if len(values_for_construct) == 1 or isinstance(values, DICTLIKE_TYPES):
+        # check values for dictlike, not values_for_construct
         is_unique = True
+    else:
+        is_unique = False
 
     # construction
     if has_tuple:

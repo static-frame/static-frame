@@ -50,7 +50,6 @@ from static_frame.core.util import intersect1d
 
 from static_frame.core.util import to_datetime64
 
-from static_frame.core.util import resolve_type
 from static_frame.core.util import resolve_type_iter
 
 
@@ -907,25 +906,25 @@ class TestUnit(TestCase):
             dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
 
 
-    def test_resolve_type_a(self) -> None:
+    # def test_resolve_type_a(self) -> None:
 
-        self.assertEqual(resolve_type('a', str), (str, False))
-        self.assertEqual(resolve_type('a', int), (object, False))
-        self.assertEqual(resolve_type(3, str), (object, False))
-        self.assertEqual(resolve_type((3,4), str), (object, True))
-        self.assertEqual(resolve_type((3,4), tuple), (object, True))
+    #     self.assertEqual(resolve_type('a', str), (str, False))
+    #     self.assertEqual(resolve_type('a', int), (object, False))
+    #     self.assertEqual(resolve_type(3, str), (object, False))
+    #     self.assertEqual(resolve_type((3,4), str), (object, True))
+    #     self.assertEqual(resolve_type((3,4), tuple), (object, True))
 
 
-        self.assertEqual(resolve_type(3, float), (float, False))
-        self.assertEqual(resolve_type(False, str), (object, False))
-        self.assertEqual(resolve_type(1.2, int), (float, False))
+    #     self.assertEqual(resolve_type(3, float), (float, False))
+    #     self.assertEqual(resolve_type(False, str), (object, False))
+    #     self.assertEqual(resolve_type(1.2, int), (float, False))
 
 
     def test_resolve_type_iter_a(self) -> None:
 
         v1 = ('a', 'b', 'c')
         resolved, has_tuple, values = resolve_type_iter(v1)
-        self.assertEqual(resolved, str)
+        self.assertEqual(resolved, None)
 
         v22 = ('a', 'b', 3)
         resolved, has_tuple, values = resolve_type_iter(v22)
@@ -938,12 +937,12 @@ class TestUnit(TestCase):
 
         v4 = (1, 2, 4.3, 2)
         resolved, has_tuple, values = resolve_type_iter(v4)
-        self.assertEqual(resolved, float)
+        self.assertEqual(resolved, None)
 
 
         v5 = (1, 2, 4.3, 2, None)
         resolved, has_tuple, values = resolve_type_iter(v5)
-        self.assertEqual(resolved, object)
+        self.assertEqual(resolved, None)
 
 
         v6 = (1, 2, 4.3, 2, 'g')
@@ -959,7 +958,7 @@ class TestUnit(TestCase):
 
         v1 = iter(('a', 'b', 'c'))
         resolved, has_tuple, values = resolve_type_iter(v1)
-        self.assertEqual(resolved, str)
+        self.assertEqual(resolved, None)
 
         v2 = iter(('a', 'b', 3))
         resolved, has_tuple, values = resolve_type_iter(v2)
@@ -972,7 +971,7 @@ class TestUnit(TestCase):
 
         v4 = range(4)
         resolved, has_tuple, values = resolve_type_iter(v4)
-        self.assertEqual(resolved, int)
+        self.assertEqual(resolved, None)
 
 
     def test_resolve_type_iter_c(self) -> None:
@@ -984,7 +983,7 @@ class TestUnit(TestCase):
         resolved, has_tuple, values = resolve_type_iter(iter(a))
         self.assertNotEqual(id(a), id(values))
 
-        self.assertEqual(resolved, bool)
+        self.assertEqual(resolved, None)
         self.assertEqual(has_tuple, False)
 
 
@@ -993,6 +992,7 @@ class TestUnit(TestCase):
         a = [3, 2, (3,4)]
         resolved, has_tuple, values = resolve_type_iter(a)
         self.assertEqual(id(a), id(values))
+        self.assertTrue(has_tuple)
 
         resolved, has_tuple, values = resolve_type_iter(iter(a))
         self.assertNotEqual(id(a), id(values))
@@ -1009,7 +1009,7 @@ class TestUnit(TestCase):
 
         resolved, has_tuple, values = resolve_type_iter(iter(a))
         self.assertNotEqual(id(a), id(values))
-        self.assertEqual(resolved, int)
+        self.assertEqual(resolved, None)
         self.assertEqual(has_tuple, False)
 
     def test_resolve_type_iter_f(self) -> None:
@@ -1021,7 +1021,7 @@ class TestUnit(TestCase):
 
         resolved, has_tuple, values = resolve_type_iter(a())
         self.assertEqual(values, [0, 1, 2, None])
-        self.assertEqual(resolved, object)
+        self.assertEqual(resolved, None)
         self.assertEqual(has_tuple, False)
 
     def test_resolve_type_iter_g(self) -> None:
@@ -1033,7 +1033,7 @@ class TestUnit(TestCase):
 
         resolved, has_tuple, values = resolve_type_iter(a())
         self.assertEqual(values, [None, 0, 1, 2])
-        self.assertEqual(resolved, object)
+        self.assertEqual(resolved, None)
         self.assertEqual(has_tuple, False)
 
     def test_resolve_type_iter_h(self) -> None:
@@ -1058,13 +1058,11 @@ class TestUnit(TestCase):
 
 
     def test_resolve_type_iter_i(self) -> None:
-
-
         a = range(3, 7)
         resolved, has_tuple, values = resolve_type_iter(a)
         # a copy is not made
         self.assertEqual(id(a), id(values))
-        self.assertEqual(resolved, int)
+        self.assertEqual(resolved, None)
 
         post = iterable_to_array(a)
         self.assertEqual(post[0].tolist(),
