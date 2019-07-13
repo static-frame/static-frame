@@ -321,6 +321,3 @@ class ContainerBase(metaclass=ContainerMeta):
 
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
         raise NotImplementedError()
-
-
-# class SupportsOpsIndex(ContainerBase):
