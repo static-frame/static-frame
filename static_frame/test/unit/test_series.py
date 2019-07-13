@@ -1023,6 +1023,62 @@ class TestUnit(TestCase):
         self.assertEqual(s3.name, s1.name)
 
 
+    def test_series_sort_index_b(self) -> None:
+
+        index = IndexYearMonth.from_date_range('2017-12-15', '2018-03-15')
+        s = Series(list('abcd'), index=index)
+
+        post = s.sort_index(ascending=False)
+
+        self.assertEqual(
+                post.to_pairs(),
+                ((np.datetime64('2018-03'), 'd'), (np.datetime64('2018-02'), 'c'), (np.datetime64('2018-01'), 'b'), (np.datetime64('2017-12'), 'a'))
+                )
+
+        self.assertEqual(post.index.__class__, IndexYearMonth)
+
+
+    # def test_series_sort_index_c(self) -> None:
+
+    #     index = IndexHierarchy.from_product((0, 1), (10, 20))
+    #     s = Series(list('abcd'), index=index)
+
+    #     post = s.sort_index(ascending=False)
+
+    #     import ipdb; ipdb.set_trace()
+
+    #     self.assertEqual(post.index.__class__, IndexHierarchy)
+
+
+    def test_series_sort_values_a(self) -> None:
+
+        index = IndexYearMonth.from_date_range('2017-12-15', '2018-03-15')
+        s = Series(list('abcd'), index=index)
+
+        post = s.sort_values(ascending=False)
+
+        self.assertEqual(
+                post.to_pairs(),
+                ((np.datetime64('2018-03'), 'd'), (np.datetime64('2018-02'), 'c'), (np.datetime64('2018-01'), 'b'), (np.datetime64('2017-12'), 'a'))
+                )
+
+        self.assertEqual(post.index.__class__, IndexYearMonth)
+
+    def test_series_sort_values_b(self) -> None:
+
+        index = IndexHierarchy.from_product((0, 1), (10, 20))
+        s = Series(list('abcd'), index=index)
+
+        post = s.sort_values(ascending=False)
+
+        self.assertEqual(post,
+                (((1, 20), 'd'), ((1, 10), 'c'), ((0, 20), 'b'), ((0, 10), 'a'))
+                )
+
+        self.assertEqual(post.index.__class__, IndexHierarchy)
+
+
+
     def test_series_reversed(self) -> None:
 
         idx = tuple('abcd')

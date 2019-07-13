@@ -1125,15 +1125,25 @@ class Series(ContainerBase):
         Return a new Series ordered by the sorted Index.
         '''
         # argsort lets us do the sort once and reuse the results
+        if self._index.depth > 1:
+            raise NotImplementedError()
+
+        # this technique does not work when values is a 2d array
         order = np.argsort(self._index.values, kind=kind)
         if not ascending:
             order = order[::-1]
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values, name=self._name)
+
+        return self.__class__(values,
+                index=index_values,
+                name=self._name,
+                index_constructor=self._index.from_labels
+                )
 
     def sort_values(self,
             ascending: bool = True,
@@ -1148,9 +1158,15 @@ class Series(ContainerBase):
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+
         values = self.values[order]
         values.flags.writeable = False
-        return self.__class__(values, index=index_values, name=self._name)
+
+        return self.__class__(values,
+                index=index_values,
+                name=self._name,
+                index_constructor=self._index.from_labels
+                )
 
 
     def isin(self, other) -> 'Series':

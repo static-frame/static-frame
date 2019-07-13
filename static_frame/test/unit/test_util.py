@@ -1058,13 +1058,13 @@ class TestUnit(TestCase):
 
 
     def test_resolve_type_iter_i(self) -> None:
-        a = range(3, 7)
-        resolved, has_tuple, values = resolve_type_iter(a)
+        a0 = range(3, 7)
+        resolved, has_tuple, values = resolve_type_iter(a0)
         # a copy is not made
-        self.assertEqual(id(a), id(values))
+        self.assertEqual(id(a0), id(values))
         self.assertEqual(resolved, None)
 
-        post = iterable_to_array(a)
+        post = iterable_to_array(a0)
         self.assertEqual(post[0].tolist(),
                 [3, 4, 5, 6])
 
@@ -1097,6 +1097,10 @@ class TestUnit(TestCase):
         x = [(0, 0), (0, 1), (0, 2), (0, 3)]
         a1, is_unique = iterable_to_array(iter(x))
         self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
+
+        a4 = np.array([np.nan, 0j], dtype=object)
+        post, _ = iterable_to_array(a4)
+        self.assertAlmostEqualValues(a4, post)
 
 
         self.assertEqual(iterable_to_array((1, 1.1))[0].dtype,
@@ -1147,7 +1151,6 @@ class TestUnit(TestCase):
             self.assertEqual(set(a2), set(iterable))
 
 
-
     def test_iterable_to_array_d(self) -> None:
 
         self.assertEqual(
@@ -1170,12 +1173,6 @@ class TestUnit(TestCase):
         )
 
 
-    def test_iterable_to_array_e(self) -> None:
-
-        a1 = np.array([np.nan, 0j], dtype=object)
-        post, _ = iterable_to_array(a1)
-
-        self.assertAlmostEqualValues(a1, post)
 
 if __name__ == '__main__':
     unittest.main()

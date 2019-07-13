@@ -284,7 +284,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_index_sort(self) -> None:
+    def test_index_sort_a(self) -> None:
 
         index = Index(('a', 'c', 'd', 'e', 'b'))
         self.assertEqual(
@@ -293,6 +293,7 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [index.sort(ascending=False).loc_to_iloc(x) for x in sorted(index.values)],
                 [4, 3, 2, 1, 0])
+
 
     def test_index_reversed(self) -> None:
 

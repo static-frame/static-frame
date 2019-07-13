@@ -46,6 +46,9 @@ if tp.TYPE_CHECKING:
 #     U 	Unicode
 #     V 	void
 
+# https://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.scalars.html
+
+
 DEFAULT_SORT_KIND = 'mergesort'
 
 DEFAULT_INT_DTYPE = np.int64 # default for SF construction
@@ -107,24 +110,6 @@ UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 INT_TYPES = (int, np.int_) # NOTE: this does not cover all NP int types; use np.integer check
 
 BOOL_TYPES = (bool, np.bool_)
-
-# avoid all this using hierarchy
-# https://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.scalars.html
-
-# some platforms do not have float128
-# if hasattr(np, 'float128'):
-#     FLOAT_TYPES: tp.Tuple[type, ...] = (float, np.float64, np.float16, np.float32, np.float128)
-# else:
-#     FLOAT_TYPES = (float, np.float64, np.float16, np.float32)
-
-# # some platforms do not have complex256
-# if hasattr(np, 'complex256'):
-#     COMPLEX_TYPES: tp.Tuple[type, ...]  = (complex, np.complex128, np.complex64, np.complex256)
-# else:
-#     COMPLEX_TYPES  = (complex, np.complex128, np.complex64)
-
-# NAN_TYPES = FLOAT_TYPES + COMPLEX_TYPES
-# NAT_TYPES = (np.datetime64, np.timedelta64)
 
 DICTLIKE_TYPES = (abc.Set, dict)
 
