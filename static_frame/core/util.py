@@ -661,11 +661,6 @@ def resolve_type_iter(
                 values_post.extend(v_iter)
             break
 
-        # else:
-        #     resolved, has_tuple = resolve_type(v, resolved=resolved)
-        #     if resolved == object or i >= iter_limit:
-        #         break
-
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
         return resolved, has_tuple, values_post
