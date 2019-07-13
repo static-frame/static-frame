@@ -153,7 +153,7 @@ UFUNC_SHAPE_SKIPNA = {
         'cumprod': (np.cumprod, np.nancumprod, None),
         }
 
-class MetaOperatorDelegate(type):
+class ContainerMeta(type):
     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
     '''
 
@@ -252,8 +252,9 @@ class MetaOperatorDelegate(type):
         return type.__new__(mcs, name, bases, attrs)
 
 
-class ContainerBase:
-    '''For type checking. Maybe in the future we could factor out a bit of the dynamic-ness of MetaOperatorDelegate.'''
+class ContainerBase(metaclass=ContainerMeta):
+    '''Base class of all containers.'''
+    # Maybe in the future we could factor out a bit of the dynamic-ness of ContainerMeta.
 
     __pos__: tp.Callable[[T], T]
     __neg__: tp.Callable[[T], T]

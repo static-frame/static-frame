@@ -44,7 +44,6 @@ from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
-from static_frame.core.operator_delegate import MetaOperatorDelegate
 from static_frame.core.operator_delegate import ContainerBase
 
 from static_frame.core.display import DisplayConfig
@@ -72,7 +71,7 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
-class Series(ContainerBase, metaclass=MetaOperatorDelegate):
+class Series(ContainerBase):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
 

@@ -30,7 +30,6 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 
-from static_frame.core.operator_delegate import MetaOperatorDelegate
 # from static_frame.core.operator_delegate import SupportsOpsIndex
 from static_frame.core.array_go import ArrayGO
 
@@ -61,8 +60,7 @@ IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
 
 #-------------------------------------------------------------------------------
-class IndexHierarchy(IndexBase,
-        metaclass=MetaOperatorDelegate):
+class IndexHierarchy(IndexBase):
     '''
     A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
     '''
