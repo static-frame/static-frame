@@ -706,7 +706,7 @@ class Display:
     @classmethod
     def from_values(cls,
             values: np.ndarray,
-            header: HeaderInitializer,
+            header: object,
             config: DisplayConfig = None,
             outermost: bool = False,
             index_depth: int = 0,

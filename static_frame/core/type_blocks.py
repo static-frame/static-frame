@@ -4,7 +4,7 @@ import typing as tp
 
 from itertools import zip_longest
 from itertools import chain
-import numpy as np
+import numpy as np  # type: ignore
 
 
 from static_frame.core.util import NULL_SLICE
@@ -18,6 +18,8 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import UFunc
 
 from static_frame.core.util import column_2d_filter
 
@@ -69,7 +71,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         '''
         if array.ndim == 1:
             return array.shape[0], 1
-        return array.shape
+        return tp.cast(tp.Tuple[int, int], array.shape)
 
     #---------------------------------------------------------------------------
     # constructors
@@ -89,10 +91,12 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns.
 
         '''
-        blocks = [] # ordered blocks
-        dtypes = [] # column position to dtype
-        index = [] # columns position to blocks key
+        blocks: tp.List[np.ndarray] = [] # ordered blocks
+        dtypes: tp.List[np.dtype] = [] # column position to dtype
+        index: tp.List[tp.Tuple[int, int]] = [] # columns position to blocks key
         block_count = 0
+
+        row_count: tp.Optional[int]
 
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
@@ -158,7 +162,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                 )
 
     @classmethod
-    def from_element_items(cls, items, shape, dtype) -> 'TypeBlocks':
+    def from_element_items(cls, items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]], shape: tp.Tuple[int, ...], dtype: np.dtype) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
         a = np.full(shape, fill_value=dtype_to_na(dtype), dtype=dtype)
@@ -191,9 +195,9 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
 
     def __init__(self, *,
-            blocks: tp.Sequence[np.ndarray],
-            dtypes: tp.Sequence[np.dtype],
-            index: tp.Sequence[tp.Tuple[int, int]],
+            blocks: tp.List[np.ndarray],
+            dtypes: tp.List[np.dtype],
+            index: tp.List[tp.Tuple[int, int]],
             shape: tp.Tuple[int, int]
             ) -> None:
         '''
@@ -217,7 +221,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         self.iloc = GetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state):
+    def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
@@ -301,7 +305,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     @staticmethod
     def _blocks_to_array(*,
-            blocks: tp.Iterable[np.ndarray],
+            blocks: tp.Sequence[np.ndarray],
             shape: tp.Tuple[int, int],
             row_dtype: tp.Optional[np.dtype],
             row_multiple: bool
@@ -356,7 +360,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                 row_dtype=self._row_dtype,
                 row_multiple=True)
 
-    def axis_values(self, axis=0, reverse=False) -> tp.Iterator[np.ndarray]:
+    def axis_values(self, axis: int = 0, reverse: bool = False) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays produced along an axis.
 
         Args:
@@ -381,7 +385,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     for b in self._blocks:
                         if b.ndim == 1:
                             # get a slice to permit concatenation
-                            key = slice(i, i+1)
+                            key: tp.Union[int, slice] = slice(i, i+1)
                         else:
                             key = i
                         if b.dtype == self._row_dtype:
@@ -392,7 +396,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
         elif axis == 0: # iterate over columns
             if not reverse:
-                block_column_iter = self._index
+                block_column_iter: tp.Iterable[tp.Tuple[int, int]] = self._index
             else:
                 block_column_iter = reversed(self._index)
 
@@ -448,7 +452,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def block_compatible(self,
             other: 'TypeBlocks',
-            by_shape=True) -> bool:
+            by_shape: bool = True) -> bool:
         '''Block compatible means that the blocks are the same shape. Have not yet added type to this evaluation.
 
         Args:
@@ -542,7 +546,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             index_ic: tp.Optional[IndexCorrespondence],
             columns_ic: tp.Optional[IndexCorrespondence],
             fill_value: tp.Any
-            ) -> tp.Generator[np.ndarray, None, None]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
         '''
@@ -556,7 +560,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     # works for both 1d and 2s arrays
                     yield b[index_ic.iloc_src]
                 else:
-                    shape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
+                    shape: tp.Union[int, tp.Tuple[int, int]] = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
                         values[index_ic.iloc_dst] = b[index_ic.iloc_src]
@@ -578,7 +582,13 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     else:
                         yield b[:, columns_ic.iloc_src]
                 else:
-                    dst_to_src = dict(zip(columns_ic.iloc_dst, columns_ic.iloc_src))
+                    dst_to_src = dict(
+                            zip(
+                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
+                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
+
+                            )
+                    )
                     for idx in range(columns_ic.size):
                         if idx in dst_to_src:
                             block_idx, block_col = self._index[dst_to_src[idx]]
@@ -597,6 +607,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                             yield values
 
         else: # both defined
+            assert columns_ic is not None and index_ic is not None
             if not columns_ic.has_common and not index_ic.has_common:
                 # just return an empty frame; what type it shold be is not clear
                 shape = index_ic.size, columns_ic.size
@@ -611,7 +622,13 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     else:
                         yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
                 else:
-                    columns_dst_to_src = dict(zip(columns_ic.iloc_dst, columns_ic.iloc_src))
+                    columns_dst_to_src = dict(
+                            zip(
+                                    tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
+                                    tp.cast(tp.Iterable[int], columns_ic.iloc_src),
+
+                            )
+                    )
 
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
@@ -642,8 +659,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
     def group(self,
-            axis,
-            key) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            axis: int,
+            key: GetItemKeyTypeCompound) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         '''
         Args:
             key: iloc selector on opposite axis
@@ -676,7 +693,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                 yield g, selection, self._extract(column_key=selection)
 
 
-    def block_apply_axis(self, func, *, axis, dtype=None) -> np.ndarray:
+    def block_apply_axis(self, func: AnyCallable, *, axis: int, dtype: tp.Optional[np.dtype] = None) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis.
 
         Args:
@@ -696,7 +713,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             # need to have good row dtype here, so that ints goes to floats
             if axis == 0:
                 # reduce all rows to 1d with column width
-                shape = self._shape[1]
+                shape: tp.Union[int, tp.Tuple[int, int]] = self._shape[1]
                 pos = 0
             else:
                 # reduce all columns to 2d blocks with 1 column
@@ -736,7 +753,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         return result
 
     #---------------------------------------------------------------------------
-    def __len__(self):
+    def __len__(self) -> int:
         '''Length, as with NumPy and Pandas, is the number of rows. Note that A shape of (3, 0) will return a length of 3, even though there is no data.
         '''
         return self._shape[0]
@@ -771,6 +788,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             # explicitly enumerate so as to not count no-width blocks
             idx += 1
 
+        assert d is not None
+
         return d
 
     def __repr__(self) -> str:
@@ -799,7 +818,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
     @classmethod
-    def _indices_to_contiguous_pairs(cls, indices) -> tp.Generator:
+    def _indices_to_contiguous_pairs(cls, indices: tp.Iterable[tp.Tuple[int, int]]
+        ) -> tp.Iterator[tp.Tuple[int, slice]]:
         '''Indices are pairs of (block_idx, value); convert these to pairs of (block_idx, slice) when we identify contiguous indices within a block (these are block slices)
 
         Args:
@@ -828,7 +848,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         if last and bundle:
             yield (last[0], cls._cols_to_slice(bundle))
 
-    def _all_block_slices(self) -> tp.Generator:
+    def _all_block_slices(self) -> tp.Iterator[tp.Tuple[int, slice]]:
         '''
         Alternaitve to _indices_to_contiguous_pairs when we need all indices per block in a slice.
         '''
@@ -840,7 +860,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     # @profile
     def _key_to_block_slices(self,
-                key,
+                key: GetItemKeyTypeCompound,
                 retain_key_order: bool = True) -> tp.Generator[
                 tp.Tuple[int, tp.Union[slice, int]], None, None]:
         '''
@@ -864,7 +884,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     #  slice the index; null slice already handled
                     if not retain_key_order:
                         key = slice_to_ascending_slice(key, self._shape[1])
-                    indices = self._index[key]
+                    indices: tp.Iterable[tp.Tuple[int, int]] = self._index[key]
                 elif isinstance(key, np.ndarray) and key.dtype == bool:
                     # NOTE: if self._index was an array we could use Boolean selection directly
                     indices = (self._index[idx] for idx, v in enumerate(key) if v)
@@ -883,8 +903,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
-            row_key=None,
-            column_key=None) -> tp.Generator[np.ndarray, None, None]:
+            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
         '''Return Boolean blocks of the same size and shape, where key selection sets values to True.
         '''
 
@@ -937,6 +957,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                 column_key,
                 retain_key_order=False))
 
+        target_slice: tp.Optional[tp.Union[slice, int]]
+
         target_block_idx = target_slice = None
         targets_remain = True
 
@@ -966,6 +988,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     target_block_idx = target_slice = None
                     break
                 else:
+                    assert target_slice is not None
                     # target_slice can be a slice or an integer
                     if isinstance(target_slice, slice):
                         target_start = target_slice.start
@@ -974,6 +997,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                         target_start = target_slice
                         target_stop = target_slice + 1
 
+                    assert target_start is not None and target_stop is not None
                     if target_start > part_start_last:
                         # yield un changed components before and after
                         parts.append(b[:, slice(part_start_last, target_start)])
@@ -1005,7 +1029,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         '''
         if column_key is None:
             # the default should not be the null slice, which would drop all
-            block_slices = iter(())
+            block_slices: tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]] = iter(())
         else:
             # block slices must be in ascending order, not key order
             block_slices = iter(self._key_to_block_slices(
@@ -1052,6 +1076,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                         target_start = target_slice # can be zero
                         target_stop = target_slice + 1
 
+                    assert target_start is not None and target_stop is not None
                     # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
                     if target_start > part_start_last:
                         # yield retained components before and after
@@ -1112,10 +1137,10 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
             if block_start_column == 0:
                 # we are starting at the block, no tail, always yield;  captures all 1 dim block cases
-                block_head_iter = chain(
+                block_head_iter: tp.Iterable[np.ndarray] = chain(
                         (block_start,),
                         self._blocks[block_start_idx + 1:])
-                block_tail_iter = self._blocks[:block_start_idx]
+                block_tail_iter: tp.Iterable[np.ndarray] = self._blocks[:block_start_idx]
             else:
                 block_head_iter = chain(
                         (block_start[:, block_start_column:],),
@@ -1149,9 +1174,9 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
     def _assign_blocks_from_keys(self,
-            row_key=None,
-            column_key=None,
-            value=None) -> tp.Generator[np.ndarray, None, None]:
+            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            value: object = None) -> tp.Iterator[np.ndarray]:
         '''Assign value into all blocks, returning blocks of the same size and shape.
         '''
         if isinstance(value, np.ndarray):
@@ -1193,7 +1218,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
                     if b.ndim == 1:
                         width = 1
                         # if block is 1D, then we can only take 1 column if we have a 2d value
-                        value_piece_column_key = 0
+                        value_piece_column_key: tp.Union[slice, int] = 0
                     else:
                         width = len(range(*target_slice.indices(assigned.shape[1])))
                         # if block id 2D, can take up to width from value
@@ -1234,7 +1259,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
-            value=None) -> tp.Generator[np.ndarray, None, None]:
+            value: object = None) -> tp.Iterator[np.ndarray]:
         '''Assign value into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
@@ -1265,8 +1290,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
     def _slice_blocks(self,
-            row_key=None,
-            column_key=None) -> tp.Generator[np.ndarray, None, None]:
+            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
         '''
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
@@ -1324,8 +1349,8 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
     def _extract_array(self,
-            row_key=None,
-            column_key=None) -> np.ndarray:
+            row_key: tp.Optional[GetItemKeyTypeCompound] = None,
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> np.ndarray:
         '''Alternative extractor that returns just an np array, concatenating blocks as necessary. Used by internal clients that need to process row/column with an array.
 
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
@@ -1372,7 +1397,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def _extract(self,
             row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None) -> 'TypeBlocks': # but sometimes an element
+            column_key: GetItemKeyType = None) -> tp.Union['TypeBlocks', np.ndarray]: # but sometimes an element
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.
 
@@ -1434,8 +1459,9 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def extract_iloc_assign(self,
             key: GetItemKeyTypeCompound,
-            value) -> 'TypeBlocks':
+            value: object) -> 'TypeBlocks':
         if isinstance(key, tuple):
+            key = tp.cast(tp.Tuple[int, int], key)
             return TypeBlocks.from_blocks(self._assign_blocks_from_keys(*key, value=value))
         return TypeBlocks.from_blocks(self._assign_blocks_from_keys(row_key=key, value=value))
 
@@ -1445,7 +1471,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         return TypeBlocks.from_blocks(self._drop_blocks(row_key=key))
 
 
-    def __getitem__(self, key) -> 'TypeBlocks':
+    def __getitem__(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''
         Returns a column, or a column slice.
         '''
@@ -1457,9 +1483,9 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: tp.Callable) -> 'TypeBlocks':
+    def _ufunc_unary_operator(self, operator: tp.Callable[[np.ndarray], np.ndarray]) -> 'TypeBlocks':
         # for now, do no reblocking; though, in many cases, operating on a unified block will be faster
-        def operation():
+        def operation() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
                 result = operator(b)
                 result.flags.writeable = False
@@ -1469,7 +1495,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     #---------------------------------------------------------------------------
 
-    def _block_shape_slices(self) -> tp.Generator[slice, None, None]:
+    def _block_shape_slices(self) -> tp.Iterator[slice]:
         '''Generator of slices necessary to slice a 1d array of length equal to the number of columns into a lenght suitable for each block.
         '''
         start = 0
@@ -1478,7 +1504,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             yield slice(start, end)
             start = end
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> 'TypeBlocks':
+    def _ufunc_binary_operator(self, *, operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray], other: tp.Iterable[tp.Any]) -> 'TypeBlocks':
         if isinstance(other, TypeBlocks):
             if self.block_compatible(other):
                 # this means that the blocks are the same size; we do not check types
@@ -1495,7 +1521,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
 
-            def operation():
+            def operation() -> tp.Iterator[np.ndarray]:
                 for a, b in zip_longest(
                         (column_2d_filter(op) for op in self_operands),
                         (column_2d_filter(op) for op in other_operands)
@@ -1521,7 +1547,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
             else:
                 raise NotImplementedError('cannot apply binary operators to arbitrary np arrays.')
 
-            def operation():
+            def operation() -> tp.Iterator[np.ndarray]:
                 for a, b in zip_longest(self_operands, other_operands):
                     result = operator(a, b)
                     result.flags.writeable = False # own the data
@@ -1531,11 +1557,11 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
 
 
-    def _ufunc_axis_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype):
+    def _ufunc_axis_skipna(self, *, axis: int, skipna: bool, ufunc: UFunc, ufunc_skipna: UFunc, dtype: np.dtype) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
 
-    def _ufunc_shape_skipna(self, *, axis, skipna, ufunc, ufunc_skipna, dtype):
+    def _ufunc_shape_skipna(self, *, axis: int, skipna: bool, ufunc: UFunc, ufunc_skipna: UFunc, dtype: np.dtype) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
 
@@ -1560,7 +1586,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
     def isna(self) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is NaN or None.
         '''
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
                 bool_block = isna_array(b)
                 bool_block.flags.writeable = False
@@ -1572,7 +1598,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
     def notna(self) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not NaN or None.
         '''
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
                 bool_block = np.logical_not(isna_array(b))
                 bool_block.flags.writeable = False
@@ -1780,7 +1806,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def dropna_to_keep_locations(self,
             axis: int = 0,
-            condition: tp.Callable[[np.ndarray], bool] = np.all,
+            condition: tp.Callable[..., bool] = np.all,
     ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
@@ -1806,7 +1832,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
         return row_key, column_key
 
 
-    def fillna(self, value) -> 'TypeBlocks':
+    def fillna(self, value: object) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
         '''
@@ -1820,7 +1846,7 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
     #---------------------------------------------------------------------------
     # mutate
 
-    def append(self, block: np.ndarray):
+    def append(self, block: np.ndarray) -> None:
         '''Add a block; an array copy will not be made unless the passed in block is not immutable'''
         # NOTE: shape can be 0, 0 if empty, or any one dimension can be 0. if columns is 0 and rows is non-zero, that row count is binding for appending (though the array need no tbe appended); if columns is > 0 and rows is zero, that row is binding for appending (and the array should be appended).
 
@@ -1860,14 +1886,14 @@ class TypeBlocks(SupportsOps, metaclass=MetaOperatorDelegate):
 
     def extend(self,
             other: tp.Union['TypeBlocks', tp.Iterable[np.ndarray]]
-            ):
+            ) -> None:
         '''Extend this TypeBlock with the contents of another TypeBlocks instance, or an iterable of arrays. Note that an iterable of TypeBlocks is not currently supported.
         '''
         if isinstance(other, TypeBlocks):
             if self._shape[0]:
                 if self._shape[0] != other._shape[0]:
                     raise RuntimeError('cannot extend unaligned shapes')
-            blocks = other._blocks
+            blocks: tp.Iterable[np.ndarray] = other._blocks
         else: # accept iterables of np.arrays
             blocks = other
         # row count must be the same
