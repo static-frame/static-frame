@@ -100,11 +100,11 @@ class TestCase(unittest.TestCase):
                 and np.isnan(v2)
                 ):
             return
-         # type: ignore
+
         if ((isinstance(v1, complex) or isinstance(v1, np.complexfloating))
                 and cmath.isnan(v1)
                 and (isinstance(v2, complex) or isinstance(v1, np.complexfloating))
-                and cmath.isnan(v2)
+                and cmath.isnan(v2)  # type: ignore
                 ):
             return
         return self.assertEqual(v1, v2)
