@@ -1036,7 +1036,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
 
         with self.assertRaises(RuntimeError):
-            ih1.isin([3,4,5]) # not an iterable of iterables
+            ih1.isin([3,4,5]) # type: ignore # not an iterable of iterables
 
         post = ih1.isin(([3,4], [2,5,1,5]))
         self.assertEqual(post.sum(), 0)
