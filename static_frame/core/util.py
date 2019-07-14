@@ -603,7 +603,7 @@ def resolve_type_iter(
     v_iter = iter(values)
 
     if copy_values:
-        # do not create list unless we are sure we have more than 1 value
+        # will copy in loop below; check for empty iterables and exit early
         try:
             front = next(v_iter)
         except StopIteration:
@@ -611,6 +611,7 @@ def resolve_type_iter(
             return None, False, EMPTY_TUPLE
 
         v_iter = chain((front,), v_iter)
+        # do not create list unless we are sure we have more than 1 value
         values_post = []
 
     resolved = None # None is valid specifier if the type is not ambiguous
@@ -630,7 +631,8 @@ def resolve_type_iter(
 
             if value_type == tuple:
                 has_tuple = True
-            elif value_type == str:
+            elif value_type == str or value_type == np.str_:
+                # must compare to both sring types
                 has_str = True
             else:
                 has_non_str = True
@@ -674,20 +676,18 @@ def iterable_to_array(
             raise RuntimeError('supplied dtype not set on supplied array')
         return values, len(values) <= 1
 
-
     # values for construct will only be a copy when necessary in iteration to find type
     if dtype is None:
+        # this gives as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = resolve_type_iter(values)
 
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
 
-        dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
+        # dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
     else: # dtype given, do not do full iteration
         is_gen, copy_values = is_gen_copy_values(values)
-
-        dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
 
         if copy_values:
             # we have to realize into sequence for numpy creation
@@ -702,7 +702,7 @@ def iterable_to_array(
             return v, True
 
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
-        has_tuple = dtype_is_object
+        has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
 
     if len(values_for_construct) == 1 or isinstance(values, DICTLIKE_TYPES):
         # check values for dictlike, not values_for_construct

@@ -1126,10 +1126,12 @@ class Series(ContainerBase):
         '''
         # argsort lets us do the sort once and reuse the results
         if self._index.depth > 1:
-            raise NotImplementedError()
+            v = self._index.values
+            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+        else:
+            # this technique does not work when values is a 2d array
+            order = np.argsort(self._index.values, kind=kind)
 
-        # this technique does not work when values is a 2d array
-        order = np.argsort(self._index.values, kind=kind)
         if not ascending:
             order = order[::-1]
 

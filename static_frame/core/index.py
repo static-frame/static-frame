@@ -777,6 +777,7 @@ class Index(IndexBase):
         v = np.sort(self.values, kind=kind)
         if not ascending:
             v = v[::-1]
+
         v.flags.writeable = False
         return self.__class__(v)
 

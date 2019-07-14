@@ -24,6 +24,7 @@ from static_frame.core.util import union2d
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
+from static_frame.core.util import iterable_to_array
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -220,7 +221,7 @@ class IndexHierarchy(IndexBase):
         token = object()
         observed_last = [token for _ in range(len(first))]
 
-        tree = OrderedDict()
+        tree = OrderedDict() # order assumed and necessary
         # put first back in front
         for label in chain((first,), labels_iter):
             current = tree
@@ -713,12 +714,49 @@ class IndexHierarchy(IndexBase):
         Args:
             kind: Sort algorithm passed to NumPy.
         '''
-        raise NotImplementedError()
+        if self._recache:
+            self._update_array_cache()
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
-        '''Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
+        v = self._labels
+        order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+
+        if not ascending:
+            order = order[::-1]
+
+        values = v[order]
+        values.flags.writeable = False
+        return self.__class__.from_labels(values, name=self._name)
+
+
+    def isin(self, other: tp.Iterable[tp.Iterable[tp.Hashable]]) -> np.ndarray:
+        '''Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
         '''
-        raise NotImplementedError()
+        if self._recache:
+            self._update_array_cache()
+
+        matches = []
+        for seq in other:
+            if not hasattr(seq, '__iter__'):
+                raise RuntimeError('must provide one or more iterables within an iterable')
+            # must use iterable to array to properly handle heterogenous types, or if already an array
+            v, _ = iterable_to_array(seq)
+            # if seq is a tuple, could check self.keys()
+            if len(v) == self.depth:
+                matches.append(v)
+
+        if not matches:
+            return np.full(self._length, False, dtype=bool)
+
+        values = self._labels
+
+        # NOTE: when doing 2d to 1d comparison, np.isin does elementwise comparison, as does ==, but == is shown to be faster in this context
+        array = np.full(self._length, False, dtype=bool)
+        for match in matches:
+            array |= (values == match).all(axis=1)
+
+        array.flags.writeable = False
+        return array
+
 
     def roll(self, shift: int) -> 'Index':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).

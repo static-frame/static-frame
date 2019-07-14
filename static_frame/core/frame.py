@@ -2149,19 +2149,27 @@ class Frame(ContainerBase):
         '''
         Return a new Frame ordered by the sorted Index.
         '''
-        # argsort lets us do the sort once and reuse the results
-        order = np.argsort(self._index.values, kind=kind)
+        if self._index.depth > 1:
+            v = self._index.values
+            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+        else:
+            # argsort lets us do the sort once and reuse the results
+            order = np.argsort(self._index.values, kind=kind)
+
         if not ascending:
             order = order[::-1]
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
                 index=index_values,
                 columns=self._columns,
                 own_data=True,
-                name=self._name)
+                name=self._name,
+                index_constructor=self._index.from_labels,
+                )
 
     def sort_columns(self,
             ascending: bool = True,
@@ -2169,19 +2177,27 @@ class Frame(ContainerBase):
         '''
         Return a new Frame ordered by the sorted Columns.
         '''
-        # argsort lets us do the sort once and reuse the results
-        order = np.argsort(self._columns.values, kind=kind)
+        if self._columns.depth > 1:
+            v = self._columns.values
+            order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
+        else:
+            # argsort lets us do the sort once and reuse the results
+            order = np.argsort(self._columns.values, kind=kind)
+
         if not ascending:
             order = order[::-1]
 
         columns_values = self._columns.values[order]
         columns_values.flags.writeable = False
+
         blocks = self._blocks[order]
         return self.__class__(blocks,
                 index=self._index,
                 columns=columns_values,
                 own_data=True,
-                name=self._name)
+                name=self._name,
+                columns_constructor=self._columns.from_labels
+                )
 
     def sort_values(self,
             key: KeyOrKeys,
@@ -2233,7 +2249,9 @@ class Frame(ContainerBase):
                     index=self._index,
                     columns=column_values,
                     own_data=True,
-                    name=self._name)
+                    name=self._name,
+                    columns_constructor=self._columns.from_labels
+                    )
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
@@ -2242,15 +2260,17 @@ class Frame(ContainerBase):
                 index=index_values,
                 columns=self._columns,
                 own_data=True,
-                name=self._name)
+                name=self._name,
+                index_constructor=self._index.from_labels
+                )
 
     def isin(self, other) -> 'Frame':
         '''
         Return a same-sized Boolean Frame that shows if the same-positioned element is in the iterable passed to the function.
         '''
-        # cannot use assume_unique because do not know if values is unique
+        # cannot use assume_unique because do not know if values are unique
         v, _ = iterable_to_array(other)
-        # TODO: is it faster to do this at the block level and return blocks?
+        # NOTE: is it faster to do this at the block level and return blocks?
         array = np.isin(self.values, v)
         array.flags.writeable = False
         return self.__class__(array, columns=self._columns, index=self._index)

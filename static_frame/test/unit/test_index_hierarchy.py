@@ -1008,5 +1008,54 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.get((20, 200)), None)
 
 
+    def test_index_hierarchy_sort_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
+
+        self.assertEqual(ih1.sort(ascending=False).values.tolist(),
+            [[2, 70], [2, 30], [1, 70], [1, 30]]
+            )
+
+
+
+    def test_index_hierarchy_isin_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
+
+        post = ih1.isin([(2, 30, 2),])
+        self.assertEqual(post.dtype, bool)
+        self.assertEqual(post.tolist(),
+            [False, False, False, False, True, False, False, False])
+
+        extract = ih1.loc[post]
+        self.assertEqual(extract.values.shape, (1, 3))
+
+
+    def test_index_hierarchy_isin_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
+
+        with self.assertRaises(RuntimeError):
+            ih1.isin([3,4,5]) # not an iterable of iterables
+
+        post = ih1.isin(([3,4], [2,5,1,5]))
+        self.assertEqual(post.sum(), 0)
+
+
+    def test_index_hierarchy_isin_c(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        # multiple matches
+
+        post1 = ih1.isin([(1, 'a', 5), (2, 'b', 2)])
+        self.assertEqual(post1.tolist(),
+                [False, True, False, False, False, False, True, False])
+
+        post2 = ih1.isin(ih1.keys())
+        self.assertEqual(post2.sum(), len(ih1))
+
+
+
 if __name__ == '__main__':
     unittest.main()

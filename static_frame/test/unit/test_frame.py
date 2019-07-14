@@ -21,6 +21,7 @@ from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
+from static_frame import IndexYearMonth
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -2109,6 +2110,28 @@ class TestUnit(TestCase):
                 (('p', (('z', 2), ('y', 30), ('x', 30), ('w', 2))), ('q', (('z', 2), ('y', 73), ('x', 34), ('w', 95))), ('r', (('z', 'a'), ('y', 'd'), ('x', 'b'), ('w', 'c'))), ('s', (('z', False), ('y', True), ('x', True), ('w', False))), ('t', (('z', False), ('y', True), ('x', False), ('w', False)))))
 
 
+
+    def test_frame_sort_index_b(self) -> None:
+        # reindex both axis
+        records = (
+                ('a', False, False),
+                ('b', True, False),
+                ('c', False, False),
+                ('d', True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=IndexHierarchy.from_product((1, 2), (10, 20)),
+                )
+
+        post = f1.sort_index(ascending=False)
+
+        self.assertEqual(post.to_pairs(0),
+                (('p', (((2, 20), 'd'), ((2, 10), 'c'), ((1, 20), 'b'), ((1, 10), 'a'))), ('q', (((2, 20), True), ((2, 10), False), ((1, 20), True), ((1, 10), False))), ('r', (((2, 20), True), ((2, 10), False), ((1, 20), False), ((1, 10), False))))
+                )
+
+
     def test_frame_sort_columns_a(self) -> None:
         # reindex both axis
         records = (
@@ -2129,6 +2152,50 @@ class TestUnit(TestCase):
                 (('p', (('z', False), ('x', False), ('w', False), ('y', True))), ('q', (('z', False), ('x', True), ('w', False), ('y', True))), ('r', (('z', 'a'), ('x', 'b'), ('w', 'c'), ('y', 'd'))), ('s', (('z', 2), ('x', 34), ('w', 95), ('y', 73))), ('t', (('z', 2), ('x', 30), ('w', 2), ('y', 30)))))
 
         self.assertEqual(f2.name, f1.name)
+
+
+    def test_frame_sort_columns_b(self) -> None:
+        # reindex both axis
+        records = (
+                (2, 2, False, False),
+                (30, 34, True, False),
+                (2, 95, False, False),
+                (30, 73, True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((1, 2), (10, 20)),
+                index=('z', 'x', 'w', 'y'),
+                )
+
+        f2 = f1.sort_columns(ascending=False)
+
+        self.assertEqual(
+            f2.to_pairs(0),
+            (((2, 20), (('z', False), ('x', False), ('w', False), ('y', True))), ((2, 10), (('z', False), ('x', True), ('w', False), ('y', True))), ((1, 20), (('z', 2), ('x', 34), ('w', 95), ('y', 73))), ((1, 10), (('z', 2), ('x', 30), ('w', 2), ('y', 30))))
+            )
+
+
+    def test_frame_sort_columns_c(self) -> None:
+        # reindex both axis
+        records = (
+                (2, 2, False, False),
+                (30, 34, True, False),
+                (2, 95, False, False),
+                (30, 73, True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=IndexYearMonth.from_year_month_range('2018-01', '2018-04'),
+                index=('z', 'x', 'w', 'y'),
+                )
+        f2 = f1.sort_columns(ascending=False)
+
+        self.assertEqual(f2.to_pairs(0),
+            ((np.datetime64('2018-04'), (('z', False), ('x', False), ('w', False), ('y', True))), (np.datetime64('2018-03'), (('z', False), ('x', True), ('w', False), ('y', True))), (np.datetime64('2018-02'), (('z', 2), ('x', 34), ('w', 95), ('y', 73))), (np.datetime64('2018-01'), (('z', 2), ('x', 30), ('w', 2), ('y', 30))))
+        )
+
+        self.assertEqual(f2.columns.__class__, IndexYearMonth)
 
     def test_frame_sort_values_a(self) -> None:
         # reindex both axis

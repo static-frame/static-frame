@@ -1038,16 +1038,17 @@ class TestUnit(TestCase):
         self.assertEqual(post.index.__class__, IndexYearMonth)
 
 
-    # def test_series_sort_index_c(self) -> None:
+    def test_series_sort_index_c(self) -> None:
 
-    #     index = IndexHierarchy.from_product((0, 1), (10, 20))
-    #     s = Series(list('abcd'), index=index)
+        index = IndexHierarchy.from_product((0, 1), (10, 20))
+        s = Series(list('abcd'), index=index)
 
-    #     post = s.sort_index(ascending=False)
+        post = s.sort_index(ascending=False)
 
-    #     import ipdb; ipdb.set_trace()
-
-    #     self.assertEqual(post.index.__class__, IndexHierarchy)
+        self.assertEqual(post.to_pairs(),
+            (((1, 20), 'd'), ((1, 10), 'c'), ((0, 20), 'b'), ((0, 10), 'a'))
+            )
+        self.assertEqual(post.index.__class__, IndexHierarchy)
 
 
     def test_series_sort_values_a(self) -> None:

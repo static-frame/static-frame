@@ -7,6 +7,14 @@ What is New in Static Frame
 0.3.7-dev
 ------------
 
+``IndexHierarchy.sort()``, ``IndexHierarchy.isin()`` now implemented.
+
+``Series.sort_index()`` now properly propagates ``IndexBase`` subclasses.
+
+``Frame.sort_index()`` and ``Frame.sort_columns()`` now properly propagate ``IndexBase`` subclasses.
+
+All containers now derive from ``ContainerBase``, simplyfying inheritance and ``ContainerMeta`` application.
+
 ``Index`` objects based on ``np.datetime64`` now accept ``np.datetime64`` objects in ``loc`` expressions.
 
 All construction from Python iterables now better handle array creation from diverse Python objects.
