@@ -27,11 +27,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks
 
 
-# handle nan in object blocks with skipna processing on ufuncs
-# bloc() to select / assign into an 2D array with Boolean mask selection
-# roll() on TypeBlocks (can be used in duplicate discovery on blocks)
-
-
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
 #     b 	boolean
