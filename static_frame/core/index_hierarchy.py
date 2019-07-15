@@ -222,7 +222,7 @@ class IndexHierarchy(IndexBase):
         token = object()
         observed_last = [token for _ in range(len(first))]
 
-        tree = OrderedDict() # order assumed and necessary
+        tree = dict() # order assumed and necessary
         # put first back in front
         for label in chain((first,), labels_iter):
             current = tree
@@ -231,7 +231,7 @@ class IndexHierarchy(IndexBase):
                 # print('d', d, 'v', v, 'depth_pre_max', depth_pre_max, 'depth_max', depth_max)
                 if d < depth_pre_max:
                     if v not in current:
-                        current[v] = OrderedDict()
+                        current[v] = dict() # order necessary
                     else:
                         # can only fetch this node (and not create a new node) if this is the sequential predecessor
                         if v != observed_last[d]:
