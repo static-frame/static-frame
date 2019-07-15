@@ -14,6 +14,7 @@ import datetime
 from urllib import request
 import tempfile
 from functools import reduce
+from itertools import zip_longest
 
 import numpy as np  # type: ignore
 
@@ -1240,6 +1241,54 @@ def intersect2d(array: np.ndarray,
 
 def union2d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
     return set_ufunc2d(np.union1d, array, other)
+
+#-------------------------------------------------------------------------------
+
+def slices_from_targets(
+        target_index: tp.Iterable[int],
+        target_values: tp.Iterable[tp.Any],
+        length: int,
+        directional_forward: bool,
+        limit: int,
+        slice_condition: tp.Callable[[slice], bool]
+        ) -> tp.Iterator[slice]:
+
+    if directional_forward:
+        target_slices = (
+                slice(start+1, stop)
+                for start, stop in
+                zip_longest(target_index, target_index[1:], fillvalue=length)
+                )
+    else:
+        target_slices = (
+                slice((start+1 if start is not None else start), stop)
+                for start, stop in
+                zip(chain((None,), target_index[:-1]), target_index)
+                )
+
+    for target_slice, value in zip(target_slices, target_values):
+        if target_slice.start == target_slice.stop:
+            continue
+        if directional_forward and target_slice.start >= length:
+            continue
+        elif (not directional_forward
+                and target_slice.start == None
+                and target_slice.stop == 0):
+            continue
+
+        # only process if first value of slice is NaN
+        if slice_condition(target_slice):
+            if limit > 0:
+                # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+                shift = len(range(*target_slice.indices(length))) - limit
+                if shift > 0:
+                    if directional_forward:
+                        target_slice = slice(target_slice.start, target_slice.stop - shift)
+                    else:
+                        target_slice = slice(target_slice.start + shift, target_slice.stop)
+            yield target_slice, value
+
+
 
 
 

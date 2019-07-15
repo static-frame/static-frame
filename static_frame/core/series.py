@@ -28,6 +28,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import binary_transition
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import slices_from_targets
 
 
 from static_frame.core.util import CallableOrMapping
@@ -594,40 +595,51 @@ class Series(ContainerBase):
         target_values = array[target_index]
         length = len(array)
 
-        if directional_forward:
-            target_slices = (
-                    slice(start+1, stop)
-                    for start, stop in
-                    zip_longest(target_index, target_index[1:], fillvalue=length)
-                    )
-        else:
-            target_slices = (
-                    slice((start+1 if start is not None else start), stop)
-                    for start, stop in
-                    zip(chain((None,), target_index[:-1]), target_index)
-                    )
+        # if directional_forward:
+        #     target_slices = (
+        #             slice(start+1, stop)
+        #             for start, stop in
+        #             zip_longest(target_index, target_index[1:], fillvalue=length)
+        #             )
+        # else:
+        #     target_slices = (
+        #             slice((start+1 if start is not None else start), stop)
+        #             for start, stop in
+        #             zip(chain((None,), target_index[:-1]), target_index)
+        #             )
 
-        for target_slice, value in zip(target_slices, target_values):
-            if target_slice.start == target_slice.stop:
-                continue
-            if directional_forward and target_slice.start >= length:
-                continue
-            elif (not directional_forward
-                    and target_slice.start == None
-                    and target_slice.stop == 0):
-                continue
+        # for target_slice, value in zip(target_slices, target_values):
+        #     if target_slice.start == target_slice.stop:
+        #         continue
+        #     if directional_forward and target_slice.start >= length:
+        #         continue
+        #     elif (not directional_forward
+        #             and target_slice.start == None
+        #             and target_slice.stop == 0):
+        #         continue
 
-            # only process if first value of slice is NaN
-            if sel[target_slice][0]:
-                if limit > 0:
-                    # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
-                    shift = len(range(*target_slice.indices(length))) - limit
-                    if shift > 0:
-                        if directional_forward:
-                            target_slice = slice(target_slice.start, target_slice.stop - shift)
-                        else:
-                            target_slice = slice(target_slice.start + shift, target_slice.stop)
-                assigned[target_slice] = value
+        #     # only process if first value of slice is NaN
+        #     if sel[target_slice][0]:
+        #         if limit > 0:
+        #             # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+        #             shift = len(range(*target_slice.indices(length))) - limit
+        #             if shift > 0:
+        #                 if directional_forward:
+        #                     target_slice = slice(target_slice.start, target_slice.stop - shift)
+        #                 else:
+        #                     target_slice = slice(target_slice.start + shift, target_slice.stop)
+
+
+        for target_slice, value in slices_from_targets(
+                target_index=target_index,
+                target_values=target_values,
+                length=length,
+                directional_forward=directional_forward,
+                limit=limit,
+                slice_condition=lambda target_slice: bool(sel[target_slice][0])
+                ):
+
+            assigned[target_slice] = value
 
         assigned.flags.writeable = False
         return assigned
