@@ -32,6 +32,7 @@ from static_frame.core.util import dtype_to_na
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import isna_array
 from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import binary_transition
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence

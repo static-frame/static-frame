@@ -970,7 +970,7 @@ def binary_transition(
             target_sel_trailing[:, 0] = False
 
         # this dictionary could be very sparse compared to axis dimensionality
-        indices_by_axis = defaultdict(list)
+        indices_by_axis: tp.DefaultDict[int, tp.List[int]] = defaultdict(list)
         for y, x in zip(*np.nonzero(target_sel_leading | target_sel_trailing)):
             if axis == 0:
                 # store many rows values for each column
