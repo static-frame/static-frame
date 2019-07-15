@@ -610,7 +610,6 @@ class Series(ContainerBase):
         for target_slice, value in zip(target_slices, target_values):
             if target_slice.start == target_slice.stop:
                 continue
-
             if directional_forward and target_slice.start >= length:
                 continue
             elif (not directional_forward
@@ -618,7 +617,7 @@ class Series(ContainerBase):
                     and target_slice.stop == 0):
                 continue
 
-            # only assume if all values are NaN, which will be given by first value
+            # only process if first value of slice is NaN
             if sel[target_slice][0]:
                 if limit > 0:
                     # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount

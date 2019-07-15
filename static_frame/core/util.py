@@ -934,6 +934,9 @@ def binary_transition(
         ) -> np.ndarray:
     '''
     Given a Boolean 1D array, return the index positions (integers) at False values where that False was previously True, or will be True
+
+    Returns:
+        For a 1D input, a 1D array of integers; for a 2D input, a 1D object array of lists, where each position corresponds to a found index position. Returning a list is undesirable, but more efficient as a list will be neede for selection downstream.
     '''
 
     if len(array) == 0:
@@ -979,9 +982,9 @@ def binary_transition(
                 indices_by_axis[y].append(x)
 
         # if axis is 0, return column width, else return row height
-        post = np.empty(dtype=object, shape=array.shape[1 if axis == 0 else 0])
+        post = np.empty(dtype=object, shape=array.shape[not axis])
         for k, v in indices_by_axis.items():
-            post[k] = tuple(v)
+            post[k] = v
 
         return post
 

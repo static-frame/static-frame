@@ -1806,16 +1806,18 @@ class TypeBlocks(ContainerBase):
     @staticmethod
     def _fillna_directional_axis_0(
             blocks: tp.Iterable[np.ndarray],
-            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+            directional_forward: bool,
+            limit: int = 0
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Do a directional fill along axis 0, meaning filling vertically, going top/bottom or bottom/top.
 
         Args:
-            sided_leading: if True, start from the leading (top or left) side.
+            directional_forward: if True, start from the forward (top or left) side.
         '''
-        sided_index = 0 if sided_leading else -1
 
         for b in blocks:
+
             sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
@@ -1823,17 +1825,80 @@ class TypeBlocks(ContainerBase):
                 yield b
             elif ndim == 2 and not np.any(sel).any():
                 yield b
+            else:
 
-            # will work on 1d, 2d
-            target_index = binary_transition(sel)
+                # will work on 1d, 2d
+                if ndim == 1:
+                    # make single array look like iterable of tuples
+                    target_indexes = binary_transition(sel)
+                    slots = 1
+                    length = len(sel)
 
-            # see _fillna_directional in Series
+                elif ndim == 2:
+                    target_indexes = binary_transition(sel)
+                    slots = b.shape[1] # axis 0 has column width
+                    length = b.shape[0]
+
+                # type is already compatible, no need for check
+                assigned = b.copy()
+
+                for i in range(slots):
+
+                    if ndim == 1:
+                        target_index = target_indexes
+                        if not target_index:
+                            continue
+                        target_values = b[target_index]
+                    else:
+                        target_index = target_indexes[i]
+                        if not target_index:
+                            continue
+                        target_values = b[target_index, i]
+
+                    if directional_forward:
+                        target_slices = (
+                                slice(start+1, stop)
+                                for start, stop in
+                                zip_longest(target_index, target_index[1:], fillvalue=length)
+                                )
+                    else:
+                        target_slices = (
+                                slice((start+1 if start is not None else start), stop)
+                                for start, stop in
+                                zip(chain((None,), target_index[:-1]), target_index)
+                                )
+
+                    for target_slice, value in zip(target_slices, target_values):
+                        if target_slice.start == target_slice.stop:
+                            continue
+                        if directional_forward and target_slice.start >= length:
+                            continue
+                        elif (not directional_forward
+                                and target_slice.start == None
+                                and target_slice.stop == 0):
+                            continue
+                        if limit > 0:
+                            # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+                            shift = len(range(*target_slice.indices(length))) - limit
+                            if shift > 0:
+                                if directional_forward:
+                                    target_slice = slice(target_slice.start, target_slice.stop - shift)
+                                else:
+                                    target_slice = slice(target_slice.start + shift, target_slice.stop)
+                        if ndim == 1:
+                            assigned[target_slice] = value
+                        else:
+                            assigned[target_slice, i] = value
+
+                assigned.flags.writeable = False
+                yield assigned
+
 
 
     @staticmethod
     def _fillna_directional_axis_1(
             blocks: tp.Iterable[np.ndarray],
-            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+            directional_forward: bool) -> tp.Iterator[np.ndarray]:
         pass
 
 
@@ -1846,12 +1911,12 @@ class TypeBlocks(ContainerBase):
         if axis == 0:
             return self.from_blocks(self._fillna_directional_axis_0(
                     blocks=self._blocks,
-                    sided_leading=False))
+                    directional_forward=True))
         elif axis == 1:
             # must reverse when not leading
             blocks = reversed(tuple(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    sided_leading=False)))
+                    directional_forward=True)))
             return self.from_blocks(blocks)
 
         raise NotImplementedError(f'no support for axis {axis}')
@@ -1865,11 +1930,11 @@ class TypeBlocks(ContainerBase):
         if axis == 0:
             return self.from_blocks(self._fillna_directional_axis_0(
                     blocks=self._blocks,
-                    sided_leading=True))
+                    directional_forward=False))
         elif axis == 1:
             return self.from_blocks(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    sided_leading=True))
+                    directional_forward=False))
         raise NotImplementedError(f'no support for axis {axis}')
 
 

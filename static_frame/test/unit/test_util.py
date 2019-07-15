@@ -846,12 +846,12 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 binary_transition(a1, axis=0).tolist(),
-                [(0, 2), None, (2,), (1,)]
+                [[0, 2], None, [2,], [1,]]
                 )
 
         self.assertEqual(
                 binary_transition(a1, axis=1).tolist(),
-                [(1, 3), (1, 3), (2,)]
+                [[1, 3], [1, 3], [2,]]
                 )
 
     def test_binary_transition_c(self) -> None:
@@ -865,12 +865,12 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 binary_transition(a1, axis=0).tolist(),
-                [(0, 4), None, (3,), (2,)]
+                [[0, 4], None, [3,], [2,]]
                 )
 
         self.assertEqual(
                 binary_transition(a1, axis=1).tolist(),
-                [(1, 3), (1, 3), (1, 3), (1, 2), (2,)]
+                [[1, 3], [1, 3], [1, 3], [1, 2], [2,]]
                 )
 
 

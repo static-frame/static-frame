@@ -1350,14 +1350,22 @@ class TestUnit(TestCase):
         a2 = np.array([nan, nan, nan], dtype=object)
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_forward()
 
-        # import ipdb; ipdb.set_trace()
 
-        # tb2 = tb1.fillna_forward(0)
+        self.assertEqual(
+                tb2.fillna(0).values.tolist(),
+                [[0.0, 0.0, 3.0, 4.0, 0],
+                [0.0, 0.0, 6.0, 4.0, 0],
+                [5.0, 0.0, 6.0, 4.0, 0]]
+                )
 
-        # self.assertAlmostEqualValues(list(tb2.values.flat),
-        #         [0.0, 0.0, 3.0, 4.0, 0, 0.0, 0.0, 6.0, nan, 0, 5.0, 0.0, nan, nan, 0])
-
+        tb3 = tb1.fillna_backward()
+        self.assertEqual(tb3.fillna(0).values.tolist(),
+                [[5.0, 0.0, 6.0, 4.0, 0],
+                [5.0, 0.0, 6.0, 0.0, 0],
+                [5.0, 0.0, 0.0, 0.0, 0]]
+                )
 
 
 
