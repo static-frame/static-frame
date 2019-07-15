@@ -1056,6 +1056,32 @@ class TestUnit(TestCase):
         self.assertEqual(post2.sum(), len(ih1))
 
 
+    def test_index_hierarchy_roll_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
+
+        with self.assertRaises(RuntimeError):
+            ih1.roll(1) # result in invalid tree form
+
+        self.assertEqual(ih1.roll(2).values.tolist(),
+            [[2, 30], [2, 70], [1, 30], [1, 70]]
+            )
+
+
+    def test_index_hierarchy_roll_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_labels((('a', 1), ('b', 20), ('c', 400), ('d', 50)))
+
+        self.assertEqual(
+                ih1.roll(1).values.tolist(),
+                [['d', 50], ['a', 1], ['b', 20], ['c', 400]]
+                )
+
+        self.assertEqual(
+                ih1.roll(-1).values.tolist(),
+                [['b', 20], ['c', 400], ['d', 50], ['a', 1]]
+                )
+
 
 if __name__ == '__main__':
     unittest.main()

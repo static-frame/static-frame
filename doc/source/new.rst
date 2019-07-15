@@ -7,7 +7,7 @@ What is New in Static Frame
 0.3.7-dev
 ------------
 
-``IndexHierarchy.sort()``, ``IndexHierarchy.isin()`` now implemented.
+``IndexHierarchy.sort()``, ``IndexHierarchy.isin()``, ``IndexHierarchy.roll()`` now implemented.
 
 ``Series.sort_index()`` now properly propagates ``IndexBase`` subclasses.
 

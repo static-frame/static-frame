@@ -799,7 +799,6 @@ class Index(IndexBase):
                     axis=0,
                     wrap=True)
             values.flags.writeable = False
-        # NOTE: could recycle self._map if we know this is an immutable Index
         return self.__class__(values)
 
     #---------------------------------------------------------------------------

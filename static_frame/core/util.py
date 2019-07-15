@@ -1028,13 +1028,14 @@ def array_to_duplicated(
     r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
-def array_shift(array: np.ndarray,
+def array_shift(
+        array: np.ndarray,
         shift: int,
         axis: int, # 0 is rows, 1 is columns
         wrap: bool,
         fill_value: tp.Any = np.nan) -> np.ndarray:
     '''
-    Apply an np-style roll to an array; if wrap is False, fill values out-shifted values with fill_value.
+    Apply an np-style roll to a 1D or 2D array; if wrap is False, fill values out-shifted values with fill_value.
 
     Args:
         fill_value: only used if wrap is False.

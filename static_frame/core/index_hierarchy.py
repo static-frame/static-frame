@@ -30,6 +30,7 @@ from static_frame.core.util import GetItem
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import array_shift
 
 # from static_frame.core.container import SupportsOpsIndex
 from static_frame.core.array_go import ArrayGO
@@ -758,10 +759,23 @@ class IndexHierarchy(IndexBase):
         return array
 
 
-    def roll(self, shift: int) -> 'Index':
+    def roll(self, shift: int) -> 'IndexHierarchy':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
         '''
-        raise NotImplementedError()
+        if self._recache:
+            self._update_array_cache()
+
+        values = self._labels
+
+        if shift % len(values):
+            values = array_shift(values,
+                    shift,
+                    axis=0,
+                    wrap=True)
+            values.flags.writeable = False
+        return self.__class__.from_labels(values)
+
+
 
     #---------------------------------------------------------------------------
     # export

@@ -3,6 +3,14 @@ Transformations & Utilities
 
 The following utilites transform a container into a container of similar size.
 
+Index
+--------
+
+.. automethod:: static_frame.Index.isin
+
+.. automethod:: static_frame.Index.roll
+
+
 
 Series
 ---------
