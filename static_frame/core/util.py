@@ -4,8 +4,9 @@ import os
 import operator
 import struct
 
-from collections import OrderedDict
 from collections import abc
+from collections import defaultdict
+
 from itertools import chain
 from io import StringIO
 from io import BytesIO
@@ -439,7 +440,9 @@ def ufunc_unique(
     return np.unique(array, axis=axis)
 
 
-def roll_1d(array: np.ndarray, shift: int) -> np.ndarray:
+def roll_1d(array: np.ndarray,
+            shift: int
+            ) -> np.ndarray:
     '''
     Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
     '''
@@ -462,7 +465,10 @@ def roll_1d(array: np.ndarray, shift: int) -> np.ndarray:
     return post
 
 
-def roll_2d(array: np.ndarray, shift: int, axis: int) -> np.ndarray:
+def roll_2d(array: np.ndarray,
+            shift: int,
+            axis: int
+            ) -> np.ndarray:
     '''
     Specialized form of np.roll that, by focusing on the 2D solution
     '''
@@ -848,22 +854,6 @@ def key_to_datetime_key(
 
 #-------------------------------------------------------------------------------
 
-
-# def _dict_to_sorted_items(
-#             mapping: tp.Dict) -> tp.Generator[
-#             tp.Tuple[tp.Hashable, tp.Any], None, None]:
-#     '''
-#     Convert a dict into two arrays. Note that sorting is only necessary in Python 3.5, and should not be done if an ordered dict
-#     '''
-#     if isinstance(mapping, OrderedDict) or _DICT_STABLE:
-#         # cannot use fromiter as do not know type
-#         keys = mapping.keys()
-#     else:
-#         keys = sorted(mapping.keys())
-#     for k in keys:
-#         yield k, mapping[k]
-
-
 def array_to_groups_and_locations(
         array: np.ndarray,
         unique_axis: tp.Optional[int] = 0) -> tp.Tuple[np.ndarray, np.ndarray]:
@@ -938,25 +928,64 @@ def isna_array(array: np.ndarray) -> np.ndarray:
 
 
 
-def binary_transition(array: np.ndarray) -> np.ndarray:
+def binary_transition(
+        array: np.ndarray,
+        axis: int = 0
+        ) -> np.ndarray:
     '''
     Given a Boolean 1D array, return the index positions (integers) at False values where that False was previously True, or will be True
     '''
+
     if len(array) == 0:
         # NOTE: on some platforms this may not be the same dtype as returned from np.nonzero
         return EMPTY_ARRAY_INT
 
     not_array = ~array
 
-    # non-nan values that go (from left to right) to NaN
-    target_sel_leading = (array ^ roll_1d(array, -1)) & not_array
-    target_sel_leading[-1] = False # wrap around observation invalid
-    # non-nan values that were previously NaN (from left to right)
-    target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
-    target_sel_trailing[0] = False # wrap around observation invalid
+    if array.ndim == 1:
+        # non-nan values that go (from left to right) to NaN
+        target_sel_leading = (array ^ roll_1d(array, -1)) & not_array
+        target_sel_leading[-1] = False # wrap around observation invalid
+        # non-nan values that were previously NaN (from left to right)
+        target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
+        target_sel_trailing[0] = False # wrap around observation invalid
 
-    return np.nonzero(target_sel_leading | target_sel_trailing)[0]
+        return np.nonzero(target_sel_leading | target_sel_trailing)[0]
 
+    elif array.ndim == 2:
+        # if axis == 0, we compare rows going down/up, looking at column values
+        # non-nan values that go (from left to right) to NaN
+        target_sel_leading = (array ^ roll_2d(array, -1, axis=axis)) & not_array
+        # non-nan values that were previously NaN (from left to right)
+        target_sel_trailing = (array ^ roll_2d(array, 1, axis=axis)) & not_array
+
+        # wrap around observation invalid
+        if axis == 0:
+            # process an entire row
+            target_sel_leading[-1, :] = False
+            target_sel_trailing[0, :] = False
+        else:
+            # process entire column
+            target_sel_leading[:, -1] = False
+            target_sel_trailing[:, 0] = False
+
+        # this dictionary could be very sparse compared to axis dimensionality
+        indices_by_axis = defaultdict(list)
+        for y, x in zip(*np.nonzero(target_sel_leading | target_sel_trailing)):
+            if axis == 0:
+                # store many rows values for each column
+                indices_by_axis[x].append(y)
+            else:
+                indices_by_axis[y].append(x)
+
+        # if axis is 0, return column width, else return row height
+        post = np.empty(dtype=object, shape=array.shape[1 if axis == 0 else 0])
+        for k, v in indices_by_axis.items():
+            post[k] = tuple(v)
+
+        return post
+
+    raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
 
 def array_to_duplicated(
         array: np.ndarray,

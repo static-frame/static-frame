@@ -1605,7 +1605,7 @@ class TypeBlocks(ContainerBase):
 
         return self.from_blocks(blocks())
 
-
+    #---------------------------------------------------------------------------
 
     @staticmethod
     def _fillna_sided_axis_1(
@@ -1647,10 +1647,6 @@ class TypeBlocks(ContainerBase):
 
             if not isna_entry.any():
                 yield b
-            # elif ndim == 1 and not sel.any():
-            #     yield b
-            # elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
-            #     yield b
             else:
                 assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
                 if b.dtype == assignable_dtype:
@@ -1698,7 +1694,7 @@ class TypeBlocks(ContainerBase):
             blocks: tp.Iterable[np.ndarray],
             value: tp.Any,
             sided_leading: bool) -> tp.Iterator[np.ndarray]:
-        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0.
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
 
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
@@ -1761,11 +1757,30 @@ class TypeBlocks(ContainerBase):
 
 
 
+    def fillna_leading(self,
+            value: tp.Any,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a TypeBlocks instance replacing leading values with the passed `value`. Leading, axis 0 fills columns, going from top to bottom. Leading axis 1 fills rows, going from left to right.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fillna_sided_axis_0(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=True))
+        elif axis == 1:
+            return self.from_blocks(self._fillna_sided_axis_1(
+                    blocks=self._blocks,
+                    value=value,
+                    sided_leading=True))
+        raise NotImplementedError(f'no support for axis {axis}')
+
+
     def fillna_trailing(self,
             value: tp.Any,
             *,
             axis: int = 0) -> 'TypeBlocks':
-        '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`.
+        '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`. Trailing, axis 0 fills columns, going from bottom to top. Trailing axis 1 fills rows, going from right to left.
         '''
         if axis == 0:
             return self.from_blocks(self._fillna_sided_axis_0(
@@ -1783,25 +1798,82 @@ class TypeBlocks(ContainerBase):
         raise NotImplementedError(f'no support for axis {axis}')
 
 
-    def fillna_leading(self,
-            value: tp.Any,
+
+    #---------------------------------------------------------------------------
+
+
+    @staticmethod
+    def _fillna_directional_axis_0(
+            blocks: tp.Iterable[np.ndarray],
+            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+        '''
+        Do a directional fill along axis 0, meaning filling vertically, going top/bottom or bottom/top.
+
+        Args:
+            sided_leading: if True, start from the leading (top or left) side.
+        '''
+        sided_index = 0 if sided_leading else -1
+
+        for b in blocks:
+            sel = isna_array(b) # True for is NaN
+            ndim = sel.ndim
+
+            if ndim == 1 and not np.any(sel):
+                yield b
+            elif ndim == 2 and not np.any(sel).any():
+                yield b
+
+            # will work on 1d, 2d
+            target_index = binary_transition(sel)
+
+            # see _fillna_directional in Series
+
+
+    @staticmethod
+    def _fillna_directional_axis_1(
+            blocks: tp.Iterable[np.ndarray],
+            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+        pass
+
+
+
+    def fillna_forward(self,
             *,
             axis: int = 0) -> 'TypeBlocks':
-        '''Return a TypeBlocks instance replacing leading values with the passed `value`.
+        '''Return a new ``TypeBlocks`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls. Forward axis 0 fills columns, going from top to bottom. Forward axis 1 fills rows, going from left to right.
         '''
         if axis == 0:
-            return self.from_blocks(self._fillna_sided_axis_0(
+            return self.from_blocks(self._fillna_directional_axis_0(
                     blocks=self._blocks,
-                    value=value,
+                    sided_leading=False))
+        elif axis == 1:
+            # must reverse when not leading
+            blocks = reversed(tuple(self._fillna_directional_axis_1(
+                    blocks=self._blocks,
+                    sided_leading=False)))
+            return self.from_blocks(blocks)
+
+        raise NotImplementedError(f'no support for axis {axis}')
+
+
+    def fillna_backward(self,
+            *,
+            axis: int = 0) -> 'TypeBlocks':
+        '''Return a new ``TypeBlocks`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls. Backward, axis 0 fills columns, going from bottom to top. Backward axis 1 fills rows, going from right to left.
+        '''
+        if axis == 0:
+            return self.from_blocks(self._fillna_directional_axis_0(
+                    blocks=self._blocks,
                     sided_leading=True))
         elif axis == 1:
-            return self.from_blocks(self._fillna_sided_axis_1(
+            return self.from_blocks(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    value=value,
                     sided_leading=True))
         raise NotImplementedError(f'no support for axis {axis}')
 
 
+
+    #---------------------------------------------------------------------------
 
     def dropna_to_keep_locations(self,
             axis: int = 0,

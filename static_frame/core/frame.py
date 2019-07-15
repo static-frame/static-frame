@@ -1429,7 +1429,6 @@ class Frame(ContainerBase):
                 own_data=True)
 
 
-
     def fillna_leading(self,
             value: tp.Any,
             *,

@@ -810,7 +810,7 @@ class TestUnit(TestCase):
                 to_timedelta64(timedelta(minutes=4)),
                 np.timedelta64(240, 's'))
 
-    def test_transition_indices_a(self) -> None:
+    def test_binary_transition_a(self) -> None:
         a1 = np.array([False, True, True, False, False, True, True, False])
         self.assertEqual(binary_transition(a1).tolist(), [0, 3, 4, 7])
 
@@ -835,6 +835,46 @@ class TestUnit(TestCase):
 
         a1 = np.array([True, False])
         self.assertEqual(binary_transition(a1).tolist(), [1])
+
+
+    def test_binary_transition_b(self) -> None:
+        # return index per axis (column or row) at False values where False was True, or will be True
+        a1 = np.array([[False, False, True, False],
+                       [True, False, True, False],
+                       [False, False, False, True]
+                       ])
+
+        self.assertEqual(
+                binary_transition(a1, axis=0).tolist(),
+                [(0, 2), None, (2,), (1,)]
+                )
+
+        self.assertEqual(
+                binary_transition(a1, axis=1).tolist(),
+                [(1, 3), (1, 3), (2,)]
+                )
+
+    def test_binary_transition_c(self) -> None:
+        # return index per axis (column or row) at False values where False was True, or will be True
+        a1 = np.array([[False, False, True, False],
+                       [True, False, True, False],
+                       [True, False, True, False],
+                       [True, False, False, True],
+                       [False, False, False, True]
+                       ])
+
+        self.assertEqual(
+                binary_transition(a1, axis=0).tolist(),
+                [(0, 4), None, (3,), (2,)]
+                )
+
+        self.assertEqual(
+                binary_transition(a1, axis=1).tolist(),
+                [(1, 3), (1, 3), (1, 3), (1, 2), (2,)]
+                )
+
+
+
 
 
     def test_roll_1d_a(self) -> None:

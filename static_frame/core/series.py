@@ -648,7 +648,7 @@ class Series(ContainerBase):
                 name=self._name)
 
     def fillna_backward(self, limit: int = 0) -> 'Series':
-        '''Return a new ``Series`` after feeding backward the last   non-null (NaN or None) observation across contiguous nulls.
+        '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
         '''
         return self.__class__(self._fillna_directional(
                     array=self.values,
