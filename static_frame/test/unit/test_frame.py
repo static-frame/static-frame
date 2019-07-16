@@ -2263,6 +2263,23 @@ class TestUnit(TestCase):
         self.assertEqual(f2.name, 'foo')
 
 
+
+    def test_frame_sort_values_d(self) -> None:
+
+        a1 = np.arange(8).reshape(4, 2) / 10
+        match = (('a', ((0.6, 0.6), (0.4, 0.4), (0.2, 0.2), (0.0, 0.0))), ('b', ((0.6, 0.7), (0.4, 0.5), (0.2, 0.3), (0.0, 0.1))))
+
+        f1 = Frame(a1, columns=('a', 'b'))
+        f1 = f1.set_index('a')
+        f1 = f1.sort_values('b', ascending=False)
+        self.assertEqual(f1.to_pairs(0), match)
+
+        f2 = FrameGO(a1, columns=('a', 'b'))
+        f2 = f2.set_index('a') # type: ignore
+        f2 = f2.sort_values('b', ascending=False) # type: ignore
+        self.assertEqual(f2.to_pairs(0), match)
+
+
     def test_frame_relabel_a(self) -> None:
         # reindex both axis
         records = (

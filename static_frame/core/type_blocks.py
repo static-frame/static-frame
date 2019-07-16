@@ -163,7 +163,11 @@ class TypeBlocks(ContainerBase):
                 )
 
     @classmethod
-    def from_element_items(cls, items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]], shape: tp.Tuple[int, ...], dtype: np.dtype) -> 'TypeBlocks':
+    def from_element_items(cls,
+            items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]],
+            shape: tp.Tuple[int, ...],
+            dtype: np.dtype
+            ) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
         a = np.full(shape, fill_value=dtype_to_na(dtype), dtype=dtype)
@@ -694,7 +698,11 @@ class TypeBlocks(ContainerBase):
                 yield g, selection, self._extract(column_key=selection)
 
 
-    def block_apply_axis(self, func: AnyCallable, *, axis: int, dtype: tp.Optional[np.dtype] = None) -> np.ndarray:
+    def block_apply_axis(self,
+            func: AnyCallable, *,
+            axis: int,
+            dtype: tp.Optional[np.dtype] = None
+            ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis.
 
         Args:
@@ -861,9 +869,9 @@ class TypeBlocks(ContainerBase):
 
     # @profile
     def _key_to_block_slices(self,
-                key: GetItemKeyTypeCompound,
-                retain_key_order: bool = True) -> tp.Generator[
-                tp.Tuple[int, tp.Union[slice, int]], None, None]:
+            key: GetItemKeyTypeCompound,
+            retain_key_order: bool = True
+            ) -> tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]]:
         '''
         For a column key (an integer, slice, or iterable), generate pairs of (block_idx, slice or integer) to cover all extractions. First, get the relevant index values (pairs of block id, column id), then convert those to contiguous slices.
 
@@ -1305,7 +1313,7 @@ class TypeBlocks(ContainerBase):
             if self._shape[0] == 1:
                 # this codition used to only hold if the arg is a null slice; now if None too and shape has one row
                 single_row = True
-        elif isinstance(row_key, int):
+        elif isinstance(row_key, INT_TYPES):
             single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -1357,7 +1365,7 @@ class TypeBlocks(ContainerBase):
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, int):
+        if isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
             if b.ndim == 1:
@@ -1413,7 +1421,7 @@ class TypeBlocks(ContainerBase):
             TypeBlocks, or a single element if both are coordinats
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, int):
+        if isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]
             b = self._blocks[block_idx]
             row_key_null = (row_key is None or
@@ -1853,7 +1861,7 @@ class TypeBlocks(ContainerBase):
                         target_values = b[target_index]
 
                         def slice_condition(target_slice: slice) -> bool:
-                            return sel[target_slice][0]
+                            return sel[target_slice][0] # type: ignore
 
                     else:
                         target_index = target_indexes[i]
@@ -1862,7 +1870,7 @@ class TypeBlocks(ContainerBase):
                         target_values = b[target_index, i]
 
                         def slice_condition(target_slice: slice) -> bool:
-                            return sel[target_slice, i][0]
+                            return sel[target_slice, i][0] # type: ignore
 
                     for target_slice, value in slices_from_targets(
                             target_index=target_index,

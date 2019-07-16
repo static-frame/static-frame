@@ -17,6 +17,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping
@@ -591,7 +592,7 @@ class Frame(ContainerBase):
         '''
 
         names = array.dtype.names
-        if isinstance(index_column, int):
+        if isinstance(index_column, INT_TYPES):
             index_name = names[index_column]
         else:
             index_name = index_column

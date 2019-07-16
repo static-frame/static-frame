@@ -7,6 +7,8 @@ What is New in Static Frame
 0.3.7-dev
 ------------
 
+Fixed issue exposed in FrameGO.sort_values().
+
 ``IndexHierarchy.sort()``, ``IndexHierarchy.isin()``, ``IndexHierarchy.roll()`` now implemented.
 
 ``Series.sort_index()`` now properly propagates ``IndexBase`` subclasses.

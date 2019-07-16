@@ -104,7 +104,7 @@ UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 #-------------------------------------------------------------------------------
 # utility type groups
 
-INT_TYPES = (int, np.int_) # NOTE: this does not cover all NP int types; use np.integer check
+INT_TYPES = (int, np.integer) # np.integer catches all np int types
 
 BOOL_TYPES = (bool, np.bool_)
 
@@ -124,11 +124,11 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 # for type hinting
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
-        int, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
+        int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[
-        tp.Tuple[tp.Any, ...], int, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
+        tp.Tuple[tp.Any, ...], int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
 UFunc = tp.Callable[[np.ndarray], np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
@@ -1245,13 +1245,13 @@ def union2d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(
-        target_index: tp.Iterable[int],
-        target_values: tp.Iterable[tp.Any],
+        target_index: tp.Sequence[int],
+        target_values: tp.Sequence[tp.Any],
         length: int,
         directional_forward: bool,
         limit: int,
         slice_condition: tp.Callable[[slice], bool]
-        ) -> tp.Iterator[slice]:
+        ) -> tp.Iterator[tp.Tuple[slice, tp.Any]]:
     '''
     Utility function used in fillna_directional implementations for Series and Frame. Yields slices and values for setting contiguous ranges of values.
 
@@ -1272,6 +1272,7 @@ def slices_from_targets(
                 zip_longest(target_index, target_index[1:], fillvalue=length)
                 )
     else:
+        # NOTE: usage of None here is awkward; try to use zero
         target_slices = (
                 slice((start+1 if start is not None else start), stop)
                 for start, stop in
@@ -1283,23 +1284,31 @@ def slices_from_targets(
         # all conditions that are noop slices
         if target_slice.start == target_slice.stop:
             continue
-        if directional_forward and target_slice.start >= length:
+        elif (directional_forward
+                and target_slice.start is not None
+                and target_slice.start >= length):
             continue
         elif (not directional_forward
-                and target_slice.start == None
+                and target_slice.start is None
                 and target_slice.stop == 0):
             continue
+        elif target_slice.stop is None:
+            # stop value should never be None
+            raise NotImplementedError('unexpected slice', target_slice)
 
         # only process if first value of slice is NaN
         if slice_condition(target_slice):
+
             if limit > 0:
                 # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
                 shift = len(range(*target_slice.indices(length))) - limit
                 if shift > 0:
+
                     if directional_forward:
                         target_slice = slice(target_slice.start, target_slice.stop - shift)
                     else:
-                        target_slice = slice(target_slice.start + shift, target_slice.stop)
+                        target_slice = slice((target_slice.start or 0) + shift, target_slice.stop)
+
             yield target_slice, value
 
 
