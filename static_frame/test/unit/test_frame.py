@@ -2439,6 +2439,39 @@ class TestUnit(TestCase):
                 (('t', (('a', 0), ('b', 0), ('c', 0))), ('u', (('a', 0), ('b', 0), ('c', 0))), ('v', (('a', 0), ('b', 1), ('c', 5))), ('w', (('a', 0), ('b', None), ('c', None))), ('x', (('a', 0), ('b', 6), ('c', None))), ('y', (('a', 0), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5)))))
 
 
+
+
+
+    def test_frame_fillna_forward_a(self) -> None:
+        a2 = np.array([
+                [8, None, None, None],
+                [None, 1, None, 6],
+                [0, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, 3, None], dtype=object)
+        a3 = np.array([
+                [None, 4],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+
+        self.assertEqual(
+                f1.fillna_forward().to_pairs(0),
+                (('t', (('a', None), ('b', 3), ('c', 3))), ('u', (('a', 8), ('b', 8), ('c', 0))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', None), ('c', None))), ('x', (('a', None), ('b', 6), ('c', 6))), ('y', (('a', None), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(
+                f1.fillna_backward().to_pairs(0),
+                (('t', (('a', 3), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 0), ('c', 0))), ('v', (('a', 1), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', None), ('c', None))), ('x', (('a', 6), ('b', 6), ('c', None))), ('y', (('a', None), ('b', None), ('c', None))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+
     def test_frame_empty_a(self) -> None:
 
         f1 = FrameGO(index=('a', 'b', 'c'))

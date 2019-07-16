@@ -1433,7 +1433,7 @@ class Frame(ContainerBase):
     def fillna_leading(self,
             value: tp.Any,
             *,
-            axis: int = 0):
+            axis: int = 0) -> 'Frame':
         '''
         Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the supplied value.
         '''
@@ -1447,7 +1447,7 @@ class Frame(ContainerBase):
     def fillna_trailing(self,
             value: tp.Any,
             *,
-            axis: int = 0):
+            axis: int = 0) -> 'Frame':
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
         '''
@@ -1457,6 +1457,30 @@ class Frame(ContainerBase):
                 name=self._name,
                 own_data=True)
 
+
+    def fillna_forward(self,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling forward (and only forward) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._blocks.fillna_forward(axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
+
+    def fillna_backward(self,
+            *,
+            axis: int = 0) -> 'Frame':
+        '''
+        Return a new ``Frame`` after filling backward (and only backward) null (NaN or None) with the supplied value.
+        '''
+        return self.__class__(self._blocks.fillna_backward(axis=axis),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True)
 
     #---------------------------------------------------------------------------
 

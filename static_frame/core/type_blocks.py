@@ -1895,7 +1895,7 @@ class TypeBlocks(ContainerBase):
     def _fillna_directional_axis_1(
             blocks: tp.Iterable[np.ndarray],
             directional_forward: bool) -> tp.Iterator[np.ndarray]:
-        pass
+        raise NotImplementedError()
 
 
 
@@ -1931,6 +1931,7 @@ class TypeBlocks(ContainerBase):
             return self.from_blocks(self._fillna_directional_axis_1(
                     blocks=self._blocks,
                     directional_forward=False))
+
         raise NotImplementedError(f'no support for axis {axis}')
 
 

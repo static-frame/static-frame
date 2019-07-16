@@ -606,7 +606,6 @@ class Series(ContainerBase):
                 limit=limit,
                 slice_condition=slice_condition # isna True in region
                 ):
-
             assigned[target_slice] = value
 
         assigned.flags.writeable = False
