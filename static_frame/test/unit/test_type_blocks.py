@@ -1380,7 +1380,7 @@ class TestUnit(TestCase):
         tb2 = tb1.fillna_forward(axis=1)
         tb3 = tb1.fillna_backward(axis=1)
 
-        # import ipdb; ipdb.set_trace()
+        import ipdb; ipdb.set_trace()
 
 
 
