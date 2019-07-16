@@ -600,6 +600,18 @@ class TestUnit(TestCase):
         self.assertEqual(s1.fillna_forward(limit=10).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
 
+    def test_series_fillna_forward_c(self) -> None:
+
+        # this case shown to justify the slice_condition oassed to slices_from_targets
+        index = tuple(string.ascii_lowercase[:8])
+        s1 = Series((3, 2, None, 4, None, None, 5, 6), index=index)
+
+        self.assertEqual(s1.fillna_forward().to_pairs(),
+                (('a', 3), ('b', 2), ('c', 2), ('d', 4), ('e', 4), ('f', 4), ('g', 5), ('h', 6)))
+
+        self.assertEqual(s1.fillna_backward().to_pairs(),
+                (('a', 3), ('b', 2), ('c', 4), ('d', 4), ('e', 5), ('f', 5), ('g', 5), ('h', 6)))
+
 
     def test_series_fillna_backward_a(self) -> None:
 

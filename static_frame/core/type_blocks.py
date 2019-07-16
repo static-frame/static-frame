@@ -1817,6 +1817,7 @@ class TypeBlocks(ContainerBase):
             directional_forward: if True, start from the forward (top or left) side.
         '''
 
+
         for b in blocks:
 
             sel = isna_array(b) # True for is NaN
@@ -1850,42 +1851,18 @@ class TypeBlocks(ContainerBase):
                         if not target_index:
                             continue
                         target_values = b[target_index]
+
+                        def slice_condition(target_slice: slice) -> bool:
+                            return sel[target_slice][0]
+
                     else:
                         target_index = target_indexes[i]
                         if not target_index:
                             continue
                         target_values = b[target_index, i]
 
-                    # if directional_forward:
-                    #     target_slices = (
-                    #             slice(start+1, stop)
-                    #             for start, stop in
-                    #             zip_longest(target_index, target_index[1:], fillvalue=length)
-                    #             )
-                    # else:
-                    #     target_slices = (
-                    #             slice((start+1 if start is not None else start), stop)
-                    #             for start, stop in
-                    #             zip(chain((None,), target_index[:-1]), target_index)
-                    #             )
-
-                    # for target_slice, value in zip(target_slices, target_values):
-                    #     if target_slice.start == target_slice.stop:
-                    #         continue
-                    #     if directional_forward and target_slice.start >= length:
-                    #         continue
-                    #     elif (not directional_forward
-                    #             and target_slice.start == None
-                    #             and target_slice.stop == 0):
-                    #         continue
-                    #     if limit > 0:
-                    #         # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
-                    #         shift = len(range(*target_slice.indices(length))) - limit
-                    #         if shift > 0:
-                    #             if directional_forward:
-                    #                 target_slice = slice(target_slice.start, target_slice.stop - shift)
-                    #             else:
-                    #                 target_slice = slice(target_slice.start + shift, target_slice.stop)
+                        def slice_condition(target_slice: slice) -> bool:
+                            return sel[target_slice, i][0]
 
                     for target_slice, value in slices_from_targets(
                             target_index=target_index,
@@ -1893,7 +1870,7 @@ class TypeBlocks(ContainerBase):
                             length=length,
                             directional_forward=directional_forward,
                             limit=limit,
-                            slice_condition=lambda target_slice: True # NOTE: does this benefit
+                            slice_condition=slice_condition
                             ):
 
                         if ndim == 1:

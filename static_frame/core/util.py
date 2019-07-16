@@ -1252,7 +1252,19 @@ def slices_from_targets(
         limit: int,
         slice_condition: tp.Callable[[slice], bool]
         ) -> tp.Iterator[slice]:
+    '''
+    Utility function used in fillna_directional implementations for Series and Frame. Yields slices and values for setting contiguous ranges of values.
 
+    NOTE: slice_condition is still needed to check if a slice actually has missing values; see if there is a way to determine these cases in advance, so as to not call a function on each slice.
+
+    Args:
+        target_index: iterable of integers, where integers are positions where (as commonly used) values along an axis were previously NA, or will be NA. Often the result of binary_transition()
+        target_values: values found at the index positions
+        length: the maximum lengh in the target array
+        directional_forward: determine direction
+        limit: set a max size for all slices
+        slice_condition: optional function for filtering slices.
+    '''
     if directional_forward:
         target_slices = (
                 slice(start+1, stop)
@@ -1267,6 +1279,8 @@ def slices_from_targets(
                 )
 
     for target_slice, value in zip(target_slices, target_values):
+
+        # all conditions that are noop slices
         if target_slice.start == target_slice.stop:
             continue
         if directional_forward and target_slice.start >= length:
