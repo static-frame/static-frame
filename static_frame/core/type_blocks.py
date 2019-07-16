@@ -1616,6 +1616,74 @@ class TypeBlocks(ContainerBase):
         return self.from_blocks(blocks())
 
     #---------------------------------------------------------------------------
+    # fillna sided
+
+    @staticmethod
+    def _fillna_sided_axis_0(
+            blocks: tp.Iterable[np.ndarray],
+            value: tp.Any,
+            sided_leading: bool) -> tp.Iterator[np.ndarray]:
+        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
+
+        Args:
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+
+        '''
+        if isinstance(value, np.ndarray):
+            raise RuntimeError('cannot assign an array to fillna')
+
+        sided_index = 0 if sided_leading else -1
+
+        # store flag for when non longer need to check blocks, yield immediately
+
+        for b in blocks:
+            sel = isna_array(b) # True for is NaN
+            ndim = sel.ndim
+
+            if ndim == 1 and not sel[sided_index]:
+                # if last value (bottom row) is not NaN, we can return block
+                yield b
+            elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
+                # can use this last-row observation below
+                yield b
+            else:
+                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                if b.dtype == assignable_dtype:
+                    assigned = b.copy()
+                else:
+                    assigned = b.astype(assignable_dtype)
+
+                # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
+                if ndim == 1:
+                    sels_nonzero = ((0, sel),)
+                else:
+                    # only collect columns for sided NaNs
+                    sels_nonzero = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
+
+                    # is_leading = (i for i, j in enumerate(sel[sided_index]) if j)
+                    # sels_nonzero = ((i, sel[:, i]) for i in is_leading)
+
+                for idx, sel_nonzero in sels_nonzero:
+                    # indices of not-nan values, per column
+                    targets = np.nonzero(~sel_nonzero)[0]
+                    if len(targets):
+                        if sided_leading:
+                            # update this variable name
+                            sel_trailing = slice(0, targets[0])
+                        else: # trailing
+                            sel_trailing = slice(targets[-1]+1, None)
+                    else: # all are NaN
+                        sel_trailing = NULL_SLICE
+
+                    if ndim == 1:
+                        assigned[sel_trailing] = value
+                    else:
+                        assigned[sel_trailing, idx] = value
+
+                # done writing
+                assigned.flags.writeable = False
+                yield assigned
+
 
     @staticmethod
     def _fillna_sided_axis_1(
@@ -1699,73 +1767,6 @@ class TypeBlocks(ContainerBase):
             else:
                 isna_exit_previous = sel.all(axis=1) & isna_exit_previous
 
-    @staticmethod
-    def _fillna_sided_axis_0(
-            blocks: tp.Iterable[np.ndarray],
-            value: tp.Any,
-            sided_leading: bool) -> tp.Iterator[np.ndarray]:
-        '''Return a TypeBlocks where NaN or None are replaced in sided (leading or trailing) segments along axis 0, meaning vertically.
-
-        Args:
-            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
-
-        '''
-        if isinstance(value, np.ndarray):
-            raise RuntimeError('cannot assign an array to fillna')
-
-        sided_index = 0 if sided_leading else -1
-
-        # store flag for when non longer need to check blocks, yield immediately
-
-        for b in blocks:
-            sel = isna_array(b) # True for is NaN
-            ndim = sel.ndim
-
-            if ndim == 1 and not sel[sided_index]:
-                # if last value (bottom row) is not NaN, we can return block
-                yield b
-            elif ndim > 1 and ~sel[sided_index].any(): # if not any are NaN
-                # can use this last-row observation below
-                yield b
-            else:
-                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
-                if b.dtype == assignable_dtype:
-                    assigned = b.copy()
-                else:
-                    assigned = b.astype(assignable_dtype)
-
-                # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
-                if ndim == 1:
-                    sels_nonzero = ((0, sel),)
-                else:
-                    # only collect columns for sided NaNs
-                    sels_nonzero = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
-
-                    # is_leading = (i for i, j in enumerate(sel[sided_index]) if j)
-                    # sels_nonzero = ((i, sel[:, i]) for i in is_leading)
-
-                for idx, sel_nonzero in sels_nonzero:
-                    # indices of not-nan values, per column
-                    targets = np.nonzero(~sel_nonzero)[0]
-                    if len(targets):
-                        if sided_leading:
-                            # update this variable name
-                            sel_trailing = slice(0, targets[0])
-                        else: # trailing
-                            sel_trailing = slice(targets[-1]+1, None)
-                    else: # all are NaN
-                        sel_trailing = NULL_SLICE
-
-                    if ndim == 1:
-                        assigned[sel_trailing] = value
-                    else:
-                        assigned[sel_trailing, idx] = value
-
-                # done writing
-                assigned.flags.writeable = False
-                yield assigned
-
-
 
     def fillna_leading(self,
             value: tp.Any,
@@ -1784,7 +1785,6 @@ class TypeBlocks(ContainerBase):
                     value=value,
                     sided_leading=True))
         raise NotImplementedError(f'no support for axis {axis}')
-
 
     def fillna_trailing(self,
             value: tp.Any,
@@ -1807,10 +1807,8 @@ class TypeBlocks(ContainerBase):
 
         raise NotImplementedError(f'no support for axis {axis}')
 
-
-
     #---------------------------------------------------------------------------
-
+    # fillna directional
 
     @staticmethod
     def _fillna_directional_axis_0(
@@ -1825,9 +1823,7 @@ class TypeBlocks(ContainerBase):
             directional_forward: if True, start from the forward (top or left) side.
         '''
 
-
         for b in blocks:
-
             sel = isna_array(b) # True for is NaN
             ndim = sel.ndim
 
@@ -1836,16 +1832,14 @@ class TypeBlocks(ContainerBase):
             elif ndim == 2 and not np.any(sel).any():
                 yield b
             else:
+                target_indexes = binary_transition(sel)
 
-                # will work on 1d, 2d
                 if ndim == 1:
                     # make single array look like iterable of tuples
-                    target_indexes = binary_transition(sel)
                     slots = 1
                     length = len(sel)
 
                 elif ndim == 2:
-                    target_indexes = binary_transition(sel)
                     slots = b.shape[1] # axis 0 has column width
                     length = b.shape[0]
 
@@ -1894,9 +1888,75 @@ class TypeBlocks(ContainerBase):
     @staticmethod
     def _fillna_directional_axis_1(
             blocks: tp.Iterable[np.ndarray],
-            directional_forward: bool) -> tp.Iterator[np.ndarray]:
-        raise NotImplementedError()
+            directional_forward: bool,
+            limit: int = 0
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Do a directional fill along axis 1, or horizontally, going left to right or right to left.
 
+        NOTE: blocks are generated in reverse order when directional_forward is False.
+
+        '''
+
+        bridging_index = -1 if directional_forward else 0
+        # will need to re-reverse blocks coming out of this
+        block_iter = blocks if directional_forward else reversed(blocks)
+
+        bridging_values = None
+
+        for b in block_iter:
+            sel = isna_array(b) # True for is NaN
+            ndim = sel.ndim
+
+            if ndim == 1 and not np.any(sel):
+                yield b
+            elif ndim == 2 and not np.any(sel).any():
+                yield b
+            else: # some NA found
+                if bridging_values is None:
+                    assigned = b.copy()
+                else:
+                    assignable_dtype = resolve_dtype(bridging_values.dtype, b.dtype)
+                    assigned = b.astype(assignable_dtype)
+
+                if ndim == 1:
+                    # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
+                    if bridging_values is not None:
+                        assigned[sel] = bridging_values[sel]
+
+                    bridging_values = assigned
+
+                elif ndim == 2:
+                    target_indexes = binary_transition(sel, axis=1)
+
+                    slots = b.shape[0] # axis 0 has column width
+                    length = b.shape[1]
+
+                    for i in range(slots):
+
+                        # NOTE: not getting bridging values for initial NaNs
+
+                        target_index = target_indexes[i]
+                        target_values = b[i, target_index]
+
+                        def slice_condition(target_slice: slice) -> bool:
+                            return sel[i, target_slice][0] # type: ignore
+
+                        for target_slice, value in slices_from_targets(
+                                target_index=target_index,
+                                target_values=target_values,
+                                length=length,
+                                directional_forward=directional_forward,
+                                limit=limit,
+                                slice_condition=slice_condition
+                                ):
+                            assigned[i, target_slice] = value
+
+                    bridging_values = assigned[:, bridging_index]
+
+                # already wrote to assigned
+                assigned.flags.writeable = False
+                yield assigned
 
 
     def fillna_forward(self,

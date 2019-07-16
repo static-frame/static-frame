@@ -1367,6 +1367,30 @@ class TestUnit(TestCase):
 
 
 
+    def test_type_blocks_fillna_forward_c(self) -> None:
+
+        a1 = np.array([
+                [nan, nan,3, 4],
+                [nan, nan, 6, nan],
+                [5, nan, nan, nan]
+                ], dtype=float)
+        a2 = np.array([nan, nan, nan], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        tb2 = tb1.fillna_forward(axis=1)
+
+        self.assertEqual(
+                tb2.fillna(0).values.tolist(),
+                [[4.0, 0.0, 0.0, 3.0, 4.0],
+                [6.0, 0.0, 0.0, 6.0, 6.0],
+                [5.0, 5.0, 5.0, 5.0, 5.0]]
+                )
+
+
+        # import ipdb; ipdb.set_trace()
+
+
+
 
 
     def test_type_blocks_from_none_a(self) -> None:
