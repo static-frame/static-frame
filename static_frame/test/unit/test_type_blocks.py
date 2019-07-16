@@ -1378,18 +1378,9 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
         tb2 = tb1.fillna_forward(axis=1)
-
-        self.assertEqual(
-                tb2.fillna(0).values.tolist(),
-                [[4.0, 0.0, 0.0, 3.0, 4.0],
-                [6.0, 0.0, 0.0, 6.0, 6.0],
-                [5.0, 5.0, 5.0, 5.0, 5.0]]
-                )
-
+        tb3 = tb1.fillna_backward(axis=1)
 
         # import ipdb; ipdb.set_trace()
-
-
 
 
 

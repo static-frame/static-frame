@@ -1969,11 +1969,9 @@ class TypeBlocks(ContainerBase):
                     blocks=self._blocks,
                     directional_forward=True))
         elif axis == 1:
-            # must reverse when not leading
-            blocks = reversed(tuple(self._fillna_directional_axis_1(
+            return self.from_blocks(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    directional_forward=True)))
-            return self.from_blocks(blocks)
+                    directional_forward=True))
 
         raise NotImplementedError(f'no support for axis {axis}')
 
@@ -1988,9 +1986,10 @@ class TypeBlocks(ContainerBase):
                     blocks=self._blocks,
                     directional_forward=False))
         elif axis == 1:
-            return self.from_blocks(self._fillna_directional_axis_1(
+            blocks = reversed(tuple(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    directional_forward=False))
+                    directional_forward=False)))
+            return self.from_blocks(blocks)
 
         raise NotImplementedError(f'no support for axis {axis}')
 
