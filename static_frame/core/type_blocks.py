@@ -1925,11 +1925,6 @@ class TypeBlocks(ContainerBase):
                     assignable_dtype = resolve_dtype(bridging_values.dtype, b.dtype)
                     assigned = b.astype(assignable_dtype)
 
-                # print(b)
-                # print(bridging_count)
-                # print('bridging_values', bridging_values)
-                # print()
-
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
