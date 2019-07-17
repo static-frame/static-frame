@@ -1420,8 +1420,12 @@ class Frame(ContainerBase):
                 return self
         return self._extract(row_key, column_key)
 
-    def fillna(self, value) -> 'Frame':
-        '''Return a new Frame after replacing NaN or None values with the supplied value.
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Frame':
+        '''Return a new ``Frame`` after replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
         '''
         return self.__class__(self._blocks.fillna(value),
                 index=self._index,
@@ -1429,13 +1433,17 @@ class Frame(ContainerBase):
                 name=self._name,
                 own_data=True)
 
-
+    @doc_inject(selector='fillna')
     def fillna_leading(self,
             value: tp.Any,
             *,
             axis: int = 0) -> 'Frame':
         '''
         Return a new ``Frame`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+            {axis}
         '''
         return self.__class__(self._blocks.fillna_leading(value, axis=axis),
                 index=self._index,
@@ -1443,13 +1451,17 @@ class Frame(ContainerBase):
                 name=self._name,
                 own_data=True)
 
-
+    @doc_inject(selector='fillna')
     def fillna_trailing(self,
             value: tp.Any,
             *,
             axis: int = 0) -> 'Frame':
         '''
         Return a new ``Frame`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+            {axis}
         '''
         return self.__class__(self._blocks.fillna_trailing(value, axis=axis),
                 index=self._index,
@@ -1457,26 +1469,37 @@ class Frame(ContainerBase):
                 name=self._name,
                 own_data=True)
 
-
+    @doc_inject(selector='fillna')
     def fillna_forward(self,
+            limit: int = 0,
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling forward (and only forward) null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling forward null (NaN or None) with the supplied value.
+
+        Args:
+            {limit}
+            {axis}
         '''
-        return self.__class__(self._blocks.fillna_forward(axis=axis),
+        return self.__class__(self._blocks.fillna_forward(limit=limit, axis=axis),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,
                 own_data=True)
 
+    @doc_inject(selector='fillna')
     def fillna_backward(self,
+            limit: int = 0,
             *,
             axis: int = 0) -> 'Frame':
         '''
-        Return a new ``Frame`` after filling backward (and only backward) null (NaN or None) with the supplied value.
+        Return a new ``Frame`` after filling backward null (NaN or None) with the supplied value.
+
+        Args:
+            {limit}
+            {axis}
         '''
-        return self.__class__(self._blocks.fillna_backward(axis=axis),
+        return self.__class__(self._blocks.fillna_backward(limit=limit, axis=axis),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,

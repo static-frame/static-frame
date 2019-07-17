@@ -1742,16 +1742,16 @@ class TypeBlocks(ContainerBase):
                         targets = np.nonzero(~sel_nonzero)[0]
                         if len(targets):
                             if sided_leading:
-                                sel_trailing = slice(0, targets[0])
+                                sel_slice = slice(0, targets[0])
                             else: # trailing
-                                sel_trailing = slice(targets[-1]+1, None)
+                                sel_slice = slice(targets[-1]+1, None)
                         else: # all are NaN
-                            sel_trailing = NULL_SLICE
+                            sel_slice = NULL_SLICE
 
                         if ndim == 1:
-                            assigned[sel_trailing] = value
+                            assigned[sel_slice] = value
                         else:
-                            assigned[idx, sel_trailing] = value
+                            assigned[idx, sel_slice] = value
 
                 assigned.flags.writeable = False
                 yield assigned
@@ -1893,7 +1893,6 @@ class TypeBlocks(ContainerBase):
         NOTE: blocks are generated in reverse order when directional_forward is False.
 
         '''
-
         bridge_src_index = -1 if directional_forward else 0
         bridge_dst_index = 0 if directional_forward else -1
 
@@ -1901,6 +1900,8 @@ class TypeBlocks(ContainerBase):
         block_iter = blocks if directional_forward else reversed(blocks) # type: ignore
 
         bridging_values = None
+        bridging_count = None
+        bridging_isna = None # Boolean array describing isna of bridging values
 
         for b in block_iter:
             sel = isna_array(b) # True for is NaN
@@ -1908,9 +1909,13 @@ class TypeBlocks(ContainerBase):
 
             if ndim == 1 and not np.any(sel):
                 bridging_values = b
+                bridging_isna = sel
+                bridging_count = np.full(b.shape[0], 0)
                 yield b
             elif ndim == 2 and not np.any(sel).any():
                 bridging_values = b[:, bridge_src_index]
+                bridging_isna = sel[:, bridge_src_index]
+                bridging_count = np.full(b.shape[0], 0)
                 yield b
             else: # some NA in this block
                 if bridging_values is None:
@@ -1921,8 +1926,22 @@ class TypeBlocks(ContainerBase):
 
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
-                    if bridging_values is not None:
-                        assigned[sel] = bridging_values[sel]
+                    if bridging_values is not None: # sel has at least one NaN
+                        bridging_isnotna = ~bridging_isna
+
+                        sel_sided = sel & bridging_isnotna
+                        if limit:
+                            # set to false those values where bridging already at limit
+                            sel_sided[bridging_count >= limit] = False
+
+                        # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
+                        assigned[sel_sided] = bridging_values[sel_sided]
+                        # only increment positions that are NaN here and have not-nan bridging values
+                        sel_count_increment = sel & bridging_isnotna
+                        bridging_count[sel_count_increment] += 1
+                        bridging_count[~sel_count_increment] = 0 # set unassigned to zero
+                    else:
+                        bridging_count = np.full(b.shape[0], 0)
 
                     bridging_values = assigned
 
@@ -1946,15 +1965,20 @@ class TypeBlocks(ContainerBase):
                                 targets = np.nonzero(~sel_nonzero)[0]
                                 if len(targets):
                                     if directional_forward:
-                                        sel_trailing = slice(0, targets[0])
+                                        sel_slice = slice(0, targets[0])
                                     else: # backward
-                                        sel_trailing = slice(targets[-1]+1, None)
+                                        sel_slice = slice(targets[-1]+1, None)
                                 else: # all are NaN
-                                    sel_trailing = NULL_SLICE
+                                    sel_slice = NULL_SLICE
 
-                                assigned[idx, sel_trailing] = bridging_values[idx]
+                                # TODO: truncate sel_slice by limit-
+
+                                assigned[idx, sel_slice] = bridging_values[idx]
 
                         target_index = target_indexes[i]
+                        if target_index is None:
+                            continue # found no transitions
+
                         target_values = b[i, target_index]
 
                         def slice_condition(target_slice: slice) -> bool:
@@ -1970,14 +1994,18 @@ class TypeBlocks(ContainerBase):
                                 ):
                             assigned[i, target_slice] = value
 
+                    # TEMP
+                    bridging_count = np.full(b.shape[0], 0)
                     bridging_values = assigned[:, bridge_src_index]
 
-                # already wrote to assigned
+                # for both 1d, 2d cases where we assigned
+                bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
                 assigned.flags.writeable = False
                 yield assigned
 
 
     def fillna_forward(self,
+            limit: int = 0,
             *,
             axis: int = 0) -> 'TypeBlocks':
         '''Return a new ``TypeBlocks`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls. Forward axis 0 fills columns, going from top to bottom. Forward axis 1 fills rows, going from left to right.
@@ -1985,16 +2013,21 @@ class TypeBlocks(ContainerBase):
         if axis == 0:
             return self.from_blocks(self._fillna_directional_axis_0(
                     blocks=self._blocks,
-                    directional_forward=True))
+                    directional_forward=True,
+                    limit=limit
+                    ))
         elif axis == 1:
             return self.from_blocks(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    directional_forward=True))
+                    directional_forward=True,
+                    limit=limit
+                    ))
 
         raise NotImplementedError(f'no support for axis {axis}')
 
 
     def fillna_backward(self,
+            limit: int = 0,
             *,
             axis: int = 0) -> 'TypeBlocks':
         '''Return a new ``TypeBlocks`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls. Backward, axis 0 fills columns, going from bottom to top. Backward axis 1 fills rows, going from right to left.
@@ -2002,11 +2035,15 @@ class TypeBlocks(ContainerBase):
         if axis == 0:
             return self.from_blocks(self._fillna_directional_axis_0(
                     blocks=self._blocks,
-                    directional_forward=False))
+                    directional_forward=False,
+                    limit=limit
+                    ))
         elif axis == 1:
             blocks = reversed(tuple(self._fillna_directional_axis_1(
                     blocks=self._blocks,
-                    directional_forward=False)))
+                    directional_forward=False,
+                    limit=limit
+                    )))
             return self.from_blocks(blocks)
 
         raise NotImplementedError(f'no support for axis {axis}')

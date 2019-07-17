@@ -80,8 +80,18 @@ class DOC_TEMPLATE:
             consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
     )
 
+    fillna = dict(
+            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
+            value='value: Value to be used to replace missing values (NaN or None).',
+            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+    )
 
-def doc_inject(*, selector: tp.Optional[str] = None, **kwargs: object) -> tp.Callable[[AnyCallable], AnyCallable]:
+
+
+def doc_inject(*,
+        selector: tp.Optional[str] = None,
+        **kwargs: object
+        ) -> tp.Callable[[AnyCallable], AnyCallable]:
     '''
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.

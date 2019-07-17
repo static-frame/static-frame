@@ -37,6 +37,14 @@ Frame
 
 .. automethod:: static_frame.Frame.fillna
 
+.. automethod:: static_frame.Frame.fillna_forward
+
+.. automethod:: static_frame.Frame.fillna_backward
+
+.. automethod:: static_frame.Frame.fillna_leading
+
+.. automethod:: static_frame.Frame.fillna_trailing
+
 
 .. admonition:: Deviations from Pandas
     :class: Warning

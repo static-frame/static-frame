@@ -516,7 +516,7 @@ class Series(ContainerBase):
 
     def isna(self) -> 'Series':
         '''
-        Return a same-indexed, Boolean Series indicating which values are NaN or None.
+        Return a same-indexed, Boolean ``Series`` indicating which values are NaN or None.
         '''
         # consider returning self if not values.any()?
         values = isna_array(self.values)
@@ -533,7 +533,7 @@ class Series(ContainerBase):
 
     def dropna(self) -> 'Series':
         '''
-        Return a new Series after removing values of NaN or None.
+        Return a new ``Series`` after removing values of NaN or None.
         '''
         # get positions that we want to keep
         sel = np.logical_not(isna_array(self.values))
@@ -548,9 +548,12 @@ class Series(ContainerBase):
                 name=self._name,
                 own_index=True)
 
-
+    @doc_inject(selector='fillna')
     def fillna(self, value) -> 'Series':
         '''Return a new ``Series`` after replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
         '''
         sel = isna_array(self.values)
         if not np.any(sel):
@@ -611,12 +614,12 @@ class Series(ContainerBase):
         assigned.flags.writeable = False
         return assigned
 
-
+    @doc_inject(selector='fillna')
     def fillna_forward(self, limit: int = 0) -> 'Series':
         '''Return a new ``Series`` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
-            count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
+            {limit}
         '''
         return self.__class__(self._fillna_directional(
                     array=self.values,
@@ -625,8 +628,12 @@ class Series(ContainerBase):
                 index=self._index,
                 name=self._name)
 
+    @doc_inject(selector='fillna')
     def fillna_backward(self, limit: int = 0) -> 'Series':
         '''Return a new ``Series`` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
+
+        Args:
+            {limit}
         '''
         return self.__class__(self._fillna_directional(
                     array=self.values,
@@ -668,19 +675,22 @@ class Series(ContainerBase):
         targets = np.nonzero(~sel)[0] # as 1D, can just take index 0 resuilts
         if len(targets):
             if sided_leading:
-                sel_sided = slice(0, targets[0])
+                sel_slice = slice(0, targets[0])
             else: # trailing
-                sel_sided = slice(targets[-1]+1, None)
+                sel_slice = slice(targets[-1]+1, None)
         else: # all are NaN
-            sel_sided = NULL_SLICE
+            sel_slice = NULL_SLICE
 
-        assigned[sel_sided] = value
+        assigned[sel_slice] = value
         assigned.flags.writeable = False
         return assigned
 
-
-    def fillna_leading(self, value) -> 'Series':
+    @doc_inject(selector='fillna')
+    def fillna_leading(self, value: tp.Any) -> 'Series':
         '''Return a new ``Series`` after filling leading (and only leading) null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
         '''
         return self.__class__(self._fillna_sided(
                     array=self.values,
@@ -689,8 +699,12 @@ class Series(ContainerBase):
                 index=self._index,
                 name=self._name)
 
-    def fillna_trailing(self, value) -> 'Series':
+    @doc_inject(selector='fillna')
+    def fillna_trailing(self, value: tp.Any) -> 'Series':
         '''Return a new ``Series`` after filling trailing (and only trailing) null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
         '''
         return self.__class__(self._fillna_sided(
                     array=self.values,

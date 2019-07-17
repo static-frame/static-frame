@@ -1300,14 +1300,18 @@ def slices_from_targets(
         if slice_condition(target_slice):
 
             if limit > 0:
-                # get the length ofthe range resulting from the slice; if bigger than limit, reduce the stop by that amount
+                # get the length of the range resulting from the slice; if bigger than limit, reduce the by that amount
                 shift = len(range(*target_slice.indices(length))) - limit
                 if shift > 0:
 
                     if directional_forward:
-                        target_slice = slice(target_slice.start, target_slice.stop - shift)
+                        target_slice = slice(
+                                target_slice.start,
+                                target_slice.stop - shift)
                     else:
-                        target_slice = slice((target_slice.start or 0) + shift, target_slice.stop)
+                        target_slice = slice(
+                                (target_slice.start or 0) + shift,
+                                target_slice.stop)
 
             yield target_slice, value
 
