@@ -1899,9 +1899,9 @@ class TypeBlocks(ContainerBase):
         # will need to re-reverse blocks coming out of this
         block_iter = blocks if directional_forward else reversed(blocks) # type: ignore
 
-        bridging_values = None
-        bridging_count = None
-        bridging_isna = None # Boolean array describing isna of bridging values
+        bridging_values: tp.Optional[np.ndarray] = None
+        bridging_count: tp.Optional[np.ndarray] = None
+        bridging_isna: tp.Optional[np.ndarray] = None # Boolean array describing isna of bridging values
 
         for b in block_iter:
             sel = isna_array(b) # True for is NaN
@@ -1933,19 +1933,20 @@ class TypeBlocks(ContainerBase):
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
-                        bridging_isnotna = ~bridging_isna
+                        bridging_isnotna = ~bridging_isna # type: ignore
 
                         sel_sided = sel & bridging_isnotna
                         if limit:
                             # set to false those values where bridging already at limit
-                            sel_sided[bridging_count >= limit] = False
+                            sel_sided[bridging_count >= limit] = False # type: ignore
 
                         # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
                         assigned[sel_sided] = bridging_values[sel_sided]
                         # only increment positions that are NaN here and have not-nan bridging values
                         sel_count_increment = sel & bridging_isnotna
-                        bridging_count[sel_count_increment] += 1
-                        bridging_count[~sel_count_increment] = 0 # set unassigned to zero
+                        bridging_count[sel_count_increment] += 1 # type: ignore
+                        # set unassigned to zero
+                        bridging_count[~sel_count_increment] = 0 # type: ignore
                     else:
                         bridging_count = np.full(b.shape[0], 0)
 
@@ -1961,7 +1962,7 @@ class TypeBlocks(ContainerBase):
                     bridging_count_reset = ~sel[:, bridge_src_index]
 
                     if bridging_values is not None:
-                        bridging_isnotna = ~bridging_isna
+                        bridging_isnotna = ~bridging_isna # type: ignore
 
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
@@ -1984,13 +1985,13 @@ class TypeBlocks(ContainerBase):
                             # truncate sel_slice by limit-
                             sided_len = len(range(*sel_slice.indices(length)))
 
-                            if limit and bridging_count[idx] >= limit:
+                            if limit and bridging_count[idx] >= limit: # type: ignore
                                 # if already at limit, do not assign
-                                bridging_count[idx] += sided_len
+                                bridging_count[idx] += sided_len # type: ignore
                                 continue
-                            elif limit and (bridging_count[idx] + sided_len) >= limit:
+                            elif limit and (bridging_count[idx] + sided_len) >= limit: # type: ignore
                                 # trim slice to fit
-                                shift = bridging_count[idx] + sided_len - limit
+                                shift = bridging_count[idx] + sided_len - limit # type: ignore
                                 # shift should only be positive only here
                                 if directional_forward:
                                     sel_slice = slice(
@@ -2002,7 +2003,7 @@ class TypeBlocks(ContainerBase):
                                             sel_slice.stop)
 
                             # update with full length or limited length?
-                            bridging_count[idx] += sided_len
+                            bridging_count[idx] += sided_len # type: ignore
                             assigned[idx, sel_slice] = bridging_values[idx]
 
                     # handle each row (going horizontally) in isolation
@@ -2032,14 +2033,14 @@ class TypeBlocks(ContainerBase):
 
                         # update counts from the last slice; this will have already been limited if necessary, but need to reflext contiguous values going into the next block; if slices does not go to edge; will identify as needing as reset
                         if target_slice is not None:
-                            bridging_count[i] = len(range(*target_slice.indices(length)))
+                            bridging_count[i] = len(range(*target_slice.indices(length))) # type: ignore
 
                     bridging_values = assigned[:, bridge_src_index]
                     bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
 
                     # if the birdging values is NaN now, it could not be filled, or was not filled enough, and thus does not continue a count; can set to zero
                     bridging_count_reset |= bridging_isna
-                    bridging_count[bridging_count_reset] = 0
+                    bridging_count[bridging_count_reset] = 0 # type: ignore
 
                 assigned.flags.writeable = False
                 yield assigned

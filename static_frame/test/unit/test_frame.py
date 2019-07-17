@@ -2521,7 +2521,19 @@ class TestUnit(TestCase):
                 columns=self.get_letters(-tb1.shape[1], None)
                 )
         post = f1.fillna_forward(axis=1)
-        # import ipdb; ipdb.set_trace()
+
+        self.assertEqual(f1.fillna_forward(axis=1, limit=1).to_pairs(0),
+                (('t', (('a', None), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 3), ('c', 0))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 1), ('c', 5))), ('x', (('a', None), ('b', 6), ('c', None))), ('y', (('a', None), ('b', 6), ('c', None))), ('z', (('a', 4), ('b', None), ('c', 5))))
+                )
+
+        self.assertEqual(f1.fillna_forward(axis=1, limit=2).to_pairs(0),
+                (('t', (('a', None), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 3), ('c', 0))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', 8), ('b', 1), ('c', 5))), ('x', (('a', None), ('b', 6), ('c', 5))), ('y', (('a', None), ('b', 6), ('c', None))), ('z', (('a', 4), ('b', 6), ('c', 5))))
+                )
+
+        self.assertEqual(f1.fillna_backward(axis=1, limit=2).to_pairs(0),
+                (('t', (('a', 8), ('b', 3), ('c', 0))), ('u', (('a', 8), ('b', 1), ('c', 0))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 6), ('c', None))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', None), ('c', 5))), ('z', (('a', 4), ('b', None), ('c', 5))))
+                )
+
 
     def test_frame_empty_a(self) -> None:
 
