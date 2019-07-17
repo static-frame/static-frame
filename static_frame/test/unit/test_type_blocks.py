@@ -1378,10 +1378,89 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
         tb2 = tb1.fillna_forward(axis=1)
+
+        self.assertEqual(
+            tb2.fillna(0).values.tolist(),
+            [[0.0, 0.0, 3.0, 4.0, 4.0], [0.0, 0.0, 6.0, 6.0, 6.0], [5.0, 5.0, 5.0, 5.0, 5.0]]
+        )
+
         tb3 = tb1.fillna_backward(axis=1)
+        self.assertEqual(
+            tb3.fillna(0).values.tolist(),
+            [[3.0, 3.0, 3.0, 4.0, 0], [6.0, 6.0, 6.0, 0, 0], [5.0, 0, 0, 0, 0]]
+            )
 
-        import ipdb; ipdb.set_trace()
 
+    def test_type_blocks_fillna_forward_d(self) -> None:
+
+        a1 = np.array([
+                [None, 10, None],
+                [None, 88, None],
+                [None, 40, None]
+                ], dtype=object)
+        a2 = np.array([None, None, None], dtype=object)
+        a3 = np.array([543, 601, 234], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a3, a2, a1))
+        tb2 = tb1.fillna_forward(axis=1)
+
+        self.assertEqual(tb2.values.tolist(),
+                [[543, 543, 543, 10, 10],
+                [601, 601, 601, 88, 88],
+                [234, 234, 234, 40, 40]]
+                )
+
+        tb3 = tb1.fillna_backward(axis=1)
+        self.assertEqual(tb3.values.tolist(),
+                [[543, 10, 10, 10, None],
+                [601, 88, 88, 88, None],
+                [234, 40, 40, 40, None]]
+                )
+
+
+    def test_type_blocks_fillna_forward_e(self) -> None:
+
+        a1 = np.array([None, None, None], dtype=object)
+        a2 = np.array([None, 8, None], dtype=object)
+        a3 = np.array([543, 601, 234], dtype=object)
+        a4 = np.array([30, None, 74], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a2, a1, a1, a4, a1, a3, a1))
+
+        # axis 1 tests
+        self.assertEqual(tb1.fillna_forward(axis=1).values.tolist(),
+                [[None, None, None, 30, 30, 543, 543],
+                [8, 8, 8, 8, 8, 601, 601],
+                [None, None, None, 74, 74, 234, 234]])
+
+        self.assertEqual(tb1.fillna_backward(axis=1).values.tolist(),
+                [[30, 30, 30, 30, 543, 543, None],
+                [8, 601, 601, 601, 601, 601, None],
+                [74, 74, 74, 74, 234, 234, None]]
+                )
+
+
+
+    def test_type_blocks_fillna_forward_f(self) -> None:
+
+        a1 = np.array([None, None, 40], dtype=object)
+        a2 = np.array([None, 8, None], dtype=object)
+        a3 = np.array([543, 601, 234], dtype=object)
+        a4 = np.array([30, None, 74], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a2, a1, a4, a3))
+
+        self.assertEqual(
+                tb1.fillna_forward().values.tolist(),
+                [[None, None, 30, 543],
+                [8, None, 30, 601],
+                [8, 40, 74, 234]]
+                )
+        self.assertEqual(tb1.fillna_backward().values.tolist(),
+                [[8, 40, 30, 543],
+                [8, 40, 74, 601],
+                [None, 40, 74, 234]]
+                )
 
 
     def test_type_blocks_from_none_a(self) -> None:

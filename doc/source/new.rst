@@ -4,10 +4,16 @@ What is New in Static Frame
 ===============================
 
 
-0.3.7-dev
+0.3.8-dev
+-----------
+
+
+0.3.7
 ------------
 
-Fixed issue exposed in FrameGO.sort_values().
+Completed implementation of ``Frame.fillna_forward``, ``Frame.fillna_backward``, ``Frame.fillna_leading``, ``Frame.fillna_trailing``.
+
+Fixed issue exposed in FrameGO.sort_values() due to NumPy integers being used for selection.
 
 ``IndexHierarchy.sort()``, ``IndexHierarchy.isin()``, ``IndexHierarchy.roll()`` now implemented.
 

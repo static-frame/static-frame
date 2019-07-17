@@ -1313,8 +1313,6 @@ def slices_from_targets(
 
 
 
-
-
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 

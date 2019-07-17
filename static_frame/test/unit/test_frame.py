@@ -2472,6 +2472,36 @@ class TestUnit(TestCase):
                 )
 
 
+
+    def test_frame_fillna_forward_b(self) -> None:
+        a2 = np.array([
+                [8, None, None, None],
+                [None, 1, None, 6],
+                [0, 5, None, None]
+                ], dtype=object)
+        a1 = np.array([None, 3, None], dtype=object)
+        a3 = np.array([
+                [None, 4],
+                [None, 1],
+                [None, 5]
+                ], dtype=object)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                index=self.get_letters(None, tb1.shape[0]),
+                columns=self.get_letters(-tb1.shape[1], None)
+                )
+        # axis 1 tests
+        self.assertEqual(
+                f1.fillna_forward(axis=1).to_pairs(0),
+                (('t', (('a', None), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 3), ('c', 0))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', 8), ('b', 1), ('c', 5))), ('x', (('a', 8), ('b', 6), ('c', 5))), ('y', (('a', 8), ('b', 6), ('c', 5))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
+        self.assertEqual(
+                f1.fillna_backward(axis=1).to_pairs(0),
+                (('t', (('a', 8), ('b', 3), ('c', 0))), ('u', (('a', 8), ('b', 1), ('c', 0))), ('v', (('a', 4), ('b', 1), ('c', 5))), ('w', (('a', 4), ('b', 6), ('c', 5))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', 1), ('c', 5))), ('z', (('a', 4), ('b', 1), ('c', 5))))
+                )
+
     def test_frame_empty_a(self) -> None:
 
         f1 = FrameGO(index=('a', 'b', 'c'))

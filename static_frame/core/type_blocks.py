@@ -1655,30 +1655,26 @@ class TypeBlocks(ContainerBase):
 
                 # because np.nonzero is easier / faster to parse if applied on a 1D array, w can make 2d look like 1D here
                 if ndim == 1:
-                    sels_nonzero = ((0, sel),)
+                    sel_nonzeros = ((0, sel),)
                 else:
                     # only collect columns for sided NaNs
-                    sels_nonzero = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
+                    sel_nonzeros = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
 
-                    # is_leading = (i for i, j in enumerate(sel[sided_index]) if j)
-                    # sels_nonzero = ((i, sel[:, i]) for i in is_leading)
-
-                for idx, sel_nonzero in sels_nonzero:
+                for idx, sel_nonzero in sel_nonzeros:
                     # indices of not-nan values, per column
                     targets = np.nonzero(~sel_nonzero)[0]
                     if len(targets):
                         if sided_leading:
-                            # update this variable name
-                            sel_trailing = slice(0, targets[0])
-                        else: # trailing
-                            sel_trailing = slice(targets[-1]+1, None)
+                            sel_slice = slice(0, targets[0])
+                        else: # trailings
+                            sel_slice = slice(targets[-1]+1, None)
                     else: # all are NaN
-                        sel_trailing = NULL_SLICE
+                        sel_slice = NULL_SLICE
 
                     if ndim == 1:
-                        assigned[sel_trailing] = value
+                        assigned[sel_slice] = value
                     else:
-                        assigned[sel_trailing, idx] = value
+                        assigned[sel_slice, idx] = value
 
                 # done writing
                 assigned.flags.writeable = False
@@ -1738,8 +1734,8 @@ class TypeBlocks(ContainerBase):
                 else:
                     # only collect rows that have a sided NaN
                     # could use np.nonzero()
-                    is_leading = (i for i, j in enumerate(isna_entry) if j == True)
-                    sels_nonzero = ((i, sel[i]) for i in is_leading)
+                    candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                    sels_nonzero = ((i, sel[i]) for i in candidates)
 
                     for idx, sel_nonzero in sels_nonzero:
                         # indices of not-nan values, per row
@@ -1850,7 +1846,7 @@ class TypeBlocks(ContainerBase):
 
                     if ndim == 1:
                         target_index = target_indexes
-                        if not target_index:
+                        if not len(target_index):
                             continue
                         target_values = b[target_index]
 
@@ -1898,9 +1894,11 @@ class TypeBlocks(ContainerBase):
 
         '''
 
-        bridging_index = -1 if directional_forward else 0
+        bridge_src_index = -1 if directional_forward else 0
+        bridge_dst_index = 0 if directional_forward else -1
+
         # will need to re-reverse blocks coming out of this
-        block_iter = blocks if directional_forward else reversed(blocks)
+        block_iter = blocks if directional_forward else reversed(blocks) # type: ignore
 
         bridging_values = None
 
@@ -1909,10 +1907,12 @@ class TypeBlocks(ContainerBase):
             ndim = sel.ndim
 
             if ndim == 1 and not np.any(sel):
+                bridging_values = b
                 yield b
             elif ndim == 2 and not np.any(sel).any():
+                bridging_values = b[:, bridge_src_index]
                 yield b
-            else: # some NA found
+            else: # some NA in this block
                 if bridging_values is None:
                     assigned = b.copy()
                 else:
@@ -1934,7 +1934,25 @@ class TypeBlocks(ContainerBase):
 
                     for i in range(slots):
 
-                        # NOTE: not getting bridging values for initial NaNs
+                        if bridging_values is not None:
+                            # find leading NaNs segments if they exist and fill
+                            isna_entry = sel[:, bridge_dst_index]
+                            # get a fi;; row of Booleans for all candidates
+                            candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                            sels_nonzero = ((i, sel[i]) for i in candidates)
+
+                            for idx, sel_nonzero in sels_nonzero:
+                                # indices of not-nan values, per row
+                                targets = np.nonzero(~sel_nonzero)[0]
+                                if len(targets):
+                                    if directional_forward:
+                                        sel_trailing = slice(0, targets[0])
+                                    else: # backward
+                                        sel_trailing = slice(targets[-1]+1, None)
+                                else: # all are NaN
+                                    sel_trailing = NULL_SLICE
+
+                                assigned[idx, sel_trailing] = bridging_values[idx]
 
                         target_index = target_indexes[i]
                         target_values = b[i, target_index]
@@ -1952,7 +1970,7 @@ class TypeBlocks(ContainerBase):
                                 ):
                             assigned[i, target_slice] = value
 
-                    bridging_values = assigned[:, bridging_index]
+                    bridging_values = assigned[:, bridge_src_index]
 
                 # already wrote to assigned
                 assigned.flags.writeable = False
