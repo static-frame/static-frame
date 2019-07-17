@@ -1927,6 +1927,7 @@ class TypeBlocks(ContainerBase):
 
                 # print(b)
                 # print(bridging_count)
+                # print('bridging_values', bridging_values)
                 # print()
 
                 if ndim == 1:
@@ -1949,11 +1950,15 @@ class TypeBlocks(ContainerBase):
                         bridging_count = np.full(b.shape[0], 0)
 
                     bridging_values = assigned
+                    bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
 
                 elif ndim == 2:
 
                     slots = b.shape[0] # axis 0 has column width
                     length = b.shape[1]
+
+                    # set to True when can reset count to zero; this is always the case if the bridge src value is not NaN (before we do any filling)
+                    bridging_count_reset = ~sel[:, bridge_src_index]
 
                     if bridging_values is not None:
                         bridging_isnotna = ~bridging_isna
@@ -1996,7 +2001,7 @@ class TypeBlocks(ContainerBase):
                                             sel_slice.start + shift,
                                             sel_slice.stop)
 
-                            # update with full length
+                            # update with full length or limited length?
                             bridging_count[idx] += sided_len
                             assigned[idx, sel_slice] = bridging_values[idx]
 
@@ -2006,7 +2011,8 @@ class TypeBlocks(ContainerBase):
 
                         target_index = target_indexes[i]
                         if target_index is None:
-                            continue # found no transitions
+                            # found no transitions, so either all NaN or all not NaN; if all NaN, might have been filled in bridging; if had values, will aready identify as bridging_count_reset[i] == True
+                            continue
 
                         target_values = b[i, target_index]
 
@@ -2024,14 +2030,17 @@ class TypeBlocks(ContainerBase):
                                 ):
                             assigned[i, target_slice] = value
 
-                        # update counts from the last slice; this will have already been limited if necessary, but need to reflext contiguous values going into the next block
+                        # update counts from the last slice; this will have already been limited if necessary, but need to reflext contiguous values going into the next block; if slices does not go to edge; will identify as needing as reset
                         if target_slice is not None:
                             bridging_count[i] = len(range(*target_slice.indices(length)))
 
                     bridging_values = assigned[:, bridge_src_index]
+                    bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
 
-                # for both 1d, 2d cases where we assigned
-                bridging_isna = isna_array(bridging_values) # must reevaluate if assigned
+                    # if the birdging values is NaN now, it could not be filled, or was not filled enough, and thus does not continue a count; can set to zero
+                    bridging_count_reset |= bridging_isna
+                    bridging_count[bridging_count_reset] = 0
+
                 assigned.flags.writeable = False
                 yield assigned
 
