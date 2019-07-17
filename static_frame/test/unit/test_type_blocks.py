@@ -1485,6 +1485,35 @@ class TestUnit(TestCase):
 
 
 
+    def test_type_blocks_fillna_forward_h(self) -> None:
+
+        a1 = np.array([
+                [None, None, 10, None],
+                [None, None, 88, None],
+                [None, None, 40, None]
+                ], dtype=object)
+        a2 = np.array([
+                [None, 3, None, None],
+                [None, None, 4, None],
+                [3, None, None, None]
+                ], dtype=object)
+        a3 = np.array([None, None, None], dtype=object)
+        a4 = np.array([543, 601, 234], dtype=object)
+
+        tb1 = TypeBlocks.from_blocks((a4, a3, a2, a1))
+        self.assertEqual(
+                tb1.fillna_forward(axis=1, limit=1).values.tolist(),
+                [[543, 543, None, 3, 3, None, None, None, 10, 10], [601, 601, None, None, 4, 4, None, None, 88, 88], [234, 234, 3, 3, None, None, None, None, 40, 40]])
+
+        self.assertEqual(
+                tb1.fillna_forward(axis=1, limit=3).values.tolist(),
+                [[543, 543, 543, 3, 3, 3, 3, None, 10, 10], [601, 601, 601, 601, 4, 4, 4, 4, 88, 88], [234, 234, 3, 3, 3, 3, None, None, 40, 40]])
+
+
+        tb1.fillna_backward(axis=1, limit=1)
+        # import ipdb; ipdb.set_trace()
+
+
     def test_type_blocks_from_none_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)

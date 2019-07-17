@@ -1920,9 +1920,14 @@ class TypeBlocks(ContainerBase):
             else: # some NA in this block
                 if bridging_values is None:
                     assigned = b.copy()
+                    bridging_count = np.full(b.shape[0], 0)
                 else:
                     assignable_dtype = resolve_dtype(bridging_values.dtype, b.dtype)
                     assigned = b.astype(assignable_dtype)
+
+                # print(b)
+                # print(bridging_count)
+                # print()
 
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
@@ -1946,34 +1951,58 @@ class TypeBlocks(ContainerBase):
                     bridging_values = assigned
 
                 elif ndim == 2:
-                    target_indexes = binary_transition(sel, axis=1)
 
                     slots = b.shape[0] # axis 0 has column width
                     length = b.shape[1]
 
+                    if bridging_values is not None:
+                        bridging_isnotna = ~bridging_isna
+
+                        # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
+                        isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
+                        # get a row of Booleans for plausible candidates
+                        candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                        sels_nonzero = ((i, sel[i]) for i in candidates)
+
+                        # get appropriate leading slice to cover nan region
+                        for idx, sel_nonzero in sels_nonzero:
+                            # indices of not-nan values, per row
+                            targets = np.nonzero(~sel_nonzero)[0]
+                            if len(targets):
+                                if directional_forward:
+                                    sel_slice = slice(0, targets[0])
+                                else: # backward
+                                    sel_slice = slice(targets[-1]+1, length)
+                            else: # all are NaN
+                                sel_slice = slice(0, length)
+
+                            # truncate sel_slice by limit-
+                            sided_len = len(range(*sel_slice.indices(length)))
+
+                            if limit and bridging_count[idx] >= limit:
+                                # if already at limit, do not assign
+                                bridging_count[idx] += sided_len
+                                continue
+                            elif limit and (bridging_count[idx] + sided_len) >= limit:
+                                # trim slice to fit
+                                shift = bridging_count[idx] + sided_len - limit
+                                # shift should only be positive only here
+                                if directional_forward:
+                                    sel_slice = slice(
+                                            sel_slice.start,
+                                            sel_slice.stop - shift)
+                                else:
+                                    sel_slice = slice(
+                                            sel_slice.start + shift,
+                                            sel_slice.stop)
+
+                            # update with full length
+                            bridging_count[idx] += sided_len
+                            assigned[idx, sel_slice] = bridging_values[idx]
+
+                    # handle each row (going horizontally) in isolation
+                    target_indexes = binary_transition(sel, axis=1)
                     for i in range(slots):
-
-                        if bridging_values is not None:
-                            # find leading NaNs segments if they exist and fill
-                            isna_entry = sel[:, bridge_dst_index]
-                            # get a fi;; row of Booleans for all candidates
-                            candidates = (i for i, j in enumerate(isna_entry) if j == True)
-                            sels_nonzero = ((i, sel[i]) for i in candidates)
-
-                            for idx, sel_nonzero in sels_nonzero:
-                                # indices of not-nan values, per row
-                                targets = np.nonzero(~sel_nonzero)[0]
-                                if len(targets):
-                                    if directional_forward:
-                                        sel_slice = slice(0, targets[0])
-                                    else: # backward
-                                        sel_slice = slice(targets[-1]+1, None)
-                                else: # all are NaN
-                                    sel_slice = NULL_SLICE
-
-                                # TODO: truncate sel_slice by limit-
-
-                                assigned[idx, sel_slice] = bridging_values[idx]
 
                         target_index = target_indexes[i]
                         if target_index is None:
@@ -1984,6 +2013,7 @@ class TypeBlocks(ContainerBase):
                         def slice_condition(target_slice: slice) -> bool:
                             return sel[i, target_slice][0] # type: ignore
 
+                        target_slice = None
                         for target_slice, value in slices_from_targets(
                                 target_index=target_index,
                                 target_values=target_values,
@@ -1994,8 +2024,10 @@ class TypeBlocks(ContainerBase):
                                 ):
                             assigned[i, target_slice] = value
 
-                    # TEMP
-                    bridging_count = np.full(b.shape[0], 0)
+                        # update counts from the last slice; this will have already been limited if necessary, but need to reflext contiguous values going into the next block
+                        if target_slice is not None:
+                            bridging_count[i] = len(range(*target_slice.indices(length)))
+
                     bridging_values = assigned[:, bridge_src_index]
 
                 # for both 1d, 2d cases where we assigned
