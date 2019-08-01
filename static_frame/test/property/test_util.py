@@ -225,18 +225,18 @@ class TestUnit(TestCase):
 
 
     # NOTE: temporarily only using numeric types;
-    # @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
-    # def test_array_to_duplicated(self, array: np.ndarray) -> None:
-    #     if array.ndim == 2:
-    #         for axis in (0, 1):
-    #             post = util.array_to_duplicated(array, axis=axis)
-    #     else:
-    #         post = util.array_to_duplicated(array)
-    #         # if not all value are unique, we must have some duplicated
-    #         if np.unique(array) < len(array):
-    #             self.assertTrue(post.sum() > 0)
+    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
+    def test_array_to_duplicated(self, array: np.ndarray) -> None:
+        if array.ndim == 2:
+            for axis in (0, 1):
+                post = util.array_to_duplicated(array, axis=axis)
+        else:
+            post = util.array_to_duplicated(array)
+            # if not all value are unique, we must have some duplicated
+            if len(np.unique(array)) < len(array):
+                self.assertTrue(post.sum() > 0)
 
-    #     self.assertTrue(post.dtype == bool)
+        self.assertTrue(post.dtype == bool)
 
 
 if __name__ == '__main__':

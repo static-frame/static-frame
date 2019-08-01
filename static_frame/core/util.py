@@ -991,16 +991,76 @@ def binary_transition(
 
     raise NotImplementedError(f'no handling for array with ndim: {array.ndim}')
 
-def array_to_duplicated(
+
+#-------------------------------------------------------------------------------
+# tools for handling duplicates
+
+def _array_to_duplicated_hashable(
         array: np.ndarray,
         axis: int = 0,
         exclude_first: bool = False,
         exclude_last: bool = False) -> np.ndarray:
-    '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
+    '''
+    Algorithm for finding duplicates in unsortable arrays for hashables. This will always be an object array.
+    '''
+    # np.unique fails under the same conditions that sorting fails, so there is no need to try np.unique: must go to set drectly.
+    len_axis = array.shape[axis]
 
-    Args:
-        exclude_first: Mark as True all duplicates except the first encountared.
-        exclude_last: Mark as True all duplicates except the last encountared.
+    if array.ndim == 1:
+        value_source = array
+        to_hashable = None
+    else:
+        if axis == 0:
+            value_source = array # will iterate rows
+        else:
+            value_source = (array[:, i] for i in range(len_axis))
+        # values will be arrays; must convert to tuples to make hashable
+        to_hashable = tuple
+
+
+    is_dupe = np.full(len_axis, False)
+
+    # could exit early with a set, but would have to hash all array twice to go to set and dictionary
+    # creating a list for each entry and tracking indices would be very expensive
+
+    unique_to_first = {} # dict of value to first occurence
+    dupe_to_first = {}
+    dupe_to_last = {}
+
+    for idx, v in enumerate(value_source):
+
+        # import ipdb; ipdb.set_trace()
+        if to_hashable:
+            v = to_hashable(v)
+
+        if v not in unique_to_first:
+            unique_to_first[v] = idx
+        else:
+            # v has been seen before; upate Boolean array
+            is_dupe[idx] = True
+
+            # if no entry in dupe to first, no update with value in unique to first, which is the index this values was first seen
+            if v not in dupe_to_first:
+                dupe_to_first[v] = unique_to_first[v]
+            # always update last
+            dupe_to_last[v] = idx
+
+    if exclude_last: # overwrite with False
+        is_dupe[list(dupe_to_last.values())] = False
+
+    if not exclude_first: # add in first values
+        is_dupe[list(dupe_to_first.values())] = True
+
+    return is_dupe
+
+
+def _array_to_duplicated_sortable(
+        array: np.ndarray,
+        axis: int = 0,
+        exclude_first: bool = False,
+        exclude_last: bool = False) -> np.ndarray:
+    '''
+    Algorithm for finding duplicates in sortable arrays. This may or may not be an object array, as some object arrays (those of compatible types) are sortable.
     '''
     # based in part on https://stackoverflow.com/questions/11528078/determining-duplicate-values-in-an-array
     # https://stackoverflow.com/a/43033882/388739
@@ -1013,8 +1073,8 @@ def array_to_duplicated(
         o_idx = np.argsort(array, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
         array_sorted = array[o_idx]
         opposite_axis = 0
+        # f_flags is True where there are duplicated values in the sorted array
         f_flags = array_sorted == roll_1d(array_sorted, 1)
-
     else:
         if axis == 0: # sort rows
             # first should be last
@@ -1061,6 +1121,37 @@ def array_to_duplicated(
     r_idx = np.argsort(o_idx, axis=None, kind=DEFAULT_STABLE_SORT_KIND)
     return dupes[r_idx]
 
+
+
+def array_to_duplicated(
+        array: np.ndarray,
+        axis: int = 0,
+        exclude_first: bool = False,
+        exclude_last: bool = False) -> np.ndarray:
+    '''Given a numpy array (1D or 2D), return a Boolean array along the specified axis that shows which values are duplicated. By default, all duplicates are indicated. For 2d arrays, axis 0 compares rows and returns a row-length Boolean array; axis 1 compares columns and returns a column-length Boolean array.
+
+    Args:
+        exclude_first: Mark as True all duplicates except the first encountared.
+        exclude_last: Mark as True all duplicates except the last encountared.
+    '''
+    # NOTE: this presently assumes that the sortable algorithm is faster; this is not yet confirmed
+    try:
+        return _array_to_duplicated_sortable(
+                array=array,
+                axis=axis,
+                exclude_first=exclude_first,
+                exclude_last=exclude_last
+                )
+    except TypeError: # raised if not sorted
+        return _array_to_duplicated_hashable(
+                array=array,
+                axis=axis,
+                exclude_first=exclude_first,
+                exclude_last=exclude_last
+                )
+
+
+#-------------------------------------------------------------------------------
 def array_shift(
         array: np.ndarray,
         shift: int,
