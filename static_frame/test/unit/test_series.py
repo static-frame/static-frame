@@ -283,7 +283,9 @@ class TestUnit(TestCase):
         c = Series(['100312', '101376', '101092', '100828', '100185'],
                 index=['100312', '101376', '101092', '100828', '100185'])
         post = r == c
-        # the string ordering here unstable!
+
+        # import ipdb; ipdb.set_trace()
+
         self.assertEqual(set(post.to_pairs()),
                 set(((0, False), (1, False), (2, False), (3, False), (4, False), ('101376', False), ('101092', False), ('100828', False), ('100312', False), ('100185', False)))
                 )

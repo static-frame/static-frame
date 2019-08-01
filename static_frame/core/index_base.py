@@ -7,6 +7,8 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
+from static_frame.core.util import BOOL_TYPES
+
 
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayActive
@@ -230,6 +232,15 @@ class IndexBase(ContainerBase):
             opperand = other.values
 
         cls = self.__class__
+
+        # if opperands are identical, want to keep common order; any other scenario will result in a reordering
+        if len(self._labels) == len(opperand):
+            compare = self._labels == opperand
+            if isinstance(compare, BOOL_TYPES) and compare:
+                return cls(self) # re-use as much as possible
+            elif isinstance(compare, np.ndarray) and compare.all():
+                return cls(self) # re-use as much as possible
+
         return cls.from_labels(cls._UFUNC_INTERSECTION(self._labels, opperand))
 
     def union(self: I, other: 'IndexBase') -> I:
@@ -242,6 +253,15 @@ class IndexBase(ContainerBase):
             opperand = other.values
 
         cls = self.__class__
+
+        # if opperands are identical, want to keep common order; any other scenario will result in a reordering
+        if len(self._labels) == len(opperand):
+            compare = self._labels == opperand
+            if isinstance(compare, BOOL_TYPES) and compare:
+                return cls(self) # re-use as much as possible
+            elif isinstance(compare, np.ndarray) and compare.all():
+                return cls(self) # re-use as much as possible
+
         return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
 
     #---------------------------------------------------------------------------

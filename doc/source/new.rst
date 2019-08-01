@@ -7,6 +7,10 @@ What is New in Static Frame
 0.3.8-dev
 -----------
 
+All duplicate-handling functions now support heterogenously typed object arrays with unsortable (but hashable) types.
+
+Binary operations on ``Frame`` now preserve ``Index`` order when indices are equal.
+
 
 0.3.7
 ------------

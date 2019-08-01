@@ -1830,6 +1830,13 @@ class TestUnit(TestCase):
                 ((0, False),))
 
 
+    def test_frame_binary_operator_e(self) -> None:
+        # keep column order when columns are the same
+        f = sf.Frame(1, columns=['dog', 3, 'bat'], index=[1, 2])
+        post = f / f.sum()
+        self.assertEqual(post.columns.values.tolist(), f.columns.values.tolist())
+
+
 
     def test_frame_isin_a(self) -> None:
         # reindex both axis

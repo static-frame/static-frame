@@ -837,6 +837,20 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c'])
 
 
+    def test_index_intersection_b(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.intersection(idx2)
+        self.assertEqual(idx3.values.tolist(),
+                ['c', 'b', 'a']
+                )
+
+
+    # TODO; add test for hierarchical index
+
+
     def test_index_union_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
@@ -847,6 +861,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd', 'dd', 'e', 'f'])
+
+
+    def test_index_union_b(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.union(idx2)
+        self.assertEqual(idx3.values.tolist(),
+                ['c', 'b', 'a']
+                )
+
 
 
     def test_index_to_html_a(self) -> None:
