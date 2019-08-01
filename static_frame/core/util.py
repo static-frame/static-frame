@@ -1023,9 +1023,9 @@ def _array_to_duplicated_hashable(
     # could exit early with a set, but would have to hash all array twice to go to set and dictionary
     # creating a list for each entry and tracking indices would be very expensive
 
-    unique_to_first = {} # dict of value to first occurence
-    dupe_to_first = {}
-    dupe_to_last = {}
+    unique_to_first: tp.Dict[tp.Hashable, int] = {} # value to first occurence
+    dupe_to_first: tp.Dict[tp.Hashable, int] = {}
+    dupe_to_last: tp.Dict[tp.Hashable, int] = {}
 
     for idx, v in enumerate(value_source):
 

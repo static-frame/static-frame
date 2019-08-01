@@ -225,7 +225,7 @@ class TestUnit(TestCase):
 
 
     # NOTE: temporarily only using numeric types;
-    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
+    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC)) # type: ignore
     def test_array_to_duplicated(self, array: np.ndarray) -> None:
         if array.ndim == 2:
             for axis in (0, 1):
