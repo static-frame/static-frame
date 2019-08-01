@@ -224,16 +224,23 @@ class TestUnit(TestCase):
             self.assertTrue(array[post].sum() == 0)
 
 
-    # NOTE: temporarily only using numeric types;
-    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC)) # type: ignore
+    @given(get_array_1d2d()) # type: ignore
     def test_array_to_duplicated(self, array: np.ndarray) -> None:
         if array.ndim == 2:
             for axis in (0, 1):
                 post = util.array_to_duplicated(array, axis=axis)
+                if axis == 0:
+                    unique_count = len(set(tuple(x) for x in array))
+                else:
+                    unique_count = len(set(
+                        tuple(array[:, i]) for i in range(array.shape[1]))
+                        )
+                if unique_count < array.shape[axis]:
+                    self.assertTrue(post.sum() > 0)
         else:
             post = util.array_to_duplicated(array)
             # if not all value are unique, we must have some duplicated
-            if len(np.unique(array)) < len(array):
+            if len(set(array)) < len(array):
                 self.assertTrue(post.sum() > 0)
 
         self.assertTrue(post.dtype == bool)
