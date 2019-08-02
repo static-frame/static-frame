@@ -1628,6 +1628,19 @@ class TestUnit(TestCase):
         assert f1.sum().sum() == 9900.0
 
 
+    def test_frame_sum_d(self) -> None:
+
+        a1 = np.array([
+                (2, 2, 3, 4.23, np.nan),
+                (30, 34, None, 80.6, 90.123),
+                ], dtype=object)
+        f1 = Frame(a1,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x'),
+                )
+
+        # import ipdb; ipdb.set_trace()
+
     def test_frame_prod_a(self) -> None:
 
         records = (

@@ -18,7 +18,7 @@ from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
-from static_frame.core.util import ufunc_skipna_1d
+from static_frame.core.util import ufunc_axis_skipna
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
@@ -747,8 +747,8 @@ class Series(ContainerBase):
         return self.__class__(result, index=index)
 
     def _ufunc_axis_skipna(self, *,
-            axis,
-            skipna,
+            axis: int,
+            skipna: bool,
             ufunc,
             ufunc_skipna,
             dtype=None
@@ -759,15 +759,17 @@ class Series(ContainerBase):
         Args:
             dtype: not used, part of signature for a common interface
         '''
-        return ufunc_skipna_1d(
+        return ufunc_axis_skipna(
                 array=self.values,
                 skipna=skipna,
+                axis=0,
                 ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
+                ufunc_skipna=ufunc_skipna
+                )
 
     def _ufunc_shape_skipna(self, *,
-            axis,
-            skipna,
+            axis: int,
+            skipna: bool,
             ufunc,
             ufunc_skipna,
             dtype=None
@@ -778,11 +780,13 @@ class Series(ContainerBase):
         Args:
             dtype: not used, part of signature for a common interface
         '''
-        values = ufunc_skipna_1d(
+        values = ufunc_axis_skipna(
                 array=self.values,
                 skipna=skipna,
+                axis=0,
                 ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
+                ufunc_skipna=ufunc_skipna
+                )
         values.flags.writeable = False
         return self.__class__(values, index=self._index)
 

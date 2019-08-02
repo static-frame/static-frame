@@ -763,7 +763,6 @@ class TestUnit(TestCase):
         self.assertEqual(s2.sum(), 'abc')
 
 
-
     def test_series_cumsum_a(self) -> None:
 
         s1 = Series.from_items(zip('abc', (10, 20, 30)))
@@ -1314,10 +1313,18 @@ class TestUnit(TestCase):
 
         s2 = sf.Series([-1, 4, None, np.nan])
         self.assertEqual(s2.min(), -1)
-        self.assertTrue(np.isnan(s2.min(skipna=False)))
+        with self.assertRaises(TypeError):
+            s2.min(skipna=False)
 
         self.assertEqual(s2.max(), 4)
-        self.assertTrue(np.isnan(s2.max(skipna=False)))
+        with self.assertRaises(TypeError):
+            s2.max(skipna=False)
+
+        s3 = sf.Series([-1, 4, None])
+        self.assertEqual(s3.min(), -1)
+        with self.assertRaises(TypeError):
+            s2.max(skipna=False)
+
 
 
     def test_series_min_max_b(self) -> None:

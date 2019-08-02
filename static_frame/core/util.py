@@ -385,29 +385,48 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
     raise NotImplementedError('no support for this dtype', kind)
 
 
-def ufunc_skipna_1d(*,
+def ufunc_axis_skipna(*,
         array: np.ndarray,
         skipna: bool,
+        axis: int,
         ufunc: UFunc,
-        ufunc_skipna: UFunc) -> np.ndarray:
-    '''For one dimensional ufunc array application. Expected to always reduce to single element.
+        ufunc_skipna: UFunc,
+        ) -> np.ndarray:
+    '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
+
     if array.dtype.kind == 'O':
         # replace None with nan
-        v = array[np.not_equal(array, None)]
-        if len(v) == 0: # all values were None
-            return np.nan
-    elif array.dtype.kind == 'M':
+        if skipna:
+            is_not_none = np.not_equal(array, None)
+
+        if array.ndim == 1:
+            if skipna:
+                v = array[is_not_none]
+                if len(v) == 0: # all values were None
+                    return np.nan
+            else:
+                v = array
+        else:
+            # for 2D array, replace None with NaN
+            if skipna:
+                v = array.copy() # already an object type
+                v[~is_not_none] = np.nan
+            else:
+                v = array
+
+    elif array.dtype.kind == 'M' or array.dtype.kind == 'm':
         # dates do not support skipna functions
-        return ufunc(array)
+        return ufunc(array, axis=axis)
+
     elif array.dtype.kind in DTYPE_STR_KIND and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:
         v = array
 
     if skipna:
-        return ufunc_skipna(v)
-    return ufunc(v)
+        return ufunc_skipna(v, axis=axis)
+    return ufunc(v, axis=axis)
 
 
 def ufunc_unique(

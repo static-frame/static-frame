@@ -25,7 +25,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
-from static_frame.core.util import ufunc_skipna_1d
+from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import key_to_datetime_key
 
@@ -726,11 +726,13 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        return ufunc_skipna_1d(
+        return ufunc_axis_skipna(
                 array=self._labels,
                 skipna=skipna,
+                axis=0,
                 ufunc=ufunc,
-                ufunc_skipna=ufunc_skipna)
+                ufunc_skipna=ufunc_skipna
+                )
 
 
     # _ufunc_shape_skipna defined in IndexBase

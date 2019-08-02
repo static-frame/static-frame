@@ -39,6 +39,7 @@ from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift
 from static_frame.core.util import ufunc_unique
+from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import to_timedelta64
 from static_frame.core.util import binary_transition
 
@@ -759,6 +760,32 @@ class TestUnit(TestCase):
         post = array_shift(a1, 0, axis=0, wrap=False)
         self.assertEqual(a1.tolist(), post.tolist())
 
+
+    def test_ufunc_skipna_1d_a(self) -> None:
+
+        a1 = np.array([
+                (2, 2, 3, 4.23, np.nan),
+                (30, 34, None, 80.6, 90.123),
+                ], dtype=object)
+
+        a2 = ufunc_axis_skipna(array=a1,
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum
+                )
+        self.assertEqual(a2.tolist(),
+                [32, 36, 3, 84.83, 90.123])
+
+        a3 = ufunc_axis_skipna(array=a1,
+                skipna=True,
+                axis=1,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum
+                )
+        self.assertEqual(a3.tolist(),
+                [11.23, 234.723]
+                )
 
     def test_ufunc_unique_a(self) -> None:
 

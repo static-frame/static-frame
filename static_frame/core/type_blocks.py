@@ -698,6 +698,8 @@ class TypeBlocks(ContainerBase):
                 yield g, selection, self._extract(column_key=selection)
 
 
+    # TODO: make this more like _ufunc_axis_skipna in signature, then use resolve skipna usage appropriately
+
     def block_apply_axis(self,
             func: AnyCallable, *,
             axis: int,
@@ -728,7 +730,7 @@ class TypeBlocks(ContainerBase):
                 # reduce all columns to 2d blocks with 1 column
                 shape = (self._shape[0], len(self._blocks))
 
-            # this will be uninitialzied and thuse, if a value is not assigned, will have garbage
+            # this will be uninitialzied and thus, if a value is not assigned, will have garbage
             out = np.empty(shape, dtype=dtype or self._row_dtype)
             for idx, b in enumerate(self._blocks):
                 if axis == 0:
@@ -737,9 +739,7 @@ class TypeBlocks(ContainerBase):
                         out[pos] = func(b, axis=axis)
                     else:
                         end = pos + b.shape[1]
-                        temp = func(b, axis=axis)
-                        if len(temp) != end - pos:
-                            raise Exception('unexpected.')
+                        # temp = func(b, axis=axis)
                         func(b, axis=axis, out=out[pos: end])
                     pos = end
                 else:

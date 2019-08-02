@@ -105,20 +105,23 @@ class TestUnit(TestCase):
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 
 
-    @given(get_array_1d(min_size=1, dtype_group=DTGroup.NUMERIC)) # type: ignore
-    def test_ufunc_skipna_1d(self, array: np.ndarray) -> None:
+    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC)) # type: ignore
+    def test_ufunc_axis_skipna(self, array: np.ndarray) -> None:
 
         has_na = util.isna_array(array).any()
+
         for ufunc, ufunc_skipna, dtype in UFUNC_AXIS_SKIPNA.values():
 
-            with np.errstate(over='ignore', under='ignore'):
-                v1 = ufunc_skipna(array)
-                # this should return a single value
-                self.assertFalse(isinstance(v1, np.ndarray))
+            with np.errstate(over='ignore', under='ignore', divide='ignore'):
 
-                if has_na:
-                    v2 = ufunc(array)
-                    self.assertFalse(isinstance(v2, np.ndarray))
+                post = util.ufunc_axis_skipna(array=array,
+                        skipna=True,
+                        axis=0,
+                        ufunc=ufunc,
+                        ufunc_skipna=ufunc_skipna
+                        )
+                if array.ndim == 2:
+                    self.assertTrue(post.ndim == 1)
 
     @given(get_array_1d2d()) # type: ignore
     def test_ufunc_unique(self, array: np.ndarray) -> None:
