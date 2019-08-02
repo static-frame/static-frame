@@ -37,7 +37,6 @@ class IndexBase(ContainerBase):
     _name: tp.Hashable
     values: np.ndarray
 
-
     __pos__: tp.Callable[['IndexBase'], np.ndarray]
     __neg__: tp.Callable[['IndexBase'], np.ndarray]
     __abs__: tp.Callable[['IndexBase'], np.ndarray]
@@ -77,6 +76,7 @@ class IndexBase(ContainerBase):
 
     _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
+
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -237,9 +237,10 @@ class IndexBase(ContainerBase):
         if len(self._labels) == len(opperand):
             compare = self._labels == opperand
             if isinstance(compare, BOOL_TYPES) and compare:
-                return cls(self) # re-use as much as possible
+                # NOTE: favor using cls here as it permits more maximal sharing of static resources; not sure how to handle mypy error: Too many arguments for "IndexBase"
+                return cls(self) # type: ignore
             elif isinstance(compare, np.ndarray) and compare.all():
-                return cls(self) # re-use as much as possible
+                return cls(self) # type: ignore
 
         return cls.from_labels(cls._UFUNC_INTERSECTION(self._labels, opperand))
 
@@ -258,9 +259,9 @@ class IndexBase(ContainerBase):
         if len(self._labels) == len(opperand):
             compare = self._labels == opperand
             if isinstance(compare, BOOL_TYPES) and compare:
-                return cls(self) # re-use as much as possible
+                return cls(self) # type: ignore
             elif isinstance(compare, np.ndarray) and compare.all():
-                return cls(self) # re-use as much as possible
+                return cls(self) # type: ignore
 
         return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
 
