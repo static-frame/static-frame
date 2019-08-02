@@ -712,8 +712,13 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         ih2 = IndexHierarchy.from_labels(labels)
 
-        post = ih1.union(ih2)
-        # import ipdb; ipdb.set_trace()
+        post1 = ih1.union(ih2)
+        self.assertEqual(post1.values.tolist(),
+            [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+
+        post2 = ih1.intersection(ih2)
+        self.assertEqual(post2.values.tolist(),
+            [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
 
 
