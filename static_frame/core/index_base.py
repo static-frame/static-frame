@@ -224,7 +224,7 @@ class IndexBase(ContainerBase):
 
 
     def _ufunc_set(self: I,
-            func: UFunc,
+            func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
             other: 'IndexBase'
             ) -> I:
         if self._recache:
