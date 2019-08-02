@@ -222,7 +222,11 @@ class IndexBase(ContainerBase):
     #---------------------------------------------------------------------------
     # set operations
 
-    def intersection(self: I, other: 'IndexBase') -> I:
+
+    def _ufunc_set(self: I,
+            func: UFunc,
+            other: 'IndexBase'
+            ) -> I:
         if self._recache:
             self._update_array_cache()
 
@@ -234,36 +238,73 @@ class IndexBase(ContainerBase):
         cls = self.__class__
 
         # if opperands are identical, want to keep common order; any other scenario will result in a reordering
-        if len(self._labels) == len(opperand):
+        # NOTE: compare shape for IndexHierarchy
+        if self._labels.shape == opperand.shape:
             compare = self._labels == opperand
             if isinstance(compare, BOOL_TYPES) and compare:
                 # NOTE: favor using cls here as it permits more maximal sharing of static resources; not sure how to handle mypy error: Too many arguments for "IndexBase"
                 return cls(self) # type: ignore
-            elif isinstance(compare, np.ndarray) and compare.all():
+            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 return cls(self) # type: ignore
 
-        return cls.from_labels(cls._UFUNC_INTERSECTION(self._labels, opperand))
+        return cls.from_labels(func(self._labels, opperand))
+
+
+    def intersection(self: I, other: 'IndexBase') -> I:
+        # NOTE: must get UFunc off of class to avoid self-application
+        return self._ufunc_set(
+                self.__class__._UFUNC_INTERSECTION,
+                other)
 
     def union(self: I, other: 'IndexBase') -> I:
-        if self._recache:
-            self._update_array_cache()
+        return self._ufunc_set(
+                self.__class__._UFUNC_UNION,
+                other)
 
-        if isinstance(other, np.ndarray):
-            opperand = other
-        else: # assume we can get it from a .values attribute
-            opperand = other.values
 
-        cls = self.__class__
 
-        # if opperands are identical, want to keep common order; any other scenario will result in a reordering
-        if len(self._labels) == len(opperand):
-            compare = self._labels == opperand
-            if isinstance(compare, BOOL_TYPES) and compare:
-                return cls(self) # type: ignore
-            elif isinstance(compare, np.ndarray) and compare.all():
-                return cls(self) # type: ignore
+    # def intersection(self: I, other: 'IndexBase') -> I:
+    #     if self._recache:
+    #         self._update_array_cache()
 
-        return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
+
+    #     cls = self.__class__
+
+    #     # if opperands are identical, want to keep common order; any other scenario will result in a reordering
+    #     if self._labels.shape == opperand.shape:
+    #         compare = self._labels == opperand
+    #         if isinstance(compare, BOOL_TYPES) and compare:
+    #             # NOTE: favor using cls here as it permits more maximal sharing of static resources; not sure how to handle mypy error: Too many arguments for "IndexBase"
+    #             return cls(self) # type: ignore
+    #         elif isinstance(compare, np.ndarray) and compare.all(axis=None):
+    #             return cls(self) # type: ignore
+
+    #     return cls.from_labels(cls._UFUNC_INTERSECTION(self._labels, opperand))
+
+    # def union(self: I, other: 'IndexBase') -> I:
+    #     if self._recache:
+    #         self._update_array_cache()
+
+    #     if isinstance(other, np.ndarray):
+    #         opperand = other
+    #     else: # assume we can get it from a .values attribute
+    #         opperand = other.values
+
+    #     cls = self.__class__
+
+    #     # if opperands are identical, want to keep common order; any other scenario will result in a reordering
+    #     if self._labels.shape == opperand.shape:
+    #         compare = self._labels == opperand
+    #         if isinstance(compare, BOOL_TYPES) and compare:
+    #             return cls(self) # type: ignore
+    #         elif isinstance(compare, np.ndarray) and compare.all(axis=None):
+    #             return cls(self) # type: ignore
+
+    #     return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
 
     #---------------------------------------------------------------------------
     # dictionary-like interface

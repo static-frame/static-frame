@@ -700,6 +700,23 @@ class TestUnit(TestCase):
 
 
 
+    def test_hierarchy_intersection_b(self) -> None:
+
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        post = ih1.union(ih2)
+        # import ipdb; ipdb.set_trace()
+
+
+
     def test_hierarchy_operators_a(self) -> None:
 
         labels = (
