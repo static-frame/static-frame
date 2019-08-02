@@ -700,9 +700,11 @@ class TypeBlocks(ContainerBase):
 
     # TODO: make this more like _ufunc_axis_skipna in signature, then use resolve skipna usage appropriately
 
-    def block_apply_axis(self,
-            func: AnyCallable, *,
+    def block_apply_axis(self, *,
+            skipna: bool,
             axis: int,
+            func: UFunc,
+            ufunc_skipna: UFunc,
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis.
@@ -714,6 +716,9 @@ class TypeBlocks(ContainerBase):
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
         '''
         assert axis < 2
+
+        if skipna:
+            func = ufunc_skipna
 
         if self.unified:
             # TODO: not sure if we need dim filter here
