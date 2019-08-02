@@ -34,6 +34,8 @@ https://docs.scipy.org/doc/numpy/reference/generated/numpy.seterr.html
 
 (NumPy, through the same mechanism, provides the ability to similarly handle underflow and overflow issues, a case, similar to zero division, that might also be best treated with explicit handling. At this time, however, that check is only applied to scalar types (not arrays), making it less generally useful.)
 
+https://github.com/numpy/numpy/issues/8987
+
 
 
 
