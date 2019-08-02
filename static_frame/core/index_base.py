@@ -262,50 +262,6 @@ class IndexBase(ContainerBase):
                 other)
 
 
-
-    # def intersection(self: I, other: 'IndexBase') -> I:
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     cls = self.__class__
-
-    #     # if opperands are identical, want to keep common order; any other scenario will result in a reordering
-    #     if self._labels.shape == opperand.shape:
-    #         compare = self._labels == opperand
-    #         if isinstance(compare, BOOL_TYPES) and compare:
-    #             # NOTE: favor using cls here as it permits more maximal sharing of static resources; not sure how to handle mypy error: Too many arguments for "IndexBase"
-    #             return cls(self) # type: ignore
-    #         elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-    #             return cls(self) # type: ignore
-
-    #     return cls.from_labels(cls._UFUNC_INTERSECTION(self._labels, opperand))
-
-    # def union(self: I, other: 'IndexBase') -> I:
-    #     if self._recache:
-    #         self._update_array_cache()
-
-    #     if isinstance(other, np.ndarray):
-    #         opperand = other
-    #     else: # assume we can get it from a .values attribute
-    #         opperand = other.values
-
-    #     cls = self.__class__
-
-    #     # if opperands are identical, want to keep common order; any other scenario will result in a reordering
-    #     if self._labels.shape == opperand.shape:
-    #         compare = self._labels == opperand
-    #         if isinstance(compare, BOOL_TYPES) and compare:
-    #             return cls(self) # type: ignore
-    #         elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-    #             return cls(self) # type: ignore
-
-    #     return cls.from_labels(cls._UFUNC_UNION(self._labels, opperand))
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
