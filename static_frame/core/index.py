@@ -58,6 +58,7 @@ from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import GetItem
 from static_frame.core.util import InterfaceSelection1D
 from static_frame.core.util import union1d
+from static_frame.core.util import intersect1d
 
 from static_frame.core.util import resolve_dtype
 
@@ -255,7 +256,7 @@ class Index(IndexBase):
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
     _UFUNC_UNION = union1d
-    _UFUNC_INTERSECTION = np.intersect1d
+    _UFUNC_INTERSECTION = intersect1d
 
     _DTYPE = None # for specialized indices requiring a typed labels
     # for compatability with IndexHierarchy, where this is implemented as a property method

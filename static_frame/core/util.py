@@ -1234,7 +1234,7 @@ def array_set_ufunc_many(
     result = next(arrays)
 
     if result.ndim == 1:
-        ufunc = np.union1d if union else np.intersect1d
+        ufunc = union1d if union else intersect1d
         ndim = 1
     else: # ndim == 2
         ufunc = union2d if union else intersect2d
@@ -1264,7 +1264,12 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
-def union1d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
+# TODO: add array comparison filtering
+
+def union1d(array: np.ndarray,
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KIND
@@ -1285,7 +1290,9 @@ def union1d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
 
 def intersect1d(
         array: np.ndarray,
-        other: np.ndarray) -> np.ndarray:
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
     '''
     Extend ufunc version to handle cases where types cannot be sorted.
     '''
@@ -1309,7 +1316,8 @@ def intersect1d(
 def set_ufunc2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
-        other: np.ndarray
+        other: np.ndarray,
+        assume_unique: bool=False
         ) -> np.ndarray:
     '''
     Given a 1d set operation, evaluate the set operation on the rows given either by a 2D array or a 1D object array of tuples.
@@ -1397,11 +1405,16 @@ def set_ufunc2d(
 
 
 def intersect2d(array: np.ndarray,
-        other: np.ndarray) -> np.ndarray:
-    return set_ufunc2d(np.intersect1d, array, other)
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    return set_ufunc2d(np.intersect1d, array, other, assume_unique)
 
-def union2d(array: np.ndarray, other: np.ndarray) -> np.ndarray:
-    return set_ufunc2d(np.union1d, array, other)
+def union2d(array: np.ndarray,
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    return set_ufunc2d(np.union1d, array, other, assume_unique)
 
 #-------------------------------------------------------------------------------
 
