@@ -116,7 +116,6 @@ class Frame(ContainerBase):
             '_name'
             )
 
-    sum: tp.Callable[['Frame'], Series]
     _blocks: TypeBlocks
     _columns: IndexBase
     _index: IndexBase

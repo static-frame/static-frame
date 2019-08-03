@@ -726,7 +726,6 @@ class TypeBlocks(ContainerBase):
                 )
 
         if self.unified:
-            # TODO: not sure if we need dim filter here
             result = func(array=self._blocks[0])
             result.flags.writeable = False
             return result

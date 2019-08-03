@@ -130,7 +130,7 @@ GetItemKeyType = tp.Union[
 GetItemKeyTypeCompound = tp.Union[
         tp.Tuple[tp.Any, ...], int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
-UFunc = tp.Callable[[np.ndarray], np.ndarray]
+UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
