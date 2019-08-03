@@ -235,8 +235,11 @@ class IndexBase(ContainerBase):
 
         if isinstance(other, np.ndarray):
             opperand = other
-        else: # assume we can get it from a .values attribute
+        elif isinstance(other, ContainerBase):
+            # assume we can get it from a .values attribute
             opperand = other.values
+        else:
+            raise NotImplementedError(f'no support for {other}')
 
         cls = self.__class__
 

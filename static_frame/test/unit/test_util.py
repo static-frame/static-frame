@@ -24,7 +24,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.container import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
-from static_frame.core.util import set_ufunc2d
+from static_frame.core.util import ufunc_set_2d
 
 from static_frame import Index
 
@@ -923,7 +923,7 @@ class TestUnit(TestCase):
         # fails due wrong function
         a1 = np.array([1, 1, 1])
         with self.assertRaises(NotImplementedError):
-            set_ufunc2d(np.sum, a1, a1)
+            ufunc_set_2d(np.sum, a1, a1)
 
 
     def test_set_ufunc2d_b(self) -> None:
@@ -931,11 +931,11 @@ class TestUnit(TestCase):
         a1 = np.array([['a', 'b'], ['b', 'c']])
         a2 = np.array([['b', 'cc'], ['dd', 'ee']])
 
-        post = set_ufunc2d(np.union1d, a1, a2)
+        post = ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
-        post = set_ufunc2d(np.union1d, a2, a1)
+        post = ufunc_set_2d(np.union1d, a2, a1)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
@@ -945,7 +945,7 @@ class TestUnit(TestCase):
         a1 = np.array([[False]])
         a2 = np.array([[0]])
 
-        post = set_ufunc2d(np.union1d, a1, a2)
+        post = ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(post.tolist(), [[False]])
 
 
@@ -953,11 +953,11 @@ class TestUnit(TestCase):
         a1 = np.array([[3], [2], [1]])
         a2 = np.array([[30], [20], [2], [1]])
 
-        post1 = set_ufunc2d(np.union1d, a1, a2)
+        post1 = ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(post1.tolist(),
                 [[1], [2], [3], [20], [30]])
 
-        post2 = set_ufunc2d(np.intersect1d, a1, a2)
+        post2 = ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(post2.tolist(),
                 [[1], [2]])
 
@@ -967,10 +967,10 @@ class TestUnit(TestCase):
         a1 = np.array([[0, 1], [-1, -2]])
         a2 = np.array([])
 
-        post1 = set_ufunc2d(np.union1d, a1, a2)
+        post1 = ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(id(a1), id(post1))
 
-        post2 = set_ufunc2d(np.union1d, a2, a1)
+        post2 = ufunc_set_2d(np.union1d, a2, a1)
         self.assertEqual(id(a1), id(post2))
 
 
@@ -981,10 +981,10 @@ class TestUnit(TestCase):
         a2 = np.array([])
 
         # intersect with 0 results in 0
-        post1 = set_ufunc2d(np.intersect1d, a1, a2)
+        post1 = ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(len(post1), 0)
 
-        post2 = set_ufunc2d(np.intersect1d, a2, a1)
+        post2 = ufunc_set_2d(np.intersect1d, a2, a1)
         self.assertEqual(len(post2), 0)
 
 

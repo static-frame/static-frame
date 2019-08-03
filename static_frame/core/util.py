@@ -1313,7 +1313,7 @@ def intersect1d(
 
     return np.intersect1d(array, other)
 
-def set_ufunc2d(
+def ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
@@ -1408,13 +1408,13 @@ def intersect2d(array: np.ndarray,
         other: np.ndarray,
         assume_unique: bool=False
         ) -> np.ndarray:
-    return set_ufunc2d(np.intersect1d, array, other, assume_unique)
+    return ufunc_set_2d(np.intersect1d, array, other, assume_unique)
 
 def union2d(array: np.ndarray,
         other: np.ndarray,
         assume_unique: bool=False
         ) -> np.ndarray:
-    return set_ufunc2d(np.union1d, array, other, assume_unique)
+    return ufunc_set_2d(np.union1d, array, other, assume_unique)
 
 #-------------------------------------------------------------------------------
 
