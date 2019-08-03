@@ -1238,8 +1238,9 @@ class Series(ContainerBase):
             include_index: Determine if the Index is shifted with the underlying data.
         '''
         if shift % len(self.values):
-            values = array_shift(self.values,
-                    shift,
+            values = array_shift(
+                    array=self.values,
+                    shift=shift,
                     axis=0,
                     wrap=True)
             values.flags.writeable = False
@@ -1270,8 +1271,9 @@ class Series(ContainerBase):
         '''
 
         if shift:
-            values = array_shift(self.values,
-                    shift,
+            values = array_shift(
+                    array=self.values,
+                    shift=shift,
                     axis=0,
                     wrap=False,
                     fill_value=fill_value)

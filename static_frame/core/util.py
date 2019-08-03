@@ -468,7 +468,7 @@ def roll_1d(array: np.ndarray,
     Specialized form of np.roll that, by focusing on the 1D solution, is at least four times faster.
     '''
     size = len(array)
-    if size == 0:
+    if size <= 1:
         return array.copy()
 
     shift = shift % size
@@ -497,7 +497,7 @@ def roll_2d(array: np.ndarray,
 
     if axis == 0: # roll rows
         size = array.shape[0]
-        if size == 0: # cannot mod zero
+        if size <= 1:
             return array.copy()
 
         shift = shift % size
@@ -514,7 +514,7 @@ def roll_2d(array: np.ndarray,
 
     elif axis == 1: # roll columns
         size = array.shape[1]
-        if size == 0: # cannot mod zero
+        if size <= 1:
             return array.copy()
 
         shift = shift % size
@@ -1172,7 +1172,7 @@ def array_to_duplicated(
 
 
 #-------------------------------------------------------------------------------
-def array_shift(
+def array_shift(*,
         array: np.ndarray,
         shift: int,
         axis: int, # 0 is rows, 1 is columns
@@ -1184,6 +1184,7 @@ def array_shift(
     Args:
         fill_value: only used if wrap is False.
     '''
+
     # works for all shapes
     if shift > 0:
         shift_mod = shift % array.shape[axis]
@@ -1198,6 +1199,7 @@ def array_shift(
         return array.copy()
 
     if wrap:
+        # roll functions will handle finding noop rolls
         if array.ndim == 1:
             return roll_1d(array, shift_mod)
         return roll_2d(array, shift_mod, axis=axis)

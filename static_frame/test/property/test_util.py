@@ -248,6 +248,36 @@ class TestUnit(TestCase):
 
         self.assertTrue(post.dtype == bool)
 
+    @given(get_array_1d2d()) # type: ignore
+    def test_array_shift(self, array: np.ndarray) -> None:
+
+        for shift in (-1, 1):
+            for wrap in (True, False):
+
+                tests = []
+                post1 = util.array_shift(
+                        array=array,
+                        shift=shift,
+                        axis=0,
+                        wrap=wrap)
+                tests.append(post1)
+
+                if array.ndim == 2:
+                    post2 = util.array_shift(
+                        array=array,
+                        shift=shift,
+                        axis=1,
+                        wrap=wrap)
+                    tests.append(post2)
+
+                for post in tests:
+                    self.assertTrue(array.shape == post.shape)
+                    # type is only always maintained if we are wrapping
+                    if wrap:
+                        self.assertTrue(array.dtype == post.dtype)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

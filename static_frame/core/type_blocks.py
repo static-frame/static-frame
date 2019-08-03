@@ -1181,8 +1181,9 @@ class TypeBlocks(ContainerBase):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
                 else:
-                    b = array_shift(b,
-                            row_shift,
+                    b = array_shift(
+                            array=b,
+                            shift=row_shift,
                             axis=0,
                             wrap=wrap,
                             fill_value=fill_value)

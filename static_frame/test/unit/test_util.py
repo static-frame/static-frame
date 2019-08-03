@@ -699,23 +699,23 @@ class TestUnit(TestCase):
 
         # import ipdb; ipdb.set_trace()
 
-        self.assertEqual(array_shift(a1, 2, axis=0, wrap=True).tolist(),
+        self.assertEqual(array_shift(array=a1, shift=2, axis=0, wrap=True).tolist(),
                 [4, 5, 0, 1, 2, 3])
-        self.assertEqual(array_shift(a1, -2, axis=0, wrap=True).tolist(),
+        self.assertEqual(array_shift(array=a1, shift=-2, axis=0, wrap=True).tolist(),
                 [2, 3, 4, 5, 0, 1])
-        self.assertEqual(array_shift(a1, 5, axis=0, wrap=True).tolist(),
+        self.assertEqual(array_shift(array=a1, shift=5, axis=0, wrap=True).tolist(),
                 [1, 2, 3, 4, 5, 0])
 
         self.assertEqual(
-                array_shift(a1, 2, axis=0, wrap=False, fill_value=-1).tolist(),
+                array_shift(array=a1, shift=2, axis=0, wrap=False, fill_value=-1).tolist(),
                 [-1, -1, 0, 1, 2, 3])
 
         self.assertEqual(
-                array_shift(a1, 2, axis=0, wrap=False, fill_value=1.5).tolist(),
+                array_shift(array=a1, shift=2, axis=0, wrap=False, fill_value=1.5).tolist(),
                 [1.5, 1.5, 0, 1, 2, 3])
 
         self.assertEqual(
-                array_shift(a1, -2, axis=0, wrap=False, fill_value=1.5).tolist(),
+                array_shift(array=a1, shift=-2, axis=0, wrap=False, fill_value=1.5).tolist(),
                 [2, 3, 4, 5, 1.5, 1.5])
 
 
@@ -724,32 +724,32 @@ class TestUnit(TestCase):
                 ('c', 'd', 'f', 'w'),
                 ('e', 'f', 's', 'q')])
 
-        self.assertEqual(array_shift(a1, 2, axis=0, wrap=True).tolist(),
+        self.assertEqual(array_shift(array=a1, shift=2, axis=0, wrap=True).tolist(),
                 [['c', 'd', 'f', 'w'], ['e', 'f', 's', 'q'], ['a', 'b', 'e', 'd']])
 
-        self.assertEqual(array_shift(a1, -2, axis=0, wrap=True).tolist(),
+        self.assertEqual(array_shift(array=a1, shift=-2, axis=0, wrap=True).tolist(),
                 [['e', 'f', 's', 'q'], ['a', 'b', 'e', 'd'], ['c', 'd', 'f', 'w']])
 
 
         self.assertEqual(
-                array_shift(a1, -2, axis=0, wrap=False, fill_value='XX').dtype,
+                array_shift(array=a1, shift=-2, axis=0, wrap=False, fill_value='XX').dtype,
                 np.dtype('<U2')
                 )
 
         self.assertEqual(
-                array_shift(a1, -2, axis=0, wrap=False, fill_value='XX').tolist(),
+                array_shift(array=a1, shift=-2, axis=0, wrap=False, fill_value='XX').tolist(),
                 [['e', 'f', 's', 'q'],
                 ['XX', 'XX', 'XX', 'XX'],
                 ['XX', 'XX', 'XX', 'XX']])
 
         self.assertEqual(
-                array_shift(a1, 2, axis=1, wrap=False, fill_value='XX').tolist(),
+                array_shift(array=a1, shift=2, axis=1, wrap=False, fill_value='XX').tolist(),
                 [['XX', 'XX', 'a', 'b'],
                 ['XX', 'XX', 'c', 'd'],
                 ['XX', 'XX', 'e', 'f']])
 
         self.assertEqual(
-                array_shift(a1, -2, axis=1, wrap=False, fill_value='XX').tolist(),
+                array_shift(array=a1, shift=-2, axis=1, wrap=False, fill_value='XX').tolist(),
                 [['e', 'd', 'XX', 'XX'],
                 ['f', 'w', 'XX', 'XX'],
                 ['s', 'q', 'XX', 'XX']])
@@ -757,7 +757,7 @@ class TestUnit(TestCase):
 
     def test_array_shift_c(self) -> None:
         a1 = np.arange(6)
-        post = array_shift(a1, 0, axis=0, wrap=False)
+        post = array_shift(array=a1, shift=0, axis=0, wrap=False)
         self.assertEqual(a1.tolist(), post.tolist())
 
 

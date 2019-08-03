@@ -796,8 +796,9 @@ class Index(IndexBase):
         '''
         values = self.values # force usage of property for cache update
         if shift % len(values):
-            values = array_shift(values,
-                    shift,
+            values = array_shift(
+                    array=values,
+                    shift=shift,
                     axis=0,
                     wrap=True)
             values.flags.writeable = False

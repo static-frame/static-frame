@@ -768,8 +768,9 @@ class IndexHierarchy(IndexBase):
         values = self._labels
 
         if shift % len(values):
-            values = array_shift(values,
-                    shift,
+            values = array_shift(
+                    array=values,
+                    shift=shift,
                     axis=0,
                     wrap=True)
             values.flags.writeable = False

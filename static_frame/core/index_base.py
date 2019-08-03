@@ -251,7 +251,7 @@ class IndexBase(ContainerBase):
 
 
     def intersection(self: I, other: 'IndexBase') -> I:
-        # NOTE: must get UFunc off of class to avoid self-application
+        # NOTE: must get UFunc off of class to avoid automatic additionn of self to signature
         return self._ufunc_set(
                 self.__class__._UFUNC_INTERSECTION,
                 other)
