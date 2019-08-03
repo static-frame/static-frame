@@ -4,6 +4,7 @@ import typing as tp
 
 from itertools import zip_longest
 from itertools import chain
+from functools import partial
 import numpy as np  # type: ignore
 
 
@@ -33,6 +34,7 @@ from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import isna_array
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import binary_transition
+from static_frame.core.util import ufunc_axis_skipna
 
 from static_frame.core.util import GetItem
 from static_frame.core.util import IndexCorrespondence
@@ -698,12 +700,11 @@ class TypeBlocks(ContainerBase):
                 yield g, selection, self._extract(column_key=selection)
 
 
-    # TODO: make this more like _ufunc_axis_skipna in signature, then use resolve skipna usage appropriately
 
-    def block_apply_axis(self, *,
+    def ufunc_axis_skipna(self, *,
             skipna: bool,
             axis: int,
-            func: UFunc,
+            ufunc: UFunc,
             ufunc_skipna: UFunc,
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
@@ -717,12 +718,16 @@ class TypeBlocks(ContainerBase):
         '''
         assert axis < 2
 
-        if skipna:
-            func = ufunc_skipna
+        func = partial(ufunc_axis_skipna,
+                skipna=skipna,
+                axis=axis,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                )
 
         if self.unified:
             # TODO: not sure if we need dim filter here
-            result = func(self._blocks[0], axis=axis)
+            result = func(array=self._blocks[0])
             result.flags.writeable = False
             return result
         else:
@@ -741,28 +746,27 @@ class TypeBlocks(ContainerBase):
                 if axis == 0:
                     if b.ndim == 1:
                         end = pos + 1
-                        out[pos] = func(b, axis=axis)
+                        out[pos] = func(array=b)
                     else:
                         end = pos + b.shape[1]
-                        # temp = func(b, axis=axis)
-                        func(b, axis=axis, out=out[pos: end])
+                        func(array=b, out=out[pos: end])
                     pos = end
                 else:
                     if b.ndim == 1: # cannot process yet
                         # if this is a numeric single columns we just copy it and process it later; but if this is a logical application (and, or) then out is already boolean
                         if out.dtype == bool and b.dtype != bool:
                             # making 2D with axis 0 func will result in element-wise operation
-                            out[:, idx] = func(column_2d_filter(b), axis=0)
+                            out[:, idx] = func(array=column_2d_filter(b), axis=0)
                         else: # otherwise, keep as is
                             out[:, idx] = b
                     else:
-                        func(b, axis=axis, out=out[:, idx])
+                        func(array=b, out=out[:, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False
             return out
         # must call function one more time on remaining components
-        result = func(out, axis=axis)
+        result = func(array=out)
         result.flags.writeable = False
         return result
 

@@ -391,6 +391,7 @@ def ufunc_axis_skipna(*,
         axis: int,
         ufunc: UFunc,
         ufunc_skipna: UFunc,
+        out: tp.Optional[np.ndarray]=None
         ) -> np.ndarray:
     '''For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality.
     '''
@@ -417,7 +418,7 @@ def ufunc_axis_skipna(*,
 
     elif array.dtype.kind == 'M' or array.dtype.kind == 'm':
         # dates do not support skipna functions
-        return ufunc(array, axis=axis)
+        return ufunc(array, axis=axis, out=out)
 
     elif array.dtype.kind in DTYPE_STR_KIND and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
@@ -425,8 +426,8 @@ def ufunc_axis_skipna(*,
         v = array
 
     if skipna:
-        return ufunc_skipna(v, axis=axis)
-    return ufunc(v, axis=axis)
+        return ufunc_skipna(v, axis=axis, out=out)
+    return ufunc(v, axis=axis, out=out)
 
 
 def ufunc_unique(

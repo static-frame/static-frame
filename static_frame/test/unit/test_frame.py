@@ -1639,7 +1639,15 @@ class TestUnit(TestCase):
                 index=('w', 'x'),
                 )
 
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(f1.sum(axis=0).values.tolist(),
+                [32, 36, 3, 84.83, 90.123])
+
+        self.assertEqual(f1.sum(axis=1).values.tolist(),
+                [11.23, 234.723])
+
+        with self.assertRaises(TypeError):
+            f1.sum(skipna=False)
+
 
     def test_frame_prod_a(self) -> None:
 

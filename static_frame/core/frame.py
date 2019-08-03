@@ -13,6 +13,8 @@ from functools import partial
 import numpy as np
 from numpy.ma import MaskedArray
 
+from static_frame.core.util import UFunc
+
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import NULL_SLICE
@@ -1976,23 +1978,29 @@ class Frame(ContainerBase):
     # axis functions
 
     def _ufunc_axis_skipna(self, *,
-            axis,
-            skipna,
-            ufunc,
-            ufunc_skipna,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
             dtype) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2
 
         # TODO: need to handle replacing None with nan in object blocks!
-        if skipna:
-            post = self._blocks.block_apply_axis(ufunc_skipna, axis=axis, dtype=dtype)
-        else:
-            post = self._blocks.block_apply_axis(ufunc, axis=axis, dtype=dtype)
+        post = self._blocks.ufunc_axis_skipna(
+                skipna=skipna,
+                axis=axis,
+                ufunc=ufunc,
+                ufunc_skipna=ufunc_skipna,
+                dtype=dtype)
+
         # post has been made immutable so Series will own
         if axis == 0:
-            return Series(post, index=immutable_index_filter(self._columns))
+            return Series(
+                    post,
+                    index=immutable_index_filter(self._columns)
+                    )
         return Series(post, index=self._index)
 
     def _ufunc_shape_skipna(self, *,
