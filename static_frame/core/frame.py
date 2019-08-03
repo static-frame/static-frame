@@ -1986,7 +1986,6 @@ class Frame(ContainerBase):
         # axis 1 processes cols, delivers row index
         assert axis < 2
 
-        # TODO: need to handle replacing None with nan in object blocks!
         post = self._blocks.ufunc_axis_skipna(
                 skipna=skipna,
                 axis=axis,
