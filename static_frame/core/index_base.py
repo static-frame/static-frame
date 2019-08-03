@@ -227,6 +227,9 @@ class IndexBase(ContainerBase):
             func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
             other: 'IndexBase'
             ) -> I:
+        '''
+        Utility function for preparing and collecting values for Indices to produce a new Index.
+        '''
         if self._recache:
             self._update_array_cache()
 

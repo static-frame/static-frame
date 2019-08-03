@@ -371,7 +371,9 @@ def get_array_1d2d(
 #-------------------------------------------------------------------------------
 # aligend arrays for concatenation and type blocks
 
-def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10) -> st.SearchStrategy:
+def get_arrays_2d_aligned_columns(
+        min_size: int = 1,
+        max_size: int = 10) -> st.SearchStrategy:
 
     return st.integers(min_value=1, max_value=MAX_COLUMNS).flatmap(
         lambda columns: st.lists(
@@ -384,13 +386,32 @@ def get_arrays_2d_aligned_columns(min_size: int = 1, max_size: int = 10) -> st.S
             )
     )
 
-def get_arrays_2d_aligned_rows(min_size: int = 1, max_size: int = 10) -> st.SearchStrategy:
+def get_arrays_2d_aligned_rows(
+        min_size: int = 1,
+        max_size: int = 10) -> st.SearchStrategy:
 
     return st.integers(min_value=1, max_value=MAX_ROWS).flatmap(
         lambda rows: st.lists(
             get_array_2d(
                 min_rows=rows,
                 max_rows=rows,
+                ),
+            min_size=min_size,
+            max_size=max_size
+            )
+    )
+
+def get_arrays_2d_aligned(
+        min_size: int = 1,
+        max_size: int = 10) -> st.SearchStrategy:
+
+    return get_shape_2d().flatmap(
+        lambda shape: st.lists(
+            get_array_2d(
+                min_rows=shape[0],
+                max_rows=shape[0],
+                min_columns=shape[1],
+                max_columns=shape[1],
                 ),
             min_size=min_size,
             max_size=max_size

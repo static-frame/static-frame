@@ -918,14 +918,15 @@ class TestUnit(TestCase):
         self.assertEqual(post, None)
 
 
-    def test_ufunc2d_a(self) -> None:
-        # fails due to wrong dimensionality, not wrong function
+
+    def test_set_ufunc2d_a(self) -> None:
+        # fails due wrong function
         a1 = np.array([1, 1, 1])
-        with self.assertRaises(IndexError):
+        with self.assertRaises(NotImplementedError):
             set_ufunc2d(np.sum, a1, a1)
 
 
-    def test_ufunc2d_b(self) -> None:
+    def test_set_ufunc2d_b(self) -> None:
 
         a1 = np.array([['a', 'b'], ['b', 'c']])
         a2 = np.array([['b', 'cc'], ['dd', 'ee']])
@@ -937,6 +938,58 @@ class TestUnit(TestCase):
         post = set_ufunc2d(np.union1d, a2, a1)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
+
+    def test_set_ufunc2d_c(self) -> None:
+
+        # these values, as tuples, are equivalent and hash to the same value in Python, thus we get one result
+        a1 = np.array([[False]])
+        a2 = np.array([[0]])
+
+        post = set_ufunc2d(np.union1d, a1, a2)
+        self.assertEqual(post.tolist(), [[False]])
+
+
+    def test_set_ufunc2d_d(self) -> None:
+        a1 = np.array([[3], [2], [1]])
+        a2 = np.array([[30], [20], [2], [1]])
+
+        post1 = set_ufunc2d(np.union1d, a1, a2)
+        self.assertEqual(post1.tolist(),
+                [[1], [2], [3], [20], [30]])
+
+        post2 = set_ufunc2d(np.intersect1d, a1, a2)
+        self.assertEqual(post2.tolist(),
+                [[1], [2]])
+
+
+    def test_set_ufunc2d_e(self) -> None:
+
+        a1 = np.array([[0, 1], [-1, -2]])
+        a2 = np.array([])
+
+        post1 = set_ufunc2d(np.union1d, a1, a2)
+        self.assertEqual(id(a1), id(post1))
+
+        post2 = set_ufunc2d(np.union1d, a2, a1)
+        self.assertEqual(id(a1), id(post2))
+
+
+
+    def test_set_ufunc2d_f(self) -> None:
+
+        a1 = np.array([[0, 1], [-1, -2]])
+        a2 = np.array([])
+
+        # intersect with 0 results in 0
+        post1 = set_ufunc2d(np.intersect1d, a1, a2)
+        self.assertEqual(len(post1), 0)
+
+        post2 = set_ufunc2d(np.intersect1d, a2, a1)
+        self.assertEqual(len(post2), 0)
+
+
+
+
 
     def test_to_timedelta64_a(self) -> None:
         timedelta = datetime.timedelta

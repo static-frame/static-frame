@@ -1245,10 +1245,9 @@ def array_set_ufunc_many(
             raise RuntimeError('arrays do not all have the same ndim')
         # is the new array different
         if ndim == 1:
-            # if lengths are not comparable, or comparable and the values are not the same
+            # if lengths are not comparable, or comparable and the values are not all the same; otherwise, arrays are identical and can skip ufunc application
             if len(array) != len(result) or (array != result).any():
                 result = ufunc(result, array)
-            # otherwise, arrays are identical and can skip ufunc application
         else:
             result = ufunc(result, array)
 
@@ -1310,41 +1309,90 @@ def intersect1d(
 def set_ufunc2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
-        other: np.ndarray) -> np.ndarray:
+        other: np.ndarray
+        ) -> np.ndarray:
     '''
-    Given a 1d set operation, convert to structured array, perform operation, then restore original shape.
+    Given a 1d set operation, evaluate the set operation on the rows given either by a 2D array or a 1D object array of tuples.
+
+    Args:
+        array: can be a 2D array, or a 1D object array of tuples.
+        other: can be a 2D array, or a 1D object array of tuples.
+    Returns:
+        Either a 2D array, or a 1D object array of tuples.
     '''
-    if array.dtype.kind == 'O' or other.dtype.kind == 'O':
+    if func == np.intersect1d:
+        is_union = False
+    elif func == np.union1d:
+        is_union = True
+    else:
+        raise NotImplementedError('unexpected func', func)
+
+    # if either are object, or combination resovle to object, get object
+    dtype = resolve_dtype(array.dtype, other.dtype)
+
+    # optimizations for empty arrays
+    if is_union:
+        if len(array) == 0:
+            return other
+        elif len(other) == 0:
+            return array
+    else: # intersection with empty
+        if len(array) == 0 or len(other) == 0:
+            # note sure what DTYPE is correct to return here
+            return np.array(EMPTY_TUPLE, dtype=dtype)
+
+    if dtype.kind == 'O':
         if array.ndim == 1:
             array_set = set(array)
-        else:
+        else: # assume row-wise comparison
             array_set = set(tuple(row) for row in array)
+
         if other.ndim == 1:
             other_set = set(other)
-        else:
+        else: # assume row-wise comparison
             other_set = set(tuple(row) for row in other)
 
-        if func is np.union1d:
+        if is_union:
             result = array_set | other_set
-        elif func is np.intersect1d:
-            result = array_set & other_set
         else:
-            raise NotImplementedError('unexpected func', func)
-        # sort so as to duplicate results from NP functions
-        # NOTE: this sort may not always be necssary
-        return np.array(sorted(result), dtype=object)
+            result = array_set & other_set
 
+        # NOTE: this sort may not always be succesful
+        try:
+            values = sorted(result)
+        except TypeError:
+            values = tuple(result)
+
+        # returns a 1D object array of tuples
+        return np.array(values, dtype=object)
+
+    # from here, we assume we have two 2D arrays
+    if array.ndim != 2 or other.ndim != 2:
+        raise RuntimeError('non-object arrays have to both be 2D')
+
+
+    # number of columns must be the same, as doing row-wise comparison, and determines the length of each row
     assert array.shape[1] == other.shape[1]
-    # this does will work if dyptes are differently sized strings, such as U2 and U3
-    dtype = resolve_dtype(array.dtype, other.dtype)
+    width = array.shape[1]
+
     if array.dtype != dtype:
         array = array.astype(dtype)
     if other.dtype != dtype:
         other = other.astype(dtype)
 
-    width = array.shape[1]
-    array_view = array.view([('', array.dtype)] * width)
-    other_view = other.view([('', other.dtype)] * width)
+    if width == 1:
+        # let the function flatten the array
+        post = func(array, other)
+        return post.reshape(len(post), width)
+
+    # this approach based on https://stackoverflow.com/questions/9269681/intersection-of-2d-numpy-ndarrays
+    # we can use a the 1D function on the rows, once converted to a structured array
+
+    dtype_view = [('', array.dtype)] * width
+    # creates a view of tuples for 1D operation
+    array_view = array.view(dtype_view)
+    other_view = other.view(dtype_view)
+
     return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 

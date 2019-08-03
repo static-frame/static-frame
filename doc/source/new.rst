@@ -11,6 +11,8 @@ All duplicate-handling functions now support heterogenously typed object arrays 
 
 Binary operations on ``Frame`` now preserve ``Index`` order when indices are equal.
 
+Functions with the ``skipna`` argument now properly skip ``None`` in ``Frames`` with built with object arrays.
+
 
 0.3.7
 ------------

@@ -23,8 +23,10 @@ from static_frame.test.property.strategies import get_dtypes
 from static_frame.test.property.strategies import get_label
 from static_frame.test.property.strategies import get_value
 from static_frame.test.property.strategies import get_labels
+from static_frame.test.property.strategies import get_arrays_2d_aligned
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
+from static_frame.test.property.strategies import get_blocks
 
 from static_frame.core.container import UFUNC_AXIS_SKIPNA
 
@@ -272,10 +274,18 @@ class TestUnit(TestCase):
 
                 for post in tests:
                     self.assertTrue(array.shape == post.shape)
+
                     # type is only always maintained if we are wrapping
                     if wrap:
                         self.assertTrue(array.dtype == post.dtype)
 
+    # @given(st.lists(get_array_1d2d())) # type: ignore
+    @given(get_arrays_2d_aligned()) # type: ignore
+    def test_array_set_ufunc_many(self, arrays: tp.Iterable[np.ndarray]) -> None:
+
+        print(len(arrays))
+        for union in (True, False):
+            post = util.array_set_ufunc_many(arrays, union=union)
 
 
 
