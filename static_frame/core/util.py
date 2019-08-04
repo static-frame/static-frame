@@ -1461,10 +1461,10 @@ def ufunc_set_iter(
 
     # will detect ndim by first value, but insure that all other arrays have the same ndim
     if result.ndim == 1:
-        ufunc: union1d if union else intersect1d # type: ignore
+        ufunc = union1d if union else intersect1d
         ndim = 1
     else: # ndim == 2
-        ufunc = union2d if union else intersect2d
+        ufunc = union2d if union else intersect2d # type: ignore
         ndim = 2
 
     for array in arrays:
