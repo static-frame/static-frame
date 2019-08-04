@@ -1006,10 +1006,10 @@ class TestUnit(TestCase):
         a1 = np.array([[0, 1], [-1, -2]])
         a2 = np.array([])
 
-        post1 = ufunc_set_2d(np.union1d, a1, a2)
+        post1 = ufunc_set_2d(np.union1d, a1, a2, assume_unique=True)
         self.assertEqual(id(a1), id(post1))
 
-        post2 = ufunc_set_2d(np.union1d, a2, a1)
+        post2 = ufunc_set_2d(np.union1d, a2, a1, assume_unique=True)
         self.assertEqual(id(a1), id(post2))
 
 

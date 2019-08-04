@@ -1250,18 +1250,19 @@ def ufunc_set_1d(
     dtype = resolve_dtype(array.dtype, other.dtype)
 
     # optimizations for empty arrays
-    if is_union:
-        if len(array) == 0:
-            return other
-        elif len(other) == 0:
-            return array
-    else: # intersection with empty
+    if not is_union: # intersection with empty
         if len(array) == 0 or len(other) == 0:
-            # note sure what DTYPE is correct to return here
+            # not sure what DTYPE is correct to return here
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
-        # can only use length to determine unique comparison condition if arguments are assumed to already be unique
+        # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
+        if is_union:
+            if len(array) == 0:
+                return other
+            elif len(other) == 0:
+                return array
+
         if len(array) == len(other):
             compare = array == other
             if isinstance(compare, BOOL_TYPES) and compare:
@@ -1317,18 +1318,19 @@ def ufunc_set_2d(
     dtype = resolve_dtype(array.dtype, other.dtype)
 
     # optimizations for empty arrays
-    if is_union:
-        if len(array) == 0:
-            return other
-        elif len(other) == 0:
-            return array
-    else: # intersection with empty
+    if not is_union: # intersection with empty
         if len(array) == 0 or len(other) == 0:
-            # note sure what DTYPE is correct to return here
+            # not sure what DTYPE is correct to return here
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
-        # can only use length to determine unique comparison condition if arguments are assumed to already be unique
+        # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
+        if is_union:
+            if len(array) == 0:
+                return other
+            elif len(other) == 0:
+                return array
+
         # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
         if array.shape == other.shape:
             compare = array == other
