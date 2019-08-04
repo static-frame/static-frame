@@ -74,8 +74,8 @@ class IndexBase(ContainerBase):
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
-    _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
-    _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray], np.ndarray]
+    _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
+    _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
 
     def _ufunc_axis_skipna(self, *,
@@ -224,7 +224,7 @@ class IndexBase(ContainerBase):
 
 
     def _ufunc_set(self: I,
-            func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
+            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: 'IndexBase'
             ) -> I:
         '''
@@ -248,7 +248,7 @@ class IndexBase(ContainerBase):
         cls = self.__class__
 
         # using assume_unique will permit retaining order when opperands are identical
-        labels = func(self._labels, opperand, assume_unique=assume_unique)
+        labels = func(self._labels, opperand, assume_unique=assume_unique) # type: ignore
 
         if id(labels) == id(self._labels):
             # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary

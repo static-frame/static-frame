@@ -1355,7 +1355,7 @@ def ufunc_set_2d(
 
         # NOTE: this sort may not always be succesful
         try:
-            values = sorted(result)
+            values: tp.Iterable[tp.Tuple[tp.Hashable, ...]] = sorted(result)
         except TypeError:
             values = tuple(result)
 
@@ -1461,7 +1461,7 @@ def ufunc_set_iter(
 
     # will detect ndim by first value, but insure that all other arrays have the same ndim
     if result.ndim == 1:
-        ufunc = union1d if union else intersect1d
+        ufunc: union1d if union else intersect1d # type: ignore
         ndim = 1
     else: # ndim == 2
         ufunc = union2d if union else intersect2d
