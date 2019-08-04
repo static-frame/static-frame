@@ -10,7 +10,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_set_ufunc_many
+from static_frame.core.util import ufunc_set_iter
 
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
@@ -539,15 +539,17 @@ class TestUnit(TestCase):
 
 
     def test_array_set_ufunc_many_a(self) -> None:
+
+        # this shows that identical arrays return the same ordering
         a1 = np.array([3, 2, 1])
         a2 = np.array([3, 2, 1])
         a3 = np.array([3, 2, 1])
         a4 = np.array([3, 2, 1])
 
-        post = array_set_ufunc_many((a1, a2, a3, a4), union=False)
+        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
-        post = array_set_ufunc_many((a1, a2, a3, a4), union=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
         self.assertEqual(post.tolist(), [3, 2, 1])
 
 
@@ -557,10 +559,10 @@ class TestUnit(TestCase):
         a3 = np.array([5, 3, 2, 1])
         a4 = np.array([2])
 
-        post = array_set_ufunc_many((a1, a2, a3, a4), union=False)
+        post = ufunc_set_iter((a1, a2, a3, a4), union=False, assume_unique=True)
         self.assertEqual(post.tolist(), [2])
 
-        post = array_set_ufunc_many((a1, a2, a3, a4), union=True)
+        post = ufunc_set_iter((a1, a2, a3, a4), union=True, assume_unique=True)
         self.assertEqual(post.tolist(), [1, 2, 3, 5])
 
 
@@ -569,10 +571,10 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
         a3 = np.array([[10, 20, 30], [1, 2, 3]])
 
-        post = array_set_ufunc_many((a1, a2, a3), union=False)
+        post = ufunc_set_iter((a1, a2, a3), union=False)
         self.assertEqual(post.tolist(), [[1, 2, 3]])
 
-        post = array_set_ufunc_many((a1, a2, a3), union=True)
+        post = ufunc_set_iter((a1, a2, a3), union=True)
         self.assertEqual(post.tolist(),
                 [[1, 2, 3], [3, 2, 1], [5, 2, 1], [10, 20, 30]])
 
@@ -582,14 +584,14 @@ class TestUnit(TestCase):
         a2 = np.array([[5, 2, 1], [1, 2, 3]])
 
         with self.assertRaises(Exception):
-            post = array_set_ufunc_many((a1, a2), union=False)
+            post = ufunc_set_iter((a1, a2), union=False)
 
 
     def test_array_set_ufunc_many_e(self) -> None:
         a1 = np.array([3, 2, 1])
         a2 = np.array([30, 20])
 
-        post = array_set_ufunc_many((a1, a2), union=False)
+        post = ufunc_set_iter((a1, a2), union=False)
         self.assertEqual(post.tolist(), [])
 
 

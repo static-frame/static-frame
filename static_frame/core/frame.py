@@ -41,7 +41,7 @@ from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_set_ufunc_many
+from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
@@ -173,9 +173,11 @@ class Frame(ContainerBase):
                     raise RuntimeError('Column names after horizontal concatenation are not unique; supply a columns argument.')
 
             if index is None:
-                index = array_set_ufunc_many(
+                index = ufunc_set_iter(
                         (frame._index.values for frame in frames),
-                        union=union)
+                        union=union,
+                        assume_unique=True # all from indices
+                        )
                 index.flags.writeable = False
                 from_array_index = True
 
@@ -196,9 +198,11 @@ class Frame(ContainerBase):
                     raise RuntimeError('Index names after vertical concatenation are not unique; supply an index argument.')
 
             if columns is None:
-                columns = array_set_ufunc_many(
+                columns = ufunc_set_iter(
                         (frame._columns.values for frame in frames),
-                        union=union)
+                        union=union,
+                        assume_unique=True
+                        )
                 # import ipdb; ipdb.set_trace()
                 columns.flags.writeable = False
                 from_array_columns = True

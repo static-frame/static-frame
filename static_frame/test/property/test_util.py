@@ -279,14 +279,16 @@ class TestUnit(TestCase):
                     if wrap:
                         self.assertTrue(array.dtype == post.dtype)
 
-    # @given(st.lists(get_array_1d2d())) # type: ignore
-    @given(get_arrays_2d_aligned()) # type: ignore
+    @given(get_arrays_2d_aligned_columns()) # type: ignore
     def test_array_set_ufunc_many(self, arrays: tp.Iterable[np.ndarray]) -> None:
 
-        print(len(arrays))
         for union in (True, False):
-            post = util.array_set_ufunc_many(arrays, union=union)
-
+            post = util.ufunc_set_iter(arrays, union=union)
+            if post.dtype == object:
+                # returned object arrays might be 2D or 1D of tuples
+                self.assertTrue(post.ndim in (1, 2))
+            else:
+                self.assertTrue(post.ndim == 2)
 
 
 if __name__ == '__main__':
