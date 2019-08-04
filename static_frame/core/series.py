@@ -435,7 +435,6 @@ class Series(ContainerBase):
 
         ic = IndexCorrespondence.from_correspondence(self.index, index)
 
-
         if ic.is_subset: # must have some common
             return self.__class__(self.values[ic.iloc_src],
                     index=index,

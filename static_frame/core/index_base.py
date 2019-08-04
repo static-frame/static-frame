@@ -235,34 +235,40 @@ class IndexBase(ContainerBase):
 
         if isinstance(other, np.ndarray):
             opperand = other
-        elif isinstance(other, ContainerBase):
-            # assume we can get it from a .values attribute
+            assume_unique = False
+        elif isinstance(other, IndexBase):
             opperand = other.values
+            assume_unique = True # can always assume unique
+        elif isinstance(other, ContainerBase):
+            opperand = other.values
+            assume_unique = False
         else:
             raise NotImplementedError(f'no support for {other}')
 
         cls = self.__class__
 
-        # if opperands are identical, want to keep common order; any other scenario will result in a reordering
-        # NOTE: compare shape for IndexHierarchy
-        if self._labels.shape == opperand.shape:
-            compare = self._labels == opperand
-            if isinstance(compare, BOOL_TYPES) and compare:
-                # NOTE: favor using cls here as it permits more maximal sharing of static resources; not sure how to handle mypy error: Too many arguments for "IndexBase"
-                return cls(self) # type: ignore
-            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                return cls(self) # type: ignore
+        # using assume_unique will permit retaining order when opperands are identical
+        labels = func(self._labels, opperand, assume_unique=assume_unique)
 
-        return cls.from_labels(func(self._labels, opperand))
+        if id(labels) == id(self._labels):
+            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
+            return cls(self) # type: ignore
+        return cls.from_labels(labels)
 
 
     def intersection(self: I, other: 'IndexBase') -> I:
-        # NOTE: must get UFunc off of class to avoid automatic additionn of self to signature
+        '''
+        Perform intersection with another Index, container, or NumPy array. Identical comparisons retain order.
+        '''
+        # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
         return self._ufunc_set(
                 self.__class__._UFUNC_INTERSECTION,
                 other)
 
     def union(self: I, other: 'IndexBase') -> I:
+        '''
+        Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
+        '''
         return self._ufunc_set(
                 self.__class__._UFUNC_UNION,
                 other)

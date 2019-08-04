@@ -624,6 +624,14 @@ class TestUnit(TestCase):
                 {'d', 1, 3, None, 'ff'}
                 )
 
+
+    def test_union1d_b(self) -> None:
+        a1 = np.array([False, True, False])
+        a2 = np.array([2, 3])
+        self.assertEqual(union1d(a1, a2).tolist(),
+                [False, True, 2, 3])
+
+
     def test_intersect1d_a(self) -> None:
 
         a1 = np.array([3, 2, 1])
@@ -652,6 +660,34 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [(0, 1), (0, 3)])
 
+
+
+    def test_union2d_a(self) -> None:
+        a1 = np.array([[3, 1], [0, 1]])
+        a2 = np.array([[3, 1], [0, 1]])
+
+        post1 = union2d(a1, a2, assume_unique=True)
+        self.assertEqual(post1.tolist(),
+                [[3, 1], [0, 1]])
+
+        # result will get sorted
+        post2 = union2d(a1, a2, assume_unique=False)
+        self.assertEqual(post2.tolist(),
+                [[0, 1], [3, 1]])
+
+
+    def test_union2d_b(self) -> None:
+        a1 = np.array([[3, 1], [0, 1]])
+        a2 = np.array([['3', '1'], ['0', '1']])
+
+        post1 = union2d(a1, a2, assume_unique=True)
+        self.assertEqual(
+                set(tuple(x) for x in post1),
+                set(((0, 1), ('0', '1'), (3, 1), ('3', '1')))
+                )
+
+
+
     def test_intersect2d_a(self) -> None:
         a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
         b = np.array([('a', 'g'), ('c', 'd'), ('e', 'f')])
@@ -672,6 +708,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(),
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
+
 
     @unittest.skip('requires network')
     def test_read_url(self) -> None:

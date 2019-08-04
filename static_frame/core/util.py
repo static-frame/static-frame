@@ -1227,8 +1227,6 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
-# TODO: implement assume_unique, array comparison filtering
-
 def ufunc_set_1d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
@@ -1237,6 +1235,8 @@ def ufunc_set_1d(
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
+    Peform 1D set operations. When possible, short-circuit comparison and return array with original order.
+
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
@@ -1247,10 +1247,27 @@ def ufunc_set_1d(
     else:
         raise NotImplementedError('unexpected func', func)
 
+    dtype = resolve_dtype(array.dtype, other.dtype)
+
+    # optimizations for empty arrays
+    if is_union:
+        if len(array) == 0:
+            return other
+        elif len(other) == 0:
+            return array
+    else: # intersection with empty
+        if len(array) == 0 or len(other) == 0:
+            # note sure what DTYPE is correct to return here
+            return np.array(EMPTY_TUPLE, dtype=dtype)
+
     if assume_unique:
         # can only use length to determine unique comparison condition if arguments are assumed to already be unique
-        if len(array) == len(other) and (array == other).all():
-            return array
+        if len(array) == len(other):
+            compare = array == other
+            if isinstance(compare, BOOL_TYPES) and compare:
+                return array
+            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
+                return array
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KIND
@@ -1260,88 +1277,29 @@ def ufunc_set_1d(
         # if only one is string
         set_compare = True
 
-    if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
+    if set_compare or dtype.kind == 'O':
         if is_union:
             result = set(array) | set(other)
         else:
             result = set(array) & set(other)
-
-        # this might need to go up
-        dtype = resolve_dtype(array.dtype, other.dtype)
         v, _ = iterable_to_array(result, dtype)
         return v
 
     return func(array, other)
 
-def union1d(array: np.ndarray,
-        other: np.ndarray,
-        assume_unique: bool=False
-        ) -> np.ndarray:
-    '''
-    '''
-    return ufunc_set_1d(np.union1d,
-            array,
-            other,
-            assume_unique=assume_unique)
-
-
-    # set_compare = False
-    # array_is_str = array.dtype.kind in DTYPE_STR_KIND
-    # other_is_str = other.dtype.kind in DTYPE_STR_KIND
-
-    # if array_is_str ^ other_is_str:
-    #     # if only one is string
-    #     set_compare = True
-
-    # if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
-    #     result = set(array) | set(other)
-    #     dtype = resolve_dtype(array.dtype, other.dtype)
-    #     v, _ = iterable_to_array(result, dtype)
-    #     return v
-
-    # return np.union1d(array, other)
-
-
-def intersect1d(
-        array: np.ndarray,
-        other: np.ndarray,
-        assume_unique: bool=False
-        ) -> np.ndarray:
-    '''
-    Extend ufunc version to handle cases where types cannot be sorted.
-    '''
-    return ufunc_set_1d(np.intersect1d,
-            array,
-            other,
-            assume_unique=assume_unique)
-
-    # set_compare = False
-    # array_is_str = array.dtype.kind in DTYPE_STR_KIND
-    # other_is_str = other.dtype.kind in DTYPE_STR_KIND
-
-    # if array_is_str ^ other_is_str:
-    #     # if only one is string
-    #     set_compare = True
-
-    # if set_compare or array.dtype.kind == 'O' or other.dtype.kind == 'O':
-    #     # if a 2D array gets here, a hashability error will be raised
-    #     result = set(array) & set(other)
-    #     dtype = resolve_dtype(array.dtype, other.dtype)
-    #     v, _ = iterable_to_array(result, dtype)
-    #     return v
-
-    # return np.intersect1d(array, other)
 
 def ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
+        *,
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
-    Given a 1d set operation, evaluate the set operation on the rows given either by a 2D array or a 1D object array of tuples.
+    Peform 2D set operations. When possible, short-circuit comparison and return array with original order.
 
     Args:
+        func: a 1d set operation
         array: can be a 2D array, or a 1D object array of tuples.
         other: can be a 2D array, or a 1D object array of tuples.
         assume_unique: if True, array operands are assumed unique and order is preserved for matching operands.
@@ -1368,6 +1326,16 @@ def ufunc_set_2d(
         if len(array) == 0 or len(other) == 0:
             # note sure what DTYPE is correct to return here
             return np.array(EMPTY_TUPLE, dtype=dtype)
+
+    if assume_unique:
+        # can only use length to determine unique comparison condition if arguments are assumed to already be unique
+        # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
+        if array.shape == other.shape:
+            compare = array == other
+            if isinstance(compare, BOOL_TYPES) and compare:
+                return array
+            elif isinstance(compare, np.ndarray) and compare.all(axis=None):
+                return array
 
     if dtype.kind == 'O':
         if array.ndim == 1:
@@ -1398,7 +1366,6 @@ def ufunc_set_2d(
     if array.ndim != 2 or other.ndim != 2:
         raise RuntimeError('non-object arrays have to both be 2D')
 
-
     # number of columns must be the same, as doing row-wise comparison, and determines the length of each row
     assert array.shape[1] == other.shape[1]
     width = array.shape[1]
@@ -1409,7 +1376,7 @@ def ufunc_set_2d(
         other = other.astype(dtype)
 
     if width == 1:
-        # let the function flatten the array
+        # let the function flatten the array, then reshape into 2D
         post = func(array, other)
         return post.reshape(len(post), width)
 
@@ -1424,17 +1391,56 @@ def ufunc_set_2d(
     return func(array_view, other_view).view(dtype).reshape(-1, width)
 
 
-def intersect2d(array: np.ndarray,
+def union1d(array: np.ndarray,
         other: np.ndarray,
         assume_unique: bool=False
         ) -> np.ndarray:
-    return ufunc_set_2d(np.intersect1d, array, other, assume_unique)
+    '''
+    Union on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
+    '''
+    return ufunc_set_1d(np.union1d,
+            array,
+            other,
+            assume_unique=assume_unique)
+
+def intersect1d(
+        array: np.ndarray,
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    '''
+    Intersect on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
+    '''
+    return ufunc_set_1d(np.intersect1d,
+            array,
+            other,
+            assume_unique=assume_unique)
 
 def union2d(array: np.ndarray,
         other: np.ndarray,
+        *,
         assume_unique: bool=False
         ) -> np.ndarray:
-    return ufunc_set_2d(np.union1d, array, other, assume_unique)
+    '''
+    Union on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
+    '''
+    return ufunc_set_2d(np.union1d,
+            array,
+            other,
+            assume_unique=assume_unique)
+
+def intersect2d(array: np.ndarray,
+        other: np.ndarray,
+        *,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    '''
+    Intersect on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
+    '''
+    return ufunc_set_2d(np.intersect1d,
+            array,
+            other,
+            assume_unique=assume_unique)
 
 
 def ufunc_set_iter(
@@ -1444,7 +1450,7 @@ def ufunc_set_iter(
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
-    Iteratively apply a set operation unfunc to 1D or 2D arrays; if all are equal, no operation is performed and order is retained.
+    Iteratively apply a set operation ufunc to 1D or 2D arrays; if all are equal, no operation is performed and order is retained.
 
     Args:
         arrays: iterator of arrays; can be a Generator.
@@ -1465,16 +1471,8 @@ def ufunc_set_iter(
         if array.ndim != ndim:
             raise RuntimeError('arrays do not all have the same ndim')
 
+        # to retain order on identity, assume_unique must be True
         result = ufunc(result, array, assume_unique=assume_unique)
-
-
-        # is the new array different
-        # if ndim == 1:
-        #     # if lengths are not comparable, or comparable and the values are not all the same; otherwise, arrays are identical and can skip ufunc application
-        #     if len(array) != len(result) or (array != result).any():
-        #         result = ufunc(result, array)
-        # else:
-        #     result = ufunc(result, array)
 
         if not union and len(result) == 0:
             # short circuit intersection that results in no common values
@@ -1749,12 +1747,20 @@ class IndexCorrespondence:
         # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
         if depth == 1:
             # NOTE: this can fail in some cases: comparing two object arrays with NaNs and strings.
-            common_labels = intersect1d(src_index.values, dst_index.values)
+            common_labels = intersect1d(
+                    src_index.values,
+                    dst_index.values,
+                    assume_unique=True
+                    )
             has_common = len(common_labels) > 0
             assert not mixed_depth
         elif depth > 1:
             # if either values arrays are object, we have to covert all values to tuples
-            common_labels = intersect2d(src_index.values, dst_index.values)
+            common_labels = intersect2d(
+                    src_index.values,
+                    dst_index.values,
+                    assume_unique=True
+                    )
             if mixed_depth:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
                 common_labels = list(array2d_to_tuples(common_labels))
