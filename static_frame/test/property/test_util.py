@@ -279,6 +279,77 @@ class TestUnit(TestCase):
                     if wrap:
                         self.assertTrue(array.dtype == post.dtype)
 
+
+    @given(st.lists(get_array_1d(),
+            min_size=2,
+            max_size=2)
+            ) # type: ignore
+    def test_union1d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+        post = util.union1d(
+                arrays[0],
+                arrays[1],
+                assume_unique=False)
+        self.assertTrue(post.ndim == 1)
+        # nan values in complex numbers make direct comparison tricky
+        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
+
+        # complex results are tricky to compare after forming sets
+        if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
+                and not np.isnan(post).any()):
+            self.assertTrue(set(post) == (set(arrays[0]) | set(arrays[1])))
+
+
+    @given(st.lists(get_array_1d(),
+            min_size=2,
+            max_size=2)) # type: ignore
+    def test_intersect1d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+        post = util.intersect1d(
+                arrays[0],
+
+                arrays[1],
+                assume_unique=False)
+        self.assertTrue(post.ndim == 1)
+        # nan values in complex numbers make direct comparison tricky
+        self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
+
+        if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
+                and not np.isnan(post).any()):
+            self.assertTrue(set(post) == (set(arrays[0]) & set(arrays[1])))
+
+
+    @given(get_arrays_2d_aligned_columns(
+            min_size=2,
+            max_size=2)) # type: ignore
+    def test_union2d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+        post = util.union2d(arrays[0], arrays[1], assume_unique=False)
+        if post.dtype == object:
+            self.assertTrue(post.ndim == 1)
+        else:
+            self.assertTrue(post.ndim == 2)
+
+        self.assertTrue(len(post) == len(
+                set(util.array2d_to_tuples(arrays[0]))
+                | set(util.array2d_to_tuples(arrays[1])))
+                )
+
+
+    @given(get_arrays_2d_aligned_columns(
+            min_size=2,
+            max_size=2)) # type: ignore
+    def test_intersect2d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+        post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
+        if post.dtype == object:
+            self.assertTrue(post.ndim == 1)
+        else:
+            self.assertTrue(post.ndim == 2)
+
+        self.assertTrue(len(post) == len(
+                set(util.array2d_to_tuples(arrays[0]))
+                & set(util.array2d_to_tuples(arrays[1])))
+                )
+
+
+
     @given(get_arrays_2d_aligned_columns()) # type: ignore
     def test_array_set_ufunc_many(self, arrays: tp.Iterable[np.ndarray]) -> None:
 

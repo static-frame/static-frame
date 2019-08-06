@@ -24,7 +24,7 @@ from static_frame.core.util import key_to_datetime_key
 from static_frame.core.container import _ufunc_logical_skipna
 
 from static_frame.core.util import _read_url
-from static_frame.core.util import ufunc_set_2d
+from static_frame.core.util import _ufunc_set_2d
 
 from static_frame import Index
 
@@ -631,6 +631,14 @@ class TestUnit(TestCase):
         self.assertEqual(union1d(a1, a2).tolist(),
                 [False, True, 2, 3])
 
+    def test_union1d_c(self) -> None:
+        a1 = np.array([])
+        a2 = np.array([9007199254740993], dtype=np.uint64)
+
+        # if we cannot asume unique, the result is a rounded float
+        self.assertEqual(union1d(a1, a2, assume_unique=True).tolist(),
+                [9007199254740993])
+
 
     def test_intersect1d_a(self) -> None:
 
@@ -686,6 +694,28 @@ class TestUnit(TestCase):
                 set(((0, 1), ('0', '1'), (3, 1), ('3', '1')))
                 )
 
+    def test_union2d_c(self) -> None:
+        a1 = np.array([[3, 1], [0, 1]])
+        a2 = np.array([[3, 1], [10, 20]])
+
+        post1 = union2d(a1, a2, assume_unique=True)
+        self.assertEqual(
+                set(tuple(x) for x in post1),
+                set(((0, 1), (3, 1), (10, 20)))
+                )
+
+    def test_union2d_d(self) -> None:
+        a1 = np.array([None, None], dtype=object)
+        a1[:] = ((3, 1), (20, 10))
+        a2 = np.array([[3, 1], [10, 20]])
+
+
+        post1 = union2d(a1, a2, assume_unique=True)
+        self.assertEqual(
+                set(tuple(x) for x in post1),
+                set(((20, 10), (3, 1), (10, 20)))
+                )
+
 
 
     def test_intersect2d_a(self) -> None:
@@ -693,21 +723,50 @@ class TestUnit(TestCase):
         b = np.array([('a', 'g'), ('c', 'd'), ('e', 'f')])
 
         post = intersect2d(a, b)
-        self.assertEqual(post.tolist(),
-                [['c', 'd'], ['e', 'f']])
+        self.assertEqual([list(x) for x in post],
+                [['c', 'd'], ['e', 'f']]
+                )
 
         post = intersect2d(a.astype(object), b.astype(object))
-        self.assertEqual(post.tolist(),
-                [['c', 'd'], ['e', 'f']])
+        self.assertEqual([list(x) for x in post],
+                [['c', 'd'], ['e', 'f']]
+                )
 
         post = union2d(a, b)
-        self.assertEqual(post.tolist(),
+        self.assertEqual([list(x) for x in post],
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
         post = union2d(a.astype(object), b.astype(object))
-        self.assertEqual(post.tolist(),
+        self.assertEqual([list(x) for x in post],
                 [['a', 'b'], ['a', 'g'], ['c', 'd'], ['e', 'f']]
                 )
+
+
+    def test_intersect2d_b(self) -> None:
+        a1 = np.array([None, None], dtype=object)
+        a1[:] = ((3, 1), (20, 10))
+        a2 = np.array([[3, 1], [10, 20]])
+
+        post1 = intersect2d(a1, a2, assume_unique=True)
+        self.assertEqual(
+                set(tuple(x) for x in post1),
+                set(((3, 1),))
+                )
+
+
+    def test_intersect2d_c(self) -> None:
+        a1 = np.array([None, None], dtype=object)
+        a1[:] = ((3, 1), (20, 10))
+
+        a2 = np.array([None, None], dtype=object)
+        a2[:] = ((3, 1), (1, 2))
+
+        post1 = intersect2d(a1, a2)
+        self.assertEqual(
+                set(tuple(x) for x in post1),
+                set(((3, 1),))
+                )
+
 
 
     @unittest.skip('requires network')
@@ -962,7 +1021,7 @@ class TestUnit(TestCase):
         # fails due wrong function
         a1 = np.array([1, 1, 1])
         with self.assertRaises(NotImplementedError):
-            ufunc_set_2d(np.sum, a1, a1)
+            _ufunc_set_2d(np.sum, a1, a1)
 
 
     def test_set_ufunc2d_b(self) -> None:
@@ -970,11 +1029,11 @@ class TestUnit(TestCase):
         a1 = np.array([['a', 'b'], ['b', 'c']])
         a2 = np.array([['b', 'cc'], ['dd', 'ee']])
 
-        post = ufunc_set_2d(np.union1d, a1, a2)
+        post = _ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
-        post = ufunc_set_2d(np.union1d, a2, a1)
+        post = _ufunc_set_2d(np.union1d, a2, a1)
         self.assertEqual(len(post), 4)
         self.assertEqual(str(post.dtype), '<U2')
 
@@ -984,19 +1043,19 @@ class TestUnit(TestCase):
         a1 = np.array([[False]])
         a2 = np.array([[0]])
 
-        post = ufunc_set_2d(np.union1d, a1, a2)
-        self.assertEqual(post.tolist(), [[False]])
+        post = _ufunc_set_2d(np.union1d, a1, a2)
+        self.assertEqual(post.tolist(), [(False,)])
 
 
     def test_set_ufunc2d_d(self) -> None:
         a1 = np.array([[3], [2], [1]])
         a2 = np.array([[30], [20], [2], [1]])
 
-        post1 = ufunc_set_2d(np.union1d, a1, a2)
+        post1 = _ufunc_set_2d(np.union1d, a1, a2)
         self.assertEqual(post1.tolist(),
                 [[1], [2], [3], [20], [30]])
 
-        post2 = ufunc_set_2d(np.intersect1d, a1, a2)
+        post2 = _ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(post2.tolist(),
                 [[1], [2]])
 
@@ -1006,10 +1065,10 @@ class TestUnit(TestCase):
         a1 = np.array([[0, 1], [-1, -2]])
         a2 = np.array([])
 
-        post1 = ufunc_set_2d(np.union1d, a1, a2, assume_unique=True)
+        post1 = _ufunc_set_2d(np.union1d, a1, a2, assume_unique=True)
         self.assertEqual(id(a1), id(post1))
 
-        post2 = ufunc_set_2d(np.union1d, a2, a1, assume_unique=True)
+        post2 = _ufunc_set_2d(np.union1d, a2, a1, assume_unique=True)
         self.assertEqual(id(a1), id(post2))
 
 
@@ -1020,10 +1079,10 @@ class TestUnit(TestCase):
         a2 = np.array([])
 
         # intersect with 0 results in 0
-        post1 = ufunc_set_2d(np.intersect1d, a1, a2)
+        post1 = _ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(len(post1), 0)
 
-        post2 = ufunc_set_2d(np.intersect1d, a2, a1)
+        post2 = _ufunc_set_2d(np.intersect1d, a2, a1)
         self.assertEqual(len(post2), 0)
 
 

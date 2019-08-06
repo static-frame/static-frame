@@ -9,7 +9,7 @@ What is New in Static Frame
 
 All duplicate-handling functions now support heterogenously typed object arrays with unsortable (but hashable) types.
 
-Binary operations on ``Frame`` now preserve ``Index`` order when indices are equal.
+Operations on all indicdes now preserve order when indices are equal.
 
 Functions with the ``skipna`` argument now properly skip ``None`` in ``Frames`` with built with object arrays.
 

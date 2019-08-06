@@ -61,7 +61,7 @@ from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 
 from static_frame.core.util import resolve_dtype
-
+from static_frame.core.container import ContainerBase
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
@@ -390,7 +390,7 @@ class Index(IndexBase):
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
                 labels = array2d_to_tuples(labels._labels)
-        elif hasattr(labels, 'values'):
+        elif isinstance(labels, ContainerBase):
             # it is a Series or similar
             array = labels.values
             if array.ndim == 1:

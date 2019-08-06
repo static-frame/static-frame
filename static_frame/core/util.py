@@ -1227,7 +1227,7 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 
-def ufunc_set_1d(
+def _ufunc_set_1d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
@@ -1289,7 +1289,7 @@ def ufunc_set_1d(
     return func(array, other)
 
 
-def ufunc_set_2d(
+def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
@@ -1340,6 +1340,7 @@ def ufunc_set_2d(
                 return array
 
     if dtype.kind == 'O':
+        # assume that 1D arrays arrays are arrays of tuples
         if array.ndim == 1:
             array_set = set(array)
         else: # assume row-wise comparison
@@ -1362,7 +1363,9 @@ def ufunc_set_2d(
             values = tuple(result)
 
         # returns a 1D object array of tuples
-        return np.array(values, dtype=object)
+        post = np.empty(len(values), dtype=object)
+        post[:] = values
+        return post
 
     # from here, we assume we have two 2D arrays
     if array.ndim != 2 or other.ndim != 2:
@@ -1400,7 +1403,7 @@ def union1d(array: np.ndarray,
     '''
     Union on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
-    return ufunc_set_1d(np.union1d,
+    return _ufunc_set_1d(np.union1d,
             array,
             other,
             assume_unique=assume_unique)
@@ -1413,7 +1416,7 @@ def intersect1d(
     '''
     Intersect on 1D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
-    return ufunc_set_1d(np.intersect1d,
+    return _ufunc_set_1d(np.intersect1d,
             array,
             other,
             assume_unique=assume_unique)
@@ -1426,7 +1429,7 @@ def union2d(array: np.ndarray,
     '''
     Union on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
-    return ufunc_set_2d(np.union1d,
+    return _ufunc_set_2d(np.union1d,
             array,
             other,
             assume_unique=assume_unique)
@@ -1439,7 +1442,7 @@ def intersect2d(array: np.ndarray,
     '''
     Intersect on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
     '''
-    return ufunc_set_2d(np.intersect1d,
+    return _ufunc_set_2d(np.intersect1d,
             array,
             other,
             assume_unique=assume_unique)
