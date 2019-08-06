@@ -280,11 +280,8 @@ class TestUnit(TestCase):
                         self.assertTrue(array.dtype == post.dtype)
 
 
-    @given(st.lists(get_array_1d(),
-            min_size=2,
-            max_size=2)
-            ) # type: ignore
-    def test_union1d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
+    def test_union1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union1d(
                 arrays[0],
                 arrays[1],
@@ -299,10 +296,8 @@ class TestUnit(TestCase):
             self.assertTrue(set(post) == (set(arrays[0]) | set(arrays[1])))
 
 
-    @given(st.lists(get_array_1d(),
-            min_size=2,
-            max_size=2)) # type: ignore
-    def test_intersect1d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
+    def test_intersect1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect1d(
                 arrays[0],
 
@@ -317,10 +312,8 @@ class TestUnit(TestCase):
             self.assertTrue(set(post) == (set(arrays[0]) & set(arrays[1])))
 
 
-    @given(get_arrays_2d_aligned_columns(
-            min_size=2,
-            max_size=2)) # type: ignore
-    def test_union2d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2)) # type: ignore
+    def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         if post.dtype == object:
             self.assertTrue(post.ndim == 1)
@@ -333,10 +326,8 @@ class TestUnit(TestCase):
                 )
 
 
-    @given(get_arrays_2d_aligned_columns(
-            min_size=2,
-            max_size=2)) # type: ignore
-    def test_intersect2d(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2)) # type: ignore
+    def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         if post.dtype == object:
             self.assertTrue(post.ndim == 1)
@@ -351,7 +342,7 @@ class TestUnit(TestCase):
 
 
     @given(get_arrays_2d_aligned_columns()) # type: ignore
-    def test_array_set_ufunc_many(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
 
         for union in (True, False):
             post = util.ufunc_set_iter(arrays, union=union)

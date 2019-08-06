@@ -1358,7 +1358,7 @@ def _ufunc_set_2d(
 
         # NOTE: this sort may not always be succesful
         try:
-            values: tp.Iterable[tp.Tuple[tp.Hashable, ...]] = sorted(result)
+            values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
         except TypeError:
             values = tuple(result)
 
