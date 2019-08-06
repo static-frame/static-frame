@@ -741,7 +741,7 @@ class Frame(ContainerBase):
             index_column: Optionally specify a column, by position or name, to become the index.
             skip_header: Number of leading lines to skip.
             skip_footer: Numver of trailing lines to skip.
-            header_is_columns: If True, the header, the first line after the skip_header count of lines, is used to create the column labels.
+            header_is_columns: If True (by default), the header, the first line after the skip_header count of lines, is used to create the column labels.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -2665,7 +2665,7 @@ class Frame(ContainerBase):
 
     def to_csv(self,
             fp: FilePathOrFileLike,
-            sep: str = ',',
+            delimiter: str = ',',
             include_index: bool = True,
             include_columns: bool = True,
             encoding: tp.Optional[str] = None,
@@ -2673,6 +2673,9 @@ class Frame(ContainerBase):
             ):
         '''
         Given a file path or file-like object, write the Frame as delimited text.
+
+        Args:
+            delimiter: character to be used for delimiterarating elements.
         '''
         # to_str = str
 
@@ -2686,11 +2689,11 @@ class Frame(ContainerBase):
             if include_columns:
                 if include_index:
                     if self._index.name is not None:
-                        f.write(f'{self._index.name}{sep}')
+                        f.write(f'{self._index.name}{delimiter}')
                     else:
-                        f.write(f'index{sep}')
+                        f.write(f'index{delimiter}')
                 # iter directly over columns in case it is an IndexGO and needs to update cache
-                f.write(sep.join(f'{x}' for x in self._columns))
+                f.write(delimiter.join(f'{x}' for x in self._columns))
                 f.write(line_terminator)
 
             col_idx_last = self._blocks._shape[1] - 1
@@ -2701,13 +2704,13 @@ class Frame(ContainerBase):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        f.write(f'{self._index._labels[row_idx]}{sep}')
-                        # f.write(to_str(self._index._labels[row_idx]) + sep)
+                        f.write(f'{self._index._labels[row_idx]}{delimiter}')
+                        # f.write(to_str(self._index._labels[row_idx]) + delimiter)
                     row_current_idx = row_idx
                 # f.write(to_str(element))
                 f.write(f'{element}')
                 if col_idx != col_idx_last:
-                    f.write(sep)
+                    f.write(delimiter)
             # not sure if we need a final line terminator
         except:
             raise
@@ -2718,11 +2721,12 @@ class Frame(ContainerBase):
             f.close()
 
     def to_tsv(self,
-            fp: FilePathOrFileLike, **kwargs):
+            fp: FilePathOrFileLike,
+            **kwargs):
         '''
         Given a file path or file-like object, write the Frame as tab-delimited text.
         '''
-        return self.to_csv(fp=fp, sep='\t', **kwargs)
+        return self.to_csv(fp=fp, delimiter='\t', **kwargs)
 
     @doc_inject(class_name='Frame')
     def to_html(self,

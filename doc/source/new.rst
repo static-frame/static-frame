@@ -13,6 +13,8 @@ Operations on all indicdes now preserve order when indices are equal.
 
 Functions with the ``skipna`` argument now properly skip ``None`` in ``Frames`` with built with object arrays.
 
+``Frame.to_csv`` now uses the argument name `delimiter` instead of `sep`, aligning with the usage in ``Frame.from_csv``.
+
 
 0.3.7
 ------------
