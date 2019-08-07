@@ -536,54 +536,6 @@ def roll_2d(array: np.ndarray,
 #-------------------------------------------------------------------------------
 # array constructors
 
-# def resolve_type(
-#         value: tp.Any,
-#         resolved: tp.Optional[type]=None
-#         ) -> tp.Tuple[type, bool]:
-#     '''Return a type, suitable for usage as a DtypeSpecifier, that will not truncate when used in array creation.
-#     Returns:
-#         type, is_tuple
-#     '''
-#     if resolved == object:
-#         # clients should stop iteration once ann object is returned
-#         raise RuntimeError('already resolved to object')
-
-#     value_type = type(value)
-
-#     is_tuple = False
-
-#     # normalize NP types to python types
-#     if issubclass(value_type, np.integer):
-#         value_type = int
-#     elif issubclass(value_type, np.floating):
-#         value_type = float
-#     elif issubclass(value_type, np.complexfloating):
-#         value_type = complex
-#     elif value_type == tuple:
-#         is_tuple = True
-
-#     # anything that gets converted to object
-#     if is_tuple:
-#         # NOTE: we do not convert other conntainers to object here, as they are not common as elements, and if it is an iterable of set, list, etc, array constructor will treat that argument the same as object
-#         return object, is_tuple
-
-#     if resolved is None: # first usage
-#         return value_type, is_tuple
-
-#     if value_type == resolved:
-#         # fine to return set, list here;
-#         return value_type, is_tuple
-
-#     if ((resolved == float and value_type == int)
-#             or (resolved == int and value_type == float)
-#             ):
-#         # if not the same (float or int), promote value of int to float
-#         # if value is float and resolved
-#         return float, is_tuple
-
-#     # resolved is not None, and this value_type is not equal to the resolved
-#     return object, is_tuple
-
 
 def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
     '''
