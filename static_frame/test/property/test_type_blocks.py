@@ -34,13 +34,16 @@ from static_frame import FrameGO
 class TestUnit(TestCase):
 
 
-    @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
-    def test_from_element_items(self, shapes, labels):
+    @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1)) # type: ignore
+    def test_from_element_items(self,
+            shapes: tp.List[tp.Tuple[int, int]],
+            labels: tp.Sequence[tp.Hashable]
+            ) -> None:
 
         # use shapes to get coordinates, where the max shape + 1 is the final shape
         shape = tuple(np.array(shapes).max(axis=0) + 1)
 
-        def values():
+        def values() -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Hashable]]:
             for idx, coord in enumerate(shapes):
                 yield coord, labels[idx % len(labels)]
 
@@ -48,8 +51,8 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, shape)
 
 
-    @given(st.integers(max_value=sfst.MAX_COLUMNS))
-    def test_from_zero_size_shape(self, value):
+    @given(st.integers(max_value=sfst.MAX_COLUMNS)) # type: ignore
+    def test_from_zero_size_shape(self, value: int) -> None:
 
         for shape in ((0, value), (value, 0)):
             post = TypeBlocks.from_zero_size_shape(shape=shape)
