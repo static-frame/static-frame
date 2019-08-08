@@ -42,9 +42,9 @@ from static_frame.core.util import STATIC_ATTR
 
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
-from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
 
 from static_frame.core.display import DisplayConfig

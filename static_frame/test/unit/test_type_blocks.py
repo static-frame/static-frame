@@ -19,7 +19,7 @@ from static_frame import DisplayConfig
 
 
 from static_frame.core.util import immutable_filter
-from static_frame.core.util import IndexCorrespondence
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.test.test_case import TestCase
 
 

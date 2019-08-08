@@ -48,13 +48,13 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import InterfaceAsType
-from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
 
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
 
 from static_frame.core.iter_node import IterNodeApplyType

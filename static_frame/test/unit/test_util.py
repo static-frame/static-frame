@@ -34,7 +34,6 @@ from static_frame.core.util import iterable_to_array
 
 
 from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import IndexCorrespondence
 
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift
@@ -53,6 +52,7 @@ from static_frame.core.util import to_datetime64
 
 from static_frame.core.util import resolve_type_iter
 
+from static_frame.core.index_correspondence import IndexCorrespondence
 
 from static_frame.test.test_case import TestCase
 

@@ -37,16 +37,16 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
 
 from static_frame.core.util import InterfaceGetItem
-from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
+
+from static_frame.core.index_correspondence import IndexCorrespondence
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 
 from static_frame.core.container import ContainerBase
-
 
 
 #-------------------------------------------------------------------------------
