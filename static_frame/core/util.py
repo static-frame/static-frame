@@ -1106,7 +1106,6 @@ def array_to_duplicated(
         exclude_first: Mark as True all duplicates except the first encountared.
         exclude_last: Mark as True all duplicates except the last encountared.
     '''
-    # NOTE: this presently assumes that the sortable algorithm is faster; this is not yet confirmed
     try:
         return _array_to_duplicated_sortable(
                 array=array,
@@ -1548,25 +1547,10 @@ def write_optional_file(
 
 #-------------------------------------------------------------------------------
 
-# Options:
-# 1. store GetItem instance on object: created at init regardless of use, storage on container
-# 2. use descripter to return a GetItem instance lazily created and stored on the container: no init creation, incurs extra branching on call, stored once used.
-
-# NOTE: object creation can be faster than getattr and branching
-# In [3]: %timeit sf.GetItem('')
-# 249 ns ± 3.1 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-
-# In [4]: x = object()
-
-# In [5]: %timeit getattr(x, '', None); 0 if x else 1
-# 316 ns ± 1.29 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
-
-
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks')
 GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
 
-#TODO: rename InterfaceGetItem
-class GetItem(tp.Generic[TContainer]):
+class InterfaceGetItem(tp.Generic[TContainer]):
 
     __slots__ = ('_func',)
 
@@ -1595,12 +1579,12 @@ class InterfaceSelection1D(tp.Generic[TContainer]):
         self._func_loc = func_loc
 
     @property
-    def iloc(self) -> GetItem[TContainer]:
-        return GetItem(self._func_iloc)
+    def iloc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._func_iloc)
 
     @property
-    def loc(self) -> GetItem[TContainer]:
-        return GetItem(self._func_loc)
+    def loc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._func_loc)
 
 
 #-------------------------------------------------------------------------------
@@ -1628,12 +1612,12 @@ class InterfaceSelection2D(tp.Generic[TContainer]):
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> GetItem[TContainer]:
-        return GetItem(self._func_iloc)
+    def iloc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._func_iloc)
 
     @property
-    def loc(self) -> GetItem[TContainer]:
-        return GetItem(self._func_loc)
+    def loc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._func_loc)
 
 #-------------------------------------------------------------------------------
 

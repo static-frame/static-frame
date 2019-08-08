@@ -45,7 +45,7 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import GetItem
+from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import InterfaceAsType
 from static_frame.core.util import IndexCorrespondence
@@ -1056,12 +1056,12 @@ class Frame(ContainerBase):
     # interfaces
 
     @property
-    def loc(self) -> GetItem:
-        return GetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> GetItem:
-        return GetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelection2D:
@@ -2392,7 +2392,7 @@ class Frame(ContainerBase):
         '''
         Return an axis-sized Boolean Series that shows True for all rows (axis 0) or columns (axis 1) duplicated.
         '''
-        # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
+        # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
         duplicates = array_to_duplicated(self.values,
                 axis=axis,
                 exclude_first=exclude_first,

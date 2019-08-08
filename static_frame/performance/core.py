@@ -350,6 +350,18 @@ class SeriesIntFloat_fillna_forward(PerfTest):
         post = SampleData.get('sfs_int_float_10k').fillna_forward()
 
 
+class SeriesIntFloat_drop_duplicated(PerfTest):
+
+    @staticmethod
+    def pd() -> None:
+        post = SampleData.get('pds_int_float_10k').drop_duplicates(keep=False)
+
+    @staticmethod
+    def sf() -> None:
+        post = SampleData.get('sfs_int_float_10k').drop_duplicated()
+
+
+
 class SeriesIntFloat_apply(PerfTest):
 
     NUMBER = 50
@@ -466,6 +478,17 @@ class SeriesIntObj_fillna_forward(PerfTest):
     @staticmethod
     def sf() -> None:
         post = SampleData.get('sfs_obj_10k').fillna_forward()
+
+
+class SeriesIntObj_drop_duplicated(PerfTest):
+
+    @staticmethod
+    def pd() -> None:
+        post = SampleData.get('pds_obj_10k').drop_duplicates(keep=False)
+
+    @staticmethod
+    def sf() -> None:
+        post = SampleData.get('sfs_obj_10k').drop_duplicated()
 
 
 class SeriesIntObj_apply(PerfTest):

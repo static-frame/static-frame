@@ -14,7 +14,7 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import FrameInitializer as FrameInitializer
 from static_frame.core.util import mloc as mloc
 
-from static_frame.core.util import GetItem as GetItem
+from static_frame.core.util import InterfaceGetItem as InterfaceGetItem
 
 from static_frame.core.iter_node import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType as IterNodeType

@@ -40,7 +40,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import STATIC_ATTR
 
-from static_frame.core.util import GetItem
+from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import DEFAULT_INT_DTYPE
@@ -308,12 +308,12 @@ class Series(ContainerBase):
     # interfaces
 
     @property
-    def loc(self) -> GetItem:
-        return GetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> GetItem:
-        return GetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_iloc)
 
     # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
 
@@ -1196,7 +1196,6 @@ class Series(ContainerBase):
         '''
         Return a same-sized Boolean Series that shows True for all b values that are duplicated.
         '''
-        # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)

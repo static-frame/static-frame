@@ -55,7 +55,7 @@ from static_frame.core.util import _TD64_MS
 
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
-from static_frame.core.util import GetItem
+from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection1D
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
@@ -450,12 +450,12 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> GetItem:
-        return GetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> GetItem:
-        return GetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_iloc)
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 

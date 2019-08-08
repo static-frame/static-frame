@@ -239,7 +239,7 @@ However, unlike Pandas, ``__getitem__``, ``loc``, and ``iloc`` cannot be used fo
 98
 >>> frame.loc[4854, 'albumId'] = 200
 Traceback (most recent call last):
-TypeError: 'GetItem' object does not support item assignment
+TypeError: 'InterfaceGetItem' object does not support item assignment
 >>> frame.values[4854, 0] = 200
 Traceback (most recent call last):
 ValueError: assignment destination is read-only

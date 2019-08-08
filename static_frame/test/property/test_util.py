@@ -340,7 +340,6 @@ class TestUnit(TestCase):
                 )
 
 
-
     @given(get_arrays_2d_aligned_columns()) # type: ignore
     def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
 
@@ -351,6 +350,10 @@ class TestUnit(TestCase):
                 self.assertTrue(post.ndim in (1, 2))
             else:
                 self.assertTrue(post.ndim == 2)
+
+
+
+# slices_from_targets
 
 
 if __name__ == '__main__':

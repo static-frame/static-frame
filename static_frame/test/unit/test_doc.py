@@ -34,7 +34,7 @@ TypeError: 'Series' object does not support item assignment
 >>> s.iloc[0] = 68
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-TypeError: 'GetItem' object does not support item assignment
+TypeError: 'InterfaceGetItem' object does not support item assignment
 >>> s.values[0] = 68
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>

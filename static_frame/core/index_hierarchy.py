@@ -26,7 +26,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import iterable_to_array
 
-from static_frame.core.util import GetItem
+from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
@@ -434,12 +434,12 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> GetItem:
-        return GetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> GetItem:
-        return GetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_iloc)
 
 
     def _iter_label(self, depth_level: int = 0):

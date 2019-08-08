@@ -36,7 +36,7 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
 
-from static_frame.core.util import GetItem
+from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import IndexCorrespondence
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
@@ -225,7 +225,7 @@ class TypeBlocks(ContainerBase):
             # NOTE: this violates the type and may break something downstream; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
-        self.iloc = GetItem(self._extract_iloc)
+        self.iloc = InterfaceGetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
