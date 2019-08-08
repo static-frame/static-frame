@@ -44,6 +44,10 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(x, int))
 
 
+    @given(get_array_1d2d())  # type: ignore
+    def test_shape_filter(self, shape: np.ndarray) -> None:
+        self.assertTrue(len(util.shape_filter(shape)), 2)
+
     @given(get_dtype_pairs())  # type: ignore
     def test_resolve_dtype(self, dtype_pair: tp.Tuple[np.dtype, np.dtype]) -> None:
 

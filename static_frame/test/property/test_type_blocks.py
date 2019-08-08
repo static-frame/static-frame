@@ -34,11 +34,6 @@ from static_frame import FrameGO
 class TestUnit(TestCase):
 
 
-    @given(sfst.get_array_1d2d())  # type: ignore
-    def test_shape_filter(self, shape: np.ndarray) -> None:
-        self.assertTrue(len(TypeBlocks.shape_filter(shape)), 2)
-
-
     @given(sfst.get_type_blocks())  # type: ignore
     def test_basic_attributes(self, tb: TypeBlocks) -> None:
         self.assertTrue(len(tb.dtypes), len(tb))

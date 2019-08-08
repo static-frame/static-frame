@@ -35,6 +35,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import shape_filter
 
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import immutable_filter
@@ -65,16 +66,16 @@ class TypeBlocks(ContainerBase):
             'iloc',
             )
 
-    @staticmethod
-    def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
-        '''Reprsent a 1D array as a 2D array with length as rows of a single-column array.
+    # @staticmethod
+    # def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
+    #     '''Reprsent a 1D array as a 2D array with length as rows of a single-column array.
 
-        Return:
-            row, column count for a block of ndim 1 or ndim 2.
-        '''
-        if array.ndim == 1:
-            return array.shape[0], 1
-        return tp.cast(tp.Tuple[int, int], array.shape)
+    #     Return:
+    #         row, column count for a block of ndim 1 or ndim 2.
+    #     '''
+    #     if array.ndim == 1:
+    #         return array.shape[0], 1
+    #     return tp.cast(tp.Tuple[int, int], array.shape)
 
     #---------------------------------------------------------------------------
     # constructors
@@ -103,7 +104,7 @@ class TypeBlocks(ContainerBase):
 
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
-            row_count, column_count = cls.shape_filter(raw_blocks)
+            row_count, column_count = shape_filter(raw_blocks)
             if column_count == 0:
                 # set shape but do not store array
                 return cls(blocks=blocks,
@@ -127,7 +128,7 @@ class TypeBlocks(ContainerBase):
                 if block.ndim > 2:
                     raise RuntimeError(f'cannot include array with {block.ndim} dimensions')
 
-                r, c = cls.shape_filter(block)
+                r, c = shape_filter(block)
 
                 # check number of rows is the same for all blocks
                 if row_count is not None and r != row_count:
@@ -469,10 +470,10 @@ class TypeBlocks(ContainerBase):
             if a is None or b is None:
                 return False
             if by_shape:
-                if self.shape_filter(a) != self.shape_filter(b):
+                if shape_filter(a) != shape_filter(b):
                     return False
             else:
-                if self.shape_filter(a)[1] != self.shape_filter(b)[1]:
+                if shape_filter(a)[1] != shape_filter(b)[1]:
                     return False
             # this does not show us if the types can be operated on;
             # similarly, np.can_cast, np.result_type do not tell us if an operation will succeede
