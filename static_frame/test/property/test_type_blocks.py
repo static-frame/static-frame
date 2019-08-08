@@ -34,10 +34,43 @@ from static_frame import FrameGO
 class TestUnit(TestCase):
 
 
+    @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
+    def test_from_element_items(self, shapes, labels):
+
+        # use shapes to get coordinates, where the max shape + 1 is the final shape
+        shape = tuple(np.array(shapes).max(axis=0) + 1)
+
+        def values():
+            for idx, coord in enumerate(shapes):
+                yield coord, labels[idx % len(labels)]
+
+        post = TypeBlocks.from_element_items(values(), shape=shape, dtype=object)
+        self.assertEqual(post.shape, shape)
+
+
+    @given(st.integers(max_value=sfst.MAX_COLUMNS))
+    def test_from_zero_size_shape(self, value):
+
+        for shape in ((0, value), (value, 0)):
+            post = TypeBlocks.from_zero_size_shape(shape=shape)
+            self.assertEqual(post.shape, shape)
+
+
     @given(sfst.get_type_blocks())  # type: ignore
     def test_basic_attributes(self, tb: TypeBlocks) -> None:
-        self.assertTrue(len(tb.dtypes), len(tb))
-        self.assertTrue(len(tb.shapes), len(tb.mloc))
+        self.assertEqual(len(tb.dtypes), tb.shape[1])
+        self.assertEqual(len(tb.shapes), len(tb.mloc))
+        self.assertEqual(tb.copy().shape, tb.shape)
+        self.assertEqual(tb.ndim, 2)
+        self.assertEqual(tb.unified, len(tb.mloc) <= 1)
+
+        if tb.shape[0] > 0 and tb.shape[1] > 0:
+            self.assertTrue(tb.size > 0)
+            self.assertTrue(tb.nbytes > 0)
+        else:
+            self.assertTrue(tb.size == 0)
+            self.assertTrue(tb.nbytes == 0)
+
 
 
     @given(sfst.get_type_blocks())  # type: ignore
@@ -45,6 +78,9 @@ class TestUnit(TestCase):
         values = tb.values
         self.assertEqual(values.shape, tb.shape)
         self.assertEqual(values.dtype, tb._row_dtype)
+
+
+# TODO: axis_values
 
 
     @given(sfst.get_type_blocks())  # type: ignore
@@ -56,8 +92,7 @@ class TestUnit(TestCase):
         for k, v in tb.element_items():
             count += 1
             v_extract = tb.iloc[k]
-
-            self.assertEqualWithNaN (v, v_extract)
+            self.assertEqualWithNaN(v, v_extract)
 
         self.assertEqual(count, tb.size)
 
@@ -71,6 +106,7 @@ class TestUnit(TestCase):
             self.assertEqual(tb.shape[1], shape_original[1] + 1)
         else:
             self.assertEqual(tb.shape[1], shape_original[1] + aa.shape[1])
+
 
     @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))  # type: ignore
     def test_extend(self, tbs: tp.Sequence[TypeBlocks]) -> None:

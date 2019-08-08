@@ -560,10 +560,14 @@ def get_index(
                 ))
     return st.builds(cls, get_labels(min_size=min_size, max_size=max_size))
 
-get_index_date: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexDate, dtype_group=DTGroup.DATE)
+get_index_date: tp.Callable[..., st.SearchStrategy] = partial(get_index,
+        cls=IndexDate,
+        dtype_group=DTGroup.DATE)
 get_index_date.__name__ = 'get_index_date'
 
-get_index_year: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexYear, dtype_group=DTGroup.YEAR)
+get_index_year: tp.Callable[..., st.SearchStrategy] = partial(get_index,
+        cls=IndexYear,
+        dtype_group=DTGroup.YEAR)
 get_index_year.__name__ = 'get_index_year'
 
 

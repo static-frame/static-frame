@@ -66,17 +66,6 @@ class TypeBlocks(ContainerBase):
             'iloc',
             )
 
-    # @staticmethod
-    # def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
-    #     '''Reprsent a 1D array as a 2D array with length as rows of a single-column array.
-
-    #     Return:
-    #         row, column count for a block of ndim 1 or ndim 2.
-    #     '''
-    #     if array.ndim == 1:
-    #         return array.shape[0], 1
-    #     return tp.cast(tp.Tuple[int, int], array.shape)
-
     #---------------------------------------------------------------------------
     # constructors
 
