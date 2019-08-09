@@ -152,6 +152,7 @@ CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
 IndexSpecifier = tp.Union[int, str]
 IndexInitializer = tp.Union[
+        'IndexBase',
         tp.Iterable[tp.Hashable],
         tp.Generator[tp.Hashable, None, None]]
 IndexConstructor = tp.Callable[[IndexInitializer], 'IndexBase']

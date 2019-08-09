@@ -419,7 +419,7 @@ class Series(ContainerBase):
         return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
     def reindex(self,
-            index: tp.Union[IndexBase, tp.Sequence[tp.Any]],
+            index: IndexInitializer,
             fill_value=np.nan,
             own_index: bool = False
             ) -> 'Series':

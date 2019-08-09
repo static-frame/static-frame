@@ -1254,8 +1254,8 @@ class Frame(ContainerBase):
 
 
     def reindex(self,
-            index: tp.Union[IndexBase, tp.Sequence[tp.Any]] = None,
-            columns: tp.Union[IndexBase, tp.Sequence[tp.Any]] = None,
+            index: IndexInitializer = None,
+            columns: IndexInitializer = None,
             fill_value=np.nan,
             own_index: bool = False,
             own_columns: bool = False
