@@ -355,6 +355,16 @@ class TestUnit(TestCase):
         self.assertEqual(s2.index.values.tolist(), ['c', 'd', 'a'])
         self.assertEqual(s2.name, 'foo')
 
+    def test_series_reindex_e(self) -> None:
+
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        idx = Index(('c', 'd', 'a'))
+        s2 = s1.reindex(idx, own_index=True)
+        self.assertEqual(s2.index.values.tolist(), ['c', 'd', 'a'])
+        self.assertEqual(s2.name, 'foo')
+        # we owned the index, so have the same instance
+        self.assertEqual(id(s2.index), id(idx))
+
 
     def test_series_isnull_a(self) -> None:
 

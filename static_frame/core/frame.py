@@ -1266,7 +1266,6 @@ class Frame(ContainerBase):
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')
 
-
         if index is not None:
             if isinstance(index, IndexBase):
                 # always use the Index constructor for safe reuse when possible
@@ -1287,7 +1286,8 @@ class Frame(ContainerBase):
                 # always use the Index constructor for safe reuse when possible
                 if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
                     raise Exception('static status of index does not match expected column static status')
-                columns = columns.__class__(columns)
+                if not own_columns:
+                    columns = columns.__class__(columns)
             else: # create the Index if not already an columns, assume 1D
                 columns = self._COLUMNS_CONSTRUCTOR(columns)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)

@@ -1432,6 +1432,27 @@ class TestUnit(TestCase):
         self.assertEqual(f2.name, 'foo')
 
 
+    def test_frame_reindex_g(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        columns1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        f1 = Frame.from_records(records, columns=columns1, name='foo')
+
+        index = Index((0, 1, 2))
+        f2 = f1.reindex(index=index, fill_value=0, own_index=True)
+        self.assertEqual(id(f2.index), id(index))
+
+        columns2 = IndexHierarchy.from_labels((('a', 2), ('b', 1)))
+        f2 = f1.reindex(columns=columns2, own_columns=True)
+        self.assertEqual(id(f2.columns), id(columns2))
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('a', 2), ((0, 2), (1, 34))), (('b', 1), ((0, 'a'), (1, 'b'))))
+                )
+
 
     def test_frame_axis_interface_a(self) -> None:
         # reindex both axis
