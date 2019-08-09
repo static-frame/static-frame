@@ -1254,9 +1254,12 @@ class Frame(ContainerBase):
 
 
     def reindex(self,
-            index: tp.Union[Index, tp.Sequence[tp.Any]] = None,
-            columns: tp.Union[Index, tp.Sequence[tp.Any]] = None,
-            fill_value=np.nan) -> 'Frame':
+            index: tp.Union[IndexBase, tp.Sequence[tp.Any]] = None,
+            columns: tp.Union[IndexBase, tp.Sequence[tp.Any]] = None,
+            fill_value=np.nan,
+            own_index: bool = False,
+            own_columns: bool = False
+            ) -> 'Frame':
         '''
         Return a new Frame based on the passed index and/or columns.
         '''
@@ -1265,18 +1268,22 @@ class Frame(ContainerBase):
 
 
         if index is not None:
-            if isinstance(index, (Index, IndexHierarchy)):
+            if isinstance(index, IndexBase):
                 # always use the Index constructor for safe reuse when possible
-                index = index.__class__(index)
+                if not own_index:
+                    index = index.__class__(index)
             else: # create the Index if not already an index, assume 1D
                 index = Index(index)
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)
+            own_index_frame = True
         else:
             index = self._index
             index_ic = None
+            # cannot own self._index, need a new index on Frame construction
+            own_index_frame = False
 
         if columns is not None:
-            if isinstance(columns, (Index, IndexHierarchy)):
+            if isinstance(columns, IndexBase):
                 # always use the Index constructor for safe reuse when possible
                 if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
                     raise Exception('static status of index does not match expected column static status')
@@ -1299,7 +1306,8 @@ class Frame(ContainerBase):
                 index=index,
                 columns=columns,
                 name=self._name,
-                own_data=True
+                own_data=True,
+                own_index=own_index_frame
                 )
 
 

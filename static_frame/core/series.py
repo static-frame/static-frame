@@ -419,17 +419,20 @@ class Series(ContainerBase):
         return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
     def reindex(self,
-            index: tp.Union[Index, tp.Sequence[tp.Any]],
-            fill_value=np.nan) -> 'Series':
+            index: tp.Union[IndexBase, tp.Sequence[tp.Any]],
+            fill_value=np.nan,
+            own_index: bool = False
+            ) -> 'Series':
         '''
         Return a new Series based on the passed index.
 
         Args:
             fill_value: attempted to be used, but may be coerced by the dtype of this Series. `
         '''
-        if isinstance(index, (Index, IndexHierarchy)):
-            # always use the Index constructor for safe reuse when possible
-            index = index.__class__(index)
+        if isinstance(index, IndexBase):
+            if not own_index:
+                # use the Index constructor for safe reuse when possible
+                index = index.__class__(index)
         else: # create the Index if not already an index, assume 1D
             index = Index(index)
 
