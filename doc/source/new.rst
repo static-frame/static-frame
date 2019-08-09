@@ -3,8 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.3.9-dev
+-----------
 
-0.3.8-dev
+
+0.3.8
 -----------
 
 All duplicate-handling functions now support heterogenously typed object arrays with unsortable (but hashable) types.
