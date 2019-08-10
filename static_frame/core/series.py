@@ -127,23 +127,29 @@ class Series(ContainerBase):
     def from_concat(cls,
             containers: tp.Iterable['Series'],
             *,
+            index: tp.Union[IndexInitializer, IndexAutoFactory] = None,
             name: tp.Hashable = None
             ):
         '''
         Concatenate multiple Series into a new Series, assuming the combination of all Indices result in a unique Index.
         '''
         array_values = []
-        array_index = []
+        if index is None:
+            array_index = []
         for c in containers:
             array_values.append(c.values)
-            array_index.append(c.index.values)
+            if index is None:
+                array_index.append(c.index.values)
 
         # returns immutable arrays
         values = concat_resolved(array_values)
-        index = concat_resolved(array_index)
 
-        if index.ndim == 2:
-            index = IndexHierarchy.from_labels(index)
+        if index is None:
+            index = concat_resolved(array_index)
+            if index.ndim == 2:
+                index = IndexHierarchy.from_labels(index)
+        elif index is IndexAutoFactory:
+            index = IndexAutoFactory.from_is_go(len(values), is_go=False)
 
         return cls(values, index=index, name=name)
 

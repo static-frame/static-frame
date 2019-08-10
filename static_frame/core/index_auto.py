@@ -25,17 +25,17 @@ from static_frame.core.util import DEFAULT_INT_DTYPE
 
 class IndexAutoFactory:
 
-    @staticmethod
-    def _get_labels(initializer: IndexAutoInitializer) -> tp.Iterable[int]:
-        if isinstance(initializer, int):
-            size = initializer
-        elif hasattr(initializer, '__len__'):
-            size = len(initializer)
-        else:
-            size = len(list(initializer))
+    # @staticmethod
+    # def _get_labels(initializer: IndexAutoInitializer) -> tp.Iterable[int]:
+    #     if isinstance(initializer, int):
+    #         size = initializer
+    #     elif hasattr(initializer, '__len__'):
+    #         size = len(initializer)
+    #     else:
+    #         size = len(list(initializer))
 
-        # NOTE: might be faster to directly create array of labels here and set to immutable
-        return range(size)
+    #     # NOTE: might be faster to directly create array of labels here and set to immutable
+    #     return range(size)
 
     @classmethod
     def from_is_go(cls,
@@ -48,7 +48,7 @@ class IndexAutoFactory:
             initializer: An integer, or a sizable iterable.
             is_go: Boolean if this should be a grow-only index.
         '''
-        labels = cls._get_labels(initializer)
+        labels = range(initializer)
         constructor = IndexGO if is_go else Index
         return constructor(
                 labels=labels,
@@ -63,5 +63,5 @@ class IndexAutoFactory:
             constructor: IndexConstructor,
             ) -> tp.Union[Index, IndexHierarchy]:
 
-        labels = cls._get_labels(initializer)
+        labels = range(initializer)
         return constructor(labels)

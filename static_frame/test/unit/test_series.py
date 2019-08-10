@@ -30,6 +30,7 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexDate
 from static_frame import IndexSecond
 from static_frame import IndexYearMonth
+from static_frame import IndexAutoFactory
 
 from static_frame import HLoc
 
@@ -1673,6 +1674,18 @@ class TestUnit(TestCase):
 
         self.assertEqual(s3.to_pairs(),
                 ((('i', 'a'), 2), (('i', 'b'), 3), (('i', 'c'), 0), (('ii', 'a'), '10'), (('ii', 'b'), '20'), (('ii', 'c'), '100'))
+                )
+
+    def test_series_from_concat_e(self) -> None:
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series((10, 20), index=list('de'))
+        s3 = Series((8, 6), index=list('fg'))
+
+
+        s = Series.from_concat((s1, s2, s3), index=IndexAutoFactory)
+
+        self.assertEqual(s.to_pairs(),
+                ((0, 2), (1, 3), (2, 0), (3, 10), (4, 20), (5, 8), (6, 6))
                 )
 
 
