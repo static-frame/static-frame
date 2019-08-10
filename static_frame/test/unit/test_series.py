@@ -366,6 +366,14 @@ class TestUnit(TestCase):
         # we owned the index, so have the same instance
         self.assertEqual(id(s2.index), id(idx))
 
+    def test_series_reindex_f(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        s2 = s1.reindex(IndexAutoFactory)
+        self.assertEqual(s2.to_pairs(),
+                ((0, 0), (1, 1), (2, 2), (3, 3))
+                )
+
 
     def test_series_isnull_a(self) -> None:
 
@@ -1686,6 +1694,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(s.to_pairs(),
                 ((0, 2), (1, 3), (2, 0), (3, 10), (4, 20), (5, 8), (6, 6))
+                )
+
+    def test_series_from_concat_f(self) -> None:
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        s2 = Series((10, 20), index=list('de'))
+        s3 = Series((8, 6), index=list('fg'))
+
+        s = Series.from_concat((s1, s2, s3), index=list('pqrstuv'))
+
+        self.assertEqual(s.to_pairs(),
+                (('p', 2), ('q', 3), ('r', 0), ('s', 10), ('t', 20), ('u', 8), ('v', 6))
                 )
 
 

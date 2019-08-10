@@ -63,6 +63,7 @@ from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.doc_str import doc_inject
 
@@ -127,7 +128,7 @@ class Series(ContainerBase):
     def from_concat(cls,
             containers: tp.Iterable['Series'],
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactory] = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None
             ):
         '''
@@ -149,7 +150,8 @@ class Series(ContainerBase):
             if index.ndim == 2:
                 index = IndexHierarchy.from_labels(index)
         elif index is IndexAutoFactory:
-            index = IndexAutoFactory.from_is_go(len(values), is_go=False)
+            # set index arg to None to force IndexAutoFactory usage in creation
+            index = None
 
         return cls(values, index=index, name=name)
 
@@ -429,7 +431,7 @@ class Series(ContainerBase):
         return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
     def reindex(self,
-            index: IndexInitializer,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType],
             fill_value=np.nan,
             own_index: bool = False
             ) -> 'Series':
@@ -443,6 +445,12 @@ class Series(ContainerBase):
             if not own_index:
                 # use the Index constructor for safe reuse when possible
                 index = index.__class__(index)
+        elif index is IndexAutoFactory:
+            # exit immediatly, reusing values, forcing index auto
+            return self.__class__(self.values,
+                    index=None,
+                    name=self._name
+                    )
         else: # create the Index if not already an index, assume 1D
             index = Index(index)
 

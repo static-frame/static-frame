@@ -6,6 +6,8 @@ What is New in Static Frame
 0.3.9-dev
 -----------
 
+``IndexAutoFactory`` introduced to consolidate creation of auto-incremented integer indices, and provide a single token to force auto-incremented integer indices in other contexts where ``index`` arguments are taken.
+
 
 0.3.8
 -----------

@@ -8,10 +8,11 @@ from static_frame.core.index import IndexGO
 
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexAutoInitializer
 
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
+
+IndexAutoInitializer = int
 
 
 # could create trival subclasses for these indices, but the type would would not always describe the instance; for example, an IndexAutoGO could grow inot non-contiguous integer index, as loc_is_iloc is reevaluated with each append can simply go to false.
@@ -65,3 +66,7 @@ class IndexAutoFactory:
 
         labels = range(initializer)
         return constructor(labels)
+
+
+
+IndexAutoFactoryType = tp.Type[IndexAutoFactory]
