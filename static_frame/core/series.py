@@ -38,6 +38,7 @@ from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import STATIC_ATTR
 
 from static_frame.core.util import InterfaceGetItem
@@ -61,6 +62,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_auto import IndexAutoFactory
 
 from static_frame.core.doc_str import doc_inject
 
@@ -180,7 +182,7 @@ class Series(ContainerBase):
             index: IndexInitializer = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
-            index_constructor: tp.Optional[tp.Type[IndexBase]] = None,
+            index_constructor: IndexConstructor = None,
             own_index: bool = False
             ) -> None:
         # doc string at class definition
@@ -244,11 +246,13 @@ class Series(ContainerBase):
                 and len(index) == 0):
             if index_constructor:
                 # use index_constructor if povided
-                self._index = index_constructor(range(len(self.values)))
-            else: # create a default integer index; we specify dtype for windows
-                self._index = Index(range(len(self.values)),
-                        loc_is_iloc=True,
-                        dtype=DEFAULT_INT_DTYPE)
+                self._index = IndexAutoFactory.from_constructor(
+                        len(self.values),
+                        constructor=index_constructor)
+            else:
+                self._index = IndexAutoFactory.from_is_go(
+                        len(self.values),
+                        is_go=False)
         else: # an iterable of labels, or an index subclass
             if index_constructor:
                 # always use constructor if provided

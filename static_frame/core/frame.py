@@ -30,6 +30,7 @@ from static_frame.core.util import DtypesSpecifier
 
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import immutable_filter
@@ -82,6 +83,8 @@ from static_frame.core.index import immutable_index_filter
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
+
+from static_frame.core.index_auto import IndexAutoFactory
 
 from static_frame.core.doc_str import doc_inject
 
@@ -945,7 +948,6 @@ class Frame(ContainerBase):
         #-----------------------------------------------------------------------
         # columns assignment
 
-
         if own_columns:
             self._columns = columns
             col_count = len(self._columns)
@@ -960,12 +962,14 @@ class Frame(ContainerBase):
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
             if columns_constructor:
-                self._columns = columns_constructor(range(col_count))
+                self._columns = IndexAutoFactory.from_constructor(
+                        col_count,
+                        constructor=columns_constructor
+                        )
             else:
-                self._columns = self._COLUMNS_CONSTRUCTOR(
-                        range(col_count),
-                        loc_is_iloc=True,
-                        dtype=DEFAULT_INT_DTYPE)
+                self._columns = IndexAutoFactory.from_is_go(
+                        col_count,
+                        is_go=not self._COLUMNS_CONSTRUCTOR.STATIC)
         else:
             # columns could be a mutable index here
             if columns_constructor:
@@ -974,6 +978,7 @@ class Frame(ContainerBase):
                 self._columns = self._COLUMNS_CONSTRUCTOR(columns)
             col_count = len(self._columns)
 
+        # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
             raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
         #-----------------------------------------------------------------------
@@ -992,11 +997,13 @@ class Frame(ContainerBase):
         elif index_empty:
             row_count = 0 if row_count is None else row_count
             if index_constructor:
-                self._index = index_constructor(range(row_count))
+                self._index = IndexAutoFactory.from_constructor(
+                        row_count,
+                        constructor=index_constructor)
             else:
-                self._index = Index(range(row_count),
-                        loc_is_iloc=True,
-                        dtype=DEFAULT_INT_DTYPE)
+                self._index = IndexAutoFactory.from_is_go(
+                        row_count,
+                        is_go=False)
         else:
             if index_constructor:
                 self._index = index_constructor(index)

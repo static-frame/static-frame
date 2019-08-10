@@ -10,6 +10,8 @@ from static_frame.core.util import FilePathOrFileLike as FilePathOrFileLike
 from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import IndexInitializer as IndexInitializer
+from static_frame.core.util import IndexAutoInitializer as IndexAutoInitializer
+
 from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import FrameInitializer as FrameInitializer
 from static_frame.core.util import mloc as mloc
@@ -44,6 +46,9 @@ from static_frame.core.index_level import IndexLevel as IndexLevel
 from static_frame.core.index_level import IndexLevelGO as IndexLevelGO
 from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
+
+from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
+
 
 from static_frame.core.hloc import HLoc as HLoc
 

@@ -157,6 +157,8 @@ IndexInitializer = tp.Union[
         tp.Generator[tp.Hashable, None, None]]
 IndexConstructor = tp.Callable[[IndexInitializer], 'IndexBase']
 
+# take integers for size; otherwise, extract size from any other index initializer
+IndexAutoInitializer = tp.Union[int, IndexInitializer]
 
 SeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
