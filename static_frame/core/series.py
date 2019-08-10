@@ -132,7 +132,11 @@ class Series(ContainerBase):
             name: tp.Hashable = None
             ):
         '''
-        Concatenate multiple Series into a new Series, assuming the combination of all Indices result in a unique Index.
+        Concatenate multiple Series into a new Series.
+
+        Args:
+            containers: Iterable of ``Series`` from which values in the new ``Series`` are drawn.
+            index: If None, the resultant index will be the concatenation of all indices (assuming they are unique in combination). If ``IndexAutoFactory``, the resultant index is a auto-incremented integer index. Otherwise, the value is used as a index initializer.
         '''
         array_values = []
         if index is None:

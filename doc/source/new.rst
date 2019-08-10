@@ -8,6 +8,8 @@ What is New in Static Frame
 
 ``IndexAutoFactory`` introduced to consolidate creation of auto-incremented integer indices, and provide a single token to force auto-incremented integer indices in other contexts where ``index`` arguments are taken.
 
+``IndexAutoFactory`` implemented for the ``index`` argument in ``Series.concat`` and  ``Series.reindex``.
+
 
 0.3.8
 -----------
