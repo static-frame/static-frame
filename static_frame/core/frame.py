@@ -85,6 +85,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.doc_str import doc_inject
 
@@ -133,8 +134,8 @@ class Frame(ContainerBase):
             *,
             axis: int = 0,
             union: bool = True,
-            index: IndexInitializer = None,
-            columns: IndexInitializer = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ):
@@ -143,7 +144,7 @@ class Frame(ContainerBase):
 
         Args:
             frames: Iterable of Frames.
-            axis: Integer specifying 0 to concatenate supplied frames vertically (aligning on columns), 1 to concatenate horizontally (aligning on rows).
+            axis: Integer specifying 0 to concatenate supplied Frames vertically (aligning on columns), 1 to concatenate horizontally (aligning on rows).
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
@@ -167,15 +168,20 @@ class Frame(ContainerBase):
 
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
-            if columns is None:
+            if columns is IndexAutoFactory:
+                columns = None # let default creation happen
+            elif columns is None:
                 # returns immutable array
                 columns = concat_resolved([frame._columns.values for frame in frames])
                 from_array_columns = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(columns, axis=0)) != len(columns):
-                    raise RuntimeError('Column names after horizontal concatenation are not unique; supply a columns argument.')
+                    raise RuntimeError('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
 
-            if index is None:
+            if index is IndexAutoFactory:
+                raise NotImplementedError('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
+            elif index is None:
+                # get the union index, or the common index if identical
                 index = ufunc_set_iter(
                         (frame._index.values for frame in frames),
                         union=union,
@@ -192,15 +198,19 @@ class Frame(ContainerBase):
                         yield block
 
         elif axis == 0: # stacks rows (extends columns vertically)
-            if index is None:
+            if index is IndexAutoFactory:
+                index = None # let default creationn happen
+            elif index is None:
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])
                 from_array_index = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(index, axis=0)) != len(index):
-                    raise RuntimeError('Index names after vertical concatenation are not unique; supply an index argument.')
+                    raise RuntimeError('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
 
-            if columns is None:
+            if columns is IndexAutoFactory:
+                raise NotImplementedError('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
+            elif columns is None:
                 columns = ufunc_set_iter(
                         (frame._columns.values for frame in frames),
                         union=union,
@@ -1261,8 +1271,8 @@ class Frame(ContainerBase):
 
 
     def reindex(self,
-            index: IndexInitializer = None,
-            columns: IndexInitializer = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             fill_value=np.nan,
             own_index: bool = False,
             own_columns: bool = False
@@ -1273,9 +1283,16 @@ class Frame(ContainerBase):
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')
 
-        if index is not None:
+        if index is IndexAutoFactory:
+            # create index so can provide shape_reference below
+            index = IndexAutoFactory.from_is_go(
+                    len(self._index),
+                    is_go=False)
+            index_ic = None
+            own_index_frame = True
+        elif index is not None:
             if isinstance(index, IndexBase):
-                # always use the Index constructor for safe reuse when possible
+                # always use the Index constructor for safe reuse when poss[ible
                 if not own_index:
                     index = index.__class__(index)
             else: # create the Index if not already an index, assume 1D
@@ -1288,7 +1305,13 @@ class Frame(ContainerBase):
             # cannot own self._index, need a new index on Frame construction
             own_index_frame = False
 
-        if columns is not None:
+        if columns is IndexAutoFactory:
+            columns = IndexAutoFactory.from_is_go(
+                    len(self._columns),
+                    is_go=not self._COLUMNS_CONSTRUCTOR.STATIC)
+            columns_ic = None
+            own_columns_frame = True
+        elif columns is not None:
             if isinstance(columns, IndexBase):
                 # always use the Index constructor for safe reuse when possible
                 if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
@@ -1298,9 +1321,12 @@ class Frame(ContainerBase):
             else: # create the Index if not already an columns, assume 1D
                 columns = self._COLUMNS_CONSTRUCTOR(columns)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
+            own_columns_frame = True
         else:
             columns = self._columns
             columns_ic = None
+            # if static, can own
+            own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
         return self.__class__(
                 TypeBlocks.from_blocks(
@@ -1314,7 +1340,8 @@ class Frame(ContainerBase):
                 columns=columns,
                 name=self._name,
                 own_data=True,
-                own_index=own_index_frame
+                own_index=own_index_frame,
+                own_columns=own_columns_frame
                 )
 
 

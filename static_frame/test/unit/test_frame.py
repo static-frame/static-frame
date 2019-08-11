@@ -31,6 +31,7 @@ from static_frame import mloc
 from static_frame import ILoc
 from static_frame import HLoc
 from static_frame import DisplayConfig
+from static_frame import IndexAutoFactory
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -1453,6 +1454,54 @@ class TestUnit(TestCase):
                 ((('a', 2), ((0, 2), (1, 34))), (('b', 1), ((0, 'a'), (1, 'b'))))
                 )
 
+    def test_frame_reindex_h(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=tuple('pqrs'),
+                index=tuple('ab'),
+                name='foo')
+
+        f2 = f1.reindex(index=IndexAutoFactory)
+        self.assertEqual(f2.to_pairs(0),
+            (('p', ((0, 1), (1, 30))), ('q', ((0, 2), (1, 34))), ('r', ((0, 'a'), (1, 'b'))), ('s', ((0, False), (1, True))))
+            )
+
+        f3 = f1.reindex(columns=IndexAutoFactory)
+        self.assertEqual(
+            f3.reindex(columns=IndexAutoFactory).to_pairs(0),
+            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
+            )
+        self.assertTrue(f3.columns.STATIC)
+
+    def test_frame_reindex_i(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=tuple('pqrs'),
+                index=tuple('ab'),
+                name='foo')
+
+        f2 = f1.reindex(columns=IndexAutoFactory)
+        self.assertEqual(
+            f2.reindex(columns=IndexAutoFactory).to_pairs(0),
+            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
+            )
+        self.assertFalse(f2.columns.STATIC)
+        f2[4] = None
+        self.assertTrue(f2.columns._loc_is_iloc)
+        f2[6] = None
+        self.assertFalse(f2.columns._loc_is_iloc)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))), (4, (('a', None), ('b', None))), (6, (('a', None), ('b', None))))
+                )
 
     def test_frame_axis_interface_a(self) -> None:
         # reindex both axis
@@ -3337,6 +3386,47 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 ((3, ((1, 'a'), (2, 3))), (4, ((1, 'b'), (2, 4))), (5, ((1, 'c'), (2, 5))))
                 )
+
+
+    def test_frame_from_concat_v(self) -> None:
+        records1 = (
+                (2, False),
+                (34, False),
+                )
+
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q'),
+                index=('x', 'y'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records2,
+                columns=('p', 'q',),
+                index=('x', 'y'))
+
+        # get combined columns as they are unique
+        post1 = Frame.from_concat((f1, f2), axis=1, columns=IndexAutoFactory)
+        self.assertEqual(post1.to_pairs(0),
+                ((0, (('x', 2), ('y', 34))), (1, (('x', False), ('y', False))), (2, (('x', 'c'), ('y', 'd'))), (3, (('x', False), ('y', True))))
+                )
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat((f1, f2), axis=1, columns=IndexAutoFactory, index=IndexAutoFactory)
+
+        post2 = Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory)
+        self.assertEqual(post2.to_pairs(0),
+                (('p', ((0, 2), (1, 34), (2, 'c'), (3, 'd'))), ('q', ((0, False), (1, False), (2, False), (3, True))))
+                )
+
+        with self.assertRaises(NotImplementedError):
+            Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
+
+
+
+
+
 
     def test_frame_set_index_a(self) -> None:
         records = (
