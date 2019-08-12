@@ -111,7 +111,7 @@ class IndexBase(ContainerBase):
     def from_pandas(cls,
             value: 'pd.DataFrame',
             *,
-            is_go: bool = False) -> 'IndexBase':
+            is_static: bool = True) -> 'IndexBase':
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
@@ -125,15 +125,15 @@ class IndexBase(ContainerBase):
         if isinstance(value, pandas.MultiIndex):
             # iterating over a hierarchucal index will iterate over labels
             name = tuple(value.names)
-            if is_go:
+            if not is_static:
                 return IndexHierarchyGO.from_labels(value, name=name)
             return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
-            if is_go:
+            if not is_static:
                 raise NotImplementedError('No grow-only version of IndexDate yet exists')
             return IndexDate(value, name=value.name)
 
-        if is_go:
+        if not is_static:
             return IndexGO(value, name=value.name)
         return Index(value, name=value.name)
 

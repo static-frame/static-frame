@@ -261,9 +261,9 @@ class Series(ContainerBase):
                         len(self.values),
                         constructor=index_constructor)
             else:
-                self._index = IndexAutoFactory.from_is_go(
+                self._index = IndexAutoFactory.from_is_static(
                         len(self.values),
-                        is_go=False)
+                        is_static=True)
         else: # an iterable of labels, or an index subclass
             if index_constructor:
                 # always use constructor if provided

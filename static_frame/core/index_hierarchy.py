@@ -890,7 +890,7 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
-        return IndexBase.from_pandas(value, is_go=True)
+        return IndexBase.from_pandas(value, is_static=False)
 
     def append(self, value: tuple):
         '''

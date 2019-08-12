@@ -26,31 +26,19 @@ IndexAutoInitializer = int
 
 class IndexAutoFactory:
 
-    # @staticmethod
-    # def _get_labels(initializer: IndexAutoInitializer) -> tp.Iterable[int]:
-    #     if isinstance(initializer, int):
-    #         size = initializer
-    #     elif hasattr(initializer, '__len__'):
-    #         size = len(initializer)
-    #     else:
-    #         size = len(list(initializer))
-
-    #     # NOTE: might be faster to directly create array of labels here and set to immutable
-    #     return range(size)
-
     @classmethod
-    def from_is_go(cls,
+    def from_is_static(cls,
             initializer: IndexAutoInitializer,
             *,
-            is_go: bool,
+            is_static: bool,
             ) -> tp.Union[Index, IndexGO]:
         '''
         Args:
             initializer: An integer, or a sizable iterable.
-            is_go: Boolean if this should be a grow-only index.
+            is_static: Boolean if this should be a static (not grow-only) index.
         '''
         labels = range(initializer)
-        constructor = IndexGO if is_go else Index
+        constructor = Index if is_static else IndexGO
         return constructor(
                 labels=labels,
                 loc_is_iloc=True, # th

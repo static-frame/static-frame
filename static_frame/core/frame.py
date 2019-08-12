@@ -869,11 +869,10 @@ class Frame(ContainerBase):
         else:
             name = None
 
-        is_go = not cls._COLUMNS_CONSTRUCTOR.STATIC
-
         return cls(blocks,
                 index=IndexBase.from_pandas(value.index),
-                columns=IndexBase.from_pandas(value.columns, is_go=is_go),
+                columns=IndexBase.from_pandas(value.columns,
+                        is_static=cls._COLUMNS_CONSTRUCTOR.STATIC),
                 name=name,
                 own_data=True,
                 own_index=True,
@@ -977,9 +976,9 @@ class Frame(ContainerBase):
                         constructor=columns_constructor
                         )
             else:
-                self._columns = IndexAutoFactory.from_is_go(
+                self._columns = IndexAutoFactory.from_is_static(
                         col_count,
-                        is_go=not self._COLUMNS_CONSTRUCTOR.STATIC)
+                        is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
         else:
             # columns could be a mutable index here
             if columns_constructor:
@@ -1011,9 +1010,9 @@ class Frame(ContainerBase):
                         row_count,
                         constructor=index_constructor)
             else:
-                self._index = IndexAutoFactory.from_is_go(
+                self._index = IndexAutoFactory.from_is_static(
                         row_count,
-                        is_go=False)
+                        is_static=True)
         else:
             if index_constructor:
                 self._index = index_constructor(index)
@@ -1285,9 +1284,9 @@ class Frame(ContainerBase):
 
         if index is IndexAutoFactory:
             # create index so can provide shape_reference below
-            index = IndexAutoFactory.from_is_go(
+            index = IndexAutoFactory.from_is_static(
                     len(self._index),
-                    is_go=False)
+                    is_static=True)
             index_ic = None
             own_index_frame = True
         elif index is not None:
@@ -1306,9 +1305,9 @@ class Frame(ContainerBase):
             own_index_frame = False
 
         if columns is IndexAutoFactory:
-            columns = IndexAutoFactory.from_is_go(
+            columns = IndexAutoFactory.from_is_static(
                     len(self._columns),
-                    is_go=not self._COLUMNS_CONSTRUCTOR.STATIC)
+                    is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
             columns_ic = None
             own_columns_frame = True
         elif columns is not None:
