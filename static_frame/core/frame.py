@@ -885,11 +885,11 @@ class Frame(ContainerBase):
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
-            index: IndexInitializer = None,
-            columns: IndexInitializer = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None,
-            index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
-            columns_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             own_data: bool = False,
             own_index: bool = False,
             own_columns: bool = False
@@ -898,11 +898,11 @@ class Frame(ContainerBase):
 
         self._name = name if name is None else name_filter(name)
 
-        # we can determin if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
-        columns_empty = columns is None or (
+        # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
+        columns_empty = columns is None or columns is IndexAutoFactory or (
                 hasattr(columns, '__len__') and len(columns) == 0)
 
-        index_empty = index is None or (
+        index_empty = index is None or index is IndexAutoFactory or (
                 hasattr(index, '__len__') and len(index) == 0)
 
         #-----------------------------------------------------------------------

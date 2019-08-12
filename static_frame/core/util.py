@@ -154,8 +154,9 @@ IndexSpecifier = tp.Union[int, str]
 IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
+        tp.Iterable[tp.Sequence[tp.Hashable]],
         tp.Generator[tp.Hashable, None, None]]
-IndexConstructor = tp.Callable[[IndexInitializer], 'IndexBase']
+IndexConstructor = tp.Callable[..., 'IndexBase']
 
 # take integers for size; otherwise, extract size from any other index initializer
 
