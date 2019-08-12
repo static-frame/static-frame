@@ -202,6 +202,26 @@ class TestUnit(TestCase):
             # cannot create an unfillable array with a data value
             f1 = sf.Frame('x', index=(), columns=iter(range(3)))
 
+    def test_frame_init_s(self) -> None:
+        # check that we got autoincrement indices if no col/index provided
+        f1 = Frame([[0, 1], [2, 3]],
+                index=IndexAutoFactory,
+                columns=IndexAutoFactory)
+
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 0), (1, 2))), (1, ((0, 1), (1, 3))))
+                )
+
+        f2 = Frame([[0, 1], [2, 3]],
+                index=IndexAutoFactory,
+                columns=list('ab')
+                )
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('a', ((0, 0), (1, 2))), ('b', ((0, 1), (1, 3))))
+                )
+
+
 
     def test_frame_init_index_constructor_a(self) -> None:
 
