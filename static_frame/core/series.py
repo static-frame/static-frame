@@ -159,7 +159,6 @@ class Series(ContainerBase):
 
         return cls(values, index=index, name=name)
 
-
     @classmethod
     @doc_inject()
     def from_pandas(cls,
@@ -191,7 +190,7 @@ class Series(ContainerBase):
     def __init__(self,
             values: SeriesInitializer,
             *,
-            index: IndexInitializer = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None,
             dtype: DtypeSpecifier = None,
             index_constructor: IndexConstructor = None,
@@ -253,7 +252,7 @@ class Series(ContainerBase):
                 ):
             # if it is a static index, and we have no constructor, own it
             self._index = index
-        elif index is None or (
+        elif index is None or index is IndexAutoFactory or (
                 hasattr(index, '__len__')
                 and len(index) == 0):
             if index_constructor:

@@ -135,6 +135,11 @@ class TestUnit(TestCase):
                 [3, 4, 'a']
                 )
 
+    def test_series_init_j(self) -> None:
+        s1 = Series((3, 4, 'a'), index=IndexAutoFactory)
+        self.assertEqual(s1.to_pairs(),
+                ((0, 3), (1, 4), (2, 'a')))
+
 
     def test_series_slice_a(self) -> None:
         # create a series from a single value
