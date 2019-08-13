@@ -10,6 +10,15 @@ from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import DtypeSpecifier
+
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.frame import Frame
+    from static_frame.core.series import Series
+
+
+FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')
 
 
 class IterNodeApplyType(Enum):
@@ -24,7 +33,7 @@ class IterNodeType(Enum):
     ITEMS = 2
 
 
-class IterNodeDelegate:
+class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
     Delegate returned from :py:class:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
     '''
@@ -37,10 +46,11 @@ class IterNodeDelegate:
             )
 
     def __init__(self,
-            func_values,
-            func_items,
+            func_values: tp.Callable[..., tp.Iterable[tp.Any]],
+            func_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
-            apply_constructor) -> None:
+            apply_constructor: tp.Callable[..., FrameOrSeries]
+        ) -> None:
         '''
         Args:
             apply_constructor: Callable (generally a class) used to construct the object returned from apply(); must take an iterator of items.
@@ -48,15 +58,15 @@ class IterNodeDelegate:
         self._func_values = func_values
         self._func_items = func_items
         self._yield_type = yield_type
-        self._apply_constructor = apply_constructor
+        self._apply_constructor: tp.Callable[..., FrameOrSeries] = apply_constructor
 
     #---------------------------------------------------------------------------
 
     def _apply_iter_items_parallel(self,
             func: CallableOrMapping,
-            max_workers=None,
-            chunksize=1,
-            use_threads=False,
+            max_workers: tp.Optional[int] = None,
+            chunksize: int = 1,
+            use_threads: bool = False,
             ) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
 
         pool_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
@@ -68,13 +78,16 @@ class IterNodeDelegate:
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
+
+        arg_gen: tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
+
         if yt_is_values:
-            def arg_gen():
+            def arg_gen() -> tp.Iterator[tp.Any]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield v
         else:
-            def arg_gen():
+            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield k, v
@@ -107,6 +120,8 @@ class IterNodeDelegate:
         else:
             condition = None
 
+        assert callable(func)
+
         # apply always calls the items function
         for k, v in self._func_items():
             # with IndexHierarchy, k might be an unhashable np array
@@ -137,8 +152,8 @@ class IterNodeDelegate:
     def apply(self,
             func: CallableOrMapping,
             *,
-            dtype=None
-            ):
+            dtype: DtypeSpecifier = None
+            ) -> FrameOrSeries:
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance.
 
@@ -154,11 +169,11 @@ class IterNodeDelegate:
     def apply_pool(self,
             func: CallableOrMapping,
             *,
-            dtype=None,
+            dtype: DtypeSpecifier = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False
-            ):
+            ) -> FrameOrSeries:
         '''
         Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
 
@@ -177,7 +192,7 @@ class IterNodeDelegate:
                         use_threads=use_threads),
                 dtype=dtype)
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]:
         '''
         Return a generator based on the yield type.
         '''
@@ -186,8 +201,7 @@ class IterNodeDelegate:
         else:
             yield from self._func_items()
 
-
-class IterNode:
+class IterNode(tp.Generic[FrameOrSeries]):
     '''Interface to a type of iteration on :py:class:`static_frame.Series` and :py:class:`static_frame.Frame`.
     '''
     # '''Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
@@ -202,20 +216,21 @@ class IterNode:
             )
 
     def __init__(self, *,
-            container, # tp.Union['static_frame.Series', 'static_frame.Frame']
-            function_values,
-            function_items,
+            container: FrameOrSeries,
+            function_values: tp.Callable[..., tp.Iterable[tp.Any]],
+            function_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],
             yield_type: IterNodeType,
             apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
             ) -> None:
 
-        self._container = container
+        self._container: FrameOrSeries = container
         self._func_values = function_values
         self._func_items = function_items
         self._yield_type = yield_type
         self._apply_type = apply_type
 
-    def __call__(self, *args, **kwargs) -> IterNodeDelegate:
+    # Returns IterNodeDelegate... may need some TypeVar wizardry here...
+    def __call__(self, *args: object, **kwargs: object) -> IterNodeDelegate[FrameOrSeries]:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
         '''
@@ -226,6 +241,7 @@ class IterNode:
         func_values = partial(self._func_values, *args, **kwargs)
         func_items = partial(self._func_items, *args, **kwargs)
 
+        apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
         if self._apply_type is IterNodeApplyType.SERIES_ITEMS:
             # always return a Series
@@ -238,6 +254,7 @@ class IterNode:
             apply_constructor = Series.from_items
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
+            assert isinstance(self._container, Frame)
             apply_constructor = partial(
                     Frame.from_element_loc_items,
                     index=self._container._index,
@@ -253,10 +270,5 @@ class IterNode:
                 func_values=func_values,
                 func_items=func_items,
                 yield_type=self._yield_type,
-                apply_constructor=apply_constructor
+                apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor)
                 )
-
-
-
-
-
