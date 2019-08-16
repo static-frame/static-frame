@@ -597,7 +597,7 @@ class DisplayHeader:
 
 HeaderInitializer = tp.Optional[tp.Union[str, DisplayHeader]]
 
-# store formatted string (with color markup), raw width (without markup), and the original, raw string
+# store formating string, raw string
 DisplayCell = namedtuple('DisplayCell', ('format_str', 'raw'))
 FORMAT_EMPTY = '{}'
 
@@ -630,8 +630,10 @@ class Display:
             config: DisplayConfig
             ) -> tp.Tuple[str, DisplayTypeCategory]:
         '''
-        Apply delimteres to type, for either numpy types or Python classes.
+        Apply delimters to type, for either numpy types or Python classes.
         '''
+        # TODO: need to deal with floating point values in scientific notation, but do not know yet what width available
+
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
@@ -661,6 +663,9 @@ class Display:
             ) -> str:
         '''
         Return a format string for applying color to a type based on type category and config.
+
+        Returns:
+            A templated string with a "text" field for formatting.
         '''
         color = getattr(config, type_category.CONFIG_ATTR)
         if config.display_format in _DISPLAY_FORMAT_HTML:
@@ -775,30 +780,6 @@ class Display:
             return 1 # practical floor for all values of 4 or less
         return (count_target - 1) // 2
 
-    # @classmethod
-    # def _truncate_indices(cls, count_target: int, indices):
-
-    #     # if have 5 data cols, 7 total, and target was 6
-    #     # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
-
-    #     # if have 5 data cols, 7 total, and target was 7
-    #     # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
-
-    #     # if have 6 data cols, 8 total, and target was 6
-    #     # half count of 2, 5 total out, with 1 meta, 1 data, elipsis, data, meta
-
-    #     # if have 6 data cols, 8 total, and target was 7
-    #     # half count of 3, 7 total out, with 1 meta, 2 data, elipsis, 2 data, 1 meta
-
-    #     if count_target and len(indices) > count_target:
-    #         half_count = cls.truncate_half_count(count_target)
-    #         # replace with array from_iter? with known size?
-    #         return tuple(chain(
-    #                 indices[:half_count],
-    #                 cls.ELLIPSIS_INDICES,
-    #                 indices[-half_count:]))
-    #     return indices
-
 
     @classmethod
     def _get_max_width_pad_width(cls, *,
@@ -907,9 +888,11 @@ class Display:
                         # must truncate if cell width is greater than max width
                         width_truncate = max_width - len(cls.CELL_ELLIPSIS.raw)
 
+                        # TODO: this is truncating scientific notation
                         cell_raw = cell_raw[:width_truncate] + cls.ELLIPSIS
                         if is_html:
                             cell_raw = html.escape(cell_raw)
+
                         cell_formatted = cell_format_str.format(cell_raw)
                         cell_fill_width = cls.CHAR_MARGIN # should only be margin left
                     else:
