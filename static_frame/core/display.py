@@ -11,7 +11,7 @@ from enum import Enum
 from functools import partial
 from collections import namedtuple
 
-import numpy as np
+import numpy as np  # type: ignore
 
 
 from static_frame.core.util import _gen_skip_middle
@@ -37,79 +37,79 @@ class DisplayTypeCategory:
     '''
     CONFIG_ATTR = 'type_color_default'
 
-    @staticmethod
-    def is_dtype(t: type) -> bool:
-        '''Utility method to identify NP dtypes.
-        '''
-        return isinstance(t, np.dtype)
+    # @staticmethod
+    # def is_dtype(t: type) -> bool:
+    #     '''Utility method to identify NP dtypes.
+    #     '''
+    #     return isinstance(t, np.dtype)
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
         return True
 
 
 class DisplayTypeInt(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_int'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind in DTYPE_INT_KIND
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind in DTYPE_INT_KIND
 
 class DisplayTypeFloat(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_float'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'f'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'f'
 
 class DisplayTypeComplex(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_complex'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'c'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'c'
 
 class DisplayTypeBool(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_bool'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'b'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'b'
 
 class DisplayTypeObject(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_object'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'O'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'O'
 
 class DisplayTypeStr(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_str'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind in DTYPE_STR_KIND
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind in DTYPE_STR_KIND
 
 class DisplayTypeDateTime(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_datetime'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'M'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'M'
 
 class DisplayTypeTimeDelta(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_timedelta'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
-        return cls.is_dtype(t) and t.kind == 'm'
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+        return isinstance(t, np.dtype) and t.kind == 'm'
 
 
 class DisplayTypeIndex(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_index'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
         from static_frame.core.index_base import IndexBase
         if not inspect.isclass(t):
             return False
@@ -118,8 +118,8 @@ class DisplayTypeIndex(DisplayTypeCategory):
 class DisplayTypeSeries(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_series'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
         from static_frame import Series
         if not inspect.isclass(t):
             return False
@@ -128,8 +128,8 @@ class DisplayTypeSeries(DisplayTypeCategory):
 class DisplayTypeFrame(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_frame'
 
-    @classmethod
-    def in_category(cls, t: type) -> bool:
+    @staticmethod
+    def in_category(t: tp.Union[type, np.dtype]) -> bool:
         from static_frame import Frame
         if not inspect.isclass(t):
             return False
@@ -152,10 +152,10 @@ class DisplayTypeCategoryFactory:
             DisplayTypeFrame
             )
 
-    _TYPE_TO_CATEGORY_CACHE = {}
+    _TYPE_TO_CATEGORY_CACHE: tp.Dict[tp.Union[type, np.dtype], tp.Type[DisplayTypeCategory]] = {}
 
     @classmethod
-    def to_category(cls, dtype: tp.Optional[type]):
+    def to_category(cls, dtype: tp.Optional[tp.Union[type, np.dtype]]) -> tp.Type[DisplayTypeCategory]:
         if dtype not in cls._TYPE_TO_CATEGORY_CACHE:
             category = None
             for dtc in cls._DISPLAY_TYPE_CATEGORIES:
@@ -212,11 +212,11 @@ class DisplayFormat:
             yield msg
 
     @staticmethod
-    def markup_header(msg: str):
+    def markup_header(msg: str) -> str:
         return msg
 
     @staticmethod
-    def markup_body(msg: str):
+    def markup_body(msg: str) -> str:
         return msg
 
     @staticmethod
@@ -250,11 +250,11 @@ class DisplayFormatHTMLTable(DisplayFormat):
         yield '</tr>'
 
     @staticmethod
-    def markup_header(msg: str):
+    def markup_header(msg: str) -> str:
         return '<thead>{}</thead>'.format(msg)
 
     @staticmethod
-    def markup_body(msg: str):
+    def markup_body(msg: str) -> str:
         return '<tbody>{}</tbody>'.format(msg)
 
     @staticmethod
@@ -300,7 +300,7 @@ class DisplayFormatHTMLPre(DisplayFormat):
                 msg=msg)
 
 
-_DISPLAY_FORMAT_MAP = {
+_DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
         DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
         DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
@@ -309,7 +309,7 @@ _DISPLAY_FORMAT_MAP = {
 
 #-------------------------------------------------------------------------------
 
-def terminal_ansi(stream=sys.stdout) -> bool:
+def terminal_ansi(stream: tp.TextIO = sys.stdout) -> bool:
     '''
     Return True if the terminal is ANSI color compatible.
     '''
@@ -371,7 +371,7 @@ class DisplayConfig:
             )
 
     @classmethod
-    def from_json(cls, json_str) -> 'DisplayConfig':
+    def from_json(cls, json_str: str) -> 'DisplayConfig':
         args = json.loads(json_str.strip())
         # filter arguments by current slots
         args_valid = {}
@@ -381,12 +381,12 @@ class DisplayConfig:
         return cls(**args_valid)
 
     @classmethod
-    def from_file(cls, fp):
+    def from_file(cls, fp: str) -> 'DisplayConfig':
         with open(fp) as f:
             return cls.from_json(f.read())
 
     @classmethod
-    def from_default(cls, **kwargs) -> 'DisplayConfig':
+    def from_default(cls, **kwargs: tp.Any) -> 'DisplayConfig':
         return cls(**kwargs)
 
     def __init__(self, *,
@@ -417,9 +417,10 @@ class DisplayConfig:
             value_format_complex_positional: str = '{}',
             value_format_complex_scientific: str = '{:.2e}',
 
-            display_format=DisplayFormats.TERMINAL,
-            display_columns: tp.Optional[int] = 12,
-            display_rows: tp.Optional[int] = 36,
+            display_format: str = DisplayFormats.TERMINAL,
+            display_columns: int = 12,
+            display_rows: int = 36,
+
             cell_max_width: int = 20,
             cell_max_width_leftmost: int = 36,
 
@@ -461,18 +462,18 @@ class DisplayConfig:
 
         self.cell_align_left = cell_align_left
 
-    def write(self, fp):
+    def write(self, fp: str) -> None:
         '''Write a JSON file.
         '''
         with open(fp, 'w') as f:
             f.write(self.to_json() + '\n')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '<' + self.__class__.__name__ + ' ' + ' '.join(
                 '{k}={v}'.format(k=k, v=getattr(self, k))
                 for k in self.__slots__) + '>'
 
-    def to_dict(self, **kwargs) -> dict:
+    def to_dict(self, **kwargs: object) -> tp.Dict[str, tp.Any]:
         # overrides with passed in kwargs if provided
         return {k: kwargs.get(k, getattr(self, k))
                 for k in self.__slots__}
@@ -486,7 +487,7 @@ class DisplayConfig:
                 kwargs['display_rows'], kwargs['display_columns'])
         return self.__class__(**kwargs)
 
-    def to_display_config(self, **kwargs) -> 'DisplayConfig':
+    def to_display_config(self, **kwargs: object) -> 'DisplayConfig':
         return self.__class__(**self.to_dict(**kwargs))
 
 #-------------------------------------------------------------------------------
@@ -538,7 +539,7 @@ class DisplayConfigs:
 
 #-------------------------------------------------------------------------------
 
-_module._display_active = DisplayConfig()
+_module._display_active = DisplayConfig()  # type: ignore
 
 class DisplayActive:
     '''Utility interface for setting module-level display configuration.
@@ -546,12 +547,12 @@ class DisplayActive:
     FILE_NAME = '.static_frame.conf'
 
     @staticmethod
-    def set(dc: DisplayConfig):
-        _module._display_active = dc
+    def set(dc: DisplayConfig) -> None:
+        _module._display_active = dc  # type: ignore
 
     @staticmethod
     def get(**kwargs: tp.Union[bool, int, str]) -> DisplayConfig:
-        config = _module._display_active
+        config: DisplayConfig = _module._display_active  # type: ignore
         if not kwargs:
             return config
         args = config.to_dict()
@@ -559,24 +560,24 @@ class DisplayActive:
         return DisplayConfig(**args)
 
     @classmethod
-    def update(cls, **kwargs):
+    def update(cls, **kwargs: object) -> None:
         args = cls.get().to_dict()
         args.update(kwargs)
         cls.set(DisplayConfig(**args))
 
     @classmethod
-    def _default_fp(cls):
+    def _default_fp(cls) -> str:
         # TODO: improve cross platform support
         return os.path.join(os.path.expanduser('~'), cls.FILE_NAME)
 
     @classmethod
-    def write(cls, fp=None):
+    def write(cls, fp: tp.Optional[str] = None) -> None:
         fp = fp or cls._default_fp()
         dc = cls.get()
         dc.write(fp)
 
     @classmethod
-    def read(cls, fp=None):
+    def read(cls, fp: tp.Optional[str] = None) -> None:
         fp = fp or cls._default_fp()
         cls.set(DisplayConfig.from_file(fp))
 
@@ -591,8 +592,8 @@ class DisplayHeader:
     __slots__ = ('cls', 'name')
 
     def __init__(self,
-            cls,
-            name: tp.Optional[object] = None):
+            cls: type,
+            name: tp.Optional[object] = None) -> None:
         '''
         Args:
             cls: the Class to be displayed.
@@ -641,9 +642,9 @@ class Display:
 
     @staticmethod
     def type_attributes(
-            type_input: tp.Union[np.dtype, DisplayHeader],
+            type_input: tp.Union[np.dtype, type, DisplayHeader],
             config: DisplayConfig
-            ) -> tp.Tuple[str, DisplayTypeCategory]:
+            ) -> tp.Tuple[str, tp.Type[DisplayTypeCategory]]:
         '''
         Apply delimters to type, for either numpy types or Python classes.
         '''
@@ -651,6 +652,7 @@ class Display:
             type_str = str(type_input)
             type_ref = type_input
         elif inspect.isclass(type_input):
+            assert isinstance(type_input, type)
             type_str = type_input.__name__
             type_ref = type_input
         elif isinstance(type_input, DisplayHeader):
@@ -671,7 +673,7 @@ class Display:
     @staticmethod
     def type_color_markup(
             type_label: str,
-            type_category: DisplayTypeCategory,
+            type_category: tp.Type[DisplayTypeCategory],
             config: DisplayConfig
             ) -> str:
         '''
@@ -697,8 +699,7 @@ class Display:
     def to_cell(cls,
             value: object, # dtype, HeaderInitializer, or a type
             config: DisplayConfig,
-            is_dtype=False
-            ) -> DisplayCell:
+            is_dtype: bool = False) -> DisplayCell:
         '''
         Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
         '''
@@ -740,7 +741,7 @@ class Display:
     def from_values(cls,
             values: np.ndarray,
             header: object,
-            config: DisplayConfig = None,
+            config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
             columns_depth: int = 0
@@ -811,11 +812,11 @@ class Display:
 
     @classmethod
     def _get_max_width_pad_width(cls, *,
-            rows: tp.Iterable[tp.Iterable[DisplayCell]],
+            rows: tp.Sequence[tp.Sequence[DisplayCell]],
             col_idx_src: int,
             col_last_src: int,
             row_indices: tp.Iterable[int],
-            config: DisplayConfig = None
+            config: tp.Optional[DisplayConfig] = None,
             ) -> tp.Tuple[int, int]:
         '''
         Called once for each column to determine the maximum_width and pad_width for a particular column. All row data is passed to this function, and cell values are looked up directly with the `col_idx_src` argument.
@@ -826,6 +827,8 @@ class Display:
             col_last_src: the integer index for the last column
             row_indices: passed here so same range() can be reused.
         '''
+        config = config or DisplayActive.get()
+
         is_last = col_idx_src == col_last_src
         is_first = col_idx_src == 0
 
@@ -863,7 +866,7 @@ class Display:
     @classmethod
     def _to_rows(cls,
             display: 'Display',
-            config: DisplayConfig = None,
+            config: tp.Optional[DisplayConfig] = None,
             index_depth: int = 0,
             columns_depth: int = 0,
             ) -> tp.Iterable[str]:
@@ -882,7 +885,7 @@ class Display:
         row_count_src = len(display._rows)
         row_indices = range(row_count_src)
 
-        rows = [[] for _ in row_indices]
+        rows: tp.List[tp.List[str]] = [[] for _ in row_indices]
 
         # if we normalize, we truncate cells and pad
         dfc = _DISPLAY_FORMAT_MAP[config.display_format]
@@ -901,11 +904,11 @@ class Display:
                         )
 
             for row_idx_src in row_indices:
-                row = display._rows[row_idx_src]
-                if col_idx_src >= len(row):
+                display_row = display._rows[row_idx_src]
+                if col_idx_src >= len(display_row):
                     cell = cls.CELL_EMPTY
                 else:
-                    cell = row[col_idx_src]
+                    cell = display_row[col_idx_src]
 
                 cell_format_str = cell.format_str
                 cell_raw = cell.raw
@@ -956,7 +959,7 @@ class Display:
     #---------------------------------------------------------------------------
     def __init__(self,
             rows: tp.List[tp.List[DisplayCell]],
-            config: DisplayConfig = None,
+            config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
             columns_depth: int = 0,
@@ -971,7 +974,7 @@ class Display:
         self._index_depth = index_depth
         self._columns_depth = columns_depth
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         rows = self._to_rows(self,
                 self._config,
                 index_depth=self._index_depth,
@@ -996,11 +999,11 @@ class Display:
     def to_rows(self) -> tp.Iterable[str]:
         return self._to_rows(self, self._config)
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterator[tp.List[str]]:
         for row in self._rows:
             yield [cell.format_str.format(cell.raw) for cell in row]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._rows)
 
     #---------------------------------------------------------------------------
@@ -1017,7 +1020,7 @@ class Display:
             self._rows[row_idx].extend(row)
 
     def extend_iterable(self,
-            iterable: tp.Iterable[tp.Any],
+            iterable: tp.Sequence[tp.Any],
             header: HeaderInitializer) -> None:
         '''
         Add an iterable of strings as a column to the display.
@@ -1032,7 +1035,7 @@ class Display:
 
         if len(iterable) > count_max:
             data_half_count = self.truncate_half_count(count_max)
-            value_gen = partial(_gen_skip_middle,
+            value_gen: tp.Callable[[], tp.Iterator[tp.Any]] = partial(_gen_skip_middle,
                     forward_iter=iterable.__iter__,
                     forward_count=data_half_count,
                     reverse_iter=partial(reversed, iterable),
@@ -1055,15 +1058,15 @@ class Display:
                     config=self._config,
                     is_dtype=True))
 
-    def extend_ellipsis(self):
+    def extend_ellipsis(self) -> None:
         '''Append an ellipsis over all rows.
         '''
         for row in self._rows:
             row.append(self.CELL_ELLIPSIS)
 
     def insert_displays(self,
-            *displays: tp.Iterable['Display'],
-            insert_index: int = 0):
+            *displays: 'Display',
+            insert_index: int = 0) -> None:
         '''
         Insert rows on top of existing rows.
         args:
@@ -1072,7 +1075,7 @@ class Display:
         '''
         # each arg is a list, to be a new row
         # assume each row in display becomes a column
-        new_rows = []
+        new_rows: tp.List[tp.List[DisplayCell]] = []
         for display in displays:
             new_rows.extend(display._rows)
 
@@ -1082,7 +1085,7 @@ class Display:
         rows.extend(self._rows[insert_index:])
         self._rows = rows
 
-    def append_row(self, row: tp.Iterable[DisplayCell]):
+    def append_row(self, row: tp.List[DisplayCell]) -> None:
         '''
         Append a row at the bottom of existing rows.
         '''
@@ -1108,7 +1111,7 @@ class Display:
 
         # assume first row gives us column count
         col_count = len(self._rows[0])
-        rows = [[] for _ in range(col_count)]
+        rows: tp.List[tp.List[DisplayCell]] = [[] for _ in range(col_count)]
         for r in self._rows:
             for idx, cell in enumerate(r):
                 rows[idx].append(cell)
