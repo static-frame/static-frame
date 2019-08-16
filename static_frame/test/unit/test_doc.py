@@ -241,11 +241,12 @@ Neptune 102.0
 >>> a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)], dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
 >>> sf.Frame.from_structured_array(a, index_column='name')
 <Frame>
-<Index>  mass      temperature <<U11>
+<Index>  mass              temperature <<U11>
 <Index>
-Venus    4.87      464
-Neptune  102.0     -200
-<object> <float32> <int32>
+Venus    4.869999885559082 464
+Neptune  102.0             -200
+<object> <float32>         <int32>
+
 
 #end_frame_from_structured_array_a
 
@@ -723,9 +724,9 @@ Jupiter  0.0
 >>> f.iter_tuple(1).apply(lambda nt: nt.mass / (4 / 3 * np.pi * (nt.diameter * 0.5) ** 3))
 <Series>
 <Index>
-Earth    5.493285577295119...
-Mars     3.913302082789825...
-Jupiter  1.240038755875004...
+Earth    5.49328558e-12
+Mars     3.91330208e-12
+Jupiter  1.24003876e-12
 <<U7>    <float64>
 
 #end_frame_iter_tuple_a

@@ -595,15 +595,15 @@ class TestUnit(TestCase):
 
         # non default config for scientifici will truncate values
         self.assertEqual(
-                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')).to_rows(),                          ['<Series>',
+                s1.display(sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}')).to_rows(),                          ['<Series>',
                 '<Index>',
                 '0        45130251461102338...',
                 '1        43665028242109283...',
-                '<int64>  <float64>']
+                '<int64>  <complex128>']
                 )
 
         self.assertEqual(
-                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:.1e}')).to_rows(),
+                s1.display(sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:.1e}')).to_rows(),
                 ['<Series>',
                 '<Index>',
                 '0        4.5e+19+0.0e+00j',
