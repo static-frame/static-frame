@@ -460,7 +460,6 @@ class TestUnit(TestCase):
 <table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;object&gt;</th><th>&lt;object&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
         '''
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(html.strip(), str(expected).strip())
 
 
@@ -547,6 +546,71 @@ class TestUnit(TestCase):
 
         post = f2.display(sf.DisplayConfig(type_color=False, cell_max_width_leftmost=30)).to_rows()
         self.assertEqual(post[2], "<IndexHierarchy: ('p', 'q')>")
+
+    def test_display_float_scientific_a(self) -> None:
+
+        s1 = sf.Series([3.1, 5.2]) ** 40
+
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False)).to_rows(),
+                ['<Series>',
+                '<Index>',
+                '0        4.51302515e+19',
+                '1        4.36650282e+28',
+                '<int64>  <float64>']
+                )
+
+        # non default config for scientifici will truncate values
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')).to_rows(),                          ['<Series>',
+                '<Index>',
+                '0        45130251461102272...',
+                '1        43665028242109266...',
+                '<int64>  <float64>']
+                )
+
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:.2e}')).to_rows(),
+                ['<Series>',
+                '<Index>',
+                '0        4.51e+19',
+                '1        4.37e+28',
+                '<int64>  <float64>']
+                )
+
+
+
+    def test_display_float_scientific_b(self) -> None:
+
+        s1 = sf.Series([3.1j, 5.2j]) ** 40
+
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False)).to_rows(),
+                ['<Series>',
+                '<Index>',
+                '0        4.51e+19+0.00e+00j',
+                '1        4.37e+28+0.00e+00j',
+                '<int64>  <complex128>']
+                )
+
+        # non default config for scientifici will truncate values
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')).to_rows(),                          ['<Series>',
+                '<Index>',
+                '0        45130251461102338...',
+                '1        43665028242109283...',
+                '<int64>  <float64>']
+                )
+
+        self.assertEqual(
+                s1.display(sf.DisplayConfig(type_color=False, value_format_float_scientific='{:.1e}')).to_rows(),
+                ['<Series>',
+                '<Index>',
+                '0        4.5e+19+0.0e+00j',
+                '1        4.4e+28+0.0e+00j',
+                '<int64>  <complex128>']
+                )
+
 
 
     @unittest.skip('too colorful')

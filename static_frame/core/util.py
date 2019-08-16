@@ -104,7 +104,10 @@ UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 #-------------------------------------------------------------------------------
 # utility type groups
 
-INT_TYPES = (int, np.integer) # np.integer catches all np int types
+INT_TYPES = (int, np.integer) # np.integer catches all np int
+FLOAT_TYPES = (float, np.floating) # np.floating catches all np float
+COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all np complex
+INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
 
 BOOL_TYPES = (bool, np.bool_)
 

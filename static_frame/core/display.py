@@ -20,19 +20,17 @@ from static_frame.core import display_html_datatables
 
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import COMPLEX_TYPES
 
 _module = sys.modules[__name__]
-
-
 
 ColorConstructor = tp.Union[int, str]
 
 #-------------------------------------------------------------------------------
 # display infrastructure
 
-
 #-------------------------------------------------------------------------------
-
 class DisplayTypeCategory:
     '''
     Display Type Categories are used for identifying types to which to apply specific formatting.
@@ -358,6 +356,11 @@ class DisplayConfig:
             'type_delimiter_left',
             'type_delimiter_right',
 
+            'value_format_float_positional',
+            'value_format_float_scientific',
+            'value_format_complex_positional',
+            'value_format_complex_scientific',
+
             'display_format',
             'display_columns',
             'display_rows',
@@ -407,6 +410,13 @@ class DisplayConfig:
 
             type_delimiter_left: str = '<',
             type_delimiter_right: str = '>',
+
+            # for positional, default to {} to avoid a fixed floating point size
+            value_format_float_positional: str = '{}',
+            value_format_float_scientific: str = '{:.8e}',
+            value_format_complex_positional: str = '{}',
+            value_format_complex_scientific: str = '{:.2e}',
+
             display_format=DisplayFormats.TERMINAL,
             display_columns: tp.Optional[int] = 12,
             display_rows: tp.Optional[int] = 36,
@@ -435,6 +445,11 @@ class DisplayConfig:
 
         self.type_delimiter_left = type_delimiter_left
         self.type_delimiter_right = type_delimiter_right
+
+        self.value_format_float_positional = value_format_float_positional
+        self.value_format_float_scientific = value_format_float_scientific
+        self.value_format_complex_positional = value_format_complex_positional
+        self.value_format_complex_scientific = value_format_complex_scientific
 
         self.display_format = display_format
 
@@ -632,8 +647,6 @@ class Display:
         '''
         Apply delimters to type, for either numpy types or Python classes.
         '''
-        # TODO: need to deal with floating point values in scientific notation, but do not know yet what width available
-
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
@@ -684,7 +697,8 @@ class Display:
     def to_cell(cls,
             value: object, # dtype, HeaderInitializer, or a type
             config: DisplayConfig,
-            is_dtype=False) -> DisplayCell:
+            is_dtype=False
+            ) -> DisplayCell:
         '''
         Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
         '''
@@ -702,7 +716,21 @@ class Display:
             return DisplayCell(format_str, type_str_raw)
 
         # handling for all other values that are stringable
+
         msg = str(value)
+
+        # handling for float, complex if str() produces an 'e', then we use the scientific template; otherwise, we use the postional; users can config both to be the same to always get one or the other
+        if isinstance(value, FLOAT_TYPES):
+            if 'e' in msg:
+                msg = config.value_format_float_scientific.format(value)
+            else:
+                msg = config.value_format_float_positional.format(value)
+        elif isinstance(value, COMPLEX_TYPES):
+            if 'e' in msg:
+                msg = config.value_format_complex_scientific.format(value)
+            else:
+                msg = config.value_format_complex_positional.format(value)
+
         return DisplayCell(FORMAT_EMPTY, msg)
 
     #---------------------------------------------------------------------------

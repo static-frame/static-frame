@@ -18,7 +18,6 @@ from static_frame.core.index import _requires_reindex
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import INT_TYPES
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
 from static_frame.core.util import resolve_dtype_iter
