@@ -34,6 +34,13 @@ class DOC_TEMPLATE:
 
     clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
+    ufunc_skipna = '''{header}
+
+    Args:
+        axis: Axis, defaulting to axis 0.
+        skipna: Skip missing (NaN) values, defaulting to True.
+    '''
+
     #---------------------------------------------------------------------------
     # dict entries
 
