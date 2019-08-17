@@ -63,7 +63,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
                 _UFUNC_BINARY_OPERATORS)
 
     def get_ufunc_doc(cls: type,
-            func_map: tp.Mapping[str, tp.Tuple[AnyCallable, AnyCallable, tp.Optional[type]]],
+            func_map: tp.Mapping[str, tp.Tuple[AnyCallable, AnyCallable, tp.Optional[type], str]],
         ) -> tp.List[tp.Tuple[str, str, type]]:
         # doc here is a complex string, just take the first line
         post = []
