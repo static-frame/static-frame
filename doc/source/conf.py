@@ -62,25 +62,24 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
         post[label + '_operator_binary'] = get_func_doc(cls,
                 _UFUNC_BINARY_OPERATORS)
 
-    def get_ufunc_doc(cls: type,
-            func_map: tp.Mapping[str, tp.Tuple[AnyCallable, AnyCallable, tp.Optional[type], str]],
-        ) -> tp.List[tp.Tuple[str, str, type]]:
-        # doc here is a complex string, just take the first line
-        post = []
-        for label, funcs in sorted(func_map.items()):
-            assert funcs[0].__doc__ is not None
-            doc_str = funcs[0].__doc__.strip().split('\n')[0]
-            return_type = funcs[2] if funcs[2] is not None else float
-            post.append((label, doc_str, return_type))
-        return post
+    # def get_ufunc_doc(cls: type,
+    #         func_map: tp.Mapping[str, tp.Tuple[AnyCallable, AnyCallable, tp.Optional[type], str]],
+    #     ) -> tp.List[tp.Tuple[str, str, type]]:
+    #     # doc here is a complex string, just take the first line
+    #     post = []
+    #     for label, funcs in sorted(func_map.items()):
+    #         assert funcs[0].__doc__ is not None
+    #         doc_str = funcs[0].__doc__.strip().split('\n')[0]
+    #         return_type = funcs[2] if funcs[2] is not None else float
+    #         post.append((label, doc_str, return_type))
+    #     return post
 
     for label, cls in (
             ('index', sf.Index),
             ('series', sf.Series),
             ('frame', sf.Frame),
             ):
-        post[label + '_ufunc_axis'] = get_ufunc_doc(cls,
-                UFUNC_AXIS_SKIPNA)
+        post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
 
     return post
 

@@ -37,12 +37,6 @@ class DisplayTypeCategory:
     '''
     CONFIG_ATTR = 'type_color_default'
 
-    # @staticmethod
-    # def is_dtype(t: type) -> bool:
-    #     '''Utility method to identify NP dtypes.
-    #     '''
-    #     return isinstance(t, np.dtype)
-
     @staticmethod
     def in_category(t: tp.Union[type, np.dtype]) -> bool:
         return True

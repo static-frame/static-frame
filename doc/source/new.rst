@@ -3,7 +3,7 @@
 What is New in Static Frame
 ===============================
 
-0.3.9-dev
+0.3.9
 -----------
 
 ``IndexAutoFactory`` introduced to consolidate creation of auto-incremented integer indices, and provide a single token to force auto-incremented integer indices in other contexts where ``index`` arguments are taken.
@@ -11,6 +11,10 @@ What is New in Static Frame
 ``IndexAutoFactory`` suport implemented for the ``index`` argument in ``Series.from_concat`` and ``Series.reindex``.
 
 ``IndexAutoFactory`` support implemented for the ``index`` and ``columns`` argument in ``Frame.from_concat`` and ``Frame.reindex``.
+
+Added new ``DisplyaConfig`` parameters to format floating-point values: ``value_format_float_positional``, ``value_format_float_scientific``,  ``value_format_complex_positional``, ``value_format_complex_scientific``,
+
+Set default ``value_format_float_scientific`` and ``value_format_complex_scientific`` to avoid truncation of scientific notation in output displays.
 
 
 0.3.8
