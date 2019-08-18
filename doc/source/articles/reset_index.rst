@@ -2,15 +2,14 @@
 Boring Indices and Where to Find Them: The Auto-Incremented Integer Index in StaticFrame
 ==========================================================================================
 
-This article is part of a series exploring the features and design of StaticFrame, a Python package that offers data structures similar to the Pandas DataFrame and Series, but with immutable data and consistent interfaces.
+This article is part of a series exploring the features and design of StaticFrame, a Python package that offers data structures similar to the Pandas DataFrame and Series, but with an immutable data model.
 
-In this article, I will demonstrate how StaticFrame exposes functionality for creating the most boring index object: the auto-incremented integer index (AIII). While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
+This article demonstrates how StaticFrame exposes functionality for creating the most boring index object: the auto-incremented integer index (AIII). While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple, inscrutable AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
 
 All examples use StaticFrame 0.3.9 or later (https://pypi.org/project/static-frame) and import with the following convention:
 
-.. code-block:: python
 
-    >>> import static_frame as sf
+>>> import static_frame as sf
 
 
 Reindexing
@@ -22,41 +21,39 @@ The idea of reindexing a ``Series`` or ``Frame`` could be interpreted in at leas
 
 Following the precedent of Pandas, StaticFrame implements ``Series.reindex()`` and ``Frame.reindex()`` with the former interpretation: alignment based on index labels. For example:
 
-.. code-block:: python
 
-    >>> s1 = sf.Series((x * 100 for x in range(1, 5)), index=tuple('wxyz'))
-    >>> s1
-    <Series>
-    <Index>
-    w        100
-    x        200
-    y        300
-    z        400
-    <<U1>    <int64>
+>>> s1 = sf.Series((x * 100 for x in range(1, 5)), index=tuple('wxyz'))
+>>> s1
+<Series>
+<Index>
+w        100
+x        200
+y        300
+z        400
+<<U1>    <int64>
 
-    >>> s1.reindex(tuple('stwx'), fill_value=0)
-    <Series>
-    <Index>
-    s        0
-    t        0
-    w        100
-    x        200
-    <<U1>    <int64>
+>>> s1.reindex(tuple('stwx'), fill_value=0)
+<Series>
+<Index>
+s        0
+t        0
+w        100
+x        200
+<<U1>    <int64>
 
 To handle the latter interpretation, alignment based on position, Pandas offers at least two approaches: the mutable ``index`` attribute can be directly assigned, or the ``set_axis()`` function can be used.
 
 One way to achieve setting a new index by position in StaticFrame is to create a new ``Series``, reusing the old ``values``. As NumPy arrays in StaticFrame are immutable, reusing ``values`` is practical and efficient: it is a no-copy operation.
 
-.. code-block:: python
 
-    >>> sf.Series(s1.values, index=tuple('abcd'))
-    <Series>
-    <Index>
-    a        100
-    b        200
-    c        300
-    d        400
-    <<U1>    <int64>
+>>> sf.Series(s1.values, index=tuple('abcd'))
+<Series>
+<Index>
+a        100
+b        200
+c        300
+d        400
+<<U1>    <int64>
 
 
 Setting an Auto-Incremented Integer Index
@@ -88,21 +85,19 @@ By accepting an ``IndexAutoFactory`` argument, a ``reindex()`` method can be use
 
 For example, the ``IndexAutoFactory`` class can be given as the ``index`` argument to ``Series.reindex()`` to produce a new ``Series`` with an AIII. As underlying NumPy arrays are immutable in StaticFrame, this is a no-copy operation.
 
-.. code-block:: python
 
-    >>> s1.reindex(sf.IndexAutoFactory)
-    <Series>
-    <Index>
-    0        100
-    1        200
-    2        300
-    3        400
-    <int64>  <int64>
+>>> s1.reindex(sf.IndexAutoFactory)
+<Series>
+<Index>
+0        100
+1        200
+2        300
+3        400
+<int64>  <int64>
 
 
 The benefit of having a specific type, rather than using ``None``, to signify application of an AIII is made more clear in the context of ``Frame.reindex()``, where both a ``columns`` and ``index`` argument can be set independently. The example bellow demonstrates creating a ``Frame``, setting an AIII on both axis, and setting an AIII on ``columns`` while doing conventional reindexing on the ``index``.
 
-.. code-block:: python
 
 >>> f1 = sf.Frame.from_dict(dict(a=(1,2), b=(True, False)), index=tuple('xy'))
 >>> f1
@@ -138,73 +133,69 @@ Concatinating ``Series`` and ``Frame`` is a context where supplying a new index 
 
 For example, when concatenating (vertically stacking) with ``Series.from_concat()``, we must supply a new index if the resulting index is not unique. Unlike Pandas, StaticFrame requires all indices to have unique values.
 
-.. code-block:: python
 
-    >>> s1
-    <Series>
-    <Index>
-    w        100
-    x        200
-    y        300
-    z        400
-    <<U1>    <int64>
-    >>> sf.Series.from_concat((s1, s1), index=tuple('abcdefgh'))
-    <Series>
-    <Index>
-    a        100
-    b        200
-    c        300
-    d        400
-    e        100
-    f        200
-    g        300
-    h        400
-    <<U1>    <int64>
+>>> s1
+<Series>
+<Index>
+w        100
+x        200
+y        300
+z        400
+<<U1>    <int64>
+
+>>> sf.Series.from_concat((s1, s1), index=tuple('abcdefgh'))
+<Series>
+<Index>
+a        100
+b        200
+c        300
+d        400
+e        100
+f        200
+g        300
+h        400
+<<U1>    <int64>
 
 However, if an AIII is needed, the ``IndexAutoFactory`` type can be used with the same interface:
 
-.. code-block:: python
-
-    >>> sf.Series.from_concat((s1, s1), index=sf.IndexAutoFactory)
-    <Series>
-    <Index>
-    0        100
-    1        200
-    2        300
-    3        400
-    4        100
-    5        200
-    6        300
-    7        400
-    <int64>  <int64>
+>>> sf.Series.from_concat((s1, s1), index=sf.IndexAutoFactory)
+<Series>
+<Index>
+0        100
+1        200
+2        300
+3        400
+4        100
+5        200
+6        300
+7        400
+<int64>  <int64>
 
 
 The same approach is used with ``Frame.from_concat()``, where both ``columns`` and ``index`` arguments are exposed. For example, two ``Series`` can be horizontally "stacked" along axis 1 to produce a new ``Frame``. If the ``Series.name`` attributes are unique, they can be used to create the columns; otherwise, new columns can be supplied or an ``IndexAutoFactory`` value can be provided.
 
-.. code-block:: python
 
-    >>> s2 = s1 * .5
-    >>> sf.Frame.from_concat((s1, s2), axis=1, columns=sf.IndexAutoFactory)
-    <Frame>
-    <Index> 0       1         <int64>
-    <Index>
-    w       100     50.0
-    x       200     100.0
-    y       300     150.0
-    z       400     200.0
-    <<U1>   <int64> <float64>
+>>> s2 = s1 * .5
+>>> sf.Frame.from_concat((s1, s2), axis=1, columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1         <int64>
+<Index>
+w       100     50.0
+x       200     100.0
+y       300     150.0
+z       400     200.0
+<<U1>   <int64> <float64>
 
 Similarly, concatenating along axis 1 (horizontally stacking) the same ``Frame`` multiple times results in non-unique columns, which raises an ``Exception`` in StaticFrame. To avoid this, the ``IndexAutoFactory`` can be supplied.
 
-.. code-block:: python
 
-    >>> sf.Frame.from_concat((f1, f1), axis=1, columns=sf.IndexAutoFactory)
-    <Frame>
-    <Index> 0       1      2       3      <int64>
-    <Index>
-    x       1       True   1       True
-    y       2       False  2       False
-    <<U1>   <int64> <bool> <int64> <bool>
+>>> sf.Frame.from_concat((f1, f1), axis=1, columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1      2       3      <int64>
+<Index>
+x       1       True   1       True
+y       2       False  2       False
+<<U1>   <int64> <bool> <int64> <bool>
 
 
 
