@@ -31,6 +31,13 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    performance
    new
 
+.. toctree::
+   :maxdepth: 3
+   :numbered:
+   :caption: Articles
+
+   articles/reset_index
+
 
 .. toctree::
    :maxdepth: 3

@@ -616,14 +616,11 @@ class TestUnit(TestCase):
     @unittest.skip('too colorful')
     def test_display_type_color_a(self) -> None:
 
-        f = Frame(dict(a=(1, 2),
+        f = sf.Frame.from_dict(dict(a=(1, 2),
                 b=(1.2, 3.4),
                 c=(False, True),
-                d=(object(), []),
                 e=(1j, 3j),
                 f=(np.datetime64('2014'), np.datetime64('2015')),
-                g=(np.datetime64('2014')-np.datetime64('2015'),
-                np.datetime64('2014')-np.datetime64('2015'))
                 ),
                 index=tuple('xy'))
         print(f)
@@ -649,7 +646,7 @@ class TestUnit(TestCase):
         from itertools import product
         index: tp.Iterable[tp.Hashable] = (0x2210, 0x2330)
         columns: tp.Iterable[tp.Hashable] = (0x1, 0xe)
-        f = Frame.from_element_loc_items(
+        f = sf.Frame.from_element_loc_items(
                 ((x, chr(sum(x))) for x in product(index, columns)),  # type: ignore  # Should probably open a typeshed issue for this.
                 index=index,
                 columns=columns,
@@ -669,7 +666,7 @@ class TestUnit(TestCase):
         columns = tuple('efgh')
         index = range(3, 0, -1)
 
-        f = Frame.from_element_loc_items(
+        f = sf.Frame.from_element_loc_items(
                 (
                 ((2, 'f'), chr(0x265F)), # pawn
                 ((2, 'g'), chr(0x265F)),
@@ -703,8 +700,9 @@ class TestUnit(TestCase):
         # s = Series(('', chr(0x265C), '', chr(0x265A)), index=tuple('efgh'))
 
         # s = Series.from_items((('f', chr(0x265C)), ('h', chr(0x265A)))).reindex(tuple('efgh'), fill_value='')
+        import ipdb; ipdb.set_trace()
 
-        s = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
+        s1 = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
 
         f.assign.loc[8, :](s, fill_value='')
 
