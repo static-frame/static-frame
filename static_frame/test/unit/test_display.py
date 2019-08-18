@@ -626,8 +626,10 @@ class TestUnit(TestCase):
         print(f)
         print(f.loc['x'])
 
-        print(f.display(DisplayConfigs.COLOR))
-        print(f.loc['x'].display(DisplayConfigs.COLOR))
+        sf.DisplayActive.set(sf.DisplayConfigs.COLOR)
+
+        print(f.display(sf.DisplayConfigs.COLOR))
+        print(f.loc['x'].display(sf.DisplayConfigs.COLOR))
 
         f = sf.Frame.from_dict(dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
