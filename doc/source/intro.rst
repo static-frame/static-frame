@@ -84,7 +84,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - Yu Tomita
 - Quang Vu
 
-Thanks also for additional contributions from GitHub pull requests.
+Thanks also for additional contributions from GitHub users.
 
 https://github.com/InvestmentSystems/static-frame/graphs/contributors
 

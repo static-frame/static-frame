@@ -4,7 +4,9 @@ Boring Indices and Where to Find Them: The Auto-Incremented Integer Index in Sta
 
 This article is part of a series exploring the features and design of StaticFrame, a Python package that offers data structures similar to the Pandas DataFrame and Series, but with an immutable data model.
 
-This article demonstrates how StaticFrame exposes functionality for creating the most boring index object: the auto-incremented integer index (AIII). While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple, inscrutable AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
+This article demonstrates how StaticFrame exposes functionality for creating the most boring index object: the auto-incremented integer index (AIII). An AIII makes an axis selectable with integers, just as a NumPy array; it makes ``loc`` selection equivalent to ``iloc`` selection; and it is closely related to "auto increment" integer columns found in databases, such as in MySQL (the ``AUTO_INCREMENT`` keyword), SQLite (the ``AUTOINCREMENT`` keyword), or PostgreSQL (the ``SERIAL`` pseudo-type).
+
+While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple, inscrutable AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
 
 All examples use StaticFrame 0.3.9 or later (https://pypi.org/project/static-frame) and import with the following convention:
 
@@ -59,13 +61,13 @@ d        400
 Setting an Auto-Incremented Integer Index
 ------------------------------------------------
 
-One of the more common uses of index assignment based on position is "resetting" the index: replacing an existing index with an auto-incremented integer index (AIII). AIIIs are given to ``Series`` and ``Frame`` created without explicit index arguments; they are also useful when combining data that does not have a "natural" index along an axis.
+A common use of index assignment based on position is "resetting" the index: replacing an existing index with an auto-incremented integer index (AIII). AIIIs are given to ``Series`` and ``Frame`` created without explicit index arguments; they are also useful when combining data that does not have a "natural" index along an axis.
 
-While Pandas offers a discrete method for this operation, ``reset_index()``, that function is made complex due to the ``drop`` and ``inplace`` parameters. For example, ``reset_index()`` will produce, from a ``pd.Series``, a new ``pd.Series`` or ``pd.Frame`` depending on if ``drop`` is ``True`` or ``False``, and exposes a conflicting parameter configuration if ``drop`` is ``False`` and ``inplace`` is ``True``, raising "TypeError: Cannot reset_index inplace on a Series to create a DataFrame."
+While Pandas offers a discrete method for this operation, ``reset_index()``, that function is made complex due to the ``drop`` and ``inplace`` parameters. For example, ``reset_index()`` will produce, from a ``pd.Series``, a new ``pd.Series`` or a ``pd.Frame`` depending on if ``drop`` is ``True`` or ``False``, and exposes a conflicting parameter configuration if ``drop`` is ``False`` and ``inplace`` is ``True``, raising "TypeError: Cannot reset_index inplace on a Series to create a DataFrame."
 
-A key goal in StaticFrame's API design is to avoid, as much as possible, interfaces that permit conflicting, non-orthogonal arguments.
+A goal in StaticFrame's API design is to avoid, as much as possible, interfaces that permit conflicting, non-orthogonal arguments.
 
-In addition to reindexing, there are other cases where an AIII might be desired. A common case is in concatenating numerous ``Series`` or ``Frame``. While one axis is aligned, it is common for the new, extended axis to need an AIII. Pandas supports this with a Boolean ``ignore_index`` parameter provided to the ``pd.concat()`` function.
+In addition to reindexing, another case where an AIII is frequently needed is in concatenating numerous ``Series`` or ``Frame``. For example, when concatenating a ``Frame``, one axis might be aligned while the other, extended axis requires an AIII. Deviating in naming from of the ``reset_index()`` method, Pandas supports this with a Boolean ``ignore_index`` parameter provided to the ``pd.concat()`` function.
 
 Another goal of StaticFrame's API design is to support common interfaces wherever possible. Reusing, across diverse interfaces, the same mechanism for creating AIIIs is thus desirable.
 
