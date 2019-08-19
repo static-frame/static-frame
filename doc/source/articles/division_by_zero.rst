@@ -1,20 +1,21 @@
 
 
-Division-by-zero in NumPy, Pandas, and StaticFrame
-******************************************************
+Zero Division is Exceptional: Division-by-zero in NumPy, Pandas, and StaticFrame
+================================================================================
 
-Division by zero of integers and floats in Python raises a ZeroDisionError. This leads programmers to explicitly handle zeros in advance of division, or expect the program to halt via an Exception on zero division. In some contexts, these two consequences are both desirable: the zero handling is made explicit in the code, and any unhandled cases are not handled silently.
-
-
-https://stackoverflow.com/questions/3004095/division-by-zero-undefined-behavior-or-implementation-defined-in-c-and-or-c
+This article is part of a series exploring the features and design of StaticFrame, a Python package that offers data structures similar to the Pandas DataFrame and Series, but with an immutable data model.
 
 
-However, for those coming from mathematics and numerical computing, the default assumption, as set in the IEEE Standard for Floating-Point Arithmetic (IEEE 754), is that division by zero is infinity, and division of zero by itself is NaN. As NumPy implements this standard, this is NumPy's default behavior.
+Division by Zero in Python and IEEE 754
+-------------------------------------------------
 
-https://en.wikipedia.org/wiki/IEEE_754
+In Python, dividing an integer or floating-point number by zero raises a ``ZeroDisionError``. This leads programmers to explicitly handle zeros in advance of division, or expect the program to halt via a ``ZeroDisionError``. In many contexts, both of these consequences are desirable: the zero handling is made explicit in the code, and any unhandled cases do not pass silently.
+
+However, for many, particularly those coming from mathematics and numerical computing, the default assumption is that division by zero returns infinity, as defined in the IEEE Standard for Floating-Point Arithmetic (IEEE 754). (Division of zero by zero is also defined in IEEE 754 as NaN.) As NumPy implements this standard, this is NumPy's default behavior.
 
 
-The difference between the two approaches, for programmers, is that in applications involving massive amounts of messy data full of missing and surprising values, when zero-division raises we are forced to always explicitly handle it. When zero-division silently becomes infinity, we delight in the convenience of not having to handle it, but might later regret lacking the ability to either isolate, observe, or handle such unexpected cases.
+
+In applications involving massive amounts of messy data full of missing and surprising values,  the difference between the two approaches for programmers is whether zero-division should be explicitly handled. While we might delight in the convenience of zero-division silently becoming infinity, we might later regret lacking the code that explicitly isolates and handles such unexpected cases.
 
 The latter is my experience, which is why I favor always raising on zero division. In the context of my work, zero division is not like missing data: to be expected and handled automatically (as NaN propagation). Zero division can mean an assumption of the data model, not just the data, is invalid. In cases where zeros really are expected as divisors, I want to their handling to be explicit: they could be removed from subsequent processing, set to NaN, or something else entirely.
 
@@ -60,5 +61,9 @@ dtype: float64
 
 
 
+https://en.wikipedia.org/wiki/IEEE_754
 
 
+
+
+https://stackoverflow.com/questions/3004095/division-by-zero-undefined-behavior-or-implementation-defined-in-c-and-or-c

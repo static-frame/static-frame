@@ -1,5 +1,5 @@
 
-Boring Indices and Where to Find Them: The Auto-Incremented Integer Index in StaticFrame
+Boring Indices & Where to Find Them: The Auto-Incremented Integer Index in StaticFrame
 ==========================================================================================
 
 This article is part of a series exploring the features and design of StaticFrame, a Python package that offers data structures similar to the Pandas DataFrame and Series, but with an immutable data model.
