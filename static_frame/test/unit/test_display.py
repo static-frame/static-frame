@@ -702,11 +702,10 @@ class TestUnit(TestCase):
         # s = Series(('', chr(0x265C), '', chr(0x265A)), index=tuple('efgh'))
 
         # s = Series.from_items((('f', chr(0x265C)), ('h', chr(0x265A)))).reindex(tuple('efgh'), fill_value='')
-        import ipdb; ipdb.set_trace()
 
         s1 = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
 
-        f.assign.loc[8, :](s, fill_value='')
+        f.assign.loc[8, :](s1, fill_value='')
 
 
 

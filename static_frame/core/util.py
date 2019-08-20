@@ -671,16 +671,14 @@ def iterable_to_array(
         # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element
         dtype = None # let auto determine
         has_tuple = False
-        values_for_construct = (values,)
+        values_for_construct = (values,) # type: ignore
     elif dtype is None:
         # this gives as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = resolve_type_iter(values)
-
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
     else: # dtype given, do not do full iteration
         is_gen, copy_values = is_gen_copy_values(values)
-
         if copy_values:
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
