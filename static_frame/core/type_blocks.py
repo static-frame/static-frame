@@ -363,7 +363,6 @@ class TypeBlocks(ContainerBase):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
-        # NOTE: can add a reverse argument here and iterate in reverse; this could be useful if we need to pass rows/cols to lexsort, as in array_to_duplicated
         if axis == 1: # iterate over rows
             unified = self.unified
             # iterate over rows; might be faster to create entire values
@@ -374,7 +373,13 @@ class TypeBlocks(ContainerBase):
 
             for i in row_idx_iter:
                 if unified:
-                    yield self._blocks[0][i]
+                    b = self._blocks[0]
+                    if b.ndim == 1:
+                        # single element slice to force array creation (not an element)
+                        yield b[i:i+1]
+                    else:
+                        # if a 2d array, we can yield rows through simple indexing
+                        yield b[i]
                 else:
                     # cannot use a generator w/ np concat
                     # use == for type comparisons
@@ -449,38 +454,40 @@ class TypeBlocks(ContainerBase):
 
     def block_compatible(self,
             other: 'TypeBlocks',
-            by_shape: bool = True) -> bool:
+            axis: tp.Optional[int] = None) -> bool:
         '''Block compatible means that the blocks are the same shape. Have not yet added type to this evaluation.
 
         Args:
-            by_shape: If True, the full shape is compared; if False, only the columns width iis compared.
+            axis: If True, the full shape is compared; if False, only the columns width is compared.
         '''
+        # if shape characteristics do not match, blocks cannot be compatible
+        if axis is None and self.shape != other.shape:
+            return False
+        elif axis is not None and self.shape[axis] != other.shape[axis]:
+            return False
+
         for a, b in zip_longest(self._blocks, other._blocks, fillvalue=None):
             if a is None or b is None:
                 return False
-            if by_shape:
+            if axis is None:
                 if shape_filter(a) != shape_filter(b):
                     return False
             else:
-                if shape_filter(a)[1] != shape_filter(b)[1]:
+                if shape_filter(a)[axis] != shape_filter(b)[axis]:
                     return False
-            # this does not show us if the types can be operated on;
-            # similarly, np.can_cast, np.result_type do not tell us if an operation will succeede
-            # if not a.dtype is b.dtype:
-            #     return False
         return True
 
     def reblock_compatible(self, other: 'TypeBlocks') -> bool:
         '''
         Return True if post reblocking these TypeBlocks are compatible. This only compares columns in blocks, not the entire shape.
         '''
+        if self.shape[1] != other.shape[1]:
+            return False
         # we only compare size, not the type
-        if any(a is None or b is None or a[1] != b[1]
+        return not any(a is None or b is None or a[1] != b[1]
                 for a, b in zip_longest(
                 self._reblock_signature(),
-                other._reblock_signature())):
-            return False
-        return True
+                other._reblock_signature()))
 
     @classmethod
     def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]) -> np.array:
@@ -1512,10 +1519,14 @@ class TypeBlocks(ContainerBase):
             yield slice(start, end)
             start = end
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray], other: tp.Iterable[tp.Any]) -> 'TypeBlocks':
+    def _ufunc_binary_operator(self, *,
+            operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
+            other: tp.Iterable[tp.Any]
+            ) -> 'TypeBlocks':
+
         if isinstance(other, TypeBlocks):
-            if self.block_compatible(other):
-                # this means that the blocks are the same size; we do not check types
+            if self.block_compatible(other, axis=None):
+                # this means that the blocks are the same shape; we do not check types
                 self_operands = self._blocks
                 other_operands = other._blocks
             elif self._shape == other._shape:

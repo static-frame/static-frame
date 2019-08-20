@@ -234,7 +234,8 @@ class Frame(ContainerBase):
                     if previous_frame is not None:
                         if block_compatible:
                             block_compatible &= frame._blocks.block_compatible(
-                                    previous_frame._blocks)
+                                    previous_frame._blocks,
+                                    axis=1) # only compare columns
                         if reblock_compatible:
                             reblock_compatible &= frame._blocks.reblock_compatible(
                                     previous_frame._blocks)
@@ -242,8 +243,9 @@ class Frame(ContainerBase):
 
                 if block_compatible or reblock_compatible:
                     if not block_compatible and reblock_compatible:
+                        # after reblocking, will be compatible
                         type_blocks = [f._blocks.consolidate() for f in aligned_frames]
-                    else:
+                    else: # blocks by column are compatible
                         type_blocks = [f._blocks for f in aligned_frames]
 
                     # all TypeBlocks have the same number of blocks by here

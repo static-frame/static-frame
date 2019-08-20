@@ -266,8 +266,10 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
     '''
+    # NOTE: this is not taking into account endianness; it is not clear if this is important
     # NOTE: np.dtype(object) == np.object_, so we can return np.object_
-    # if the same, return that detype
+
+    # if the same, return that dtype
     if dt1 == dt2:
         return dt1
 

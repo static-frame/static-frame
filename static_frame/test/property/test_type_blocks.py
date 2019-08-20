@@ -83,22 +83,62 @@ class TestUnit(TestCase):
         self.assertEqual(values.dtype, tb._row_dtype)
 
 
-# TODO: axis_values
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_axis_values(self, tb: TypeBlocks) -> None:
+        # this test found a flaw in axis_values when dealing with axis 1 and unified,  1D type blocks
+        for axis in (0, 1):
+            for reverse in (True, False):
+                post = tuple(tb.axis_values(axis=axis, reverse=reverse))
+                for idx, array in enumerate(post):
+                    self.assertTrue(len(array) == tb.shape[axis])
+                    if axis == 0 and not reverse: # colums
+                        self.assertTrue(array.dtype == tb.dtypes[idx])
+                    elif axis == 0 and reverse: # colums
+                        self.assertTrue(array.dtype == tb.dtypes[tb.shape[1] - 1 - idx])
+                    else:
+                        # NOTE: only checking kinde because found cases where byte-order deviates
+                        self.assertTrue(array.dtype.kind == tb._row_dtype.kind)
 
 
     @given(sfst.get_type_blocks())  # type: ignore
     def test_element_items(self, tb: TypeBlocks) -> None:
-
         # NOTE: this found a flaw in _extract_iloc where we tried to optimize selection with a unified array
-
         count = 0
         for k, v in tb.element_items():
             count += 1
             v_extract = tb.iloc[k]
             self.assertEqualWithNaN(v, v_extract)
-
         self.assertEqual(count, tb.size)
 
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_reblock_signature(self, tb: TypeBlocks) -> None:
+        post = tuple(tb._reblock_signature())
+        unique_dtypes = np.unique(tb.dtypes)
+        # the reblock signature must be have at least as many entries as types
+        self.assertTrue(len(post) >= len(unique_dtypes))
+        # sum of column widths is qual to columns in shape
+        self.assertTrue(sum(p[1] for p in post), tb.shape[1])
+
+
+    @given(sfst.get_type_blocks(), sfst.get_type_blocks())  # type: ignore
+    def test_block_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
+
+        for axis in (None, 0, 1):
+            post1 = tb1.block_compatible(tb2, axis)
+            post2 = tb2.block_compatible(tb1, axis)
+            # either direction gets the same result
+            self.assertTrue(post1 == post2)
+            # if the shapes are different, they cannot be block compatible
+            if axis is None and tb1.shape != tb2.shape:
+                self.assertFalse(post1)
+
+
+    # TODO: reblock_compatible
+
+
+
+    #---------------------------------------------------------------------------
+    # last two methods
 
     @given(sfst.get_type_blocks_aligned_array())  # type: ignore
     def test_append(self, tb_aligned_array: tp.Tuple[TypeBlocks, np.ndarray]) -> None:
