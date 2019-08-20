@@ -666,6 +666,8 @@ def iterable_to_array(
             raise RuntimeError('supplied dtype not set on supplied array')
         return values, len(values) <= 1
 
+    values_for_construct: tp.Sequence[tp.Any]
+
     # values for construct will only be a copy when necessary in iteration to find type
     if isinstance(values, str):
         # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element
