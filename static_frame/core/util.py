@@ -667,15 +667,17 @@ def iterable_to_array(
         return values, len(values) <= 1
 
     # values for construct will only be a copy when necessary in iteration to find type
-    if dtype is None:
+    if isinstance(values, str):
+        # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element
+        dtype = None # let auto determine
+        has_tuple = False
+        values_for_construct = (values,)
+    elif dtype is None:
         # this gives as dtype only None, or object, letting array constructor do the rest
         dtype, has_tuple, values_for_construct = resolve_type_iter(values)
 
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
-
-        # dtype_is_object = dtype in DTYPE_SPECIFIERS_OBJECT
-
     else: # dtype given, do not do full iteration
         is_gen, copy_values = is_gen_copy_values(values)
 
@@ -705,7 +707,6 @@ def iterable_to_array(
         # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=DTYPE_OBJECT)
         v[NULL_SLICE] = values_for_construct
-
     elif dtype == int:
         # large python ints can overflow default NumPy int type
         try:
@@ -713,7 +714,7 @@ def iterable_to_array(
         except OverflowError:
             v = np.array(values_for_construct, dtype=DTYPE_OBJECT)
     else:
-        # if dtype was None, we might have discovered this was object and but no tuples; faster to do this constructor instead of null slice assignment
+        # if dtype was None, we might have discovered this was object but has no tuples; faster to do this constructor instead of null slice assignment
         v = np.array(values_for_construct, dtype=dtype)
 
     v.flags.writeable = False

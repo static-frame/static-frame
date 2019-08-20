@@ -1507,6 +1507,13 @@ class TestUnit(TestCase):
         )
 
 
+    def test_iterable_to_array_e(self) -> None:
+
+        # this result is surprising but is a result of NumPy's array constructor
+        post = iterable_to_array('cat')
+        self.assertEqual(post[0].tolist(), ['cat'])
+        self.assertEqual(post[1], True)
+
 
 if __name__ == '__main__':
     unittest.main()
