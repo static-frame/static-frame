@@ -54,6 +54,7 @@ from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import is_callable_or_mapping
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
@@ -71,6 +72,7 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.series import Series
+from static_frame.core.series import RelabelInput
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_base import index_from_optional_constructor
@@ -1347,14 +1349,35 @@ class Frame(ContainerBase):
 
 
     def relabel(self,
-            index: CallableOrMapping = None,
-            columns: CallableOrMapping = None) -> 'Frame':
+            index: tp.Optional[RelabelInput] = None,
+            columns: tp.Optional[RelabelInput] = None
+            ) -> 'Frame':
         '''
-        Return a new Frame based on a mapping (or callable) from old to new index values.
+        Return a new Frame with a new index, where the new index is either a transformation of the existing index, via a mapping or a callable from old to new index values,
         '''
         # create new index objects in both cases so as to call with own*
-        index = self._index.relabel(index) if index else self._index.copy()
-        columns = self._columns.relabel(columns) if columns else self._columns.copy()
+
+        own_index = False
+        if index is IndexAutoFactory:
+            index = None
+        elif is_callable_or_mapping(index):
+            index = self._index.relabel(index)
+            own_index = True
+        elif index is None:
+            index = self._index
+        else: # assume index IndexInitializer
+            index = index
+
+        own_columns = False
+        if columns is IndexAutoFactory:
+            columns = None
+        elif is_callable_or_mapping(columns):
+            columns = self._columns.relabel(columns)
+            own_columns = True
+        elif columns is None:
+            columns = self._columns
+        else: # assume IndexInitializer
+            columns = columns
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
@@ -1362,8 +1385,8 @@ class Frame(ContainerBase):
                 columns=columns,
                 name=self._name,
                 own_data=True,
-                own_index=True,
-                own_columns=True)
+                own_index=own_index,
+                own_columns=own_columns)
 
 
     def reindex_flat(self,

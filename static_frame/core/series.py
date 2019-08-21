@@ -68,9 +68,11 @@ from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-
     from static_frame import Frame
     from pandas import DataFrame
+
+
+RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
 
 
 #-------------------------------------------------------------------------------
@@ -449,6 +451,7 @@ class Series(ContainerBase):
         Return a new Series based on the passed index.
 
         Args:
+            index: an index initializer, or an IndexAutoFactory
             fill_value: attempted to be used, but may be coerced by the dtype of this Series. `
         '''
         if isinstance(index, IndexBase):

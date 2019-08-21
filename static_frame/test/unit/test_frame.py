@@ -2426,6 +2426,23 @@ class TestUnit(TestCase):
         self.assertTrue((f2.mloc == f3.mloc).all())
 
 
+    def test_frame_relabel_b(self) -> None:
+        # reindex both axis
+        records = (
+                (2, 2, 'c', False),
+                (30, 34, 'd', True),
+                )
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'r', 'q', 't'),
+                index=('x', 'y')
+                )
+
+        f2 = f1.relabel(columns=IndexAutoFactory)
+        self.assertEqual(f2.columns.values.tolist(), [0, 1, 2, 3])
+
+
+
     def test_frame_get_a(self) -> None:
         # reindex both axis
         records = (

@@ -137,6 +137,12 @@ UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
+
+def is_callable_or_mapping(value: CallableOrMapping):
+    from static_frame import Series
+    return callable(value) or isinstance(value, dict) or isinstance(value, Series)
+
+
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 FilePathOrFileLike = tp.Union[str, tp.TextIO]
 
@@ -157,7 +163,7 @@ IndexSpecifier = tp.Union[int, str]
 IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
-        tp.Iterable[tp.Sequence[tp.Hashable]],
+        tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
         tp.Generator[tp.Hashable, None, None]]
 IndexConstructor = tp.Callable[..., 'IndexBase']
 
@@ -1019,7 +1025,6 @@ def _array_to_duplicated_hashable(
 
     for idx, v in enumerate(value_source):
 
-        # import ipdb; ipdb.set_trace()
         if to_hashable:
             v = to_hashable(v)
 
