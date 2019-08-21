@@ -138,7 +138,7 @@ AnyCallable = tp.Callable[..., tp.Any]
 
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
-def is_callable_or_mapping(value: CallableOrMapping):
+def is_callable_or_mapping(value: CallableOrMapping) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
