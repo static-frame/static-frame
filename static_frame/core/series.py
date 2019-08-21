@@ -223,15 +223,17 @@ class Series(ContainerBase):
                 self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
 
             elif hasattr(values, '__iter__') and not isinstance(values, str):
+                # while iterable_to_array will correctly handle a string, we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
                 self.values, _ = iterable_to_array(values, dtype=dtype)
 
-            else: # it must be a single item
+            else: # it must be an element, or a string
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape):
                     self.values = np.full(shape, values, dtype=dtype)
                     self.values.flags.writeable = False
-        else: # is numpy
+
+        else: # is numpy array
             if dtype is not None and dtype != values.dtype:
                 raise Exception('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
             if values.shape == (): # handle special case of NP element
@@ -246,23 +248,30 @@ class Series(ContainerBase):
 
         if own_index:
             self._index = index
+
         elif (hasattr(index, STATIC_ATTR)
                 and index.STATIC
                 and not index_constructor
                 ):
             # if it is a static index, and we have no constructor, own it
             self._index = index
-        elif index is None or index is IndexAutoFactory or (
-                hasattr(index, '__len__')
-                and len(index) == 0):
+
+        elif index is None or index is IndexAutoFactory:
+
+            # if a values constructor is defined, self.values is not yete defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
+            if values_constructor:
+                shape = 1
+            else:
+                shape = len(self.values)
+
             if index_constructor:
                 # use index_constructor if povided
                 self._index = IndexAutoFactory.from_constructor(
-                        len(self.values),
+                        shape,
                         constructor=index_constructor)
             else:
                 self._index = IndexAutoFactory.from_is_static(
-                        len(self.values),
+                        shape,
                         is_static=True)
         else: # an iterable of labels, or an index subclass
             if index_constructor:

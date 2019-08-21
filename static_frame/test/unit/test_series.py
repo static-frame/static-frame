@@ -141,11 +141,36 @@ class TestUnit(TestCase):
                 ((0, 3), (1, 4), (2, 'a')))
 
     def test_series_init_k(self) -> None:
-
         s1 = Series('cat', index=(1, 2, 3))
         self.assertEqual(s1.to_pairs(),
                 ((1, 'cat'), (2, 'cat'), (3, 'cat'))
                 )
+
+    def test_series_init_l(self) -> None:
+        s1 = Series(([None], [1, 2], ['a', 'b']), index=(1, 2, 3))
+        self.assertEqual(s1[2:].to_pairs(),
+                ((2, [1, 2]), (3, ['a', 'b'])))
+        self.assertEqual((s1 * 2).to_pairs(),
+                ((1, [None, None]), (2, [1, 2, 1, 2]), (3, ['a', 'b', 'a', 'b']))
+                )
+
+
+
+    def test_series_init_m(self) -> None:
+
+        # if index is None or IndexAutoFactory, we supply an index of 0
+        s1 = sf.Series('a')
+        self.assertEqual(s1.to_pairs(),
+                ((0, 'a'),))
+
+        # an element with an explicitl empty index results in an empty series
+        s2 = sf.Series('a', index=())
+        self.assertEqual(s2.to_pairs(), ())
+
+    def test_series_init_n(self) -> None:
+        s1 = sf.Series([['a', 'b']])
+        # TODO: this returns a mangled series
+        # import ipdb; ipdb.set_trace()
 
 
     def test_series_slice_a(self) -> None:

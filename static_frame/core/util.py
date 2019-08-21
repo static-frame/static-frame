@@ -584,7 +584,6 @@ def resolve_type_iter(
     Returns:
         resolved, has_tuple, values
     '''
-
     is_gen, copy_values = is_gen_copy_values(values)
 
     if not is_gen:
@@ -672,8 +671,7 @@ def iterable_to_array(
 
     # values for construct will only be a copy when necessary in iteration to find type
     if isinstance(values, str):
-        # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element
-        dtype = None # let auto determine
+        # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element; let dtype argument be used in creation, below
         has_tuple = False
         values_for_construct = (values,)
     elif dtype is None:
