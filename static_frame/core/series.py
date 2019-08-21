@@ -223,7 +223,7 @@ class Series(ContainerBase):
                 self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
 
             elif hasattr(values, '__iter__') and not isinstance(values, str):
-                # while iterable_to_array will correctly handle a string, we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
+                # while iterable_to_array will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
                 self.values, _ = iterable_to_array(values, dtype=dtype)
 
@@ -255,9 +255,7 @@ class Series(ContainerBase):
                 ):
             # if it is a static index, and we have no constructor, own it
             self._index = index
-
         elif index is None or index is IndexAutoFactory:
-
             # if a values constructor is defined, self.values is not yete defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
             if values_constructor:
                 shape = 1

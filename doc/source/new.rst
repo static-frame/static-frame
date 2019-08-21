@@ -3,6 +3,12 @@
 What is New in Static Frame
 ===============================
 
+0.4.0
+-----------
+
+Improved handling for special cases ``Series`` initialization.
+
+
 0.3.9
 -----------
 
@@ -22,7 +28,7 @@ Set default ``value_format_float_scientific`` and ``value_format_complex_scienti
 
 All duplicate-handling functions now support heterogenously typed object arrays with unsortable (but hashable) types.
 
-Operations on all indicdes now preserve order when indices are equal.
+Operations on all indices now preserve order when indices are equal.
 
 Functions with the ``skipna`` argument now properly skip ``None`` in ``Frames`` with built with object arrays.
 

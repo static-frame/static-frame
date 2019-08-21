@@ -584,6 +584,7 @@ def resolve_type_iter(
     Returns:
         resolved, has_tuple, values
     '''
+
     is_gen, copy_values = is_gen_copy_values(values)
 
     if not is_gen:
@@ -1248,9 +1249,9 @@ def _ufunc_set_1d(
 
     if set_compare or dtype.kind == 'O':
         if is_union:
-            result = set(array) | set(other)
+            result = frozenset(array) | frozenset(other)
         else:
-            result = set(array) & set(other)
+            result = frozenset(array) & frozenset(other)
         v, _ = iterable_to_array(result, dtype)
         return v
 
@@ -1310,14 +1311,14 @@ def _ufunc_set_2d(
     if dtype.kind == 'O':
         # assume that 1D arrays arrays are arrays of tuples
         if array.ndim == 1:
-            array_set = set(array)
+            array_set = frozenset(array)
         else: # assume row-wise comparison
-            array_set = set(tuple(row) for row in array)
+            array_set = frozenset(tuple(row) for row in array)
 
         if other.ndim == 1:
-            other_set = set(other)
+            other_set = frozenset(other)
         else: # assume row-wise comparison
-            other_set = set(tuple(row) for row in other)
+            other_set = frozenset(tuple(row) for row in other)
 
         if is_union:
             result = array_set | other_set
