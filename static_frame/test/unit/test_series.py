@@ -1175,6 +1175,27 @@ class TestUnit(TestCase):
         self.assertEqual(list(s2.items()),
             [('x', 0), ('y', 1), ('z', 2), ('q', 3)])
 
+
+    def test_series_relabel_c(self) -> None:
+
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        s2 = s1.relabel(IndexAutoFactory)
+        self.assertEqual(
+                s2.to_pairs(),
+                ((0, 0), (1, 1), (2, 2), (3, 3))
+                )
+
+    def test_series_relabel_d(self) -> None:
+
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        idx = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        s2 = s1.relabel(idx)
+        self.assertEqual(s2.to_pairs(),
+            ((('a', 1), 0), (('a', 2), 1), (('b', 1), 2), (('b', 2), 3))
+            )
+
+
+
     def test_series_get_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         self.assertEqual(s1.get('q'), None)

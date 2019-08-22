@@ -29,6 +29,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import binary_transition
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import is_callable_or_mapping
 
 
 from static_frame.core.util import CallableOrMapping
@@ -488,13 +489,24 @@ class Series(ContainerBase):
                 own_index=True,
                 name=self._name)
 
-    def relabel(self, mapper: CallableOrMapping) -> 'Series':
+    def relabel(self, index: RelabelInput) -> 'Series':
         '''
         Return a new Series based on a mapping (or callable) from old to new index values.
         '''
+        own_index = False
+        if index is IndexAutoFactory:
+            index = None
+        elif is_callable_or_mapping(index):
+            index = self._index.relabel(index)
+            own_index = True
+        elif index is None:
+            index = self._index
+        else: # assume index IndexInitializer
+            index = index
+
         return self.__class__(self.values,
-                index=self._index.relabel(mapper),
-                own_index=True,
+                index=index,
+                own_index=own_index,
                 name=self._name)
 
     def reindex_flat(self):
