@@ -3,6 +3,7 @@
 
 from types import GeneratorType
 import typing as tp
+import sqlite3
 
 import csv
 import json
@@ -352,9 +353,6 @@ class Frame(ContainerBase):
                 rows_to_iter = True
                 row_reference = next(iter(rows))
 
-
-            # import ipdb; ipdb.set_trace()
-
             row_count = len(rows)
             col_count = len(row_reference)
 
@@ -422,6 +420,29 @@ class Frame(ContainerBase):
                 columns=columns,
                 name=name,
                 own_data=True)
+
+
+    @classmethod
+    def from_sql(cls,
+            query: str,
+            connection: sqlite3.Connection,
+            ) -> 'Frame':
+        '''
+        Frame constructor from an SQL query and a database connection object.
+
+        Args:
+            query: A query string.
+            connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
+        '''
+        row_gen = connection.execute(query)
+
+        columns = []
+        for bundle in row_gen.description:
+            columns.append(bundle[0])
+
+        # let default type induction do its work
+        return cls.from_records(row_gen, columns=columns)
+
 
     @classmethod
     @doc_inject(selector='constructor_frame')

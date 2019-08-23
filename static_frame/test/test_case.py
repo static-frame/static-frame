@@ -7,6 +7,7 @@ import typing as tp
 import itertools as it
 import string
 import cmath
+import sqlite3
 
 import numpy as np  # type: ignore
 import pytest  # type: ignore
@@ -87,6 +88,18 @@ class TestCase(unittest.TestCase):
             raise RuntimeError('file not found', fp)
         return fp
 
+
+    @staticmethod
+    def get_test_db_a() -> sqlite3.Connection:
+        conn = sqlite3.connect(':memory:')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE events
+             (date text, identifier text, value real, count int)''')
+        for identifier in ('a1', 'b2'):
+            for date in ('2006-01-01', '2006-01-02'):
+                c.execute(f"INSERT INTO events VALUES ('{date}','{identifier}',12.5,8)")
+        conn.commit()
+        return conn
 
     #---------------------------------------------------------------------------
 

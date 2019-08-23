@@ -9,6 +9,7 @@ import string
 import hashlib
 import pickle
 import sys
+import sqlite3
 
 import numpy as np  # type: ignore
 import pytest  # type: ignore
@@ -4308,8 +4309,19 @@ class TestUnit(TestCase):
             sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
 
 
+    def test_frame_from_sql_a(self) -> None:
 
+        conn: sqlite3.Connection = self.get_test_db_a()
 
+        f1 = sf.Frame.from_sql('select * from events', conn)
+
+        # this might be different on windows
+        self.assertEqual([str(x) for x in f1.dtypes.values],
+                ['<U10', '<U2', 'float64', 'int64'])
+
+        self.assertEqual(f1.to_pairs(0),
+                (('date', ((0, '2006-01-01'), (1, '2006-01-02'), (2, '2006-01-01'), (3, '2006-01-02'))), ('identifier', ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), ('value', ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), ('count', ((0, 8), (1, 8), (2, 8), (3, 8))))
+                )
 
 if __name__ == '__main__':
     unittest.main()
