@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Improved handling for special cases ``Series`` initialization.
 
+``IndexAutoFactory`` suport removed from ``Series.reindex`` and ``Frame.reindex`` and added to ``Series.relabel`` and ``Frame.relabel``.
+
 
 0.3.9
 -----------

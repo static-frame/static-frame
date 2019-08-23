@@ -1474,55 +1474,6 @@ class TestUnit(TestCase):
                 ((('a', 2), ((0, 2), (1, 34))), (('b', 1), ((0, 'a'), (1, 'b'))))
                 )
 
-    def test_frame_reindex_h(self) -> None:
-
-        records = (
-                (1, 2, 'a', False),
-                (30, 34, 'b', True),
-                )
-        f1 = Frame.from_records(records,
-                columns=tuple('pqrs'),
-                index=tuple('ab'),
-                name='foo')
-
-        f2 = f1.reindex(index=IndexAutoFactory)
-        self.assertEqual(f2.to_pairs(0),
-            (('p', ((0, 1), (1, 30))), ('q', ((0, 2), (1, 34))), ('r', ((0, 'a'), (1, 'b'))), ('s', ((0, False), (1, True))))
-            )
-
-        f3 = f1.reindex(columns=IndexAutoFactory)
-        self.assertEqual(
-            f3.reindex(columns=IndexAutoFactory).to_pairs(0),
-            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
-            )
-        self.assertTrue(f3.columns.STATIC)
-
-    def test_frame_reindex_i(self) -> None:
-
-        records = (
-                (1, 2, 'a', False),
-                (30, 34, 'b', True),
-                )
-        f1 = FrameGO.from_records(records,
-                columns=tuple('pqrs'),
-                index=tuple('ab'),
-                name='foo')
-
-        f2 = f1.reindex(columns=IndexAutoFactory)
-        self.assertEqual(
-            f2.reindex(columns=IndexAutoFactory).to_pairs(0),
-            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
-            )
-        self.assertFalse(f2.columns.STATIC)
-        f2[4] = None
-        self.assertTrue(f2.columns._loc_is_iloc)
-        f2[6] = None
-        self.assertFalse(f2.columns._loc_is_iloc)
-
-        self.assertEqual(f2.to_pairs(0),
-                ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))), (4, (('a', None), ('b', None))), (6, (('a', None), ('b', None))))
-                )
-
     def test_frame_axis_interface_a(self) -> None:
         # reindex both axis
         records = (
@@ -2441,6 +2392,56 @@ class TestUnit(TestCase):
         f2 = f1.relabel(columns=IndexAutoFactory)
         self.assertEqual(f2.columns.values.tolist(), [0, 1, 2, 3])
 
+
+    def test_frame_relabel_c(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=tuple('pqrs'),
+                index=tuple('ab'),
+                name='foo')
+
+        f2 = f1.relabel(index=IndexAutoFactory)
+        self.assertEqual(f2.to_pairs(0),
+            (('p', ((0, 1), (1, 30))), ('q', ((0, 2), (1, 34))), ('r', ((0, 'a'), (1, 'b'))), ('s', ((0, False), (1, True))))
+            )
+
+        f3 = f1.relabel(columns=IndexAutoFactory)
+        self.assertEqual(
+            f3.relabel(columns=IndexAutoFactory).to_pairs(0),
+            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
+            )
+        self.assertTrue(f3.columns.STATIC)
+
+
+    def test_frame_relabel_d(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=tuple('pqrs'),
+                index=tuple('ab'),
+                name='foo')
+
+        f2 = f1.relabel(columns=IndexAutoFactory)
+        self.assertEqual(
+            f2.relabel(columns=IndexAutoFactory).to_pairs(0),
+            ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))))
+            )
+        self.assertFalse(f2.columns.STATIC)
+        f2[4] = None
+        self.assertTrue(f2.columns._loc_is_iloc)
+        f2[6] = None
+        self.assertFalse(f2.columns._loc_is_iloc)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))), (4, (('a', None), ('b', None))), (6, (('a', None), ('b', None))))
+                )
 
 
     def test_frame_get_a(self) -> None:

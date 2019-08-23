@@ -403,14 +403,6 @@ class TestUnit(TestCase):
         # we owned the index, so have the same instance
         self.assertEqual(id(s2.index), id(idx))
 
-    def test_series_reindex_f(self) -> None:
-        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-
-        s2 = s1.reindex(IndexAutoFactory)
-        self.assertEqual(s2.to_pairs(),
-                ((0, 0), (1, 1), (2, 2), (3, 3))
-                )
-
 
     def test_series_isnull_a(self) -> None:
 
@@ -1193,6 +1185,14 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
             ((('a', 1), 0), (('a', 2), 1), (('b', 1), 2), (('b', 2), 3))
             )
+
+    def test_series_relabel_e(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        s2 = s1.relabel(IndexAutoFactory)
+        self.assertEqual(s2.to_pairs(),
+                ((0, 0), (1, 1), (2, 2), (3, 3))
+                )
 
 
 

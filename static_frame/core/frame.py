@@ -1274,8 +1274,8 @@ class Frame(ContainerBase):
 
 
     def reindex(self,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
             fill_value=np.nan,
             own_index: bool = False,
             own_columns: bool = False
@@ -1286,14 +1286,7 @@ class Frame(ContainerBase):
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')
 
-        if index is IndexAutoFactory:
-            # create index so can provide shape_reference below
-            index = IndexAutoFactory.from_is_static(
-                    len(self._index),
-                    is_static=True)
-            index_ic = None
-            own_index_frame = True
-        elif index is not None:
+        if index is not None:
             if isinstance(index, IndexBase):
                 # always use the Index constructor for safe reuse when poss[ible
                 if not own_index:
@@ -1308,13 +1301,7 @@ class Frame(ContainerBase):
             # cannot own self._index, need a new index on Frame construction
             own_index_frame = False
 
-        if columns is IndexAutoFactory:
-            columns = IndexAutoFactory.from_is_static(
-                    len(self._columns),
-                    is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
-            columns_ic = None
-            own_columns_frame = True
-        elif columns is not None:
+        if columns is not None:
             if isinstance(columns, IndexBase):
                 # always use the Index constructor for safe reuse when possible
                 if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
