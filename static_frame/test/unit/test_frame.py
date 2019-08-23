@@ -3207,8 +3207,8 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_i(self) -> None:
 
-        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='A')
-        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(columns='B')
+        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).relabel_add_level(columns='A')
+        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).relabel_add_level(columns='B')
 
         f = sf.Frame.from_concat((sf1, sf2), axis=1)
         self.assertEqual(f.to_pairs(0),
@@ -3217,8 +3217,8 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_j(self) -> None:
 
-        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='A')
-        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).reindex_add_level(index='B')
+        sf1 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).relabel_add_level(index='A')
+        sf2 = sf.Frame.from_dict(dict(a=[1,2,3],b=[1,2,3]),index=[100,200,300]).relabel_add_level(index='B')
 
         f = sf.Frame.from_concat((sf1, sf2), axis=0)
 
@@ -3349,8 +3349,8 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_q(self) -> None:
-        s1 = Series((2, 3, 0,), index=list('abc'), name='x').reindex_add_level('i')
-        s2 = Series(('10', '20', '100'), index=list('abc'), name='y').reindex_add_level('i')
+        s1 = Series((2, 3, 0,), index=list('abc'), name='x').relabel_add_level('i')
+        s2 = Series(('10', '20', '100'), index=list('abc'), name='y').relabel_add_level('i')
 
         # stack horizontally
         f = Frame.from_concat((s1, s2), axis=1)
@@ -3724,7 +3724,7 @@ class TestUnit(TestCase):
                 columns=columns,
                 index=('x', 'y', 'z'))
 
-        f2 = f1.reindex_flat(columns=True)
+        f2 = f1.relabel_flat(columns=True)
 
         self.assertEqual(f2.to_pairs(0),
                 ((('a', 1), (('x', 1), ('y', 30), ('z', 54))), (('a', 2), (('x', 2), ('y', 34), ('z', 95))), (('b', 1), (('x', 'a'), ('y', 'b'), ('z', 'c'))), (('b', 2), (('x', False), ('y', True), ('z', False))), (('b', 3), (('x', True), ('y', False), ('z', False)))))
@@ -3741,7 +3741,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b', 'c', 'd', 'e'),
                 index=('x', 'y', 'z'))
 
-        f2 = f1.reindex_add_level(index='I', columns='II')
+        f2 = f1.relabel_add_level(index='I', columns='II')
 
         self.assertEqual(f2.to_pairs(0),
                 ((('II', 'a'), ((('I', 'x'), 1), (('I', 'y'), 30), (('I', 'z'), 54))), (('II', 'b'), ((('I', 'x'), 2), (('I', 'y'), 34), (('I', 'z'), 95))), (('II', 'c'), ((('I', 'x'), 'a'), (('I', 'y'), 'b'), (('I', 'z'), 'c'))), (('II', 'd'), ((('I', 'x'), False), (('I', 'y'), True), (('I', 'z'), False))), (('II', 'e'), ((('I', 'x'), True), (('I', 'y'), False), (('I', 'z'), False))))
@@ -3994,7 +3994,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records, columns=list('abc'))
 
         f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
-        f1 = f1.reindex_add_level(columns='i')
+        f1 = f1.relabel_add_level(columns='i')
 
         groups = list(f1.iter_group_items(('i', 'a'), axis=0))
         self.assertEqual(groups[0][0], 'a')
@@ -4173,7 +4173,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(Exception):
             # this results in an index of size 2 being created, as we dro the leves with a postive depth; next support negative depth?
-            f2 = f1.reindex_drop_level(index=-1)
+            f2 = f1.relabel_drop_level(index=-1)
 
 
 

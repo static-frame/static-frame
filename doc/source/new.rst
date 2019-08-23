@@ -10,6 +10,8 @@ Improved handling for special cases ``Series`` initialization.
 
 ``IndexAutoFactory`` suport removed from ``Series.reindex`` and ``Frame.reindex`` and added to ``Series.relabel`` and ``Frame.relabel``.
 
+The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_drop_level``.
+
 
 0.3.9
 -----------

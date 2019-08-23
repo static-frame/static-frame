@@ -503,7 +503,7 @@ class Series(ContainerBase):
                 own_index=own_index,
                 name=self._name)
 
-    def reindex_flat(self):
+    def relabel_flat(self):
         '''
         Return a new Series, where a ``IndexHierarchy`` (if deifined) is replaced with a flat, one-dimension index of tuples.
         '''
@@ -511,7 +511,7 @@ class Series(ContainerBase):
                 index=self._index.flat(),
                 name=self._name)
 
-    def reindex_add_level(self, level: tp.Hashable):
+    def relabel_add_level(self, level: tp.Hashable):
         '''
         Return a new Series, adding a new root level to an ``IndexHierarchy``.
         '''
@@ -520,7 +520,7 @@ class Series(ContainerBase):
                 name=self._name)
 
     @doc_inject(selector='reindex')
-    def reindex_drop_level(self, count: int = 1):
+    def relabel_drop_level(self, count: int = 1):
         '''
         Return a new Series, dropping one or more levels from an ``IndexHierarchy``. {count}
         '''

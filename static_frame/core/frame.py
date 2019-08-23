@@ -1376,7 +1376,7 @@ class Frame(ContainerBase):
                 own_columns=own_columns)
 
 
-    def reindex_flat(self,
+    def relabel_flat(self,
             index: bool = False,
             columns: bool = False) -> 'Frame':
         '''
@@ -1395,7 +1395,7 @@ class Frame(ContainerBase):
                 own_index=True,
                 own_columns=True)
 
-    def reindex_add_level(self,
+    def relabel_add_level(self,
             index: tp.Hashable = None,
             columns: tp.Hashable = None) -> 'Frame':
         '''
@@ -1415,7 +1415,7 @@ class Frame(ContainerBase):
                 own_columns=True)
 
     @doc_inject(selector='reindex')
-    def reindex_drop_level(self,
+    def relabel_drop_level(self,
             index: int = 0,
             columns: int = 0
             ) -> 'Frame':

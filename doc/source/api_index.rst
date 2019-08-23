@@ -33,13 +33,13 @@ Series
    :end-before: end_series_reindex_a
 
 
-.. automethod:: static_frame.Series.reindex_flat
+.. automethod:: static_frame.Series.relabel_flat
 
 
-.. automethod:: static_frame.Series.reindex_add_level
+.. automethod:: static_frame.Series.relabel_add_level
 
 
-.. automethod:: static_frame.Series.reindex_drop_level
+.. automethod:: static_frame.Series.relabel_drop_level
 
 
 
@@ -68,13 +68,13 @@ Frame
     The functionality of the Pandas ``pd.DataFrame.rename()`` and ``pd.Series.rename()`` is available with :py:meth:`Frame.relabel` and :py:meth:`Series.relabel`, respectively.
 
 
-.. automethod:: static_frame.Frame.reindex_flat
+.. automethod:: static_frame.Frame.relabel_flat
 
 
-.. automethod:: static_frame.Frame.reindex_add_level
+.. automethod:: static_frame.Frame.relabel_add_level
 
 
-.. automethod:: static_frame.Frame.reindex_drop_level
+.. automethod:: static_frame.Frame.relabel_drop_level
 
 
 .. automethod:: static_frame.Frame.set_index
