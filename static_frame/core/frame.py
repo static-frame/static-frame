@@ -1355,13 +1355,17 @@ class Frame(ContainerBase):
                 own_columns=own_columns_frame
                 )
 
-
+    @doc_inject(selector='relabel', class_name='Frame')
     def relabel(self,
             index: tp.Optional[RelabelInput] = None,
             columns: tp.Optional[RelabelInput] = None
             ) -> 'Frame':
         '''
-        Return a new Frame with a new index, where the new index is either a transformation of the existing index, via a mapping or a callable from old to new index values,
+        {doc}
+
+        Args:
+            index: {relabel_input}
+            columns: {relabel_input}
         '''
         # create new index objects in both cases so as to call with own*
 
@@ -1396,12 +1400,16 @@ class Frame(ContainerBase):
                 own_index=own_index,
                 own_columns=own_columns)
 
-
+    @doc_inject(selector='relabel_flat', class_name='Frame')
     def relabel_flat(self,
             index: bool = False,
             columns: bool = False) -> 'Frame':
         '''
-        Return a new Frame, where an ``IndexHierarchy`` defined on the index or columns is replaced with a flat, one-dimension index of tuples.
+        {doc}
+
+        Args:
+            index: Boolean to flag flatening on the index.
+            columns: Boolean to flag flatening on the columns.
         '''
 
         index = self._index.flat() if index else self._index.copy()
@@ -1416,11 +1424,17 @@ class Frame(ContainerBase):
                 own_index=True,
                 own_columns=True)
 
+    @doc_inject(selector='relabel_add_level', class_name='Frame')
     def relabel_add_level(self,
             index: tp.Hashable = None,
-            columns: tp.Hashable = None) -> 'Frame':
+            columns: tp.Hashable = None
+            ) -> 'Frame':
         '''
-        Return a new Frame, adding a new root level to the ``IndexHierarchy`` defined on the index or columns.
+        {doc}
+
+        Args:
+            index: {level}
+            columns: {level}
         '''
 
         index = self._index.add_level(index) if index else self._index.copy()
@@ -1435,13 +1449,17 @@ class Frame(ContainerBase):
                 own_index=True,
                 own_columns=True)
 
-    @doc_inject(selector='reindex')
+    @doc_inject(selector='relabel_drop_level', class_name='Frame')
     def relabel_drop_level(self,
             index: int = 0,
             columns: int = 0
             ) -> 'Frame':
         '''
-        Return a new Frame, dropping one or more levels from the ``IndexHierarchy`` defined on the index or columns. {count}
+        {doc}
+
+        Args:
+            index: {count} Default is zero.
+            columns: {count} Default is zero.
         '''
 
         index = self._index.drop_level(index) if index else self._index.copy()

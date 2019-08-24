@@ -8,20 +8,26 @@ import typing as tp
 from static_frame.core.util import AnyCallable
 
 
+OWN_INDEX = '''own_index: Flag the passed index as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+
+OWN_DATA = '''own_data: Flag the data values as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+
+OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
     # functions
 
     to_html = '''
-    Return an HTML table representation of this {class_name} using standard TABLE, TR, and TD tags. This is not a complete HTML page.
+    Return an HTML table representation of this ``{class_name}`` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
 
     Args:
         config: Optional :py:class:`static_frame.DisplayConfig` instance.
     '''
 
     to_html_datatables = '''
-    Return a complete HTML representation of this {class_name} using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
+    Return a complete HTML representation of this ``{class_name}`` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
 
     Args:
         fp: optional file path to write; if not provided, a temporary file will be created. Note: the caller is responsible for deleting this file.
@@ -32,7 +38,7 @@ class DOC_TEMPLATE:
         Absolute file path to the file written.
     '''
 
-    clip = '''Apply a clip opertion to this {class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    clip = '''Apply a clip opertion to this ``{class_name}``. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
     ufunc_skipna = '''{header}
 
@@ -45,8 +51,36 @@ class DOC_TEMPLATE:
     # dict entries
 
     reindex = dict(
-            count='''Positive integer values drop that many outer-most levels; negative integer values drop that many inner-most levels.'''
+            fill_value='''A value to be used to fill space created by a new index that has values not found in the previous index.''',
+            own_index=OWN_INDEX,
+            own_columns=OWN_COLUMNS
             )
+
+    relabel = dict(
+            doc ='''Return a new ``{class_name}`` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            ''',
+            count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
+            level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
+            relabel_input='''One of the following types, used to create a new ``Index`` with same size as the previous index. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous index. Previous labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous index. (c) The ``IndexAutoFactory`` type, to apply an auto-incremented integer index. (d) An index initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
+            )
+
+    relabel_flat = dict(
+            doc='''Return a new ``{class_name}``, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
+            ''',
+            )
+
+    relabel_add_level = dict(
+            doc='''Return a new ``{class_name}``, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
+            ''',
+            level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
+            )
+
+    relabel_drop_level = dict(
+            doc='''Return a new ``{class_name}``, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
+            ''',
+            count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
+            )
+
 
     index_init = dict(
             args = '''
@@ -75,10 +109,10 @@ class DOC_TEMPLATE:
             index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
             columns='''columns: Optional column initializer. If provided in addition to data values, lengths must be compatible.
             ''',
-            own_index='''own_index: Flag passed index as ownable by this {class_name}. Primarily used by internal clients.''',
-            own_data='''own_data: Flag the data values as ownable by this {class_name}. Primarily used by internal clients.''',
-            own_columns='''own_columns: Flag passed columns as ownable by this {class_name}. Primarily used by internal clients.'''
-    )
+            own_index=OWN_INDEX,
+            own_data=OWN_DATA,
+            own_columns=OWN_COLUMNS
+            )
 
     constructor_frame = dict(
             dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.

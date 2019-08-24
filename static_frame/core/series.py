@@ -19,7 +19,6 @@ from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import ufunc_axis_skipna
-# from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import write_optional_file
@@ -452,7 +451,7 @@ class Series(ContainerBase):
         Return a new Series based on the passed index.
 
         Args:
-            index: an index initializer, or an IndexAutoFactory
+            index: an index initializer
             fill_value: attempted to be used, but may be coerced by the dtype of this Series. `
         '''
         if isinstance(index, IndexBase):
@@ -483,9 +482,15 @@ class Series(ContainerBase):
                 own_index=True,
                 name=self._name)
 
-    def relabel(self, index: RelabelInput) -> 'Series':
+    @doc_inject(selector='relabel', class_name='Series')
+    def relabel(self,
+            index: RelabelInput
+            ) -> 'Series':
         '''
-        Return a new Series based on a mapping (or callable) from old to new index values.
+        {doc}
+
+        Args:
+            index: {relabel_input}
         '''
         own_index = False
         if index is IndexAutoFactory:
@@ -503,26 +508,38 @@ class Series(ContainerBase):
                 own_index=own_index,
                 name=self._name)
 
-    def relabel_flat(self):
+    @doc_inject(selector='relabel_flat', class_name='Series')
+    def relabel_flat(self) -> 'Series':
         '''
-        Return a new Series, where a ``IndexHierarchy`` (if deifined) is replaced with a flat, one-dimension index of tuples.
+        {doc}
         '''
         return self.__class__(self.values,
                 index=self._index.flat(),
                 name=self._name)
 
-    def relabel_add_level(self, level: tp.Hashable):
+    @doc_inject(selector='relabel_add_level', class_name='Series')
+    def relabel_add_level(self,
+            level: tp.Hashable
+            ) -> 'Series':
         '''
-        Return a new Series, adding a new root level to an ``IndexHierarchy``.
+        {doc}
+
+        Args:
+            level: {level}
         '''
         return self.__class__(self.values,
                 index=self._index.add_level(level),
                 name=self._name)
 
-    @doc_inject(selector='reindex')
-    def relabel_drop_level(self, count: int = 1):
+    @doc_inject(selector='relabel_drop_level', class_name='Series')
+    def relabel_drop_level(self,
+            count: int = 1
+            ) -> 'Series':
         '''
-        Return a new Series, dropping one or more levels from an ``IndexHierarchy``. {count}
+        {doc}
+
+        Args:
+            count: {count}
         '''
         return self.__class__(self.values,
                 index=self._index.drop_level(count),
