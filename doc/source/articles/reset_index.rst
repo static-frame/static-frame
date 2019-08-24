@@ -8,20 +8,20 @@ This article demonstrates how StaticFrame exposes functionality for creating the
 
 While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple, inscrutable AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
 
-All examples use StaticFrame 0.3.9 or later (https://pypi.org/project/static-frame) and import with the following convention:
+All examples use StaticFrame 0.4.0 or later (https://pypi.org/project/static-frame) and import with the following convention:
 
 
 >>> import static_frame as sf
 
 
-Reindexing
----------------
+Reindexing & Relabeling
+-------------------------
 
-We will take a brief detour to consider how reindexing works in Pandas and StaticFrame.
+We will take a brief detour to consider how reindexing and relabeling work in Pandas and StaticFrame.
 
-The idea of reindexing a ``Series`` or ``Frame`` could be interpreted in at least two ways: (1) create a new container with a new index, supplying labels with values from the old container if those labels are in the old index (i.e., alignment based on index labels) or (2) create a new container with a new index, reusing the same values (alignment based on position).
+Changing an index on a ``Series`` or ``Frame`` could be done in at least two ways: (1) create a new container with a new index of any size, supplying labels with values from the old container if those labels are in the old index (i.e., alignment based on index labels) or (2) create a new container with a new index of the same size, reusing the same values in the same position (alignment based on position).
 
-Following the precedent of Pandas, StaticFrame implements ``Series.reindex()`` and ``Frame.reindex()`` with the former interpretation: alignment based on index labels. For example:
+Following the precedent of Pandas, StaticFrame implements ``Series.reindex()`` and ``Frame.reindex()`` with the former interpretation: alignment based on index labels. As shown in the example below, the new index only matches and retains two of the four previous values:
 
 
 >>> s1 = sf.Series((x * 100 for x in range(1, 5)), index=tuple('wxyz'))
@@ -45,10 +45,10 @@ x        200
 
 To handle the latter interpretation, alignment based on position, Pandas offers at least two approaches: the mutable ``index`` attribute can be directly assigned, or the ``set_axis()`` function can be used.
 
-One way to achieve setting a new index by position in StaticFrame is to create a new ``Series``, reusing the old ``values``. As NumPy arrays in StaticFrame are immutable, reusing ``values`` is practical and efficient: it is a no-copy operation.
+StaticFrame names all methods "relabel" that supply a new or transformed index of the same size, to be aligned by position. The ``Series.relabel()`` method can be used to create a new index by transforming old index labels (via a function or mapping), or by supplying an appropriately sized index initializer. As NumPy arrays in StaticFrame are immutable, relabeling is efficient: underlying data is never copied.
 
 
->>> sf.Series(s1.values, index=tuple('abcd'))
+>>> s1.relabel(tuple('abcd'))
 <Series>
 <Index>
 a        100
@@ -67,7 +67,7 @@ While Pandas offers a discrete method for this operation, ``reset_index()``, tha
 
 A goal in StaticFrame's API design is to avoid, as much as possible, interfaces that permit conflicting, non-orthogonal arguments.
 
-In addition to reindexing, another case where an AIII is frequently needed is in concatenating numerous ``Series`` or ``Frame``. For example, when concatenating a ``Frame``, one axis might be aligned while the other, extended axis requires an AIII. Deviating in naming from of the ``reset_index()`` method, Pandas supports this with a Boolean ``ignore_index`` parameter provided to the ``pd.concat()`` function.
+In addition to relabeling, another case where an AIII is frequently needed is in concatenating numerous ``Series`` or ``Frame``. For example, when concatenating a ``Frame``, one axis might be aligned while the other, extended axis requires an AIII. Deviating in naming from of the ``reset_index()`` method, Pandas supports this with a Boolean ``ignore_index`` parameter provided to the ``pd.concat()`` function.
 
 Another goal of StaticFrame's API design is to support common interfaces wherever possible. Reusing, across diverse interfaces, the same mechanism for creating AIIIs is thus desirable.
 
@@ -75,20 +75,20 @@ Another goal of StaticFrame's API design is to support common interfaces whereve
 The ``IndexAutoFactory`` Type
 ------------------------------------------------
 
-Rather than specialized functions or arguments, AIIIs in StaticFrame can be created on ``Series`` or ``Frame`` by passing a special value, an ``IndexAutoFactory`` object, to index initializer arguments. This is presently supported for ``Series.reindex()``, ``Frame.reindex()``, ``Series.from_concat()``, and ``Frame.from_concat()``. ``Series`` and ``Frame`` initializers similarly can take an ``IndexAutoFactory``.
+Rather than specialized functions or arguments, AIIIs in StaticFrame can be created on ``Series`` or ``Frame`` by passing a special value, an ``IndexAutoFactory`` object, to index initializer arguments. This is presently supported for ``Series.relabel()``, ``Frame.relabel()``, ``Series.from_concat()``, and ``Frame.from_concat()``. ``Series`` and ``Frame`` initializers similarly can take an ``IndexAutoFactory``.
 
 By using a special type that can be supplied to existing ``index`` or ``columns`` arguments, StaticFrame avoids non-orthogonal arguments and offers a consistent interface for producing AIIIs.
 
 
-Resetting an Index when Reindexing
+Resetting an Index when Relabeling
 ------------------------------------------------
 
-By accepting an ``IndexAutoFactory`` argument, a ``reindex()`` method can be used to cover the functionality of the Pandas ``reset_index()`` method.
+By accepting an ``IndexAutoFactory`` argument, a ``relabel()`` method can be used to cover the functionality of the Pandas ``reset_index()`` method.
 
-For example, the ``IndexAutoFactory`` class can be given as the ``index`` argument to ``Series.reindex()`` to produce a new ``Series`` with an AIII. As underlying NumPy arrays are immutable in StaticFrame, this is a no-copy operation.
+For example, the ``IndexAutoFactory`` class can be given as the ``index`` argument to ``Series.relabel()`` to produce a new ``Series`` with an AIII. As mentioned above, as underlying NumPy arrays are immutable in StaticFrame, this is a no-copy operation.
 
 
->>> s1.reindex(sf.IndexAutoFactory)
+>>> s1.relabel(sf.IndexAutoFactory)
 <Series>
 <Index>
 0        100
@@ -98,7 +98,7 @@ For example, the ``IndexAutoFactory`` class can be given as the ``index`` argume
 <int64>  <int64>
 
 
-The benefit of having a specific type, rather than using ``None``, to signify application of an AIII is made more clear in the context of ``Frame.reindex()``, where both a ``columns`` and ``index`` argument can be set independently. The example bellow demonstrates creating a ``Frame``, setting an AIII on both axis, and setting an AIII on ``columns`` while doing conventional reindexing on the ``index``.
+The benefit of having a specific type, rather than using ``None``, to signify application of an AIII is made more clear in the context of ``Frame.relabel()``, where both a ``columns`` and ``index`` argument can be set independently. The example bellow demonstrates creating a ``Frame``, setting an AIII on both axis, and setting an AIII on ``columns`` while doing relabeling on the ``index``.
 
 
 >>> f1 = sf.Frame.from_dict(dict(a=(1,2), b=(True, False)), index=tuple('xy'))
@@ -110,7 +110,7 @@ x       1       True
 y       2       False
 <<U1>   <int64> <bool>
 
->>> f1.reindex(index=sf.IndexAutoFactory, columns=sf.IndexAutoFactory)
+>>> f1.relabel(index=sf.IndexAutoFactory, columns=sf.IndexAutoFactory)
 <Frame>
 <Index> 0       1      <int64>
 <Index>
@@ -118,14 +118,14 @@ y       2       False
 1       2       False
 <int64> <int64> <bool>
 
->>> f1.reindex(index=tuple('xyz'), columns=sf.IndexAutoFactory)
+>>> f1.relabel(index=tuple('ab'), columns=sf.IndexAutoFactory)
 <Frame>
-<Index> 0         1        <int64>
+<Index> 0       1      <int64>
 <Index>
-x       1.0       True
-y       2.0       False
-z       nan       nan
-<<U1>   <float64> <object>
+a       1       True
+b       2       False
+<<U1>   <int64> <bool>
+
 
 
 Resetting an Index when Concatenating
