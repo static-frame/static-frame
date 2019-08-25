@@ -80,7 +80,7 @@ class TestUnit(TestCase):
 
     def test_array_copy_a(self) -> None:
 
-        ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), object))
+        ag1 = ArrayGO(np.array(('a', 'b', 'c', 'd'), dtype=object))
         ag1.append('e')
 
         ag2 = ag1.copy()

@@ -26,14 +26,13 @@ class ArrayGO:
     def __init__(self,
             iterable: tp.Union[np.ndarray, tp.List[object]],
             *,
-            dtype: object = object,
             own_iterable: bool = False) -> None:
         '''
         Args:
             own_iterable: flag iterable as ownable by this instance.
         '''
 
-        self._dtype = dtype
+        self._dtype = object # only object arrays are supported
 
         if isinstance(iterable, np.ndarray):
             if own_iterable:
@@ -41,7 +40,8 @@ class ArrayGO:
                 self._array.flags.writeable = False
             else:
                 self._array = immutable_filter(iterable)
-            assert self._array.dtype == self._dtype
+            if self._array.dtype != self._dtype:
+                raise NotImplementedError('only object arrays are supported')
             self._recache = False
             self._array_mutable = None
         else:
@@ -115,5 +115,4 @@ class ArrayGO:
         '''
         if self._recache:
             self._update_array_cache()
-        assert self._array is not None
-        return self.__class__(self._array, dtype=self._dtype)
+        return self.__class__(self._array, own_iterable=True)

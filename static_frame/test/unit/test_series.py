@@ -173,6 +173,12 @@ class TestUnit(TestCase):
         # import ipdb; ipdb.set_trace()
 
 
+    def test_series_init_o(self) -> None:
+        s1 = sf.Series('T', index=())
+        self.assertEqual(s1.to_pairs(), ())
+
+
+
     def test_series_slice_a(self) -> None:
         # create a series from a single value
         # s0 = Series(3, index=('a',))
