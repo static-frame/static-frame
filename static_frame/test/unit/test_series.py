@@ -84,7 +84,7 @@ class TestUnit(TestCase):
 
     def test_series_init_c(self) -> None:
 
-        s1 = Series(OrderedDict([('b', 4), ('a', 1)]), dtype=np.int64)
+        s1 = Series.from_dict(OrderedDict([('b', 4), ('a', 1)]), dtype=np.int64)
         self.assertEqual(s1.to_pairs(),
                 (('b', 4), ('a', 1)))
 
@@ -106,7 +106,7 @@ class TestUnit(TestCase):
                 )
 
     def test_series_init_e(self) -> None:
-        s1 = Series(dict(a=1, b=2, c=np.nan, d=None), dtype=object)
+        s1 = Series.from_dict(dict(a=1, b=2, c=np.nan, d=None), dtype=object)
         self.assertEqual(s1.to_pairs(),
                 (('a', 1), ('b', 2), ('c', nan), ('d', None))
                 )
@@ -114,7 +114,7 @@ class TestUnit(TestCase):
             s1.values[1] = 23
 
     def test_series_init_f(self) -> None:
-        s1 = Series({'a': 'x', 'b': 'y', 'c': 'z'})
+        s1 = Series.from_dict({'a': 'x', 'b': 'y', 'c': 'z'})
         self.assertEqual(s1.to_pairs(), (('a', 'x'), ('b', 'y'), ('c', 'z')))
 
     def test_series_init_g(self) -> None:
@@ -878,7 +878,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.assign['c':](s1['c':] * 10).to_pairs(),  # type: ignore  # https://github.com/python/typeshed/pull/3024
                 (('a', 0), ('b', 1), ('c', 20), ('d', 30)))
 
-        self.assertEqual(s1.assign['c':](Series({'d':40, 'c':60})).to_pairs(),  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        self.assertEqual(s1.assign['c':](Series.from_dict({'d':40, 'c':60})).to_pairs(),  # type: ignore  # https://github.com/python/typeshed/pull/3024
                 (('a', 0), ('b', 1), ('c', 60), ('d', 40)))
 
 

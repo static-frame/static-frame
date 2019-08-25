@@ -70,6 +70,9 @@ Frame
 .. automethod:: static_frame.Frame.from_json_url
 
 
+.. automethod:: static_frame.Frame.from_sql
+
+
 .. automethod:: static_frame.Frame.from_pandas
 
 

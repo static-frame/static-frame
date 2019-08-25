@@ -80,7 +80,7 @@ Neptune  11
 >>> import numpy as np
 >>> import static_frame as sf
 
->>> sf.Series(dict(Mercury=167, Neptune=-200), dtype=np.int64)
+>>> sf.Series.from_dict(dict(Mercury=167, Neptune=-200), dtype=np.int64)
 <Series>
 <Index>
 Mercury  167

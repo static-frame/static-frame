@@ -141,7 +141,7 @@ class TestUnit(TestCase):
 
         f1 = sf.FrameGO(index=tuple('abc'))
         f1['x'] = (3, 4, 5)
-        f1['y'] = Series(dict(b=10, c=11, a=12))
+        f1['y'] = Series.from_dict(dict(b=10, c=11, a=12))
 
         self.assertEqual(f1.to_pairs(0),
             (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
@@ -4316,8 +4316,8 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_sql('select * from events', conn)
 
         # this might be different on windows
-        self.assertEqual([str(x) for x in f1.dtypes.values],
-                ['<U10', '<U2', 'float64', 'int64'])
+        self.assertEqual([x.kind for x in f1.dtypes.values],
+                ['U', 'U', 'f', 'i'])
 
         self.assertEqual(f1.to_pairs(0),
                 (('date', ((0, '2006-01-01'), (1, '2006-01-02'), (2, '2006-01-01'), (3, '2006-01-02'))), ('identifier', ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), ('value', ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), ('count', ((0, 8), (1, 8), (2, 8), (3, 8))))

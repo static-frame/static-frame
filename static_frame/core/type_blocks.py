@@ -80,7 +80,7 @@ class TypeBlocks(ContainerBase):
         It is acceptable to construct blocks with a 0-sided shape.
 
         Args:
-            raw_blocks: iterable (generator compatible) of NDArrays.
+            raw_blocks: iterable (generator compatible) of NDArrays, or a single NDArray.
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns.
 
         '''

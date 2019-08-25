@@ -96,6 +96,8 @@ class Series(ContainerBase):
     sum: tp.Callable[['Series'], tp.Any]
     values: np.ndarray
 
+    _NDIM: int = 1
+
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
@@ -124,6 +126,29 @@ class Series(ContainerBase):
                 index=index,
                 dtype=dtype,
                 name=name,
+                index_constructor=index_constructor)
+
+
+    @classmethod
+    def from_dict(cls,
+            mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
+            *,
+            dtype: DtypeSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
+            ) -> 'Series':
+        '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
+
+        Args:
+            mapping: a dictionary or similar mapping interface.
+            dtype: dtype or valid dtype specifier.
+
+        Returns:
+            :py:class:`static_frame.Series`
+        '''
+        return cls.from_items(mapping.items(),
+                name=name,
+                dtype=dtype,
                 index_constructor=index_constructor)
 
     @classmethod
@@ -211,18 +236,20 @@ class Series(ContainerBase):
 
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
-                # not sure if we should sort; not sure what to do if index is provided
-                if index is not None:
-                    raise Exception('cannot create a Series from a dictionary when an index is defined')
+                raise RuntimeError('use Series.from_dict to create a Series from a mapping.')
 
-                index = []
-                def values_gen():
-                    for k, v in values.items():
-                        # populate index as side effect of iterating values
-                        index.append(k)
-                        yield v
+                # # not sure if we should sort; not sure what to do if index is provided
+                # if index is not None:
+                #     raise Exception('cannot create a Series from a dictionary when an index is defined')
 
-                self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
+                # index = []
+                # def values_gen():
+                #     for k, v in values.items():
+                #         # populate index as side effect of iterating values
+                #         index.append(k)
+                #         yield v
+
+                # self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
 
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # while iterable_to_array will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
@@ -455,7 +482,7 @@ class Series(ContainerBase):
             index: {index_initializer}
             columns: {index_initializer}
             {fill_value}
-            {own_index} `
+            {own_index}
         '''
         if isinstance(index, IndexBase):
             if not own_index:
@@ -931,7 +958,7 @@ class Series(ContainerBase):
         Returns:
             :py:class:`int`
         '''
-        return self.values.ndim
+        return self._NDIM
 
     @property
     def size(self) -> int:

@@ -129,6 +129,7 @@ class Frame(ContainerBase):
     _name: tp.Hashable
 
     _COLUMNS_CONSTRUCTOR = Index
+    _NDIM: int = 2
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -586,23 +587,24 @@ class Frame(ContainerBase):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict(cls,
-            dict: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
+            mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
             *,
             index: IndexInitializer = None,
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
-            ):
+            ) -> 'Frame':
         '''
         Create a Frame from a dictionary, or any object that has an items() method.
 
         Args:
+            mapping: a dictionary or similar mapping interface.
             {dtypes}
             {name}
             {consolidate_blocks}
         '''
-        return cls.from_items(dict.items(),
+        return cls.from_items(mapping.items(),
                 index=index,
                 fill_value=fill_value,
                 name=name,
@@ -948,7 +950,7 @@ class Frame(ContainerBase):
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
-            raise RuntimeError('use Frame.from_dict to create a Frame from a dict')
+            raise RuntimeError('use Frame.from_dict to create a Frame from a mapping.')
 
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
@@ -1750,7 +1752,7 @@ class Frame(ContainerBase):
         Returns:
             :py:class:`int`
         '''
-        return self._blocks.ndim
+        return self._NDIM
 
     @property
     def size(self) -> int:
@@ -2572,7 +2574,7 @@ class Frame(ContainerBase):
             drop: Boolean to determine if selected columns should be removed from the data.
 
         Returns:
-            :py:class:`IndexHierarchy`
+            :py:class:`Frame`
         '''
 
         # columns cannot be a tuple

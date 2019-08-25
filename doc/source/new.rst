@@ -14,6 +14,8 @@ The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``
 
 Implemented ``Frame.from_sql``.
 
+The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` is added for explicit creation from mappings.
+
 0.3.9
 -----------
 

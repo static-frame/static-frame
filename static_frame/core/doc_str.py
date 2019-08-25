@@ -7,6 +7,7 @@ import typing as tp
 
 from static_frame.core.util import AnyCallable
 
+#NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
 
 OWN_INDEX = '''own_index: Flag the passed index as ownable by this ``{class_name}``. Primarily used by internal clients.'''
 
@@ -14,7 +15,7 @@ OWN_DATA = '''own_data: Flag the data values as ownable by this ``{class_name}``
 
 OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this ``{class_name}``. Primarily used by internal clients.'''
 
-INDEX_INITIALIZER = '''An iterable of unique, hashable labels, or another ``Index``, to be used for new index initialization.'''
+INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
 
 class DOC_TEMPLATE:
 
@@ -90,10 +91,10 @@ class DOC_TEMPLATE:
     index_init = dict(
             args = '''
         Args:
-            labels: Iterable of hashable values to be used as the index labels. If an Index or IndexHierarchy class is passed, values will be appropriately extracted.
+            labels: {}
             name: A hashable object to name the Index.
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            dtype: Optional dtype to be used for labels.'''
+            dtype: Optional dtype to be used for labels.'''.format(INDEX_INITIALIZER)
             )
 
     index_date_time_init = dict(
