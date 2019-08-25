@@ -237,25 +237,10 @@ class Series(ContainerBase):
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
                 raise RuntimeError('use Series.from_dict to create a Series from a mapping.')
-
-                # # not sure if we should sort; not sure what to do if index is provided
-                # if index is not None:
-                #     raise Exception('cannot create a Series from a dictionary when an index is defined')
-
-                # index = []
-                # def values_gen():
-                #     for k, v in values.items():
-                #         # populate index as side effect of iterating values
-                #         index.append(k)
-                #         yield v
-
-                # self.values, _ = iterable_to_array(values_gen(), dtype=dtype)
-
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # while iterable_to_array will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
                 self.values, _ = iterable_to_array(values, dtype=dtype)
-
             else: # it must be an element, or a string
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape):
@@ -319,6 +304,12 @@ class Series(ContainerBase):
 
         if values_constructor:
             values_constructor(shape) # updates self.values
+
+        #-----------------------------------------------------------------------
+        # final checks
+
+        if self.values.ndim != self._NDIM:
+            raise RuntimeError('dimensionality of final values not supported')
 
         if len(self.values) != shape:
             raise RuntimeError('values and index do not match length')

@@ -168,9 +168,14 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), ())
 
     def test_series_init_n(self) -> None:
-        s1 = sf.Series([['a', 'b']])
-        # TODO: this returns a mangled series
-        # import ipdb; ipdb.set_trace()
+        with self.assertRaises(RuntimeError):
+            # results in 2D array
+            s1 = sf.Series([['a', 'b']])
+
+        s2 = sf.Series([['a', 'b']], dtype=object)
+        self.assertEqual(s2.to_pairs(),
+            ((0, ['a', 'b']),)
+            )
 
 
     def test_series_init_o(self) -> None:
