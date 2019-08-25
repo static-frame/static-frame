@@ -1293,7 +1293,7 @@ class Frame(ContainerBase):
                     + ' with key configuration'), (nm_row, nm_column))
         return v
 
-
+    @doc_inject(selector='reindex', class_name='Frame')
     def reindex(self,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
@@ -1302,7 +1302,14 @@ class Frame(ContainerBase):
             own_columns: bool = False
             ) -> 'Frame':
         '''
-        Return a new Frame based on the passed index and/or columns.
+        {doc}
+
+        Args:
+            index: {index_initializer}
+            columns: {index_initializer}
+            {fill_value}
+            {own_index}
+            {own_columns}
         '''
         if index is None and columns is None:
             raise Exception('must specify one of index or columns')

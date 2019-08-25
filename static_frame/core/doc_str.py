@@ -14,6 +14,8 @@ OWN_DATA = '''own_data: Flag the data values as ownable by this ``{class_name}``
 
 OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this ``{class_name}``. Primarily used by internal clients.'''
 
+INDEX_INITIALIZER = '''An iterable of unique, hashable labels, or another ``Index``, to be used for new index initialization.'''
+
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
@@ -51,7 +53,10 @@ class DOC_TEMPLATE:
     # dict entries
 
     reindex = dict(
-            fill_value='''A value to be used to fill space created by a new index that has values not found in the previous index.''',
+            doc='''Return a new ``{class_name}`` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
+            ''',
+            index_initializer=INDEX_INITIALIZER,
+            fill_value='''fill_value: A value to be used to fill space created by a new index that has values not found in the previous index.''',
             own_index=OWN_INDEX,
             own_columns=OWN_COLUMNS
             )
@@ -61,7 +66,7 @@ class DOC_TEMPLATE:
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
-            relabel_input='''One of the following types, used to create a new ``Index`` with same size as the previous index. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous index. Previous labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous index. (c) The ``IndexAutoFactory`` type, to apply an auto-incremented integer index. (d) An index initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
+            relabel_input='''One of the following types, used to create a new ``Index`` with the same size as the previous index. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous index. Previous labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous index. (c) The ``IndexAutoFactory`` type, to apply an auto-incremented integer index. (d) An index initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
             )
 
     relabel_flat = dict(

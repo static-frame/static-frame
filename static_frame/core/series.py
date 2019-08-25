@@ -442,17 +442,20 @@ class Series(ContainerBase):
         '''
         return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
 
+    @doc_inject(selector='reindex', class_name='Series')
     def reindex(self,
             index: IndexInitializer,
             fill_value=np.nan,
             own_index: bool = False
             ) -> 'Series':
         '''
-        Return a new Series based on the passed index.
+        {doc}
 
         Args:
-            index: an index initializer
-            fill_value: attempted to be used, but may be coerced by the dtype of this Series. `
+            index: {index_initializer}
+            columns: {index_initializer}
+            {fill_value}
+            {own_index} `
         '''
         if isinstance(index, IndexBase):
             if not own_index:
