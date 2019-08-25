@@ -131,7 +131,7 @@ class Series(ContainerBase):
 
     @classmethod
     def from_dict(cls,
-            mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
+            mapping: tp.Dict[tp.Hashable, tp.Any],
             *,
             dtype: DtypeSpecifier = None,
             name: tp.Hashable = None,
