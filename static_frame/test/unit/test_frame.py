@@ -222,6 +222,23 @@ class TestUnit(TestCase):
                 (('a', ((0, 0), (1, 2))), ('b', ((0, 1), (1, 3))))
                 )
 
+    def test_frame_init_t(self) -> None:
+
+        # 3d array raises exception
+        a1 = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(a1)
+
+
+    def test_frame_init_u(self) -> None:
+
+        # 3d array raises exception
+        a1 = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+
+        with self.assertRaises(RuntimeError):
+            f1 = Frame(a1)
+
 
 
     def test_frame_init_index_constructor_a(self) -> None:

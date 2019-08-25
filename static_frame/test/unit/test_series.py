@@ -154,8 +154,6 @@ class TestUnit(TestCase):
                 ((1, [None, None]), (2, [1, 2, 1, 2]), (3, ['a', 'b', 'a', 'b']))
                 )
 
-
-
     def test_series_init_m(self) -> None:
 
         # if index is None or IndexAutoFactory, we supply an index of 0
@@ -177,10 +175,17 @@ class TestUnit(TestCase):
             ((0, ['a', 'b']),)
             )
 
-
     def test_series_init_o(self) -> None:
         s1 = sf.Series('T', index=())
         self.assertEqual(s1.to_pairs(), ())
+
+
+    def test_series_init_p(self) -> None:
+        # 3d array raises exception
+        a1 = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+        with self.assertRaises(RuntimeError):
+            s1 = Series(a1)
+
 
 
 

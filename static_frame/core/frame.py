@@ -972,7 +972,7 @@ class Frame(ContainerBase):
                 self._blocks = TypeBlocks.from_blocks(a)
 
         else:
-            # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame.
+            # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame. The array cas be 1D (to produce one column) or 2D; greater dimensionality will raise exception.
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
@@ -1066,6 +1066,10 @@ class Frame(ContainerBase):
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
+
+        if self._blocks.ndim != self._NDIM:
+            raise RuntimeError('dimensionality of final values not supported')
+
         if self._blocks.shape[0] != row_count:
             # row count might be 0 for an empty DF
             raise RuntimeError(

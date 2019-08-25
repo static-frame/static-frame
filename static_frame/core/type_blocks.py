@@ -93,6 +93,9 @@ class TypeBlocks(ContainerBase):
 
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
+            if raw_blocks.ndim > 2:
+                raise RuntimeError('arrays of dimensionality greater than 2 cannot be used to create TypeBlocks')
+
             row_count, column_count = shape_filter(raw_blocks)
             if column_count == 0:
                 # set shape but do not store array

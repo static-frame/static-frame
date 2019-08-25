@@ -306,7 +306,7 @@ class Series(ContainerBase):
             values_constructor(shape) # updates self.values
 
         #-----------------------------------------------------------------------
-        # final checks
+        # final evaluation
 
         if self.values.ndim != self._NDIM:
             raise RuntimeError('dimensionality of final values not supported')
