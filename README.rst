@@ -2,10 +2,6 @@
    :width: 340px
    :align: center
 
-|
-
-.. image:: https://img.shields.io/pypi/status/static-frame.svg?style=flat-square
-  :target: https://pypi.org/project/static-frame
 
 .. image:: https://img.shields.io/pypi/pyversions/static-frame.svg?style=flat-square
   :target: https://pypi.org/project/static-frame
@@ -27,6 +23,10 @@
 
 .. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg?style=flat-square
   :target: https://hypothesis.readthedocs.io
+
+.. image:: https://img.shields.io/pypi/status/static-frame.svg?style=flat-square
+  :target: https://pypi.org/project/static-frame
+
 
 
 static-frame
