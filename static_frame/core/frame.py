@@ -955,14 +955,14 @@ class Frame(ContainerBase):
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
 
-            def blocks_constructor(shape):
+            def blocks_constructor(shape): #pylint: disable=E0102
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)
 
         elif not hasattr(data, '__len__') or isinstance(data, str):
             # data is not None, and data is a single element to scale to size of index and columns; must defer until after index realization
             # or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
-            def blocks_constructor(shape):
+            def blocks_constructor(shape): #pylint: disable=E0102
                 if shape[0] > 0 and shape[1] > 0 and data is FRAME_INITIALIZER_DEFAULT:
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')

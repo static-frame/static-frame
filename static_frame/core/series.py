@@ -243,7 +243,7 @@ class Series(ContainerBase):
                 self.values, _ = iterable_to_array(values, dtype=dtype)
             else: # it must be an element, or a string
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
-                def values_constructor(shape):
+                def values_constructor(shape): #pylint: disable=E0102
                     self.values = np.full(shape, values, dtype=dtype)
                     self.values.flags.writeable = False
 
@@ -251,7 +251,7 @@ class Series(ContainerBase):
             if dtype is not None and dtype != values.dtype:
                 raise Exception('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
             if values.shape == (): # handle special case of NP element
-                def values_constructor(shape):
+                def values_constructor(shape): #pylint: disable=E0102
                     self.values = np.repeat(values, shape)
                     self.values.flags.writeable = False
             else:

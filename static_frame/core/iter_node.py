@@ -82,12 +82,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         arg_gen: tp.Callable[[], tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]]
 
         if yt_is_values:
-            def arg_gen() -> tp.Iterator[tp.Any]:
+            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield v
         else:
-            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+            def arg_gen() -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]: #pylint: disable=E0102
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield k, v

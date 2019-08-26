@@ -251,10 +251,10 @@ class ContainerMeta(type):
 
         if opperand_count == 1:
             assert not reverse # cannot reverse a single opperand
-            def func(self: tp.Any) -> tp.Any:
+            def func(self: tp.Any) -> tp.Any: #pylint: disable=E0102
                 return self._ufunc_unary_operator(operator_func)
         elif opperand_count == 2:
-            def func(self: tp.Any, other: tp.Any) -> tp.Any:
+            def func(self: tp.Any, other: tp.Any) -> tp.Any: #pylint: disable=E0102
                 return self._ufunc_binary_operator(operator=operator_func, other=other)
         else:
             raise NotImplementedError()

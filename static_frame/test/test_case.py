@@ -18,6 +18,7 @@ from static_frame import TypeBlocks
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
 
+# pylint --output-format=colorized static_frame
 
 skip_win = pytest.mark.skipif(sys.platform == 'win32', reason='Windows default dtypes.')
 

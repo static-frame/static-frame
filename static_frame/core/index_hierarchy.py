@@ -617,10 +617,14 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__.from_labels(labels=labels)
 
-    def _extract_loc(self, key: GetItemKeyType) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
+    def _extract_loc(self,
+            key: GetItemKeyType
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         return self._extract_iloc(self.loc_to_iloc(key))
 
-    def __getitem__(self, key: GetItemKeyType) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
+    def __getitem__(self, #pylint: disable=E0102
+            key: GetItemKeyType
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
