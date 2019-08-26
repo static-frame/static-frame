@@ -103,14 +103,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(col_count, cols)
 
-    @hypo_settings(max_examples=10)
-    @given(sfst.get_index())
+    @hypo_settings(max_examples=10) # type: ignore
+    @given(sfst.get_index()) # type: ignore
     def test_get_index(self, idx: Index) -> None:
         self.assertTrue(isinstance(idx, Index))
         self.assertEqual(len(idx), len(idx.values))
 
     @hypo_settings(max_examples=10)  # type: ignore
-    @given(sfst.get_index_hierarchy())
+    @given(sfst.get_index_hierarchy()) # type: ignore
     def test_get_index_hierarchy(self, idx: IndexHierarchy) -> None:
         self.assertTrue(isinstance(idx, IndexHierarchy))
         self.assertTrue(idx.depth > 1)
