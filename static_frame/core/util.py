@@ -664,7 +664,7 @@ def iterable_to_array(
         dtype: DtypeSpecifier=None
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
-    Convert an arbitrary Python iterable to a NumPy array without any undesirable type coercion.
+    Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
 
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
@@ -678,7 +678,7 @@ def iterable_to_array(
 
     # values for construct will only be a copy when necessary in iteration to find type
     if isinstance(values, str):
-        # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element; let dtype argument be used in creation, below
+        # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element; let dtype argument (if passed or None) be used in creation, below
         has_tuple = False
         values_for_construct = (values,)
     elif dtype is None:
