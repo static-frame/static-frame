@@ -75,6 +75,12 @@ matrix:
       language: python
       script: mypy --strict
 
+    - name: pylint
+      python: 3.7
+      dist: xenial
+      language: python
+      script: pylint static_frame
+
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
 
