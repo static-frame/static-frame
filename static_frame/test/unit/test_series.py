@@ -168,7 +168,7 @@ class TestUnit(TestCase):
     def test_series_init_n(self) -> None:
         with self.assertRaises(RuntimeError):
             # results in 2D array
-            s1 = sf.Series([['a', 'b']])
+            s1 = sf.Series(np.array([['a', 'b']]))
 
         s2 = sf.Series([['a', 'b']], dtype=object)
         self.assertEqual(s2.to_pairs(),

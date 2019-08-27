@@ -1515,5 +1515,19 @@ class TestUnit(TestCase):
         self.assertEqual(post[1], True)
 
 
+    def test_iterable_to_array_f(self) -> None:
+
+
+        post1, _ = iterable_to_array([[3,],[4,]])
+        self.assertEqual(post1.dtype, object)
+        self.assertEqual(post1.ndim, 1)
+        self.assertEqual(post1.tolist(), [[3], [4]])
+
+        post2, _ = iterable_to_array([[3,],[4,]], dtype=object)
+        self.assertEqual(post2.dtype, object)
+        self.assertEqual(post2.ndim, 1)
+        self.assertEqual(post2.tolist(), [[3], [4]])
+
+
 if __name__ == '__main__':
     unittest.main()

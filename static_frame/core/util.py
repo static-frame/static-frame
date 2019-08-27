@@ -582,7 +582,7 @@ def resolve_type_iter(
         sample_size: int = 10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
-    Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect).
+    Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
 
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
@@ -624,10 +624,9 @@ def resolve_type_iter(
             values_post.append(v)
 
         if resolved != object:
-
             value_type = type(v)
 
-            if value_type == tuple:
+            if value_type == tuple or value_type == list:
                 has_tuple = True
             elif value_type == str or value_type == np.str_:
                 # must compare to both sring types
@@ -711,6 +710,7 @@ def iterable_to_array(
 
     # construction
     if has_tuple:
+        # this matches cases where dtype is given and dtype is an object specifier
         # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=DTYPE_OBJECT)
         v[NULL_SLICE] = values_for_construct
