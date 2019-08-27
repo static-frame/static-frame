@@ -224,7 +224,7 @@ class IndexHierarchy(IndexBase):
         tree = dict() # order assumed and necessary
         # put first back in front
         for label in chain((first,), labels_iter):
-            current = tree
+            current = tree # NOTE: over the life of this loop, current can be a dict or a list
             # each label is an iterable
             for d, v in enumerate(label):
                 # print('d', d, 'v', v, 'depth_pre_max', depth_pre_max, 'depth_max', depth_max)
@@ -255,7 +255,7 @@ class IndexHierarchy(IndexBase):
                     current = current[v]
                     observed_last[d] = v
                 elif d == depth_max: # at depth max
-                    # if there are redundancies her they will be caught in index creation
+                    # if there are redundancies here they will be caught in index creation
                     current.append(v)
                 else:
                     raise RuntimeError('label exceeded expected depth', label)

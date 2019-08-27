@@ -1902,7 +1902,7 @@ class Frame(ContainerBase):
         return self._extract(row_key=iloc_row_key,
                 column_key=iloc_column_key)
 
-    def __getitem__(self, key: GetItemKeyType):
+    def __getitem__(self, key: GetItemKeyType) -> tp.Union[Series, 'Frame']:
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
     #---------------------------------------------------------------------------
