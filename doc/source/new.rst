@@ -6,7 +6,9 @@ What is New in Static Frame
 0.4.0
 -----------
 
-Improved handling for special cases ``Series`` initialization.
+Improved handling for special cases ``Series`` initialization, including initialization from iterables of lists.
+
+The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` is added for explicit creation from mappings.
 
 ``IndexAutoFactory`` suport removed from ``Series.reindex`` and ``Frame.reindex`` and added to ``Series.relabel`` and ``Frame.relabel``.
 
@@ -14,14 +16,13 @@ The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``
 
 Implemented ``Frame.from_sql``.
 
-The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` is added for explicit creation from mappings.
 
 0.3.9
 -----------
 
 ``IndexAutoFactory`` introduced to consolidate creation of auto-incremented integer indices, and provide a single token to force auto-incremented integer indices in other contexts where ``index`` arguments are taken.
 
-``IndexAutoFactory`` suport implemented for the ``index`` argument in ``Series.from_concat`` and ``Series.reindex``.
+``IndexAutoFactory`` support implemented for the ``index`` argument in ``Series.from_concat`` and ``Series.reindex``.
 
 ``IndexAutoFactory`` support implemented for the ``index`` and ``columns`` argument in ``Frame.from_concat`` and ``Frame.reindex``.
 
