@@ -142,7 +142,7 @@ class Frame(ContainerBase):
             columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
-            ):
+            ) -> 'Frame':
         '''
         Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
 
