@@ -1,25 +1,20 @@
-from itertools import zip_longest
-from itertools import combinations
 import unittest
 from collections import OrderedDict
 import itertools as it
 from collections import namedtuple
 from io import StringIO
 import string
-import hashlib
 import pickle
-import sys
 import sqlite3
 
 import numpy as np  # type: ignore
-import pytest  # type: ignore
 import typing as tp
 
 import static_frame as sf
 
 # assuming located in the same directory
 from static_frame import Index
-from static_frame import IndexGO
+# from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
@@ -27,7 +22,7 @@ from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import TypeBlocks
-from static_frame import Display
+# from static_frame import Display
 from static_frame import mloc
 from static_frame import ILoc
 from static_frame import HLoc

@@ -1,11 +1,8 @@
 
-from itertools import zip_longest
-from itertools import combinations
 import unittest
 from collections import OrderedDict
 from io import StringIO
 import string
-import hashlib
 import pickle
 import typing as tp
 from io import StringIO
@@ -21,8 +18,8 @@ from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
-from static_frame import Display
+# from static_frame import TypeBlocks
+# from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
@@ -34,16 +31,16 @@ from static_frame import IndexAutoFactory
 
 from static_frame import HLoc
 
-from static_frame.core.util import isna_array
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import array_to_duplicated
+# from static_frame.core.util import isna_array
+# from static_frame.core.util import resolve_dtype
+# from static_frame.core.util import resolve_dtype_iter
+# from static_frame.core.util import array_to_duplicated
 
 
-from static_frame.core.container import _all
-from static_frame.core.container import _any
-from static_frame.core.container import _nanall
-from static_frame.core.container import _nanany
+# from static_frame.core.container import _all
+# from static_frame.core.container import _any
+# from static_frame.core.container import _nanall
+# from static_frame.core.container import _nanany
 
 nan = np.nan
 

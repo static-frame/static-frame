@@ -1,21 +1,19 @@
 import unittest
 import pickle
-import itertools as it
 
 import numpy as np  # type: ignore
 
 
-import static_frame as sf
 # assuming located in the same directory
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import Series
-from static_frame import Frame
-from static_frame import FrameGO
+# from static_frame import Index
+# from static_frame import IndexGO
+# from static_frame import Series
+# from static_frame import Frame
+# from static_frame import FrameGO
 from static_frame import TypeBlocks
-from static_frame import Display
+# from static_frame import Display
 from static_frame import mloc
-from static_frame import DisplayConfig
+# from static_frame import DisplayConfig
 
 
 from static_frame.core.util import immutable_filter

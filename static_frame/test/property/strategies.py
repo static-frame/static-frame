@@ -23,12 +23,12 @@ from static_frame import Index
 
 from static_frame import IndexDate
 from static_frame import IndexYear
-from static_frame import IndexYearMonth
-from static_frame import IndexSecond
-from static_frame import IndexMillisecond
+# from static_frame import IndexYearMonth
+# from static_frame import IndexSecond
+# from static_frame import IndexMillisecond
 
 from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
+# from static_frame import IndexHierarchyGO
 
 from static_frame import IndexGO
 from static_frame import Series
@@ -789,7 +789,6 @@ get_frame_go.__name__ = 'get_frame_go'
 
 if __name__ == '__main__':
     import fnmatch
-    import sys
     from argparse import ArgumentParser
     from static_frame.core.display_color import HexColor
 

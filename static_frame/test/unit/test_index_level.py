@@ -7,18 +7,18 @@ from collections import OrderedDict
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
-from static_frame import Series
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import IndexYearMonth
-from static_frame import IndexYear
-from static_frame import DisplayConfig
+# from static_frame import Series
+# from static_frame import Frame
+# from static_frame import FrameGO
+# from static_frame import IndexYearMonth
+# from static_frame import IndexYear
+# from static_frame import DisplayConfig
 
 from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
+# from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexLevelGO
-from static_frame import HLoc
+# from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.test.test_case import TestCase
@@ -196,3 +196,9 @@ class TestUnit(TestCase):
 
         post = list(levels.iter(2))
         self.assertEqual(post, [1, 2, 1, 2, 3, 2, 3, 1, 2, 3, 1])
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+
