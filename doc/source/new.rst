@@ -3,6 +3,12 @@
 What is New in Static Frame
 ===============================
 
+0.4.1
+-----------
+
+``iter_element().apply`` now properly preserves index and column types.
+
+
 0.4.0
 -----------
 
