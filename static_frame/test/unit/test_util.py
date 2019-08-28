@@ -33,7 +33,6 @@ from static_frame.core.util import iterable_to_array
 # from static_frame.core.util import collection_and_dtype_to_array
 
 
-from static_frame.core.util import array_to_groups_and_locations
 
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift

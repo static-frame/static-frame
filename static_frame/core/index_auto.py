@@ -6,7 +6,6 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.index import IndexGO
 
-from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 
 from static_frame.core.util import DEFAULT_INT_DTYPE

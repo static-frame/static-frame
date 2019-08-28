@@ -14,8 +14,8 @@ from static_frame.core.util import DtypeSpecifier
 
 if tp.TYPE_CHECKING:
 
-    from static_frame.core.frame import Frame
-    from static_frame.core.series import Series
+    from static_frame.core.frame import Frame # pylint: disable=W0611
+    from static_frame.core.series import Series # pylint: disable=W0611
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')

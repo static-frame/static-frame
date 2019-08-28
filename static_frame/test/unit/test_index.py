@@ -17,13 +17,12 @@ from static_frame import IndexYear
 from static_frame import IndexSecond
 from static_frame import IndexMillisecond
 
-from static_frame import HLoc
+# from static_frame import HLoc
 from static_frame import ILoc
 
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
-from static_frame.core.index import _is_index_initializer
 
 
 class TestUnit(TestCase):

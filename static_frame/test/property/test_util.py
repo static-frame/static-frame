@@ -7,8 +7,6 @@ import numpy as np  # type: ignore
 
 from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
-from hypothesis import example  # type: ignore
-from hypothesis import reproduce_failure  # type: ignore
 
 from static_frame.test.property.strategies import DTGroup
 
@@ -20,13 +18,13 @@ from static_frame.test.property.strategies import get_dtype_pairs
 
 from static_frame.test.property.strategies import get_dtype
 from static_frame.test.property.strategies import get_dtypes
-from static_frame.test.property.strategies import get_label
+# from static_frame.test.property.strategies import get_label
 from static_frame.test.property.strategies import get_value
 from static_frame.test.property.strategies import get_labels
-from static_frame.test.property.strategies import get_arrays_2d_aligned
+# from static_frame.test.property.strategies import get_arrays_2d_aligned
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
-from static_frame.test.property.strategies import get_blocks
+# from static_frame.test.property.strategies import get_blocks
 
 from static_frame.core.container import UFUNC_AXIS_SKIPNA
 

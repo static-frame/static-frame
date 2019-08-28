@@ -1,6 +1,5 @@
 
 import unittest
-import numpy as np  # type: ignore
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO

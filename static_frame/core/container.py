@@ -10,15 +10,13 @@ from collections import namedtuple
 import numpy as np  # type: ignore
 
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import UFunc
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_BOOL
-
 from static_frame.core.doc_str import DOC_TEMPLATE
 
-if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase
+# if tp.TYPE_CHECKING:
+#     from static_frame.core.index_base import IndexBase
 
 T = tp.TypeVar('T')
 

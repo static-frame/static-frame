@@ -38,7 +38,7 @@ class DisplayTypeCategory:
     CONFIG_ATTR = 'type_color_default'
 
     @staticmethod
-    def in_category(t: tp.Union[type, np.dtype]) -> bool:
+    def in_category(t: tp.Union[type, np.dtype]) -> bool: #pylint: disable=W0613
         return True
 
 
@@ -196,7 +196,7 @@ class DisplayFormat:
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int
+            header_depth: int #pylint: disable=W0613
             ) -> tp.Generator[str, None, None]:
         '''
         Args:
@@ -215,7 +215,7 @@ class DisplayFormat:
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None
+            identifier: tp.Optional[str] = None #pylint: disable=W0613
             ) -> str:
         return msg
 

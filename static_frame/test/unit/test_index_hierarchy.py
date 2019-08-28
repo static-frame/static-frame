@@ -6,19 +6,19 @@ import numpy as np  # type: ignore
 from collections import OrderedDict
 
 from static_frame import Index
-from static_frame import IndexGO
+# from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import IndexYearMonth
-from static_frame import IndexYear
+# from static_frame import IndexYearMonth
+# from static_frame import IndexYear
 from static_frame import DisplayConfig
 
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
-from static_frame import IndexLevelGO
+# from static_frame import IndexLevelGO
 from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
 

@@ -1,6 +1,4 @@
 import typing as tp
-from itertools import zip_longest
-from itertools import chain
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -13,7 +11,6 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import mloc
 from static_frame.core.util import immutable_filter
@@ -43,7 +40,6 @@ from static_frame.core.util import STATIC_ATTR
 
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
-from static_frame.core.util import DEFAULT_INT_DTYPE
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
@@ -68,8 +64,8 @@ from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    from static_frame import Frame
-    from pandas import DataFrame
+    from static_frame import Frame # pylint: disable=W0611
+    from pandas import DataFrame # pylint: disable=W0611
 
 
 RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]

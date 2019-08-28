@@ -1,6 +1,5 @@
 
 import unittest
-import datetime
 import typing as tp
 
 import numpy as np  # type: ignore

@@ -1,9 +1,6 @@
 import typing as tp
-import collections
 import itertools as it
 import string
-import shutil
-import tempfile
 import os
 from urllib import request
 

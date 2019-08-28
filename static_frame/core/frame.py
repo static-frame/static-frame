@@ -17,16 +17,13 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import UFunc
 
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DEFAULT_INT_DTYPE
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import FilePathOrFileLike
-from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FILL_VALUE_DEFAULT
 
@@ -35,7 +32,6 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
-from static_frame.core.util import immutable_filter
 from static_frame.core.util import column_2d_filter
 from static_frame.core.util import column_1d_filter
 

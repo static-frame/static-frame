@@ -1,7 +1,6 @@
 import typing as tp
 
 
-from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE

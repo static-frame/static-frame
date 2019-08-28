@@ -2,7 +2,6 @@ import typing as tp
 from collections.abc import KeysView
 import datetime
 import operator
-from functools import partial
 from functools import reduce
 
 import numpy as np
@@ -50,8 +49,8 @@ from static_frame.core.util import _DT64_MS
 from static_frame.core.util import _TD64_DAY
 from static_frame.core.util import _TD64_MONTH
 from static_frame.core.util import _TD64_YEAR
-from static_frame.core.util import _TD64_S
-from static_frame.core.util import _TD64_MS
+# from static_frame.core.util import _TD64_S
+# from static_frame.core.util import _TD64_MS
 
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
@@ -77,8 +76,7 @@ from static_frame.core.display import DisplayHeader
 
 
 if tp.TYPE_CHECKING:
-
-    import pandas as pd
+    import pandas as pd #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound=IndexBase)

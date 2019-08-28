@@ -1,15 +1,12 @@
-import sys
 import typing as tp
 import os
 import operator
-import struct
 
 from collections import abc
 from collections import defaultdict
 
 from itertools import chain
 from io import StringIO
-from io import BytesIO
 import datetime
 from urllib import request
 import tempfile
@@ -21,12 +18,12 @@ import numpy as np  # type: ignore
 
 if tp.TYPE_CHECKING:
 
-    from static_frame.core.index_base import IndexBase
-    from static_frame.core.index import Index
-    from static_frame.core.series import Series
-    from static_frame.core.frame import Frame
-    from static_frame.core.frame import FrameAsType
-    from static_frame.core.type_blocks import TypeBlocks
+    from static_frame.core.index_base import IndexBase # pylint: disable=W0611
+    from static_frame.core.index import Index # pylint: disable=W0611
+    from static_frame.core.series import Series # pylint: disable=W0611
+    from static_frame.core.frame import Frame # pylint: disable=W0611
+    from static_frame.core.frame import FrameAsType # pylint: disable=W0611
+    from static_frame.core.type_blocks import TypeBlocks # pylint: disable=W0611
 
 
 # dtype.kind

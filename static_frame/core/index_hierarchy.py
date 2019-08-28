@@ -1,26 +1,21 @@
 
 import typing as tp
-from collections import OrderedDict
 from collections.abc import KeysView
-from collections import deque
 from itertools import chain
 
 import numpy as np
 
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import KEY_MULTIPLE_TYPES
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import ILoc
 from static_frame.core.index import _requires_reindex
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
-from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import iterable_to_array
@@ -52,9 +47,8 @@ from static_frame.core.index_level import IndexLevelGO
 
 if tp.TYPE_CHECKING:
 
-    from pandas import DataFrame
-
-    from static_frame.core.frame import Frame
+    from pandas import DataFrame #pylint: disable=W0611
+    from static_frame.core.frame import Frame #pylint: disable=W0611
 
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')

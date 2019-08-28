@@ -1,17 +1,12 @@
-from itertools import zip_longest
 from itertools import combinations
 import unittest
-from collections import OrderedDict
-from io import StringIO
 import string
 import typing as tp
 import hashlib
 import json
-import sys
 
 
 import numpy as np  # type: ignore
-import pytest  # type: ignore
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -19,28 +14,16 @@ from static_frame.test.test_case import skip_win
 import static_frame as sf
 # assuming located in the same directory
 from static_frame import Index
-from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import TypeBlocks
 from static_frame import Display
-from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
 
-from static_frame.core.util import isna_array
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import array_to_duplicated
-
 from static_frame.core.display import DisplayTypeCategoryFactory
 
-from static_frame.core.container import _all
-from static_frame.core.container import _any
-from static_frame.core.container import _nanall
-from static_frame.core.container import _nanany
 
 nan = np.nan
 

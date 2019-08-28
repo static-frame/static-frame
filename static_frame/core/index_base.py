@@ -7,7 +7,6 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
-from static_frame.core.util import BOOL_TYPES
 
 
 from static_frame.core.display import DisplayFormats
@@ -19,8 +18,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerBase
 
 if tp.TYPE_CHECKING:
-
-    import pandas as pd  # type: ignore
+    import pandas as pd  # type: ignore #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound='IndexBase')

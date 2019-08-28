@@ -10,7 +10,7 @@ import static_frame as sf
 
 
 try:
-    import IPython  # type: ignore
+    import IPython  # type: ignore # pylint: disable=W0611
 except ImportError:
     HAS_IPYTHON = False
 else:
