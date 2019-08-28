@@ -258,7 +258,10 @@ class IterNode(tp.Generic[FrameOrSeries]):
             apply_constructor = partial(
                     Frame.from_element_loc_items,
                     index=self._container._index,
-                    columns=self._container._columns)
+                    columns=self._container._columns,
+                    index_constructor=self._container._index.from_labels,
+                    columns_constructor=self._container._columns.from_labels
+                    )
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
             # import ipdb; ipdb.set_trace()

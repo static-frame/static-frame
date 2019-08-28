@@ -40,6 +40,7 @@ from static_frame.core.util import shape_filter
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
+from static_frame.core.util import FILL_VALUE_DEFAULT
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 
@@ -48,7 +49,6 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 
 from static_frame.core.container import ContainerBase
-
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerBase):
@@ -161,11 +161,15 @@ class TypeBlocks(ContainerBase):
     def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[tp.Tuple[int, ...], object]],
             shape: tp.Tuple[int, ...],
-            dtype: np.dtype
+            dtype: np.dtype,
+            fill_value: object = FILL_VALUE_DEFAULT
             ) -> 'TypeBlocks':
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
-        a = np.full(shape, fill_value=dtype_to_na(dtype), dtype=dtype)
+        fill_value = (fill_value if fill_value is not FILL_VALUE_DEFAULT
+                else dtype_to_na(dtype))
+
+        a = np.full(shape, fill_value=fill_value, dtype=dtype)
         for iloc, v in items:
             a[iloc] = v
         a.flags.writeable = False

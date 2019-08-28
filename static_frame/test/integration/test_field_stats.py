@@ -43,7 +43,7 @@ class FieldStatConfig:
 
 def process(
         frame: sf.Frame,
-        config: FieldStatConfig = tp.Type[FieldStatConfig]
+        config: tp.Type[FieldStatConfig] = FieldStatConfig
         ) -> sf.Frame:
     '''
     Perform statistical analysis, returning a new Frame.
@@ -99,8 +99,8 @@ class TestUnit(TestCase):
 
     def test_process(self) -> None:
 
-        a1 = np.array([.1, -.1, .4, .2])
-        a2 = np.array([.4, -.3, .7, -.5])
+        a1 = np.array([.1, -.1, np.nan, .2])
+        a2 = np.array([.4, np.nan, .7, -.5])
 
         records = (
             a1,
@@ -123,6 +123,19 @@ class TestUnit(TestCase):
 
         post = process(f)
 
+        self.assertEqual(post.shape, (40, 7))
+        self.assertEqual(post.index.depth, 3)
+
+        self.assertEqual(post.iloc[0].to_pairs(),
+            (('x', 6.0), ('y', 6.0), ('min', 6.0), ('max', 6.0), ('sum', 12.0), ('mean', 6.0), ('median', 6.0))
+            )
+
+        self.assertEqual(post['x'].to_pairs(),
+            ((('category_a', 'a1', 'count'), 6.0), (('category_a', 'a1', 'count<0'), 1.0), (('category_a', 'a1', 'count>0'), 4.0), (('category_a', 'a1', 'count_unique'), 6.0), (('category_a', 'a1', 'min'), -0.05), (('category_a', 'a1', 'max'), 0.2), (('category_a', 'a1', 'sum'), 0.31), (('category_a', 'a1', 'mean'), 0.052), (('category_a', 'a1', 'median'), 0.03), (('category_a', 'a1', 'nanfill'), 0.0), (('category_a', 'a2', 'count'), 6.0), (('category_a', 'a2', 'count<0'), 2.0), (('category_a', 'a2', 'count>0'), 1.0), (('category_a', 'a2', 'count_unique'), 6.0), (('category_a', 'a2', 'min'), -0.1), (('category_a', 'a2', 'max'), 0.05), (('category_a', 'a2', 'sum'), -0.07), (('category_a', 'a2', 'mean'), -0.018), (('category_a', 'a2', 'median'), -0.01), (('category_a', 'a2', 'nanfill'), 0.333), (('category_b', 'b1', 'count'), 6.0), (('category_b', 'b1', 'count<0'), 2.0), (('category_b', 'b1', 'count>0'), 0.0), (('category_b', 'b1', 'count_unique'), 6.0), (('category_b', 'b1', 'min'), -0.1), (('category_b', 'b1', 'max'), -0.02), (('category_b', 'b1', 'sum'), -0.12), (('category_b', 'b1', 'mean'), -0.06), (('category_b', 'b1', 'median'), -0.06), (('category_b', 'b1', 'nanfill'), 0.667), (('category_b', 'b2', 'count'), 6.0), (('category_b', 'b2', 'count<0'), 1.0), (('category_b', 'b2', 'count>0'), 4.0), (('category_b', 'b2', 'count_unique'), 6.0), (('category_b', 'b2', 'min'), -0.1), (('category_b', 'b2', 'max'), 0.2), (('category_b', 'b2', 'sum'), 0.26), (('category_b', 'b2', 'mean'), 0.043), (('category_b', 'b2', 'median'), 0.03), (('category_b', 'b2', 'nanfill'), 0.0))
+        )
+
+        self.assertAlmostEqualValues(post.sum().values.tolist(),
+            [64.467, 67.12100000000001, 56.066999999999986, 75.52100000000004, 131.587, 65.794, 65.794])
 
 if __name__ == '__main__':
     unittest.main()

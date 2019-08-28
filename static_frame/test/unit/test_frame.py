@@ -2156,9 +2156,13 @@ class TestUnit(TestCase):
 
         f2 = f1.iter_element().apply(lambda x: str(x).lower().replace('e', ''))
 
+        self.assertEqual(f1.columns.__class__, f2.columns.__class__,)
+
         self.assertEqual(f2.to_pairs(0),
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
+
+
 
     def test_frame_reversed(self) -> None:
         columns = tuple('pqrst')

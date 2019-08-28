@@ -378,24 +378,26 @@ class IndexBase(ContainerBase):
 
 
 def index_from_optional_constructor(
-        value: tp.Union[IndexInitializer, IndexBase],
+        value: IndexInitializer,
         default_constructor: IndexConstructor,
         ) -> IndexBase:
     '''
-    Given a value that might be an Index or and IndexInitializer, determine if that value is an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor
+    Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is an really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor
     '''
     if isinstance(value, IndexBase) and isinstance(default_constructor, IndexBase):
-        # if default is STATIC, use value is not STATIC, get an immutabel
+        # if default is STATIC, and value is not STATIC, get an immutabel
         if default_constructor.STATIC:
             if not value.STATIC:
-                # use the immutabel alternative
+                # v: ~S, dc: S, use immutable alternative
                 return value._IMMUTABLE_CONSTRUCTOR(value)
-            return value # immutable, can reuse
+            # v: S, dc: S, both immutable
+            return value
         else: # default constructor is mutable
-            if not value.STATIC: # both are mutable
+            if not value.STATIC:
+                # v: ~S, dc: ~S, both are mutable
                 return value.copy()
-            # need to return a mutable version of something that is not mutabel
-            # TODO: not sure how to do this
+            # v: S, dc: ~S, return a mutable version of something that is not mutable
             return default_constructor(value)
 
+    # cannot always deterine satic status from constructors; fallback on using default constructor
     return default_constructor(value)

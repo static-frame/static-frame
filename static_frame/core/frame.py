@@ -28,6 +28,7 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import FilePathOrFileLike
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import FILL_VALUE_DEFAULT
 
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
@@ -719,31 +720,47 @@ class Frame(ContainerBase):
 
     @classmethod
     def from_element_loc_items(cls,
-            items,
+            items: tp.Iterable[tp.Tuple[
+                    tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
-            index,
-            columns,
+            index: IndexInitializer,
+            columns: IndexInitializer,
             dtype=None,
-            name: tp.Hashable = None
+            name: tp.Hashable = None,
+            fill_value: object = FILL_VALUE_DEFAULT,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None
             ) -> 'Frame':
         '''
-        This function is partialed (seeting the index and columns) and used by ``IterNodeDelegate`` as as the apply constructor for doing application on iteration.
+        This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
+
+        Args:
+            items: an iterable of pairs of 2-tuples of row, column loc labels and values.
+
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
+        if not index_constructor:
+            index = index_from_optional_constructor(index, Index)
+        else:
+            index = index_constructor(index)
 
-        index = index_from_optional_constructor(index, Index)
-        columns = index_from_optional_constructor(columns, cls._COLUMNS_CONSTRUCTOR)
+        if not columns_constructor:
+            columns = index_from_optional_constructor(columns, cls._COLUMNS_CONSTRUCTOR)
+        else:
+            columns = columns_constructor(columns)
 
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)
 
         dtype = dtype if dtype is not None else object
+
         tb = TypeBlocks.from_element_items(
                 items,
                 shape=(len(index), len(columns)),
-                dtype=dtype)
+                dtype=dtype,
+                fill_value=fill_value)
 
         return cls(tb,
                 index=index,

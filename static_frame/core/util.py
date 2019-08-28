@@ -182,6 +182,7 @@ FrameInitializer = tp.Union[
         ]
 
 FRAME_INITIALIZER_DEFAULT = object()
+FILL_VALUE_DEFAULT = object()
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
