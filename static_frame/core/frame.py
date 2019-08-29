@@ -78,7 +78,7 @@ from static_frame.core.index_base import index_from_optional_constructor
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _requires_reindex
-from static_frame.core.index import _is_index_initializer
+from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -524,7 +524,7 @@ class Frame(ContainerBase):
 
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
         own_index = False
-        if _is_index_initializer(index):
+        if _index_initializer_needs_init(index):
             index = Index(index)
             own_index = True
 
@@ -683,7 +683,7 @@ class Frame(ContainerBase):
                 own_data=True)
 
     #---------------------------------------------------------------------------
-    # iloc/loc pairs constructors: these are not yet documented
+    # iloc/loc pairs constructors: these are not public, not sure if they should be
 
     @classmethod
     def from_element_iloc_items(cls,
@@ -737,15 +737,15 @@ class Frame(ContainerBase):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        if not index_constructor:
-            index = index_from_optional_constructor(index, Index)
-        else:
-            index = index_constructor(index)
+        index = index_from_optional_constructor(index,
+                default_constructor=Index,
+                explicit_constructor=index_constructor
+                )
 
-        if not columns_constructor:
-            columns = index_from_optional_constructor(columns, cls._COLUMNS_CONSTRUCTOR)
-        else:
-            columns = columns_constructor(columns)
+        columns = index_from_optional_constructor(columns,
+                default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                explicit_constructor=columns_constructor
+                )
 
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)

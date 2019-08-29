@@ -377,11 +377,16 @@ class IndexBase(ContainerBase):
 
 def index_from_optional_constructor(
         value: IndexInitializer,
+        *,
         default_constructor: IndexConstructor,
+        explicit_constructor: IndexConstructor = None,
         ) -> IndexBase:
     '''
-    Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is an really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor
+    Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
+    if explicit_constructor:
+        return explicit_constructor(value)
+
     if isinstance(value, IndexBase) and isinstance(default_constructor, IndexBase):
         # if default is STATIC, and value is not STATIC, get an immutabel
         if default_constructor.STATIC:

@@ -1279,12 +1279,12 @@ class IndexMillisecond(_IndexDatetime):
 
 #-------------------------------------------------------------------------------
 
-def _is_index_initializer(value) -> bool:
+def _index_initializer_needs_init(value) -> bool:
     '''Determine if value is a non-empty index initializer. This could almost just be a truthy test, but ndarrays need to be handled in isolation. Generators should return True.
     '''
     if value is None:
         return False
-    if isinstance(value, Index):
+    if isinstance(value, IndexBase):
         return False
     if isinstance(value, np.ndarray):
         return bool(len(value))

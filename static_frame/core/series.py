@@ -266,7 +266,7 @@ class Series(ContainerBase):
             # if it is a static index, and we have no constructor, own it
             self._index = index
         elif index is None or index is IndexAutoFactory:
-            # if a values constructor is defined, self.values is not yete defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
+            # if a values constructor is defined, self.values is not yet defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
             if values_constructor:
                 shape = 1
             else:
