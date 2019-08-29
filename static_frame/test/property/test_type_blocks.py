@@ -130,9 +130,7 @@ class TestUnit(TestCase):
         # if the shapes are different, they cannot be block compatible
         if tb1.shape[1] != tb2.shape[1]:
             self.assertFalse(post1)
-        if post1:
-            self.assertTrue(tb1.shape[1] == tb2.shape[1])
-            self.assertTrue(len(tb1.shapes) == len(tb2.shapes))
+
 
     # TODO: _concatenate_blocks
 
