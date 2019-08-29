@@ -461,7 +461,7 @@ class TypeBlocks(ContainerBase):
     def block_compatible(self,
             other: 'TypeBlocks',
             axis: tp.Optional[int] = None) -> bool:
-        '''Block compatible means that the blocks are the same shape. Have not yet added type to this evaluation.
+        '''Block compatible means that the blocks are the same shape. Type is not yet included in this evaluation.
 
         Args:
             axis: If True, the full shape is compared; if False, only the columns width is compared.

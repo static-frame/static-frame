@@ -120,7 +120,21 @@ class TestUnit(TestCase):
                 self.assertFalse(post1)
 
 
-    # TODO: reblock_compatible
+    @given(sfst.get_type_blocks(), sfst.get_type_blocks())  # type: ignore
+    def test_reblock_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
+
+        post1 = tb1.reblock_compatible(tb2)
+        post2 = tb2.reblock_compatible(tb1)
+        # either direction gets the same result
+        self.assertTrue(post1 == post2)
+        # if the shapes are different, they cannot be block compatible
+        if tb1.shape[1] != tb2.shape[1]:
+            self.assertFalse(post1)
+        if post1:
+            self.assertTrue(tb1.shape[1] == tb2.shape[1])
+            self.assertTrue(len(tb1.shapes) == len(tb2.shapes))
+
+    # TODO: _concatenate_blocks
 
 
 
@@ -136,7 +150,6 @@ class TestUnit(TestCase):
             self.assertEqual(tb.shape[1], shape_original[1] + 1)
         else:
             self.assertEqual(tb.shape[1], shape_original[1] + aa.shape[1])
-
 
     @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))  # type: ignore
     def test_extend(self, tbs: tp.Sequence[TypeBlocks]) -> None:
