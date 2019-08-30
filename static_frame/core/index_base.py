@@ -380,7 +380,7 @@ def index_from_optional_constructor(
         value: IndexInitializer,
         *,
         default_constructor: IndexConstructor,
-        explicit_constructor: IndexConstructor = None,
+        explicit_constructor: tp.Optional[IndexConstructor] = None,
         ) -> IndexBase:
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
@@ -391,7 +391,7 @@ def index_from_optional_constructor(
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase) and hasattr(default_constructor, STATIC_ATTR):
         # if default is STATIC, and value is not STATIC, get an immutabel
-        if default_constructor.STATIC:
+        if default_constructor.STATIC: # type: ignore
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
                 return value._IMMUTABLE_CONSTRUCTOR(value)

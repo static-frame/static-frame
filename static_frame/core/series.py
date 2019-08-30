@@ -36,7 +36,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
-from static_frame.core.util import STATIC_ATTR
+# from static_frame.core.util import STATIC_ATTR
 
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D

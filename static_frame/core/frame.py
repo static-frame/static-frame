@@ -48,7 +48,7 @@ from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import InterfaceAsType
 from static_frame.core.util import ufunc_unique
-from static_frame.core.util import STATIC_ATTR
+# from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations

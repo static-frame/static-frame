@@ -1,11 +1,11 @@
 
 import typing as tp
 
-from static_frame.core.index_base import IndexBase
+# from static_frame.core.index_base import IndexBase
 
 
 from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
+# from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.index import IndexGO
 
@@ -63,8 +63,8 @@ class IndexAutoFactory:
             initializer: IndexAutoInitializer,
             *,
             default_constructor: IndexConstructor,
-            explicit_constructor: IndexConstructor = None,
-            ) -> IndexBase:
+            explicit_constructor: tp.Optional[IndexConstructor] = None,
+            ) -> tp.Union[Index, IndexGO]:
 
         labels = range(initializer)
 
