@@ -23,6 +23,7 @@ from static_frame import ILoc
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
+from static_frame.core.index_base import index_from_optional_constructor
 
 
 class TestUnit(TestCase):
@@ -1028,8 +1029,26 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_from_optional_constructor_a(self) -> None:
+        idx1 = index_from_optional_constructor([1, 3, 4],
+                default_constructor=Index)
+        self.assertEqual(idx1.__class__, Index)
 
+        # given a mutable index and an immutable default, get immutable version
+        idx2 = index_from_optional_constructor(IndexGO((1, 3, 4)),
+                default_constructor=Index)
+        self.assertEqual(idx2.__class__, Index)
 
+        # given a mutable index and an immutable default, get immutable version
+        idx3 = index_from_optional_constructor(IndexGO((1, 3, 4)),
+                default_constructor=IndexGO)
+        self.assertEqual(idx3.__class__, IndexGO)
+
+        # given a mutable index and an immutable default, get immutable version
+        idx4 = index_from_optional_constructor(
+                IndexSecond((1, 3, 4)),
+                default_constructor=Index)
+        self.assertEqual(idx4.__class__, IndexSecond)
 
 if __name__ == '__main__':
     unittest.main()

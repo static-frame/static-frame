@@ -11,14 +11,16 @@ class TestUnit(TestCase):
 
     def test_index_auto_factory_a(self) -> None:
 
-        idx1 = IndexAutoFactory.from_is_static(4, is_static=True)
+        idx1 = IndexAutoFactory.from_optional_constructor(4,
+                default_constructor=Index)
         self.assertEqual(idx1._loc_is_iloc, True)
         self.assertEqual(len(idx1), 4)
         self.assertEqual(idx1.STATIC, True)
 
     def test_index_auto_factory_b(self) -> None:
 
-        idx1 = IndexAutoFactory.from_is_static(8, is_static=False)
+        idx1 = IndexAutoFactory.from_optional_constructor(8,
+                default_constructor=IndexGO)
         self.assertEqual(idx1._loc_is_iloc, True)
         self.assertEqual(len(idx1), 8)
         self.assertEqual(idx1.STATIC, False)
@@ -32,7 +34,9 @@ class TestUnit(TestCase):
 
     def test_index_auto_factory_c(self) -> None:
 
-        idx1 = IndexAutoFactory.from_constructor(5, constructor=Index)
+        idx1 = IndexAutoFactory.from_optional_constructor(5,
+                default_constructor=IndexGO,
+                explicit_constructor=Index)
         # when using an alternate constructor, loc_is_iloc will not be set
         self.assertEqual(idx1._loc_is_iloc, False)
         self.assertEqual(len(idx1), 5)

@@ -1000,31 +1000,38 @@ class Frame(ContainerBase):
         if own_columns:
             self._columns = columns
             col_count = len(self._columns)
-        elif (self._COLUMNS_CONSTRUCTOR.STATIC
-                and not columns_constructor
-                and hasattr(columns, STATIC_ATTR)
-                and columns.STATIC
-                ):
-            # if it is a STATIC index, and we do not have a columns_constructor, we can assign directly
-            self._columns = columns
-            col_count = len(self._columns)
+        # elif (self._COLUMNS_CONSTRUCTOR.STATIC
+        #         and not columns_constructor
+        #         and hasattr(columns, STATIC_ATTR)
+        #         and columns.STATIC
+        #         ):
+        #     # if it is a STATIC index, and we do not have a columns_constructor, we can assign directly
+        #     self._columns = columns
+        #     col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
-            if columns_constructor:
-                self._columns = IndexAutoFactory.from_constructor(
-                        col_count,
-                        constructor=columns_constructor
-                        )
-            else:
-                self._columns = IndexAutoFactory.from_is_static(
-                        col_count,
-                        is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
+            self._columns = IndexAutoFactory.from_optional_constructor(
+                    col_count,
+                    default_constructor=self._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
+            # if columns_constructor:
+            #     self._columns = IndexAutoFactory.from_constructor(
+            #             col_count,
+            #             constructor=columns_constructor)
+            # else:
+            #     self._columns = IndexAutoFactory.from_is_static(
+            #             col_count,
+            #             is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
         else:
-            # columns could be a mutable index here
-            if columns_constructor:
-                self._columns = columns_constructor(columns)
-            else:
-                self._columns = self._COLUMNS_CONSTRUCTOR(columns)
+            # if columns_constructor:
+            #     self._columns = columns_constructor(columns)
+            # else:
+            #     self._columns = self._COLUMNS_CONSTRUCTOR(columns)
+            self._columns = index_from_optional_constructor(columns,
+                    default_constructor=self._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
             col_count = len(self._columns)
 
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
@@ -1036,28 +1043,37 @@ class Frame(ContainerBase):
         if own_index:
             self._index = index
             row_count = len(self._index)
-        elif (hasattr(index, STATIC_ATTR)
-                and index.STATIC
-                and not index_constructor
-                ):
-            # if it is a static index, we have no constructor, own it
-            self._index = index
-            row_count = len(self._index)
+        # elif (hasattr(index, STATIC_ATTR)
+        #         and index.STATIC
+        #         and not index_constructor
+        #         ):
+        #     # if it is a static index, we have no constructor, own it
+        #     self._index = index
+        #     row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
-            if index_constructor:
-                self._index = IndexAutoFactory.from_constructor(
-                        row_count,
-                        constructor=index_constructor)
-            else:
-                self._index = IndexAutoFactory.from_is_static(
-                        row_count,
-                        is_static=True)
+            self._index = IndexAutoFactory.from_optional_constructor(
+                    row_count,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+            # if index_constructor:
+            #     self._index = IndexAutoFactory.from_constructor(
+            #             row_count,
+            #             constructor=index_constructor)
+            # else:
+            #     self._index = IndexAutoFactory.from_is_static(
+            #             row_count,
+            #             is_static=True)
         else:
-            if index_constructor:
-                self._index = index_constructor(index)
-            else:
-                self._index = Index(index)
+            # if index_constructor:
+            #     self._index = index_constructor(index)
+            # else:
+            #     self._index = Index(index)
+            self._index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
             row_count = len(self._index)
 
         if not self._index.STATIC:

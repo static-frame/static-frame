@@ -17,6 +17,9 @@ from static_frame.core.display import Display
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerBase
 
+from static_frame.core.util import STATIC_ATTR
+
+
 if tp.TYPE_CHECKING:
     import pandas as pd  # type: ignore #pylint: disable=W0611
 
@@ -373,8 +376,6 @@ class IndexBase(ContainerBase):
 
 
 
-
-
 def index_from_optional_constructor(
         value: IndexInitializer,
         *,
@@ -387,7 +388,8 @@ def index_from_optional_constructor(
     if explicit_constructor:
         return explicit_constructor(value)
 
-    if isinstance(value, IndexBase) and isinstance(default_constructor, IndexBase):
+    # default constructor could be a function with a STATIC attribute
+    if isinstance(value, IndexBase) and hasattr(default_constructor, STATIC_ATTR):
         # if default is STATIC, and value is not STATIC, get an immutabel
         if default_constructor.STATIC:
             if not value.STATIC:
