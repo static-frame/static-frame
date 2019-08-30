@@ -85,10 +85,8 @@ disable=C0102,C0103,C0111,C0112,C0113,C0121,C0122,C0123,C0200,C0201,C0202,C0203,
 
 files-output=no
 reports=no
-
-# not compatible with IDEs
-# msg-template={msg_id}: {line:3d}: {obj}: {msg}
-# output-format=colorized
+msg-template={msg_id}: {line:3d}: {obj}: {msg}
+output-format=colorized
 
 
 [MISCELLANEOUS]

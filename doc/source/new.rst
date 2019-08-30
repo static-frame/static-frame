@@ -8,6 +8,8 @@ What is New in Static Frame
 
 ``iter_element().apply`` now properly preserves index and column types.
 
+Using ``Frame.from_records`` with an empty iterable or iterator will deliver a ``ErrorInitFrame``.
+
 
 0.4.0
 -----------
