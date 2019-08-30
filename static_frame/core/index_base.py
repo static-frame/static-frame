@@ -70,7 +70,7 @@ class IndexBase(ContainerBase):
 
 
 
-    STATIC = True
+    STATIC: bool = True
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
