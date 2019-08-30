@@ -74,6 +74,8 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
+from static_frame.core.exception import ErrorInitIndex
+
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611
@@ -366,7 +368,7 @@ class Index(IndexBase):
             dtype_extract = self._DTYPE # set in some specialized Index classes
         else: # passed dtype is not None
             if self._DTYPE is not None and dtype != self._DTYPE:
-                raise RuntimeError('invalid dtype argument for this Index',
+                raise ErrorInitIndex('invalid dtype argument for this Index',
                         dtype, self._DTYPE)
             # self._DTYPE is None, passed dtype is not None, use dtype
             dtype_extract = dtype
@@ -415,10 +417,10 @@ class Index(IndexBase):
         self._positions = self._extract_positions(self._map, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
-            raise RuntimeError('invalid label dtype for this Index',
+            raise ErrorInitIndex('invalid label dtype for this Index',
                     self._labels.dtype, self._DTYPE)
         if len(self._map) != len(self._labels):
-            raise KeyError(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
+            raise ErrorInitIndex(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
 
         # NOTE: automatic discovery is possible, but not yet implemented
         self._loc_is_iloc = loc_is_iloc

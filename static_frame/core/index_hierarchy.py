@@ -43,6 +43,7 @@ from static_frame.core.hloc import HLoc
 from static_frame.core.index_level import IndexLevel
 
 from static_frame.core.index_level import IndexLevelGO
+from static_frame.core.exception import ErrorInitIndex
 
 
 if tp.TYPE_CHECKING:
@@ -207,7 +208,7 @@ class IndexHierarchy(IndexBase):
 
         # minimum permitted depth is 2
         if len(first) < 2:
-            raise RuntimeError('cannot create an IndexHierarhcy from only one level.')
+            raise ErrorInitIndex('cannot create an IndexHierarhcy from only one level.')
 
         depth_max = len(first) - 1
         depth_pre_max = len(first) - 2
@@ -228,7 +229,7 @@ class IndexHierarchy(IndexBase):
                     else:
                         # can only fetch this node (and not create a new node) if this is the sequential predecessor
                         if v != observed_last[d]:
-                            raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined'.format(
+                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined'.format(
                                     v,
                                     label,
                                     observed_last[d],
@@ -241,7 +242,7 @@ class IndexHierarchy(IndexBase):
                     else:
                         # cannot just fetch this list if it is not the predecessor
                         if v != observed_last[d]:
-                            raise RuntimeError('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
+                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
                                     v,
                                     label,
                                     observed_last[d],
@@ -252,7 +253,7 @@ class IndexHierarchy(IndexBase):
                     # if there are redundancies here they will be caught in index creation
                     current.append(v)
                 else:
-                    raise RuntimeError('label exceeded expected depth', label)
+                    raise ErrorInitIndex('label exceeded expected depth', label)
 
         return cls(levels=cls._tree_to_index_level(tree), name=name)
 

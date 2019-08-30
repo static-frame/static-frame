@@ -24,7 +24,7 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
 from static_frame.core.index_base import index_from_optional_constructor
-
+from static_frame.core.exception import ErrorInitIndex
 
 class TestUnit(TestCase):
 
@@ -135,19 +135,19 @@ class TestUnit(TestCase):
 
     def test_index_unique(self) -> None:
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = Index(('a', 'b', 'c', 'a'))
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = IndexGO(('a', 'b', 'c', 'a'))
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = Index(['a', 'a'])
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = IndexGO(['a', 'a'])
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = Index(np.array([True, False, True], dtype=bool))
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             idx = IndexGO(np.array([True, False, True], dtype=bool))
 
         # acceptable but not advisiable

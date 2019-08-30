@@ -31,7 +31,7 @@ from static_frame import IndexAutoFactory
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
-
+from static_frame.core.exception import ErrorInitFrame
 
 nan = np.nan
 
@@ -3467,7 +3467,7 @@ class TestUnit(TestCase):
                 ((0, (('x', 2), ('y', 34))), (1, (('x', False), ('y', False))), (2, (('x', 'c'), ('y', 'd'))), (3, (('x', False), ('y', True))))
                 )
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ErrorInitFrame):
             Frame.from_concat((f1, f2), axis=1, columns=IndexAutoFactory, index=IndexAutoFactory)
 
         post2 = Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory)
@@ -3475,7 +3475,7 @@ class TestUnit(TestCase):
                 (('p', ((0, 2), (1, 34), (2, 'c'), (3, 'd'))), ('q', ((0, False), (1, False), (2, False), (3, True))))
                 )
 
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ErrorInitFrame):
             Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
 
 

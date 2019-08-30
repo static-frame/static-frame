@@ -87,6 +87,8 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+from static_frame.core.exception import ErrorInitFrame
+
 from static_frame.core.doc_str import doc_inject
 
 
@@ -177,10 +179,10 @@ class Frame(ContainerBase):
                 from_array_columns = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(columns, axis=0)) != len(columns):
-                    raise RuntimeError('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
+                    raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
 
             if index is IndexAutoFactory:
-                raise NotImplementedError('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
+                raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
                 # get the union index, or the common index if identical
                 index = ufunc_set_iter(
@@ -207,10 +209,10 @@ class Frame(ContainerBase):
                 from_array_index = True
                 # avoid sort for performance; always want rows if ndim is 2
                 if len(ufunc_unique(index, axis=0)) != len(index):
-                    raise RuntimeError('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+                    raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
 
             if columns is IndexAutoFactory:
-                raise NotImplementedError('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
+                raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
                 columns = ufunc_set_iter(
                         (frame._columns.values for frame in frames),
@@ -324,7 +326,7 @@ class Frame(ContainerBase):
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
             if dtypes is not None:
-                raise NotImplementedError('handling of dtypes when using NP records is no yet implemented')
+                raise ErrorInitFrame('handling of dtypes when using NP records is not permitted')
             return cls(records, index=index, columns=columns)
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -361,7 +363,7 @@ class Frame(ContainerBase):
                 if derive_columns: # just pass the key back
                     column_getter = lambda key: key
             elif isinstance(row_reference, Series):
-                raise RuntimeError('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
+                raise ErrorInitFrame('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
             else:
                 # all other iterables
                 col_idx_iter = range(col_count)
@@ -551,7 +553,7 @@ class Frame(ContainerBase):
                         yield v
                 elif isinstance(v, Series):
                     if index is None:
-                        raise RuntimeError('can only consume Series in Frame.from_items if an Index is provided.')
+                        raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
                     if column_type is not None:
                         v = v.astype(column_type)
@@ -562,7 +564,7 @@ class Frame(ContainerBase):
                         yield v.values
 
                 elif isinstance(v, Frame):
-                    raise NotImplementedError('Frames are not supported in from_items constructor.')
+                    raise ErrorInitFrame('Frames are not supported in from_items constructor.')
                 else:
                     values = np.array(v, dtype=column_type)
                     values.flags.writeable = False
@@ -963,7 +965,7 @@ class Frame(ContainerBase):
             self._blocks = TypeBlocks.from_blocks(data)
 
         elif isinstance(data, dict):
-            raise RuntimeError('use Frame.from_dict to create a Frame from a mapping.')
+            raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
 
         elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
@@ -1000,14 +1002,6 @@ class Frame(ContainerBase):
         if own_columns:
             self._columns = columns
             col_count = len(self._columns)
-        # elif (self._COLUMNS_CONSTRUCTOR.STATIC
-        #         and not columns_constructor
-        #         and hasattr(columns, STATIC_ATTR)
-        #         and columns.STATIC
-        #         ):
-        #     # if it is a STATIC index, and we do not have a columns_constructor, we can assign directly
-        #     self._columns = columns
-        #     col_count = len(self._columns)
         elif columns_empty:
             col_count = 0 if col_count is None else col_count
             self._columns = IndexAutoFactory.from_optional_constructor(
@@ -1015,19 +1009,7 @@ class Frame(ContainerBase):
                     default_constructor=self._COLUMNS_CONSTRUCTOR,
                     explicit_constructor=columns_constructor
                     )
-            # if columns_constructor:
-            #     self._columns = IndexAutoFactory.from_constructor(
-            #             col_count,
-            #             constructor=columns_constructor)
-            # else:
-            #     self._columns = IndexAutoFactory.from_is_static(
-            #             col_count,
-            #             is_static=self._COLUMNS_CONSTRUCTOR.STATIC)
         else:
-            # if columns_constructor:
-            #     self._columns = columns_constructor(columns)
-            # else:
-            #     self._columns = self._COLUMNS_CONSTRUCTOR(columns)
             self._columns = index_from_optional_constructor(columns,
                     default_constructor=self._COLUMNS_CONSTRUCTOR,
                     explicit_constructor=columns_constructor
@@ -1036,20 +1018,13 @@ class Frame(ContainerBase):
 
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
-            raise RuntimeError(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
+            raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
         #-----------------------------------------------------------------------
         # index assignment
 
         if own_index:
             self._index = index
             row_count = len(self._index)
-        # elif (hasattr(index, STATIC_ATTR)
-        #         and index.STATIC
-        #         and not index_constructor
-        #         ):
-        #     # if it is a static index, we have no constructor, own it
-        #     self._index = index
-        #     row_count = len(self._index)
         elif index_empty:
             row_count = 0 if row_count is None else row_count
             self._index = IndexAutoFactory.from_optional_constructor(
@@ -1057,19 +1032,7 @@ class Frame(ContainerBase):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-            # if index_constructor:
-            #     self._index = IndexAutoFactory.from_constructor(
-            #             row_count,
-            #             constructor=index_constructor)
-            # else:
-            #     self._index = IndexAutoFactory.from_is_static(
-            #             row_count,
-            #             is_static=True)
         else:
-            # if index_constructor:
-            #     self._index = index_constructor(index)
-            # else:
-            #     self._index = Index(index)
             self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
@@ -1077,7 +1040,7 @@ class Frame(ContainerBase):
             row_count = len(self._index)
 
         if not self._index.STATIC:
-            raise RuntimeError('non-static index cannot be assigned to Frame')
+            raise ErrorInitFrame('non-static index cannot be assigned to Frame')
 
         #-----------------------------------------------------------------------
         # final evaluation
@@ -1090,22 +1053,22 @@ class Frame(ContainerBase):
             # if we have a blocks_constructor, we are determining final size from index and/or columns; we might have a legitamate single value for data, but it cannot be FRAME_INITIALIZER_DEFAULT
             if data is not FRAME_INITIALIZER_DEFAULT and (
                     columns_empty or index_empty):
-                raise RuntimeError('cannot supply a data argument to Frame constructor when index or columns is empty')
+                raise ErrorInitFrame('cannot supply a data argument to Frame constructor when index or columns is empty')
             # must update the row/col counts, sets self._blocks
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
 
         if self._blocks.ndim != self._NDIM:
-            raise RuntimeError('dimensionality of final values not supported')
+            raise ErrorInitFrame('dimensionality of final values not supported')
 
         if self._blocks.shape[0] != row_count:
             # row count might be 0 for an empty DF
-            raise RuntimeError(
+            raise ErrorInitFrame(
                 f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})'
             )
         if self._blocks.shape[1] != col_count:
-            raise RuntimeError(
+            raise ErrorInitFrame(
                 f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
             )
 

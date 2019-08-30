@@ -63,6 +63,8 @@ from static_frame.core.index_base import index_from_optional_constructor
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+from static_frame.core.exception import ErrorInitSeries
+
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
@@ -225,7 +227,7 @@ class Series(ContainerBase):
         self._name = name if name is None else name_filter(name)
 
         if own_index and index is None:
-            raise RuntimeError('cannot own_index if no index is provided.')
+            raise ErrorInitSeries('cannot own_index if no index is provided.')
 
         #-----------------------------------------------------------------------
         # values assignment
@@ -234,7 +236,7 @@ class Series(ContainerBase):
 
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
-                raise RuntimeError('use Series.from_dict to create a Series from a mapping.')
+                raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # while iterable_to_array will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
@@ -247,7 +249,7 @@ class Series(ContainerBase):
 
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
-                raise Exception('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
+                raise ErrorInitSeries('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
             if values.shape == (): # handle special case of NP element
                 def values_constructor(shape): #pylint: disable=E0102
                     self.values = np.repeat(values, shape)
@@ -260,13 +262,6 @@ class Series(ContainerBase):
 
         if own_index:
             self._index = index
-
-        # elif (hasattr(index, STATIC_ATTR)
-        #         and index.STATIC
-        #         and not index_constructor
-        #         ):
-        #     # if it is a static index, and we have no constructor, own it
-        #     self._index = index
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
             if values_constructor:
@@ -279,35 +274,14 @@ class Series(ContainerBase):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-
-            # if index_constructor:
-            #     # use index_constructor if povided
-            #     self._index = IndexAutoFactory.from_constructor(
-            #             shape,
-            #             constructor=index_constructor)
-            # else:
-            #     self._index = IndexAutoFactory.from_is_static(
-            #             shape,
-            #             is_static=True)
         else: # an iterable of labels, or an index subclass
             self._index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
 
-            # if index_constructor:
-            #     # always use constructor if provided
-            #     self._index = index_constructor(index)
-            # else:
-            #     if isinstance(index, IndexBase):
-            #         # we call with the class of the passed-in index to get a new instance (and in case it is hierarchical); this may no be needed now that we takk index_cosntructor classes, and might be remove, as it is not done in Frame
-            #         self._index = index.__class__(index)
-            #     else:
-            #         # index argument is an iterable of labels
-            #         self._index = Index(index)
-
         if not self._index.STATIC:
-            raise RuntimeError('non-static index cannot be assigned to Series')
+            raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
         shape = self._index.__len__()
 
@@ -318,10 +292,10 @@ class Series(ContainerBase):
         # final evaluation
 
         if self.values.ndim != self._NDIM:
-            raise RuntimeError('dimensionality of final values not supported')
+            raise ErrorInitSeries('dimensionality of final values not supported')
 
         if len(self.values) != shape:
-            raise RuntimeError('values and index do not match length')
+            raise ErrorInitSeries('values and index do not match length')
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:

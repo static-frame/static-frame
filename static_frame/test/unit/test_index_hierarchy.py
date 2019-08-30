@@ -23,6 +23,7 @@ from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.test.test_case import TestCase
+from static_frame.core.exception import ErrorInitIndex
 
 class TestUnit(TestCase):
 
@@ -75,7 +76,7 @@ class TestUnit(TestCase):
                 ('III', 'B'),
                 ('III', 'B')
                 )
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarchy_init_e(self) -> None:
@@ -115,7 +116,7 @@ class TestUnit(TestCase):
                 ('II', 'A', 2),
                 ('II', 'A', 1),
                 )
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             ih1 = IndexHierarchy.from_labels(labels)
 
     def test_hierarchy_init_h(self) -> None:
@@ -803,7 +804,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
             [['A', 1], ['B', 1], ['C', 1], ['C', 2]])
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ErrorInitIndex):
             ih2.drop_level(1)
 
     def test_hierarchy_drop_level_c(self) -> None:
