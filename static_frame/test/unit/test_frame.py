@@ -3683,6 +3683,17 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(0),
                 (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
 
+
+
+    def test_frame_from_records_k(self) -> None:
+
+        with self.assertRaises(ErrorInitFrame):
+            Frame.from_records(())
+
+        with self.assertRaises(ErrorInitFrame):
+            Frame.from_records(((0, 1, 2) for x in range(3) if x < 0))
+
+
     def test_frame_from_json_a(self) -> None:
 
         msg = """[

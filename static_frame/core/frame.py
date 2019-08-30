@@ -345,11 +345,14 @@ class Frame(ContainerBase):
                 # could be a sequence, or something like a dict view
                 rows = records
 
+            if not len(rows):
+                raise ErrorInitFrame('no rows available in records.')
+
             if hasattr(rows, '__getitem__'):
                 rows_to_iter = False
                 row_reference = rows[0]
             else:
-                # dict view, or other sized iterable that does not suppor getitem
+                # dict view, or other sized iterable that does not support getitem
                 rows_to_iter = True
                 row_reference = next(iter(rows))
 
