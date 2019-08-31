@@ -1912,6 +1912,22 @@ class TestUnit(TestCase):
         self.assertEqual(post.columns.values.tolist(), f.columns.values.tolist())
 
 
+    def test_frame_binary_operator_f(self) -> None:
+
+            a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+
+            post1 = a @ b
+
+            self.assertEqual(
+                    post1.to_pairs(0),
+                    (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                    )
+
+            post2 = a @ Series([1, 2], index=tuple('ab'))
+            self.assertEqual(post2.to_pairs(),
+                    (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
+
 
     def test_frame_isin_a(self) -> None:
         # reindex both axis

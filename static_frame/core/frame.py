@@ -1,13 +1,9 @@
-
-
-
 from types import GeneratorType
 import typing as tp
 import sqlite3
-
+import operator as operator_mod
 import csv
 import json
-
 from collections import namedtuple
 from functools import partial
 
@@ -15,7 +11,6 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import UFunc
-
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -2044,6 +2039,31 @@ class Frame(ContainerBase):
                 columns=self._columns)
 
     def _ufunc_binary_operator(self, *, operator, other):
+
+
+        if operator is operator_mod.__matmul__:
+            # self.columns must be equal to other.index
+            if not (self.columns == other.index).all():
+                raise RuntimeError('columns and indices are not aligned for matrix multiplication')
+
+            # do not reindex operands
+            if isinstance(other, Series):
+                data = operator(self.values, other.values)
+                return Series(data,
+                        index=self.index,
+                        # own_data=True,
+                        own_index=True,
+                        )
+
+            data = operator(self.values, other.values)
+            return self.__class__(data,
+                    index=self.index,
+                    columns=other.columns,
+                    own_data=True,
+                    own_index=True,
+                    )
+
+
         if isinstance(other, Frame):
             # reindex both dimensions to union indices
             columns = self._columns.union(other._columns)

@@ -60,6 +60,7 @@ _REVERSE_OPERATOR_MAP = {
         '__radd__': '__add__',
         '__rsub__': '__sub__',
         '__rmul__': '__mul__',
+        '__rmatmul__': '__matmul__',
         '__rtruediv__': '__truediv__',
         '__rfloordiv__': '__floordiv__',
         }
@@ -238,8 +239,7 @@ class ContainerMeta(type):
             operator_func = getattr(operator_mod, func_name)
             func_wrapper = operator_func
         else:
-            unreversed_operator_func = getattr(operator_mod,
-                _REVERSE_OPERATOR_MAP[func_name])
+            unreversed_operator_func = getattr(operator_mod, _REVERSE_OPERATOR_MAP[func_name])
             # flip the order of the arguments
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
             func_wrapper = unreversed_operator_func
