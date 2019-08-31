@@ -1914,6 +1914,8 @@ class TestUnit(TestCase):
 
     def test_frame_binary_operator_f(self) -> None:
 
+            # matrix multiplication, with realigment of same sized axis
+
             a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
             b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
@@ -1924,9 +1926,43 @@ class TestUnit(TestCase):
                     (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
                     )
 
-            post2 = a @ Series([1, 2], index=tuple('ab'))
-            self.assertEqual(post2.to_pairs(),
+            # with reorded index on b, we get the same result, as opposite axis align
+            post2 = a @ b.reindex(index=('b', 'a'))
+
+            self.assertEqual(
+                    post2.to_pairs(0),
+                    (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                    )
+
+            post3 = a @ Series([1, 2], index=tuple('ab'))
+            self.assertEqual(post3.to_pairs(),
                     (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
+
+            # index is aligned
+            post4 = a @ Series([2, 1], index=tuple('ba'))
+            self.assertEqual(post3.to_pairs(),
+                    (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
+
+
+    def test_frame_binary_operator_g(self) -> None:
+
+            # matrix multiplication, with realigment of different sized axis
+
+            a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+            a['c'] = 30
+
+            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+
+            post1 = a @ b
+            # all values go to NaN
+
+            a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+
+            b = Frame.from_dict(dict(p=(1, 2, 3), q=(3, 4, 5), r=(5, 6, 7)), index=tuple('abc'))
+
+            post2 = a @ b
+            # import ipdb; ipdb.set_trace()
+
 
 
     def test_frame_isin_a(self) -> None:

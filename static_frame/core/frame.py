@@ -1312,9 +1312,12 @@ class Frame(ContainerBase):
 
         if index is not None:
             if isinstance(index, IndexBase):
-                # always use the Index constructor for safe reuse when poss[ible
                 if not own_index:
-                    index = index.__class__(index)
+                    # always use the Index constructor for safe reuse when poss[ible
+                    if not index.STATIC:
+                        index = index._IMMUTABLE_CONSTRUCTOR(index)
+                    else:
+                        index = index.__class__(index)
             else: # create the Index if not already an index, assume 1D
                 index = Index(index)
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)
@@ -2031,6 +2034,55 @@ class Frame(ContainerBase):
     #---------------------------------------------------------------------------
     # operator functions
 
+
+    def _ufunc_binary_operator_matmul(self, other):
+        # for a @ b = c, a.columns must align b.index
+        # if b is 1D, a.columns bust align with b.index
+        # self.columns must be equal to other.index
+
+        if not isinstance(other, (np.ndarray, Series, Frame)):
+            # try to make it into an array
+            other = np.array(other)
+        if isinstance(other, (Series, Frame)):
+            aligned = self._columns.union(other._index)
+
+        if isinstance(other, np.ndarray):
+            if len(self.columns) != other.shape[0]: # wroks for 1D and 2D
+                raise RuntimeError('shapes not alignable for matrix multiplication')
+            ndim = other.ndim == 1
+            left = self.values
+            right = other # already np
+            index = self.index
+        elif isinstance(other, Series):
+            # a.columns must align with b.index
+            ndim = 1
+            left = self.reindex(columns=aligned).values
+            right = other.reindex(aligned).values
+            index = self.index  # this axis is not changed
+        else: # has to be Frame
+            # a.columns must align with b.index
+            ndim = 2
+            left = self.reindex(columns=aligned).values
+            right = other.reindex(index=aligned).values
+            index = self.index
+            columns = other.columns
+
+        data = left @ right
+        data.flags.writeable = False
+
+        # do not reindex operands
+        if ndim == 1:
+            return Series(data,
+                    index=index,
+                    own_index=True,
+                    )
+        return self.__class__(data,
+                index=index,
+                columns=columns,
+                own_index=True
+                )
+
+
     def _ufunc_unary_operator(self, operator: tp.Callable) -> 'Frame':
         # call the unary operator on _blocks
         return self.__class__(
@@ -2040,29 +2092,8 @@ class Frame(ContainerBase):
 
     def _ufunc_binary_operator(self, *, operator, other):
 
-
         if operator is operator_mod.__matmul__:
-            # self.columns must be equal to other.index
-            if not (self.columns == other.index).all():
-                raise RuntimeError('columns and indices are not aligned for matrix multiplication')
-
-            # do not reindex operands
-            if isinstance(other, Series):
-                data = operator(self.values, other.values)
-                return Series(data,
-                        index=self.index,
-                        # own_data=True,
-                        own_index=True,
-                        )
-
-            data = operator(self.values, other.values)
-            return self.__class__(data,
-                    index=self.index,
-                    columns=other.columns,
-                    own_data=True,
-                    own_index=True,
-                    )
-
+            return self._ufunc_binary_operator_matmul(other)
 
         if isinstance(other, Frame):
             # reindex both dimensions to union indices
