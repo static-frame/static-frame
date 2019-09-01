@@ -50,7 +50,7 @@ def index_from_optional_constructor(
 def matmul(
         lhs: tp.Union['Series', 'Frame', tp.Iterable],
         rhs: tp.Union['Series', 'Frame', tp.Iterable],
-        ) -> tp.Union['Series', 'Frame']:
+        ) -> tp.Any: #tp.Union['Series', 'Frame']:
     '''
     Implementation of matrix multiplication for Series and Frame
     '''
@@ -82,9 +82,12 @@ def matmul(
             ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
             left = lhs.values
             right = rhs # already np
-            index = lhs.index
+            if rhs.ndim == 2:
+                index = None # force auto increment integer
+            else:
+                index = lhs.index
         elif isinstance(rhs, Series):
-            ndim = 1
+            ndim = 0
             left = lhs.reindex(aligned).values
             right = rhs.reindex(aligned).values
             index = aligned
