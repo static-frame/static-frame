@@ -1,6 +1,6 @@
 import unittest
 
-import numpy as np
+import numpy as np  # type: ignore
 
 
 from static_frame.core.container_util import index_from_optional_constructor
@@ -49,7 +49,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx4.__class__, IndexSecond)
 
 
-    def test_matmul_a(self):
+    def test_matmul_a(self) -> None:
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
@@ -76,7 +76,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_matmul_b(self):
+    def test_matmul_b(self) -> None:
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
@@ -90,7 +90,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_matmul_c(self):
+    def test_matmul_c(self) -> None:
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
