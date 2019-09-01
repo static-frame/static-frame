@@ -4,8 +4,8 @@ import numpy as np  # type: ignore
 from static_frame.core.util import mloc
 from static_frame.core.util import FilePathOrFileLike
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IndexConstructor
+# from static_frame.core.util import IndexInitializer
+# from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
 
 
@@ -17,7 +17,6 @@ from static_frame.core.display import Display
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerBase
 
-from static_frame.core.util import STATIC_ATTR
 
 
 if tp.TYPE_CHECKING:
@@ -67,7 +66,6 @@ class IndexBase(ContainerBase):
     __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
     __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
     __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
-
 
 
     STATIC: bool = True
@@ -137,9 +135,6 @@ class IndexBase(ContainerBase):
         if not is_static:
             return IndexGO(value, name=value.name)
         return Index(value, name=value.name)
-
-
-
 
     #---------------------------------------------------------------------------
     # name interface
@@ -374,35 +369,3 @@ class IndexBase(ContainerBase):
 
         return fp
 
-
-
-def index_from_optional_constructor(
-        value: IndexInitializer,
-        *,
-        default_constructor: IndexConstructor,
-        explicit_constructor: tp.Optional[IndexConstructor] = None,
-        ) -> IndexBase:
-    '''
-    Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
-    '''
-    if explicit_constructor:
-        return explicit_constructor(value)
-
-    # default constructor could be a function with a STATIC attribute
-    if isinstance(value, IndexBase) and hasattr(default_constructor, STATIC_ATTR):
-        # if default is STATIC, and value is not STATIC, get an immutabel
-        if default_constructor.STATIC: # type: ignore
-            if not value.STATIC:
-                # v: ~S, dc: S, use immutable alternative
-                return value._IMMUTABLE_CONSTRUCTOR(value)
-            # v: S, dc: S, both immutable
-            return value
-        else: # default constructor is mutable
-            if not value.STATIC:
-                # v: ~S, dc: ~S, both are mutable
-                return value.copy()
-            # v: S, dc: ~S, return a mutable version of something that is not mutable
-            return default_constructor(value)
-
-    # cannot always deterine satic status from constructors; fallback on using default constructor
-    return default_constructor(value)

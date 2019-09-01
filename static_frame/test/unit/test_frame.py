@@ -1953,14 +1953,16 @@ class TestUnit(TestCase):
 
             b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
-            post1 = a @ b
-            # all values go to NaN
+            with self.assertRaises(RuntimeError):
+                post1 = a @ b
+                # all values would go to NaN
 
             a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
 
             b = Frame.from_dict(dict(p=(1, 2, 3), q=(3, 4, 5), r=(5, 6, 7)), index=tuple('abc'))
 
-            post2 = a @ b
+            with self.assertRaises(RuntimeError):
+                post2 = a @ b
             # import ipdb; ipdb.set_trace()
 
 
