@@ -50,6 +50,7 @@ class TestUnit(TestCase):
 
 
     def test_matmul_a(self) -> None:
+        # lhs: frame, rhs: array
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
@@ -77,6 +78,7 @@ class TestUnit(TestCase):
 
 
     def test_matmul_b(self) -> None:
+        # lhs: frame, rhs: array
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
@@ -87,10 +89,23 @@ class TestUnit(TestCase):
             ((0, (('x', 15), ('y', 20), ('z', 25))), (1, (('x', 19), ('y', 26), ('z', 33))), (2, (('x', 23), ('y', 32), ('z', 41))), (3, (('x', 27), ('y', 38), ('z', 49))), (4, (('x', 31), ('y', 44), ('z', 57))))
             )
 
-
-
-
     def test_matmul_c(self) -> None:
+        # lhs: frame, rhs: Series, 1D array
+
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
+                index=('x', 'y', 'z'))
+        s1 = Series((10, 11), index=('a', 'b'))
+
+        self.assertEqual(matmul(f1, s1).to_pairs(),
+                (('x', 43), ('y', 64), ('z', 85)))
+
+        self.assertEqual(matmul(f1, s1.values).to_pairs(),
+                (('x', 43), ('y', 64), ('z', 85)))
+
+
+
+    def test_matmul_d(self) -> None:
+        # lhs: series, rhs: frame
 
         f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
                 index=('x', 'y', 'z'))
@@ -101,6 +116,23 @@ class TestUnit(TestCase):
             matmul(s1, f1).to_pairs(),
             (('a', 17), ('b', 35))
             )
+
+        # produces a Series indexed 0, 1
+        self.assertEqual(matmul(s1, f1.values).to_pairs(),
+            ((0, 17), (1, 35)))
+
+
+
+    def test_matmul_e(self) -> None:
+        # lhs: series, rhs: series
+
+        s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
+
+        s2 = Series((10, 11, 12), index=('x', 'y', 'z'))
+
+        self.assertEqual(matmul(s1, s2), 98)
+        self.assertEqual(matmul(s1, s2.values), 98)
+
 
 
 if __name__ == '__main__':

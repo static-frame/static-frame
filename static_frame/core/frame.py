@@ -2043,7 +2043,10 @@ class Frame(ContainerBase):
                 index=self._index,
                 columns=self._columns)
 
-    def _ufunc_binary_operator(self, *, operator, other) -> 'Frame':
+    def _ufunc_binary_operator(self, *,
+            operator,
+            other
+            ) -> 'Frame':
 
         if operator is operator_mod.__matmul__:
             return matmul(self, other)

@@ -1,7 +1,8 @@
 import typing as tp
 from collections.abc import KeysView
 import datetime
-import operator
+import operator as operator_mod
+
 from functools import reduce
 
 import numpy as np
@@ -204,7 +205,8 @@ class LocMap:
                 if labels.dtype != key.dtype:
                     labels_ref = labels.astype(key.dtype)
                     # let Boolean key hit next branch
-                    key = reduce(operator.or_, (labels_ref == k for k in key))
+                    key = reduce(operator_mod.or_,
+                            (labels_ref == k for k in key))
                     # NOTE: may want to raise instead of support this
                     # raise NotImplementedError(f'selecting {labels.dtype} with {key.dtype} is not presently supported')
 
@@ -702,8 +704,10 @@ class Index(IndexBase):
 
         result = operator(self._labels, other)
 
-        # see Series._ufunc_binary_operator for notes on why
+        if operator is operator_mod.__matmul__: # a single number results
+            return result
         if not isinstance(result, np.ndarray):
+            # see Series._ufunc_binary_operator for notes on why
             if isinstance(result, BOOL_TYPES):
                 result = np.full(len(self._labels), result)
             else:
@@ -978,7 +982,9 @@ class _IndexDatetime(Index):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
+    def _ufunc_binary_operator(self, *,
+            operator: tp.Callable,
+            other) -> np.ndarray:
 
         if self._recache:
             self._update_array_cache()
@@ -988,6 +994,7 @@ class _IndexDatetime(Index):
         elif isinstance(other, str):
             # do not pass dtype, as want to coerce to this parsed type, not the type of sled
             other = to_datetime64(other)
+
         if isinstance(other, np.datetime64):
             # convert labels to other's datetime64 type to enable matching on month, year, etc.
             array = operator(self._labels.astype(other.dtype), other)

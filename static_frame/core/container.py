@@ -54,9 +54,8 @@ _UFUNC_OPERATORS_MAP = {k: getattr(operator_mod, k)
         for k in chain(_UFUNC_UNARY_OPERATORS, _UFUNC_BINARY_OPERATORS)
         }
 
-# all reverse are binary
-# should be RIGHT, not REVERSE
-_REVERSE_OPERATOR_MAP = {
+# all right are binary
+_RIGHT_OPERATOR_MAP = {
         '__radd__': '__add__',
         '__rsub__': '__sub__',
         '__rmul__': '__mul__',
@@ -239,7 +238,7 @@ class ContainerMeta(type):
             operator_func = getattr(operator_mod, func_name)
             func_wrapper = operator_func
         else:
-            unreversed_operator_func = getattr(operator_mod, _REVERSE_OPERATOR_MAP[func_name])
+            unreversed_operator_func = getattr(operator_mod, _RIGHT_OPERATOR_MAP[func_name])
             # flip the order of the arguments
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
             func_wrapper = unreversed_operator_func
@@ -314,7 +313,7 @@ class ContainerMeta(type):
                     func_name,
                     opperand_count=opperand_count)
 
-        for func_name in _REVERSE_OPERATOR_MAP:
+        for func_name in _RIGHT_OPERATOR_MAP:
             attrs[func_name] = mcs.create_ufunc_operator(
                     func_name,
                     opperand_count=2,

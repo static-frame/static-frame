@@ -1,4 +1,5 @@
 import typing as tp
+import operator as operator_mod
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -60,6 +61,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
 
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import matmul
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -769,10 +771,16 @@ class Series(ContainerBase):
                 dtype=self.dtype,
                 name=self._name)
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> 'Series':
+    def _ufunc_binary_operator(self, *,
+            operator: tp.Callable,
+            other
+            ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate.
         '''
+        if operator is operator_mod.__matmul__: # a single number results
+            return matmul(self, other)
+
         values = self.values
         index = self._index
 
@@ -799,7 +807,7 @@ class Series(ContainerBase):
         if not isinstance(result, np.ndarray):
             # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
             if isinstance(result, BOOL_TYPES):
-                # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equalt to an erray, NP will perform element wise comparison; bit if the arguemtn is a tuple of length greater or eqial, each value in value will be compared to that tuple
+                # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
                 result = np.full(len(values), result)
             else:
                 raise RuntimeError('unexpected branch from non-array result of operator application to array')

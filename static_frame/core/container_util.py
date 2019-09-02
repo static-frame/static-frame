@@ -67,66 +67,96 @@ def matmul(
         # try to make it into an array
         rhs = np.array(rhs)
 
-    if isinstance(lhs, Series):
+    if not isinstance(lhs, (np.ndarray, Series, Frame)):
+        # try to make it into an array
+        lhs = np.array(lhs)
+
+    if isinstance(lhs, np.ndarray):
+        lhs_type = np.ndarray
+    elif isinstance(lhs, Series):
+        lhs_type = Series
+    else: # normalize subclasses
+        lhs_type = Frame
+
+    if isinstance(rhs, np.ndarray):
+        rhs_type = np.ndarray
+    elif isinstance(rhs, Series):
+        rhs_type = Series
+    else: # normalize subclasses
+        rhs_type = Frame
+
+    own_index = True
+
+    if lhs.ndim == 1: # Series, 1D array
         # result will be 1D or 0D
         columns = None
-        if isinstance(rhs, (Series, Frame)):
+
+        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame):
             aligned = lhs._index.union(rhs._index)
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
             if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
-        if isinstance(rhs, np.ndarray):
-            if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
-                raise RuntimeError('shapes not alignable for matrix multiplication')
-            ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
-            left = lhs.values
-            right = rhs # already np
-            if rhs.ndim == 2:
-                index = None # force auto increment integer
-            else:
-                index = lhs.index
-        elif isinstance(rhs, Series):
-            ndim = 0
-            left = lhs.reindex(aligned).values
-            right = rhs.reindex(aligned).values
-            index = aligned
-        else: # has to be Frame
-            ndim = 1
-            left = lhs.reindex(aligned).values
-            right = rhs.reindex(index=aligned).values
-            index = rhs._columns
+        if lhs_type == Series:
+            if rhs_type == np.ndarray:
+                if lhs.shape[0] != rhs.shape[0]: # works for 1D and 2D
+                    raise RuntimeError('shapes not alignable for matrix multiplication')
+                ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
+                left = lhs.values
+                right = rhs # already np
+                if rhs.ndim == 2:
+                    index = None # force auto increment integer
+                    own_index = False
+                else:
+                    index = lhs.index
+            elif rhs_type == Series:
+                ndim = 0
+                left = lhs.reindex(aligned).values
+                right = rhs.reindex(aligned).values
+                index = aligned
+            else: # has to be Frame
+                ndim = 1
+                left = lhs.reindex(aligned).values
+                right = rhs.reindex(index=aligned).values
+                index = rhs._columns
+        else: # lhs is 1D array
+            raise NotImplementedError()
 
-    elif isinstance(lhs, Frame):
-        if isinstance(rhs, (Series, Frame)):
+    elif lhs.ndim == 2: # Frame, 2D array
+
+        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame):
             aligned = lhs._columns.union(rhs._index)
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
             if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
                 raise RuntimeError('shapes not alignable for matrix multiplication')
 
-        if isinstance(rhs, np.ndarray):
-            if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
-                raise RuntimeError('shapes not alignable for matrix multiplication')
-            ndim = rhs.ndim
-            left = lhs.values
-            right = rhs # already np
-            index = lhs._index
-            columns = None # force auto increment index
-        elif isinstance(rhs, Series):
-            # a.columns must align with b.index
-            ndim = 1
-            left = lhs.reindex(columns=aligned).values
-            right = rhs.reindex(aligned).values
-            index = lhs._index  # this axis is not changed
-        else: # has to be Frame
-            # a.columns must align with b.index
-            ndim = 2
-            left = lhs.reindex(columns=aligned).values
-            right = rhs.reindex(index=aligned).values
-            index = lhs._index
-            columns = rhs._columns
+        if lhs_type == Frame:
+            if rhs_type == np.ndarray:
+                if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
+                    raise RuntimeError('shapes not alignable for matrix multiplication')
+                ndim = rhs.ndim
+                left = lhs.values
+                right = rhs # already np
+                index = lhs._index
+                columns = None # force auto increment index
+            elif rhs_type == Series:
+                # a.columns must align with b.index
+                ndim = 1
+                left = lhs.reindex(columns=aligned).values
+                right = rhs.reindex(aligned).values
+                index = lhs._index  # this axis is not changed
+            else: # has to be Frame
+                # a.columns must align with b.index
+                ndim = 2
+                left = lhs.reindex(columns=aligned).values
+                right = rhs.reindex(index=aligned).values
+                index = lhs._index
+                columns = rhs._columns
+        else: # lhs is 2D array
+            raise NotImplementedError()
 
-    data = left @ right
+    # NOTE: np.matmul is not the same as np.dot for some arguments
+    data = np.matmul(left, right)
 
     if ndim == 0:
         return data
@@ -135,11 +165,11 @@ def matmul(
     if ndim == 1:
         return Series(data,
                 index=index,
-                own_index=True,
+                own_index=own_index,
                 )
     # lhs must be a Frame
     return lhs.__class__(data,
             index=index,
             columns=columns,
-            own_index=True
+            own_index=own_index
             )
