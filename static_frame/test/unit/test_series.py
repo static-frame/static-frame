@@ -342,6 +342,42 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_binary_operator_g(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(
+                (s1 - 1).to_pairs(),
+                (('a', -1), ('b', 0), ('c', 1), ('d', 2))
+                )
+
+
+        self.assertEqual((1 - s1).to_pairs(),
+                (('a', 1), ('b', 0), ('c', -1), ('d', -2))
+                )
+
+
+    def test_series_binary_operator_h(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+        self.assertEqual(
+                s1 @ sf.Series([3, 4, 1, 2], index=('a', 'b', 'c', 'd')),
+                12
+                )
+        self.assertEqual(
+                s1 @ sf.Series([3, 4, 1, 2], index=('a', 'c', 'b', 'd')),
+                15
+                )
+
+    # def test_series_binary_operator_i(self) -> None:
+    #     s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+
+    #     post = [3, 4, 1, 2] @ s1
+
+    #     import ipdb; ipdb.set_trace()
+
+
+
+
     def test_series_reindex_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
 

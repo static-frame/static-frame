@@ -121,8 +121,6 @@ class TestUnit(TestCase):
         self.assertEqual(matmul(s1, f1.values).to_pairs(),
             ((0, 17), (1, 35)))
 
-
-
     def test_matmul_e(self) -> None:
         # lhs: series, rhs: series
 
@@ -132,6 +130,45 @@ class TestUnit(TestCase):
 
         self.assertEqual(matmul(s1, s2), 98)
         self.assertEqual(matmul(s1, s2.values), 98)
+
+
+    def test_matmul_f(self) -> None:
+        # lhs: array 1D, rhs: array 2D, Frame
+
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))),
+                index=('x', 'y', 'z'))
+
+        self.assertEqual(matmul([3, 4, 5], f1.values).tolist(),
+                [26, 50])
+
+        self.assertEqual(matmul([3, 4, 5], f1).to_pairs(),
+                (('a', 26), ('b', 50))
+                )
+
+
+    def test_matmul_g(self) -> None:
+        # lhs: array 1D, rhs: array 1D, Series
+
+        s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
+        self.assertEqual(matmul([10, 11, 12], s1.values), 98)
+        self.assertEqual(matmul([10, 11, 12], s1), 98)
+
+
+    def test_matmul_h(self) -> None:
+        # lhs: array 2D, rhs: array 2D, Frame
+
+        f1 = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+        f2 = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+
+
+        self.assertEqual(matmul(f1.values, f2).to_pairs(0),
+                (('p', ((0, 11), (1, 14), (2, 17), (3, 20))), ('q', ((0, 23), (1, 30), (2, 37), (3, 44))), ('r', ((0, 35), (1, 46), (2, 57), (3, 68))))
+                )
+
+        self.assertEqual(matmul(f1, f2.values).to_pairs(0),
+                ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                )
+
 
 
 

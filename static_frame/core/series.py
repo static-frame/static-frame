@@ -778,8 +778,11 @@ class Series(ContainerBase):
         '''
         For binary operations, the `name` attribute does not propagate.
         '''
-        if operator is operator_mod.__matmul__: # a single number results
+        # get both reverse and regular
+        if operator.__name__ == '__matmul__':
             return matmul(self, other)
+        elif operator.__name__ == '__rmatmul__':
+            return matmul(other, self)
 
         values = self.values
         index = self._index

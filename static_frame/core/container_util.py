@@ -1,3 +1,7 @@
+'''
+This module us for utilty functions that take as input and / or return Container subclasses such as Index, Series, or Frame, and that need to be shared by multiple such Container classes.
+'''
+
 import numpy as np
 import typing as tp
 
@@ -60,7 +64,6 @@ def matmul(
     # for a @ b = c
     # if a is 2D: a.columns must align b.index
     # if b is 1D, a.columns bust align with b.index
-
     # if a is 1D: len(a) == b.index (len of b), returns w columns of B
 
     if not isinstance(rhs, (np.ndarray, Series, Frame)):
@@ -85,7 +88,12 @@ def matmul(
     else: # normalize subclasses
         rhs_type = Frame
 
+    if rhs_type == np.ndarray and lhs_type == np.ndarray:
+        return np.matmul(lhs, rhs)
+
+
     own_index = True
+    constructor = None
 
     if lhs.ndim == 1: # Series, 1D array
         # result will be 1D or 0D
@@ -104,23 +112,32 @@ def matmul(
                 ndim = rhs.ndim - 1 # if 2D, result is 1D, of 1D, result is 0
                 left = lhs.values
                 right = rhs # already np
-                if rhs.ndim == 2:
+                if ndim == 1:
                     index = None # force auto increment integer
                     own_index = False
-                else:
-                    index = lhs.index
+                    constructor = lhs.__class__
+                # else:
+                #     index = lhs.index
             elif rhs_type == Series:
                 ndim = 0
                 left = lhs.reindex(aligned).values
                 right = rhs.reindex(aligned).values
-                index = aligned
-            else: # has to be Frame
+                # index = aligned
+            else: # rhs is Frame
                 ndim = 1
                 left = lhs.reindex(aligned).values
                 right = rhs.reindex(index=aligned).values
                 index = rhs._columns
+                constructor = lhs.__class__
         else: # lhs is 1D array
-            raise NotImplementedError()
+            left = lhs
+            right = rhs.values
+            if rhs_type == Series:
+                ndim = 0
+            else: # rhs is Frame, len(lhs) == len(rhs.index)
+                ndim = 1
+                index = rhs._columns
+                constructor = Series # cannot get from argument
 
     elif lhs.ndim == 2: # Frame, 2D array
 
@@ -138,38 +155,59 @@ def matmul(
                 left = lhs.values
                 right = rhs # already np
                 index = lhs._index
-                columns = None # force auto increment index
+
+                if ndim == 1:
+                    constructor = Series
+                else:
+                    constructor = lhs.__class__
+                    columns = None # force auto increment index
             elif rhs_type == Series:
                 # a.columns must align with b.index
                 ndim = 1
                 left = lhs.reindex(columns=aligned).values
                 right = rhs.reindex(aligned).values
                 index = lhs._index  # this axis is not changed
-            else: # has to be Frame
+                constructor = rhs.__class__
+            else: # rhs is Frame
                 # a.columns must align with b.index
                 ndim = 2
                 left = lhs.reindex(columns=aligned).values
                 right = rhs.reindex(index=aligned).values
                 index = lhs._index
                 columns = rhs._columns
+                constructor = lhs.__class__ # give left precedence
         else: # lhs is 2D array
-            raise NotImplementedError()
+            left = lhs
+            right = rhs.values
+            if rhs_type == Series: # returns unindexed Series
+                ndim = 1
+                index = None
+                own_index = False
+                constructor = rhs.__class__
+            else: # rhs is Frame, lhs.shape[1] == rhs.shape[0]
+                if lhs.shape[1] != rhs.shape[0]: # works for 1D and 2D
+                    raise RuntimeError('shapes not alignable for matrix multiplication')
+                ndim = 2
+                index = None
+                own_index = False
+                columns = rhs._columns
+                constructor = rhs.__class__
 
     # NOTE: np.matmul is not the same as np.dot for some arguments
     data = np.matmul(left, right)
+    # import ipdb; ipdb.set_trace()
 
     if ndim == 0:
         return data
 
     data.flags.writeable = False
     if ndim == 1:
-        return Series(data,
+        return constructor(data,
                 index=index,
                 own_index=own_index,
                 )
-    # lhs must be a Frame
-    return lhs.__class__(data,
+    return constructor(data,
             index=index,
-            columns=columns,
-            own_index=own_index
+            own_index=own_index,
+            columns=columns
             )

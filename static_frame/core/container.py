@@ -238,9 +238,12 @@ class ContainerMeta(type):
             operator_func = getattr(operator_mod, func_name)
             func_wrapper = operator_func
         else:
-            unreversed_operator_func = getattr(operator_mod, _RIGHT_OPERATOR_MAP[func_name])
+            unreversed_operator_func = getattr(
+                    operator_mod,
+                    _RIGHT_OPERATOR_MAP[func_name])
             # flip the order of the arguments
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
+            operator_func.__name__ = func_name
             func_wrapper = unreversed_operator_func
 
         func: tp.Union[tp.Callable[[tp.Any], tp.Any],
