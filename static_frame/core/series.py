@@ -779,9 +779,9 @@ class Series(ContainerBase):
         For binary operations, the `name` attribute does not propagate.
         '''
         # get both reverse and regular
-        if operator.__name__ == '__matmul__':
+        if operator.__name__ == 'matmul':
             return matmul(self, other)
-        elif operator.__name__ == '__rmatmul__':
+        elif operator.__name__ == 'rmatmul':
             return matmul(other, self)
 
         values = self.values

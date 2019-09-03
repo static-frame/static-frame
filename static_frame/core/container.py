@@ -243,7 +243,8 @@ class ContainerMeta(type):
                     _RIGHT_OPERATOR_MAP[func_name])
             # flip the order of the arguments
             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
-            operator_func.__name__ = func_name
+            # construct a __name__ that will look the name we get from for the unreversed operator; these are names without the leading and trailing dunders, like "matmul", we we just add an r for reverse.
+            operator_func.__name__ = 'r' + unreversed_operator_func.__name__
             func_wrapper = unreversed_operator_func
 
         func: tp.Union[tp.Callable[[tp.Any], tp.Any],

@@ -368,12 +368,10 @@ class TestUnit(TestCase):
                 15
                 )
 
-    # def test_series_binary_operator_i(self) -> None:
-    #     s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-
-    #     post = [3, 4, 1, 2] @ s1
-
-    #     import ipdb; ipdb.set_trace()
+    def test_series_binary_operator_i(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        post = [3, 4, 1, 2] @ s1
+        self.assertEqual(post, 12)
 
 
 
