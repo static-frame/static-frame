@@ -2048,8 +2048,10 @@ class Frame(ContainerBase):
             other
             ) -> 'Frame':
 
-        if operator is operator_mod.__matmul__:
+        if operator.__name__ == 'matmul':
             return matmul(self, other)
+        elif operator.__name__ == 'rmatmul':
+            return matmul(other, self)
 
         if isinstance(other, Frame):
             # reindex both dimensions to union indices
