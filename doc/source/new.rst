@@ -10,6 +10,8 @@ What is New in Static Frame
 
 Using ``Frame.from_records`` with an empty iterable or iterator will deliver a ``ErrorInitFrame``.
 
+Matrix multiplication implemented for ``Index``, ``Series``, and ``Frame``.
+
 
 0.4.0
 -----------
