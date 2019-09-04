@@ -63,6 +63,9 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import resolve_dtype
 from static_frame.core.container import ContainerBase
 
+from static_frame.core.container_util import matmul
+
+
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
 from static_frame.core.iter_node import IterNode
