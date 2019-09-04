@@ -1,5 +1,4 @@
 import typing as tp
-import operator as operator_mod
 
 import numpy as np
 from numpy.ma import MaskedArray

@@ -179,7 +179,7 @@ class TestUnit(TestCase):
 
         for pair in ((f1, f1.T), (f1, f1.loc['y']), (f1['a'], f1), (f1.loc['y'], f1.loc['z'])):
             for x, y in it.combinations((f_container, f_values, f_container, f_values), 2):
-                post = matmul(x(pair[0]), y(pair[1]))
+                post = matmul(x(pair[0]), y(pair[1])) # type: ignore
                 if isinstance(post, (Series, Frame)):
                     self.assertTrue(post.values.tolist(), (pair[0].values @ pair[1].values).tolist())
                 elif isinstance(post, np.ndarray):

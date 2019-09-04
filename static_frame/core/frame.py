@@ -1,7 +1,6 @@
 from types import GeneratorType
 import typing as tp
 import sqlite3
-import operator as operator_mod
 import csv
 import json
 from collections import namedtuple
