@@ -13,8 +13,6 @@ from static_frame import Index
 from static_frame import IndexGO
 # from static_frame import IndexDate
 # from static_frame import IndexHierarchy
-# from static_frame import Series
-# from static_frame import Frame
 # from static_frame import IndexYearMonth
 # from static_frame import IndexYear
 from static_frame import IndexSecond
@@ -170,6 +168,22 @@ class TestUnit(TestCase):
                 )
 
 
+
+    def test_matmul_i(self) -> None:
+        import itertools as it
+
+        f1 = Frame.from_dict(dict(a=(1, 2), b=(5, 6)), index=tuple('yz'))
+
+        f_container = lambda x: x
+        f_values = lambda x: x.values
+
+        for pair in ((f1, f1.T), (f1, f1.loc['y']), (f1['a'], f1), (f1.loc['y'], f1.loc['z'])):
+            for x, y in it.combinations((f_container, f_values, f_container, f_values), 2):
+                post = matmul(x(pair[0]), y(pair[1]))
+                if isinstance(post, (Series, Frame)):
+                    self.assertTrue(post.values.tolist(), (pair[0].values @ pair[1].values).tolist())
+                elif isinstance(post, np.ndarray):
+                    self.assertTrue(post.tolist(), (pair[0].values @ pair[1].values).tolist())
 
 
 if __name__ == '__main__':
