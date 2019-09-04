@@ -723,7 +723,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_operators_a(self) -> None:
+    def test_hierarchy_binary_operators_a(self) -> None:
 
         labels = (
                 (1, 1),
@@ -738,6 +738,36 @@ class TestUnit(TestCase):
         self.assertEqual((-ih1).tolist(),
                 [[-1, -1], [-1, -2], [-2, -1], [-2, -2]])
 
+
+    def test_hierarchy_binary_operators_b(self) -> None:
+
+        labels = (
+                (1, 1),
+                (1, 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                (3, 3),
+                (1, 2),
+                )
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual((ih1 @ ih2).tolist(),
+                [[4, 5], [5, 7]]
+                )
+
+        self.assertEqual((ih1.values @ ih2).tolist(),
+                [[4, 5], [5, 7]]
+                )
+
+        self.assertEqual((ih1 @ ih2.values).tolist(),
+                [[4, 5], [5, 7]]
+                )
+
+        self.assertEqual((ih1.values @ ih2.values).tolist(),
+                [[4, 5], [5, 7]]
+                )
 
     def test_hierarchy_flat_a(self) -> None:
 

@@ -517,13 +517,15 @@ class IndexHierarchy(IndexBase):
         return self._labels
 
     @property
-    def depth(self):
+    def depth(self) -> int:
         if self._recache:
             return next(self._levels.depths())
             # self._update_array_cache()
         return self._depth
 
-    def values_at_depth(self, depth_level: DepthLevelSpecifier = 0):
+    def values_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
         '''
         Return an NP array for the `depth_level` specified.
         '''

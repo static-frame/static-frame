@@ -224,6 +224,10 @@ class TestUnit(TestCase):
 
         self.assertEqual((idx1 == idx2).tolist(), [True, False, False, False])
 
+    def test_index_binary_operators_c(self) -> None:
+        idx1 = Index((20, 30, 40, 50))
+        idx2 = Index((20, 3, 4, 5))
+        self.assertEqual(idx1 @ idx2, idx1.values @ idx2.values)
 
 
     def test_index_ufunc_axis_a(self) -> None:
