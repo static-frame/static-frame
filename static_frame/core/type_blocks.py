@@ -1530,6 +1530,10 @@ class TypeBlocks(ContainerBase):
             other: tp.Iterable[tp.Any]
             ) -> 'TypeBlocks':
 
+        if operator.__name__ == 'matmul' or operator.__name__ == 'rmatmul':
+            # this could be implemented but would force block consolidation
+            raise NotImplementedError('matrix multiplication not supported')
+
         if isinstance(other, TypeBlocks):
             if self.block_compatible(other, axis=None):
                 # this means that the blocks are the same shape; we do not check types

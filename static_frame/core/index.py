@@ -702,10 +702,13 @@ class Index(IndexBase):
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
 
+        if operator.__name__ == 'matmul':
+            return matmul(self._labels, other)
+        elif operator.__name__ == 'rmatmul':
+            return matmul(other, self._labels)
+
         result = operator(self._labels, other)
 
-        if operator is operator_mod.__matmul__: # a single number results
-            return result
         if not isinstance(result, np.ndarray):
             # see Series._ufunc_binary_operator for notes on why
             if isinstance(result, BOOL_TYPES):
@@ -988,6 +991,9 @@ class _IndexDatetime(Index):
 
         if self._recache:
             self._update_array_cache()
+
+        if operator.__name__ == 'matmul' or operator.__name__ == 'rmatmul':
+            raise NotImplementedError('matrix multiplication not supported')
 
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels

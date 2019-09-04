@@ -193,6 +193,8 @@ def matmul(
                 columns = rhs._columns
                 constructor = rhs.__class__
 
+    # import ipdb; ipdb.set_trace()
+
     # NOTE: np.matmul is not the same as np.dot for some arguments
     data = np.matmul(left, right)
     # import ipdb; ipdb.set_trace()

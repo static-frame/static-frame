@@ -1963,7 +1963,21 @@ class TestUnit(TestCase):
 
             with self.assertRaises(RuntimeError):
                 post2 = a @ b
-            # import ipdb; ipdb.set_trace()
+
+
+    def test_frame_binary_operator_h(self) -> None:
+
+            a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+
+
+            self.assertEqual(
+                    (a @ b.values).to_pairs(0),
+                    ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                    )
+            # NOTE: the following yields a ValueError from the interpreter
+            # post2 = a.values @ b
+
 
 
 

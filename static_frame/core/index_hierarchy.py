@@ -26,7 +26,8 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_shift
 
-# from static_frame.core.container import SupportsOpsIndex
+from static_frame.core.container_util import matmul
+
 from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.display import DisplayConfig
@@ -646,6 +647,12 @@ class IndexHierarchy(IndexBase):
 
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
+
+        if operator.__name__ == 'matmul':
+            return matmul(self._labels, other)
+        elif operator.__name__ == 'rmatmul':
+            return matmul(other, self._labels)
+
         array = operator(self._labels, other)
         array.flags.writeable = False
         return array
