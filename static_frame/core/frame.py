@@ -1,4 +1,3 @@
-from types import GeneratorType
 import typing as tp
 import sqlite3
 import csv
