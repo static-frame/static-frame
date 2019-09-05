@@ -325,6 +325,7 @@ class Frame(ContainerBase):
             return cls(records, index=index, columns=columns)
 
         dtypes_is_map = dtypes_mappable(dtypes)
+
         def get_col_dtype(col_idx):
             if dtypes_is_map:
                 return dtypes.get(columns[col_idx], None)
@@ -367,7 +368,6 @@ class Frame(ContainerBase):
                 col_idx_iter = range(col_count)
                 if hasattr(row_reference, '_fields') and derive_columns:
                     column_getter = row_reference._fields.__getitem__
-
 
             # derive types from first rows
             for col_idx, col_key in enumerate(col_idx_iter):
@@ -419,6 +419,31 @@ class Frame(ContainerBase):
                 name=name,
                 own_data=True)
 
+
+    @classmethod
+    def from_records_items(cls,
+            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            *,
+            columns: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False):
+        '''
+        '''
+        index = []
+
+        def gen():
+            for label, values in items:
+                index.append(label)
+                yield values
+
+        return cls.from_records(gen(),
+                index=index,
+                columns=columns,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks
+                )
 
     @classmethod
     def from_sql(cls,
@@ -507,7 +532,7 @@ class Frame(ContainerBase):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ):
-        '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value an iterable of column values.
+        '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value is an iterable of a single column's values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.

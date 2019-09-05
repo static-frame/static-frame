@@ -4418,5 +4418,21 @@ class TestUnit(TestCase):
                 (('date', ((0, '2006-01-01'), (1, '2006-01-02'), (2, '2006-01-01'), (3, '2006-01-02'))), ('identifier', ((0, 'a1'), (1, 'a1'), (2, 'b2'), (3, 'b2'))), ('value', ((0, 12.5), (1, 12.5), (2, 12.5), (3, 12.5))), ('count', ((0, 8), (1, 8), (2, 8), (3, 8))))
                 )
 
+
+    def test_frame_from_records_items(self) -> None:
+
+        def gen():
+            for i in range(3):
+                yield f'000{i}', {'squared': i**2, 'cubed': i**3}
+
+        f = Frame.from_records_items(gen())
+
+        self.assertEqual(
+                f.to_pairs(0),
+                (('squared', (('0000', 0), ('0001', 1), ('0002', 4))), ('cubed', (('0000', 0), ('0001', 1), ('0002', 8))))
+        )
+
+
+
 if __name__ == '__main__':
     unittest.main()
