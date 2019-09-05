@@ -723,13 +723,12 @@ class TypeBlocks(ContainerBase):
 
         func = partial(ufunc_axis_skipna,
                 skipna=skipna,
-                axis=axis,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
                 )
 
         if self.unified:
-            result = func(array=self._blocks[0])
+            result = func(array=self._blocks[0], axis=axis)
             result.flags.writeable = False
             return result
         else:
@@ -748,10 +747,10 @@ class TypeBlocks(ContainerBase):
                 if axis == 0:
                     if b.ndim == 1:
                         end = pos + 1
-                        out[pos] = func(array=b)
+                        out[pos] = func(array=b, axis=axis)
                     else:
                         end = pos + b.shape[1]
-                        func(array=b, out=out[pos: end])
+                        func(array=b, axis=axis, out=out[pos: end])
                     pos = end
                 else:
                     if b.ndim == 1: # cannot process yet
@@ -762,13 +761,13 @@ class TypeBlocks(ContainerBase):
                         else: # otherwise, keep as is
                             out[:, idx] = b
                     else:
-                        func(array=b, out=out[:, idx])
+                        func(array=b, axis=axis, out=out[:, idx])
 
         if axis == 0: # nothing more to do
             out.flags.writeable = False
             return out
         # must call function one more time on remaining components
-        result = func(array=out)
+        result = func(array=out, axis=axis)
         result.flags.writeable = False
         return result
 

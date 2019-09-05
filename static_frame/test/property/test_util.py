@@ -175,7 +175,7 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(post, np.ndarray))
 
 
-    @given(st.slices(10)) # type: ignore
+    @given(st.slices(10)) # type: ignore #pylint: disable=E1120
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
         post_key = util.slice_to_ascending_slice(key, size=10)
