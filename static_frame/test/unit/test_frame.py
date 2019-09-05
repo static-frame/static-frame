@@ -4421,7 +4421,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_items(self) -> None:
 
-        def gen():
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Dict[tp.Hashable, tp.Any]]]:
             for i in range(3):
                 yield f'000{i}', {'squared': i**2, 'cubed': i**3}
 
