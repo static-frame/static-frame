@@ -1,4 +1,4 @@
-    
+
 
 What is New in Static Frame
 ===============================
@@ -12,6 +12,12 @@ Using ``Frame.from_records`` with an empty iterable or iterator will deliver a `
 
 Matrix multiplication implemented for ``Index``, ``Series``, and ``Frame``.
 
+Added ``Frame.from_records_items`` constructor.
+
+Improved dtype selection in ``FrameGO`` set item and related functions.
+
+
+
 
 0.4.0
 -----------
@@ -24,7 +30,7 @@ The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` 
 
 The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_drop_level``.
 
-Implemented ``Frame.from_sql``.
+Implemented ``Frame.from_sql`` constructor.
 
 
 0.3.9

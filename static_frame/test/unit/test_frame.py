@@ -235,7 +235,6 @@ class TestUnit(TestCase):
             f1 = Frame(a1)
 
 
-
     def test_frame_init_index_constructor_a(self) -> None:
 
         f1 = sf.Frame('q',
@@ -629,8 +628,10 @@ class TestUnit(TestCase):
         self.assertEqual(f1.loc['x'].values.tolist(),
                 [1, 2, 'a', False, True, 0])
 
-        with self.assertRaises(Exception):
-            f1['w'] = [[1,2], [4,5]]
+        # with self.assertRaises(Exception):
+        f1['w'] = [[1,2], [4,5]]
+        self.assertEqual(f1['w'].to_pairs(),
+                (('x', [1, 2]), ('y', [4, 5])))
 
 
     def test_frame_setitem_c(self) -> None:
@@ -640,6 +641,16 @@ class TestUnit(TestCase):
         f1['a'] = 30
         self.assertEqual(f1.to_pairs(0),
                 (('a', (('a', 30), ('b', 30), ('c', 30), ('d', 30), ('e', 30))),))
+
+
+    def test_frame_setitem_d(self) -> None:
+
+        # 3d array raises exception
+        f = sf.FrameGO(index=range(3))
+        f['a'] = 5
+        self.assertEqual(f.sum(), 15)
+
+
 
 
 

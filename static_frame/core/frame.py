@@ -1009,8 +1009,7 @@ class Frame(ContainerBase):
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)
 
         elif not hasattr(data, '__len__') or isinstance(data, str):
-            # data is not None, and data is a single element to scale to size of index and columns; must defer until after index realization
-            # or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
+            # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
             def blocks_constructor(shape): #pylint: disable=E0102
                 if shape[0] > 0 and shape[1] > 0 and data is FRAME_INITIALIZER_DEFAULT:
@@ -2929,15 +2928,13 @@ class FrameGO(Frame):
             fill_value=np.nan):
         '''For adding a single column, one column at a time.
         '''
-        # TODO: support assignment from iterables of keys, values?
-
         if key in self._columns:
             raise RuntimeError('key already defined in columns; use .assign to get new Frame')
 
         row_count = len(self._index)
 
         if isinstance(value, Series):
-            # TODO: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
+            # NOTE: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
             # select only the values matching our index
             self._blocks.append(
                     value.reindex(
@@ -2949,16 +2946,18 @@ class FrameGO(Frame):
                 raise RuntimeError('incorrectly sized, unindexed value')
             self._blocks.append(value)
         else:
-            if isinstance(value, GeneratorType):
-                value = np.array(tuple(value))
-            elif not hasattr(value, '__len__') or isinstance(value, str):
+            # if isinstance(value, GeneratorType):
+            #     value = np.array(tuple(value))
+            if not hasattr(value, '__iter__'):
                 value = np.full(row_count, value)
             else:
-                # for now, we assume all values make sense to convert to NP array
-                value = np.array(value)
-                if value.ndim != 1 or len(value) != row_count:
-                    raise RuntimeError('incorrectly sized, unindexed value')
+                value, _ = iterable_to_array(value)
+            # else: # has length
+            #     value = np.array(value)
+            if value.ndim != 1 or len(value) != row_count:
+                raise RuntimeError('incorrectly sized, unindexed value')
 
+            # import ipdb; ipdb.set_trace()
             value.flags.writeable = False
             self._blocks.append(value)
 

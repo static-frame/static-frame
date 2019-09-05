@@ -727,8 +727,8 @@ class TypeBlocks(ContainerBase):
                 ufunc_skipna=ufunc_skipna,
                 )
 
-        if self.unified:
-            result = func(array=self._blocks[0], axis=axis)
+        if self.unified:            
+            result = func(array=column_2d_filter(self._blocks[0]), axis=axis)
             result.flags.writeable = False
             return result
         else:
