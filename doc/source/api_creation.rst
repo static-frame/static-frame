@@ -37,6 +37,9 @@ Frame
    :end-before: end_frame_from_records_a
 
 
+.. automethod:: static_frame.Frame.from_records_items
+
+
 .. automethod:: static_frame.Frame.from_structured_array
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py

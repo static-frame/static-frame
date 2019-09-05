@@ -297,9 +297,9 @@ class Frame(ContainerBase):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterable of rows.
+        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple or dictionary, and ``columns`` is not provided, column names will be derived from the dictionary keys or NamedTuple fields. 
 
-        Note that defining rows with an iterable of dictionaries is supported; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
+        Note that rows defined as ``Series`` is not supported; use ``Frame.from_concat``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
 
         Args:
             records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
@@ -321,7 +321,7 @@ class Frame(ContainerBase):
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
             if dtypes is not None:
-                raise ErrorInitFrame('handling of dtypes when using NP records is not permitted')
+                raise ErrorInitFrame('specifying dtypes when using NP records is not permitted')
             return cls(records, index=index, columns=columns)
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -421,14 +421,26 @@ class Frame(ContainerBase):
 
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
             items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
             *,
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False):
-        '''
+            consolidate_blocks: bool = False) -> 'Frame':
+        '''Frame constructor from iterable of pairs of index value, row iterable.
+
+        Args:
+            items: Iterable of pairs of index label, row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
+            columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+
         '''
         index = []
 
