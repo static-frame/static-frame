@@ -33,11 +33,13 @@ from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 
 from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
-from static_frame.core.index import IndexDate as IndexDate
-from static_frame.core.index import IndexYearMonth as IndexYearMonth
-from static_frame.core.index import IndexYear as IndexYear
-from static_frame.core.index import IndexMillisecond as IndexMillisecond
-from static_frame.core.index import IndexSecond as IndexSecond
+
+
+from static_frame.core.index_datetime import IndexDate as IndexDate
+from static_frame.core.index_datetime import IndexYearMonth as IndexYearMonth
+from static_frame.core.index_datetime import IndexYear as IndexYear
+from static_frame.core.index_datetime import IndexMillisecond as IndexMillisecond
+from static_frame.core.index_datetime import IndexSecond as IndexSecond
 
 
 from static_frame.core.index import ILoc as ILoc
@@ -60,4 +62,4 @@ from static_frame.core.frame import Frame as Frame
 from static_frame.core.frame import FrameGO as FrameGO
 from static_frame.core.frame import FrameAssign as FrameAssign
 
-__version__ = '0.4.0' # use -dev for new version in development
+__version__ = '0.4.1-dev' # use -dev for new version in development
