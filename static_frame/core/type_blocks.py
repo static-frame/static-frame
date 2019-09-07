@@ -727,7 +727,7 @@ class TypeBlocks(ContainerBase):
                 ufunc_skipna=ufunc_skipna,
                 )
 
-        if self.unified:            
+        if self.unified:
             result = func(array=column_2d_filter(self._blocks[0]), axis=axis)
             result.flags.writeable = False
             return result
@@ -1069,51 +1069,53 @@ class TypeBlocks(ContainerBase):
             drop_block = False # indicate entire block is dropped
             part_start_last = 0 # within this block, keep track of where our last change was started
 
-            while targets_remain:
-                # get target block and slice; this is what we want to remove
-                if target_block_idx is None: # can be zero
-                    try:
-                        target_block_idx, target_slice = next(block_slices)
-                    except StopIteration:
-                        targets_remain = False
+            if not targets_remain:
+                parts.append(b)
+            else:
+                while targets_remain:
+                    # get target block and slice; this is what we want to remove
+                    if target_block_idx is None: # can be zero
+                        try:
+                            target_block_idx, target_slice = next(block_slices)
+                        except StopIteration:
+                            targets_remain = False
+                            break
+
+                    if block_idx != target_block_idx:
+                        break # need to advance blocks
+
+                    if b.ndim == 1 or b.shape[1] == 1: # given 1D array or 2D, 1 col array
+                        part_start_last = 1
+                        target_block_idx = target_slice = None
+                        drop_block = True
                         break
+                    else:
+                        # target_slice can be a slice or an integer
+                        if isinstance(target_slice, slice):
+                            target_start = target_slice.start
+                            target_stop = target_slice.stop
+                        else: # it is an integer
+                            target_start = target_slice # can be zero
+                            target_stop = target_slice + 1
 
-                if block_idx != target_block_idx:
-                    break # need to advance blocks
+                        assert target_start is not None and target_stop is not None
+                        # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
+                        if target_start == 0 and target_stop == b.shape[1]:
+                            drop_block = True
+                        elif target_start > part_start_last:
+                            # yield retained components before and after
+                            parts.append(b[:, slice(part_start_last, target_start)])
+                        part_start_last = target_stop
 
-                if b.ndim == 1 or b.shape[1] == 1: # given 1D array or 2D, 1 col array
-                    part_start_last = 1
+                    # reset target block index, forcing fetchin next target info
                     target_block_idx = target_slice = None
-                    drop_block = True
-                    break
-                else:
-                    # target_slice can be a slice or an integer
-                    if isinstance(target_slice, slice):
-                        target_start = target_slice.start
-                        target_stop = target_slice.stop
-                    else: # it is an integer
-                        target_start = target_slice # can be zero
-                        target_stop = target_slice + 1
 
-                    assert target_start is not None and target_stop is not None
-                    # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
-                    if target_start > part_start_last:
-                        # yield retained components before and after
-                        parts.append(b[:, slice(part_start_last, target_start)])
-
-                    part_start_last = target_stop
-
-                # reset target block index, forcing fetchin next target info
-                target_block_idx = target_slice = None
-
-            # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
-
-            if b.ndim != 1 and 0 < part_start_last < b.shape[1]:
-                # if a 2D block, and part_start_last is less than the shape, collect the remaining slice
-                parts.append(b[:, slice(part_start_last, None)])
+                # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
+                if b.ndim != 1 and 0 < part_start_last < b.shape[1]:
+                    # if a 2D block, and part_start_last is less than the shape, collect the remaining slice
+                    parts.append(b[:, slice(part_start_last, None)])
 
             # for row deletions, we use np.delete, which handles finding the inverse of a slice correctly; the returned array requires writeability re-set; np.delete does not work correctly with Boolean selectors
-
             if not drop_block and not parts:
                 if row_key is not None:
                     b = np.delete(b, row_key, axis=0)
@@ -1244,7 +1246,6 @@ class TypeBlocks(ContainerBase):
                         # if block id 2D, can take up to width from value
                         value_piece_column_key = slice(0, width)
 
-                    # import ipdb; ipdb.set_trace()
                     if isinstance(value, np.ndarray) and value.ndim > 1:
                         # if value is 2D array, we want value[:, 0]
                         value_piece = value[:, value_piece_column_key]
@@ -1408,7 +1409,6 @@ class TypeBlocks(ContainerBase):
         row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
         row_multiple = row_key is None or isinstance(row_key, KEY_MULTIPLE_TYPES)
 
-        # import ipdb; ipdb.set_trace()
         return self._blocks_to_array(
                 blocks=blocks,
                 shape=(rows, columns),

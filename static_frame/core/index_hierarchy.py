@@ -161,10 +161,6 @@ class IndexHierarchy(IndexBase):
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=explicit_constructor)
 
-            # index = cls._INDEX_CONSTRUCTOR(labels)
-            # import ipdb; ipdb.set_trace()
-            # return index
-
         def get_level(level_data, offset=0, depth=0):
 
             if isinstance(level_data, dict):

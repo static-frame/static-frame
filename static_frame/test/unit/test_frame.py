@@ -4023,8 +4023,15 @@ class TestUnit(TestCase):
         # import ipdb; ipdb.set_trace()
         f = f.astype[[0, 1]](int)
 
-        # TODO: this fails
-        # fh = f.set_index_hierarchy([0, 1], drop=True)
+
+        fh = f.set_index_hierarchy([0, 1], drop=True)
+
+        self.assertEqual(fh.columns.values.tolist(),
+                [2]
+                )
+
+        self.assertEqual( fh.to_pairs(0),
+                ((2, (((1, 1), 'a'), ((1, 2), 'b'), ((1, 3), 'c'), ((2, 1), 'd'), ((2, 2), 'e'), ((2, 3), 'f'), ((3, 1), 'g'), ((3, 2), 'h'), ((3, 3), 'i'))),))
 
         fh = f.set_index_hierarchy([0, 1], drop=False)
         self.assertEqual(
