@@ -1,6 +1,7 @@
 
 import unittest
 import pickle
+import datetime
 import numpy as np  # type: ignore
 
 from collections import OrderedDict
@@ -320,6 +321,43 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             ih = IndexHierarchy.from_labels([(3,), (4,)])
+
+
+    def test_hierarchy_from_labels_e(self) -> None:
+
+        index_constructors = (Index, IndexDate)
+
+        labels = (
+            ('a', '2019-01-01'),
+            ('a', '2019-02-01'),
+            ('b', '2019-01-01'),
+            ('b', '2019-02-01'),
+        )
+
+        from static_frame.core.exception import ErrorInitIndex
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy.from_labels(labels, index_constructors=(Index,))
+
+
+        ih = IndexHierarchy.from_labels(labels, index_constructors=index_constructors)
+
+        self.assertEqual(ih.loc[HLoc[:, '2019-02']].values.tolist(),
+                [['a', datetime.date(2019, 2, 1)],
+                ['b', datetime.date(2019, 2, 1)]])
+
+        self.assertEqual(ih.loc[HLoc[:, '2019']].values.tolist(),
+                [['a', datetime.date(2019, 1, 1)],
+                ['a', datetime.date(2019, 2, 1)],
+                ['b', datetime.date(2019, 1, 1)],
+                ['b', datetime.date(2019, 2, 1)]])
+
+        self.assertEqual(ih.loc[HLoc[:, '2019-02-01']].values.tolist(),
+                [['a', datetime.date(2019, 2, 1)],
+                ['b', datetime.date(2019, 2, 1)]]
+)
+
+
 
 
 

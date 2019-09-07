@@ -12,6 +12,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _requires_reindex
 
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import intersect2d
@@ -27,6 +28,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_shift
 
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import index_from_optional_constructor
 
 from static_frame.core.array_go import ArrayGO
 
@@ -143,27 +145,52 @@ class IndexHierarchy(IndexBase):
         return cls(level, name=name)
 
     @classmethod
-    def _tree_to_index_level(cls, tree) -> IndexLevel:
+    def _tree_to_index_level(cls,
+            tree,
+            index_constructors: tp.Optional[IndexConstructors] = None
+            ) -> IndexLevel:
         # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
 
-        def get_level(level_data, offset=0):
+        def get_index(labels, depth: int):
+            if index_constructors:
+                explicit_constructor = index_constructors[depth]
+            else:
+                explicit_constructor = None
+
+            return index_from_optional_constructor(labels,
+                    default_constructor=cls._INDEX_CONSTRUCTOR,
+                    explicit_constructor=explicit_constructor)
+
+            # index = cls._INDEX_CONSTRUCTOR(labels)
+            # import ipdb; ipdb.set_trace()
+            # return index
+
+        def get_level(level_data, offset=0, depth=0):
 
             if isinstance(level_data, dict):
                 level_labels = []
                 targets = np.empty(len(level_data), dtype=object)
                 offset_local = 0
+
+                # ordered key, value pairs, where the key is the label, the value is a list or dictionary; enmerate for insertion pre-allocated object array
                 for idx, (k, v) in enumerate(level_data.items()):
                     level_labels.append(k)
-                    level = get_level(v, offset=offset_local)
+                    level = get_level(v, offset=offset_local, depth=depth + 1)
                     targets[idx] = level
-                    offset_local += len(level)
-                index = cls._INDEX_CONSTRUCTOR(level_labels)
-                targets = ArrayGO(targets, own_iterable=True)
-            else: # an iterable, terminal node, no offsets needed
-                targets = None
-                index = cls._INDEX_CONSTRUCTOR(level_data)
+                    offset_local += len(level) # for lower level offsetting
 
-            return cls._LEVEL_CONSTRUCTOR(index=index, offset=offset, targets=targets)
+                index = get_index(level_labels, depth=depth)
+                targets = ArrayGO(targets, own_iterable=True)
+
+            else: # an iterable, terminal node, no offsets needed
+                index = get_index(level_data, depth=depth)
+                targets = None
+
+            return cls._LEVEL_CONSTRUCTOR(
+                    index=index,
+                    offset=offset,
+                    targets=targets,
+                    )
 
         return get_level(tree)
 
@@ -187,7 +214,8 @@ class IndexHierarchy(IndexBase):
     def from_labels(cls: tp.Type[IH],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
-            name: tp.Hashable = None
+            name: tp.Hashable = None,
+            index_constructors: tp.Optional[IndexConstructors] = None
             ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
@@ -207,15 +235,19 @@ class IndexHierarchy(IndexBase):
                     cls._INDEX_CONSTRUCTOR(())
                     ), name=name)
 
+        depth = len(first)
         # minimum permitted depth is 2
-        if len(first) < 2:
-            raise ErrorInitIndex('cannot create an IndexHierarhcy from only one level.')
+        if depth < 2:
+            raise ErrorInitIndex('cannot create an IndexHierarchy from only one level.')
+        if index_constructors and len(index_constructors) != depth:
+            raise ErrorInitIndex('if providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
 
-        depth_max = len(first) - 1
-        depth_pre_max = len(first) - 2
+
+        depth_max = depth - 1
+        depth_pre_max = depth - 2
 
         token = object()
-        observed_last = [token for _ in range(len(first))]
+        observed_last = [token for _ in range(depth)]
 
         tree = dict() # order assumed and necessary
         # put first back in front
@@ -256,7 +288,10 @@ class IndexHierarchy(IndexBase):
                 else:
                     raise ErrorInitIndex('label exceeded expected depth', label)
 
-        return cls(levels=cls._tree_to_index_level(tree), name=name)
+        return cls(levels=cls._tree_to_index_level(
+                tree,
+                index_constructors=index_constructors
+                ), name=name)
 
 
 # NOTE: this alternative implementation works, but is shown to be slower than the implementation used above

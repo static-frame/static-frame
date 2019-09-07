@@ -203,7 +203,8 @@ class IndexLevel:
 
         if not isinstance(key, HLoc):
             # assume it is a leaf loc tuple
-            assert isinstance(key, tuple)
+            if not isinstance(key, tuple):
+                raise KeyError(f'{key} cannot be used for loc selection from IndexHierarchy; try HLoc')
             return self.leaf_loc_to_iloc(key)
 
         # everything after this is an HLoc

@@ -23,6 +23,8 @@ from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
+
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import column_2d_filter
@@ -296,7 +298,7 @@ class Frame(ContainerBase):
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple or dictionary, and ``columns`` is not provided, column names will be derived from the dictionary keys or NamedTuple fields. 
+        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple or dictionary, and ``columns`` is not provided, column names will be derived from the dictionary keys or NamedTuple fields.
 
         Note that rows defined as ``Series`` is not supported; use ``Frame.from_concat``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
 
@@ -2607,7 +2609,9 @@ class Frame(ContainerBase):
 
     def set_index_hierarchy(self,
             columns: GetItemKeyType,
-            drop: bool = False
+            *,
+            drop: bool = False,
+            index_constructors: tp.Optional[IndexConstructors] = None
             ) -> 'Frame':
         '''
         Given an iterable of column labels, return a new ``Frame`` with those columns as an ``IndexHierarchy`` on the index.
@@ -2647,7 +2651,10 @@ class Frame(ContainerBase):
 
         index_labels = self._blocks._extract_array(column_key=column_iloc)
         # index is always immutable
-        index = IndexHierarchy.from_labels(index_labels, name=column_name)
+        index = IndexHierarchy.from_labels(index_labels,
+                name=column_name,
+                index_constructors=index_constructors
+                )
 
         return self.__class__(blocks,
                 columns=columns,
