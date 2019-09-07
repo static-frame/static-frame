@@ -1070,7 +1070,7 @@ class TypeBlocks(ContainerBase):
             part_start_last = 0 # within this block, keep track of where our last change was started
 
             if not targets_remain:
-                parts.append(b)
+                pass
             else:
                 while targets_remain:
                     # get target block and slice; this is what we want to remove
