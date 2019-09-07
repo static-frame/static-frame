@@ -313,6 +313,11 @@ class TestUnit(TestCase):
                 index.relabel(lambda x: x.upper()).values.tolist(),
                 ['A', 'C', 'D', 'E', 'B'])
 
+        self.assertEqual(
+                index.relabel(lambda x: 'pre_' + x.upper()).values.tolist(),
+                ['pre_A', 'pre_C', 'pre_D', 'pre_E', 'pre_B'])
+
+
         # letter to number
         s1 = Series(range(5), index=index.values)
 
