@@ -4,6 +4,10 @@ class ErrorInit(RuntimeError):
     '''Error in Container initialization.
     '''
 
+class ErrorInitTypeBlocks(ErrorInit):
+    '''Error in TypeBlocks initialization.
+    '''
+
 class ErrorInitSeries(ErrorInit):
     '''Error in Series initialization.
     '''

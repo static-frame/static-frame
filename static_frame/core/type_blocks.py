@@ -49,6 +49,8 @@ from static_frame.core.display import Display
 
 from static_frame.core.container import ContainerBase
 
+from static_frame.core.exception import ErrorInitTypeBlocks
+
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerBase):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :py:class:`Frame` for core, unindexed array management.
@@ -80,7 +82,7 @@ class TypeBlocks(ContainerBase):
 
         Args:
             raw_blocks: iterable (generator compatible) of NDArrays, or a single NDArray.
-            shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns.
+            shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns, or columns and no rows.
 
         '''
         blocks: tp.List[np.ndarray] = [] # ordered blocks
@@ -93,7 +95,7 @@ class TypeBlocks(ContainerBase):
         # if a single block, no need to loop
         if isinstance(raw_blocks, np.ndarray):
             if raw_blocks.ndim > 2:
-                raise RuntimeError('arrays of dimensionality greater than 2 cannot be used to create TypeBlocks')
+                raise ErrorInitTypeBlocks('arrays of dimensionality greater than 2 cannot be used to create TypeBlocks')
 
             row_count, column_count = shape_filter(raw_blocks)
             if column_count == 0:
@@ -114,16 +116,16 @@ class TypeBlocks(ContainerBase):
 
             for block in raw_blocks:
                 if not isinstance(block, np.ndarray):
-                    raise RuntimeError(f'found non array block: {block}')
+                    raise ErrorInitTypeBlocks(f'found non array block: {block}')
 
                 if block.ndim > 2:
-                    raise RuntimeError(f'cannot include array with {block.ndim} dimensions')
+                    raise ErrorInitTypeBlocks(f'cannot include array with {block.ndim} dimensions')
 
                 r, c = shape_filter(block)
 
                 # check number of rows is the same for all blocks
                 if row_count is not None and r != row_count:
-                    raise RuntimeError(f'mismatched row count: {r}: {row_count}')
+                    raise ErrorInitTypeBlocks(f'mismatched row count: {r}: {row_count}')
                 else: # assign on first
                     row_count = r
 
@@ -147,7 +149,7 @@ class TypeBlocks(ContainerBase):
                 # if columns have gone to zero, and this was created from a TB that had rows, continue to represent those rows
                 row_count = shape_reference[0]
             else:
-                raise Exception()
+                raise ErrorInitTypeBlocks('cannot derive a row_count from blocks; provide a shape reference')
 
         return cls(
                 blocks=blocks,
@@ -540,7 +542,7 @@ class TypeBlocks(ContainerBase):
                 yield cls._concatenate_blocks(group)
 
 
-    def _reblock(self) -> tp.Generator[np.ndarray, None, None]:
+    def _reblock(self) -> tp.Iterator[np.ndarray]:
         '''Generator of new block that consolidate adjacent types that are the same.
         '''
         yield from self.consolidate_blocks(raw_blocks=self._blocks)
@@ -596,7 +598,6 @@ class TypeBlocks(ContainerBase):
                             zip(
                                     tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
                                     tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-
                             )
                     )
                     for idx in range(columns_ic.size):
@@ -636,7 +637,6 @@ class TypeBlocks(ContainerBase):
                             zip(
                                     tp.cast(tp.Iterable[int], columns_ic.iloc_dst),
                                     tp.cast(tp.Iterable[int], columns_ic.iloc_src),
-
                             )
                     )
 
@@ -1482,9 +1482,22 @@ class TypeBlocks(ContainerBase):
         return TypeBlocks.from_blocks(self._assign_blocks_from_keys(row_key=key, value=value))
 
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+        '''
+        Drop rows or columns from a TyepBlocks instance.
+
+        Args:
+            key: if a single value, treated as a row key; if a tuple, treated as a pair of row, column keys.
+        '''
         if isinstance(key, tuple):
-            return TypeBlocks.from_blocks(self._drop_blocks(*key))
-        return TypeBlocks.from_blocks(self._drop_blocks(row_key=key))
+            # column dropping can leed to a TB with generator that yields nothing;
+            return TypeBlocks.from_blocks(
+                    self._drop_blocks(*key),
+                    shape_reference=self._shape
+                    )
+        return TypeBlocks.from_blocks(
+                self._drop_blocks(row_key=key),
+                shape_reference=self._shape
+                )
 
 
     def __getitem__(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
@@ -1581,11 +1594,23 @@ class TypeBlocks(ContainerBase):
 
 
 
-    def _ufunc_axis_skipna(self, *, axis: int, skipna: bool, ufunc: UFunc, ufunc_skipna: UFunc, dtype: np.dtype) -> np.ndarray:
+    def _ufunc_axis_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            dtype: np.dtype
+            ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
 
-    def _ufunc_shape_skipna(self, *, axis: int, skipna: bool, ufunc: UFunc, ufunc_skipna: UFunc, dtype: np.dtype) -> np.ndarray:
+    def _ufunc_shape_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            dtype: np.dtype
+            ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
 

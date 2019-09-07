@@ -1847,6 +1847,14 @@ class TestUnit(TestCase):
 
 
 
+    def test_type_blocks_drop_blocks_h(self) -> None:
+        a1 = np.array([[False]])
+        tb1 = TypeBlocks.from_blocks(a1)
+        self.assertEqual(tb1.shape, (1, 1))
+        self.assertEqual(tb1.drop(0).shape, (0, 1))
+        self.assertEqual(tb1.drop((None, 0)).shape, (1, 0))
+
+
     def test_type_blocks_pickle_a(self) -> None:
 
         a1 = np.array([1, 2, 3])

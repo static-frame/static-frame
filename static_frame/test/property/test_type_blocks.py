@@ -131,13 +131,163 @@ class TestUnit(TestCase):
         if tb1.shape[1] != tb2.shape[1]:
             self.assertFalse(post1)
 
+    @unittest.skip('pending')
+    def test_concatenate_blocks(self) -> None:
+        pass
 
-    # TODO: _concatenate_blocks
+    @unittest.skip('pending')
+    def test_consolidate_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_reblock(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_consolidate(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_resize_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_group(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_ufunc_axis_skipna(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_display(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_cols_to_slice(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_indices_to_contiguous_pairs(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_all_block_slices(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_key_to_block_slices(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_mask_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_astype_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_shift_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_assign_blocks_from_keys(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_assign_blocks_from_boolean_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_slice_blocks(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_extract_array(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_extract(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_extract_iloc(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_extract_iloc_mask(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_extract_iloc_assign(self) -> None:
+        pass
+
+    @given(sfst.get_type_blocks(min_rows=1, min_columns=1))  # type: ignore
+    def test_drop(self, tb: TypeBlocks) -> None:
+        # import ipdb; ipdb.set_trace()
+
+        for row in range(tb.shape[0]):
+            tb_post1 = tb.drop(row)
+            self.assertTrue(tb_post1.shape[0] == tb.shape[0] - 1)
+
+        for col in range(tb.shape[1]):
+            tb_post2 = tb.drop((None, col))
+            self.assertTrue(tb_post2.shape[1] == tb.shape[1] - 1)
 
 
+    @unittest.skip('pending')
+    def test_getitem(self) -> None:
+        pass
 
-    #---------------------------------------------------------------------------
-    # last two methods
+    @unittest.skip('pending')
+    def test_ufunc_unary_operator(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_block_shape_slices(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_ufunc_binary_operator(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_transpose(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_isna(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_notna(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_fillna_leading(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_fillna_trailing(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_fillna_forward(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_fillna_backward(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_dropna_to_keep_locations(self) -> None:
+        pass
+
+    @unittest.skip('pending')
+    def test_fillna(self) -> None:
+        pass
+
 
     @given(sfst.get_type_blocks_aligned_array())  # type: ignore
     def test_append(self, tb_aligned_array: tp.Tuple[TypeBlocks, np.ndarray]) -> None:
