@@ -230,9 +230,20 @@ class TestUnit(TestCase):
             tb_post1 = tb.drop(row)
             self.assertTrue(tb_post1.shape[0] == tb.shape[0] - 1)
 
+        if tb.shape[0] > 2:
+            for start in range(1, tb.shape[0]):
+                tb_post2 = tb.drop(slice(start, None))
+                self.assertTrue(tb_post2.shape[0] == start)
+
         for col in range(tb.shape[1]):
-            tb_post2 = tb.drop((None, col))
-            self.assertTrue(tb_post2.shape[1] == tb.shape[1] - 1)
+            tb_post3 = tb.drop((None, col))
+            self.assertTrue(tb_post3.shape[1] == tb.shape[1] - 1)
+
+        if tb.shape[1] > 2:
+            for start in range(1, tb.shape[1]):
+                tb_post4 = tb.drop((None, slice(start, None)))
+                self.assertTrue(tb_post4.shape[1] == start)
+
 
 
     @unittest.skip('pending')
