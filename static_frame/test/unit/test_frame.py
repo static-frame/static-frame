@@ -6,6 +6,7 @@ from io import StringIO
 import string
 import pickle
 import sqlite3
+import datetime
 
 import numpy as np  # type: ignore
 import typing as tp
@@ -4040,6 +4041,8 @@ class TestUnit(TestCase):
                 )
 
 
+
+
     @unittest.skip('requires network')
     def test_frame_set_index_hierarchy_c(self) -> None:
 
@@ -4064,6 +4067,7 @@ class TestUnit(TestCase):
 
         fh.loc[sf.ILoc[-1], ['id', 'title', 'url']]
 
+
     def test_frame_set_index_hierarchy_d(self) -> None:
         f1 = sf.Frame.from_records([('one', 1, 'hello')],
                 columns=['name', 'val', 'msg'])
@@ -4072,6 +4076,28 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(0),
                 (('msg', ((('one', 1), 'hello'),)),))
+
+
+
+    def test_frame_set_index_hierarchy_e(self) -> None:
+
+        records = (
+                (1, '2018-12', 10),
+                (1, '2019-01', 20),
+                (1, '2019-02', 30),
+                (2, '2018-12', 40),
+                (2, '2019-01', 50),
+                (2, '2019-02', 60),
+                )
+        f = Frame.from_records(records)
+        fh = f.set_index_hierarchy([0, 1],
+                drop=True,
+                index_constructors=(Index, IndexYearMonth))
+
+        self.assertEqual(fh.loc[HLoc[:, '2018']].to_pairs(0),
+                ((2, (((1, datetime.date(2018, 12, 1)), 10), ((2, datetime.date(2018, 12, 1)), 40))),))
+
+
 
     def test_frame_iloc_in_loc_a(self) -> None:
         records = (
