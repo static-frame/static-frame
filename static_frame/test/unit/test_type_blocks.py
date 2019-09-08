@@ -1854,6 +1854,17 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.drop(0).shape, (0, 1))
         self.assertEqual(tb1.drop((None, 0)).shape, (1, 0))
 
+        # after no rows remain, trying to drop more rows
+        tb2 = tb1.drop(0)
+        with self.assertRaises(IndexError):
+            tb2.drop(0) # raise from NumPy
+
+        tb3 = tb1.drop((None, 0))
+
+        # after no columns remain, tyring to drop more should raise an exception
+        with self.assertRaises(IndexError):
+            tb3.drop((None, 0))
+
 
     def test_type_blocks_pickle_a(self) -> None:
 

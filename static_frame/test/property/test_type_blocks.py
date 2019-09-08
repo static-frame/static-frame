@@ -225,7 +225,6 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks(min_rows=1, min_columns=1))  # type: ignore
     def test_drop(self, tb: TypeBlocks) -> None:
-        # import ipdb; ipdb.set_trace()
 
         for row in range(tb.shape[0]):
             tb_post1 = tb.drop(row)

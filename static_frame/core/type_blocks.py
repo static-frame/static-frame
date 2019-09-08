@@ -1050,6 +1050,8 @@ class TypeBlocks(ContainerBase):
             # the default should not be the null slice, which would drop all
             block_slices: tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]] = iter(())
         else:
+            if not self._blocks:
+                raise IndexError(f'cannot drop columns from zero-blocks')
             # block slices must be in ascending order, not key order
             block_slices = iter(self._key_to_block_slices(
                     column_key,
