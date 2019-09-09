@@ -125,7 +125,7 @@ class IndexLevel:
     #                 levels.extend(level.targets)
 
     def dtypes(self) -> tp.Iterator[np.dtype]:
-        '''Return an iterable of reprsentative types, one from each depth level.'''
+        '''Return an iterator of reprsentative dtypes, one from each depth level.'''
         if self.targets is None:
             yield self.index.values.dtype
         else:
@@ -138,6 +138,22 @@ class IndexLevel:
                     levels.append(level.targets[0])
                 else:
                     break
+
+    def index_types(self) -> tp.Iterator[np.dtype]:
+        '''Return an iterator of reprsentative Index classes, one from each depth level.'''
+        if self.targets is None:
+            yield self.index.__class__
+        else:
+            levels = [self]
+            while levels:
+                level = levels.pop()
+                # use pulbic interface, as this might be an IndexGO
+                yield level.index.__class__
+                if level.targets is not None: # not terminus
+                    levels.append(level.targets[0])
+                else:
+                    break
+
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.

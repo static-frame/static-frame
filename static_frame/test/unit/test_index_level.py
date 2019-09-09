@@ -80,6 +80,14 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_level_index_types_a(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+        self.assertEqual(
+                [it.__name__ for it in hidx._levels.index_types()],
+                ['Index', 'IndexDate', 'Index'])
 
 
     def test_index_level_get_labels_a(self) -> None:
