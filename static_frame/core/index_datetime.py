@@ -161,7 +161,7 @@ class IndexYear(_IndexDatetime):
             stop: DateInitializer,
             step: int = 1):
         '''
-        Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
+        Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
         labels = np.arange(
                 to_datetime64(start, _DT64_DAY),

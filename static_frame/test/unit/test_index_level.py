@@ -65,7 +65,20 @@ class TestUnit(TestCase):
                 IndexLevelGO(observations, offset=2)))
 
         level0 = IndexLevelGO(index=groups, targets=targets)
-        self.assertEqual([d.kind for d in level0.dtypes()], ['U', 'U', 'U'])
+        self.assertEqual([d.kind for d in level0.dtypes()], ['U', 'U'])
+
+
+    def test_index_level_dtypes_b(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual([dt.kind for dt in hidx._levels.dtypes()],
+                ['U', 'M', 'i'],
+                )
+
 
 
 

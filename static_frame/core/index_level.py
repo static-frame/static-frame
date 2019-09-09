@@ -17,6 +17,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.index import LocMap
 from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import GetItemKeyTypeCompound
 
 
 class IndexLevel:
@@ -110,8 +111,21 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
+    # def dtypes(self) -> tp.Iterator[np.dtype]:
+    #     # this returns all types at all levels
+    #     if self.targets is None:
+    #         yield self.index.values.dtype
+    #     else:
+    #         levels = [self]
+    #         while levels:
+    #             level = levels.pop()
+    #             # use pulbic interface, as this might be an IndexGO
+    #             yield level.index.values.dtype
+    #             if level.targets is not None: # not terminus
+    #                 levels.extend(level.targets)
+
     def dtypes(self) -> tp.Iterator[np.dtype]:
-        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
+        '''Return an iterable of reprsentative types, one from each depth level.'''
         if self.targets is None:
             yield self.index.values.dtype
         else:
@@ -121,7 +135,9 @@ class IndexLevel:
                 # use pulbic interface, as this might be an IndexGO
                 yield level.index.values.dtype
                 if level.targets is not None: # not terminus
-                    levels.extend(level.targets)
+                    levels.append(level.targets[0])
+                else:
+                    break
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
@@ -184,7 +200,6 @@ class IndexLevel:
 
         raise ValueError('Invalid key length.')
 
-    from static_frame.core.util import GetItemKeyTypeCompound
     def loc_to_iloc(self, key: GetItemKeyTypeCompound) -> GetItemKeyType:
         '''
         This is the low-level loc_to_iloc, analagous to LocMap.loc_to_iloc as used by Index. As such, the key at this point should not be a Series or Index object.
@@ -219,7 +234,6 @@ class IndexLevel:
             next_offset = offset + level.offset
 
             # print(level, depth, offset, depth_key, next_offset)
-            # import ipdb; ipdb.set_trace()
 
             if level.targets is None:
                 try:
