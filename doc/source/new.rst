@@ -16,6 +16,13 @@ Added ``Frame.from_records_items`` constructor.
 
 Improved dtype selection in ``FrameGO`` set item and related functions.
 
+``IndexHierarchy.from_labels`` now accepts an ``index_constructors`` argument.
+
+``Frame.set_index_hierarchy`` now accepts an ``index_constructors`` argument.
+
+``IndexHierarhcy.from_product() now attempts to use ``name`` of provided indicies for the ``IndexHierarchy`` name, when all names are non-None.
+
+Added ``IndexHierarchy.dtypes`` and ``IndexHierarchy.index_types``, returning ``Series`` indexed by ``name`` when possible.
 
 
 

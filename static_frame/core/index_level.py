@@ -330,6 +330,30 @@ class IndexLevel:
         labels.flags.writeable = False
         return labels
 
+    # def values_at_depth(self,
+    #         depth_level: int
+    #         ) -> np.ndarray:
+    #     # NOTE: not yet accepting a depth_level as an iterable of ints
+    #     # NOTE: this only concatenates found values in stored indicies, meaning that the length of the array will differ based on the depth level
+
+    #     if depth_level == 0:
+    #         return self.index.values
+    #     else:
+    #         def gen():
+    #             levels = deque(((self, 0),))
+    #             while levels:
+    #                 level, depth = levels.popleft()
+    #                 if depth == depth_level:
+    #                     yield level.index.values
+    #                     continue # do not need to descend
+    #                 if level.targets is not None: # terminus
+    #                     next_depth = depth + 1
+    #                     levels.extend([(lvl, next_depth) for lvl in level.targets])
+
+    #         return np.concatenate(tuple(gen()))
+
+
+
 class IndexLevelGO(IndexLevel):
     '''Grow only variant of IndexLevel
     '''
