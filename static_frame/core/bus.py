@@ -20,7 +20,7 @@ class Store:
     pass
 
 
-class StoreZip:
+class StoreZip(Store):
 
     EXT_CONTAINED = '.txt'
 
@@ -110,7 +110,7 @@ class Bus:
         '''
         Given a get-item key, translate to an iterator of loc positions.
         '''
-        # key maybe a selction, slice, or Boolean
+        # key maybe a selection, slice, or Boolean
         labels = self.index.values[self.index.loc_to_iloc(key)]
         if isinstance(labels, str): # single values
             return (labels,)
