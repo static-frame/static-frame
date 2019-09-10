@@ -10,7 +10,7 @@ from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
 
-    def test_bus_init_a(self):
+    def test_bus_init_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
