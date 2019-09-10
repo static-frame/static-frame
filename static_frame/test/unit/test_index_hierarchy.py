@@ -1173,6 +1173,21 @@ class TestUnit(TestCase):
                 [['b', 20], ['c', 400], ['d', 50], ['a', 1]]
                 )
 
+    def test_index_hierarchy_dtypes_a(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(
+            [(x, y.kind) for x, y in hidx.dtypes.to_pairs()],
+            [(0, 'U'), (1, 'M'), (2, 'i')]
+            )
+
+        # import ipdb; ipdb.set_trace()
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

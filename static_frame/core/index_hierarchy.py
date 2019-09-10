@@ -564,8 +564,40 @@ class IndexHierarchy(IndexBase):
             sel = depth_level
         else:
             sel = list(depth_level)
+        # NOTE: thes values could be different if we were to concatenate the values from each of the composed arrays
         return self.values[:, sel]
 
+    @property
+    def dtypes(self) -> 'Series':
+        '''
+        Return a Series of dytpes for each index depth.
+
+        Returns:
+            :py:class:`static_frame.Series`
+        '''
+        from static_frame.core.series import Series
+
+        if self._name and len(self._name) == self.depth:
+            labels = self._name
+        else:
+            labels = None
+        return Series(self._levels.dtypes(), index=labels)
+
+
+    @property
+    def index_types(self) -> 'Series':
+        '''
+        Return a Series of Index classes for each index depth.
+
+        Returns:
+            :py:class:`static_frame.Series`
+        '''
+        from static_frame.core.series import Series
+        if self._name and len(self._name) == self.depth:
+            labels = self._name
+        else:
+            labels = None
+        return Series(self._levels.index_types(), index=labels)
 
     #---------------------------------------------------------------------------
 
