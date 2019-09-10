@@ -1970,7 +1970,7 @@ class TypeBlocks(ContainerBase):
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
-                        bridging_isnotna = ~bridging_isna # type: ignore
+                        bridging_isnotna = ~bridging_isna # type: ignore #pylint: disable=E1130
 
                         sel_sided = sel & bridging_isnotna
                         if limit:
@@ -1999,7 +1999,7 @@ class TypeBlocks(ContainerBase):
                     bridging_count_reset = ~sel[:, bridge_src_index]
 
                     if bridging_values is not None:
-                        bridging_isnotna = ~bridging_isna # type: ignore
+                        bridging_isnotna = ~bridging_isna #type: ignore #pylint: disable=E1130
 
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna

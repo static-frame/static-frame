@@ -341,7 +341,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(Exception):
-            f['c'] = 0
+            f['c'] = 0 #pylint: disable=E1137
 
 
     def test_frame_from_pandas_c(self) -> None:
