@@ -111,12 +111,18 @@ class IndexHierarchy(IndexBase):
         '''
         indices = [] # store in a list, where index is depth
         for lvl in levels:
-            if not isinstance(lvl, Index):
+            if not isinstance(lvl, Index): # Index, not IndexBase
                 lvl = cls._INDEX_CONSTRUCTOR(lvl)
             indices.append(lvl)
 
         if len(indices) == 1:
             raise RuntimeError('only one level given')
+
+        # build name from index names, assuming they are all specified
+        if name is None:
+            name = tuple(index.name for index in indices)
+            if any(n is None for n in name):
+                name = None
 
         targets_previous = None
 

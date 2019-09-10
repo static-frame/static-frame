@@ -159,7 +159,9 @@ class IndexYear(_IndexDatetime):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None):
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
@@ -169,13 +171,16 @@ class IndexYear(_IndexDatetime):
                 np.timedelta64(step, 'Y'),
                 dtype=_DT64_YEAR)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     @classmethod
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
+            ):
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -186,14 +191,16 @@ class IndexYear(_IndexDatetime):
                 np.timedelta64(step, 'Y'),
                 dtype=_DT64_YEAR)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
 
     @classmethod
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int = 1
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
             ):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
@@ -204,7 +211,7 @@ class IndexYear(_IndexDatetime):
                 step=np.timedelta64(step, 'Y'),
                 )
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
     def to_pandas(self):
@@ -235,7 +242,10 @@ class IndexYearMonth(_IndexDatetime):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
+            ):
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
@@ -246,13 +256,16 @@ class IndexYearMonth(_IndexDatetime):
                 dtype=_DT64_MONTH)
 
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     @classmethod
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
+            ):
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -263,14 +276,16 @@ class IndexYearMonth(_IndexDatetime):
                 np.timedelta64(step, 'M'),
                 dtype=_DT64_MONTH)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
 
     @classmethod
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int = 1
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
             ):
         '''
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
@@ -281,7 +296,7 @@ class IndexYearMonth(_IndexDatetime):
                 step=np.timedelta64(step, 'M'),
                 dtype=_DT64_MONTH)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
     def to_pandas(self):
@@ -312,7 +327,10 @@ class IndexDate(_IndexDatetime):
     def from_date_range(cls,
             start: DateInitializer,
             stop: DateInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
+            ):
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
@@ -321,13 +339,15 @@ class IndexDate(_IndexDatetime):
                 to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
                 np.timedelta64(step, 'D'))
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     @classmethod
     def from_year_month_range(cls,
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
-            step: int = 1):
+            step: int = 1,
+            *,
+            name: tp.Hashable = None):
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
@@ -337,13 +357,15 @@ class IndexDate(_IndexDatetime):
                 step=np.timedelta64(step, 'D'),
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
     @classmethod
     def from_year_range(cls,
             start: YearInitializer,
             stop: YearInitializer,
-            step: int = 1
+            step: int = 1,
+            *,
+            name: tp.Hashable = None
             ):
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
@@ -354,7 +376,7 @@ class IndexDate(_IndexDatetime):
                 step=np.timedelta64(step, 'D'),
                 dtype=_DT64_DAY)
         labels.flags.writeable = False
-        return cls(labels)
+        return cls(labels, name=name)
 
 
 #-------------------------------------------------------------------------------

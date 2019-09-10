@@ -1184,7 +1184,41 @@ class TestUnit(TestCase):
             [(0, 'U'), (1, 'M'), (2, 'i')]
             )
 
-        # import ipdb; ipdb.set_trace()
+    def test_index_hierarchy_dtypes_b(self) -> None:
+        idx1 = Index(('A', 'B'), name='a')
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
+        idx3 = Index((1, 2), name='c')
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(
+            [(x, y.kind) for x, y in hidx.dtypes.to_pairs()],
+            [('a', 'U'), ('b', 'M'), ('c', 'i')]
+            )
+
+    def test_index_hierarchy_index_types_a(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(
+            [(x, y.__name__) for x, y in hidx.index_types.to_pairs()],
+            [(0, 'Index'), (1, 'IndexDate'), (2, 'Index')]
+            )
+
+    def test_index_hierarchy_index_types_b(self) -> None:
+        idx1 = Index(('A', 'B'), name='a')
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
+        idx3 = Index((1, 2), name='c')
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(
+            [(x, y.__name__) for x, y in hidx.index_types.to_pairs()],
+            [('a', 'Index'), ('b', 'IndexDate'), ('c', 'Index')]
+            )
+
+
+
 
 
 
