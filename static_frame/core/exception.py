@@ -19,3 +19,7 @@ class ErrorInitFrame(ErrorInit):
 class ErrorInitIndex(ErrorInit):
     '''Error in IndexBase (and derived Index) initialization.
     '''
+
+class ErrorInitBus(ErrorInit):
+    '''Error in Bus initialization.
+    '''

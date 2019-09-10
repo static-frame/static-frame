@@ -17,6 +17,7 @@ import numpy as np  # type: ignore
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.display_color import HexColor
 from static_frame.core import display_html_datatables
+from static_frame.core.container import ContainerBase
 
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
@@ -712,7 +713,10 @@ class Display:
 
         # handling for all other values that are stringable
 
-        msg = str(value)
+        if isinstance(value, ContainerBase):
+            msg = value.__class__.__name__
+        else:
+            msg = str(value)
 
         # handling for float, complex if str() produces an 'e', then we use the scientific template; otherwise, we use the postional; users can config both to be the same to always get one or the other
         if isinstance(value, FLOAT_TYPES):
