@@ -1,6 +1,5 @@
 
 import typing as tp
-from io import StringIO
 
 from static_frame.core.series import Series
 from static_frame.core.frame import Frame

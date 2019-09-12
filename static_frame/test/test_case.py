@@ -28,7 +28,7 @@ skip_win = pytest.mark.skipif(
         )
 
 @contextlib.contextmanager
-def temp_file(suffix=None):
+def temp_file(suffix: tp.Optional[str] = None) -> tp.Iterator[str]:
     try:
         f = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
         tmp_name = f.name
