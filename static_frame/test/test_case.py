@@ -8,6 +8,8 @@ import itertools as it
 import string
 import cmath
 import sqlite3
+import contextlib
+import tempfile
 
 import numpy as np  # type: ignore
 import pytest  # type: ignore
@@ -20,16 +22,26 @@ from static_frame import TypeBlocks
 
 # pylint --output-format=colorized static_frame
 
-skip_win = pytest.mark.skipif(sys.platform == 'win32', reason='Windows default dtypes.')
+skip_win = pytest.mark.skipif(
+        sys.platform == 'win32',
+        reason='Windows default dtypes.'
+        )
+
+@contextlib.contextmanager
+def temp_file(suffix=None):
+    try:
+        f = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp_name = f.name
+        f.close()
+        yield tmp_name
+    finally:
+        os.unlink(tmp_name)
+
 
 class TestCase(unittest.TestCase):
     '''
     TestCase specialized for usage with StaticFrame
     '''
-
-    def setUp(self) -> None:
-        pass
-
 
     @staticmethod
     def get_arrays_a() -> tp.Generator[np.ndarray, None , None]:
@@ -101,6 +113,7 @@ class TestCase(unittest.TestCase):
                 c.execute(f"INSERT INTO events VALUES ('{date}','{identifier}',12.5,8)")
         conn.commit()
         return conn
+
 
     #---------------------------------------------------------------------------
 

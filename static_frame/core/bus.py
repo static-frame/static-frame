@@ -1,12 +1,15 @@
 
 import typing as tp
-# import os
-import zipfile
 from io import StringIO
 
 from static_frame.core.series import Series
 from static_frame.core.frame import Frame
 # from static_frame.core.frame import Index
+
+from static_frame.core.store import Store
+from static_frame.core.store import StoreZipCSV
+from static_frame.core.store import StoreZipTSV
+
 
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.util import GetItemKeyType
@@ -15,47 +18,6 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
-
-class Store:
-    pass
-
-
-class StoreZip(Store):
-
-    EXT_CONTAINED = '.txt'
-
-    def __init__(self, fp: str):
-        self._fp = fp
-
-    def read(self, label: str) -> Frame:
-        with zipfile.ZipFile(self._fp) as zf:
-            src = StringIO()
-            # keys may not be present
-            src.write(zf.read(label + self.EXT_CONTAINED).decode())
-            src.seek(0)
-            # NOTE: how to handle index hiearchy?
-            return Frame.from_tsv(src, index_column=0)
-
-    def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]]
-            ) -> None:
-
-        # if isinstance(self._fp, StringIO):
-        #     self._fp.seek(0)
-
-        with zipfile.ZipFile(self._fp, 'w',zipfile.ZIP_DEFLATED) as zf:
-            for label, frame in items:
-                dst = StringIO()
-                frame.to_tsv(dst)
-                dst.seek(0)
-                # this will write it without a container
-                zf.writestr(label + self.EXT_CONTAINED, dst.read())
-
-
-    def keys(self) -> tp.Iterator[str]:
-        with zipfile.ZipFile(self._fp) as zf:
-            for name in zf.namelist():
-                yield name.replace(self.EXT_CONTAINED, '')
 
 
 class Bus:
@@ -85,9 +47,15 @@ class Bus:
 
 
     @classmethod
-    def from_zip(cls, fp: str):
-        store = StoreZip(fp)
-        return cls(cls._empty_series(store.keys()), store=store)
+    def from_zip_tsv(cls, fp: str):
+        store = StoreZipTSV(fp)
+        return cls(cls._empty_series(store.labels()), store=store)
+
+    @classmethod
+    def from_zip_csv(cls, fp: str):
+        store = StoreZipCSV(fp)
+        return cls(cls._empty_series(store.labels()), store=store)
+
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -173,6 +141,10 @@ class Bus:
 
 
     #---------------------------------------------------------------------------
-    def to_zip(self, fp) -> None:
-        store = StoreZip(fp)
+    def to_zip_tsv(self, fp) -> None:
+        store = StoreZipTSV(fp)
+        store.write(self.items())
+
+    def to_zip_csv(self, fp) -> None:
+        store = StoreZipCSV(fp)
         store.write(self.items())
