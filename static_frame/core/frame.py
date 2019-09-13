@@ -430,7 +430,7 @@ class Frame(ContainerBase):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False) -> 'Frame':
-        '''Frame constructor from iterable of pairs of index value, row iterable.
+        '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
 
         Args:
             items: Iterable of pairs of index label, row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
@@ -2619,6 +2619,7 @@ class Frame(ContainerBase):
         Args:
             columns: Iterable of column labels.
             drop: Boolean to determine if selected columns should be removed from the data.
+            index_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting columns Index components in the ``IndexHierarchy``.
 
         Returns:
             :py:class:`Frame`

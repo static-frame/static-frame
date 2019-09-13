@@ -8,12 +8,17 @@ Both :py:class:`Series` and :py:class:`Frame` have ``from_items`` constructors t
 Series
 ---------
 
+
 .. automethod:: static_frame.Series.from_items
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
    :start-after: start_series_from_items_a
    :end-before: end_series_from_items_a
+
+.. automethod:: static_frame.Series.from_dict
+
+.. automethod:: static_frame.Series.from_concat
 
 .. automethod:: static_frame.Series.from_pandas
 
@@ -39,13 +44,8 @@ Frame
 
 .. automethod:: static_frame.Frame.from_records_items
 
+.. automethod:: static_frame.Frame.from_dict
 
-.. automethod:: static_frame.Frame.from_structured_array
-
-.. literalinclude:: ../../static_frame/test/unit/test_doc.py
-   :language: python
-   :start-after: start_frame_from_structured_array_a
-   :end-before: end_frame_from_structured_array_a
 
 
 .. automethod:: static_frame.Frame.from_concat
@@ -76,16 +76,27 @@ Frame
 .. automethod:: static_frame.Frame.from_sql
 
 
+.. automethod:: static_frame.Frame.from_structured_array
+
+.. literalinclude:: ../../static_frame/test/unit/test_doc.py
+   :language: python
+   :start-after: start_frame_from_structured_array_a
+   :end-before: end_frame_from_structured_array_a
+
+
 .. automethod:: static_frame.Frame.from_pandas
 
 
 
 
 
-Index Creation
-===============================
+Index
+-----------------
 
-While indices are often specified with their data in container creation, in some cases explicitly creating indices in advance of the data is practical.
+While indices are often specified with their data at container creation, in some cases explicitly creating indices in advance of the data is practical.
+
+
+.. automethod:: static_frame.Index.from_labels
 
 
 .. automethod:: static_frame.IndexHierarchy.from_product

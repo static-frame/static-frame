@@ -331,7 +331,7 @@ class Index(IndexBase):
     def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'Index':
         '''
-        Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interfave to ``IndexHierarchy``.
+        Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
         '''
         return cls(labels=labels)
 

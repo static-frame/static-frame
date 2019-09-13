@@ -25,7 +25,6 @@ Improved dtype selection in ``FrameGO`` set item and related functions.
 Added ``IndexHierarchy.dtypes`` and ``IndexHierarchy.index_types``, returning ``Series`` indexed by ``name`` when possible.
 
 
-
 0.4.0
 -----------
 

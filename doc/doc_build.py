@@ -1,5 +1,5 @@
 import os
-import sphinx  # type: ignore
+from sphinx.cmd.build import main  # type: ignore
 
 if __name__ == '__main__':
     doc_dir = os.path.abspath(os.path.dirname(__file__))
@@ -7,11 +7,12 @@ if __name__ == '__main__':
     source_dir = os.path.join(doc_dir, 'source')
     build_dir = os.path.join(doc_dir, 'build', 'html')
 
-    args = ['sphinx', '-E', '-b', 'html',
-            '-d', doctrees_dir,
+    args = ['-E', '-b', 'html',
+            '-d',
+            doctrees_dir,
             source_dir,
             build_dir]
-    status = sphinx.main(args)
+    status = main(args)
 
     import webbrowser
     webbrowser.open(os.path.join(build_dir, 'index.html'))
