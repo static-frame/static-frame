@@ -119,7 +119,6 @@ class IndexLevel:
     #         levels = [self]
     #         while levels:
     #             level = levels.pop()
-    #             # use pulbic interface, as this might be an IndexGO
     #             yield level.index.values.dtype
     #             if level.targets is not None: # not terminus
     #                 levels.extend(level.targets)
@@ -132,7 +131,6 @@ class IndexLevel:
             levels = [self]
             while levels:
                 level = levels.pop()
-                # use pulbic interface, as this might be an IndexGO
                 yield level.index.values.dtype
                 if level.targets is not None: # not terminus
                     levels.append(level.targets[0])
@@ -147,7 +145,6 @@ class IndexLevel:
             levels = [self]
             while levels:
                 level = levels.pop()
-                # use pulbic interface, as this might be an IndexGO
                 yield level.index.__class__
                 if level.targets is not None: # not terminus
                     levels.append(level.targets[0])
@@ -372,25 +369,32 @@ class IndexLevelGO(IndexLevel):
     # grow only mutation
 
     def extend(self, level: IndexLevel) -> None:
-        # assert isinstance(level, IndexLevelGO)
+        '''Extend this IndexLevel with another IndexLevel, assuming that it has compatible depth and Index types.
+        '''
 
         depth = next(self.depths())
+
+        if level.targets is None:
+            raise RuntimeError('found IndexLevel with None as targets')
         if depth != next(level.depths()):
-            raise Exception('level for extension does not have necessary levels.')
+            raise RuntimeError('level for extension does not have necessary levels.')
+        if tuple(self.index_types()) != tuple(level.index_types()):
+            raise RuntimeError('level for extension does not have corresponding types.')
 
         # this will raise for duplicates
         self.index.extend(level.index.values)
 
         def target_gen() -> tp.Iterator[GetItemKeyType]:
             offset_prior = self.__len__()
-            assert level.targets is not None
             for t in level.targets:
                 # only need to update offsets at this level, as lower levels are relative to this
                 target = t.to_index_level(offset_prior, cls=self.__class__)
                 offset_prior += len(target)
                 yield target
 
-        assert self.targets is not None
+        if self.targets is None:
+            raise RuntimeError('found IndexLevel with None as targets')
+
         self.targets.extend(target_gen())
 
     def append(self, key: tp.Sequence[tp.Hashable]) -> None:
@@ -398,6 +402,7 @@ class IndexLevelGO(IndexLevel):
         '''
         # find fist depth that does not contain key
         depth_count = next(self.depths())
+        index_types = tuple(self.index_types())
 
         if len(key) != depth_count:
             raise RuntimeError('appending key {} of insufficent depth {}'.format(
@@ -415,9 +420,12 @@ class IndexLevelGO(IndexLevel):
             if node.targets is not None:
                 node = node.targets[-1]
 
-        assert depth_not_found != -1
+        if depth_not_found == -1:
+            raise RuntimeError('unable to set depth_not_found')
+
         level_previous = None
 
+        # iterate from the innermost depth out
         for depth in range(depth_count - 1, depth_not_found - 1, -1):
             node = edge_nodes[depth]
             k = key[depth]
@@ -434,10 +442,13 @@ class IndexLevelGO(IndexLevel):
                     node.targets.append(level_previous)
 
             else: # depth not found is higher up
+                # NOTE: do not need to use index_from_optional_constructor, as no explicit constructor is being supplied, and we can expect that the existing types must be valid
+                index_constructor = index_types[depth]
+
                 if node.targets is None:
-                    # we are at the max depth; will need to create a LevelGO to append in th next level
+                    # we are at the max depth; will need to create a LevelGO to append in the next level
                     level_previous = IndexLevelGO(
-                            index=IndexGO((k,)),
+                            index=index_constructor((k,)),
                             offset=0,
                             targets=None
                             )
@@ -445,7 +456,7 @@ class IndexLevelGO(IndexLevel):
                     # targets = np.empty(1, dtype=object)
                     targets = ArrayGO([level_previous,], own_iterable=True)
                     level_previous = IndexLevelGO(
-                            index=IndexGO((k,)),
+                            index=index_constructor((k,)),
                             offset=0,
                             targets=targets
                             )

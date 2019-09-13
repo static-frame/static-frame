@@ -10,12 +10,13 @@ from static_frame.core.frame import Frame
 
 
 class Store:
-    pass
+    INCREMENTAL: bool = True # define if this Store can do incremental loads
 
 
 class _StoreZipDelimited(Store):
 
-    _EXT_CONTAINED = '.txt'
+    INCREMENTAL = True
+    _EXT_CONTAINED: str = ''
 
     def __init__(self, fp: str):
         self._fp = fp
@@ -50,8 +51,16 @@ class _StoreZipDelimited(Store):
 
 
 class StoreZipTSV(_StoreZipDelimited):
+    '''
+    Store of TSV files contained within a ZIP file. Incremental loading is supported.
+    '''
     _EXT_CONTAINED = '.txt'
-
 
 class StoreZipCSV(_StoreZipDelimited):
     _EXT_CONTAINED = '.csv'
+    '''
+    Store of CSV files contained within a ZIP file. Incremental loading is supported.
+    '''
+
+class StorePickle(Store):
+    pass
