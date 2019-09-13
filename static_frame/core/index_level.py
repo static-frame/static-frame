@@ -386,7 +386,7 @@ class IndexLevelGO(IndexLevel):
 
         def target_gen() -> tp.Iterator[GetItemKeyType]:
             offset_prior = self.__len__()
-            for t in level.targets:
+            for t in level.targets: #type: ignore # should be able to figure out level.targets is not None
                 # only need to update offsets at this level, as lower levels are relative to this
                 target = t.to_index_level(offset_prior, cls=self.__class__)
                 offset_prior += len(target)
