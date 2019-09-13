@@ -3773,6 +3773,17 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             Frame.from_records(((0, 1, 2) for x in range(3) if x < 0))
 
+    def test_frame_from_records_m(self) -> None:
+
+        f1 = sf.Frame.from_records([
+            (88,),
+            (27, ),
+            (27,),
+            (None,)])
+
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 88), (1, 27), (2, 27), (3, None))),))
+
 
     def test_frame_from_json_a(self) -> None:
 
