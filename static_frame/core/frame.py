@@ -400,8 +400,6 @@ class Frame(ContainerBase):
                         if not column_type_explicit:
                             # reset to None if not explicit and failued in fromiter
                             column_type = None
-                    except:
-                        import ipdb; ipdb.set_trace()
                 if values is None:
                     rows_iter = rows if not rows_to_iter else iter(rows)
                     # let array constructor determine type if column_type is None
