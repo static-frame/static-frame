@@ -143,6 +143,7 @@ UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'func',
         'funcna',
         'dtype',
+        'composable', # if partial solutions can be processed
         'doc_header',
 ))
 
@@ -152,58 +153,68 @@ UFUNC_AXIS_SKIPNA = {
             _all,
             _nanall,
             DTYPE_BOOL,
+            True,
             'Logical and over values along the specified axis.',
             ),
         'any': UfuncSkipnaAttrs(
             _any,
             _nanany,
             DTYPE_BOOL,
+            True,
             'Logical or over values along the specified axis.'
             ),
         'sum': UfuncSkipnaAttrs(
             np.sum,
             np.nansum,
             None,
+            True,
             'Sum values along the specified axis.'
             ),
         'min': UfuncSkipnaAttrs(
             np.min,
             np.nanmin,
             None,
+            True,
             'Return the minimum along the specified axis.'
             ),
         'max': UfuncSkipnaAttrs(
             np.max,
             np.nanmax,
             None,
+            True,
             'Return the maximum along the specified axis.'),
         'mean': UfuncSkipnaAttrs(
             np.mean,
             np.nanmean,
             None,
+            False,
             'Return the mean along the specified axis.'
             ),
         'median': UfuncSkipnaAttrs(
             np.median,
             np.nanmedian,
             None,
+            False,
             'Return the median along the specified axis.'
             ),
         'std': UfuncSkipnaAttrs(
             np.std,
             np.nanstd,
             None,
+            False,
             'Return the standard deviaton along the specified axis.'),
         'var': UfuncSkipnaAttrs(
             np.var,
             np.nanvar,
             None,
+            False,
             'Return the variance along the specified axis.'
             ),
         'prod': UfuncSkipnaAttrs(
             np.prod,
             np.nanprod,
             None,
+            True,
             'Return the product along the specified axis.'
             ),
         }
@@ -214,12 +225,14 @@ UFUNC_SHAPE_SKIPNA = {
             np.cumsum,
             np.nancumsum,
             None,
+            False,
             'Return the cumulative sum over the specified axis.'
             ),
         'cumprod': UfuncSkipnaAttrs(
             np.cumprod,
             np.nancumprod,
             None,
+            False,
             'Return the cumulative product over the specified axis.'
             ),
         }
@@ -266,15 +279,20 @@ class ContainerMeta(type):
 
     @staticmethod
     def create_ufunc_axis_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype, doc = UFUNC_AXIS_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtype, composable, doc = UFUNC_AXIS_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
-        def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
+        def func(self: tp.Any,
+                axis: int = 0,
+                skipna: bool = True,
+                **_: object
+                ) -> tp.Any:
             return self._ufunc_axis_skipna(
                     axis=axis,
                     skipna=skipna,
                     ufunc=ufunc,
                     ufunc_skipna=ufunc_skipna,
+                    composable=composable,
                     dtype=dtype)
 
         # f = wraps(ufunc)(func) # not sure if this is correct
@@ -285,7 +303,7 @@ class ContainerMeta(type):
 
     @staticmethod
     def create_ufunc_shape_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype, doc = UFUNC_SHAPE_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtype, composable, doc = UFUNC_SHAPE_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
         def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
@@ -294,6 +312,7 @@ class ContainerMeta(type):
                     skipna=skipna,
                     ufunc=ufunc,
                     ufunc_skipna=ufunc_skipna,
+                    composable=composable,
                     dtype=dtype)
 
         func.__name__ = func_name

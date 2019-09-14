@@ -2131,6 +2131,7 @@ class Frame(ContainerBase):
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
@@ -2141,6 +2142,7 @@ class Frame(ContainerBase):
                 axis=axis,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
+                composable=composable,
                 dtype=dtype)
 
         # post has been made immutable so Series will own
@@ -2156,12 +2158,13 @@ class Frame(ContainerBase):
             skipna,
             ufunc,
             ufunc_skipna,
+            composable: bool,
             dtype) -> 'Frame':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2
 
-        # full-shape processing requires processing contiguous values
+        # assumed not composable for axis 1, full-shape processing requires processing contiguous values
         v = self.values
         if skipna:
             post = ufunc_skipna(v, axis=axis, dtype=dtype)

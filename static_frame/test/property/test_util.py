@@ -114,7 +114,7 @@ class TestUnit(TestCase):
 
         has_na = util.isna_array(array).any()
 
-        for ufunc, ufunc_skipna, dtype, doc in UFUNC_AXIS_SKIPNA.values():
+        for ufunc, ufunc_skipna, dtype, composable, doc in UFUNC_AXIS_SKIPNA.values():
 
             with np.errstate(over='ignore', under='ignore', divide='ignore'):
 

@@ -82,6 +82,7 @@ class IndexBase(ContainerBase):
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype: tp.Optional[np.dtype] = None,
     ) -> np.ndarray:
         raise NotImplementedError()
@@ -296,6 +297,7 @@ class IndexBase(ContainerBase):
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype: tp.Optional[np.dtype] = None,
             ) -> np.ndarray:
         '''
@@ -309,6 +311,7 @@ class IndexBase(ContainerBase):
                 skipna=skipna,
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
+                composable=composable, # shape on axis 1 is never composable
                 dtype=dtype
                 )
 

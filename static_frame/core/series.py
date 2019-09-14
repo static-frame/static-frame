@@ -822,6 +822,7 @@ class Series(ContainerBase):
             skipna: bool,
             ufunc,
             ufunc_skipna,
+            composable: bool,
             dtype=None
             ) -> np.ndarray:
         '''
@@ -843,6 +844,7 @@ class Series(ContainerBase):
             skipna: bool,
             ufunc,
             ufunc_skipna,
+            composable: bool,
             dtype=None
             ) -> 'Series':
         '''

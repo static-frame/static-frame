@@ -1715,6 +1715,31 @@ class TestUnit(TestCase):
             f1.sum(skipna=False)
 
 
+    def test_frame_mean_a(self) -> None:
+
+
+        a1 = np.array([
+            [1, 2, 3, -5],
+            [10, 50, 30, -7],
+            [1345, 2234, 3345, -200]])
+        a2 = np.array([2, 50, 2234])
+        a3 = np.array([3, 30, 3345])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        f1 = Frame(tb1,
+                columns=tuple('pqrstu'),
+                index=('w', 'x', 'y'))
+
+        # TODO: mean needs a floating point, truncating floats
+        # self.assertEqual(
+        #         f1.mean(axis=0).values.tolist(),
+        #         f1.values.mean(axis=0).tolist())
+
+        self.assertEqual(
+                f1.mean(axis=1).values.tolist(),
+                f1.values.mean(axis=1).tolist())
+
+
     def test_frame_prod_a(self) -> None:
 
         records = (

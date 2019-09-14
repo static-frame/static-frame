@@ -712,17 +712,20 @@ class TypeBlocks(ContainerBase):
             axis: int,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
 
         Args:
+            composable: when True, the function application will return a correct result by applying the function to blocks first, and then the result of the blocks (i.e., add, prod); where observation count is relevant (i.e., mean, var, std), this must be False.
             dtype: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
 
         Returns:
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
         '''
-        assert axis < 2
+        if axis < 0 or axis > 1:
+            raise RuntimeError(f'invalid axis: {axis}')
 
         func = partial(ufunc_axis_skipna,
                 skipna=skipna,
@@ -739,9 +742,18 @@ class TypeBlocks(ContainerBase):
                 # reduce all rows to 1d with column width
                 shape: tp.Union[int, tp.Tuple[int, int]] = self._shape[1]
                 pos = 0
-            else:
+            elif composable: # axis 1
                 # reduce all columns to 2d blocks with 1 column
                 shape = (self._shape[0], len(self._blocks))
+            else: # axis 1, not block composable
+                array = self._blocks_to_array(
+                        blocks=self._blocks,
+                        shape=self._shape,
+                        row_dtype=self._row_dtype,
+                        row_multiple=True)
+                result = func(array=array, axis=axis)
+                result.flags.writeable = False
+                return result
 
             # this will be uninitialzied and thus, if a value is not assigned, will have garbage
             out = np.empty(shape, dtype=dtype or self._row_dtype)
@@ -1604,6 +1616,7 @@ class TypeBlocks(ContainerBase):
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype: np.dtype
             ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
@@ -1614,6 +1627,7 @@ class TypeBlocks(ContainerBase):
             skipna: bool,
             ufunc: UFunc,
             ufunc_skipna: UFunc,
+            composable: bool,
             dtype: np.dtype
             ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality

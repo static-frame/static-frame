@@ -734,6 +734,7 @@ class IndexHierarchy(IndexBase):
             skipna,
             ufunc,
             ufunc_skipna,
+            composable: bool,
             dtype=None
             ) -> np.ndarray:
         '''

@@ -708,7 +708,9 @@ class Index(IndexBase):
             skipna,
             ufunc,
             ufunc_skipna,
-            dtype=None) -> np.ndarray:
+            composable: bool,
+            dtype=None
+            ) -> np.ndarray:
         '''
 
         Args:
@@ -717,6 +719,7 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        # do not need to pass on composabel here
         return ufunc_axis_skipna(
                 array=self._labels,
                 skipna=skipna,
