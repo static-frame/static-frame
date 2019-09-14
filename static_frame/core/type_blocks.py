@@ -15,6 +15,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+# from static_frame.core.util import DEFAULT_INT_DTYPE
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -703,6 +704,8 @@ class TypeBlocks(ContainerBase):
                 yield g, selection, self._extract(column_key=selection)
 
 
+    #---------------------------------------------------------------------------
+    # transformations resulting in reduced dimensionality
 
     def ufunc_axis_skipna(self, *,
             skipna: bool,
@@ -711,7 +714,7 @@ class TypeBlocks(ContainerBase):
             ufunc_skipna: UFunc,
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
-        '''Apply a function that reduces blocks to a single axis.
+        '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
 
         Args:
             dtype: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
@@ -732,7 +735,6 @@ class TypeBlocks(ContainerBase):
             result.flags.writeable = False
             return result
         else:
-            # need to have good row dtype here, so that ints goes to floats
             if axis == 0:
                 # reduce all rows to 1d with column width
                 shape: tp.Union[int, tp.Tuple[int, int]] = self._shape[1]
@@ -770,6 +772,7 @@ class TypeBlocks(ContainerBase):
         result = func(array=out, axis=axis)
         result.flags.writeable = False
         return result
+
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:

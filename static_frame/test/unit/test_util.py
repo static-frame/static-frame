@@ -1528,5 +1528,18 @@ class TestUnit(TestCase):
         self.assertEqual(post2.tolist(), [[3], [4]])
 
 
+    def test_argmin_1d_a(self) -> None:
+
+        from static_frame.core.util import argmin_1d
+
+        self.assertEqual(argmin_1d(np.array([3,-2,0,1])), 1)
+        self.assertEqualWithNaN(argmin_1d(np.array([np.nan, np.nan])), np.nan)
+
+        self.assertEqual(argmin_1d(np.array([np.nan,-2,0,1])), 1)
+        self.assertEqualWithNaN(
+                argmin_1d(np.array([np.nan,-2,0,1]), skipna=False), np.nan)
+
+
+
 if __name__ == '__main__':
     unittest.main()

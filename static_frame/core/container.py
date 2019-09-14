@@ -146,7 +146,7 @@ UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'doc_header',
 ))
 
-# ufuncs that are applied along an axis, reducing dimensionality
+# ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemetned on direved containers
 UFUNC_AXIS_SKIPNA = {
         'all': UfuncSkipnaAttrs(
             _all,

@@ -558,6 +558,24 @@ def roll_2d(array: np.ndarray,
     raise NotImplementedError()
 
 
+def argmin_1d(array: np.ndarray, skipna: bool = True) -> tp.Union[int, float]:
+    '''
+    Perform 1D argmin, handling NaN as needed.
+    '''
+    # always need to to check for nans, even if skipna is False, as np will raise if all NaN, and will not return Nan if there skipna is false
+    isna = isna_array(array)
+
+    if isna.all():
+        return np.nan
+
+    if isna.any() and not skipna:
+        return np.nan
+
+    # always use nanargmin
+    return np.nanargmin(array)
+
+
+
 #-------------------------------------------------------------------------------
 # array constructors
 
