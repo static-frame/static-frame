@@ -1376,6 +1376,31 @@ class Series(ContainerBase):
         return self.iloc[-count:]
 
 
+    def loc_min(self) -> tp.Hashable:
+        '''
+        Return the label corresponding to the minimum value found.
+        '''
+        return self.index[np.argmin(self.values)]
+
+    def iloc_min(self) -> int:
+        '''
+        Return the integer index corresponding to the minimum value found.
+        '''
+        return np.argmin(self.values)
+
+    def loc_max(self) -> tp.Hashable:
+        '''
+        Return the label corresponding to the maximum value found.
+        '''
+        return self.index[np.argmax(self.values)]
+
+    def iloc_max(self) -> int:
+        '''
+        Return the integer index corresponding to the maximum value.
+        '''
+        return np.argmax(self.values)
+
+
     #---------------------------------------------------------------------------
     # utility function to numpy array
 

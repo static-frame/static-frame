@@ -1856,5 +1856,15 @@ class TestUnit(TestCase):
                 ((('circle', 'rough'), 12), (('circle', 'smooth'), 10), (('square', 'rough'), 4), (('square', 'smooth'), 2), (('triangle', 'rough'), 20), (('triangle', 'smooth'), 18))
                 )
 
+
+
+    def test_series_locmin(self) -> None:
+        s1 = Series((2, 3, 0,), index=list('abc'))
+        self.assertEqual(s1.loc_min(), 'c')
+        self.assertEqual(s1.iloc_min(), 2)
+        self.assertEqual(s1.loc_max(), 'b')
+        self.assertEqual(s1.iloc_max(), 1)
+
+
 if __name__ == '__main__':
     unittest.main()
