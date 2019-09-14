@@ -13,6 +13,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DEFAULT_FLOAT_DTYPE
 from static_frame.core.doc_str import DOC_TEMPLATE
 
 # if tp.TYPE_CHECKING:
@@ -166,7 +167,7 @@ UFUNC_AXIS_SKIPNA = {
         'sum': UfuncSkipnaAttrs(
             np.sum,
             np.nansum,
-            None,
+            None, # float or int, row type will match
             True,
             'Sum values along the specified axis.'
             ),
@@ -186,34 +187,34 @@ UFUNC_AXIS_SKIPNA = {
         'mean': UfuncSkipnaAttrs(
             np.mean,
             np.nanmean,
-            None,
+            DEFAULT_FLOAT_DTYPE, # np always returns float
             False,
             'Return the mean along the specified axis.'
             ),
         'median': UfuncSkipnaAttrs(
             np.median,
             np.nanmedian,
-            None,
+            DEFAULT_FLOAT_DTYPE,
             False,
             'Return the median along the specified axis.'
             ),
         'std': UfuncSkipnaAttrs(
             np.std,
             np.nanstd,
-            None,
+            DEFAULT_FLOAT_DTYPE,
             False,
             'Return the standard deviaton along the specified axis.'),
         'var': UfuncSkipnaAttrs(
             np.var,
             np.nanvar,
-            None,
+            DEFAULT_FLOAT_DTYPE,
             False,
             'Return the variance along the specified axis.'
             ),
         'prod': UfuncSkipnaAttrs(
             np.prod,
             np.nanprod,
-            None,
+            None, # float or int, row type will match
             True,
             'Return the product along the specified axis.'
             ),

@@ -45,7 +45,8 @@ if tp.TYPE_CHECKING:
 
 DEFAULT_SORT_KIND = 'mergesort'
 
-DEFAULT_INT_DTYPE = np.int64 # default for SF construction
+DEFAULT_INT_DTYPE = np.int64
+DEFAULT_FLOAT_DTYPE = np.float64
 
 # ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
 # ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
