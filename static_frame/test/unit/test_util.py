@@ -51,6 +51,11 @@ from static_frame.core.util import to_datetime64
 
 from static_frame.core.util import resolve_type_iter
 
+from static_frame.core.util import argmin_1d
+from static_frame.core.util import argmax_1d
+from static_frame.core.util import argmin_2d
+from static_frame.core.util import argmax_2d
+
 from static_frame.core.index_correspondence import IndexCorrespondence
 
 from static_frame.test.test_case import TestCase
@@ -1530,15 +1535,80 @@ class TestUnit(TestCase):
 
     def test_argmin_1d_a(self) -> None:
 
-        from static_frame.core.util import argmin_1d
 
         self.assertEqual(argmin_1d(np.array([3,-2,0,1])), 1)
         self.assertEqualWithNaN(argmin_1d(np.array([np.nan, np.nan])), np.nan)
 
         self.assertEqual(argmin_1d(np.array([np.nan,-2,0,1])), 1)
+
         self.assertEqualWithNaN(
                 argmin_1d(np.array([np.nan,-2,0,1]), skipna=False), np.nan)
 
+
+    def test_argmax_1d_a(self) -> None:
+        self.assertEqual(argmax_1d(np.array([3,-2,0,1])), 0)
+        self.assertEqualWithNaN(argmax_1d(np.array([np.nan, np.nan])), np.nan)
+
+        self.assertEqual(argmax_1d(np.array([np.nan,-2,0,1])), 3)
+
+        self.assertEqualWithNaN(
+                argmax_1d(np.array([np.nan,-2,0,1]), skipna=False), np.nan)
+
+
+
+
+    def test_argmin_2d_a(self) -> None:
+        a1 = np.array([[1, 2, -1], [-1, np.nan, 20]])
+
+        self.assertEqual(argmin_2d(a1, axis=1).tolist(),
+                [2, 0]
+                )
+
+        self.assertAlmostEqualValues(
+                argmin_2d(a1, axis=1, skipna=False).tolist(),
+                [2, np.nan]
+                )
+
+        self.assertEqual(argmin_2d(a1, axis=0).tolist(),
+                [1, 0, 0]
+                )
+
+        self.assertAlmostEqualValues(argmin_2d(a1, axis=0, skipna=False).tolist(),
+                [1, np.nan, 0]
+                )
+
+    def test_argmin_2d_b(self) -> None:
+        a1 = np.array([[np.nan, 2, -1], [-1, np.nan, 20]])
+
+        self.assertAlmostEqualValues(
+                argmin_2d(a1, axis=1, skipna=False).tolist(),
+                [np.nan, np.nan]
+                )
+
+        self.assertAlmostEqualValues(
+                argmin_2d(a1, axis=1, skipna=True).tolist(),
+                [2, 0]
+                )
+
+    def test_argmax_2d_a(self) -> None:
+        a1 = np.array([[1, 2, -1], [-1, np.nan, 20]])
+
+        self.assertEqual(argmax_2d(a1, axis=1).tolist(),
+                [1, 2]
+                )
+
+        self.assertAlmostEqualValues(
+                argmax_2d(a1, axis=1, skipna=False).tolist(),
+                [1, np.nan]
+                )
+
+        self.assertEqual(argmax_2d(a1, axis=0).tolist(),
+                [0, 0, 1]
+                )
+
+        self.assertAlmostEqualValues(argmax_2d(a1, axis=0, skipna=False).tolist(),
+                [0, np.nan, 1]
+                )
 
 
 if __name__ == '__main__':

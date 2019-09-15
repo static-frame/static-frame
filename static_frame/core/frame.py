@@ -10,6 +10,8 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DEFAULT_FLOAT_DTYPE
+
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import INT_TYPES
@@ -48,6 +50,10 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import is_callable_or_mapping
+
+from static_frame.core.util import argmin_2d
+from static_frame.core.util import argmax_2d
+
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
@@ -2746,6 +2752,80 @@ class Frame(ContainerBase):
         '''Return a Frame consisting only of the bottom rows as specified by ``count``.
         '''
         return self.iloc[-count:]
+
+
+    def loc_min(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the minimum value found.
+        '''
+        # this operation is not composable for axis 1; cannot use _ufunc_axis_skipna interface as do not have out argument, and need to determine returned dtype in advance
+
+        # if this has NaN we cannot get a loc
+        post = argmin_2d(self.values, skipna=skipna, axis=axis)
+        if post.dtype == DEFAULT_FLOAT_DTYPE:
+            raise RuntimeError('cannot produce loc representation from NaNs')
+
+        # post has been made immutable so Series will own
+        if axis == 0:
+            return Series(
+                    self.index.values[post],
+                    index=immutable_index_filter(self._columns)
+                    )
+        return Series(self.columns.values[post], index=self._index)
+
+
+    def iloc_min(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the integer indices corresponding to the minimum values found.
+        '''
+        # if this has NaN can continue
+        post = argmin_2d(self.values, skipna=skipna, axis=axis)
+        post.flags.writeable = False
+        if axis == 0:
+            return Series(post, index=immutable_index_filter(self._columns))
+        return Series(post, index=self._index)
+
+
+    def loc_max(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the labels corresponding to the maximum values found.
+        '''
+        # if this has NaN we cannot get a loc
+        post = argmax_2d(self.values, skipna=skipna, axis=axis)
+        if post.dtype == DEFAULT_FLOAT_DTYPE:
+            raise RuntimeError('cannot produce loc representation from NaNs')
+
+        if axis == 0:
+            return Series(
+                    self.index.values[post],
+                    index=immutable_index_filter(self._columns)
+                    )
+        return Series(self.columns.values[post], index=self._index)
+
+
+    def iloc_max(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> Series:
+        '''
+        Return the integer indices corresponding to the maximum values found.
+        '''
+        # if this has NaN can continue
+        post = argmax_2d(self.values, skipna=skipna, axis=axis)
+        post.flags.writeable = False
+        if axis == 0:
+            return Series(post, index=immutable_index_filter(self._columns))
+        return Series(post, index=self._index)
+
 
 
     #---------------------------------------------------------------------------

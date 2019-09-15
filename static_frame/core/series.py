@@ -5,6 +5,8 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import FLOAT_TYPES
+
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import isna_array
@@ -40,6 +42,9 @@ from static_frame.core.util import IndexConstructor
 
 from static_frame.core.util import InterfaceGetItem
 from static_frame.core.util import InterfaceSelection2D
+
+from static_frame.core.util import argmin_1d
+from static_frame.core.util import argmax_1d
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerBase
@@ -1378,29 +1383,44 @@ class Series(ContainerBase):
         return self.iloc[-count:]
 
 
-    def loc_min(self) -> tp.Hashable:
+    def loc_min(self,
+            skipna: bool = True
+            ) -> tp.Hashable:
         '''
         Return the label corresponding to the minimum value found.
         '''
-        return self.index[np.argmin(self.values)]
+        # if skipna is False and a NaN is returned, this will raise
+        post = argmin_1d(self.values, skipna=skipna)
+        if isinstance(post, FLOAT_TYPES): # NaN was returned
+            raise RuntimeError('cannot produce loc representation from NaN')
+        return self.index[post]
 
-    def iloc_min(self) -> int:
+    def iloc_min(self,
+            skipna: bool = True,
+            ) -> int:
         '''
         Return the integer index corresponding to the minimum value found.
         '''
-        return np.argmin(self.values)
+        return argmin_1d(self.values, skipna=skipna)
 
-    def loc_max(self) -> tp.Hashable:
+    def loc_max(self,
+            skipna: bool = True,
+            ) -> tp.Hashable:
         '''
         Return the label corresponding to the maximum value found.
         '''
-        return self.index[np.argmax(self.values)]
+        post = argmax_1d(self.values, skipna=skipna)
+        if isinstance(post, FLOAT_TYPES): # NaN was returned
+            raise RuntimeError('cannot produce loc representation from NaN')
+        return self.index[post]
 
-    def iloc_max(self) -> int:
+    def iloc_max(self,
+                skipna: bool = True,
+                ) -> int:
         '''
         Return the integer index corresponding to the maximum value.
         '''
-        return np.argmax(self.values)
+        return argmax_1d(self.values, skipna=skipna)
 
 
     #---------------------------------------------------------------------------

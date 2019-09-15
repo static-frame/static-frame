@@ -1857,13 +1857,29 @@ class TestUnit(TestCase):
                 )
 
 
-
-    def test_series_locmin(self) -> None:
+    def test_series_locmin_a(self) -> None:
         s1 = Series((2, 3, 0,), index=list('abc'))
         self.assertEqual(s1.loc_min(), 'c')
         self.assertEqual(s1.iloc_min(), 2)
         self.assertEqual(s1.loc_max(), 'b')
         self.assertEqual(s1.iloc_max(), 1)
+
+    def test_series_locmin_b(self) -> None:
+        s1 = Series((2, np.nan, 0, -1), index=list('abcd'))
+        self.assertEqual(s1.loc_min(), 'd')
+        self.assertEqual(s1.iloc_min(), 3)
+        self.assertEqual(s1.loc_max(), 'a')
+        self.assertEqual(s1.iloc_max(), 0)
+
+
+    def test_series_locmin_c(self) -> None:
+        s1 = Series((2, np.nan, 0,), index=list('abc'))
+
+        with self.assertRaises(RuntimeError):
+            s1.loc_min(skipna=False)
+
+        with self.assertRaises(RuntimeError):
+            s1.loc_max(skipna=False)
 
 
 if __name__ == '__main__':

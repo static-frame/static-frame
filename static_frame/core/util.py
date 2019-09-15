@@ -4,14 +4,14 @@ import operator
 
 from collections import abc
 from collections import defaultdict
-
+from functools import partial
+from functools import reduce
 from itertools import chain
+from itertools import zip_longest
 from io import StringIO
 import datetime
 from urllib import request
 import tempfile
-from functools import reduce
-from itertools import zip_longest
 
 import numpy as np  # type: ignore
 
@@ -558,10 +558,16 @@ def roll_2d(array: np.ndarray,
 
     raise NotImplementedError()
 
+#-------------------------------------------------------------------------------
 
-def argmin_1d(array: np.ndarray, skipna: bool = True) -> tp.Union[int, float]:
+def _argminmax_1d(
+        array: np.ndarray,
+        ufunc: UFunc,
+        ufunc_skipna: UFunc,
+        skipna: bool = True,
+        ) -> tp.Any: # tp.Union[int, float]:
     '''
-    Perform 1D argmin, handling NaN as needed.
+    Perform argmin or argmax, handling NaN as needed.
     '''
     # always need to to check for nans, even if skipna is False, as np will raise if all NaN, and will not return Nan if there skipna is false
     isna = isna_array(array)
@@ -569,13 +575,49 @@ def argmin_1d(array: np.ndarray, skipna: bool = True) -> tp.Union[int, float]:
     if isna.all():
         return np.nan
 
-    if isna.any() and not skipna:
-        return np.nan
+    if isna.any():
+        if not skipna:
+            return np.nan
+        # always use skipna ufunc if any NaNs are present, as otherwise the wrong indices are returned when a nan is encountered (rather than a nan)
+        return ufunc_skipna(array)
 
-    # always use nanargmin
-    return np.nanargmin(array)
+    return ufunc(array)
 
 
+argmin_1d = partial(_argminmax_1d, ufunc=np.argmin, ufunc_skipna=np.nanargmin)
+argmax_1d = partial(_argminmax_1d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
+
+
+def _argminmax_2d(
+        array: np.ndarray,
+        ufunc: UFunc,
+        ufunc_skipna: UFunc,
+        skipna: bool = True,
+        axis: int = 0
+        ) -> np.ndarray: # int or float array
+    '''
+    Perform argmin or argmax, handling NaN as needed.
+    '''
+    # always need to to check for nans, even if skipna is False, as np will raise if all NaN, and will not return Nan if there skipna is false
+    isna = isna_array(array)
+
+    isna_axis = isna.any(axis=axis)
+    if isna_axis.all(): # nan in every axis remaining position
+        if not skipna:
+            return np.full(isna_axis.shape, np.nan, dtype=DEFAULT_FLOAT_DTYPE)
+
+    if isna_axis.any():
+        # always use skipna ufunc if any NaNs are present, as otherwise the wrong indices are returned when a nan is encountered (rather than a nan)
+        post = ufunc_skipna(array, axis=axis)
+        if not skipna:
+            post = post.astype(DEFAULT_FLOAT_DTYPE  )
+            post[isna_axis] = np.nan
+        return post
+
+    return ufunc(array, axis=axis)
+
+argmin_2d = partial(_argminmax_2d, ufunc=np.argmin, ufunc_skipna=np.nanargmin)
+argmax_2d = partial(_argminmax_2d, ufunc=np.argmax, ufunc_skipna=np.nanargmax)
 
 #-------------------------------------------------------------------------------
 # array constructors
@@ -828,7 +870,9 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(operator.add,
         (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
-def _slice_to_datetime_slice_args(key: slice, dtype: tp.Optional[np.dtype] = None) -> tp.Iterator[tp.Optional[np.datetime64]]:
+def _slice_to_datetime_slice_args(key: slice,
+        dtype: tp.Optional[np.dtype] = None
+        ) -> tp.Iterator[tp.Optional[np.datetime64]]:
     '''
     Given a slice representing a datetime region, convert to arguments for a new slice, possibly using the appropriate dtype for conversion.
     '''

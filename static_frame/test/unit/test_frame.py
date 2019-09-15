@@ -4604,5 +4604,132 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_loc_min_a(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_min().to_pairs(),
+                (('a', 'x'), ('b', 'z')))
+
+        self.assertEqual(f1.loc_min(axis=1).to_pairs(),
+                (('x', 'a'), ('y', 'a'), ('z', 'b')))
+
+
+    def test_frame_loc_min_b(self) -> None:
+
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1.loc_min(skipna=False)
+
+    def test_frame_iloc_min_a(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_min().to_pairs(),
+                (('a', 0), ('b', 2)))
+
+        self.assertEqual(f1.iloc_min(axis=1).to_pairs(),
+                (('x', 0), ('y', 0), ('z', 1)))
+
+
+    def test_frame_iloc_min_b(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, np.nan),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertAlmostEqualItems(
+                f1.iloc_min(skipna=False).to_pairs(),
+                (('a', 0), ('b', np.nan)))
+
+        self.assertAlmostEqualItems(
+                f1.iloc_min(axis=1, skipna=False).to_pairs(),
+                (('x', 0), ('y', np.nan), ('z', 1)))
+
+
+    def test_frame_loc_max_a(self) -> None:
+
+        records = (
+                (2000, 2),
+                (30, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.loc_max().to_pairs(),
+                (('a', 'x'), ('b', 'y')))
+
+        self.assertEqual(f1.loc_max(axis=1).to_pairs(),
+                (('x', 'a'), ('y', 'b'), ('z', 'a')))
+
+    def test_frame_loc_max_b(self) -> None:
+
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        with self.assertRaises(RuntimeError):
+            f1.loc_max(skipna=False)
+
+    def test_frame_iloc_max_a(self) -> None:
+
+        records = (
+                (2000, 2),
+                (30, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.iloc_max().to_pairs(),
+                (('a', 0), ('b', 1)))
+
+        self.assertEqual(f1.iloc_max(axis=1).to_pairs(),
+                (('x', 0), ('y', 1), ('z', 0)))
+
+
+
 if __name__ == '__main__':
     unittest.main()

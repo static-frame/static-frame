@@ -65,7 +65,10 @@ _RIGHT_OPERATOR_MAP = {
         '__rfloordiv__': '__floordiv__',
         }
 
-def _ufunc_logical_skipna(array: np.ndarray,
+
+#-------------------------------------------------------------------------------
+def _ufunc_logical_skipna(
+        array: np.ndarray,
         ufunc: AnyCallable,
         skipna: bool,
         axis: int = 0,
@@ -115,8 +118,15 @@ def _ufunc_logical_skipna(array: np.ndarray,
     return ufunc(v, axis=axis, out=out)
 
 
-def _all(array: np.ndarray, axis: int = 0, out: tp.Optional[np.ndarray] = None) -> np.ndarray:
-    return _ufunc_logical_skipna(array, ufunc=np.all, skipna=False, axis=axis, out=out)
+def _all(array: np.ndarray,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=False,
+            axis=axis,
+            out=out)
 
 _all.__doc__ = np.all.__doc__
 
@@ -124,7 +134,11 @@ def _any(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
         ) -> np.ndarray:
-    return _ufunc_logical_skipna(array, ufunc=np.any, skipna=False, axis=axis, out=out)
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=False,
+            axis=axis,
+            out=out)
 
 _any.__doc__ = np.any.__doc__
 
@@ -132,19 +146,27 @@ def _nanall(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
         ) -> np.ndarray:
-    return _ufunc_logical_skipna(array, ufunc=np.all, skipna=True, axis=axis, out=out)
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=True,
+            axis=axis,
+            out=out)
 
 def _nanany(array: np.ndarray,
         axis: int = 0,
         out: tp.Optional[np.ndarray] = None
         ) -> np.ndarray:
-    return _ufunc_logical_skipna(array, ufunc=np.any, skipna=True, axis=axis, out=out)
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=True,
+            axis=axis,
+            out=out)
 
 UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'func',
         'funcna',
         'dtype',
-        'composable', # if partial solutions can be processed
+        'composable', # if partial solutions can be processed per block
         'doc_header',
 ))
 
