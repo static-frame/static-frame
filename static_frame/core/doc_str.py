@@ -134,6 +134,11 @@ class DOC_TEMPLATE:
     )
 
 
+    argminmax = dict(
+            skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
+            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+    )
+
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,

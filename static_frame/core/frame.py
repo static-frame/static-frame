@@ -2753,13 +2753,17 @@ class Frame(ContainerBase):
         '''
         return self.iloc[-count:]
 
-
+    @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
             axis: int = 0
             ) -> Series:
         '''
         Return the labels corresponding to the minimum value found.
+
+        Args:
+            {skipna}
+            {axis}
         '''
         # this operation is not composable for axis 1; cannot use _ufunc_axis_skipna interface as do not have out argument, and need to determine returned dtype in advance
 
@@ -2776,13 +2780,17 @@ class Frame(ContainerBase):
                     )
         return Series(self.columns.values[post], index=self._index)
 
-
+    @doc_inject(selector='argminmax')
     def iloc_min(self, *,
             skipna: bool = True,
             axis: int = 0
             ) -> Series:
         '''
         Return the integer indices corresponding to the minimum values found.
+
+        Args:
+            {skipna}
+            {axis}
         '''
         # if this has NaN can continue
         post = argmin_2d(self.values, skipna=skipna, axis=axis)
@@ -2791,13 +2799,17 @@ class Frame(ContainerBase):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
-
+    @doc_inject(selector='argminmax')
     def loc_max(self, *,
             skipna: bool = True,
             axis: int = 0
             ) -> Series:
         '''
         Return the labels corresponding to the maximum values found.
+
+        Args:
+            {skipna}
+            {axis}
         '''
         # if this has NaN we cannot get a loc
         post = argmax_2d(self.values, skipna=skipna, axis=axis)
@@ -2811,13 +2823,17 @@ class Frame(ContainerBase):
                     )
         return Series(self.columns.values[post], index=self._index)
 
-
+    @doc_inject(selector='argminmax')
     def iloc_max(self, *,
             skipna: bool = True,
             axis: int = 0
             ) -> Series:
         '''
         Return the integer indices corresponding to the maximum values found.
+
+        Args:
+            {skipna}
+            {axis}
         '''
         # if this has NaN can continue
         post = argmax_2d(self.values, skipna=skipna, axis=axis)

@@ -1382,12 +1382,15 @@ class Series(ContainerBase):
         '''
         return self.iloc[-count:]
 
-
-    def loc_min(self,
+    @doc_inject(selector='argminmax')
+    def loc_min(self, *,
             skipna: bool = True
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the minimum value found.
+
+        Args:
+            {skipna}
         '''
         # if skipna is False and a NaN is returned, this will raise
         post = argmin_1d(self.values, skipna=skipna)
@@ -1395,30 +1398,42 @@ class Series(ContainerBase):
             raise RuntimeError('cannot produce loc representation from NaN')
         return self.index[post]
 
-    def iloc_min(self,
+    @doc_inject(selector='argminmax')
+    def iloc_min(self, *,
             skipna: bool = True,
             ) -> int:
         '''
         Return the integer index corresponding to the minimum value found.
+
+        Args:
+            {skipna}
         '''
         return argmin_1d(self.values, skipna=skipna)
 
-    def loc_max(self,
+    @doc_inject(selector='argminmax')
+    def loc_max(self, *,
             skipna: bool = True,
             ) -> tp.Hashable:
         '''
         Return the label corresponding to the maximum value found.
+
+        Args:
+            {skipna}
         '''
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
             raise RuntimeError('cannot produce loc representation from NaN')
         return self.index[post]
 
-    def iloc_max(self,
+    @doc_inject(selector='argminmax')
+    def iloc_max(self, *,
                 skipna: bool = True,
                 ) -> int:
         '''
         Return the integer index corresponding to the maximum value.
+
+        Args:
+            {skipna}
         '''
         return argmax_1d(self.values, skipna=skipna)
 

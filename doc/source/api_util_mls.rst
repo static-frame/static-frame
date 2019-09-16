@@ -30,6 +30,17 @@ Series
     {% endfor %}
 
 
+.. automethod:: static_frame.Series.loc_min
+
+.. automethod:: static_frame.Series.loc_max
+
+
+.. automethod:: static_frame.Series.iloc_min
+
+.. automethod:: static_frame.Series.iloc_max
+
+
+
 Frame
 ---------
 
@@ -40,6 +51,18 @@ Frame
     .. automethod:: static_frame.Frame.{{ func }}
 
     {% endfor %}
+
+
+
+.. automethod:: static_frame.Frame.loc_min
+
+.. automethod:: static_frame.Frame.loc_max
+
+
+.. automethod:: static_frame.Frame.iloc_min
+
+.. automethod:: static_frame.Frame.iloc_max
+
 
 
 Examples
