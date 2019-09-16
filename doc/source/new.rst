@@ -7,7 +7,7 @@ What is New in Static Frame
 0.4.2
 -----------
 
-Corrected flaw in doing axis 1 statistical operations with ``Frame`` constructed from mixed sized ``TypeBlocks``.
+Corrected flaw in axis 1 statistical operations with ``Frame`` constructed from mixed sized ``TypeBlocks``.
 
 Added ``Series.loc_min``, ``Series.loc_max``, ``Series.iloc_min``, ``Series.iloc_max``.
 
