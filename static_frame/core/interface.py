@@ -10,14 +10,21 @@ from static_frame.core.series import Series
 from static_frame.core.frame import Frame
 from static_frame.core.display import DisplayConfigs
 from static_frame.core.container import ContainerMeta
+from static_frame.core.container import _UFUNC_BINARY_OPERATORS
+from static_frame.core.container import _RIGHT_OPERATOR_MAP
 
-Interface = namedtuple('Interface', ('group', 'name', 'doc'))
+from static_frame.core.container import _UFUNC_UNARY_OPERATORS
+
+
+Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))
 
 
 class InterfaceGroup:
     Attribute = 'attribute'
+    OperatorBinary = 'operator_binary'
+    OperatorUnary = 'operator_unary'
     Method = 'method'
-    DictLike = 'dict_like'
+    DictLike = 'method_dict_like'
 
 
 DOC_CHARS = 40
@@ -27,6 +34,8 @@ EXCLUDE_PRIVATE = {
     '__annotations__',
     '__doc__',
     '__delattr__',
+    '__dir__',
+    '__dict__',
     '__format__',
     '__getattribute__',
     '__hash__',
@@ -46,13 +55,13 @@ EXCLUDE_PRIVATE = {
 
 def interrogate(cls) -> tp.Iterator[Interface]:
 
-    for name in sorted(dir(cls)):
-        if name.startswith('_') and not name.startswith('__'):
+    for name_attr in sorted(dir(cls)):
+        if name_attr.startswith('_') and not name_attr.startswith('__'):
             continue
-        if name in EXCLUDE_PRIVATE:
+        if name_attr in EXCLUDE_PRIVATE:
             continue
 
-        obj = getattr(cls, name)
+        obj = getattr(cls, name_attr)
 
         doc = ''
         if hasattr(obj, '__doc__'):
@@ -61,17 +70,25 @@ def interrogate(cls) -> tp.Iterator[Interface]:
 
         if hasattr(obj, '__name__'):
             name = obj.__name__
+        else:
+            name = name_attr
 
 
         if callable(obj):
-            yield Interface(InterfaceGroup.Method, name, doc)
-        # print(name)
+            if name_attr in _UFUNC_UNARY_OPERATORS:
+                yield Interface(cls.__name__, InterfaceGroup.OperatorUnary, name, doc)
+            elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP   :
+                yield Interface(cls.__name__, InterfaceGroup.OperatorBinary, name, doc)
+            else:
+                yield Interface(cls.__name__, InterfaceGroup.Method, name, doc)
         else:
-            yield Interface(InterfaceGroup.Attribute, name, doc)
+            yield Interface(cls.__name__, InterfaceGroup.Attribute, name, doc)
 
 
 if __name__ == '__main__':
 
 
     f = Frame.from_records(interrogate(Series))
+
+    f = f.sort_values(('cls', 'group', 'name'))
     print(f.display(DisplayConfigs.UNBOUND))
