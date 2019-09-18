@@ -653,6 +653,16 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_setitem_e(self) -> None:
+
+        # 3d array raises exception
+        f = sf.FrameGO(index=range(3))
+        f['a'] = 'foo'
+        self.assertEqual(f.to_pairs(0),
+                (('a', ((0, 'foo'), (1, 'foo'), (2, 'foo'))),)
+                )
+
+
 
 
 

@@ -3054,7 +3054,7 @@ class FrameGO(Frame):
         else:
             # if isinstance(value, GeneratorType):
             #     value = np.array(tuple(value))
-            if not hasattr(value, '__iter__'):
+            if not hasattr(value, '__iter__') or isinstance(value, str):
                 value = np.full(row_count, value)
             else:
                 value, _ = iterable_to_array(value)
