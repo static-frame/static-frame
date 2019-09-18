@@ -8,7 +8,7 @@ import typing as tp
 
 from static_frame.core.series import Series
 from static_frame.core.frame import Frame
-from static_frame.core.iter_node import IterNode
+# from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
 
 from static_frame.core.display import DisplayConfigs
