@@ -123,7 +123,7 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
     @classmethod
-    def to_frame(cls, target):
+    def to_frame(cls, target: tp.Any) -> Frame:
         f = Frame.from_records(cls.interrogate(target))
         f = f.sort_values(('cls', 'group', 'name'))
         return f
