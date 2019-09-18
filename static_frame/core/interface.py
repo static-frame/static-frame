@@ -8,6 +8,9 @@ import typing as tp
 
 from static_frame.core.series import Series
 from static_frame.core.frame import Frame
+from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeDelegate
+
 from static_frame.core.display import DisplayConfigs
 # from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
@@ -25,12 +28,15 @@ class InterfaceGroup:
     OperatorUnary = 'operator_unary'
     Method = 'method'
     DictLike = 'method_dict_like'
+    Iterator = 'iterator'
+    Selector = 'selector'
 
 
 DOC_CHARS = 40
 
 EXCLUDE_PRIVATE = {
     '__class__',
+    '__class_getitem__',
     '__annotations__',
     '__doc__',
     '__delattr__',
@@ -52,37 +58,62 @@ EXCLUDE_PRIVATE = {
     '__weakref__',
     }
 
+DICT_LIKE = {'keys', 'values', 'items'}
+
+ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
+ATTR_SELECTOR = ('__getitem__', 'iloc', 'loc')
+
+
+def is_public(field: str) -> bool:
+    if field.startswith('_') and not field.startswith('__'):
+        return False
+    if field in EXCLUDE_PRIVATE:
+        return False
+    return True
+
+def scrub_doc(doc: tp.Optional[str]) -> str:
+    if not doc:
+        return ''
+    return doc.strip().replace('\n', ' ')[:DOC_CHARS]
 
 def interrogate(cls) -> tp.Iterator[Interface]:
 
     for name_attr in sorted(dir(cls)):
-        if name_attr.startswith('_') and not name_attr.startswith('__'):
-            continue
-        if name_attr in EXCLUDE_PRIVATE:
+        if not is_public(name_attr):
             continue
 
+        # this gets object off the class, not an instance
         obj = getattr(cls, name_attr)
 
         doc = ''
         if hasattr(obj, '__doc__'):
-            if obj.__doc__:
-                doc = obj.__doc__.strip().replace('\n', ' ')[:DOC_CHARS]
+            doc = scrub_doc(obj.__doc__)
 
         if hasattr(obj, '__name__'):
             name = obj.__name__
         else:
             name = name_attr
 
+        cls_name = cls.__name__
 
-        if callable(obj):
+
+        if name in DICT_LIKE:
+            yield Interface(cls_name, InterfaceGroup.DictLike, name, doc)
+        elif name.startswith('iter_'):
+            for field in ATTR_ITER_NODE:
+                display = f'{name}(axis).{field}'
+                doc = scrub_doc(getattr(IterNodeDelegate, field).__doc__)
+                yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
+
+        elif callable(obj):
             if name_attr in _UFUNC_UNARY_OPERATORS:
-                yield Interface(cls.__name__, InterfaceGroup.OperatorUnary, name, doc)
-            elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP   :
-                yield Interface(cls.__name__, InterfaceGroup.OperatorBinary, name, doc)
+                yield Interface(cls_name, InterfaceGroup.OperatorUnary, name, doc)
+            elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP:
+                yield Interface(cls_name, InterfaceGroup.OperatorBinary, name, doc)
             else:
-                yield Interface(cls.__name__, InterfaceGroup.Method, name, doc)
+                yield Interface(cls_name, InterfaceGroup.Method, name, doc)
         else:
-            yield Interface(cls.__name__, InterfaceGroup.Attribute, name, doc)
+            yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
 
 if __name__ == '__main__':
