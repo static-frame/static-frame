@@ -2051,71 +2051,79 @@ class TestUnit(TestCase):
 
     def test_frame_binary_operator_f(self) -> None:
 
-            # matrix multiplication, with realigment of same sized axis
+        # matrix multiplication, with realigment of same sized axis
 
-            a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
-            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+        a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+        b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
-            post1 = a @ b
+        post1 = a @ b
 
-            self.assertEqual(
-                    post1.to_pairs(0),
-                    (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
-                    )
+        self.assertEqual(
+                post1.to_pairs(0),
+                (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                )
 
-            # with reorded index on b, we get the same result, as opposite axis align
-            post2 = a @ b.reindex(index=('b', 'a'))
+        # with reorded index on b, we get the same result, as opposite axis align
+        post2 = a @ b.reindex(index=('b', 'a'))
 
-            self.assertEqual(
-                    post2.to_pairs(0),
-                    (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
-                    )
+        self.assertEqual(
+                post2.to_pairs(0),
+                (('p', (('w', 11), ('x', 14), ('y', 17), ('z', 20))), ('q', (('w', 23), ('x', 30), ('y', 37), ('z', 44))), ('r', (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                )
 
-            post3 = a @ Series([1, 2], index=tuple('ab'))
-            self.assertEqual(post3.to_pairs(),
-                    (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
+        post3 = a @ Series([1, 2], index=tuple('ab'))
+        self.assertEqual(post3.to_pairs(),
+                (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
 
-            # index is aligned
-            post4 = a @ Series([2, 1], index=tuple('ba'))
-            self.assertEqual(post3.to_pairs(),
-                    (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
+        # index is aligned
+        post4 = a @ Series([2, 1], index=tuple('ba'))
+        self.assertEqual(post3.to_pairs(),
+                (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
 
 
     def test_frame_binary_operator_g(self) -> None:
 
-            # matrix multiplication, with realigment of different sized axis
+        # matrix multiplication, with realigment of different sized axis
 
-            a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
-            a['c'] = 30
+        a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+        a['c'] = 30
 
-            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+        b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
-            with self.assertRaises(RuntimeError):
-                post1 = a @ b
-                # all values would go to NaN
+        with self.assertRaises(RuntimeError):
+            post1 = a @ b
+            # all values would go to NaN
 
-            a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+        a = FrameGO.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
 
-            b = Frame.from_dict(dict(p=(1, 2, 3), q=(3, 4, 5), r=(5, 6, 7)), index=tuple('abc'))
+        b = Frame.from_dict(dict(p=(1, 2, 3), q=(3, 4, 5), r=(5, 6, 7)), index=tuple('abc'))
 
-            with self.assertRaises(RuntimeError):
-                post2 = a @ b
+        with self.assertRaises(RuntimeError):
+            post2 = a @ b
 
 
     def test_frame_binary_operator_h(self) -> None:
 
-            a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
-            b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
+        a = Frame.from_dict(dict(a=(1, 2, 3, 4), b=(5, 6, 7, 8)), index=tuple('wxyz'))
+        b = Frame.from_dict(dict(p=(1, 2), q=(3, 4), r=(5, 6)), index=tuple('ab'))
 
 
-            self.assertEqual(
-                    (a @ b.values).to_pairs(0),
-                    ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
-                    )
-            # NOTE: the following yields a ValueError from the interpreter
-            # post2 = a.values @ b
+        self.assertEqual(
+                (a @ b.values).to_pairs(0),
+                ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
+                )
+        # NOTE: the following yields a ValueError from the interpreter
+        # post2 = a.values @ b
 
 
+    def test_frame_binary_operator_i(self) -> None:
+
+        a = sf.Frame((1, 2, 3))
+        post = a == a.to_frame_go()
+
+        self.assertEqual(post.__class__, FrameGO)
+        self.assertEqual(post.to_pairs(0),
+            ((0, ((0, True), (1, True), (2, True))),))
 
 
     def test_frame_isin_a(self) -> None:
