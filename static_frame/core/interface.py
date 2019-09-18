@@ -56,12 +56,14 @@ EXCLUDE_PRIVATE = {
     '__slots__',
     '__subclasshook__',
     '__weakref__',
+    '__reduce__',
+    '__reduce_ex__',
     }
 
-DICT_LIKE = {'keys', 'values', 'items'}
+DICT_LIKE = {'keys', 'values', 'items', '__contains__'}
 
 ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
-ATTR_SELECTOR = ('__getitem__', 'iloc', 'loc')
+ATTR_SELECTOR = ('__getitem__', 'iloc', 'loc', 'drop', 'mask', 'masked_array', 'assign')
 
 
 def is_public(field: str) -> bool:
@@ -100,6 +102,8 @@ def interrogate(cls) -> tp.Iterator[Interface]:
         if name in DICT_LIKE:
             yield Interface(cls_name, InterfaceGroup.DictLike, name, doc)
         elif name.startswith('iter_'):
+            yield Interface(cls_name, InterfaceGroup.Iterator, name, doc)
+
             for field in ATTR_ITER_NODE:
                 display = f'{name}(axis).{field}'
                 doc = scrub_doc(getattr(IterNodeDelegate, field).__doc__)
