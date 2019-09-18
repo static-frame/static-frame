@@ -4,6 +4,11 @@ What is New in Static Frame
 ===============================
 
 
+0.4.3
+-----------
+
+Fixed issues in ``FrameGO`` setitem and using binary operators between ``Frame`` and ``FrameGO``.
+
 0.4.2
 -----------
 
