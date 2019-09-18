@@ -2,14 +2,14 @@
 Tools for documenting the SF interface.
 '''
 
-from enum import Enum
+# from enum import Enum
 from collections import namedtuple
 import typing as tp
 
 from static_frame.core.series import Series
 from static_frame.core.frame import Frame
 from static_frame.core.display import DisplayConfigs
-from static_frame.core.container import ContainerMeta
+# from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 
