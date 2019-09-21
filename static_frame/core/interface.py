@@ -6,12 +6,12 @@ Tools for documenting the SF interface.
 from collections import namedtuple
 import typing as tp
 
-from static_frame.core.series import Series
+# from static_frame.core.series import Series
 from static_frame.core.frame import Frame
 # from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
 
-from static_frame.core.display import DisplayConfigs
+# from static_frame.core.display import DisplayConfigs
 # from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
@@ -156,6 +156,6 @@ class InterfaceSummary:
         f = f.set_index('name', drop=True)
         return f
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    print(InterfaceSummary.to_frame(Frame).display(DisplayConfigs.UNBOUND))
+#     print(InterfaceSummary.to_frame(Frame).display(DisplayConfigs.UNBOUND))
