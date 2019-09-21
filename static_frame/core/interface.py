@@ -15,8 +15,11 @@ from static_frame.core.display import DisplayConfigs
 # from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
-
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
+
+# from static_frame.core.util import InterfaceSelection1D # used on index.drop
+from static_frame.core.util import InterfaceSelection2D
+from static_frame.core.util import InterfaceAsType
 
 
 Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))
@@ -27,9 +30,11 @@ class InterfaceGroup:
     OperatorBinary = 'operator_binary'
     OperatorUnary = 'operator_unary'
     Method = 'method'
-    DictLike = 'method_dict_like'
+    DictLike = 'dict_like'
     Iterator = 'iterator'
     Selector = 'selector'
+    Constructor = 'constructor'
+    Exporter = 'exporter'
 
 
 class InterfaceSummary:
@@ -47,7 +52,6 @@ class InterfaceSummary:
         '__format__',
         '__getattribute__',
         '__hash__',
-        '__init__',
         '__init_sbclass__',
         '__lshift__',
         '__module__',
@@ -60,11 +64,17 @@ class InterfaceSummary:
         '__weakref__',
         '__reduce__',
         '__reduce_ex__',
+        '__sizeof__',
         }
 
-    DICT_LIKE = {'keys', 'values', 'items', '__contains__'}
+    DICT_LIKE = {'keys', 'values', 'items', '__contains__', '__iter__', '__reversed__'}
     ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
-    ATTR_SELECTOR = ('__getitem__', 'iloc', 'loc', 'drop', 'mask', 'masked_array', 'assign')
+
+    SELECTOR_ROOT = {'__getitem__', 'iloc', 'loc'}
+    SELECTOR_COMPOUND = {'drop', 'mask', 'masked_array', 'assign'}
+    ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
+
+    # astype is a normal function in Series, is a selector in Frame
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -104,14 +114,31 @@ class InterfaceSummary:
 
             if name in cls.DICT_LIKE:
                 yield Interface(cls_name, InterfaceGroup.DictLike, name, doc)
+            elif name == 'astype':
+                yield Interface(cls_name, InterfaceGroup.Method, name, doc)
+                if isinstance(obj, property): # an InterfaceAsType
+                    field = '__getitem__'
+                    display = f'{name}.{field}'
+                    doc = cls.scrub_doc(getattr(InterfaceAsType, field).__doc__)
+                    yield Interface(cls_name, InterfaceGroup.Method, display, doc)
+
+            elif name.startswith('from_') or name == '__init__':
+                yield Interface(cls_name, InterfaceGroup.Constructor, name, doc)
+            elif name.startswith('to_'):
+                yield Interface(cls_name, InterfaceGroup.Exporter, name, doc)
             elif name.startswith('iter_'):
                 yield Interface(cls_name, InterfaceGroup.Iterator, name, doc)
-
                 for field in cls.ATTR_ITER_NODE:
                     display = f'{name}(axis).{field}'
                     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
-
+            elif name in cls.SELECTOR_ROOT:
+                yield Interface(cls_name, InterfaceGroup.Selector, name, doc)
+            elif name in cls.SELECTOR_COMPOUND:
+                for field in cls.ATTR_SELECTOR_NODE:
+                    display = f'{name}.{field}'
+                    doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
+                    yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
             elif callable(obj):
                 if name_attr in _UFUNC_UNARY_OPERATORS:
                     yield Interface(cls_name, InterfaceGroup.OperatorUnary, name, doc)
@@ -126,8 +153,9 @@ class InterfaceSummary:
     def to_frame(cls, target: tp.Any) -> Frame:
         f = Frame.from_records(cls.interrogate(target))
         f = f.sort_values(('cls', 'group', 'name'))
+        f = f.set_index('name', drop=True)
         return f
 
 if __name__ == '__main__':
 
-    print(InterfaceSummary.to_frame(Series).display(DisplayConfigs.UNBOUND))
+    print(InterfaceSummary.to_frame(Frame).display(DisplayConfigs.UNBOUND))

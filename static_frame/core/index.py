@@ -504,7 +504,7 @@ class Index(IndexBase):
 
     @property
     def values(self) -> np.ndarray:
-        '''Return the immutable labels array
+        '''A 1D array of labels.
         '''
         if self._recache:
             self._update_array_cache()

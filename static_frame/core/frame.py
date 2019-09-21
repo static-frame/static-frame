@@ -1173,6 +1173,9 @@ class Frame(ContainerBase):
 
     @property
     def astype(self) -> InterfaceAsType:
+        '''
+        Retype one or more columns. Can be used as as function to retype the entire ``Frame``; alternatively, a ``__getitem__`` interface permits retyping selected columns.
+        '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     # generators
@@ -1745,14 +1748,20 @@ class Frame(ContainerBase):
 
     @property
     def values(self) -> np.ndarray:
+        '''A 2D array of values. Note: type coercion might be necessary.
+        '''
         return self._blocks.values
 
     @property
     def index(self) -> Index:
+        '''The ``IndexBase`` instance assigned for row labels.
+        '''
         return self._index
 
     @property
     def columns(self) -> Index:
+        '''The ``IndexBase`` instance assigned for column labels.
+        '''
         return self._columns
 
     #---------------------------------------------------------------------------

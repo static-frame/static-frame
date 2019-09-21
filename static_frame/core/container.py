@@ -264,6 +264,11 @@ class ContainerMeta(type):
     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
     '''
 
+    @property
+    def interface(cls) -> 'Frame':
+        from static_frame.core.interface import InterfaceSummary
+        return InterfaceSummary.to_frame(cls)
+
     @staticmethod
     def create_ufunc_operator(func_name: str,
             opperand_count: int = 1,

@@ -1696,14 +1696,19 @@ class InterfaceSelection2D(tp.Generic[TContainer]):
         self._func_getitem = func_getitem
 
     def __getitem__(self, key: GetItemKeyType) -> tp.Any:
+        '''Label-based selection.
+        '''
         return self._func_getitem(key)
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
+        '''Integer-position based selection.'''
         return InterfaceGetItem(self._func_iloc)
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
+        '''Label-based selection.
+        '''
         return InterfaceGetItem(self._func_loc)
 
 #-------------------------------------------------------------------------------
@@ -1722,6 +1727,8 @@ class InterfaceAsType:
         self._func_getitem = func_getitem
 
     def __getitem__(self, key: GetItemKeyType) -> 'FrameAsType':
+        '''Provide a label, selection list, or slice to selectively change types by column.
+        '''
         return self._func_getitem(key)
 
     def __call__(self, dtype: np.dtype) -> 'Frame':

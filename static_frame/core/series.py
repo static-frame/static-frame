@@ -1132,6 +1132,9 @@ class Series(ContainerBase):
 
     @property
     def index(self):
+        '''
+        The ``IndexBase`` instance assigned for labels.
+        '''
         return self._index
 
     #---------------------------------------------------------------------------

@@ -549,6 +549,8 @@ class IndexHierarchy(IndexBase):
 
     @property
     def values(self) -> np.ndarray:
+        '''An 2D array of labels. Note: type coercion might be necessary.
+        '''
         if self._recache:
             self._update_array_cache()
         return self._labels
