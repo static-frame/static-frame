@@ -7,7 +7,9 @@ if __name__ == '__main__':
     source_dir = os.path.join(doc_dir, 'source')
     build_dir = os.path.join(doc_dir, 'build', 'html')
 
-    args = ['-E', '-b', 'html',
+    args = ['-E',
+            '-b',
+            'html',
             '-d',
             doctrees_dir,
             source_dir,

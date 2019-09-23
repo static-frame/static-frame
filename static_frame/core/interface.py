@@ -15,6 +15,7 @@ from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.display import Display
 
 # from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
@@ -48,7 +49,7 @@ class InterfaceGroup:
 
 class InterfaceSummary:
 
-    DOC_CHARS = 40
+    DOC_CHARS = 50
 
     EXCLUDE_PRIVATE = {
         '__class__',
@@ -120,9 +121,13 @@ class InterfaceSummary:
     def scrub_doc(cls, doc: tp.Optional[str]) -> str:
         if not doc:
             return ''
-        doc = doc.replace('``', '')
+        doc = doc.replace('`', '')
+        doc = doc.replace(':py:meth:', '')
         # split and join removes contiguous whitespace
-        return ' '.join(doc.split())[:cls.DOC_CHARS]
+        msg = ' '.join(doc.split())
+        if len(msg) <= cls.DOC_CHARS:
+            return msg
+        return msg[:cls.DOC_CHARS] + Display.ELLIPSIS
 
 
     @classmethod

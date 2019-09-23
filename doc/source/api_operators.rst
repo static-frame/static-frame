@@ -15,7 +15,7 @@ Unary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in index_operator_unary %}
+    {% for func, doc in Index_operator_unary %}
 
     .. py:method:: Index.{{ func }}
 
@@ -29,7 +29,7 @@ Binary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in index_operator_binary %}
+    {% for func, doc in Index_operator_binary %}
 
     .. py:method:: Index.{{ func }}(other)
 
@@ -49,7 +49,7 @@ Unary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in series_operator_unary %}
+    {% for func, doc in Series_operator_unary %}
 
     .. py:method:: Series.{{ func }}
 
@@ -63,7 +63,7 @@ Binary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in series_operator_binary %}
+    {% for func, doc in Series_operator_binary %}
 
     .. py:method:: Series.{{ func }}(other)
 
@@ -97,7 +97,7 @@ Unary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in frame_operator_unary %}
+    {% for func, doc in Frame_operator_unary %}
 
     .. py:method:: Frame.{{ func }}
 
@@ -111,7 +111,7 @@ Binary Operators
 
 .. jinja:: ctx
 
-    {% for func, doc in frame_operator_binary %}
+    {% for func, doc in Frame_operator_binary %}
 
     .. py:method:: Frame.{{ func }}(other)
 

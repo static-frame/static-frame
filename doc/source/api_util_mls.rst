@@ -11,7 +11,7 @@ Mathematical and statistical operations, when applied on an Index, apply to the 
 
 .. jinja:: ctx
 
-    {% for func in index_ufunc_axis %}
+    {% for func in Index_ufunc_axis %}
 
     .. automethod:: static_frame.Index.{{ func }}
 
@@ -23,7 +23,7 @@ Series
 
 .. jinja:: ctx
 
-    {% for func in series_ufunc_axis %}
+    {% for func in Series_ufunc_axis %}
 
     .. automethod:: static_frame.Series.{{ func }}
 
@@ -46,7 +46,7 @@ Frame
 
 .. jinja:: ctx
 
-    {% for func in frame_ufunc_axis %}
+    {% for func in Frame_ufunc_axis %}
 
     .. automethod:: static_frame.Frame.{{ func }}
 
