@@ -35,14 +35,15 @@ Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))
 
 class InterfaceGroup:
     Attribute = 'attribute'
+    Constructor = 'constructor'
+    DictLike = 'dict_like'
+    Display = 'display'
+    Exporter = 'exporter'
+    Iterator = 'iterator'
+    Method = 'method'
     OperatorBinary = 'operator_binary'
     OperatorUnary = 'operator_unary'
-    Method = 'method'
-    DictLike = 'dict_like'
-    Iterator = 'iterator'
     Selector = 'selector'
-    Constructor = 'constructor'
-    Exporter = 'exporter'
 
 
 class InterfaceSummary:
@@ -170,12 +171,13 @@ class InterfaceSummary:
 
             cls_name = target.__name__
 
-            # TODO: add grouping of display attrs
-
-
             if name in cls.DICT_LIKE:
                 display = f'{name}()' if name != 'values' else name
                 yield Interface(cls_name, InterfaceGroup.DictLike, display, doc)
+
+            elif name in cls.DISPLAY:
+                display = f'{name}()' if name != 'interface' else name
+                yield Interface(cls_name, InterfaceGroup.Display, display, doc)
 
             elif name == 'astype':
                 yield Interface(cls_name, InterfaceGroup.Method, name, doc)

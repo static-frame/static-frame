@@ -266,7 +266,7 @@ class ContainerMeta(type):
 
     @property
     def interface(cls) -> 'Frame':
-        '''Return a ``Frame`` describing the interface of this class.
+        '''A ``Frame`` documenting the interface of this class.
         '''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(cls)
