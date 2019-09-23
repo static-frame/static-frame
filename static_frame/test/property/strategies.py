@@ -782,9 +782,46 @@ get_frame_date_str_numeric: tp.Callable[..., st.SearchStrategy] = partial(get_fr
         )
 get_frame_date_str_numeric.__name__ = 'get_frame_date_str_numeric'
 
-
 get_frame_go: tp.Callable[..., st.SearchStrategy] = partial(get_frame, cls=FrameGO)
 get_frame_go.__name__ = 'get_frame_go'
+
+def get_frame_or_frame_go(
+        min_rows: int = 1,
+        max_rows: int = MAX_ROWS,
+        min_columns: int = 1,
+        max_columns: int = MAX_COLUMNS,
+        dtype_group: DTGroup = DTGroup.ALL,
+        index_cls: tp.Type[Index] = Index,
+        index_dtype_group: tp.Optional[DTGroup] = None,
+        columns_cls: tp.Type[Index] = Index,
+        columns_dtype_group: tp.Optional[DTGroup] = None
+        ) -> st.SearchStrategy:
+    st_frame = get_frame(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            cls=Frame,
+            dtype_group=dtype_group,
+            index_cls=index_cls,
+            index_dtype_group=index_dtype_group,
+            columns_cls=columns_cls,
+            columns_dtype_group=columns_dtype_group
+            )
+    st_frame_go = get_frame(
+            min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns,
+            cls=FrameGO,
+            dtype_group=dtype_group,
+            index_cls=index_cls,
+            index_dtype_group=index_dtype_group,
+            columns_cls=columns_cls,
+            columns_dtype_group=columns_dtype_group
+            )
+    return st.one_of((st_frame, st_frame_go))
+
 
 
 if __name__ == '__main__':
