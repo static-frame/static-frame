@@ -3049,8 +3049,9 @@ class FrameGO(Frame):
 
     def __setitem__(self,
             key: tp.Hashable,
-            value,
-            fill_value=np.nan):
+            value: tp.Any,
+            fill_value=np.nan
+            ) -> None:
         '''For adding a single column, one column at a time.
         '''
         if key in self._columns:

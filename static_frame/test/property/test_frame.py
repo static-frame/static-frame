@@ -2,9 +2,9 @@
 import typing as tp
 import unittest
 
-import numpy as np  # type: ignore
+# import numpy as np  # type: ignore
 
-from hypothesis import strategies as st
+# from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
 
 from static_frame.test.property import strategies as sfst
@@ -39,9 +39,8 @@ class TestUnit(TestCase):
     def test_frame_go_setitem(self, f1: Frame, label: tp.Hashable) -> None:
 
         shape = f1.shape
-        f1['foo'] = label
+        f1['foo'] = label # type: ignore
         self.assertEqual(shape[1] + 1, f1.shape[1])
-        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

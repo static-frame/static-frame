@@ -240,6 +240,7 @@ class Index(IndexBase):
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
+
     _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = intersect1d
 
@@ -344,8 +345,9 @@ class Index(IndexBase):
             dtype: DtypeSpecifier = None
             ) -> None:
 
-        self._recache = False
-        self._map = None
+        self._recache: bool = False
+        self._map: tp.Dict[tp.Hashable, int] = None
+
         positions = None
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
@@ -889,7 +891,7 @@ class IndexGO(Index):
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value: object) -> None:
+    def append(self, value: tp.Hashable) -> None:
         '''append a value
         '''
         if value in self._map:
