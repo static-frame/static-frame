@@ -24,6 +24,3 @@
 
     {% endfor %}
 
-
-
-# :py:meth:`static_frame.{{name}}.{{label}}`, "{{row.doc}}"
