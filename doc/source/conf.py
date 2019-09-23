@@ -64,7 +64,20 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
 
 
     post['interface'] = []
-    for target in (sf.Series, sf.Frame, sf.FrameGO, sf.Index, sf.IndexGO):
+    for target in (
+            sf.Series,
+            sf.Frame,
+            sf.FrameGO,
+            sf.Index,
+            sf.IndexGO,
+            sf.IndexHierarchy,
+            sf.IndexHierarchyGO,
+            sf.IndexDate,
+            sf.IndexYearMonth,
+            sf.IndexYear,
+            sf.IndexMillisecond,
+            sf.IndexSecond,
+            ):
         # import ipdb; ipdb.set_trace()
         post['interface'].append((target.__name__, target.interface))
 

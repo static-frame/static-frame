@@ -1007,8 +1007,12 @@ class Series(ContainerBase):
                 own_index=True,
                 name=self._name)
 
+    @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Series':
-        '''A Loc selection (by index labels).
+        '''Selector of values by label.
+
+        Args:
+            key: {key_loc}
 
         Compatibility:
             Pandas supports using both loc and iloc style selections with the __getitem__ interface on Series. This is undesirable, so here we only expose the loc interface (making the Series dictionary like, but unlike the Index, where __getitem__ is an iloc).
