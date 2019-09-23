@@ -6,12 +6,19 @@ Tools for documenting the SF interface.
 from collections import namedtuple
 import typing as tp
 
-# from static_frame.core.series import Series
+import numpy as np
+
 from static_frame.core.frame import Frame
+from static_frame.core.container import ContainerBase
+from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_datetime import IndexYear
+from static_frame.core.index_hierarchy import IndexHierarchy
+
 # from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
 
-# from static_frame.core.display import DisplayConfigs
 # from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
@@ -20,6 +27,7 @@ from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 # from static_frame.core.util import InterfaceSelection1D # used on index.drop
 from static_frame.core.util import InterfaceSelection2D
 from static_frame.core.util import InterfaceAsType
+from static_frame.core.util import InterfaceGetItem
 
 
 Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))
@@ -70,9 +78,15 @@ class InterfaceSummary:
     DICT_LIKE = {'keys', 'values', 'items', '__contains__', '__iter__', '__reversed__'}
     ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
 
+    GETITEM = '__getitem__'
+
     SELECTOR_ROOT = {'__getitem__', 'iloc', 'loc'}
-    SELECTOR_COMPOUND = {'drop', 'mask', 'masked_array', 'assign'}
+    # SELECTOR_COMPOUND = {'drop', 'mask', 'masked_array', 'assign'}
     ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
+
+    _CLS_TO_INSTANCE_CACHE: tp.Dict[int, int] = {}
+
+
 
     # astype is a normal function in Series, is a selector in Frame
 
@@ -88,17 +102,45 @@ class InterfaceSummary:
     def scrub_doc(cls, doc: tp.Optional[str]) -> str:
         if not doc:
             return ''
-        return doc.strip().replace('\n', ' ')[:cls.DOC_CHARS]
+        doc = doc.replace('``', '')
+        # split and join removes contiguous whitespace
+        return ' '.join(doc.split())[:cls.DOC_CHARS]
+
 
     @classmethod
-    def interrogate(cls, target: tp.Any) -> tp.Iterator[Interface]:
+    def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
+        '''
+        Get a sample instance from any ContainerBase; cache to only create one per life of process.
+        '''
+        if target not in cls._CLS_TO_INSTANCE_CACHE:
+            if target is TypeBlocks:
+                instance = target.from_blocks(np.array((0,)))
+            elif issubclass(target, IndexHierarchy):
+                instance = target.from_labels(((0,0),))
+            elif target in (IndexYearMonth, IndexYear, IndexDate):
+                instance = target(np.array((0,), dtype='datetime64[s]'))
+            else:
+                instance = target((0,))
+            cls._CLS_TO_INSTANCE_CACHE[target] = instance
+        return cls._CLS_TO_INSTANCE_CACHE[target]
 
-        for name_attr in sorted(dir(target)):
+    @classmethod
+    def name_obj_iter(cls, target: tp.Any):
+        instance = cls.get_instance(target=target)
+
+        for name_attr in dir(target.__class__): # get metaclass
+            if name_attr == 'interface':
+                yield name_attr, getattr(target.__class__, name_attr)
+
+        for name_attr in dir(target):
             if not cls.is_public(name_attr):
                 continue
+            yield name_attr, getattr(instance, name_attr)
 
-            # this gets object off the class, not an instance
-            obj = getattr(target, name_attr)
+    @classmethod
+    def interrogate(cls, target: tp.Type[ContainerBase]) -> tp.Iterator[Interface]:
+
+        for name_attr, obj in sorted(cls.name_obj_iter(target)):
 
             doc = ''
             if hasattr(obj, '__doc__'):
@@ -106,7 +148,7 @@ class InterfaceSummary:
 
             if hasattr(obj, '__name__'):
                 name = obj.__name__
-            else:
+            else: # some attributes yield objects like arrays, Series, or Frame
                 name = name_attr
 
             cls_name = target.__name__
@@ -116,29 +158,35 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.DictLike, name, doc)
             elif name == 'astype':
                 yield Interface(cls_name, InterfaceGroup.Method, name, doc)
-                if isinstance(obj, property): # an InterfaceAsType
-                    field = '__getitem__'
-                    display = f'{name}.{field}'
-                    doc = cls.scrub_doc(getattr(InterfaceAsType, field).__doc__)
+                if isinstance(obj, InterfaceAsType): # an InterfaceAsType
+                    display = f'{name}[]'
+                    doc = cls.scrub_doc(getattr(InterfaceAsType, cls.GETITEM).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Method, display, doc)
 
             elif name.startswith('from_') or name == '__init__':
-                yield Interface(cls_name, InterfaceGroup.Constructor, name, doc)
+                display = f'{name}()'
+                yield Interface(cls_name, InterfaceGroup.Constructor, display, doc)
             elif name.startswith('to_'):
-                yield Interface(cls_name, InterfaceGroup.Exporter, name, doc)
+                display = f'{name}()'
+                yield Interface(cls_name, InterfaceGroup.Exporter, display, doc)
             elif name.startswith('iter_'):
-                yield Interface(cls_name, InterfaceGroup.Iterator, name, doc)
+                display = f'{name}(axis)'
+                yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
                 for field in cls.ATTR_ITER_NODE:
-                    display = f'{name}(axis).{field}'
+                    display = f'{name}(axis).{field}()'
                     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
-            elif name in cls.SELECTOR_ROOT:
-                yield Interface(cls_name, InterfaceGroup.Selector, name, doc)
-            elif name in cls.SELECTOR_COMPOUND:
+
+            elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
+                display = f'{name}[]' if name != cls.GETITEM else '[]'
+                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+
+            elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
-                    display = f'{name}.{field}'
+                    display = f'{name}.{field}[]' if name != cls.GETITEM else f'{name}[]'
                     doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+
             elif callable(obj):
                 if name_attr in _UFUNC_UNARY_OPERATORS:
                     yield Interface(cls_name, InterfaceGroup.OperatorUnary, name, doc)
@@ -156,6 +204,3 @@ class InterfaceSummary:
         f = f.set_index('name', drop=True)
         return f
 
-# if __name__ == '__main__':
-
-#     print(InterfaceSummary.to_frame(Frame).display(DisplayConfigs.UNBOUND))

@@ -1949,7 +1949,13 @@ class Frame(ContainerBase):
         return self._extract(row_key=iloc_row_key,
                 column_key=iloc_column_key)
 
+    @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType):
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
     #---------------------------------------------------------------------------
@@ -2538,7 +2544,7 @@ class Frame(ContainerBase):
 
 
     def transpose(self) -> 'Frame':
-        '''Return a tansposed version of the Frame.
+        '''Return a tansposed version of the ``Frame``.
         '''
         return self.__class__(self._blocks.transpose(),
                 index=self._columns,
@@ -2548,6 +2554,8 @@ class Frame(ContainerBase):
 
     @property
     def T(self) -> 'Frame':
+        '''Return a transposed version of the ``Frame``.
+        '''
         return self.transpose()
 
 
@@ -3063,18 +3071,13 @@ class FrameGO(Frame):
                 raise RuntimeError('incorrectly sized, unindexed value')
             self._blocks.append(value)
         else:
-            # if isinstance(value, GeneratorType):
-            #     value = np.array(tuple(value))
             if not hasattr(value, '__iter__') or isinstance(value, str):
                 value = np.full(row_count, value)
             else:
                 value, _ = iterable_to_array(value)
-            # else: # has length
-            #     value = np.array(value)
             if value.ndim != 1 or len(value) != row_count:
                 raise RuntimeError('incorrectly sized, unindexed value')
 
-            # import ipdb; ipdb.set_trace()
             value.flags.writeable = False
             self._blocks.append(value)
 

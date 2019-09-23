@@ -1719,15 +1719,21 @@ class InterfaceAsType:
 
     __slots__ = ('_func_getitem',)
 
-    def __init__(self, func_getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']) -> None:
+    def __init__(self,
+            func_getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']
+            ) -> None:
         '''
         Args:
             _func_getitem: a callable that expects a _func_getitem key and returns a FrameAsType interface; for example, Frame._extract_getitem_astype.
         '''
         self._func_getitem = func_getitem
 
+    # @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'FrameAsType':
-        '''Provide a label, selection list, or slice to selectively change types by column.
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
         '''
         return self._func_getitem(key)
 

@@ -16,6 +16,8 @@ import pytest  # type: ignore
 
 
 from static_frame import TypeBlocks
+from static_frame.core.container import ContainerBase
+from static_frame.core.index_base import IndexBase
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -101,6 +103,18 @@ class TestCase(unittest.TestCase):
             raise RuntimeError('file not found', fp)
         return fp
 
+
+    @staticmethod
+    def get_containers() -> tp.Iterator[tp.Type[ContainerBase]]:
+
+        def yield_sub(cls: tp.Type[ContainerBase]):
+            for cls in cls.__subclasses__():
+                if cls is not IndexBase:
+                    yield cls
+                if issubclass(cls, ContainerBase):
+                    yield from yield_sub(cls)
+
+        yield from yield_sub(ContainerBase)
 
     @staticmethod
     def get_test_db_a() -> sqlite3.Connection:

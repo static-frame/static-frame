@@ -383,6 +383,8 @@ class ContainerBase(metaclass=ContainerMeta):
     '''Base class of all containers.'''
     # Maybe in the future we could factor out a bit of the dynamic-ness of ContainerMeta.
 
+    interface: 'Frame'
+
     __pos__: tp.Callable[[T], T]
     __neg__: tp.Callable[[T], T]
     __abs__: tp.Callable[[T], T]
@@ -412,6 +414,7 @@ class ContainerBase(metaclass=ContainerMeta):
     __rmul__: tp.Callable[[T, object], T]
     __rtruediv__: tp.Callable[[T, object], T]
     __rfloordiv__: tp.Callable[[T, object], T]
+
 
     def all(self, axis: int = 0, skipna: bool = True) -> bool:
         raise NotImplementedError()

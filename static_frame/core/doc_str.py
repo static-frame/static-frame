@@ -17,6 +17,11 @@ OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this ``{clas
 
 INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
 
+LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
+
+ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
+
+
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
@@ -52,6 +57,10 @@ class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
     # dict entries
+    selector = dict(
+            key_loc=LOC_SELECTOR,
+            key_iloc=ILOC_SELECTOR,
+            )
 
     reindex = dict(
             doc='''Return a new ``{class_name}`` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
