@@ -25,9 +25,9 @@ from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
 # from static_frame.core.util import InterfaceSelection1D # used on index.drop
-from static_frame.core.util import InterfaceSelection2D
-from static_frame.core.util import InterfaceAsType
-from static_frame.core.util import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.selector_node import InterfaceGetItem
 
 
 Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))

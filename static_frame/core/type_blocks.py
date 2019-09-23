@@ -37,7 +37,7 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import shape_filter
 
-from static_frame.core.util import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import FILL_VALUE_DEFAULT

@@ -34,8 +34,8 @@ from static_frame.core.util import array2d_to_tuples
 
 from static_frame.core.util import DEFAULT_INT_DTYPE
 
-from static_frame.core.util import InterfaceGetItem
-from static_frame.core.util import InterfaceSelection1D
+from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceSelection1D
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import to_datetime64

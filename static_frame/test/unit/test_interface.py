@@ -4,10 +4,10 @@ import unittest
 
 
 from static_frame.core.interface import InterfaceSummary
-from static_frame.core.series import Series
+# from static_frame.core.series import Series
 from static_frame.core.frame import FrameGO
-from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
+# from static_frame.core.index import Index
+# from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import DisplayConfigs
 
 

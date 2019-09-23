@@ -21,7 +21,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import iterable_to_array
 
-from static_frame.core.util import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier

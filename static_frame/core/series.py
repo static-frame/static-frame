@@ -40,8 +40,8 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 # from static_frame.core.util import STATIC_ATTR
 
-from static_frame.core.util import InterfaceGetItem
-from static_frame.core.util import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceSelection2D
 
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmax_1d
