@@ -107,7 +107,7 @@ class TestCase(unittest.TestCase):
     @staticmethod
     def get_containers() -> tp.Iterator[tp.Type[ContainerBase]]:
 
-        def yield_sub(cls: tp.Type[ContainerBase]):
+        def yield_sub(cls: tp.Type[ContainerBase]) -> tp.Iterator[tp.Type[ContainerBase]]:
             for cls in cls.__subclasses__():
                 if cls is not IndexBase:
                     yield cls

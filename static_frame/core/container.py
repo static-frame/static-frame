@@ -16,8 +16,8 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DEFAULT_FLOAT_DTYPE
 from static_frame.core.doc_str import DOC_TEMPLATE
 
-# if tp.TYPE_CHECKING:
-#     from static_frame.core.index_base import IndexBase
+if tp.TYPE_CHECKING:
+    from static_frame.core.frame import Frame
 
 T = tp.TypeVar('T')
 
