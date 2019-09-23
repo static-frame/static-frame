@@ -67,6 +67,7 @@ class InterfaceSummary:
         '__new__',
         '__setattr__',
         '__setstate__',
+        '__setitem__',
         '__slots__',
         '__subclasshook__',
         '__weakref__',
@@ -75,13 +76,21 @@ class InterfaceSummary:
         '__sizeof__',
         }
 
-    DICT_LIKE = {'get',
+    DICT_LIKE = {
+        'get',
         'keys',
         'values',
         'items',
         '__contains__',
         '__iter__',
         '__reversed__'
+        }
+
+    DISPLAY = {
+        'display',
+        '__repr__',
+        '__str__',
+        'interface',
         }
 
     ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
@@ -178,9 +187,11 @@ class InterfaceSummary:
             elif name.startswith('from_') or name == '__init__':
                 display = f'{name}()'
                 yield Interface(cls_name, InterfaceGroup.Constructor, display, doc)
+
             elif name.startswith('to_'):
                 display = f'{name}()'
                 yield Interface(cls_name, InterfaceGroup.Exporter, display, doc)
+
             elif name.startswith('iter_'):
                 display = f'{name}(axis)'
                 yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
