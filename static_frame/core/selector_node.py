@@ -6,7 +6,7 @@ import numpy as np  # type: ignore
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 
-
+from static_frame.core.doc_str import doc_inject
 #-------------------------------------------------------------------------------
 
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks')
@@ -103,7 +103,7 @@ class InterfaceAsType:
         '''
         self._func_getitem = func_getitem
 
-    # @doc_inject(selector='selector')
+    @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'FrameAsType':
         '''Selector of columns by label.
 

@@ -75,7 +75,15 @@ class InterfaceSummary:
         '__sizeof__',
         }
 
-    DICT_LIKE = {'keys', 'values', 'items', '__contains__', '__iter__', '__reversed__'}
+    DICT_LIKE = {'get',
+        'keys',
+        'values',
+        'items',
+        '__contains__',
+        '__iter__',
+        '__reversed__'
+        }
+
     ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
 
     GETITEM = '__getitem__'
@@ -153,9 +161,13 @@ class InterfaceSummary:
 
             cls_name = target.__name__
 
+            # TODO: add grouping of display attrs
+
 
             if name in cls.DICT_LIKE:
-                yield Interface(cls_name, InterfaceGroup.DictLike, name, doc)
+                display = f'{name}()' if name != 'values' else name
+                yield Interface(cls_name, InterfaceGroup.DictLike, display, doc)
+
             elif name == 'astype':
                 yield Interface(cls_name, InterfaceGroup.Method, name, doc)
                 if isinstance(obj, InterfaceAsType): # an InterfaceAsType
@@ -183,17 +195,18 @@ class InterfaceSummary:
 
             elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
-                    display = f'{name}.{field}[]' if name != cls.GETITEM else f'{name}[]'
+                    display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
                     doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
             elif callable(obj):
+                display = f'{name}()'
                 if name_attr in _UFUNC_UNARY_OPERATORS:
-                    yield Interface(cls_name, InterfaceGroup.OperatorUnary, name, doc)
+                    yield Interface(cls_name, InterfaceGroup.OperatorUnary, display, doc)
                 elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP:
-                    yield Interface(cls_name, InterfaceGroup.OperatorBinary, name, doc)
+                    yield Interface(cls_name, InterfaceGroup.OperatorBinary, display, doc)
                 else:
-                    yield Interface(cls_name, InterfaceGroup.Method, name, doc)
+                    yield Interface(cls_name, InterfaceGroup.Method, display, doc)
             else:
                 yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
