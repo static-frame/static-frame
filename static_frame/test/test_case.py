@@ -150,6 +150,12 @@ class TestCase(unittest.TestCase):
             return
         return self.assertEqual(v1, v2)
 
+
+    def assertAlmostEqualArray(self, a1: np.ndarray, a2: np.ndarray) -> None:
+        # NaNs are treated as equal
+        np.testing.assert_allclose(a1, a2)
+        # np.testing.assert_array_almost_equal(a1, a2, decimal=5)
+
     def assertTypeBlocksArrayEqual(self,
             tb: TypeBlocks, match: tp.Iterable[object],
             match_dtype: tp.Optional[tp.Union[type, np.dtype, str]] = None) -> None:

@@ -1,12 +1,12 @@
 import typing as tp
 
-import numpy as np
+import numpy as np # type: ignore
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import array2d_to_tuples
-
+from static_frame.core.util import DTYPE_BOOL
 
 class IndexCorrespondence:
     '''
@@ -79,7 +79,12 @@ class IndexCorrespondence:
 
             if len(common_labels) == len(dst_index):
                 # use new index to retain order
-                iloc_src = src_index.loc_to_iloc(dst_index.values)
+                values_dst = dst_index.values
+                if values_dst.dtype == DTYPE_BOOL:
+                    # if the index values are a Boolean array, loc_to_iloc will try to do a Boolean selection, which is incorrect. Using a list avoids this problem.
+                    iloc_src = src_index.loc_to_iloc(values_dst.tolist())
+                else:
+                    iloc_src = src_index.loc_to_iloc(values_dst)
                 iloc_dst = np.arange(size)
                 return cls(has_common=has_common,
                         is_subset=True,

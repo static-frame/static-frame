@@ -3,6 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.5.0-dev
+-----------
+
+Added ``interface`` attribute to all containers, providing a hierarchical presentation of all interfaces.
+
 
 0.4.3
 -----------

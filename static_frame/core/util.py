@@ -125,7 +125,15 @@ KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 # for type hinting
 # keys once dimension has been isolated
 GetItemKeyType = tp.Union[
-        int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
+        int,
+        np.integer,
+        slice,
+        tp.List[tp.Any],
+        None,
+        'Index',
+        'Series',
+        np.ndarray
+        ]
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[

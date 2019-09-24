@@ -1,6 +1,7 @@
 
 import typing as tp
 import unittest
+import operator
 
 import numpy as np  # type: ignore
 
@@ -11,6 +12,8 @@ from hypothesis import given  # type: ignore
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.series import Series
+from static_frame.core.container import _UFUNC_UNARY_OPERATORS
+from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 
 from static_frame.test.property import strategies as sfst
 
@@ -21,7 +24,6 @@ from static_frame import Frame
 
 
 class TestUnit(TestCase):
-
 
 
     @given(sfst.get_frame_or_frame_go())  # type: ignore
@@ -39,6 +41,72 @@ class TestUnit(TestCase):
             self.assertTrue(f1.size == 0)
             self.assertTrue(f1.nbytes == 0)
 
+
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))  # type: ignore
+    def test_unary_operators_numeric(self, f1: Frame) -> None:
+        for op in _UFUNC_UNARY_OPERATORS:
+            if op == '__invert__': # invalid on non Boolean
+                continue
+            func = getattr(operator, op)
+            values = f1.values
+            # must coerce all blocks to same type to compare to what NP does
+            a = func(f1.astype(values.dtype)).values
+            b = func(values)
+            self.assertAlmostEqualArray(a, b)
+
+
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    def test_unary_operators_boolean(self, f1: Frame) -> None:
+        for op in _UFUNC_UNARY_OPERATORS:
+            if op != '__invert__': # valid on Boolean
+                continue
+            func = getattr(operator, op)
+            a = func(f1).values
+            b = func(f1.values)
+            self.assertAlmostEqualArray(a, b)
+
+
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))  # type: ignore
+    def test_binary_operators_numeric(self, f1: Frame) -> None:
+        for op in _UFUNC_BINARY_OPERATORS:
+            if op in {
+                    '__matmul__',
+                    '__pow__',
+                    '__lshift__',
+                    '__rshift__',
+                    '__and__',
+                    '__xor__',
+                    '__or__',
+                    '__mod__',
+                    }:
+                continue
+            func = getattr(operator, op)
+            values = f1.values
+            # must coerce all blocks to same type to compare to what NP does
+            f2 = f1.astype(values.dtype)
+            a = func(f2, f2).values
+            b = func(values, values)
+            self.assertAlmostEqualArray(a, b)
+
+
+    # @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    # def test_binary_operators_boolean(self, f1: Frame) -> None:
+    #     for op in _UFUNC_BINARY_OPERATORS:
+    #         if op not in {
+    #                 '__and__',
+    #                 '__xor__',
+    #                 '__or__',
+    #                 }:
+    #             continue
+    #         func = getattr(operator, op)
+    #         a = func(f1, f1).values
+    #         values = f1.values
+    #         b = func(values, values)
+    #         self.assertAlmostEqualArray(a, b)
+
+
+    # TODO: intger tests with pow, mod
+    # TOD0: matmul tests
 
     #---------------------------------------------------------------------------
 
