@@ -319,9 +319,6 @@ class IndexBase(ContainerBase):
     #---------------------------------------------------------------------------
     # common display
 
-    def __repr__(self) -> str:
-        return repr(self.display())
-
     def _repr_html_(self) -> str:
         '''
         Provide HTML representation for Jupyter Notebooks.

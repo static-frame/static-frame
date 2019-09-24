@@ -135,9 +135,6 @@ class Bus:
         d.insert_displays(display_cls.flatten())
         return d
 
-    def __repr__(self):
-        return repr(self.display())
-
 
     #---------------------------------------------------------------------------
     def to_zip_tsv(self, fp) -> None:

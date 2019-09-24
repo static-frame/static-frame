@@ -901,9 +901,6 @@ class Series(ContainerBase):
         d.insert_displays(display_cls.flatten())
         return d
 
-    def __repr__(self):
-        return repr(self.display())
-
     def _repr_html_(self):
         '''
         Provide HTML representation for Jupyter Notebooks.

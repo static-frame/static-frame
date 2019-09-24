@@ -826,8 +826,6 @@ class TypeBlocks(ContainerBase):
 
         return d
 
-    def __repr__(self) -> str:
-        return repr(self. display())
 
     #---------------------------------------------------------------------------
     # extraction utilities

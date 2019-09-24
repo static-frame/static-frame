@@ -17,7 +17,6 @@ import numpy as np  # type: ignore
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.display_color import HexColor
 from static_frame.core import display_html_datatables
-from static_frame.core.container import ContainerBase
 
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
@@ -711,8 +710,10 @@ class Display:
                 format_str = FORMAT_EMPTY
             return DisplayCell(format_str, type_str_raw)
 
-        # handling for all other values that are stringable
+        # ContainerBase needs to import Display
+        from static_frame.core.container import ContainerBase
 
+        # handling for all other values that are stringable
         if isinstance(value, ContainerBase):
             msg = value.__class__.__name__
         else:

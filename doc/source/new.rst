@@ -8,6 +8,7 @@ What is New in Static Frame
 
 Added ``interface`` attribute to all containers, providing a hierarchical presentation of all interfaces.
 
+Added ``display_tall()`` and ``display_wide()`` convenienve methods to all containers.
 
 0.4.3
 -----------

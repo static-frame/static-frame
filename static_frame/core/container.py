@@ -16,6 +16,11 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DEFAULT_FLOAT_DTYPE
 from static_frame.core.doc_str import DOC_TEMPLATE
 
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayConfigs
+from static_frame.core.display import DisplayActive
+
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611
 
@@ -453,3 +458,36 @@ class ContainerBase(metaclass=ContainerMeta):
 
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
         raise NotImplementedError()
+
+
+    #---------------------------------------------------------------------------
+    # common display functions
+
+    def __repr__(self) -> str:
+        return repr(self.display())
+
+    def display_tall(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        config = config or DisplayActive.get()
+        args = config.to_dict()
+        args.update(dict(
+                display_rows=np.inf,
+                cell_max_width=np.inf,
+                cell_max_width_leftmost=np.inf,
+                ))
+        return self.display(config=DisplayConfig(**args))
+
+    def display_wide(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        config = config or DisplayActive.get()
+        args = config.to_dict()
+        args.update(dict(
+                display_columns=np.inf,
+                cell_max_width=np.inf,
+                cell_max_width_leftmost=np.inf,
+                ))
+        return self.display(config=DisplayConfig(**args))
+
+

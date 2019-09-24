@@ -31,20 +31,25 @@ from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
 
 
-Interface = namedtuple('Interface', ('cls', 'group', 'name', 'doc'))
+Interface = namedtuple('Interface', (
+        'cls',
+        'group',
+        'name',
+        'doc'
+        ))
 
 
 class InterfaceGroup:
-    Attribute = 'attribute'
-    Constructor = 'constructor'
-    DictLike = 'dict_like'
-    Display = 'display'
-    Exporter = 'exporter'
-    Iterator = 'iterator'
-    Method = 'method'
-    OperatorBinary = 'operator_binary'
-    OperatorUnary = 'operator_unary'
-    Selector = 'selector'
+    Attribute = 'Attribute'
+    Constructor = 'Constructor'
+    DictLike = 'Dictionary-Like'
+    Display = 'Display'
+    Exporter = 'Exporter'
+    Iterator = 'Iterator'
+    Method = 'Method'
+    OperatorBinary = 'Operator Binary'
+    OperatorUnary = 'Operator Unary'
+    Selector = 'Selector'
 
 
 class InterfaceSummary:
@@ -90,6 +95,8 @@ class InterfaceSummary:
 
     DISPLAY = {
         'display',
+        'display_tall',
+        'display_wide',
         '__repr__',
         '__str__',
         'interface',

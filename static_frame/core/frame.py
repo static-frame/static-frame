@@ -1729,9 +1729,6 @@ class Frame(ContainerBase):
                 )
         return d
 
-    def __repr__(self) -> str:
-        return repr(self.display())
-
     def _repr_html_(self):
         '''
         Provide HTML representation for Jupyter Notebooks.

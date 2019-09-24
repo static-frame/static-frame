@@ -2,7 +2,9 @@
 Container Import & Creation
 ===============================
 
-Both :py:class:`Series` and :py:class:`Frame` have ``from_items`` constructors that consume key/value pairs, such as those returned by ``dict.items()`` and similar functions.
+Rather than offering a complex default initializer with arguments that are sometimes irrelevant, :class:`Series` and :class:`Frame` containers offer numerous specialized constructors.
+
+Both :class:`Series` and :class:`Frame` have ``from_items`` constructors that consume key/value pairs, such as those returned by ``dict.items()`` and similar functions.
 
 
 Series
