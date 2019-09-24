@@ -3076,6 +3076,7 @@ class FrameGO(Frame):
                 value = np.full(row_count, value)
             else:
                 value, _ = iterable_to_array(value)
+
             if value.ndim != 1 or len(value) != row_count:
                 raise RuntimeError('incorrectly sized, unindexed value')
 

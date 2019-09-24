@@ -584,7 +584,9 @@ def get_index_hierarchy(
         cls: tp.Callable[..., IndexHierarchy] = IndexHierarchy.from_labels
         ) -> st.SearchStrategy:
 
-    def constructor(labels_spacings: tp.Tuple[tp.Sequence[tp.Sequence[str]], tp.Sequence[tp.Iterable[int]]]) -> st.SearchStrategy:
+    def constructor(
+            labels_spacings: tp.Tuple[tp.Sequence[tp.Sequence[str]], tp.Sequence[tp.Iterable[int]]]
+            ) -> st.SearchStrategy:
         # returns an iterable of labels
         labels_proto, spacings = labels_spacings
         depth = len(labels_proto)
@@ -796,6 +798,9 @@ def get_frame_or_frame_go(
         columns_cls: tp.Type[Index] = Index,
         columns_dtype_group: tp.Optional[DTGroup] = None
         ) -> st.SearchStrategy:
+    '''
+    Retrun either a ``Frame`` or a ``FrameGO``,
+    '''
     st_frame = get_frame(
             min_rows=min_rows,
             max_rows=max_rows,
@@ -821,6 +826,7 @@ def get_frame_or_frame_go(
             columns_dtype_group=columns_dtype_group
             )
     return st.one_of((st_frame, st_frame_go))
+
 
 
 

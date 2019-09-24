@@ -90,7 +90,7 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_letters(*slice_args: tp.Optional[int]) -> tp.Generator[str, None, None]:
+    def get_letters(*slice_args: tp.Optional[int]) -> tp.Iterator[str]:
         for letter in string.ascii_lowercase[slice(*slice_args)]:
             yield letter
 

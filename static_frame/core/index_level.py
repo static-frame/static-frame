@@ -111,17 +111,17 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    # def dtypes(self) -> tp.Iterator[np.dtype]:
-    #     # this returns all types at all levels
-    #     if self.targets is None:
-    #         yield self.index.values.dtype
-    #     else:
-    #         levels = [self]
-    #         while levels:
-    #             level = levels.pop()
-    #             yield level.index.values.dtype
-    #             if level.targets is not None: # not terminus
-    #                 levels.extend(level.targets)
+    def dtypes_all(self) -> tp.Iterator[np.dtype]:
+        '''Return an iterator of all dtypes from every depth level.'''
+        if self.targets is None:
+            yield self.index.values.dtype
+        else:
+            levels = [self]
+            while levels:
+                level = levels.pop()
+                yield level.index.values.dtype
+                if level.targets is not None: # not terminus
+                    levels.extend(level.targets)
 
     def dtypes(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of reprsentative dtypes, one from each depth level.'''
@@ -297,7 +297,8 @@ class IndexLevel:
         # assume uniform depths
         depth_count = next(self.depths())
         shape = self.__len__(), depth_count
-        dtype = resolve_dtype_iter(self.dtypes())
+
+        dtype = resolve_dtype_iter(self.dtypes_all())
         labels = np.empty(shape, dtype=dtype)
         row_count = 0
 
