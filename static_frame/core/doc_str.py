@@ -148,6 +148,10 @@ class DOC_TEMPLATE:
             axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
     )
 
+    mloc = dict(
+            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
+            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
+    )
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,

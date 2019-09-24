@@ -916,7 +916,11 @@ class Series(ContainerBase):
     # common attributes from the numpy array
 
     @property
-    def mloc(self):
+    @doc_inject()
+    def mloc(self) -> int:
+        '''
+        {doc_int}
+        '''
         return mloc(self.values)
 
     @property

@@ -134,7 +134,7 @@ class InterfaceSummary:
         msg = ' '.join(doc.split())
         if len(msg) <= cls.DOC_CHARS:
             return msg
-        return msg[:cls.DOC_CHARS] + Display.ELLIPSIS
+        return msg[:cls.DOC_CHARS].strip() + Display.ELLIPSIS
 
 
     @classmethod
@@ -155,25 +155,30 @@ class InterfaceSummary:
         return cls._CLS_TO_INSTANCE_CACHE[target]
 
     @classmethod
-    def name_obj_iter(cls, target: tp.Any):
+    def name_obj_iter(cls, target: tp.Type[ContainerBase]):
         instance = cls.get_instance(target=target)
 
         for name_attr in dir(target.__class__): # get metaclass
             if name_attr == 'interface':
-                yield name_attr, getattr(target.__class__, name_attr)
+                # getting interface off of the class will recurse
+                yield name_attr, getattr(target.__class__, name_attr), None
 
         for name_attr in dir(target):
             if not cls.is_public(name_attr):
                 continue
-            yield name_attr, getattr(instance, name_attr)
+            yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
 
     @classmethod
-    def interrogate(cls, target: tp.Type[ContainerBase]) -> tp.Iterator[Interface]:
+    def interrogate(cls,
+            target: tp.Type[ContainerBase]
+            ) -> tp.Iterator[Interface]:
 
-        for name_attr, obj in sorted(cls.name_obj_iter(target)):
-
+        for name_attr, obj, obj_cls in sorted(cls.name_obj_iter(target)):
+            # properties resdie on the class
             doc = ''
-            if hasattr(obj, '__doc__'):
+            if isinstance(obj_cls, property):
+                doc = cls.scrub_doc(obj_cls.__doc__)
+            elif hasattr(obj, '__doc__'):
                 doc = cls.scrub_doc(obj.__doc__)
 
             if hasattr(obj, '__name__'):
@@ -236,8 +241,8 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
     @classmethod
-    def to_frame(cls, target: tp.Any) -> Frame:
-        f = Frame.from_records(cls.interrogate(target))
+    def to_frame(cls, target: tp.Type[ContainerBase]) -> Frame:
+        f = Frame.from_records(cls.interrogate(target), name=target.__name__)
         f = f.sort_values(('cls', 'group', 'name'))
         f = f.set_index('name', drop=True)
         return f

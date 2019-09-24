@@ -41,6 +41,7 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 
@@ -272,8 +273,9 @@ class TypeBlocks(ContainerBase):
 
 
     @property
+    @doc_inject()
     def mloc(self) -> np.ndarray:
-        '''Return an immutable ndarray of NP array memory location integers.
+        '''{doc_array}
         '''
         a = np.fromiter(
                 (mloc(b) for b in self._blocks),

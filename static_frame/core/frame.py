@@ -1775,8 +1775,9 @@ class Frame(ContainerBase):
         return Series(self._blocks.dtypes, index=self._columns.values)
 
     @property
+    @doc_inject()
     def mloc(self) -> np.ndarray:
-        '''Return an immutable ndarray of NP array memory location integers.
+        '''{doc_array}
         '''
         return self._blocks.mloc
 
@@ -2629,7 +2630,8 @@ class Frame(ContainerBase):
                 index=index,
                 own_data=own_data,
                 own_columns=own_columns,
-                own_index=True
+                own_index=True,
+                name=self._name
                 )
 
     def set_index_hierarchy(self,

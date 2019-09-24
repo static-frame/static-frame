@@ -148,8 +148,9 @@ class IndexBase(ContainerBase):
     # common attributes from the numpy array
 
     @property
+    @doc_inject()
     def mloc(self) -> int:
-        '''Memory location
+        '''{doc_int}
         '''
         if self._recache:
             self._update_array_cache()
