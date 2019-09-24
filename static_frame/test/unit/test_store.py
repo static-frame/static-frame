@@ -18,7 +18,7 @@ from static_frame.core.exception import ErrorInitBus
 class TestUnit(TestCase):
 
 
-    def test_store_zip_tsv_a(self):
+    def test_store_zip_tsv_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -48,7 +48,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_store_zip_csv_a(self):
+    def test_store_zip_csv_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
