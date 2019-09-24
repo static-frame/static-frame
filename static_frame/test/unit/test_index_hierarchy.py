@@ -450,7 +450,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.iloc[1], ('A', 2))
         self.assertEqual(idx.loc[('B', 1)], ('B', 1))
-        self.assertEqual(idx[2], ('B', 1))
+        self.assertEqual(idx[2], ('B', 1)) #pylint: disable=E1136
         self.assertEqual(idx.loc[HLoc['B', 1]], ('B', 1))
 
 
@@ -471,7 +471,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_tree(tree)
 
         # this iterates over numpy arrays, which can be used with contains
-        self.assertEqual([k in ih for k in ih],
+        self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
                 [True, True, True, True, True, True, True, True]
                 )
 
@@ -501,7 +501,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchyGO.from_tree(tree)
 
         # NOTE: for now, __iter__ return arrays, so we have convert to a tuple
-        self.assertEqual([tuple(k) in ih.keys() for k in ih],
+        self.assertEqual([tuple(k) in ih.keys() for k in ih], #pylint: disable=E1133
                 [True, True, True, True, True, True, True, True]
                 )
 

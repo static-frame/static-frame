@@ -2,8 +2,8 @@ import unittest
 # from io import StringIO
 
 from static_frame.core.frame import Frame
-from static_frame.core.bus import Bus
-from static_frame.core.series import Series
+# from static_frame.core.bus import Bus
+# from static_frame.core.series import Series
 
 from static_frame.core.store import StoreZipTSV
 from static_frame.core.store import StoreZipCSV
@@ -12,7 +12,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 # from static_frame.test.test_case import skip_win
-from static_frame.core.exception import ErrorInitBus
+# from static_frame.core.exception import ErrorInitBus
 
 
 class TestUnit(TestCase):
