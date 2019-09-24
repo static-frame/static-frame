@@ -18,7 +18,7 @@ from static_frame.core.doc_str import DOC_TEMPLATE
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayConfigs
+# from static_frame.core.display import DisplayConfigs
 from static_frame.core.display import DisplayActive
 
 if tp.TYPE_CHECKING:
@@ -462,6 +462,11 @@ class ContainerBase(metaclass=ContainerMeta):
 
     #---------------------------------------------------------------------------
     # common display functions
+
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        raise NotImplementedError()
 
     def __repr__(self) -> str:
         return repr(self.display())
