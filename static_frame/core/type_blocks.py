@@ -272,7 +272,7 @@ class TypeBlocks(ContainerBase):
         return a
 
 
-    @property
+    @property # type: ignore
     @doc_inject()
     def mloc(self) -> np.ndarray:
         '''{doc_array}

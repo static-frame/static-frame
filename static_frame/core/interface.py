@@ -10,6 +10,8 @@ import numpy as np
 
 from static_frame.core.frame import Frame
 from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerMeta
+
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
@@ -241,7 +243,7 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
     @classmethod
-    def to_frame(cls, target: tp.Type[ContainerBase]) -> Frame:
+    def to_frame(cls, target: ContainerMeta) -> Frame:
         f = Frame.from_records(cls.interrogate(target), name=target.__name__)
         f = f.sort_values(('cls', 'group', 'name'))
         f = f.set_index('name', drop=True)

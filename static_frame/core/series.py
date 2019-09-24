@@ -918,8 +918,7 @@ class Series(ContainerBase):
     @property
     @doc_inject()
     def mloc(self) -> int:
-        '''
-        {doc_int}
+        '''{doc_int}
         '''
         return mloc(self.values)
 

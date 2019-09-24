@@ -147,7 +147,7 @@ class IndexBase(ContainerBase):
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
-    @property
+    @property # type: ignore
     @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}
