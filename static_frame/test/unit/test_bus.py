@@ -3,13 +3,15 @@ import unittest
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
+from static_frame.core.series import Series
+
 from static_frame.core.store import StoreZipTSV
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 # from static_frame.test.test_case import skip_win
-# from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitBus
 
 
 class TestUnit(TestCase):
@@ -25,7 +27,7 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='bar')
 
-        b1 = Bus.from_frames(f1, f2)
+        b1 = Bus.from_frames((f1, f2))
 
         self.assertEqual(b1.keys().values.tolist(),
                 ['foo', 'bar'])
@@ -46,6 +48,15 @@ class TestUnit(TestCase):
                 f3.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
             )
+
+    def test_bus_init_b(self) -> None:
+
+        with self.assertRaises(ErrorInitBus):
+            Bus(Series([1, 2, 3]))
+
+        with self.assertRaises(ErrorInitBus):
+            Bus(Series([3, 4], dtype=object))
+
 
 if __name__ == '__main__':
     unittest.main()

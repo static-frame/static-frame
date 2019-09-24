@@ -12,6 +12,9 @@ from static_frame.core.store import StoreZipTSV
 
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import DTYPE_OBJECT
+
+
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
@@ -36,8 +39,9 @@ class Bus:
         return Series(None, index=labels, dtype=object)
 
     @classmethod
-    def from_frames(cls, *frames) -> 'Bus':
-        # TODO: fail if a name is None
+    def from_frames(cls, frames: tp.Iterable[Frame]) -> 'Bus':
+        '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
+        '''
         series = Series.from_items(
                     ((f.name, f) for f in frames),
                     dtype=object
@@ -63,9 +67,13 @@ class Bus:
             store: tp.Optional[Store] = None
             ):
 
+        if series.dtype != DTYPE_OBJECT:
+            raise ErrorInitBus(
+                    f'Series passed to initializer must have dtype object, not {series.dtype}')
         for value in series.values:
             if not isinstance(value, Frame) and not value is None:
                 raise ErrorInitBus(f'supplied {value.__class__} is not a frame')
+        # labels need to be stings, do an explicit check
 
         self._series = series
         self._store = store
@@ -73,24 +81,23 @@ class Bus:
 
     def _key_to_labels(self,
             key: GetItemKeyType
-            ) -> tp.Iterator[int]:
+            ) -> tp.Iterable[tp.Hashable]:
         '''
         Given a get-item key, translate to an iterator of loc positions.
         '''
-        # key maybe a selection, slice, or Boolean
-        labels = self.index.values[self.index.loc_to_iloc(key)]
-        if isinstance(labels, str): # single values
-            return (labels,)
-        return labels
+        # key may be a selection, slice, or Boolean
+        iloc_key = self.index.loc_to_iloc(key)
+        if isinstance(iloc_key, int):
+            return (self.index.values[iloc_key],)
+        return self.index.values[iloc_key]
 
-    def __getattr__(self, name) -> tp.Any:
-        return getattr(self._series, name)
+    def _update_store_cache(self, key: GetItemKeyType) -> None:
 
-    def __getitem__(self, key: GetItemKeyType) -> Series:
-
+        # if any of the Series values are not loaded
         if self._series.isna().any():
             labels_to_load = set(self._key_to_labels(key))
 
+            # import ipdb; ipdb.set_trace()
             def gen():
                 for label, frame in self._series.items():
                     if frame is None and label in labels_to_load:
@@ -99,6 +106,13 @@ class Bus:
 
             self._series = Series.from_items(gen(), dtype=object)
 
+
+    def __getattr__(self, name) -> tp.Any:
+        return getattr(self._series, name)
+
+    #---------------------------------------------------------------------------
+    def __getitem__(self, key: GetItemKeyType) -> Series:
+        self._update_store_cache(key=key)
         return self._series.__getitem__(key)
 
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
