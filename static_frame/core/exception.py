@@ -20,6 +20,10 @@ class ErrorInitIndex(ErrorInit):
     '''Error in IndexBase (and derived Index) initialization.
     '''
 
+class ErrorInitIndexLevel(ErrorInit):
+    '''Error in IndexBase (and derived Index) initialization.
+    '''
+
 class ErrorInitBus(ErrorInit):
     '''Error in Bus initialization.
     '''

@@ -60,9 +60,11 @@ from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.index import Index
+
 from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_level import IndexLevel
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
@@ -164,9 +166,9 @@ class Series(ContainerBase):
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None
-            ):
+            ) -> 'Series':
         '''
-        Concatenate multiple Series into a new Series.
+        Concatenate multiple :obj:`Series` into a new :obj:`Series`.
 
         Args:
             containers: Iterable of ``Series`` from which values in the new ``Series`` are drawn.
@@ -192,6 +194,27 @@ class Series(ContainerBase):
             index = None
 
         return cls(values, index=index, name=name)
+
+    def from_concat_items(items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']]) -> 'Series':
+        '''
+        Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
+        '''
+        array_values = []
+        labels = []
+        indices = []
+
+        for label, series in items:
+            array_values.append(series.values)
+            labels.append(label)
+            indices.append(series.index)
+
+        # returns immutable arrays
+        values = concat_resolved(array_values)
+
+        # for index in indices:
+        #     IndexLevel(index=index, tar)
+
+
 
     @classmethod
     @doc_inject()

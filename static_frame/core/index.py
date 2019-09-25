@@ -210,14 +210,21 @@ class LocMap:
         return label_to_pos[key]
 
 
-def immutable_index_filter(
-        index: tp.Union['Index', 'IndexHierarchy']) -> tp.Union[
-        'Index', 'IndexHierarchy']:
+def immutable_index_filter(index: IndexBase) -> IndexBase:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
 
     if index.STATIC:
         return index
     return index._IMMUTABLE_CONSTRUCTOR(index)
+
+
+def mutable_immutable_index_filter(target_static: bool, index: IndexBase) -> IndexBase:
+    if target_static:
+        return immutable_index_filter(index)
+    # target mutable
+    if index.STATIC:
+        return index._MUTABLE_CONSTRUCTOR(index)
+    return index.__class__(index) # create new instance
 
 #-------------------------------------------------------------------------------
 

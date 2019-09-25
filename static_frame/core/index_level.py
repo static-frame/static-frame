@@ -15,10 +15,13 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.index import LocMap
+
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import GetItemKeyTypeCompound
 
+from static_frame.core.index import LocMap
+from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.exception import ErrorInitIndexLevel
 
 class IndexLevel:
     '''
@@ -33,25 +36,32 @@ class IndexLevel:
     targets: tp.Optional[ArrayGO]
     offset: int
 
-    _INDEX_CONSTRUCTOR = Index
+    STATIC: bool = True
+    # _INDEX_CONSTRUCTOR = Index
 
     def __init__(self,
             index: Index,
             targets: tp.Optional[ArrayGO] = None, # np.ndarray[IndexLevel]
-            offset: int = 0
+            offset: int = 0,
             ):
         '''
         Args:
             offset: integer offset for this level.
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
         '''
-        if self._INDEX_CONSTRUCTOR.STATIC != index.STATIC:
-            raise RuntimeError('incorrect static state in supplied index')
+        # if self.STATIC != index.STATIC:
+        #     raise ErrorInitIndexLevel('incorrect static state in supplied index')
+        if not isinstance(index, Index) or index.depth > 1:
+            # all derived Index should be depth == 1
+            raise ErrorInitIndexLevel('cannot create an IndexLevel from a higher-dimensional Index.')
 
-        if self._INDEX_CONSTRUCTOR.STATIC:
-            self.index = index # can reuse
-        else:
-            self.index = self._INDEX_CONSTRUCTOR(index)
+
+        self.index = mutable_immutable_index_filter(self.STATIC, index)
+        # if self._INDEX_CONSTRUCTOR.STATIC:
+        #     self.index = index # can reuse
+        # else:
+        #     # TODO: better to use index.__class__
+        #     self.index = self._INDEX_CONSTRUCTOR(index)
 
         self.targets = targets
         self.offset = offset
@@ -68,7 +78,8 @@ class IndexLevel:
         '''
         cls = cls if cls else self.__class__
 
-        index = cls._INDEX_CONSTRUCTOR(self.index)
+        index = mutable_immutable_index_filter(cls.STATIC, self.index)
+        # index = cls._INDEX_CONSTRUCTOR(self.index)
 
         if self.targets is not None:
             targets: tp.Optional[ArrayGO] = ArrayGO(
@@ -364,7 +375,8 @@ class IndexLevelGO(IndexLevel):
     targets: tp.Optional[np.ndarray]
     offset: int
 
-    _INDEX_CONSTRUCTOR = IndexGO
+    # _INDEX_CONSTRUCTOR = IndexGO
+    STATIC: bool = False
 
     #---------------------------------------------------------------------------
     # grow only mutation
