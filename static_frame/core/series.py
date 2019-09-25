@@ -195,7 +195,10 @@ class Series(ContainerBase):
 
         return cls(values, index=index, name=name)
 
-    def from_concat_items(items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']]) -> 'Series':
+    @classmethod
+    def from_concat_items(cls,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Series']]
+            ) -> 'Series':
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
         '''

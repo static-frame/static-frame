@@ -25,6 +25,8 @@ def index_from_optional_constructor(
     '''
     Given a value that is an IndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     '''
+    # NOTE: this might return an own_index flag to show callers when a new index has been created
+
     if explicit_constructor:
         return explicit_constructor(value)
 

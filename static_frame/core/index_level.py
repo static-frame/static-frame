@@ -43,11 +43,13 @@ class IndexLevel:
             index: Index,
             targets: tp.Optional[ArrayGO] = None, # np.ndarray[IndexLevel]
             offset: int = 0,
+            own_index: bool = False
             ):
         '''
         Args:
             offset: integer offset for this level.
             targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
+            own_index: Boolean to determine whether the Index can be owned by this IndexLevel; if False, a static index will be reused if appropriate for this IndexLevel class.
         '''
         # if self.STATIC != index.STATIC:
         #     raise ErrorInitIndexLevel('incorrect static state in supplied index')
@@ -55,8 +57,11 @@ class IndexLevel:
             # all derived Index should be depth == 1
             raise ErrorInitIndexLevel('cannot create an IndexLevel from a higher-dimensional Index.')
 
+        if own_index:
+            self.index = index
+        else:
+            self.index = mutable_immutable_index_filter(self.STATIC, index)
 
-        self.index = mutable_immutable_index_filter(self.STATIC, index)
         # if self._INDEX_CONSTRUCTOR.STATIC:
         #     self.index = index # can reuse
         # else:

@@ -29,6 +29,9 @@ class IndexBase(ContainerBase):
 
     __slots__ = () # defined in dervied classes
 
+    #---------------------------------------------------------------------------
+    # type defs
+
     _map: tp.Dict[tp.Hashable, tp.Any]
     _labels: np.ndarray
     _positions: np.ndarray
@@ -67,15 +70,16 @@ class IndexBase(ContainerBase):
     __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
     __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
 
-
-    STATIC: bool = True
-
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
 
     _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
+    #---------------------------------------------------------------------------
+    # class attrs
+
+    STATIC: bool = True
 
     def _ufunc_axis_skipna(self, *,
             axis: int,

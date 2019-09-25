@@ -891,7 +891,8 @@ class IndexHierarchy(IndexBase):
         levels = self._LEVEL_CONSTRUCTOR(
                 index=self._INDEX_CONSTRUCTOR((level,)),
                 targets=ArrayGO([levels_src], own_iterable=True),
-                offset=0
+                offset=0,
+                own_index=True
                 )
         return self.__class__(levels)
 
