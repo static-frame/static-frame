@@ -407,6 +407,7 @@ class IndexHierarchy(IndexBase):
         '''
 
         if issubclass(levels.__class__, IndexHierarchy):
+            # handle construction from another IndexHierarchy
             if self.STATIC and levels.STATIC:
                 self._levels = levels._levels
             else:
@@ -425,6 +426,7 @@ class IndexHierarchy(IndexBase):
                 name = levels.name
 
         elif isinstance(levels, IndexLevel):
+            # always assume ownership of passed in IndexLevel
             self._levels = levels
             # vlaues derived from levels are deferred
             self._labels = None

@@ -44,7 +44,7 @@ class ArrayGO:
                 raise NotImplementedError('only object arrays are supported')
             self._recache = False
             self._array_mutable = None
-        else:
+        else: # assume it is a list or listable
             self._array = None
             self._recache = True
             # always call list to get new object, or realize a generator

@@ -132,6 +132,8 @@ class InterfaceSummary:
             return ''
         doc = doc.replace('`', '')
         doc = doc.replace(':py:meth:', '')
+        doc = doc.replace(':obj:', '')
+
         # split and join removes contiguous whitespace
         msg = ' '.join(doc.split())
         if len(msg) <= cls.DOC_CHARS:

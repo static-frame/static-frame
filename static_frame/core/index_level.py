@@ -47,8 +47,9 @@ class IndexLevel:
             ):
         '''
         Args:
+            index: a 1D Index defining outer-most labels to integers in the `targets` ArrayGO.
             offset: integer offset for this level.
-            targets: np.ndarray of Indices; np.array supports fancy indexing for iloc compatible usage.
+            targets: None, or an ArrayGO of IndexLevek objects
             own_index: Boolean to determine whether the Index can be owned by this IndexLevel; if False, a static index will be reused if appropriate for this IndexLevel class.
         '''
         # if self.STATIC != index.STATIC:

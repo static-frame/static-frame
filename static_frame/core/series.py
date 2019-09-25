@@ -66,6 +66,8 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 
+from static_frame.core.array_go import ArrayGO
+
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 
@@ -204,18 +206,29 @@ class Series(ContainerBase):
         '''
         array_values = []
         labels = []
-        indices = []
+        index_levels = []
 
+        offset = 0
         for label, series in items:
             array_values.append(series.values)
             labels.append(label)
-            indices.append(series.index)
+            index_levels.append(IndexLevel(
+                    series.index,
+                    offset=offset,
+                    own_index=True)
+            )
+            offset += len(series)
 
         # returns immutable arrays
         values = concat_resolved(array_values)
 
-        # for index in indices:
-        #     IndexLevel(index=index, tar)
+        targets = ArrayGO(np.array(index_levels, dtype=object), own_iterable=True)
+        ih = IndexHierarchy(IndexLevel(
+                index=Index(labels),
+                targets=targets,
+                own_index=True
+                ))
+        return cls(values, index=ih, own_index=True)
 
 
 
