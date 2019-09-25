@@ -22,6 +22,8 @@ Series
 
 .. automethod:: static_frame.Series.from_concat
 
+.. automethod:: static_frame.Series.from_concat_items
+
 .. automethod:: static_frame.Series.from_pandas
 
 

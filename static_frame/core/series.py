@@ -203,6 +203,9 @@ class Series(ContainerBase):
             ) -> 'Series':
         '''
         Produce a :obj:`Series` with a hierarchical index from an iterable of pairs of labels, :obj:`Series`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Series`.
+
+        Args:
+            items: Iterable of pairs of label, :obj:`Series`
         '''
         array_values = []
         labels = []
