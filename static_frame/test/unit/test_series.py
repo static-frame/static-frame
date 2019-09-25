@@ -1882,7 +1882,7 @@ class TestUnit(TestCase):
             s1.loc_max(skipna=False)
 
 
-    def test_series_from_concat_items(self):
+    def test_series_from_concat_items(self) -> None:
 
         s1 = Series((2, 3, 0,), index=list('abc'))
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))

@@ -19,6 +19,8 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import GetItemKeyTypeCompound
 
+# from static_frame.core.index_base import IndexBase
+
 from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel

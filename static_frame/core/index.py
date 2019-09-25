@@ -210,7 +210,7 @@ class LocMap:
         return label_to_pos[key]
 
 
-def immutable_index_filter(index: IndexBase) -> IndexBase:
+def immutable_index_filter(index: I) -> I:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
 
     if index.STATIC:
@@ -218,7 +218,7 @@ def immutable_index_filter(index: IndexBase) -> IndexBase:
     return index._IMMUTABLE_CONSTRUCTOR(index)
 
 
-def mutable_immutable_index_filter(target_static: bool, index: IndexBase) -> IndexBase:
+def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
     if target_static:
         return immutable_index_filter(index)
     # target mutable
