@@ -149,30 +149,31 @@ class Bus(ContainerBase):
         if self._cache_not_complete():
 
             # iterate and filter
-            # labels_to_load = set(self._key_to_labels(key))
-            # # import ipdb; ipdb.set_trace()
-            # def gen():
-            #     for label, frame in self._series.items():
-            #         if frame is None and label in labels_to_load:
-            #             frame = self._store.read(label)
-            #         yield label, frame
-            # self._series = Series.from_items(gen(), dtype=object)
+            labels_to_load = set(self._key_to_labels(key))
+
+            array = np.empty(shape=len(self._index), dtype=object)
+            for idx, (label, frame) in enumerate(self._series.items()):
+                if frame is FrameDeferred and label in labels_to_load:
+                    frame = self._store.read(label)
+                array[idx] = frame
+            array.flags.writeable = False
+            self._series = Series(array, index=self._index, dtype=object)
 
 
-            # alt implementation using assignment; assume that this does not copy
-            index_assign = self._key_to_labels(key)
+            # # alt implementation using assignment; assume that this does not copy
+            # index_assign = self._key_to_labels(key)
 
-            # pre-allocate array and assign in a loop
-            values_assign = np.empty(len(index_assign), dtype=object)
-            for idx, label in enumerate(index_assign):
-                values_assign[idx] = self._store.read(label)
-            values_assign.flags.writeable = False
+            # # pre-allocate array and assign in a loop
+            # values_assign = np.empty(len(index_assign), dtype=object)
+            # for idx, label in enumerate(index_assign):
+            #     values_assign[idx] = self._store.read(label)
+            # values_assign.flags.writeable = False
 
-            insert = Series(values_assign,
-                    index=index_assign,
-                    )
+            # insert = Series(values_assign,
+            #         index=index_assign,
+            #         )
 
-            self._series = self._series.assign[index_assign](insert)
+            # self._series = self._series.assign[index_assign](insert)
 
 
     def _update_series_cache_all(self):
@@ -180,12 +181,22 @@ class Bus(ContainerBase):
         '''
         # import ipdb; ipdb.set_trace()
         if self._cache_not_complete():
-            def gen():
-                for label, frame in self._series.items():
-                    if frame is FrameDeferred:
-                        frame = self._store.read(label)
-                    yield label, frame
-            self._series = Series.from_items(gen(), dtype=object)
+
+            array = np.empty(shape=len(self._index), dtype=object)
+            for idx, (label, frame) in enumerate(self._series.items()):
+                if frame is FrameDeferred:
+                    frame = self._store.read(label)
+                array[idx] = frame
+            array.flags.writeable = False
+            self._series = Series(array, index=self._index, dtype=object)
+
+
+            # def gen():
+            #     for label, frame in self._series.items():
+            #         if frame is FrameDeferred:
+            #             frame = self._store.read(label)
+            #         yield label, frame
+            # self._series = Series.from_items(gen(), dtype=object)
 
 
     #---------------------------------------------------------------------------
