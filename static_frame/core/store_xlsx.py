@@ -46,11 +46,29 @@ class StoreXLSX(Store):
                             frame._blocks.axis_values(0)
                             ))
             else:
-                # avoid creating a per column by going to blocks
+                index_depth = 0
+                # avoid creating a Series per column by going to blocks
                 columns_iter = enumerate(frame._blocks.axis_values(0))
 
+            if include_columns:
+                columns_depth = frame._columns.depth
+                columns_values = frame._columns.values
+                # index_depth_shift = index_depth + 1
+            # else:
+            #     columns_depth = 0
+
             for col, values in columns_iter:
-                for row, v in enumerate(values):
+                if include_columns:
+                    # col integers will include index depth
+                    if col >= index_depth:
+                        if columns_depth == 1:
+                            ws.write(0, col, columns_values[col - index_depth])
+                        else:
+                            for i in range(columns_depth):
+                                # here, row selection is column count, column selection is depth
+                                ws.write(i, col, columns_values[col - index_depth, i])
+                for row, v in enumerate(values, columns_depth):
+                    # start afterc columns, if shwon
                     ws.write(row, col, v)
 
         wb.close()

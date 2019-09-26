@@ -20,28 +20,33 @@ class TestUnit(TestCase):
     def test_store_xlsx_write_a(self) -> None:
 
         f1 = Frame.from_dict(
-                dict(a=(1,2,-5,200), b=(3,4,-5,-3000)),
+                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
                 index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                name='foo')
+                name='f1')
         f2 = Frame.from_dict(
                 dict(a=(1,2,3), b=(4,5,6)),
                 index=('x', 'y', 'z'),
-                name='bar')
-        f3 = Frame.from_dict(
-                dict(a=(10,20), b=(50,60)),
+                name='f2')
+        f3 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
                 index=('p', 'q'),
-                name='baz')
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f3')
+        f4 = Frame.from_records(
+                ((10, 20, 50, False),
+                (50.0, 60.4, -50, True),
+                (234, 44452, 0, False),
+                (4, -4, 2000, True),
+                ),
+                index=IndexHierarchy.from_product(('top', 'bottom'), ('left', 'right')),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f4')
 
         with temp_file('.xlsx') as fp:
 
             st = StoreXLSX(fp)
-            st.write((f.name, f) for f in (f1, f2, f3))
+            st.write((f.name, f) for f in (f1, f2, f3, f4))
 
-
-            # import ipdb; ipdb.set_trace()
-
-
-            pass
 
 
 if __name__ == '__main__':
@@ -49,7 +54,3 @@ if __name__ == '__main__':
 
 
 
-# x x I I II II
-# x x a b a  b
-# 1 A 0 0 0  0
-# 1 B 0 0 0  0
