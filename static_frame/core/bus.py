@@ -27,11 +27,15 @@ from static_frame.core.display import DisplayHeader
 
 from static_frame.core.container import ContainerBase
 
+
 class FrameDefferedMeta(type):
     def __repr__(cls):
         return f'<{cls.__name__}>'
 
 class FrameDeferred(metaclass=FrameDefferedMeta):
+    '''
+    Token placeholder for :obj:`Frame` not yet loaded.
+    '''
     pass
 
 
@@ -245,8 +249,8 @@ class Bus(ContainerBase):
         Returns:
             :obj:`tp.Tuple[int]`
         '''
-        values = (f.shape if f is not FrameDeferred else FrameDeferred for f in self.values)
-        return Series(values, index=self.index, dtype=object)
+        values = (f.shape if f is not FrameDeferred else None for f in self.values)
+        return Series(values, index=self._index, dtype=object)
 
 
     @property
@@ -270,6 +274,20 @@ class Bus(ContainerBase):
         return f
 
 
+    @property
+    def mloc(self) -> Series:
+        '''Returns a Frame of dtypes for all loaded Frames.
+        '''
+        if self._cache_all_incomplete():
+            return Series(None, index=self._index)
+
+        def gen():
+            for label, f in zip(self._index, self.values):
+                if f is FrameDeferred:
+                    yield label, None
+                else:
+                    yield label, tuple(f.mloc)
+        return Series.from_items(gen())
 
 
     #---------------------------------------------------------------------------
