@@ -265,8 +265,10 @@ UFUNC_SHAPE_SKIPNA = {
             ),
         }
 
+
+#-------------------------------------------------------------------------------
 class ContainerMeta(type):
-    '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
+    '''Lowest level metaclass for providing interface property on class.
     '''
 
     @property
@@ -275,6 +277,11 @@ class ContainerMeta(type):
         '''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(cls)
+
+
+class ContainerOperandMeta(ContainerMeta):
+    '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
+    '''
 
     @staticmethod
     def create_ufunc_operator(func_name: str,
@@ -387,8 +394,49 @@ class ContainerMeta(type):
 
 
 class ContainerBase(metaclass=ContainerMeta):
-    '''Base class of all containers.'''
-    # Maybe in the future we could factor out a bit of the dynamic-ness of ContainerMeta.
+    '''
+    Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperaand; only Bus inherits from ContainerBase.
+    '''
+    #---------------------------------------------------------------------------
+    # common display functions
+
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        raise NotImplementedError()
+
+    def __repr__(self) -> str:
+        return repr(self.display())
+
+    def display_tall(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        config = config or DisplayActive.get()
+        args = config.to_dict()
+        args.update(dict(
+                display_rows=np.inf,
+                cell_max_width=np.inf,
+                cell_max_width_leftmost=np.inf,
+                ))
+        return self.display(config=DisplayConfig(**args))
+
+    def display_wide(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        config = config or DisplayActive.get()
+        args = config.to_dict()
+        args.update(dict(
+                display_columns=np.inf,
+                cell_max_width=np.inf,
+                cell_max_width_leftmost=np.inf,
+                ))
+        return self.display(config=DisplayConfig(**args))
+
+
+
+
+class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
+    '''Base class of all containers that support opperators.'''
 
     interface: 'Frame'
 
@@ -458,41 +506,5 @@ class ContainerBase(metaclass=ContainerMeta):
 
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
         raise NotImplementedError()
-
-
-    #---------------------------------------------------------------------------
-    # common display functions
-
-    def display(self,
-            config: tp.Optional[DisplayConfig] = None
-            ) -> Display:
-        raise NotImplementedError()
-
-    def __repr__(self) -> str:
-        return repr(self.display())
-
-    def display_tall(self,
-            config: tp.Optional[DisplayConfig] = None
-            ) -> Display:
-        config = config or DisplayActive.get()
-        args = config.to_dict()
-        args.update(dict(
-                display_rows=np.inf,
-                cell_max_width=np.inf,
-                cell_max_width_leftmost=np.inf,
-                ))
-        return self.display(config=DisplayConfig(**args))
-
-    def display_wide(self,
-            config: tp.Optional[DisplayConfig] = None
-            ) -> Display:
-        config = config or DisplayActive.get()
-        args = config.to_dict()
-        args.update(dict(
-                display_columns=np.inf,
-                cell_max_width=np.inf,
-                cell_max_width_leftmost=np.inf,
-                ))
-        return self.display(config=DisplayConfig(**args))
 
 

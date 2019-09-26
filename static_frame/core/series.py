@@ -47,7 +47,7 @@ from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmax_1d
 
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperand
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -88,7 +88,7 @@ RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitialize
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='container_init', class_name='Series')
-class Series(ContainerBase):
+class Series(ContainerOperand):
     '''
     A one-dimensional ordered, labelled collection, immutable and of fixed size.
 
@@ -1018,13 +1018,13 @@ class Series(ContainerBase):
     # extraction
 
     def _extract_iloc(self, key: GetItemKeyType) -> 'Series':
-        # iterable selection should be handled by NP (but maybe not if a tuple)
+        # iterable selection should be handled by NP
         values = self.values[key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
             return values
         return self.__class__(
-                self.values[key],
+                values,
                 index=self._index.iloc[key],
                 name=self._name)
 

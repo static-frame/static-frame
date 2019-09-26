@@ -16,7 +16,7 @@ import pytest  # type: ignore
 
 
 from static_frame import TypeBlocks
-from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperand
 from static_frame.core.index_base import IndexBase
 
 # for running with coverage
@@ -104,16 +104,16 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_containers() -> tp.Iterator[tp.Type[ContainerBase]]:
+    def get_containers() -> tp.Iterator[tp.Type[ContainerOperand]]:
 
-        def yield_sub(cls: tp.Type[ContainerBase]) -> tp.Iterator[tp.Type[ContainerBase]]:
+        def yield_sub(cls: tp.Type[ContainerOperand]) -> tp.Iterator[tp.Type[ContainerOperand]]:
             for cls in cls.__subclasses__():
                 if cls is not IndexBase:
                     yield cls
-                if issubclass(cls, ContainerBase):
+                if issubclass(cls, ContainerOperand):
                     yield from yield_sub(cls)
 
-        yield from yield_sub(ContainerBase)
+        yield from yield_sub(ContainerOperand)
 
     @staticmethod
     def get_test_db_a() -> sqlite3.Connection:

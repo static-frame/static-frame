@@ -56,7 +56,7 @@ from static_frame.core.util import argmax_2d
 
 
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 
@@ -104,7 +104,7 @@ def dtypes_mappable(dtypes: DtypesSpecifier):
 
 
 @doc_inject(selector='container_init', class_name='Frame')
-class Frame(ContainerBase):
+class Frame(ContainerOperand):
     '''
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 

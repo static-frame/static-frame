@@ -11,6 +11,8 @@ from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.util import PathSpecifier
 
+
+
 class Store:
     _EXT: str = '' # define in base class
 

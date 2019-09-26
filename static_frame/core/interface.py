@@ -11,8 +11,8 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 
-from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerMeta
+from static_frame.core.container import ContainerOperand
+from static_frame.core.container import ContainerOperandMeta
 
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.index_datetime import IndexDate
@@ -24,7 +24,7 @@ from static_frame.core.display import Display
 # from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
 
-# from static_frame.core.container import ContainerMeta
+# from static_frame.core.container import ContainerOperandMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
@@ -144,9 +144,9 @@ class InterfaceSummary:
 
 
     @classmethod
-    def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
+    def get_instance(cls, target: tp.Type[ContainerOperand]) -> ContainerOperand:
         '''
-        Get a sample instance from any ContainerBase; cache to only create one per life of process.
+        Get a sample instance from any ContainerOperand; cache to only create one per life of process.
         '''
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
@@ -164,7 +164,7 @@ class InterfaceSummary:
         return cls._CLS_TO_INSTANCE_CACHE[target]
 
     @classmethod
-    def name_obj_iter(cls, target: tp.Type[ContainerBase]):
+    def name_obj_iter(cls, target: tp.Type[ContainerOperand]):
         instance = cls.get_instance(target=target)
 
         for name_attr in dir(target.__class__): # get metaclass
@@ -179,7 +179,7 @@ class InterfaceSummary:
 
     @classmethod
     def interrogate(cls,
-            target: tp.Type[ContainerBase]
+            target: tp.Type[ContainerOperand]
             ) -> tp.Iterator[Interface]:
 
         for name_attr, obj, obj_cls in sorted(cls.name_obj_iter(target)):
@@ -250,7 +250,7 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
 
     @classmethod
-    def to_frame(cls, target: ContainerMeta) -> Frame:
+    def to_frame(cls, target: ContainerOperandMeta) -> Frame:
         f = Frame.from_records(cls.interrogate(target), name=target.__name__)
         f = f.sort_values(('cls', 'group', 'name'))
         f = f.set_index('name', drop=True)

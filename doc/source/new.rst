@@ -100,7 +100,7 @@ Fixed issue exposed in FrameGO.sort_values() due to NumPy integers being used fo
 
 ``Frame.sort_index()`` and ``Frame.sort_columns()`` now properly propagate ``IndexBase`` subclasses.
 
-All containers now derive from ``ContainerBase``, simplyfying inheritance and ``ContainerMeta`` application.
+All containers now derive from ``ContainerOperand``, simplyfying inheritance and ``ContainerOperandMeta`` application.
 
 ``Index`` objects based on ``np.datetime64`` now accept ``np.datetime64`` objects in ``loc`` expressions.
 

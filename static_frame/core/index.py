@@ -42,7 +42,7 @@ from static_frame.core.util import to_datetime64
 
 
 from static_frame.core.util import resolve_dtype
-from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import matmul
 
 
@@ -384,7 +384,7 @@ class Index(IndexBase):
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
                 labels = array2d_to_tuples(labels._labels)
-        elif isinstance(labels, ContainerBase):
+        elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values
             if array.ndim == 1:

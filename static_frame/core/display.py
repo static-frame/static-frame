@@ -660,7 +660,7 @@ class Display:
         # if config.type_delimiter_left or config.type_delimiter_right:
         left = config.type_delimiter_left or ''
         right = config.type_delimiter_right or ''
-        type_label = left + type_str + right
+        type_label = f'{left}{type_str}{right}'
 
         return type_label, type_category
 
@@ -710,11 +710,12 @@ class Display:
                 format_str = FORMAT_EMPTY
             return DisplayCell(format_str, type_str_raw)
 
-        # ContainerBase needs to import Display
-        from static_frame.core.container import ContainerBase
+        # ContainerOperand needs to import Display
+        from static_frame.core.container import ContainerOperand
 
         # handling for all other values that are stringable
-        if isinstance(value, ContainerBase):
+        if isinstance(value, ContainerOperand):
+            # NOTE: we do not use type delimieters as ths is an instance, not a class
             msg = value.__class__.__name__
         else:
             msg = str(value)

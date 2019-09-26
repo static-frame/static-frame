@@ -15,7 +15,7 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import Display
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.container import ContainerBase
+from static_frame.core.container import ContainerOperand
 
 
 
@@ -25,7 +25,7 @@ if tp.TYPE_CHECKING:
 
 I = tp.TypeVar('I', bound='IndexBase')
 
-class IndexBase(ContainerBase):
+class IndexBase(ContainerOperand):
 
     __slots__ = () # defined in dervied classes
 
@@ -241,7 +241,7 @@ class IndexBase(ContainerBase):
         elif isinstance(other, IndexBase):
             opperand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerBase):
+        elif isinstance(other, ContainerOperand):
             opperand = other.values
             assume_unique = False
         else:
