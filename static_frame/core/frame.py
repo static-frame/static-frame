@@ -839,7 +839,7 @@ class Frame(ContainerOperand):
             index_column: Optionally specify a column, by position or name, to become the index.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            header_is_columns: If True (by default), the header, the first line after the skip_header count of lines, is used to create the column labels.
+            header_is_columns: If True (by default), the first line after the skip_header count of lines is used to create the column labels.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -851,7 +851,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
         # TODO: add index_depth: int = 1
-        # TODO: add header_depth: int = 1; optionally replaces header_is_columns if 0 removes header
+        # TODO: add columns_depth: int = 1; optionally replaces header_is_columns if 0 removes header
         # NOTE: this (reasonably) asserts that hierarchical index/columns must be continguous an an input file
 
         delimiter_native = '\t'

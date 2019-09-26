@@ -574,7 +574,7 @@ class IndexHierarchy(IndexBase):
             sel = depth_level
         else:
             sel = list(depth_level)
-        # NOTE: thes values could be different if we were to concatenate the values from each of the composed arrays
+        # NOTE: thes values could have different types if we concatenate the values from each of the composed arrays, but outer layers would have to be multiplied
         return self.values[:, sel]
 
     @property

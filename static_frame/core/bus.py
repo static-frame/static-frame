@@ -153,31 +153,22 @@ class Bus(ContainerBase):
             return [self.index.values[key],] # needs to be a list for usage in loc assignment
         return self.index.values[key]
 
-    def _loc_to_labels(self,
-            key: GetItemKeyType
-            ) -> tp.Iterable[tp.Hashable]:
-        '''
-        Given a get-item key, translate to an iterator of loc positions.
-        '''
-        # key may be a selection, slice, or Boolean
-        iloc_key = self.index.loc_to_iloc(key)
-        if isinstance(iloc_key, int):
-            return [self.index.values[iloc_key],] # needs to be a list for usage in loc assignment
-        return self.index.values[iloc_key]
 
-
-    def _update_series_cache(self, labels: tp.Set[str]):
+    def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
         '''
-        Update in-place the Series cache.
+        Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
         '''
-        array = np.empty(shape=len(self._index), dtype=object)
-        for idx, (label, frame) in enumerate(self._series.items()):
-            if frame is FrameDeferred and label in labels:
-                frame = self._store.read(label)
-            array[idx] = frame
-        array.flags.writeable = False
+        if self._cache_not_complete():
+            labels = set(self._iloc_to_labels(key))
 
-        self._series = Series(array, index=self._index, dtype=object)
+            array = np.empty(shape=len(self._index), dtype=object)
+            for idx, (label, frame) in enumerate(self._series.items()):
+                if frame is FrameDeferred and label in labels:
+                    frame = self._store.read(label)
+                array[idx] = frame
+            array.flags.writeable = False
+
+            self._series = Series(array, index=self._index, dtype=object)
 
         # # alt implementation using assignment; assume that this does not copy
         # index_assign = self._loc_to_labels(key)
@@ -189,22 +180,6 @@ class Bus(ContainerBase):
         # insert = Series(values_assign, index=index_assign)
         # self._series = self._series.assign[index_assign](insert)
 
-
-    def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
-        '''
-        Update the Series cache with the key specified, where key can be any GetItemKeyType.
-        '''
-        if self._cache_not_complete():
-            labels = set(self._iloc_to_labels(key))
-            self._update_series_cache(labels=labels)
-
-    def _update_series_cache_loc(self, key: GetItemKeyType) -> None:
-        '''
-        Update the Series cache with the key specified, where key can be any GetItemKeyType.
-        '''
-        if self._cache_not_complete():
-            labels = set(self._loc_to_labels(key))
-            self._update_series_cache(labels=labels)
 
     def _update_series_cache_all(self):
         '''Load all Tables contained in this Bus.
@@ -239,9 +214,12 @@ class Bus(ContainerBase):
         return self.__class__(series=series, store=self._store)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
-        self._update_series_cache_loc(key=key)
 
         iloc_key = self._series._index.loc_to_iloc(key)
+
+        # NOTE: if we update before slicing, we change the local and the object handed back
+        self._update_series_cache_iloc(key=iloc_key)
+
         values = self._series.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element

@@ -1,6 +1,6 @@
 import unittest
 # from io import StringIO
-import numpy as np # type: ignore
+import numpy as np #type: ignore
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -195,7 +195,7 @@ class TestUnit(TestCase):
             self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
 
 
-
+    @skip_win # type: ignore
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -225,8 +225,6 @@ class TestUnit(TestCase):
                     b2.status.to_pairs(0),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
             )
 
-
-
     def test_bus_iloc_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -251,6 +249,35 @@ class TestUnit(TestCase):
                     b2.iloc[[0,2]].status['loaded'].to_pairs(),
                     (('f1', True), ('f3', True))
                     )
+
+
+
+    def test_bus_getitem_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+
+            self.assertEqual(b2['f2':].status['loaded'].to_pairs(), #type: ignore
+                    (('f2', True), ('f3', True))
+                    )
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

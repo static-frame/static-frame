@@ -74,7 +74,7 @@ class _StoreZipDelimited(_StoreZip):
 
 class StoreZipTSV(_StoreZipDelimited):
     '''
-    Store of TSV files contained within a ZIP file. Incremental loading is supported.
+    Store of TSV files contained within a ZIP file.
     '''
     _EXT_CONTAINED = '.txt'
     # by defualt this will write include the index and columns
@@ -83,7 +83,7 @@ class StoreZipTSV(_StoreZipDelimited):
 
 class StoreZipCSV(_StoreZipDelimited):
     '''
-    Store of CSV files contained within a ZIP file. Incremental loading is supported.
+    Store of CSV files contained within a ZIP file.
     '''
     _EXT_CONTAINED = '.csv'
     # NOTE: defaults may not result in intended index
@@ -108,3 +108,6 @@ class StoreZipPickle(_StoreZip):
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
+
+
+
