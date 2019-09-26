@@ -3,7 +3,7 @@ import typing as tp
 from itertools import chain
 
 from static_frame.core.frame import Frame
-from static_frame.core.exception import ErrorInitStore
+# from static_frame.core.exception import ErrorInitStore
 # from static_frame.core.util import PathSpecifier
 
 from static_frame.core.store import Store
