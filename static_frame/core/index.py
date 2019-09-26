@@ -32,7 +32,7 @@ from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift
 from static_frame.core.util import array2d_to_tuples
 
-from static_frame.core.util import DEFAULT_INT_DTYPE
+from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection1D
@@ -597,10 +597,10 @@ class Index(IndexBase):
             if isinstance(key, np.ndarray):
                 if key.dtype == bool:
                     return key
-                if key.dtype != DEFAULT_INT_DTYPE:
+                if key.dtype != DTYPE_INT_DEFAULT:
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
-                    return key.astype(DEFAULT_INT_DTYPE)
+                    return key.astype(DTYPE_INT_DEFAULT)
             return key
 
         if key_transform:

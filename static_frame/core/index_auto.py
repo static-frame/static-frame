@@ -11,7 +11,7 @@ from static_frame.core.index import IndexGO
 
 from static_frame.core.util import IndexConstructor
 
-from static_frame.core.util import DEFAULT_INT_DTYPE
+from static_frame.core.util import DTYPE_INT_DEFAULT
 
 
 IndexAutoInitializer = int
@@ -44,7 +44,7 @@ class IndexAutoFactory:
     #     return constructor(
     #             labels=labels,
     #             loc_is_iloc=True,
-    #             dtype=DEFAULT_INT_DTYPE
+    #             dtype=DTYPE_INT_DEFAULT
     #             )
 
     # @classmethod
@@ -76,7 +76,7 @@ class IndexAutoFactory:
             return constructor(
                     labels=labels,
                     loc_is_iloc=True,
-                    dtype=DEFAULT_INT_DTYPE
+                    dtype=DTYPE_INT_DEFAULT
                     )
 
 

@@ -45,14 +45,11 @@ if tp.TYPE_CHECKING:
 
 
 DEFAULT_SORT_KIND = 'mergesort'
-
-DEFAULT_INT_DTYPE = np.int64
-DEFAULT_FLOAT_DTYPE = np.float64
+DEFAULT_STABLE_SORT_KIND = 'mergesort'
 
 # ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
 # ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
-DEFAULT_STABLE_SORT_KIND = 'mergesort'
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_NAN_KIND = ('f', 'c') # kinds taht support NaN values
@@ -62,6 +59,8 @@ DTYPE_NAT_KIND = ('M', 'm')
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
+DTYPE_INT_DEFAULT = np.int64
+DTYPE_FLOAT_DEFAULT = np.float64
 
 NULL_SLICE = slice(None)
 UNIT_SLICE = slice(0, 1)
@@ -81,7 +80,7 @@ EMPTY_ARRAY.flags.writeable = False
 EMPTY_ARRAY_BOOL = np.array(EMPTY_TUPLE, dtype=DTYPE_BOOL)
 EMPTY_ARRAY_BOOL.flags.writeable = False
 
-EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DEFAULT_INT_DTYPE)
+EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 NAT = np.datetime64('nat')
@@ -615,13 +614,13 @@ def _argminmax_2d(
     isna_axis = isna.any(axis=axis)
     if isna_axis.all(): # nan in every axis remaining position
         if not skipna:
-            return np.full(isna_axis.shape, np.nan, dtype=DEFAULT_FLOAT_DTYPE)
+            return np.full(isna_axis.shape, np.nan, dtype=DTYPE_FLOAT_DEFAULT)
 
     if isna_axis.any():
         # always use skipna ufunc if any NaNs are present, as otherwise the wrong indices are returned when a nan is encountered (rather than a nan)
         post = ufunc_skipna(array, axis=axis)
         if not skipna:
-            post = post.astype(DEFAULT_FLOAT_DTYPE  )
+            post = post.astype(DTYPE_FLOAT_DEFAULT  )
             post[isna_axis] = np.nan
         return post
 

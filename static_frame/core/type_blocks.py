@@ -15,7 +15,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-# from static_frame.core.util import DEFAULT_INT_DTYPE
+# from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound

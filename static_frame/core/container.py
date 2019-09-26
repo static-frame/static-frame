@@ -13,7 +13,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DEFAULT_FLOAT_DTYPE
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.doc_str import DOC_TEMPLATE
 
 from static_frame.core.display import Display
@@ -214,27 +214,27 @@ UFUNC_AXIS_SKIPNA = {
         'mean': UfuncSkipnaAttrs(
             np.mean,
             np.nanmean,
-            DEFAULT_FLOAT_DTYPE, # np always returns float
+            DTYPE_FLOAT_DEFAULT, # np always returns float
             False,
             'Return the mean along the specified axis.'
             ),
         'median': UfuncSkipnaAttrs(
             np.median,
             np.nanmedian,
-            DEFAULT_FLOAT_DTYPE,
+            DTYPE_FLOAT_DEFAULT,
             False,
             'Return the median along the specified axis.'
             ),
         'std': UfuncSkipnaAttrs(
             np.std,
             np.nanstd,
-            DEFAULT_FLOAT_DTYPE,
+            DTYPE_FLOAT_DEFAULT,
             False,
             'Return the standard deviaton along the specified axis.'),
         'var': UfuncSkipnaAttrs(
             np.var,
             np.nanvar,
-            DEFAULT_FLOAT_DTYPE,
+            DTYPE_FLOAT_DEFAULT,
             False,
             'Return the variance along the specified axis.'
             ),

@@ -17,6 +17,10 @@ from static_frame.core.store import StoreZipPickle
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_BOOL
+# from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+
 from static_frame.core.util import PathSpecifier
 
 
@@ -253,23 +257,19 @@ class Bus(ContainerBase):
     # extended disciptors
 
     @property
-    def shapes(self) -> Series:
+    def mloc(self) -> Series:
+        '''Returns a Series of tuples of dtypes, one for each loaded Frame.
         '''
-        Return a tuple describing the shape of the underlying NumPy array.
+        if self._cache_all_incomplete():
+            return Series(None, index=self._series._index)
 
-        Returns:
-            :obj:`tp.Tuple[int]`
-        '''
-        values = (f.shape if f is not FrameDeferred else None for f in self.values)
-        return Series(values, index=self._index, dtype=object)
-
-
-    @property
-    def nbytes(self) -> int:
-        '''Returns total bytes of data currently loaded in the Bus.
-        '''
-        return sum(f.nbytes if f is not FrameDeferred else 0 for f in self.values)
-
+        def gen() -> tp.Iterator[tp.Tuple[str, tp.Optional[tp.Tuple[int, ...]]]]:
+            for label, f in zip(self._series._index, self._series.values):
+                if f is FrameDeferred:
+                    yield label, None
+                else:
+                    yield label, tuple(f.mloc)
+        return Series.from_items(gen())
 
     @property
     def dtypes(self) -> Frame:
@@ -279,26 +279,51 @@ class Bus(ContainerBase):
             return Frame(index=self._series.index)
 
         f = Frame.from_concat(
-                frames=(f.dtypes for f in self.values if f is not FrameDeferred),
+                frames=(f.dtypes for f in self._series.values if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._series.index, fill_value=None)
         return f
 
+    @property
+    def shapes(self) -> Series:
+        '''A :obj:`Series` describing the shape of each loaded :obj:`Frame`.
+
+        Returns:
+            :obj:`tp.Tuple[int]`
+        '''
+        values = (f.shape if f is not FrameDeferred else None for f in self._series.values)
+        return Series(values, index=self._series._index, dtype=object, name='shape')
+
 
     @property
-    def mloc(self) -> Series:
-        '''Returns a Frame of dtypes for all loaded Frames.
+    def nbytes(self) -> int:
+        '''Total bytes of data currently loaded in the Bus.
         '''
-        if self._cache_all_incomplete():
-            return Series(None, index=self._index)
+        return sum(f.nbytes if f is not FrameDeferred else 0 for f in self._series.values)
 
-        def gen():
-            for label, f in zip(self._index, self.values):
-                if f is FrameDeferred:
-                    yield label, None
-                else:
-                    yield label, tuple(f.mloc)
-        return Series.from_items(gen())
+    @property
+    def status(self) -> Frame:
+        '''
+        Return a
+        '''
+        def gen() -> Series:
+
+            yield Series((False if f is FrameDeferred else True for f in self._series.values),
+                    index=self._series._index,
+                    dtype=DTYPE_BOOL,
+                    name='loaded')
+
+            for attr, dtype, missing in (
+                    ('size', DTYPE_FLOAT_DEFAULT, np.nan),
+                    ('nbytes', DTYPE_FLOAT_DEFAULT, np.nan),
+                    ('shape', DTYPE_OBJECT, None)
+                    ):
+
+                values = (getattr(f, attr) if f is not FrameDeferred
+                        else missing for f in self._series.values)
+                yield Series(values, index=self._series._index, dtype=dtype, name=attr)
+
+        return Frame.from_concat(gen(), axis=1)
 
 
     #---------------------------------------------------------------------------

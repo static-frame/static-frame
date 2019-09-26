@@ -10,7 +10,7 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DEFAULT_FLOAT_DTYPE
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -2795,7 +2795,7 @@ class Frame(ContainerBase):
 
         # if this has NaN we cannot get a loc
         post = argmin_2d(self.values, skipna=skipna, axis=axis)
-        if post.dtype == DEFAULT_FLOAT_DTYPE:
+        if post.dtype == DTYPE_FLOAT_DEFAULT:
             raise RuntimeError('cannot produce loc representation from NaNs')
 
         # post has been made immutable so Series will own
@@ -2839,7 +2839,7 @@ class Frame(ContainerBase):
         '''
         # if this has NaN we cannot get a loc
         post = argmax_2d(self.values, skipna=skipna, axis=axis)
-        if post.dtype == DEFAULT_FLOAT_DTYPE:
+        if post.dtype == DTYPE_FLOAT_DEFAULT:
             raise RuntimeError('cannot produce loc representation from NaNs')
 
         if axis == 0:
