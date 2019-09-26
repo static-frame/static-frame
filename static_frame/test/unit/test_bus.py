@@ -12,6 +12,7 @@ from static_frame.core.store import StoreZipTSV
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import skip_win
 
 # from static_frame.test.test_case import skip_win
 from static_frame.core.exception import ErrorInitBus
@@ -94,7 +95,7 @@ class TestUnit(TestCase):
                     (('f1', None), ('f2', (3, 2)), ('f3', (2, 2 )))
                     )
 
-
+    @skip_win # type: ignore
     def test_bus_nbytes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -128,7 +129,7 @@ class TestUnit(TestCase):
             self.assertEqual(b2.nbytes, 112)
 
 
-
+    @skip_win # type: ignore
     def test_bus_dtypes_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
