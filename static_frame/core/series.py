@@ -1204,7 +1204,7 @@ class Series(ContainerBase):
         '''
         return self._index.__contains__(value)
 
-    def items(self) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
         return zip(self._index.values, self.values)

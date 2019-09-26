@@ -9,6 +9,8 @@ import typing as tp
 import numpy as np
 
 from static_frame.core.frame import Frame
+from static_frame.core.bus import Bus
+
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerMeta
 
@@ -149,6 +151,9 @@ class InterfaceSummary:
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
                 instance = target.from_blocks(np.array((0,)))
+            elif target is Bus:
+                f = Frame((0,), name='frame')
+                instance = target.from_frames((f,))
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif target in (IndexYearMonth, IndexYear, IndexDate):

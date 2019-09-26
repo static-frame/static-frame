@@ -142,6 +142,7 @@ class Frame(ContainerBase):
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             name: tp.Hashable = None,
+            fill_value: object = np.nan,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
@@ -198,7 +199,7 @@ class Frame(ContainerBase):
             def blocks():
                 for frame in frames:
                     if len(frame.index) != len(index) or (frame.index != index).any():
-                        frame = frame.reindex(index=index)
+                        frame = frame.reindex(index=index, fill_value=fill_value)
                     for block in frame._blocks._blocks:
                         yield block
 
@@ -233,7 +234,7 @@ class Frame(ContainerBase):
 
                 for frame in frames:
                     if len(frame.columns) != len(columns) or (frame.columns != columns).any():
-                        frame = frame.reindex(columns=columns)
+                        frame = frame.reindex(columns=columns, fill_value=fill_value)
                     aligned_frames.append(frame)
                     # column size is all the same by this point
                     if previous_frame is not None:
@@ -1776,7 +1777,10 @@ class Frame(ContainerBase):
         Returns:
             :py:class:`static_frame.Series`
         '''
-        return Series(self._blocks.dtypes, index=self._columns.values)
+        return Series(self._blocks.dtypes,
+                index=self._columns.values,
+                name=self._name
+                )
 
     @property
     @doc_inject()

@@ -27,3 +27,7 @@ class ErrorInitIndexLevel(ErrorInit):
 class ErrorInitBus(ErrorInit):
     '''Error in Bus initialization.
     '''
+
+class ErrorInitStore(ErrorInit):
+    '''Error in Store initialization.
+    '''

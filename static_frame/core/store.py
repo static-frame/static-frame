@@ -2,28 +2,39 @@
 
 import typing as tp
 import zipfile
+from pathlib import Path
+import pickle
+import os
 from io import StringIO
 
 from static_frame.core.frame import Frame
-
-
-
+from static_frame.core.exception import ErrorInitStore
+from static_frame.core.util import PathSpecifier
 
 class Store:
+    _EXT: str = '' # define in base class
 
     __slots__ = (
             '_fp',
             )
 
-    def __init__(self, fp: str):
-        self._fp = fp
+    def __init__(self, fp: PathSpecifier):
+        if isinstance(fp, Path):
+            fp = str(fp)
+
+        if not os.path.splitext(fp)[1] == self._EXT:
+            raise ErrorInitStore(
+                    f'file path {fp} does not match required extensions: {self._EXT}')
+
+        self._fp: str = fp
 
 
 #-------------------------------------------------------------------------------
 
 class _StoreZip(Store):
 
-    _EXT_CONTAINED: str = '' # extension of contained files
+    _EXT: str = '.zip' # define in base class
+    _EXT_CONTAINED: str = ''
 
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         with zipfile.ZipFile(self._fp) as zf:
@@ -42,7 +53,8 @@ class _StoreZipDelimited(_StoreZip):
             # labels may not be present
             src.write(zf.read(label + self._EXT_CONTAINED).decode())
             src.seek(0)
-            # NOTE: how to handle index hiearchy?
+            # call from class to explicitly pass self as frame
+            # NOTE: assuming single index, single columns; this will not be valid for IndexHierarchy
             return self.__class__._CONSTRUCTOR(src, index_column=0)
 
     def write(self,
@@ -62,8 +74,8 @@ class StoreZipTSV(_StoreZipDelimited):
     '''
     Store of TSV files contained within a ZIP file. Incremental loading is supported.
     '''
-
     _EXT_CONTAINED = '.txt'
+    # by defualt this will write include the index and columns
     _EXPORTER = Frame.to_tsv
     _CONSTRUCTOR = Frame.from_tsv
 
@@ -71,8 +83,8 @@ class StoreZipCSV(_StoreZipDelimited):
     '''
     Store of CSV files contained within a ZIP file. Incremental loading is supported.
     '''
-
     _EXT_CONTAINED = '.csv'
+    # NOTE: defaults may not result in intended index
     _EXPORTER = Frame.to_csv
     _CONSTRUCTOR = Frame.from_csv
 
@@ -81,11 +93,11 @@ class StoreZipPickle(_StoreZip):
     '''A zip of pickles, permitting incremental loading of Frames.
     '''
 
-    _EXT_CONTAINED = '.p'
+    _EXT_CONTAINED = '.pickle'
 
     def read(self, label: str) -> Frame:
         with zipfile.ZipFile(self._fp) as zf:
-            pass
+            return pickle.loads(zf.read(label + self._EXT_CONTAINED))
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]]
@@ -93,4 +105,4 @@ class StoreZipPickle(_StoreZip):
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
-                pass
+                zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))

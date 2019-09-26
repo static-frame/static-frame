@@ -12,6 +12,7 @@ from io import StringIO
 import datetime
 from urllib import request
 import tempfile
+from pathlib import Path
 
 import numpy as np  # type: ignore
 
@@ -111,6 +112,7 @@ BOOL_TYPES = (bool, np.bool_)
 
 DICTLIKE_TYPES = (abc.Set, dict)
 
+
 # iterables that cannot be used in NP array constructors; asumes that dictlike types have already been identified
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
 NON_STR_TYPES = {int, float, bool}
@@ -175,6 +177,7 @@ IndexConstructor = tp.Callable[..., 'IndexBase']
 
 IndexConstructors = tp.Sequence[IndexConstructor]
 
+PathSpecifier = tp.Union[str, Path]
 
 # take integers for size; otherwise, extract size from any other index initializer
 
@@ -977,6 +980,7 @@ def isna_array(array: np.ndarray) -> np.ndarray:
     elif kind != 'O':
         return np.full(array.shape, False, dtype=bool)
     # only check for None if we have an object type
+    # NOTE: this will not work for Frames contained within a Series
     return np.not_equal(array, array) | np.equal(array, None)
 
     # try: # this will only work for arrays that do not have strings
