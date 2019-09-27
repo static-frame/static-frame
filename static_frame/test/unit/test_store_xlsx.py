@@ -47,6 +47,9 @@ class TestUnit(TestCase):
             st = StoreXLSX(fp)
             st.write((f.name, f) for f in (f1, f2, f3, f4))
 
+            # import ipdb; ipdb.set_trace()
+
+            pass
 
 
 if __name__ == '__main__':

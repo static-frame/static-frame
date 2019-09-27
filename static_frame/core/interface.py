@@ -11,6 +11,8 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 
+from static_frame.core.util import _DT64_S
+
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerMeta
 
@@ -157,7 +159,7 @@ class InterfaceSummary:
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif target in (IndexYearMonth, IndexYear, IndexDate):
-                instance = target(np.array((0,), dtype='datetime64[s]'))
+                instance = target(np.array((0,), dtype=_DT64_S))
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance

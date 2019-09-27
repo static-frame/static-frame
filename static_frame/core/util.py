@@ -52,10 +52,11 @@ DEFAULT_STABLE_SORT_KIND = 'mergesort'
 
 DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
 DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
-DTYPE_NAN_KIND = ('f', 'c') # kinds taht support NaN values
+DTYPE_NAN_KIND = ('f', 'c') # kinds that support NaN values
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_NAT_KIND = ('M', 'm')
+# DTYPE_BOOL_KIND = ('b',)
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -108,7 +109,6 @@ COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all n
 INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
 
 BOOL_TYPES = (bool, np.bool_)
-
 DICTLIKE_TYPES = (abc.Set, dict)
 
 
