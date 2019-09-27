@@ -222,6 +222,40 @@ class TestUnit(TestCase):
 
 
 
+    def test_index_level_label_widths_a(self) -> None:
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1,)), ('B', (1,))
+                        ])
+                ),
+                ('III', OD([
+                        ('A', (1, 2, 3)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels = IndexHierarchy._tree_to_index_level(tree)
+
+        post0 = tuple(levels.label_widths_at_depth(0))
+        post1 = tuple(levels.label_widths_at_depth(1))
+        post2 = tuple(levels.label_widths_at_depth(2))
+
+        self.assertEqual(post0, (('I', 7), ('II', 2), ('III', 4)))
+
+        self.assertEqual(post1,
+            (('A', 2), ('B', 3), ('C', 2), ('A', 1), ('B', 1), ('A', 3), ('B', 1))
+        )
+
+        self.assertEqual(post2,
+            (((1, 1), (2, 1), (1, 1), (2, 1), (3, 1), (2, 1), (3, 1), (1, 1), (1, 1), (1, 1), (2, 1), (3, 1), (1, 1)))
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
 

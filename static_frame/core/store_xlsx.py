@@ -8,7 +8,7 @@ import numpy as np
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_DATETIME_KIND
+# from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import _DT64_S
 

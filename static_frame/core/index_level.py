@@ -2,6 +2,7 @@
 
 import typing as tp
 from collections import deque
+from itertools import zip_longest
 
 import numpy as np  # type: ignore
 
@@ -51,7 +52,7 @@ class IndexLevel:
         Args:
             index: a 1D Index defining outer-most labels to integers in the `targets` ArrayGO.
             offset: integer offset for this level.
-            targets: None, or an ArrayGO of IndexLevek objects
+            targets: None, or an ArrayGO of IndexLevel objects
             own_index: Boolean to determine whether the Index can be owned by this IndexLevel; if False, a static index will be reused if appropriate for this IndexLevel class.
         '''
         # if self.STATIC != index.STATIC:
@@ -64,12 +65,6 @@ class IndexLevel:
             self.index = index
         else:
             self.index = mutable_immutable_index_filter(self.STATIC, index)
-
-        # if self._INDEX_CONSTRUCTOR.STATIC:
-        #     self.index = index # can reuse
-        # else:
-        #     # TODO: better to use index.__class__
-        #     self.index = self._INDEX_CONSTRUCTOR(index)
 
         self.targets = targets
         self.offset = offset
@@ -115,6 +110,48 @@ class IndexLevel:
             else:
                 levels.extend(level.targets)
         return count
+
+    def label_widths_at_depth(self,
+            depth_level: int = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        '''
+        Generator of pairs of label, width, for all labels found at a specified level.
+        '''
+        # givne a: 1, 2, b: 1, 2, return ('a', 2), ('b', 2)
+
+        def get_widths(index: Index,
+                targets: tp.Optional[ArrayGO]
+                ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            '''
+            Args:
+                parent_width: the total length of the containing span.
+            '''
+            if targets is None:
+                for label in index:
+                    yield (label, 1)
+            else: # observe the offsets of the next
+                transversed = 0
+                for i, (label, level_next) in enumerate(
+                        zip_longest(index, targets[1:], fillvalue=None)
+                        ):
+                    if level_next is not None:
+                        yield label, level_next.offset - transversed
+                        transversed += level_next.offset
+                    else:
+                        # we cannot use offset; must to more expensive length of component Levels
+                        yield label, len(targets[i])
+
+        levels = deque(((self, 0),))
+        while levels:
+            level, depth = levels.popleft()
+            if depth == depth_level:
+                yield from get_widths(level.index, level.targets)
+                continue # do not need to descend
+            if level.targets is not None: # terminus
+                next_depth = depth + 1
+                levels.extend([(lvl, next_depth) for lvl in level.targets])
+
+
 
     def depths(self) -> tp.Iterator[int]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
@@ -347,11 +384,14 @@ class IndexLevel:
         labels.flags.writeable = False
         return labels
 
+
     # def values_at_depth(self,
     #         depth_level: int
     #         ) -> np.ndarray:
     #     # NOTE: not yet accepting a depth_level as an iterable of ints
     #     # NOTE: this only concatenates found values in stored indicies, meaning that the length of the array will differ based on the depth level
+          # NOTE: use label_widths_at_depth() to build arrays not at max depth
+
 
     #     if depth_level == 0:
     #         return self.index.values
