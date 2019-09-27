@@ -55,6 +55,14 @@ class DOC_TEMPLATE:
         skipna: Skip missing (NaN) values, defaulting to True.
     '''
 
+    label_widths_at_depth = '''
+    A generator of pairs, where each pair is the label and the count of that label found at the depth specified by  ``depth_level``.
+
+    Args:
+        depth_level: a depth level, starting from zero.
+    '''
+
+
     #---------------------------------------------------------------------------
     # dict entries
     selector = dict(
@@ -152,6 +160,9 @@ class DOC_TEMPLATE:
             doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
             doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
     )
+
+
+
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,

@@ -1,6 +1,7 @@
 import typing as tp
 from collections.abc import KeysView
 import operator as operator_mod
+from itertools import zip_longest
 
 from functools import reduce
 
@@ -8,6 +9,7 @@ import numpy as np
 
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
@@ -230,7 +232,7 @@ def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
 
 @doc_inject(selector='index_init')
 class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`.
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`. Base class of all 1D indices.
 
     {args}
     '''
@@ -535,6 +537,16 @@ class Index(IndexBase):
         if depth_level != 0:
             raise RuntimeError('invalid depth_level', depth_level)
         return self.values
+
+    @doc_inject()
+    def label_widths_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        '''{}'''
+        if depth_level != 0:
+            raise RuntimeError('invalid depth_level', depth_level)
+        yield from zip_longest(self.values, EMPTY_TUPLE, fillvalue=1)
+
 
     #---------------------------------------------------------------------------
 

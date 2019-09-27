@@ -47,7 +47,7 @@ from static_frame.core.index_level import IndexLevel
 
 from static_frame.core.index_level import IndexLevelGO
 from static_frame.core.exception import ErrorInitIndex
-
+from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
 
@@ -568,7 +568,10 @@ class IndexHierarchy(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> np.ndarray:
         '''
-        Return an NP array for the `depth_level` specified.
+        Return an NP array for the ``depth_level`` specified.
+
+        Args:
+            depth_level: a single depth level, or iterable depth of depth levels.
         '''
         if isinstance(depth_level, int):
             sel = depth_level
@@ -576,6 +579,22 @@ class IndexHierarchy(IndexBase):
             sel = list(depth_level)
         # NOTE: thes values could have different types if we concatenate the values from each of the composed arrays, but outer layers would have to be multiplied
         return self.values[:, sel]
+
+
+    @doc_inject()
+    def label_widths_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        '''{}'''
+        if isinstance(depth_level, int):
+            sel = depth_level
+        else:
+            raise NotImplementedError('selection from iterables is not implemented')
+            # sel = list(depth_level)
+
+        yield from self._levels.label_widths_at_depth(depth_level=depth_level)
+
+
 
     @property
     def dtypes(self) -> 'Series':

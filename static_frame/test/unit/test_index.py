@@ -646,6 +646,15 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_label_widths_at_depth(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(tuple(idx1.label_widths_at_depth(0)),
+            (('a', 1), ('b', 1), ('c', 1), ('d', 1), ('e', 1))
+            )
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

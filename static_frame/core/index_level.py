@@ -117,15 +117,11 @@ class IndexLevel:
         '''
         Generator of pairs of label, width, for all labels found at a specified level.
         '''
-        # givne a: 1, 2, b: 1, 2, return ('a', 2), ('b', 2)
+        # given a: 1, 2, b: 1, 2, return ('a', 2), ('b', 2)
 
         def get_widths(index: Index,
                 targets: tp.Optional[ArrayGO]
                 ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
-            '''
-            Args:
-                parent_width: the total length of the containing span.
-            '''
             if targets is None:
                 for label in index:
                     yield (label, 1)

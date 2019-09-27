@@ -222,7 +222,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_index_level_label_widths_a(self) -> None:
+    def test_index_level_label_widths_at_depth_a(self) -> None:
         OD = OrderedDict
         tree = OD([
                 ('I', OD([

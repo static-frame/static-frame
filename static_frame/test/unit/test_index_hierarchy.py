@@ -1219,7 +1219,23 @@ class TestUnit(TestCase):
 
 
 
+    def test_index_hierarchy_label_widths_at_depth(self) -> None:
+        idx1 = Index(('A', 'B'), name='a')
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08', name='b')
+        idx3 = Index((1, 2), name='c')
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
 
+        self.assertEqual(tuple(hidx.label_widths_at_depth(0)),
+                (('A', 8), ('B', 8))
+                )
+
+        self.assertEqual(tuple(hidx.label_widths_at_depth(1)),
+                ((np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 0), (np.datetime64('2019-01-08'), 2), (np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 0), (np.datetime64('2019-01-08'), 2))
+                )
+
+        self.assertEqual(tuple(hidx.label_widths_at_depth(2)),
+                ((1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1), (1, 1), (2, 1))
+                )
 
 
 
