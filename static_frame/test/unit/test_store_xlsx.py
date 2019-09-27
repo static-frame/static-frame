@@ -46,14 +46,23 @@ class TestUnit(TestCase):
                 columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
                 name='f4')
 
+        frames = (f1, f2, f3, f4)
+
         with temp_file('.xlsx') as fp:
 
-            st = StoreXLSX(fp)
-            st.write((f.name, f) for f in (f1, f2, f3, f4))
+            st1 = StoreXLSX(fp)
+            st1.write((f.name, f) for f in frames)
 
             # import ipdb; ipdb.set_trace()
+            sheet_names = st1.labels() # this will read from file, not in memory
 
-            pass
+            f1_loaded = st1.read('f1',
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth)
+
+
+            self.assertEqual(tuple(f.name for f in frames), sheet_names)
+
 
 
 if __name__ == '__main__':

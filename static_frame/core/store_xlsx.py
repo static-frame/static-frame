@@ -179,6 +179,57 @@ class StoreXLSX(Store):
         wb.close()
 
 
+    def read(self,
+            label: str,
+            *,
+            index_depth: int=1,
+            columns_depth: int=1,
+            ) -> Frame:
+
+        import openpyxl # type: ignore
+        # from openpyxl.utils.cell import coordinate_from_string
+        # from openpyxl.utils.cell import column_index_from_string
+
+        wb = openpyxl.load_workbook(filename=self._fp, read_only=True)
+        ws = wb[label]
+
+        if ws.max_column <= 1 or ws.max_row <= 1:
+            # https://openpyxl.readthedocs.io/en/stable/optimized.html
+            # says that some clients might not repare correct dimensions; not sure what conditions are best to show this
+            ws.calculate_dimension()
+
+        # can iter a column, but produces a tuple for each row; probably not efficient
+        # [x for x in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=1)]
+        coord_index = dict(
+                min_row=columns_depth + 1,
+                max_row=ws.max_row,
+                min_col=1,
+                max_col=index_depth
+                )
+        coord_columns = dict(
+                min_row=1,
+                max_row=columns_depth,
+                min_col=index_depth + 1,
+                max_col=ws.max_column
+                )
+        coord_data = dict(
+                min_row=columns_depth + 1,
+                max_row=ws.max_row,
+                min_col=index_depth + 1,
+                max_col=ws.max_column
+                )
+
+        data_rows = tuple(tuple(cell.value for cell in row) for row in ws.iter_rows(**coord_data))
+        # import ipdb; ipdb.set_trace()
+
+    def labels(self) -> tp.Iterator[str]:
+
+        import openpyxl # type: ignore
+
+        wb = openpyxl.load_workbook(filename=self._fp, read_only=True)
+        return tuple(wb.get_sheet_names()) # comes as a list
+
+
 # p q I I II II
 # r s A B A  B
 # 1 A 0 0 0  0
