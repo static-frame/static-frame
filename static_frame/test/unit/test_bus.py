@@ -246,7 +246,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp)
 
             self.assertEqual(
-                    b2.iloc[[0,2]].status['loaded'].to_pairs(),
+                    b2.iloc[[0,2]].status['loaded'].to_pairs(), # type: ignore
                     (('f1', True), ('f3', True))
                     )
 

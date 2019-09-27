@@ -1,6 +1,7 @@
 import typing as tp
 
-import numpy as np
+import numpy as np # type: ignore
+
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import DEFAULT_SORT_KIND

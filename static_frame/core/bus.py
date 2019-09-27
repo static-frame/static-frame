@@ -34,9 +34,10 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.container import ContainerBase
 
+from static_frame.core.selector_node import TContainer
 
 class FrameDefferedMeta(type):
-    def __repr__(cls):
+    def __repr__(cls) -> str:
         return f'<{cls.__name__}>'
 
 class FrameDeferred(metaclass=FrameDefferedMeta):
@@ -54,11 +55,11 @@ class Bus(ContainerBase):
         )
 
     _series: Series
-    _store: Store
+    _store: tp.Optional[Store]
 
 
     @staticmethod
-    def _empty_series(labels: tp.Iterable[str]):
+    def _empty_series(labels: tp.Iterable[str]) -> Series:
         # make an object dtype
         return Series(FrameDeferred, index=labels, dtype=object)
 
@@ -76,17 +77,17 @@ class Bus(ContainerBase):
     # constructors by data format
 
     @classmethod
-    def from_zip_tsv(cls, fp: PathSpecifier):
+    def from_zip_tsv(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipTSV(fp)
         return cls(cls._empty_series(store.labels()), store=store)
 
     @classmethod
-    def from_zip_csv(cls, fp: PathSpecifier):
+    def from_zip_csv(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipCSV(fp)
         return cls(cls._empty_series(store.labels()), store=store)
 
     @classmethod
-    def from_zip_pickle(cls, fp: PathSpecifier):
+    def from_zip_pickle(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipPickle(fp)
         return cls(cls._empty_series(store.labels()), store=store)
 
@@ -115,7 +116,7 @@ class Bus(ContainerBase):
     #---------------------------------------------------------------------------
     # delegation
 
-    def __getattr__(self, name) -> tp.Any:
+    def __getattr__(self, name: str) -> tp.Any:
         if name == 'interface':
             return getattr(self.__class__, 'interface')
 
@@ -128,6 +129,7 @@ class Bus(ContainerBase):
     #---------------------------------------------------------------------------
     # cache management
 
+    # TODO: could maintain a Boolean array equal in size to _series, and update as loaded so as to not do so many iterations
 
     def _cache_not_complete(self) -> bool:
         # return (self._series == FrameDeferred).any()
@@ -145,7 +147,7 @@ class Bus(ContainerBase):
 
     def _iloc_to_labels(self,
             key: GetItemKeyType
-            ) -> tp.Iterable[tp.Hashable]:
+            ) -> np.ndarray:
         '''
         Given a get-item key, translate to an iterator of loc positions.
         '''
@@ -159,6 +161,9 @@ class Bus(ContainerBase):
         Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
         '''
         if self._cache_not_complete():
+            if self._store is None:
+                raise RuntimeError('no store defined')
+
             labels = set(self._iloc_to_labels(key))
 
             array = np.empty(shape=len(self._index), dtype=object)
@@ -180,12 +185,12 @@ class Bus(ContainerBase):
         # insert = Series(values_assign, index=index_assign)
         # self._series = self._series.assign[index_assign](insert)
 
-
-    def _update_series_cache_all(self):
+    def _update_series_cache_all(self) -> None:
         '''Load all Tables contained in this Bus.
         '''
-        # import ipdb; ipdb.set_trace()
         if self._cache_not_complete():
+            if self._store is None:
+                raise RuntimeError('no store defined')
 
             array = np.empty(shape=len(self._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
@@ -209,13 +214,13 @@ class Bus(ContainerBase):
             return values
         series = Series(
                 values,
-                index=self._series._index.iloc[key],
+                index=self._series._index.iloc[key], # type: ignore
                 name=self._name)
         return self.__class__(series=series, store=self._store)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
-        iloc_key = self._series._index.loc_to_iloc(key)
+        iloc_key = self._series._index.loc_to_iloc(key) #type: ignore
 
         # NOTE: if we update before slicing, we change the local and the object handed back
         self._update_series_cache_iloc(key=iloc_key)
@@ -231,7 +236,7 @@ class Bus(ContainerBase):
                 return values
 
         series = Series(values,
-                index=self._series._index.iloc[iloc_key],
+                index=self._series._index.iloc[iloc_key], #type: ignore
                 own_index=True,
                 name=self._name)
         return self.__class__(series=series, store=self._store)
@@ -252,17 +257,17 @@ class Bus(ContainerBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem:
+    def loc(self) -> InterfaceGetItem[TContainer]:
         return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem:
+    def iloc(self) -> InterfaceGetItem[TContainer]:
         return InterfaceGetItem(self._extract_iloc)
 
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        return reversed(self._series._index)
+        return reversed(self._series._index) # type: ignore
 
     def __len__(self) -> int:
         return self._series.__len__()
@@ -318,12 +323,13 @@ class Bus(ContainerBase):
         if self._cache_all_incomplete():
             return Series(None, index=self._series._index)
 
-        def gen() -> tp.Iterator[tp.Tuple[str, tp.Optional[tp.Tuple[int, ...]]]]:
-            for label, f in zip(self._series._index, self._series.values):
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
+            for label, f in zip(self._series._index, self._series.values): # type: ignore
                 if f is FrameDeferred:
                     yield label, None
                 else:
                     yield label, tuple(f.mloc)
+
         return Series.from_items(gen())
 
     @property
@@ -337,7 +343,7 @@ class Bus(ContainerBase):
                 frames=(f.dtypes for f in self._series.values if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._series.index, fill_value=None)
-        return f
+        return tp.cast(Frame, f)
 
     @property
     def shapes(self) -> Series:
@@ -361,7 +367,7 @@ class Bus(ContainerBase):
         '''
         Return a
         '''
-        def gen() -> Series:
+        def gen() -> tp.Iterator[Series]:
 
             yield Series((False if f is FrameDeferred else True for f in self._series.values),
                     index=self._series._index,
@@ -378,18 +384,18 @@ class Bus(ContainerBase):
                         else missing for f in self._series.values)
                 yield Series(values, index=self._series._index, dtype=dtype, name=attr)
 
-        return Frame.from_concat(gen(), axis=1)
+        return tp.cast(Frame, Frame.from_concat(gen(), axis=1))
 
 
     #---------------------------------------------------------------------------
-    def to_zip_tsv(self, fp) -> None:
+    def to_zip_tsv(self, fp: PathSpecifier) -> None:
         store = StoreZipTSV(fp)
         store.write(self.items())
 
-    def to_zip_csv(self, fp) -> None:
+    def to_zip_csv(self, fp: PathSpecifier) -> None:
         store = StoreZipCSV(fp)
         store.write(self.items())
 
-    def to_zip_pickle(self, fp) -> None:
+    def to_zip_pickle(self, fp: PathSpecifier) -> None:
         store = StoreZipPickle(fp)
         store.write(self.items())

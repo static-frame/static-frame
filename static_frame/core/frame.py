@@ -5,7 +5,8 @@ import json
 from collections import namedtuple
 from functools import partial
 
-import numpy as np
+import numpy as np # type: ignore
+
 from numpy.ma import MaskedArray
 
 from static_frame.core.util import UFunc

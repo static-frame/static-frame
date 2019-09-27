@@ -30,13 +30,28 @@ class Store:
 
         self._fp: str = fp
 
+    def read(self, label: str) -> Frame:
+        raise NotImplementedError()
+
+    def write(self,
+            items: tp.Iterable[tp.Tuple[str, Frame]]
+            ) -> None:
+        raise NotImplementedError()
+
+    def labels(self) -> tp.Iterator[str]:
+        raise NotImplementedError()
+
 
 #-------------------------------------------------------------------------------
+from static_frame.core.util import AnyCallable
 
 class _StoreZip(Store):
 
     _EXT: str = '.zip' # define in base class
     _EXT_CONTAINED: str = ''
+
+    _EXPORTER: AnyCallable
+    _CONSTRUCTOR: tp.Callable[..., Frame]
 
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         with zipfile.ZipFile(self._fp) as zf:
@@ -99,7 +114,7 @@ class StoreZipPickle(_StoreZip):
 
     def read(self, label: str) -> Frame:
         with zipfile.ZipFile(self._fp) as zf:
-            return pickle.loads(zf.read(label + self._EXT_CONTAINED))
+            return tp.cast(Frame, pickle.loads(zf.read(label + self._EXT_CONTAINED)))
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]]

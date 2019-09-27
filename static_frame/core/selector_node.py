@@ -9,7 +9,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.doc_str import doc_inject
 #-------------------------------------------------------------------------------
 
-TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks')
+TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus')
 GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
 
 class InterfaceGetItem(tp.Generic[TContainer]):

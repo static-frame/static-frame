@@ -32,14 +32,18 @@ class TestUnit(TestCase):
                 index=('p', 'q'),
                 columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
                 name='f3')
-        f4 = Frame.from_records(
-                ((10, 20, 50, False),
-                (50.0, 60.4, -50, True),
-                (234, 44452, 0, False),
-                (4, -4, 2000, True),
+        f4 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
                 ),
-                index=IndexHierarchy.from_product(('top', 'bottom'), ('left', 'right')),
-                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                index=IndexHierarchy.from_product(('top', 'bottom'), ('far', 'near'), ('left', 'right')),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
                 name='f4')
 
         with temp_file('.xlsx') as fp:
