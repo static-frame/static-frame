@@ -17,7 +17,8 @@ from static_frame.core.frame import Frame
 # from static_frame.core.util import PathSpecifier
 
 from static_frame.core.store import Store
-
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index import Index
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet # type: ignore # pylint: disable=W0611
@@ -179,6 +180,18 @@ class StoreXLSX(Store):
         wb.close()
 
 
+    @staticmethod
+    def _load_workbook(fp: str) -> 'Workbook':
+        import openpyxl # type: ignore
+        # from openpyxl.utils.cell import coordinate_from_string
+        # from openpyxl.utils.cell import column_index_from_string
+
+        return openpyxl.load_workbook(
+                filename=fp,
+                read_only=True,
+                data_only=True
+                )
+
     def read(self,
             label: str,
             *,
@@ -186,14 +199,7 @@ class StoreXLSX(Store):
             columns_depth: int=1,
             ) -> Frame:
 
-        import openpyxl # type: ignore
-        # from openpyxl.utils.cell import coordinate_from_string
-        # from openpyxl.utils.cell import column_index_from_string
-
-        wb = openpyxl.load_workbook(filename=self._fp,
-                read_only=True,
-                data_only=True
-                )
+        wb = self._load_workbook(self._fp)
         ws = wb[label]
 
 
@@ -207,24 +213,24 @@ class StoreXLSX(Store):
 
         # can iter a column, but produces a tuple for each row; probably not efficient
         # [x for x in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=1)]
-        coord_index = dict(
-                min_row=columns_depth + 1,
-                max_row=ws.max_row,
-                min_col=1,
-                max_col=index_depth
-                )
-        coord_columns = dict(
-                min_row=1,
-                max_row=columns_depth,
-                min_col=index_depth + 1,
-                max_col=ws.max_column
-                )
-        coord_data = dict(
-                min_row=columns_depth + 1,
-                max_row=ws.max_row,
-                min_col=index_depth + 1,
-                max_col=ws.max_column
-                )
+        # coord_index = dict(
+        #         min_row=columns_depth + 1,
+        #         max_row=ws.max_row,
+        #         min_col=1,
+        #         max_col=index_depth
+        #         )
+        # coord_columns = dict(
+        #         min_row=1,
+        #         max_row=columns_depth,
+        #         min_col=index_depth + 1,
+        #         max_col=ws.max_column
+        #         )
+        # coord_data = dict(
+        #         min_row=columns_depth + 1,
+        #         max_row=ws.max_row,
+        #         min_col=index_depth + 1,
+        #         max_col=ws.max_column
+        #         )
 
 
         index_values = []
@@ -256,7 +262,7 @@ class StoreXLSX(Store):
             if row_count <= columns_depth - 1:
                 if columns_depth == 1:
                     columns_values.extend(row[index_depth:])
-                else:
+                elif columns_depth > 1:
                     # NOTE: this orientation will need to be rotated
                     columns_values.append(row[index_depth:])
                 continue
@@ -271,17 +277,23 @@ class StoreXLSX(Store):
                     data.append(row[index_depth:])
 
 
-        # import ipdb; ipdb.set_trace()
+        index = None
+        if index_depth == 1:
+            index = Index(index_values)
+        elif index_depth > 1:
+            index = IndexHierarchy.from_labels(index_values,
+                    continuation_token=None
+                    )
 
-
+        import ipdb; ipdb.set_trace()
 
 
     def labels(self) -> tp.Iterator[str]:
 
         import openpyxl # type: ignore
 
-        wb = openpyxl.load_workbook(filename=self._fp, read_only=True)
-        return tuple(wb.get_sheet_names()) # comes as a list
+        wb = self._load_workbook(self._fp)
+        return tuple(wb.sheetnames) # comes as a list
 
 
 # p q I I II II

@@ -57,6 +57,7 @@ if tp.TYPE_CHECKING:
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
+CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
@@ -217,13 +218,15 @@ class IndexHierarchy(IndexBase):
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
             name: tp.Hashable = None,
-            index_constructors: tp.Optional[IndexConstructors] = None
+            index_constructors: tp.Optional[IndexConstructors] = None,
+            continuation_token: tp.Hashable = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.
 
         Args:
             labels: an iterator or generator of tuples.
+            continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
             :py:class:`static_frame.IndexHierarchy`
@@ -244,7 +247,6 @@ class IndexHierarchy(IndexBase):
         if index_constructors and len(index_constructors) != depth:
             raise ErrorInitIndex('if providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
 
-
         depth_max = depth - 1
         depth_pre_max = depth - 2
 
@@ -258,6 +260,10 @@ class IndexHierarchy(IndexBase):
             # each label is an iterable
             for d, v in enumerate(label):
                 # print('d', d, 'v', v, 'depth_pre_max', depth_pre_max, 'depth_max', depth_max)
+                if continuation_token is not CONTINUATION_TOKEN_INACTIVE:
+                    if v == continuation_token:
+                        # might check that observed_last[d] != token
+                        v = observed_last[d]
                 if d < depth_pre_max:
                     if v not in current:
                         current[v] = dict() # order necessary

@@ -355,10 +355,27 @@ class TestUnit(TestCase):
         self.assertEqual(ih.loc[HLoc[:, '2019-02-01']].values.tolist(),
                 [['a', datetime.date(2019, 2, 1)],
                 ['b', datetime.date(2019, 2, 1)]]
-)
+                )
 
 
 
+    def test_hierarchy_from_labels_f(self) -> None:
+
+        labels1 = (('I', 'A', 1),
+                ('I', 'A', 2),
+                (None, 'B', 1),
+                ('I', None, 2),
+                ('II', 'A', 1),
+                (None, 'A', 2),
+                (None, 'B', 1),
+                (None, 'B', 2),
+                )
+
+        ih = IndexHierarchy.from_labels(labels1, continuation_token=None)
+
+        self.assertEqual(ih.values.tolist(),
+                [['I', 'A', 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]
+                )
 
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:
