@@ -55,13 +55,16 @@ class TestUnit(TestCase):
 
             # import ipdb; ipdb.set_trace()
             sheet_names = st1.labels() # this will read from file, not in memory
-
-            f1_loaded = st1.read('f4',
-                    index_depth=f4.index.depth,
-                    columns_depth=f4.columns.depth)
-
-
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
+
+            for i, name in enumerate(sheet_names):
+                f_src = frames[i]
+                f_loaded = st1.read(name,
+                        index_depth=f_src.index.depth,
+                        columns_depth=f_src.columns.depth
+                        )
+                self.assertEqualFrames(f_src, f_loaded)
+
 
 
 

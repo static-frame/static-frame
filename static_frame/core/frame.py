@@ -304,7 +304,9 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
+            own_index: bool = False,
+            own_columns: bool = False
             ) -> 'Frame':
         '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple or dictionary, and ``columns`` is not provided, column names will be derived from the dictionary keys or NamedTuple fields.
 
@@ -331,7 +333,12 @@ class Frame(ContainerOperand):
         if isinstance(records, np.ndarray):
             if dtypes is not None:
                 raise ErrorInitFrame('specifying dtypes when using NP records is not permitted')
-            return cls(records, index=index, columns=columns)
+            return cls(records,
+                    index=index,
+                    columns=columns,
+                    own_index=own_index,
+                    own_columns=own_columns
+                    )
 
         dtypes_is_map = dtypes_mappable(dtypes)
 
@@ -426,7 +433,10 @@ class Frame(ContainerOperand):
                 index=index,
                 columns=columns,
                 name=name,
-                own_data=True)
+                own_data=True,
+                own_index=own_index,
+                own_columns=own_columns
+                )
 
 
     @classmethod

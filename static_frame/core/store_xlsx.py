@@ -4,6 +4,7 @@ from itertools import chain
 
 import numpy as np # type: ignore
 
+from static_frame.core.util import DtypesSpecifier
 
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
@@ -19,6 +20,9 @@ from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index import Index
+from static_frame.core.frame import Frame
+
+from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet # type: ignore # pylint: disable=W0611
@@ -183,25 +187,26 @@ class StoreXLSX(Store):
     @staticmethod
     def _load_workbook(fp: str) -> 'Workbook':
         import openpyxl # type: ignore
-        # from openpyxl.utils.cell import coordinate_from_string
-        # from openpyxl.utils.cell import column_index_from_string
-
         return openpyxl.load_workbook(
                 filename=fp,
                 read_only=True,
                 data_only=True
                 )
 
+    @doc_inject(selector='constructor_frame')
     def read(self,
             label: str,
             *,
             index_depth: int=1,
             columns_depth: int=1,
+            dtypes: DtypesSpecifier = None,
             ) -> Frame:
-
+        '''
+        Args:
+            {dtypes}
+        '''
         wb = self._load_workbook(self._fp)
         ws = wb[label]
-
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
@@ -211,49 +216,21 @@ class StoreXLSX(Store):
         max_column = ws.max_column
         max_row = ws.max_row
 
-        # can iter a column, but produces a tuple for each row; probably not efficient
-        # [x for x in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=1)]
-        # coord_index = dict(
-        #         min_row=columns_depth + 1,
-        #         max_row=ws.max_row,
-        #         min_col=1,
-        #         max_col=index_depth
-        #         )
-        # coord_columns = dict(
-        #         min_row=1,
-        #         max_row=columns_depth,
-        #         min_col=index_depth + 1,
-        #         max_col=ws.max_column
-        #         )
-        # coord_data = dict(
-        #         min_row=columns_depth + 1,
-        #         max_row=ws.max_row,
-        #         min_col=index_depth + 1,
-        #         max_col=ws.max_column
-        #         )
-
-
         index_values = []
-        if index_depth == 0:
-            pass
-        elif index_depth == 1:
-            index_shape = ((max_row - columns_depth),)
-        else:
-            index_shape = (max_row - columns_depth, index_depth)
+        # elif index_depth == 1:
+        #     index_shape = ((max_row - columns_depth),)
+        # else:
+        #     index_shape = (max_row - columns_depth, index_depth)
 
         columns_values = []
-        if columns_depth == 0:
-            pass
-        elif columns_depth == 1:
-            columns_shape = ((max_column - index_depth),)
-        else:
-            columns_shape = ((max_column - index_depth), columns_depth)
+        # elif columns_depth == 1:
+        #     columns_shape = ((max_column - index_depth),)
+        # else:
+        #     columns_shape = ((max_column - index_depth), columns_depth)
 
-        # data_rows = tuple(tuple(cell.value for cell in row) for row in ws.iter_rows(**coord_data))
-
-        print()
-        for row in ws.iter_rows():
-            print(tuple(str(c.value).ljust(10) for c in row))
+        # print()
+        # for row in ws.iter_rows():
+        #     print(tuple(str(c.value).ljust(10) for c in row))
 
         data = []
 
@@ -276,17 +253,32 @@ class StoreXLSX(Store):
                     index_values.append(row[:index_depth])
                     data.append(row[index_depth:])
 
-
         index = None
         if index_depth == 1:
             index = Index(index_values)
         elif index_depth > 1:
-            index = IndexHierarchy.from_labels(index_values,
+            index = IndexHierarchy.from_labels(
+                    index_values,
                     continuation_token=None
                     )
 
-        import ipdb; ipdb.set_trace()
+        columns = None
+        if columns_depth == 1:
+            columns = Index(columns_values)
+        elif columns_depth > 1:
+            columns = IndexHierarchy.from_labels(
+                    zip(*columns_values),
+                    continuation_token=None
+                    )
 
+        return Frame.from_records(data,
+                index=index,
+                columns=columns,
+                dtypes=dtypes,
+                own_index=True,
+                own_columns=True,
+                name=ws.title
+                )
 
     def labels(self) -> tp.Iterator[str]:
 

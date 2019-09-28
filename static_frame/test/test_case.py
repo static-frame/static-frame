@@ -18,6 +18,7 @@ import pytest  # type: ignore
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
 from static_frame.core.index_base import IndexBase
+from static_frame.core.frame import Frame
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -197,3 +198,18 @@ class TestCase(unittest.TestCase):
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
             self.assertAlmostEqualItems(v1, v2)
+
+
+    def assertEqualFrames(self, f1: Frame, f2: Frame):
+        self.assertEqual(f1.shape, f2.shape)
+        self.assertEqual(f1.__class__, f2.__class__)
+        self.assertEqual(f1.name, f2.name)
+
+        self.assertEqual(f1.index.depth, f2.index.depth)
+        self.assertEqual(f1.index.__class__, f2.index.__class__)
+
+        self.assertEqual(f1.columns.depth, f2.columns.depth)
+        self.assertEqual(f1.columns.__class__, f2.columns.__class__)
+
+        # NOTE: this will not handle types
+        self.assertEqual(f1.to_pairs(0), f2.to_pairs(0))
