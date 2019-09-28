@@ -216,13 +216,13 @@ class StoreXLSX(Store):
         max_column = ws.max_column
         max_row = ws.max_row
 
-        index_values = []
+        index_values: tp.List[tp.Any] = []
         # elif index_depth == 1:
         #     index_shape = ((max_row - columns_depth),)
         # else:
         #     index_shape = (max_row - columns_depth, index_depth)
 
-        columns_values = []
+        columns_values: tp.List[tp.Any] = []
         # elif columns_depth == 1:
         #     columns_shape = ((max_column - index_depth),)
         # else:
