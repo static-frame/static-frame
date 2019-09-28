@@ -200,7 +200,7 @@ class TestCase(unittest.TestCase):
             self.assertAlmostEqualItems(v1, v2)
 
 
-    def assertEqualFrames(self, f1: Frame, f2: Frame):
+    def assertEqualFrames(self, f1: Frame, f2: Frame) -> None:
         self.assertEqual(f1.shape, f2.shape)
         self.assertEqual(f1.__class__, f2.__class__)
         self.assertEqual(f1.name, f2.name)

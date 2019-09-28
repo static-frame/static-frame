@@ -20,6 +20,8 @@ from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index import Index
+from static_frame.core.index_base import IndexBase
+
 from static_frame.core.frame import Frame
 
 from static_frame.core.doc_str import doc_inject
@@ -253,7 +255,7 @@ class StoreXLSX(Store):
                     index_values.append(row[:index_depth])
                     data.append(row[index_depth:])
 
-        index = None
+        index: tp.Optional[IndexBase] = None
         if index_depth == 1:
             index = Index(index_values)
         elif index_depth > 1:
@@ -262,7 +264,7 @@ class StoreXLSX(Store):
                     continuation_token=None
                     )
 
-        columns = None
+        columns: tp.Optional[IndexBase] = None
         if columns_depth == 1:
             columns = Index(columns_values)
         elif columns_depth > 1:
@@ -271,21 +273,21 @@ class StoreXLSX(Store):
                     continuation_token=None
                     )
 
-        return Frame.from_records(data,
+        return tp.cast(Frame, Frame.from_records(data,
                 index=index,
                 columns=columns,
                 dtypes=dtypes,
                 own_index=True,
                 own_columns=True,
                 name=ws.title
-                )
+                ))
 
     def labels(self) -> tp.Iterator[str]:
 
-        import openpyxl # type: ignore
+        import openpyxl
 
         wb = self._load_workbook(self._fp)
-        return tuple(wb.sheetnames) # comes as a list
+        yield from wb.sheetnames # comes as a list
 
 
 # p q I I II II

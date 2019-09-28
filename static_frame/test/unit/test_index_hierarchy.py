@@ -371,7 +371,7 @@ class TestUnit(TestCase):
                 (None, 'B', 2),
                 )
 
-        ih = IndexHierarchy.from_labels(labels1, continuation_token=None)
+        ih = IndexHierarchy.from_labels(labels1, continuation_token=None) # type: ignore
 
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 1], ['I', 'A', 2], ['I', 'B', 1], ['I', 'B', 2], ['II', 'A', 1], ['II', 'A', 2], ['II', 'B', 1], ['II', 'B', 2]]

@@ -219,7 +219,7 @@ class IndexHierarchy(IndexBase):
             *,
             name: tp.Hashable = None,
             index_constructors: tp.Optional[IndexConstructors] = None,
-            continuation_token: tp.Hashable = CONTINUATION_TOKEN_INACTIVE
+            continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is tuple defining the component labels for all hierarchies.

@@ -17,8 +17,6 @@ from static_frame.core.display import Display
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerOperand
 
-from static_frame.core.selector_node import InterfaceGetItem
-
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # type: ignore #pylint: disable=W0611

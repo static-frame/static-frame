@@ -54,7 +54,7 @@ class TestUnit(TestCase):
             st1.write((f.name, f) for f in frames)
 
             # import ipdb; ipdb.set_trace()
-            sheet_names = st1.labels() # this will read from file, not in memory
+            sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
             for i, name in enumerate(sheet_names):
