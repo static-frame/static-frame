@@ -190,13 +190,20 @@ class StoreXLSX(Store):
         # from openpyxl.utils.cell import coordinate_from_string
         # from openpyxl.utils.cell import column_index_from_string
 
-        wb = openpyxl.load_workbook(filename=self._fp, read_only=True)
+        wb = openpyxl.load_workbook(filename=self._fp,
+                read_only=True,
+                data_only=True
+                )
         ws = wb[label]
+
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
             # says that some clients might not repare correct dimensions; not sure what conditions are best to show this
             ws.calculate_dimension()
+
+        max_column = ws.max_column
+        max_row = ws.max_row
 
         # can iter a column, but produces a tuple for each row; probably not efficient
         # [x for x in ws.iter_rows(min_row=0, max_row=ws.max_row, min_col=1, max_col=1)]
@@ -219,8 +226,55 @@ class StoreXLSX(Store):
                 max_col=ws.max_column
                 )
 
-        data_rows = tuple(tuple(cell.value for cell in row) for row in ws.iter_rows(**coord_data))
+
+        index_values = []
+        if index_depth == 0:
+            pass
+        elif index_depth == 1:
+            index_shape = ((max_row - columns_depth),)
+        else:
+            index_shape = (max_row - columns_depth, index_depth)
+
+        columns_values = []
+        if columns_depth == 0:
+            pass
+        elif columns_depth == 1:
+            columns_shape = ((max_column - index_depth),)
+        else:
+            columns_shape = ((max_column - index_depth), columns_depth)
+
+        # data_rows = tuple(tuple(cell.value for cell in row) for row in ws.iter_rows(**coord_data))
+
+        print()
+        for row in ws.iter_rows():
+            print(tuple(str(c.value).ljust(10) for c in row))
+
+        data = []
+
+        for row_count, row in enumerate(ws.iter_rows()): # cannot use values_only on 2.5.4
+            row = tuple(c.value for c in row)
+            if row_count <= columns_depth - 1:
+                if columns_depth == 1:
+                    columns_values.extend(row[index_depth:])
+                else:
+                    # NOTE: this orientation will need to be rotated
+                    columns_values.append(row[index_depth:])
+                continue
+            else:
+                if index_depth == 0:
+                    data.append(row)
+                elif index_depth == 1:
+                    index_values.append(row[0])
+                    data.append(row[1:])
+                else:
+                    index_values.append(row[:index_depth])
+                    data.append(row[index_depth:])
+
+
         # import ipdb; ipdb.set_trace()
+
+
+
 
     def labels(self) -> tp.Iterator[str]:
 
