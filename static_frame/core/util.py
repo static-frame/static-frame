@@ -710,7 +710,7 @@ def resolve_type_iter(
             else:
                 has_non_str = True
 
-                if value_type == int and v > INT_MAX_COERCIBLE_TO_FLOAT:
+                if value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
                     has_big_int = True
                 elif value_type == float or value_type == np.float_:
                     has_float = True
