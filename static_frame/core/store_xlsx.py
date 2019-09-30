@@ -217,6 +217,7 @@ class StoreXLSX(Store):
 
         max_column = ws.max_column
         max_row = ws.max_row
+        name = ws.title
 
         index_values: tp.List[tp.Any] = []
         # elif index_depth == 1:
@@ -255,6 +256,9 @@ class StoreXLSX(Store):
                     index_values.append(row[:index_depth])
                     data.append(row[index_depth:])
 
+        # try to force cleanup
+        wb.close()
+
         index: tp.Optional[IndexBase] = None
         if index_depth == 1:
             index = Index(index_values)
@@ -279,7 +283,7 @@ class StoreXLSX(Store):
                 dtypes=dtypes,
                 own_index=True,
                 own_columns=True,
-                name=ws.title
+                name=name
                 ))
 
     def labels(self) -> tp.Iterator[str]:
@@ -288,6 +292,8 @@ class StoreXLSX(Store):
 
         wb = self._load_workbook(self._fp)
         yield from wb.sheetnames # comes as a list
+        wb.close()
+
 
 
 # p q I I II II
