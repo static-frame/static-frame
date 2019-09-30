@@ -1227,20 +1227,6 @@ class TestUnit(TestCase):
             dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
 
 
-    # def test_resolve_type_a(self) -> None:
-
-    #     self.assertEqual(resolve_type('a', str), (str, False))
-    #     self.assertEqual(resolve_type('a', int), (object, False))
-    #     self.assertEqual(resolve_type(3, str), (object, False))
-    #     self.assertEqual(resolve_type((3,4), str), (object, True))
-    #     self.assertEqual(resolve_type((3,4), tuple), (object, True))
-
-
-    #     self.assertEqual(resolve_type(3, float), (float, False))
-    #     self.assertEqual(resolve_type(False, str), (object, False))
-    #     self.assertEqual(resolve_type(1.2, int), (float, False))
-
-
     def test_resolve_type_iter_a(self) -> None:
 
         v1 = ('a', 'b', 'c')
@@ -1388,6 +1374,15 @@ class TestUnit(TestCase):
         post = iterable_to_array(a0)
         self.assertEqual(post[0].tolist(),
                 [3, 4, 5, 6])
+
+
+
+    def test_resolve_type_iter_j(self) -> None:
+        # this case was found through hypothesis
+        a0 = [0.0, 36_028_797_018_963_969]
+        resolved, has_tuple, values = resolve_type_iter(a0)
+        self.assertEqual(resolved, object)
+
 
 
     def test_iterable_to_array_a(self) -> None:

@@ -280,12 +280,12 @@ class Index(IndexBase):
             return immutable_filter(labels)
 
         if hasattr(labels, '__len__'): # not a generator, not an array
-            # resolving the detype is expensive
+            # resolving the detype is expensive, pass if possible
             labels, _ = iterable_to_array(labels, dtype=dtype)
 
         else: # labels may be an expired generator, must use the mapping
 
-            # TODO: explore why this does not work
+            # NOTE: explore why this does not work
             # if dtype is None:
             #     labels = np.array(list(mapping.keys()), dtype=object)
             # else:

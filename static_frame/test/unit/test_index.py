@@ -56,6 +56,13 @@ class TestUnit(TestCase):
                 [0, '1', 2]
                 )
 
+    def test_index_init_e(self) -> None:
+        labels = [0.0, 36028797018963969]
+        idx = Index(labels)
+        # cannot extract the value once converted to float
+        self.assertEqual(idx.loc[idx.values[1]], 36028797018963969)
+
+
 
 
     def test_index_loc_to_iloc_a(self) -> None:

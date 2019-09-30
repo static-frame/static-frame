@@ -116,6 +116,8 @@ DICTLIKE_TYPES = (abc.Set, dict)
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
 NON_STR_TYPES = {int, float, bool}
 
+# integers above this value will occassionally, once coerced to a float (64 or 128) in an NP array, will not match a hash lookup as a key in a dictionary; an NP array of int or object will work
+INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
@@ -688,6 +690,8 @@ def resolve_type_iter(
     has_tuple = False
     has_str = False
     has_non_str = False
+    has_float = False
+    has_big_int = False
 
     for i, v in enumerate(v_iter, start=1):
         if copy_values:
@@ -706,15 +710,20 @@ def resolve_type_iter(
             else:
                 has_non_str = True
 
+                if value_type == int and v > INT_MAX_COERCIBLE_TO_FLOAT:
+                    has_big_int = True
+                if value_type == float or value_type == np.float_:
+                    has_float = True
+
             if has_tuple or (has_str and has_non_str):
                 resolved = object
+            elif has_big_int and has_float:
+                resolved = object
 
-        else: # resolved is object, can exit once has_tuple is known
-            if has_tuple:
-                # can end if we have found a tuple
-                if copy_values:
-                    values_post.extend(v_iter)
-                break
+        else: # resolved is object, cam exit
+            if copy_values:
+                values_post.extend(v_iter)
+            break
 
         if i >= sample_size:
             if copy_values:
