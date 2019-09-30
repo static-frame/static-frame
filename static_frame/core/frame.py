@@ -147,7 +147,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
-        Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved.
+        Concatenate multiple Frames into a new Frame. If index or columns are provided and appropriately sized, the resulting Frame will use those indices. If the axis along concatenation (index for axis 0, columns for axis 1) is unique after concatenation, it will be preserved; otherwise, a new index or an :obj:`IndexAutoFactory` must be supplied.
 
         Args:
             frames: Iterable of Frames.
@@ -272,9 +272,9 @@ class Frame(ContainerOperand):
 
         if from_array_columns:
             if columns.ndim == 2: # we have a hierarchical index
-                column_cls = (IndexHierarchy
+                cls_ih = (IndexHierarchy
                         if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
-                columns = column_cls.from_labels(columns)
+                columns = cls_ih.from_labels(columns)
                 own_columns = True
 
         if from_array_index:
@@ -294,6 +294,57 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_columns=own_columns,
                 own_index=own_index)
+
+
+    @classmethod
+    def from_concat_items(cls,
+            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
+            *,
+            axis: int = 0,
+            union: bool = True,
+            name: tp.Hashable = None,
+            fill_value: object = np.nan,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''
+        Produce a :obj:`Frame` with a hierarchical index from an iterable of pairs of labels, :obj:`Frame`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Frame`.
+
+        Args:
+            items: Iterable of pairs of label, :obj:`Series`
+        '''
+        frames = []
+
+        def gen():
+            for label, frame in items:
+                # must normalize Series here to avoid down-stream confusion
+                if isinstance(frame, Series):
+                    frame = frame.to_frame(axis)
+
+                frames.append(frame)
+                if axis == 0:
+                    yield label, frame._index
+                else:
+                    yield label, frame._columns
+
+        # populates array_values as side effect
+        if axis == 0:
+            ih = IndexHierarchy.from_index_items(gen())
+            kwargs = dict(index=ih)
+        else:
+            cls_ih = (IndexHierarchy
+                    if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
+            ih = cls_ih.from_index_items(gen())
+            kwargs = dict(columns=ih)
+
+        return cls.from_concat(frames,
+                axis=axis,
+                union=union,
+                name=name,
+                fill_value=fill_value,
+                consolidate_blocks=consolidate_blocks,
+                **kwargs
+                )
+
 
     @classmethod
     @doc_inject(selector='constructor_frame')

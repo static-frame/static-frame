@@ -3695,6 +3695,57 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_concat_items_a(self) -> None:
+        records1 = (
+                (2, 2, False),
+                (30, 34, False),
+                )
+
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q', 't'),
+                index=('x', 'a'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('x', 'a'))
+
+        f3 = Frame.from_concat_items(dict(A=f1, B=f2).items(), axis=1)
+
+        self.assertEqual(f3.to_pairs(0),
+                ((('A', 'p'), (('x', 2), ('a', 30))), (('A', 'q'), (('x', 2), ('a', 34))), (('A', 't'), (('x', False), ('a', False))), (('B', 'r'), (('x', 'c'), ('a', 'd'))), (('B', 's'), (('x', False), ('a', True)))))
+
+        f4 = FrameGO.from_concat_items(dict(A=f1, B=f2).items(), axis=1)
+        self.assertEqual(f4.__class__, FrameGO)
+        self.assertEqual(f4.columns.__class__, IndexHierarchyGO)
+        self.assertEqual(f4.index.__class__, Index)
+
+        self.assertEqual(f4.to_pairs(0),
+                ((('A', 'p'), (('x', 2), ('a', 30))), (('A', 'q'), (('x', 2), ('a', 34))), (('A', 't'), (('x', False), ('a', False))), (('B', 'r'), (('x', 'c'), ('a', 'd'))), (('B', 's'), (('x', False), ('a', True)))))
+
+    def test_frame_from_concat_items_b(self) -> None:
+
+        records = (
+                (2, False),
+                (34, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q',),
+                index=('d', 'c'))
+
+        s1 = Series((0, True), index=('p', 'q'), name='c', dtype=object)
+        s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
+
+        f2 = Frame.from_concat_items(dict(A=s2, B=f1, C=s1).items(), axis=0)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('p', ((('A', 'd'), -2), (('B', 'd'), 2), (('B', 'c'), 34), (('C', 'c'), 0))), ('q', ((('A', 'd'), False), (('B', 'd'), False), (('B', 'c'), False), (('C', 'c'), True))))
+                )
+        self.assertEqual(f2.index.__class__, IndexHierarchy)
+
 
     def test_frame_set_index_a(self) -> None:
         records = (

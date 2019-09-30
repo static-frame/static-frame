@@ -405,6 +405,7 @@ class IndexHierarchy(IndexBase):
     @classmethod
     def from_index_items(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
+            *,
             index_constructor: tp.Optional[IndexConstructor] = None
             ) -> IH:
         '''
