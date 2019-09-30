@@ -13,4 +13,4 @@ sphinx-jinja==0.3.0
 sphinx_rtd_theme>=0.4.2
 sphinxcontrib-napoleon==0.7.0
 xlsxwriter==1.1.2
-openpyxl==2.5.4
+openpyxl==3.0.0
