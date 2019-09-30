@@ -712,7 +712,7 @@ def resolve_type_iter(
 
                 if value_type == int and v > INT_MAX_COERCIBLE_TO_FLOAT:
                     has_big_int = True
-                if value_type == float or value_type == np.float_:
+                elif value_type == float or value_type == np.float_:
                     has_float = True
 
             if has_tuple or (has_str and has_non_str):
