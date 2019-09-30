@@ -209,29 +209,16 @@ class Series(ContainerOperand):
             items: Iterable of pairs of label, :obj:`Series`
         '''
         array_values = []
-        labels = []
-        index_levels = []
 
-        offset = 0
-        for label, series in items:
-            array_values.append(series.values)
-            labels.append(label)
-            index_levels.append(IndexLevel(
-                    series.index,
-                    offset=offset,
-                    own_index=True)
-            )
-            offset += len(series)
+        def gen():
+            for label, series in items:
+                array_values.append(series.values)
+                yield label, series._index
 
-        # returns immutable arrays
+        # populates array_values as side effect
+        ih = IndexHierarchy.from_index_items(gen())
+        # returns immutable array
         values = concat_resolved(array_values)
-
-        targets = ArrayGO(np.array(index_levels, dtype=object), own_iterable=True)
-        ih = IndexHierarchy(IndexLevel(
-                index=Index(labels),
-                targets=targets,
-                own_index=True
-                ))
         return cls(values, index=ih, own_index=True)
 
 

@@ -11,7 +11,9 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _requires_reindex
+from static_frame.core.index import mutable_immutable_index_filter
 
+from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
@@ -398,6 +400,46 @@ class IndexHierarchy(IndexBase):
 
     #     # import ipdb; ipdb.set_trace()
     #     return cls(levels=level)
+
+
+    @classmethod
+    def from_index_items(cls: tp.Type[IH],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
+            index_constructor: tp.Optional[IndexConstructor] = None
+            ) -> IH:
+        '''
+        Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
+
+        Args:
+            items: iterable of pairs of label, :obj:`Index`.
+            index_constructor: Optionally provide index constructor for outermost index.
+        '''
+        labels = []
+        index_levels = []
+
+        offset = 0
+        for label, index in items:
+            labels.append(label)
+
+            index = mutable_immutable_index_filter(cls.STATIC, index)
+            index_levels.append(cls._LEVEL_CONSTRUCTOR(
+                    index,
+                    offset=offset,
+                    own_index=True)
+            )
+            offset += len(index)
+
+        targets = ArrayGO(np.array(index_levels, dtype=object), own_iterable=True)
+
+        index_outer = index_from_optional_constructor(labels,
+                    default_constructor=cls._INDEX_CONSTRUCTOR,
+                    explicit_constructor=index_constructor)
+
+        return cls(cls._LEVEL_CONSTRUCTOR(
+                index=index_outer,
+                targets=targets,
+                own_index=True
+                ))
 
 
     #---------------------------------------------------------------------------

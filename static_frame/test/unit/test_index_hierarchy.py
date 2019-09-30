@@ -378,6 +378,36 @@ class TestUnit(TestCase):
                 )
 
 
+
+    def test_hierarchy_from_index_items_a(self) -> None:
+
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+        idx3 = Index((4, 5, 6))
+
+        ih = IndexHierarchy.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+
+        self.assertEqual(
+                ih.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6]]
+                )
+
+    def test_hierarchy_from_index_items_b(self) -> None:
+
+        idx1 = Index(('A', 'B', 'C'))
+        idx2 = Index(('x', 'y'))
+        idx3 = Index((4, 5, 6))
+
+        ih = IndexHierarchyGO.from_index_items(dict(a=idx1, b=idx2, c=idx3).items())
+        ih.append(('c', 7))
+
+        self.assertEqual(ih.values.tolist(),
+                [['a', 'A'], ['a', 'B'], ['a', 'C'], ['b', 'x'], ['b', 'y'], ['c', 4], ['c', 5], ['c', 6], ['c', 7]])
+
+
+
+
+
     def test_hierarchy_loc_to_iloc_b(self) -> None:
         OD = OrderedDict
         tree = OD([
