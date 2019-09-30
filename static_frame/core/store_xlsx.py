@@ -291,9 +291,9 @@ class StoreXLSX(Store):
         import openpyxl
 
         wb = self._load_workbook(self._fp)
-        yield from wb.sheetnames # comes as a list
+        labels = tuple(wb.sheetnames) # comes    as a list
         wb.close()
-
+        yield from labels
 
 
 # p q I I II II
