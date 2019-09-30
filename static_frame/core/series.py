@@ -65,9 +65,6 @@ from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_level import IndexLevel
-
-from static_frame.core.array_go import ArrayGO
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
