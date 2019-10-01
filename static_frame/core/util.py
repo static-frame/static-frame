@@ -73,6 +73,7 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 EMPTY_TUPLE = ()
+EMPTY_SET = frozenset()
 
 # defaults to float64
 EMPTY_ARRAY = np.array(EMPTY_TUPLE, dtype=None)
@@ -201,27 +202,6 @@ FrameInitializer = tp.Union[
 
 FILL_VALUE_DEFAULT = object()
 
-REPLACE_DEFAULT = object()
-
-ReplaceToStr = tp.Dict[tp.Hashable, str]
-ReplaceFromStr = tp.Dict[str, tp.Set[str]]
-
-REPLACE_VALID_KEYS = frozenset((np.nan, None, np.inf, -np.inf))
-
-REPLACE_TO_STR_DEFAULT = {
-        np.nan: '',
-        None: 'None',
-        np.inf: 'inf',
-        -np.inf: '-inf'
-        }
-REPLACE_FROM_STR_DEFAULT = {
-        np.nan: frozenset(('', 'NaN', 'NAN', 'NULL', '#N/A')),
-        None: frozenset(('None',)),
-        np.inf: frozenset(('inf',)),
-        -np.inf: frozenset(('-inf',))
-        }
-
-
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
@@ -229,14 +209,6 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
 #-------------------------------------------------------------------------------
-
-def valid_replace(replace: tp.Dict[tp.Hashable, tp.Any]) -> None:
-    '''Retrun Boolean of the replace dictionary has valid keys.
-    '''
-    # NOTE: could be a replace filter
-    if not (replace.keys() | REPLACE_VALID_KEYS) == REPLACE_VALID_KEYS:
-        raise RuntimeError(f'invalid replace keys; must include only {REPLACE_VALID_KEYS}')
-
 
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
@@ -994,7 +966,6 @@ def array_to_groups_and_locations(
 def isna_element(value: tp.Any) -> bool:
     '''Return Boolean if value is an NA.
     '''
-
     try:
         return tp.cast(bool, np.isnan(value))
     except TypeError:
@@ -1003,7 +974,6 @@ def isna_element(value: tp.Any) -> bool:
         return tp.cast(bool, np.isnat(value))
     except TypeError:
         pass
-
     return value is None
 
 
