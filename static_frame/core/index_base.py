@@ -2,7 +2,7 @@ import typing as tp
 import numpy as np  # type: ignore
 
 from static_frame.core.util import mloc
-from static_frame.core.util import FilePathOrFileLike
+from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import write_optional_file
 # from static_frame.core.util import IndexInitializer
 # from static_frame.core.util import IndexConstructor
@@ -358,7 +358,7 @@ class IndexBase(ContainerOperand):
 
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
-            fp: tp.Optional[FilePathOrFileLike] = None,
+            fp: tp.Optional[PathSpecifierOrFileLike] = None,
             *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None

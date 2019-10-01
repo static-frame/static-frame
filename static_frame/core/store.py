@@ -2,7 +2,6 @@
 
 import typing as tp
 import zipfile
-from pathlib import Path
 import pickle
 import os
 from io import StringIO
@@ -10,6 +9,7 @@ from io import StringIO
 from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import path_filter
 
 
 
@@ -21,8 +21,7 @@ class Store:
             )
 
     def __init__(self, fp: PathSpecifier):
-        if isinstance(fp, Path):
-            fp = str(fp)
+        fp = path_filter(fp)
 
         if not os.path.splitext(fp)[1] == self._EXT:
             raise ErrorInitStore(

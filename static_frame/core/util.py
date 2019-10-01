@@ -153,7 +153,10 @@ def is_callable_or_mapping(value: CallableOrMapping) -> bool:
 
 
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
-FilePathOrFileLike = tp.Union[str, tp.TextIO]
+
+PathSpecifier = tp.Union[str, Path]
+PathSpecifierOrFileLike = tp.Union[str, tp.TextIO]
+
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
@@ -178,7 +181,6 @@ IndexConstructor = tp.Callable[..., 'IndexBase']
 
 IndexConstructors = tp.Sequence[IndexConstructor]
 
-PathSpecifier = tp.Union[str, Path]
 
 # take integers for size; otherwise, extract size from any other index initializer
 
@@ -1621,6 +1623,14 @@ def slices_from_targets(
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
+def path_filter(fp: PathSpecifier) -> str:
+    '''Realize Path objects as strings
+    '''
+    if isinstance(fp, Path):
+        return str(fp)
+    return fp
+
+
 def _read_url(fp: str) -> str:
     with request.urlopen(fp) as response:
         return tp.cast(str, response.read().decode('utf-8'))
@@ -1628,7 +1638,7 @@ def _read_url(fp: str) -> str:
 
 def write_optional_file(
         content: str,
-        fp: tp.Optional[FilePathOrFileLike] = None,
+        fp: tp.Optional[PathSpecifierOrFileLike] = None,
         ) -> tp.Optional[str]:
 
     fd = f = None

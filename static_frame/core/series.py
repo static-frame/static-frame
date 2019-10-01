@@ -33,7 +33,7 @@ from static_frame.core.util import is_callable_or_mapping
 
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
-from static_frame.core.util import FilePathOrFileLike
+from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.util import DtypeSpecifier
@@ -1572,7 +1572,7 @@ class Series(ContainerOperand):
 
     @doc_inject(class_name='Series')
     def to_html_datatables(self,
-            fp: tp.Optional[FilePathOrFileLike] = None,
+            fp: tp.Optional[PathSpecifierOrFileLike] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> str:

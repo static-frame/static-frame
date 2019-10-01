@@ -7,7 +7,7 @@ from static_frame.core.util import GetItemKeyType as GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound as GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
-from static_frame.core.util import FilePathOrFileLike as FilePathOrFileLike
+from static_frame.core.util import PathSpecifierOrFileLike as PathSpecifierOrFileLike
 from static_frame.core.util import DtypeSpecifier as DtypeSpecifier
 from static_frame.core.util import IndexSpecifier as IndexSpecifier
 from static_frame.core.util import IndexInitializer as IndexInitializer

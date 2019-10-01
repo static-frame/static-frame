@@ -30,8 +30,12 @@ from static_frame import HLoc
 from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
 
+from static_frame.core.store_xlsx import StoreXLSX
+
+
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 
 nan = np.nan
@@ -3122,6 +3126,25 @@ class TestUnit(TestCase):
         self.assertEqual(post, None)
 
         self.assertTrue(len(sio.read()) > 1600)
+
+
+
+    def test_frame_to_xlsx_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            st = StoreXLSX(fp)
+            f2 = st.read()
+            self.assertEqualFrames(f1, f2)
 
 
 

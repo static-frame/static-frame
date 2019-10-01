@@ -19,7 +19,8 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import KeyOrKeys
-from static_frame.core.util import FilePathOrFileLike
+from static_frame.core.util import PathSpecifier
+from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FILL_VALUE_DEFAULT
 
@@ -881,7 +882,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_csv(cls,
-            fp: FilePathOrFileLike,
+            fp: PathSpecifierOrFileLike,
             *,
             delimiter: str = ',',
             index_column: tp.Optional[tp.Union[int, str]] = None,
@@ -3062,7 +3063,8 @@ class Frame(ContainerOperand):
                 )
 
     def to_csv(self,
-            fp: FilePathOrFileLike,
+            fp: PathSpecifierOrFileLike,
+            *,
             delimiter: str = ',',
             include_index: bool = True,
             include_columns: bool = True,
@@ -3119,12 +3121,33 @@ class Frame(ContainerOperand):
             f.close()
 
     def to_tsv(self,
-            fp: FilePathOrFileLike,
+            fp: PathSpecifierOrFileLike,
             **kwargs):
         '''
         Given a file path or file-like object, write the Frame as tab-delimited text.
         '''
         return self.to_csv(fp=fp, delimiter='\t', **kwargs)
+
+
+    def to_xlsx(self,
+            fp: PathSpecifier, # not sure I can take a file like yet
+            sheet_name: tp.Optional[str] = None,
+            include_index: bool = True,
+            include_columns: bool = True,
+            merge_hierarchical_labels: bool = True
+            ) -> None:
+        '''
+        Write the Frame as single-sheet XLSX file.
+        '''
+        from static_frame.core.store_xlsx import StoreXLSX
+
+        st = StoreXLSX(fp)
+        st.write(((sheet_name, self),),
+                include_index=include_index,
+                include_columns=include_columns,
+                merge_hierarchical_labels=merge_hierarchical_labels
+                )
+
 
     @doc_inject(class_name='Frame')
     def to_html(self,
@@ -3142,7 +3165,7 @@ class Frame(ContainerOperand):
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,
-            fp: tp.Optional[FilePathOrFileLike] = None,
+            fp: tp.Optional[PathSpecifierOrFileLike] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> str:
@@ -3160,6 +3183,9 @@ class Frame(ContainerOperand):
             import webbrowser
             webbrowser.open_new_tab(fp)
         return fp
+
+
+
 
 class FrameGO(Frame):
     '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.

@@ -197,7 +197,7 @@ class StoreXLSX(Store):
 
     @doc_inject(selector='constructor_frame')
     def read(self,
-            label: str,
+            label: tp.Optional[str] = None,
             *,
             index_depth: int=1,
             columns_depth: int=1,
@@ -208,7 +208,14 @@ class StoreXLSX(Store):
             {dtypes}
         '''
         wb = self._load_workbook(self._fp)
-        ws = wb[label]
+
+        if label is None:
+            ws = wb[wb.sheetnames[0]]
+            name = None # do not set to default sheet name
+        else:
+            ws = wb[label]
+            name = ws.title
+
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
@@ -217,7 +224,6 @@ class StoreXLSX(Store):
 
         max_column = ws.max_column
         max_row = ws.max_row
-        name = ws.title
 
         index_values: tp.List[tp.Any] = []
         columns_values: tp.List[tp.Any] = []
