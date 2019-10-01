@@ -54,7 +54,7 @@ from static_frame.core.util import is_callable_or_mapping
 
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
-
+from static_frame.core.util import resolve_dtype
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
@@ -94,7 +94,9 @@ from static_frame.core.exception import ErrorInitFrame
 
 from static_frame.core.doc_str import doc_inject
 
-
+if tp.TYPE_CHECKING:
+    import pandas as pd # type: ignore #pylint: disable=W0611
+    from xarray import Dataset # type: ignore #pylint: disable=W0611
 
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
@@ -2973,7 +2975,7 @@ class Frame(ContainerOperand):
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
 
-    def to_pandas(self):
+    def to_pandas(self) -> 'pd.DataFrame':
         '''
         Return a Pandas DataFrame.
         '''
@@ -2987,11 +2989,11 @@ class Frame(ContainerOperand):
         return df
 
 
-    def to_xarray(self):
+    def to_xarray(self) -> 'Dataset':
         '''
         Return an xarray Dataset.
 
-        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame` is translated as a Dataset of 1D arrays, where each DataArray is a 1D array.
+        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame`, with a 1D index, is translated as a Dataset of 1D arrays, where each DataArray is a 1D array. If the index is an :obj:`IndexHierarhcy`, each column is mapped into an ND array of shape equal to the unique values found at each depth of the index.
         '''
         import xarray
 
@@ -3000,24 +3002,48 @@ class Frame(ContainerOperand):
 
         if index.depth == 1:
             index_name = index.name if index.name else 'index'
+            coords = {index_name: index.values}
         else:
-            raise NotImplementedError()
+            # NOTE: not checking the index name attr, as may not be tuple
+            index_name = tuple(f'level_{x}' for x in range(index.depth))
 
+            # index values are reduced to unique values for 2d presentation
+            coords = {f'level_{d}': np.unique(index.values_at_depth(d))
+                    for d in range(index.depth)}
+            # create dictionary version
+            coords_index = {k: Index(v) for k, v in coords.items()}
+
+        # columns form the keys in data_vars dict
         if columns.depth == 1:
-            columns_name = columns.name
-        else:
-            if columns.name:
-                if isinstance(columns.name, tuple) and len(columns.name) == columns.depth:
-                    columns_name = columns.name
-                else:
-                    columns_name = tuple(str(x) for x in range(columns.depth))
-            else:
-                columns_name = tuple(str(x) for x in range(columns.depth))
+            columns_values = columns.values
+            # needs to be called with axis argument
+            columns_arrays = partial(self._blocks.axis_values, axis=0)
+        else: # must be hashable
+            columns_values = array2d_to_tuples(columns.values)
 
+            def columns_arrays() -> tp.Iterator[np.ndarray]:
+                for c in self.iter_series(axis=0):
+                    # dtype must be able to accomodate a float NaN
+                    resolved = resolve_dtype(c.dtype, DTYPE_FLOAT_DEFAULT)
+                    # create multidimensional arsdfray of all axis for each
+                    array = np.full(
+                            shape=[len(coords[v]) for v in coords],
+                            fill_value=np.nan,
+                            dtype=resolved)
 
-        data_vars = {k: (index_name, v) for k, v in zip(columns.values, self._blocks.axis_values(0))}
+                    for index_labels, value in c.items():
+                        # translate to index positions
+                        insert_pos = [coords_index[k].loc_to_iloc(label)
+                                for k, label in zip(coords, index_labels)]
+                        # must convert to tuple to give position per dimension
+                        array[tuple(insert_pos)] = value
 
-        return xarray.Dataset(data_vars, coords={index_name:index.values})
+                    yield array
+
+        data_vars = {k: (index_name, v)
+                for k, v in zip(columns_values, columns_arrays())}
+
+        return xarray.Dataset(data_vars, coords=coords)
 
     def to_frame_go(self) -> 'FrameGO':
         '''

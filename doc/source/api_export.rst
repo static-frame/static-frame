@@ -55,6 +55,8 @@ Frame
 
 .. automethod:: static_frame.Frame.to_pandas
 
+.. automethod:: static_frame.Frame.to_xarray
+
 .. automethod:: static_frame.Frame.to_csv
 
 .. automethod:: static_frame.Frame.to_tsv

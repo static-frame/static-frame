@@ -12,6 +12,10 @@ Added ``display_tall()`` and ``display_wide()`` convenience methods to all conta
 
 Added ``label_widths_at_depth()`` on ``Index`` and ``IndexHierarchy``.
 
+Added ``Frame.to_xarray()``.
+
+
+
 
 0.4.3
 -----------

@@ -415,11 +415,19 @@ class TestUnit(TestCase):
                 (65, 73, 'd', True),
                 )
         columns = IndexHierarchy.from_product(('a', 'b'), (1, 2), name=('a', 'b'))
-        index = IndexHierarchy.from_product((100, 200), (True, False))
+        index = IndexHierarchy.from_labels(((200, False, 'a'), (200, True, 'b'), (100, False, 'a'), (300, True, 'b')))
 
         f1 = Frame.from_records(records,
                 columns=columns,
                 index=index)
+        ds1 = f1.to_xarray()
+        self.assertEqual(tuple(ds1.data_vars.keys()),
+                (('a', 1), ('a', 2), ('b', 1), ('b', 2))
+                )
+        self.assertEqual(tuple(ds1.coords.keys()),
+                ('level_0', 'level_1', 'level_2')
+                )
+        self.assertEqual(ds1[('b', 1)].values.ndim, 3)
 
         f2 = Frame.from_records(records)
         ds2 = f2.to_xarray()
@@ -427,7 +435,6 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(ds2.coords.keys()), ('index',))
         self.assertEqual(ds2[3].values.tolist(),
                 [False, True, False, True])
-
 
 
     def test_frame_getitem_a(self) -> None:

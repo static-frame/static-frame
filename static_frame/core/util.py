@@ -60,8 +60,8 @@ DTYPE_NAT_KIND = ('M', 'm')
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
-DTYPE_INT_DEFAULT = np.int64
-DTYPE_FLOAT_DEFAULT = np.float64
+DTYPE_INT_DEFAULT = np.dtype(np.int64)
+DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 
 NULL_SLICE = slice(None)
 UNIT_SLICE = slice(0, 1)
