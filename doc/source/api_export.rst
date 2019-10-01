@@ -61,6 +61,8 @@ Frame
 
 .. automethod:: static_frame.Frame.to_tsv
 
+.. automethod:: static_frame.Frame.to_xlsx
+
 .. automethod:: static_frame.Frame.to_html
 
 .. automethod:: static_frame.Frame.to_html_datatables

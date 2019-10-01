@@ -71,6 +71,9 @@ Frame
 .. automethod:: static_frame.Frame.from_tsv
 
 
+.. automethod:: static_frame.Frame.from_xlsx
+
+
 .. automethod:: static_frame.Frame.from_json
 
 

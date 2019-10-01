@@ -960,7 +960,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_tsv(cls,
-            fp,
+            fp: PathSpecifierOrFileLike,
             **kwargs
             ) -> 'Frame':
         '''
@@ -970,6 +970,28 @@ class Frame(ContainerOperand):
             :py:class:`static_frame.Frame`
         '''
         return cls.from_csv(fp, delimiter='\t', **kwargs)
+
+    @classmethod
+    def from_xlsx(cls,
+            fp: PathSpecifier,
+            *,
+            sheet_name: tp.Optional[str] = None,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None
+            ) -> 'Frame':
+        '''
+        Load Frame from the contents of a sheet in an XLSX workbook.
+        '''
+        from static_frame.core.store_xlsx import StoreXLSX
+
+        st = StoreXLSX(fp)
+        return st.read(sheet_name, # should this be called label?
+            index_depth=index_depth,
+            columns_depth=index_depth,
+            dtypes=dtypes
+            )
+
 
 
     @classmethod
@@ -3131,6 +3153,7 @@ class Frame(ContainerOperand):
 
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet
+            *,
             sheet_name: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,

@@ -14,6 +14,7 @@ Added ``label_widths_at_depth()`` on ``Index`` and ``IndexHierarchy``.
 
 Added ``Frame.to_xarray()``.
 
+Added ``Frame.to_xlsx()``, ``Frame.from_xlsx()``.
 
 
 
