@@ -406,6 +406,30 @@ class TestUnit(TestCase):
                 [[1, 1]]
                 )
 
+
+    def test_frame_to_xarray_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2), name=('a', 'b'))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        f2 = Frame.from_records(records)
+        ds2 = f2.to_xarray()
+        self.assertEqual(tuple(ds2.data_vars.keys()), (0, 1, 2, 3))
+        self.assertEqual(tuple(ds2.coords.keys()), ('index',))
+        self.assertEqual(ds2[3].values.tolist(),
+                [False, True, False, True])
+
+
+
     def test_frame_getitem_a(self) -> None:
 
         records = (
@@ -3728,11 +3752,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_items_b(self) -> None:
 
-        records = (
-                (2, False),
-                (34, False),
-                )
-        f1 = Frame.from_records(records,
+        f1 = Frame.from_records(((2, False), (34, False)),
                 columns=('p', 'q',),
                 index=('d', 'c'))
 

@@ -2986,6 +2986,39 @@ class Frame(ContainerOperand):
             df.name = self._name
         return df
 
+
+    def to_xarray(self):
+        '''
+        Return an xarray Dataset.
+
+        In order to preserve columnar types, and following the precedent of Pandas, the :obj:`Frame` is translated as a Dataset of 1D arrays, where each DataArray is a 1D array.
+        '''
+        import xarray
+
+        columns = self.columns
+        index = self.index
+
+        if index.depth == 1:
+            index_name = index.name if index.name else 'index'
+        else:
+            raise NotImplementedError()
+
+        if columns.depth == 1:
+            columns_name = columns.name
+        else:
+            if columns.name:
+                if isinstance(columns.name, tuple) and len(columns.name) == columns.depth:
+                    columns_name = columns.name
+                else:
+                    columns_name = tuple(str(x) for x in range(columns.depth))
+            else:
+                columns_name = tuple(str(x) for x in range(columns.depth))
+
+
+        data_vars = {k: (index_name, v) for k, v in zip(columns.values, self._blocks.axis_values(0))}
+
+        return xarray.Dataset(data_vars, coords={index_name:index.values})
+
     def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.

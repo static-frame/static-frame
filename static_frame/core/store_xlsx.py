@@ -220,16 +220,7 @@ class StoreXLSX(Store):
         name = ws.title
 
         index_values: tp.List[tp.Any] = []
-        # elif index_depth == 1:
-        #     index_shape = ((max_row - columns_depth),)
-        # else:
-        #     index_shape = (max_row - columns_depth, index_depth)
-
         columns_values: tp.List[tp.Any] = []
-        # elif columns_depth == 1:
-        #     columns_shape = ((max_column - index_depth),)
-        # else:
-        #     columns_shape = ((max_column - index_depth), columns_depth)
 
         # print()
         # for row in ws.iter_rows():
@@ -256,7 +247,6 @@ class StoreXLSX(Store):
                     index_values.append(row[:index_depth])
                     data.append(row[index_depth:])
 
-        # try to force cleanup
         wb.close()
 
         index: tp.Optional[IndexBase] = None

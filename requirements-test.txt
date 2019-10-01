@@ -14,3 +14,4 @@ sphinx_rtd_theme>=0.4.2
 sphinxcontrib-napoleon==0.7.0
 xlsxwriter==1.1.2
 openpyxl==3.0.0
+xarray==0.13.0
