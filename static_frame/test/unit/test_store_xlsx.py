@@ -1,6 +1,9 @@
 
 import unittest
 
+import numpy as np  # type: ignore
+
+
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.series import Series
@@ -65,6 +68,25 @@ class TestUnit(TestCase):
                         )
                 self.assertEqualFrames(f_src, f_loaded)
 
+
+
+
+    def test_store_xlsx_write_b(self) -> None:
+
+        f1 = Frame.from_records(
+                ((10, np.nan, 50, 'a'), (None, -np.inf, -50, 'b'), (None, 60.4, -50, 'c')),
+                index=('p', 'q', 'r'),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                )
+
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),))
+
+            f2 = st.read(index_depth=f1.index.depth, columns_depth=f1.columns.depth)
+            # import ipdb; ipdb.set_trace()
+            # self.assertEqualFrames(f1, f2)
 
 
 

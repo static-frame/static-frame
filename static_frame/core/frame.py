@@ -1865,7 +1865,7 @@ class Frame(ContainerOperand):
             :py:class:`static_frame.Series`
         '''
         return Series(self._blocks.dtypes,
-                index=self._columns.values,
+                index=immutable_index_filter(self._columns),
                 name=self._name
                 )
 

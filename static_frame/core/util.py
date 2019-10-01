@@ -107,6 +107,7 @@ INT_TYPES = (int, np.integer) # np.integer catches all np int
 FLOAT_TYPES = (float, np.floating) # np.floating catches all np float
 COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all np complex
 INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
+NUMERIC_TYPES = (int, float, complex, np.number)
 
 BOOL_TYPES = (bool, np.bool_)
 DICTLIKE_TYPES = (abc.Set, dict)
@@ -191,13 +192,36 @@ SeriesInitializer = tp.Union[
         int, float, str, bool]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
+FRAME_INITIALIZER_DEFAULT = object()
+
 FrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
         np.ndarray,
-        ]
+        ] # need to add FRAME_INITIALIZER_DEFAULT
 
-FRAME_INITIALIZER_DEFAULT = object()
 FILL_VALUE_DEFAULT = object()
+
+REPLACE_DEFAULT = object()
+
+ReplaceToStr = tp.Dict[tp.Hashable, str]
+ReplaceFromStr = tp.Dict[str, tp.Set[str]]
+
+REPLACE_VALID_KEYS = frozenset((np.nan, None, np.inf, -np.inf))
+
+REPLACE_TO_STR_DEFAULT = {
+        np.nan: '',
+        None: 'None',
+        np.inf: 'inf',
+        -np.inf: '-inf'
+        }
+REPLACE_FROM_STR_DEFAULT = {
+        np.nan: frozenset(('', 'NaN', 'NAN', 'NULL', '#N/A')),
+        None: frozenset(('None',)),
+        np.inf: frozenset(('inf',)),
+        -np.inf: frozenset(('-inf',))
+        }
+
+
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
@@ -205,6 +229,14 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
 #-------------------------------------------------------------------------------
+
+def valid_replace(replace: tp.Dict[tp.Hashable, tp.Any]) -> None:
+    '''Retrun Boolean of the replace dictionary has valid keys.
+    '''
+    # NOTE: could be a replace filter
+    if not (replace.keys() | REPLACE_VALID_KEYS) == REPLACE_VALID_KEYS:
+        raise RuntimeError(f'invalid replace keys; must include only {REPLACE_VALID_KEYS}')
+
 
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
