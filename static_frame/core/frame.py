@@ -91,6 +91,9 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+from static_frame.core.store_filter import StoreFilter
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+
 from static_frame.core.exception import ErrorInitFrame
 
 from static_frame.core.doc_str import doc_inject
@@ -818,6 +821,7 @@ class Frame(ContainerOperand):
                     index_constructor=IndexHierarchy.from_labels,
                     name=name,
                     own_data=True)
+
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be
 
@@ -913,14 +917,15 @@ class Frame(ContainerOperand):
             delimiter: str = ',',
             index_depth: int = 0,
             index_column: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
             skip_header: int = 0,
             skip_footer: int = 0,
-            columns_depth: int = 1,
             quote_char: str = '"',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
         Create a Frame from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -930,9 +935,9 @@ class Frame(ContainerOperand):
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
             index_column: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -3117,7 +3122,8 @@ class Frame(ContainerOperand):
             include_index: bool = True,
             include_columns: bool = True,
             encoding: tp.Optional[str] = None,
-            line_terminator: str = '\n'
+            line_terminator: str = '\n',
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ):
         '''
         Given a file path or file-like object, write the Frame as delimited text.
@@ -3133,15 +3139,27 @@ class Frame(ContainerOperand):
         else:
             f = fp # assume an open file like
             is_file = False
+
+        if include_index:
+            index_values = self._index.values # get once for caching
+
+        if store_filter:
+            filter_func = store_filter.from_type_filter_element
+
         try:
             if include_columns:
                 if include_index:
+                    # if this is included should be controlled by a Boolean switch
                     if self._index.name is not None:
                         f.write(f'{self._index.name}{delimiter}')
                     else:
                         f.write(f'index{delimiter}')
                 # iter directly over columns in case it is an IndexGO and needs to update cache
-                f.write(delimiter.join(f'{x}' for x in self._columns))
+                # TODO: support IndexHierarchy
+                if store_filter:
+                    f.write(delimiter.join(f'{filter_func(x)}' for x in self._columns))
+                else:
+                    f.write(delimiter.join(f'{x}' for x in self._columns))
                 f.write(line_terminator)
 
             col_idx_last = self._blocks._shape[1] - 1
@@ -3152,14 +3170,18 @@ class Frame(ContainerOperand):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        f.write(f'{self._index._labels[row_idx]}{delimiter}')
-                        # f.write(to_str(self._index._labels[row_idx]) + delimiter)
+                        # TODO: support IndexHierarchy
+                        if store_filter:
+                            f.write(f'{filter_func(index_values[row_idx])}{delimiter}')
+                        else:
+                            f.write(f'{index_values[row_idx]}{delimiter}')
                     row_current_idx = row_idx
-                # f.write(to_str(element))
-                f.write(f'{element}')
+                if store_filter:
+                    f.write(f'{filter_func(element)}')
+                else:
+                    f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
-            # not sure if we need a final line terminator
         except:
             raise
         finally:
