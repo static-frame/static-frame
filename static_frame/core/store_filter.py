@@ -13,7 +13,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import AnyCallable
+# from static_frame.core.util import AnyCallable
 from static_frame.core.util import EMPTY_SET
 
 
@@ -49,9 +49,10 @@ class StoreFilter:
     to_posinf: tp.FrozenSet[str]
     to_neginf: tp.FrozenSet[str]
 
-    _TYPE_TO_TO: tp.Iterable[tp.Tuple[AnyCallable, tp.FrozenSet[str]]]
-    _FLOAT_FUNC_TO_FROM: tp.Iterable[tp.Tuple[AnyCallable, tp.Optional[str]]]
-    _EQUAL_FUNC_TO_FROM: tp.Iterable[tp.Tuple[AnyCallable, tp.Optional[str]]]
+    # cannot use AnyCallable here
+    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
+    _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
+    _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
 
     def __init__(self,
             # from type to str
