@@ -40,13 +40,17 @@ def get_version() -> str:
                 return l.split('=')[-1].strip()[1:-1]
     raise ValueError("__version__ not found!")
 
+install_requires = []
+with open("./requirements.txt") as f:
+    install_requires = f.read().splitlines()
+
 setup(
     name='static-frame',
     version=get_version(),
     description='Immutable structures for one- and two-dimensional calculations with labelled axes',
     long_description=get_long_description(),
     python_requires='>3.6.0',
-    install_requires=['numpy>=1.14.2'],
+    install_requires=install_requires,
     url='https://github.com/InvestmentSystems/static-frame',
     author='Christopher Ariza',
     license='MIT',
