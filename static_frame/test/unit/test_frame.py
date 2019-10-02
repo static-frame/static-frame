@@ -3055,6 +3055,20 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
 
+
+    def test_frame_from_csv_f(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1)
+
+        self.assertAlmostEqualFramePairs(f1.to_pairs(0),
+                (('count', (('A', np.nan), ('B', np.nan), ('C', np.nan), ('D', np.nan))), ('score', (('A', 1.3), ('B', 5.2), ('C', 3.4), ('D', 9.0))), ('color', (('A', 'red'), ('B', 'green'), ('C', 'blue'), ('D', 'black'))))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (
@@ -3116,6 +3130,7 @@ class TestUnit(TestCase):
                 # nan has been converted to string
                 self.assertEqual(lines[1], 'w,2,,a,False,None\n')
                 self.assertEqual(lines[4], 'z,30,-inf,d,True,None')
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_tsv_a(self) -> None:

@@ -98,6 +98,12 @@ class TestUnit(TestCase):
 
 
 
+    def test_store_to_type_filter_array_a(self) -> None:
+        sfd = STORE_FILTER_DEFAULT
+        a1 = np.array([1, None, 'nan', '', 'inf'], dtype=object)
+        post = sfd.to_type_filter_array(a1)
+        self.assertAlmostEqualValues(post.tolist(), [1, None, np.nan, np.nan, np.inf])
+
 
 if __name__ == '__main__':
     unittest.main()

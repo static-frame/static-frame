@@ -12,6 +12,8 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -731,7 +733,8 @@ class Frame(ContainerOperand):
             index_column: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
         Convert a NumPy structed array into a Frame. Presently this always uses
@@ -783,6 +786,9 @@ class Frame(ContainerOperand):
 
                 # this is not expected to make a copy
                 array_final = array[name]
+                # do StoreFilter conversions before dtyp
+                if store_filter is not None:
+                    array_final = store_filter.to_type_filter_array(array_final)
                 if dtypes:
                     dtype = get_col_dtype(col_idx)
                     if dtype is not None:
@@ -938,6 +944,7 @@ class Frame(ContainerOperand):
             columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
+            store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently only the ``to_nan`` attributes is used.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -968,6 +975,8 @@ class Frame(ContainerOperand):
         else:
             file_like = fp
 
+        # genfromtxt takes a missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
+
         array = np.genfromtxt(file_like,
                 delimiter=delimiter_native,
                 skip_header=skip_header,
@@ -977,8 +986,8 @@ class Frame(ContainerOperand):
                 dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
-                missing_values={''},
                 )
+
         # can own this array so set it as immutable
         array.flags.writeable = False
         return cls.from_structured_array(array,
@@ -986,7 +995,8 @@ class Frame(ContainerOperand):
                 index_column=index_column,
                 dtypes=dtypes,
                 name=name,
-                consolidate_blocks=consolidate_blocks
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
                 )
 
     @classmethod

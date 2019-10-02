@@ -32,9 +32,10 @@ class StoreFilter:
             'to_posinf',
             'to_neginf',
 
-            '_TYPE_TO_TO',
             '_FLOAT_FUNC_TO_FROM',
             '_EQUAL_FUNC_TO_FROM',
+            '_TYPE_TO_TO',
+            '_TYPE_TO_TO_TUPLE',
             )
 
     # from type to string
@@ -50,9 +51,10 @@ class StoreFilter:
     to_neginf: tp.FrozenSet[str]
 
     # cannot use AnyCallable here
-    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
     _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
+    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
+    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.Tuple[str, ...]], ...]
 
     def __init__(self,
             # from type to str
@@ -77,15 +79,8 @@ class StoreFilter:
         self.to_posinf = to_posinf
         self.to_neginf = to_neginf
 
-
         # assumed faster to define these per instance than at the class level; this avoids having to use a getattr call to get a handle to the instance method, as wold be necessary if this was on th eclass
 
-        self._TYPE_TO_TO = (
-                (np.nan, self.to_nan),
-                (None, self.to_none),
-                (np.inf, self.to_posinf),
-                (-np.inf, self.to_neginf)
-                )
 
         # None has to be handled separately
         self._FLOAT_FUNC_TO_FROM = (
@@ -103,10 +98,25 @@ class StoreFilter:
                 (lambda x: np.equal(x, -np.inf), self.from_neginf)
                 )
 
+        self._TYPE_TO_TO = (
+                (np.nan, self.to_nan),
+                (None, self.to_none),
+                (np.inf, self.to_posinf),
+                (-np.inf, self.to_neginf)
+                )
+
+        # for using isin, cannot use a set, so pre-convert to tuples here
+        self._TYPE_TO_TO_TUPLE = (
+                (np.nan, tuple(self.to_nan)),
+                (None, tuple(self.to_none)),
+                (np.inf, tuple(self.to_posinf)),
+                (-np.inf, tuple(self.to_neginf)),
+                )
+
     def from_type_filter_array(self,
             array: np.ndarray
             ) -> np.ndarray:
-        '''Given an array, replace values approrpriately
+        '''Given an array, replace types with strings
         '''
         kind = array.dtype.kind
         dtype = array.dtype
@@ -119,7 +129,6 @@ class StoreFilter:
                 return array
 
             post = None # defer creating until we have a match
-
             for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None:
                     found = func(array)
@@ -128,7 +137,6 @@ class StoreFilter:
                             # need to store string replacements in object type
                             post = array.astype(object) # get a copy to mutate
                         post[found] = value_replace
-
             return post if post is not None else array
 
         if kind in DTYPE_NAT_KIND:
@@ -139,7 +147,6 @@ class StoreFilter:
                 return array
 
             post = None
-
             for func, value_replace in self._EQUAL_FUNC_TO_FROM:
                 if value_replace is not None:
                     found = func(array)
@@ -147,7 +154,6 @@ class StoreFilter:
                         if post is None:
                             post = array.copy() # get a copy to mutate
                         post[found] = value_replace
-
             return post if post is not None else array
 
         return array
@@ -158,7 +164,6 @@ class StoreFilter:
         '''
         Filter single values to string.
         '''
-
         # apply to all types
         if self.from_none is not None and value is None:
             return self.from_none
@@ -167,9 +172,38 @@ class StoreFilter:
             for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None and func(value):
                     return value_replace
-
         return value
 
+
+    def to_type_filter_array(self,
+            array: np.ndarray
+            ) -> np.ndarray:
+        '''Given an array, replace strings with types.
+        '''
+        kind = array.dtype.kind
+        dtype = array.dtype
+
+        # nothin to do with ints, floats, or bools
+        if (kind in DTYPE_INT_KIND
+                or kind in DTYPE_NAN_KIND
+                or dtype == DTYPE_BOOL
+                ):
+            return array # no replacements posible
+
+        # need to only check object or float
+        if kind in DTYPE_STR_KIND or dtype == DTYPE_OBJECT:
+            # for string types, cannot use np.equal
+            post = None
+            for value_replace, matching in self._TYPE_TO_TO_TUPLE:
+                if value_replace is not None:
+                    found = np.isin(array, matching)
+                    if found.any():
+                        if post is None:
+                            post = array.astype(object) # get a copy to mutate
+                        post[found] = value_replace
+            return post if post is not None else array
+
+        return array
 
 
     def to_type_filter_element(self,
@@ -183,7 +217,6 @@ class StoreFilter:
                 if value in matching:
                     return value_replace
         return value
-
 
 
 STORE_FILTER_DEFAULT = StoreFilter()
