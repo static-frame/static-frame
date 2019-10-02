@@ -17,10 +17,10 @@ class TestUnit(TestCase):
 
         sfd = STORE_FILTER_DEFAULT
 
-        self.assertEqual(sfd.filter_array(a1).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
                 [1.0, 2.0, '', '+inf', '-inf'])
 
-        self.assertEqual(sfd.filter_array(a2).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [1.0, 2.0, '', '+inf', '-inf'])
 
     def test_store_filter_b(self) -> None:
@@ -30,9 +30,9 @@ class TestUnit(TestCase):
 
         sfd = STORE_FILTER_DEFAULT
 
-        self.assertEqual(sfd.filter_array(a1).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
                 [False, True, False])
-        self.assertEqual(sfd.filter_array(a2).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [False, True, False])
 
 
@@ -44,9 +44,9 @@ class TestUnit(TestCase):
 
         sfd = STORE_FILTER_DEFAULT
 
-        self.assertEqual(sfd.filter_array(a1).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
                 [1, 20, 1])
-        self.assertEqual(sfd.filter_array(a2).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [1, 20, 1])
 
 
@@ -56,7 +56,7 @@ class TestUnit(TestCase):
 
         sfd = STORE_FILTER_DEFAULT
 
-        self.assertEqual(sfd.filter_array(a1).tolist(),
+        self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
             [1, 'None', '', '-inf', '+inf'])
 
 

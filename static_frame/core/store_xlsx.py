@@ -165,7 +165,7 @@ class StoreXLSX(Store):
             columns_depth = frame._columns.depth
             columns_values = frame._columns.values
             if store_filter:
-                columns_values = store_filter.filter_array(columns_values)
+                columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
 
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
@@ -191,7 +191,7 @@ class StoreXLSX(Store):
 
             if store_filter:
                 # thi might change the dtype
-                values = store_filter.filter_array(values)
+                values = store_filter.from_type_filter_array(values)
             writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the columns
             for row, v in enumerate(values, columns_depth):
