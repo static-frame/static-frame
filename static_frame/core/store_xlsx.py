@@ -279,7 +279,7 @@ class StoreXLSX(Store):
             index_depth: int=1,
             columns_depth: int=1,
             dtypes: DtypesSpecifier = None,
-
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
         Args:
@@ -313,8 +313,11 @@ class StoreXLSX(Store):
         data = []
 
         for row_count, row in enumerate(ws.iter_rows()): # cannot use values_only on 2.5.4
-            # TODO: do value conversions here
-            row = tuple(c.value for c in row)
+            if store_filter is None:
+                row = tuple(c.value for c in row)
+            else: # only need to filter string values, but probably too expensive to pre-check
+                row = tuple(store_filter.to_type_filter_element(c.value) for c in row)
+
             if row_count <= columns_depth - 1:
                 if columns_depth == 1:
                     columns_values.extend(row[index_depth:])
@@ -333,7 +336,6 @@ class StoreXLSX(Store):
                     data.append(row[index_depth:])
 
         wb.close()
-
 
         index: tp.Optional[IndexBase] = None
         if index_depth == 1:

@@ -212,4 +212,4 @@ class TestCase(unittest.TestCase):
         self.assertEqual(f1.columns.__class__, f2.columns.__class__)
 
         # NOTE: this will not handle types
-        self.assertEqual(f1.to_pairs(0), f2.to_pairs(0))
+        self.assertAlmostEqualFramePairs(f1.to_pairs(0), f2.to_pairs(0))

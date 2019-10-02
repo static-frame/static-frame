@@ -92,6 +92,10 @@ class TestUnit(TestCase):
                     f1[HLoc[('II', 'a')]].values.tolist(),
                     f2[HLoc[('II', 'a')]].values.tolist() )
 
+            self.assertEqualFrames(f1, f2)
+
+
+
 if __name__ == '__main__':
     unittest.main()
 
