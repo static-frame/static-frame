@@ -113,7 +113,7 @@ class Bus(ContainerBase):
         for label, value in series.items():
             if not isinstance(value, Frame) and not value is FrameDeferred:
                 raise ErrorInitBus(f'supplied {value.__class__} is not a frame.')
-            if not isinstnace(label, str):
+            if not isinstance(label, str):
                 raise ErrorInitBus(f'supplied label {label} is not a string.')
 
         # TODO: create _loaded Boolean array cache

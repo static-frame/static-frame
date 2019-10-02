@@ -277,9 +277,7 @@ class TestUnit(TestCase):
                     )
 
 
-
-
-    def test_bus_to_xlsx(self) -> None:
+    def test_bus_to_xlsx_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
                 index=('x', 'y'),
@@ -296,12 +294,13 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
 
         with temp_file('.xlsx') as fp:
-            b1.to_xlsx(b1)
-            import ipdb; ipdb.set_trace()
+            b1.to_xlsx(fp)
 
-            pass
+            b2 = Bus.from_xlsx(fp)
+            tuple(b2.items()) # force loading all
 
-
+        for frame in (f1, f2, f3):
+            self.assertEqualFrames(frame, b2[frame.name])
 
 
 
