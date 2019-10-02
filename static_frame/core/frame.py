@@ -747,28 +747,16 @@ class Frame(ContainerOperand):
         names = array.dtype.names
 
         index_start_pos = -1 # will be ignored
-        index_name = None
         if index_column is not None:
             if index_depth <= 0:
                 raise ErrorInitFrame('index_column specified but index_depth is 0')
             elif isinstance(index_column, INT_TYPES):
-                index_name = names[index_column]
                 index_start_pos = index_column
             else:
-                index_name = index_column
-                index_start_pos = names.index(index_name) # linear performance
-
-        index_names = None
-        if index_depth == 1:
-            if index_name is None: # has not been set by index_column, get first
-                index_name = names[0]
+                index_start_pos = names.index(index_column) # linear performance
+        else: # no index_column specified, if index depth > 0, set start to 0
+            if index_depth > 0:
                 index_start_pos = 0
-        elif index_depth > 1:
-            if index_name is None:
-                index_names = names[:index_depth]
-                index_start_pos = 0
-            else:
-                index_names = names[index_start_pos: index_start_pos+index_depth]
 
 
         # assign in generator; requires  reading through gen first
@@ -797,8 +785,9 @@ class Frame(ContainerOperand):
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
+                # import ipdb; ipdb.set_trace()
                 if col_idx >= index_start_pos and col_idx < index_start_pos + index_depth:
-                    nonlocal index_arrays
+                    # nonlocal index_arrays
                     index_arrays.append(array_final)
                     continue
 
@@ -825,7 +814,7 @@ class Frame(ContainerOperand):
         if index_depth > 1:
             return cls(TypeBlocks.from_blocks(block_gen()),
                     columns=columns,
-                    index=zip(index_arrays),
+                    index=zip(*index_arrays),
                     index_constructor=IndexHierarchy.from_labels,
                     name=name,
                     own_data=True)

@@ -3001,15 +3001,12 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_csv_c(self) -> None:
-
         s1 = StringIO('color,count,score\nred,1,1.3\ngreen,3,5.2\nblue,100,3.4\nblack,4,9.0')
         f1 = Frame.from_csv(s1, index_depth=1)
         self.assertEqual(f1.to_pairs(0),
                 (('count', (('red', 1), ('green', 3), ('blue', 100), ('black', 4))), ('score', (('red', 1.3), ('green', 5.2), ('blue', 3.4), ('black', 9.0)))))
 
-
     def test_frame_from_csv_d(self) -> None:
-
         input_stream = StringIO('''
         196412	0.0
         196501	0.0
@@ -3045,6 +3042,19 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(0),
                 (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), ('f2', ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
+
+
+    def test_frame_from_csv_e(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=2,
+                columns_depth=1)
+        self.assertEqual(f1.index.__class__, IndexHierarchy)
+        self.assertEqual(f1.to_pairs(0),
+                (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
+
 
 
     def test_frame_to_csv_a(self) -> None:
