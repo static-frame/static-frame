@@ -13,6 +13,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import AnyCallable
 
 
 class StoreFilter:
@@ -28,7 +29,11 @@ class StoreFilter:
             'to_nan',
             'to_none',
             'to_posinf',
-            'to_neginf'
+            'to_neginf',
+
+            '_TYPE_TO_TO',
+            '_FLOAT_FUNC_TO_FROM',
+            '_EQUAL_FUNC_TO_FROM',
             )
 
     # from type to string
@@ -42,6 +47,10 @@ class StoreFilter:
     to_none: tp.FrozenSet[str]
     to_posinf: tp.FrozenSet[str]
     to_neginf: tp.FrozenSet[str]
+
+    _TYPE_TO_TO: tp.Iterable[tp.Tuple[AnyCallable, tp.FrozenSet[str]]]
+    _FLOAT_FUNC_TO_FROM: tp.Iterable[tp.Tuple[AnyCallable, tp.Optional[str]]]
+    _EQUAL_FUNC_TO_FROM: tp.Iterable[tp.Tuple[AnyCallable, tp.Optional[str]]]
 
     def __init__(self,
             # from type to str
@@ -67,6 +76,31 @@ class StoreFilter:
         self.to_neginf = to_neginf
 
 
+        # assumed faster to define these per instance than at the class level; this avoids having to use a getattr call to get a handle to the instance method, as wold be necessary if this was on th eclass
+
+        self._TYPE_TO_TO = (
+                (np.nan, self.to_nan),
+                (None, self.to_none),
+                (np.inf, self.to_posinf),
+                (-np.inf, self.to_neginf)
+                )
+
+        # None has to be handled separately
+        self._FLOAT_FUNC_TO_FROM = (
+                (np.isnan, self.from_nan),
+                (np.isposinf, self.from_posinf),
+                (np.isneginf, self.from_neginf)
+                )
+
+        # for object array processing
+        self._EQUAL_FUNC_TO_FROM = (
+                # NOTE: this using the same heuristic as util.isna_array,, which may not be the besr choice for non-standard objects
+                (lambda x: np.not_equal(x, x), self.from_nan),
+                (lambda x: np.equal(x, None), self.from_none),
+                (lambda x: np.equal(x, np.inf), self.from_posinf),
+                (lambda x: np.equal(x, -np.inf), self.from_neginf)
+                )
+
     def from_type_filter_array(self,
             array: np.ndarray
             ) -> np.ndarray:
@@ -79,48 +113,40 @@ class StoreFilter:
             return array # no replacements posible
 
         if kind in DTYPE_NAN_KIND:
-            if (self.from_nan is None
-                    and self.from_posinf is None
-                    and self.from_neginf is None):
+            if all(v is None for _, v in self._FLOAT_FUNC_TO_FROM):
                 return array
 
-            # can have all but None
-            post = array.astype(object) # get a copy to mutate
+            post = None # defer creating until we have a match
 
-            for func, value_replace in (
-                    (np.isnan, self.from_nan),
-                    (np.isposinf, self.from_posinf),
-                    (np.isneginf, self.from_neginf)
-                    ):
+            for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None:
-                    post[func(array)] = value_replace
+                    found = func(array)
+                    if found.any():
+                        if post is None:
+                            # need to store string replacements in object type
+                            post = array.astype(object) # get a copy to mutate
+                        post[found] = value_replace
 
-            return post
+            return post if post is not None else array
 
         if kind in DTYPE_NAT_KIND:
             raise NotImplementedError() # np.isnat
 
         if dtype == DTYPE_OBJECT:
-            if (self.from_nan is None
-                    and self.from_none is None
-                    and self.from_posinf is None
-                    and self.from_neginf is None):
+            if all(v is None for _, v in self._EQUAL_FUNC_TO_FROM):
                 return array
 
-            array = array.copy() # get a copy to mutate
+            post = None
 
-            if self.from_nan is not None:
-                # NOTE: this using the same heuristic as util.isna_array,, which may not be the besr choice for non-standard objects
-                array[np.not_equal(array, array)] = self.from_nan
-
-            for equal_to, value_replace in (
-                    (None, self.from_none),
-                    (np.inf, self.from_posinf),
-                    (-np.inf, self.from_neginf)
-                    ):
+            for func, value_replace in self._EQUAL_FUNC_TO_FROM:
                 if value_replace is not None:
-                    array[np.equal(array, equal_to)] = value_replace
-            return array
+                    found = func(array)
+                    if found.any():
+                        if post is None:
+                            post = array.copy() # get a copy to mutate
+                        post[found] = value_replace
+
+            return post if post is not None else array
 
         return array
 
@@ -131,15 +157,12 @@ class StoreFilter:
         Filter single values to string.
         '''
 
+        # apply to all types
         if self.from_none is not None and value is None:
             return self.from_none
 
         if isinstance(value, FLOAT_TYPES):
-            for func, value_replace in (
-                    (np.isnan, self.from_nan),
-                    (np.isposinf, self.from_posinf),
-                    (np.isneginf, self.from_neginf)
-                    ):
+            for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None and func(value):
                     return value_replace
 
@@ -150,7 +173,13 @@ class StoreFilter:
     def to_type_filter_element(self,
             value: tp.Any
             ) -> tp.Any:
-        pass
+        '''
+        Given a value wich may be an encoded string, decode into a type.
+        '''
+        if isinstance(value, str):
+            for value_replace, matching in self._TYPE_TO_TO:
+                if value in matching:
+                    return value_replace
 
 
 
