@@ -87,20 +87,13 @@ class StoreFilter:
             # can have all but None
             post = array.astype(object) # get a copy to mutate
 
-            for func, value in (
+            for func, value_replace in (
                     (np.isnan, self.from_nan),
                     (np.isposinf, self.from_posinf),
                     (np.isneginf, self.from_neginf)
                     ):
-                if value is not None:
-                    post[func(array)] = value
-
-            # if self.from_nan is not None:
-            #     post[np.isnan(array)] = self.from_nan
-            # if self.from_posinf is not None:
-            #     post[np.isposinf(array)] = self.from_posinf
-            # if self.from_neginf is not None:
-            #     post[np.isneginf(array)] = self.from_neginf
+                if value_replace is not None:
+                    post[func(array)] = value_replace
 
             return post
 
@@ -120,26 +113,18 @@ class StoreFilter:
                 # NOTE: this using the same heuristic as util.isna_array,, which may not be the besr choice for non-standard objects
                 array[np.not_equal(array, array)] = self.from_nan
 
-            # if self.from_none is not None:
-            #     array[np.equal(array, None)] = self.from_none
-            # if self.from_posinf is not None:
-            #     array[np.equal(array, np.inf)] = self.from_posinf
-            # if self.from_neginf is not None:
-            #     array[np.equal(array, -np.inf)] = self.from_neginf
-
-            for equal_to, value in (
+            for equal_to, value_replace in (
                     (None, self.from_none),
                     (np.inf, self.from_posinf),
                     (-np.inf, self.from_neginf)
                     ):
-                if value is not None:
-                    array[np.equal(array, equal_to)] = value
-
+                if value_replace is not None:
+                    array[np.equal(array, equal_to)] = value_replace
             return array
 
         return array
 
-    def from_type_filter_value(self,
+    def from_type_filter_element(self,
             value: tp.Any
             ) -> tp.Any:
         '''
@@ -150,9 +135,15 @@ class StoreFilter:
             return self.from_none
 
         if isinstance(value, FLOAT_TYPES):
-            if self.from_nan is not None and np.isnan(value):
-                return self.from_nan
+            for func, value_replace in (
+                    (np.isnan, self.from_nan),
+                    (np.isposinf, self.from_posinf),
+                    (np.isneginf, self.from_neginf)
+                    ):
+                if value_replace is not None and func(value):
+                    return value_replace
 
+        return value
 
 
 
