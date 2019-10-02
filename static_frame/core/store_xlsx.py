@@ -14,14 +14,16 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import _DT64_S
 from static_frame.core.util import _DT64_DAY
 from static_frame.core.util import AnyCallable
-from static_frame.core.util import isna_array
+# from static_frame.core.util import isna_array
 
-from static_frame.core.util import REPLACE_DEFAULT
-from static_frame.core.util import ReplaceToStr
+# from static_frame.core.util import REPLACE_DEFAULT
+# from static_frame.core.util import ReplaceToStr
 # from static_frame.core.util import ReplaceFromStr
 # from static_frame.core.util import REPLACE_FROM_STR_DEFAULT
-from static_frame.core.util import REPLACE_TO_STR_DEFAULT
-from static_frame.core.util import valid_replace
+# from static_frame.core.util import REPLACE_TO_STR_DEFAULT
+# from static_frame.core.util import valid_replace
+
+
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import NUMERIC_TYPES
 
@@ -31,6 +33,10 @@ from static_frame.core.frame import Frame
 # from static_frame.core.util import PathSpecifier
 
 from static_frame.core.store import Store
+
+from static_frame.core.store_filter import StoreFilter
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
@@ -85,39 +91,24 @@ class StoreXLSX(Store):
     @classmethod
     def _get_writer(cls,
             dtype: np.dtype,
-            replace: ReplaceToStr,
             ws: 'Worksheet'
             ) -> AnyCallable: # find better type
         '''
         Return a writer function of the passed in Worksheet.
         '''
+        assert isinstance(dtype, np.dtype)
 
         import xlsxwriter # type: ignore
 
-
         writer_attr, replace_active = cls._dtype_to_writer_attr(dtype)
-        writer = getattr(ws, writer_attr)
+        writer_native = getattr(ws, writer_attr)
 
-        def writer_replace(
+        def writer(
                 row: int,
                 col: int,
                 value: tp.Any,
-                value_isna: bool,
                 cell_format: tp.Optional[xlsxwriter.format.Format] = None
                 ) -> tp.Any:
-
-            if replace_active:
-                # we assume all replacements are going to string types
-                if value_isna:
-                    if value is not None:
-                        # must be np.nan, use np.nan other NaNs may not work
-                        value = replace[np.nan]
-                    else:
-                        value = replace[None]
-                    return ws.write_string(row, col, value, cell_format)
-                elif value in replace:
-                    value = replace[value]
-                    return ws.write_string(row, col, value, cell_format)
 
             if writer_attr == 'write':
                 # determine type for aach value
@@ -128,10 +119,10 @@ class StoreXLSX(Store):
                 if isinstance(value, NUMERIC_TYPES):
                     return ws.write_number(row, col, value, cell_format)
 
-            # use the type specific writer
-            return writer(row, col, value, cell_format)
+            # use the type specific writer_native
+            return writer_native(row, col, value, cell_format)
 
-        return writer_replace
+        return writer
 
 
     @classmethod
@@ -144,12 +135,13 @@ class StoreXLSX(Store):
             format_columns: 'Format',
             format_index: 'Format',
             merge_hierarchical_labels: bool,
-            replace: ReplaceToStr
+            store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
 
         # iterating by columns avoids type coercion
         if include_index:
+            # apply store_filter below
             index_values = frame._index.values
             index_depth = frame._index.depth
 
@@ -172,12 +164,14 @@ class StoreXLSX(Store):
         if include_columns:
             columns_depth = frame._columns.depth
             columns_values = frame._columns.values
-            columns_values_isna = isna_array(columns_values)
-            writer_columns = cls._get_writer(columns_values.dtype, replace, ws)
+            if store_filter:
+                columns_values = store_filter.filter_array(columns_values)
+            writer_columns = cls._get_writer(columns_values.dtype, ws)
 
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
 
         for col, values in columns_iter:
+
             if include_columns:
                 # col integers will include index depth
                 if col >= index_depth:
@@ -185,7 +179,6 @@ class StoreXLSX(Store):
                         writer_columns(0,
                                 col,
                                 columns_values[col - index_depth],
-                                columns_values_isna[col - index_depth],
                                 format_columns)
                     elif columns_depth > 1:
                         for i in range(columns_depth):
@@ -193,18 +186,18 @@ class StoreXLSX(Store):
                             writer_columns(i,
                                     col,
                                     columns_values[col - index_depth, i],
-                                    columns_values_isna[col - index_depth, i],
                                     format_columns
                                     )
 
-            values_isna = isna_array(values)
-            writer = cls._get_writer(values.dtype, replace, ws)
+            if store_filter:
+                # thi might change the dtype
+                values = store_filter.filter_array(values)
+            writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the columns
-            for row, (v, v_isna) in enumerate(zip(values, values_isna), columns_depth):
+            for row, v in enumerate(values, columns_depth):
                 writer(row,
                         col,
                         v,
-                        v_isna,
                         format_index if col < index_depth else None)
 
         # post process to merge cells; need to get width of at depth
@@ -213,7 +206,7 @@ class StoreXLSX(Store):
                 row = depth
                 col = index_depth # start after index
                 for label, width in frame._columns.label_widths_at_depth(depth):
-                    # TODO: use replace
+                    # TODO: use store_filter
                     ws.merge_range(row, col, row, col + width - 1, label, format_columns)
                     col += width
 
@@ -222,20 +215,20 @@ class StoreXLSX(Store):
                 row = columns_depth
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
-                    # TODO: use replace
+                    # TODO: use store_filter
                     ws.merge_range(row, col, row + width - 1, col, label, format_columns)
                     row += width
 
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
+            items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
             include_index: bool = True,
             include_columns: bool = True,
             format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
             format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
-            replace: tp.Union[object, None, ReplaceToStr] = REPLACE_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
         Args:
@@ -243,7 +236,7 @@ class StoreXLSX(Store):
             include_columns: Boolean to determine if the ``columns`` is included in output.
             format_index: dictionary of XlsxWriter format specfications.
             format_columns: dictionary of XlsxWriter format specfications.
-            replace: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
+            store_filter: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
         '''
         # format_data: tp.Optional[tp.Dict[tp.Hashable, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
@@ -255,10 +248,6 @@ class StoreXLSX(Store):
         format_columns = self._get_format_or_default(wb, format_columns)
         format_index = self._get_format_or_default(wb, format_index)
 
-        if replace is REPLACE_DEFAULT:
-            replace = REPLACE_TO_STR_DEFAULT
-        valid_replace(replace)
-
         for label, frame in items:
             ws = wb.add_worksheet(label)
             self._frame_to_worksheet(frame,
@@ -268,7 +257,7 @@ class StoreXLSX(Store):
                     include_index=include_index,
                     include_columns=include_columns,
                     merge_hierarchical_labels=merge_hierarchical_labels,
-                    replace=replace
+                    store_filter=store_filter
                     )
 
         wb.close()

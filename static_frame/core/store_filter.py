@@ -62,10 +62,10 @@ class StoreFilter:
     to_posinf: tp.Optional[str]
     to_neginf: tp.Optional[str]
 
-    from_nan: tp.Set[str]
-    from_None: tp.Set[str]
-    from_posinf: tp.Set[str]
-    from_neginf: tp.Set[str]
+    from_nan: tp.FrozenSet[str]
+    from_None: tp.FrozenSet[str]
+    from_posinf: tp.FrozenSet[str]
+    from_neginf: tp.FrozenSet[str]
 
     def __init__(self,
             to_nan: tp.Optional[str],
@@ -73,10 +73,10 @@ class StoreFilter:
             to_posinf: tp.Optional[str],
             to_neginf: tp.Optional[str],
 
-            from_nan: tp.Set[str],
-            from_None: tp.Set[str],
-            from_posinf: tp.Set[str],
-            from_neginf: tp.Set[str]
+            from_nan: tp.FrozenSet[str],
+            from_None: tp.FrozenSet[str],
+            from_posinf: tp.FrozenSet[str],
+            from_neginf: tp.FrozenSet[str]
             ) -> None:
 
         self.to_nan = to_nan

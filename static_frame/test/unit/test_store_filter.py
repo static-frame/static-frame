@@ -60,6 +60,5 @@ class TestUnit(TestCase):
             [1, 'None', '', '-inf', '+inf'])
 
 
-
 if __name__ == '__main__':
     unittest.main()

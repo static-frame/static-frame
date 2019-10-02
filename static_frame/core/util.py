@@ -73,7 +73,7 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 EMPTY_TUPLE = ()
-EMPTY_SET = frozenset()
+EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
 EMPTY_ARRAY = np.array(EMPTY_TUPLE, dtype=None)
