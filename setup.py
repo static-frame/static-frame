@@ -3,6 +3,7 @@ from setuptools import setup  # type: ignore
 # To use a consistent encoding
 from codecs import open
 from os import path
+import typing as tp
 
 # https://packaging.python.org/distributing/
 # to deploy:
@@ -40,9 +41,12 @@ def get_version() -> str:
                 return l.split('=')[-1].strip()[1:-1]
     raise ValueError("__version__ not found!")
 
-install_requires = []
-with open("./requirements.txt") as f:
-    install_requires = f.read().splitlines()
+def get_install_requires() -> tp.Iterator[str]:
+    with open(path.join(root_dir_fp, 'requirements.txt')) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield line
 
 setup(
     name='static-frame',
@@ -50,7 +54,7 @@ setup(
     description='Immutable structures for one- and two-dimensional calculations with labelled axes',
     long_description=get_long_description(),
     python_requires='>3.6.0',
-    install_requires=install_requires,
+    install_requires=list(get_install_requires()),
     url='https://github.com/InvestmentSystems/static-frame',
     author='Christopher Ariza',
     license='MIT',
