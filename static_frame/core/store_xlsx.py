@@ -313,6 +313,7 @@ class StoreXLSX(Store):
         data = []
 
         for row_count, row in enumerate(ws.iter_rows()): # cannot use values_only on 2.5.4
+            # TODO: do value conversions here
             row = tuple(c.value for c in row)
             if row_count <= columns_depth - 1:
                 if columns_depth == 1:

@@ -147,6 +147,12 @@ class StoreFilter:
 
 
 
+    def to_type_filter_element(self,
+            value: tp.Any
+            ) -> tp.Any:
+        pass
+
+
 
 STORE_FILTER_DEFAULT = StoreFilter()
 
