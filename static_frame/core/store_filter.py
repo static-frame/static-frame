@@ -14,6 +14,7 @@ from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import EMPTY_SET
 
 
 class StoreFilter:
@@ -56,10 +57,10 @@ class StoreFilter:
             # from type to str
             from_nan: tp.Optional[str] = '',
             from_none: tp.Optional[str] = 'None',
-            from_posinf: tp.Optional[str] = '+inf',
+            from_posinf: tp.Optional[str] = 'inf',
             from_neginf: tp.Optional[str] = '-inf',
             # str to type
-            to_nan: tp.FrozenSet[str] = frozenset(('', 'NaN', 'NAN', 'NULL', '#N/A')),
+            to_nan: tp.FrozenSet[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
             to_none: tp.FrozenSet[str] = frozenset(('None',)),
             to_posinf: tp.FrozenSet[str] = frozenset(('inf', '+inf')),
             to_neginf: tp.FrozenSet[str] = frozenset(('-inf',)),
@@ -180,8 +181,20 @@ class StoreFilter:
             for value_replace, matching in self._TYPE_TO_TO:
                 if value in matching:
                     return value_replace
+        return value
 
 
 
 STORE_FILTER_DEFAULT = StoreFilter()
 
+STORE_FILTER_DISABLE = StoreFilter(
+            from_nan=None,
+            from_none=None,
+            from_posinf=None,
+            from_neginf=None,
+            # str to type
+            to_nan=EMPTY_SET,
+            to_none=EMPTY_SET,
+            to_posinf=EMPTY_SET,
+            to_neginf=EMPTY_SET,
+            )

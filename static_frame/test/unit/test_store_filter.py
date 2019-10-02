@@ -5,6 +5,7 @@ import numpy as np # type: ignore
 
 
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+from static_frame.core.store_filter import STORE_FILTER_DISABLE
 from static_frame.test.test_case import TestCase
 # from static_frame.test.test_case import temp_file
 
@@ -18,14 +19,14 @@ class TestUnit(TestCase):
         sfd = STORE_FILTER_DEFAULT
 
         self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
-                [1.0, 2.0, '', '+inf', '-inf'])
+                [1.0, 2.0, '', 'inf', '-inf'])
 
         self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
-                [1.0, 2.0, '', '+inf', '-inf'])
+                [1.0, 2.0, '', 'inf', '-inf'])
 
     def test_store_from_type_filter_array_b(self) -> None:
 
-        a1 = np.array([False, 20, False], dtype=bool)
+        a1 = np.array([False, True, False], dtype=bool)
         a2 = np.array([False, True, False], dtype=object)
 
         sfd = STORE_FILTER_DEFAULT
@@ -34,7 +35,6 @@ class TestUnit(TestCase):
                 [False, True, False])
         self.assertEqual(sfd.from_type_filter_array(a2).tolist(),
                 [False, True, False])
-
 
 
     def test_store_from_type_filter_array_c(self) -> None:
@@ -57,7 +57,20 @@ class TestUnit(TestCase):
         sfd = STORE_FILTER_DEFAULT
 
         self.assertEqual(sfd.from_type_filter_array(a1).tolist(),
-            [1, 'None', '', '-inf', '+inf'])
+            [1, 'None', '', '-inf', 'inf'])
+
+
+    def test_store_from_type_filter_array_e(self) -> None:
+
+        a1 = np.array([1, None, np.nan, -np.inf, np.inf], dtype=object)
+
+        sfd = STORE_FILTER_DISABLE
+
+        self.assertAlmostEqualValues(
+            sfd.from_type_filter_array(a1).tolist(),
+            [1, None, np.nan, -np.inf, np.inf])
+
+
 
 
     def test_store_from_type_filter_element_a(self) -> None:
@@ -65,6 +78,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(sfd.from_type_filter_element(None), 'None')
         self.assertEqual(sfd.from_type_filter_element(np.nan), '')
+
+
+    def test_store_to_type_filter_element_a(self) -> None:
+        sfd = STORE_FILTER_DEFAULT
+
+        self.assertTrue(np.isnan(sfd.to_type_filter_element('nan')))
+        self.assertTrue(np.isposinf(sfd.to_type_filter_element('inf')))
+        self.assertTrue(np.isneginf(sfd.to_type_filter_element('-inf')))
+        self.assertEqual(sfd.to_type_filter_element('None'), None)
+
+    def test_store_to_type_filter_element_b(self) -> None:
+        sfd = STORE_FILTER_DISABLE
+
+        self.assertEqual(sfd.to_type_filter_element('nan'), 'nan')
+        self.assertEqual(sfd.to_type_filter_element('inf'), 'inf')
+        self.assertEqual(sfd.to_type_filter_element('-inf'), '-inf')
+        self.assertEqual(sfd.to_type_filter_element('None'), 'None')
 
 
 
