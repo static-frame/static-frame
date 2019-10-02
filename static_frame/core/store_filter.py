@@ -34,7 +34,7 @@ class StoreFilter:
 
             '_FLOAT_FUNC_TO_FROM',
             '_EQUAL_FUNC_TO_FROM',
-            '_TYPE_TO_TO',
+            '_TYPE_TO_TO_SET',
             '_TYPE_TO_TO_TUPLE',
             )
 
@@ -53,8 +53,8 @@ class StoreFilter:
     # cannot use AnyCallable here
     _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
     _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
-    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
-    _TYPE_TO_TO: tp.Tuple[tp.Tuple[tp.Any, tp.Tuple[str, ...]], ...]
+    _TYPE_TO_TO_SET: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
+    _TYPE_TO_TO_TUPLE: tp.Tuple[tp.Tuple[tp.Any, tp.Tuple[str, ...]], ...]
 
     def __init__(self,
             # from type to str
@@ -65,7 +65,7 @@ class StoreFilter:
             # str to type
             to_nan: tp.FrozenSet[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
             to_none: tp.FrozenSet[str] = frozenset(('None',)),
-            to_posinf: tp.FrozenSet[str] = frozenset(('inf', '+inf')),
+            to_posinf: tp.FrozenSet[str] = frozenset(('inf',)),
             to_neginf: tp.FrozenSet[str] = frozenset(('-inf',)),
             ) -> None:
 
@@ -98,7 +98,7 @@ class StoreFilter:
                 (lambda x: np.equal(x, -np.inf), self.from_neginf)
                 )
 
-        self._TYPE_TO_TO = (
+        self._TYPE_TO_TO_SET = (
                 (np.nan, self.to_nan),
                 (None, self.to_none),
                 (np.inf, self.to_posinf),
@@ -125,8 +125,8 @@ class StoreFilter:
             return array # no replacements posible
 
         if kind in DTYPE_NAN_KIND:
-            if all(v is None for _, v in self._FLOAT_FUNC_TO_FROM):
-                return array
+            # if all(v is None for _, v in self._FLOAT_FUNC_TO_FROM):
+            #     return array
 
             post = None # defer creating until we have a match
             for func, value_replace in self._FLOAT_FUNC_TO_FROM:
@@ -143,8 +143,8 @@ class StoreFilter:
             raise NotImplementedError() # np.isnat
 
         if dtype == DTYPE_OBJECT:
-            if all(v is None for _, v in self._EQUAL_FUNC_TO_FROM):
-                return array
+            # if all(v is None for _, v in self._EQUAL_FUNC_TO_FROM):
+            #     return array
 
             post = None
             for func, value_replace in self._EQUAL_FUNC_TO_FROM:
@@ -195,7 +195,7 @@ class StoreFilter:
             # for string types, cannot use np.equal
             post = None
             for value_replace, matching in self._TYPE_TO_TO_TUPLE:
-                if value_replace is not None:
+                if matching:
                     found = np.isin(array, matching)
                     if found.any():
                         if post is None:
@@ -213,7 +213,7 @@ class StoreFilter:
         Given a value wich may be an encoded string, decode into a type.
         '''
         if isinstance(value, str):
-            for value_replace, matching in self._TYPE_TO_TO:
+            for value_replace, matching in self._TYPE_TO_TO_SET:
                 if value in matching:
                     return value_replace
         return value
