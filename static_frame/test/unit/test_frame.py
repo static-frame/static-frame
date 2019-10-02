@@ -2954,6 +2954,7 @@ class TestUnit(TestCase):
                 (('w', (('a', 50), ('b', 30), ('c', 10))), ('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 2), ('b', 3), ('c', 4))), ('z', (('a', 8), ('b', 9), ('c', 10)))))
 
 
+    #---------------------------------------------------------------------------
     @skip_win  # type: ignore
     def test_frame_from_csv_a(self) -> None:
         # header, mixed types, no index
@@ -3043,7 +3044,6 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), ('f2', ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
 
-
     def test_frame_from_csv_e(self) -> None:
         s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
 
@@ -3055,8 +3055,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
 
-
-
+    #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -3097,6 +3096,28 @@ class TestUnit(TestCase):
         file.seek(0)
         self.assertEqual(file.read(), 'Important Name,a\n0,1\n1,2\n2,3')
 
+
+    def test_frame_to_csv_c(self) -> None:
+        records = (
+                (2, np.nan, 'a', False, None),
+                (30, np.nan, 'b', True, None),
+                (2, np.inf, 'c', False, None),
+                (30, -np.inf, 'd', True, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        with temp_file('.csv') as fp:
+            f1.to_csv(fp)
+
+            with open(fp) as f:
+                lines = f.readlines()
+                # nan has been converted to string
+                self.assertEqual(lines[1], 'w,2,,a,False,None\n')
+                self.assertEqual(lines[4], 'z,30,-inf,d,True,None')
+
+    #---------------------------------------------------------------------------
     def test_frame_to_tsv_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -3115,6 +3136,7 @@ class TestUnit(TestCase):
 'index\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
 
 
+    #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:
         records = (
                 (2, 'a', False),
