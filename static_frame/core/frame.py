@@ -12,8 +12,6 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
