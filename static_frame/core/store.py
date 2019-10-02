@@ -71,7 +71,7 @@ class _StoreZipDelimited(_StoreZip):
             src.seek(0)
             # call from class to explicitly pass self as frame
             # NOTE: assuming single index, single columns; this will not be valid for IndexHierarchy
-            return self.__class__._CONSTRUCTOR(src, index_column=0)
+            return self.__class__._CONSTRUCTOR(src, index_depth=1)
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]]
@@ -85,6 +85,7 @@ class _StoreZipDelimited(_StoreZip):
                 dst.seek(0)
                 # this will write it without a container
                 zf.writestr(label + self._EXT_CONTAINED, dst.read())
+
 
 class StoreZipTSV(_StoreZipDelimited):
     '''

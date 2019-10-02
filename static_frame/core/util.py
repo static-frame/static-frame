@@ -696,7 +696,7 @@ def resolve_type_iter(
     has_tuple = False
     has_str = False
     has_non_str = False
-    has_float = False
+    has_inexact = False
     has_big_int = False
 
     for i, v in enumerate(v_iter, start=1):
@@ -715,15 +715,15 @@ def resolve_type_iter(
                 has_str = True
             else:
                 has_non_str = True
-
                 if value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
                     has_big_int = True
-                elif value_type == float or value_type == np.float_:
-                    has_float = True
+                # elif value_type == float or value_type == np.float_:
+                elif value_type in INEXACT_TYPES:
+                    has_inexact = True
 
             if has_tuple or (has_str and has_non_str):
                 resolved = object
-            elif has_big_int and has_float:
+            elif has_big_int and has_inexact:
                 resolved = object
 
         else: # resolved is object, cam exit

@@ -724,13 +724,14 @@ class Frame(ContainerOperand):
     def from_structured_array(cls,
             array: np.ndarray,
             *,
+            index_depth: int = 0,
             index_column: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
-        Convert a NumPy structed array into a Frame.
+        Convert a NumPy structed array into a Frame. Presently this always uses
 
         Args:
             array: Structured NumPy array.
@@ -742,29 +743,52 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-
+        # will be the header if this was parsed from a delimited file
         names = array.dtype.names
-        if isinstance(index_column, INT_TYPES):
-            index_name = names[index_column]
-        else:
-            index_name = index_column
+
+        index_start_pos = -1 # will be ignored
+        index_name = None
+        if index_column is not None:
+            if index_depth <= 0:
+                raise ErrorInitFrame('index_column specified but index_depth is 0')
+            elif isinstance(index_column, INT_TYPES):
+                index_name = names[index_column]
+                index_start_pos = index_column
+            else:
+                index_name = index_column
+                index_start_pos = names.index(index_name) # linear performance
+
+        index_names = None
+        if index_depth == 1:
+            if index_name is None: # has not been set by index_column, get first
+                index_name = names[0]
+                index_start_pos = 0
+        elif index_depth > 1:
+            if index_name is None:
+                index_names = names[:index_depth]
+                index_start_pos = 0
+            else:
+                index_names = names[index_start_pos: index_start_pos+index_depth]
+
 
         # assign in generator; requires  reading through gen first
-        index_array = None
-        # cannot use names of we remove an index; might be a more efficient way as we kmnow the size
+        # index_array = None
+        index_arrays = []
+        # cannot use names if we remove an index; might be a more efficient way as we know the size
         columns = []
-        columns_with_index = []
+        columns_by_col_idx = []
 
         dtypes_is_map = dtypes_mappable(dtypes)
         def get_col_dtype(col_idx):
             if dtypes_is_map:
-                return dtypes.get(columns_with_index[col_idx], None)
+                return dtypes.get(columns_by_col_idx[col_idx], None)
             return dtypes[col_idx]
 
         def blocks():
+            # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
                 # append here as we iterate for usage in get_col_dtype
-                columns_with_index.append(name)
+                columns_by_col_idx.append(name)
 
                 # this is not expected to make a copy
                 array_final = array[name]
@@ -773,9 +797,9 @@ class Frame(ContainerOperand):
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
-                if name == index_name:
-                    nonlocal index_array
-                    index_array = array_final
+                if col_idx >= index_start_pos and col_idx < index_start_pos + index_depth:
+                    nonlocal index_arrays
+                    index_arrays.append(array_final)
                     continue
 
                 columns.append(name)
@@ -786,12 +810,25 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
-        return cls(TypeBlocks.from_blocks(block_gen()),
-                columns=columns,
-                index=index_array,
-                name=name,
-                own_data=True)
-
+        if index_depth == 0:
+            return cls(TypeBlocks.from_blocks(block_gen()),
+                    columns=columns,
+                    index=None,
+                    name=name,
+                    own_data=True)
+        if index_depth == 1:
+            return cls(TypeBlocks.from_blocks(block_gen()),
+                    columns=columns,
+                    index=index_arrays[0],
+                    name=name,
+                    own_data=True)
+        if index_depth > 1:
+            return cls(TypeBlocks.from_blocks(block_gen()),
+                    columns=columns,
+                    index=zip(index_arrays),
+                    index_constructor=IndexHierarchy.from_labels,
+                    name=name,
+                    own_data=True)
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be
 
@@ -885,10 +922,11 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLike,
             *,
             delimiter: str = ',',
+            index_depth: int = 0,
             index_column: tp.Optional[tp.Union[int, str]] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
-            header_is_columns: bool = True,
+            columns_depth: int = 1,
             quote_char: str = '"',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
@@ -901,10 +939,11 @@ class Frame(ContainerOperand):
         Args:
             fp: A file path or a file-like object.
             delimiter: The character used to seperate row elements.
-            index_column: Optionally specify a column, by position or name, to become the index.
+            index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
+            index_column: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
-            header_is_columns: If True (by default), the first line after the skip_header count of lines is used to create the column labels.
+            columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -915,9 +954,8 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        # TODO: add index_depth: int = 1
-        # TODO: add columns_depth: int = 1; optionally replaces header_is_columns if 0 removes header
-        # NOTE: this (reasonably) asserts that hierarchical index/columns must be continguous an an input file
+        if columns_depth > 1:
+            raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
 
         delimiter_native = '\t'
 
@@ -936,14 +974,12 @@ class Frame(ContainerOperand):
         else:
             file_like = fp
 
-        # strange NP convention for this parameter: False it no supported, must convert to None
-        header_is_columns = header_is_columns if header_is_columns is True else None
-
         array = np.genfromtxt(file_like,
                 delimiter=delimiter_native,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
-                names=header_is_columns,
+                # strange NP convention for this parameter: False it not supported, must convert to None
+                names=None if columns_depth == 0 else True,
                 dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
@@ -952,6 +988,7 @@ class Frame(ContainerOperand):
         # can own this array so set it as immutable
         array.flags.writeable = False
         return cls.from_structured_array(array,
+                index_depth=index_depth,
                 index_column=index_column,
                 dtypes=dtypes,
                 name=name,

@@ -239,7 +239,7 @@ Neptune 102.0
 
 #start_frame_from_structured_array_a
 >>> a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)], dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
->>> sf.Frame.from_structured_array(a, index_column='name')
+>>> sf.Frame.from_structured_array(a, index_depth=1)
 <Frame>
 <Index>  mass              temperature <<U11>
 <Index>
@@ -255,7 +255,7 @@ Neptune  102.0             -200
 #start_frame_from_csv_a
 >>> from io import StringIO
 >>> filelike = StringIO('name,mass,temperature\\nVenus,4.87,464\\nNeptune,102,-200')
->>> sf.Frame.from_csv(filelike, index_column='name', dtypes=dict(temperature=np.int64))
+>>> sf.Frame.from_csv(filelike, index_depth=1, dtypes=dict(temperature=np.int64))
 <Frame>
 <Index> mass      temperature <<U11>
 <Index>
