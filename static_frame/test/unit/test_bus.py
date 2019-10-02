@@ -279,5 +279,31 @@ class TestUnit(TestCase):
 
 
 
+    def test_bus_to_xlsx(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(b1)
+            import ipdb; ipdb.set_trace()
+
+            pass
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

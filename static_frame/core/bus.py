@@ -12,6 +12,7 @@ from static_frame.core.store import Store
 from static_frame.core.store import StoreZipCSV
 from static_frame.core.store import StoreZipTSV
 from static_frame.core.store import StoreZipPickle
+from static_frame.core.store_xlsx import StoreXLSX
 
 
 from static_frame.core.exception import ErrorInitBus
@@ -59,7 +60,7 @@ class Bus(ContainerBase):
 
 
     @staticmethod
-    def _empty_series(labels: tp.Iterable[str]) -> Series:
+    def _deferred_series(labels: tp.Iterable[str]) -> Series:
         # make an object dtype
         return Series(FrameDeferred, index=labels, dtype=object)
 
@@ -79,17 +80,22 @@ class Bus(ContainerBase):
     @classmethod
     def from_zip_tsv(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipTSV(fp)
-        return cls(cls._empty_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
     def from_zip_csv(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipCSV(fp)
-        return cls(cls._empty_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
     def from_zip_pickle(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreZipPickle(fp)
-        return cls(cls._empty_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()), store=store)
+
+    @classmethod
+    def from_xlsx(cls, fp: PathSpecifier) -> 'Bus':
+        store = StoreXLSX(fp)
+        return cls(cls._deferred_series(store.labels()), store=store)
 
 
     #---------------------------------------------------------------------------
@@ -102,13 +108,15 @@ class Bus(ContainerBase):
         if series.dtype != DTYPE_OBJECT:
             raise ErrorInitBus(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
-        for value in series.values:
-            if not isinstance(value, Frame) and not value is FrameDeferred:
-                raise ErrorInitBus(f'supplied {value.__class__} is not a frame')
 
-        # TODO: additional checks
-        # labels need to be stings
-        # Frames need to be immutable
+        # do a one time iteration of series
+        for label, value in series.items():
+            if not isinstance(value, Frame) and not value is FrameDeferred:
+                raise ErrorInitBus(f'supplied {value.__class__} is not a frame.')
+            if not isinstnace(label, str):
+                raise ErrorInitBus(f'supplied label {label} is not a string.')
+
+        # TODO: create _loaded Boolean array cache
 
         self._series = series
         self._store = store
@@ -388,6 +396,7 @@ class Bus(ContainerBase):
 
 
     #---------------------------------------------------------------------------
+    # exporters
     def to_zip_tsv(self, fp: PathSpecifier) -> None:
         store = StoreZipTSV(fp)
         store.write(self.items())
@@ -399,3 +408,8 @@ class Bus(ContainerBase):
     def to_zip_pickle(self, fp: PathSpecifier) -> None:
         store = StoreZipPickle(fp)
         store.write(self.items())
+
+    def to_xlsx(self, fp: PathSpecifier) -> None:
+        store = StoreXLSX(fp)
+        store.write(self.items())
+
