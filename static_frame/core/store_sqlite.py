@@ -23,8 +23,8 @@ from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import NUMERIC_TYPES
+# from static_frame.core.util import BOOL_TYPES
+# from static_frame.core.util import NUMERIC_TYPES
 
 
 
