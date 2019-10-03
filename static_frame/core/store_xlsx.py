@@ -352,9 +352,6 @@ class StoreXLSX(Store):
                 ))
 
     def labels(self) -> tp.Iterator[str]:
-
-        import openpyxl
-
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()

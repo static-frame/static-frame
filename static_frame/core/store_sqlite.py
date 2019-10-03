@@ -3,7 +3,8 @@
 import sqlite3
 import typing as tp
 
-
+from itertools import chain
+from functools import partial
 
 import numpy as np # type: ignore
 
@@ -61,29 +62,74 @@ class StoreSQLite(Store):
             store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
+        # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
+
+        index = frame.index
+        columns = frame.columns
+
+        if not include_index:
+            dtypes = frame._blocks.dtypes
+            if include_columns:
+                field_names = columns
+            else: # name fields with integers?
+                field_names = range(frame._blocks.shape[1])
+            # no primary key possible
+            create_primary_key = ''
+        else:
+            if index.depth == 1:
+                dtypes = [index.dtype]
+                # cannot use index as it is a keyword in sqlite
+                field_names = [index.name if index.name else 'index0']
+            else:
+                dtypes = index.dtypes.values.tolist()
+                # TODO: use index .name attribute if available
+                field_names = [f'index{d}' for d in range(index.depth)]
+
+            # add fram dtypes tp those from index
+            dtypes.extend(frame._blocks.dtypes)
+
+            # add index names in front of column names
+            if include_columns:
+                field_names.extend(columns)
+            else: # name fields with integers?
+                field_names.extend(range(frame._blocks.shape[1]))
+
+            primary_fields = ', '.join(field_names[:index.depth])
+            # need leading comma
+            create_primary_key = f', PRIMARY KEY ({primary_fields})'
+
         field_name_to_field_type = (
                 (field, cls._dtype_to_affinity_type(dtype))
-                for field, dtype in frame.dtypes.items())
+                for field, dtype in zip(field_names, dtypes)
+                )
+
         create_fields = ', '.join(f'{k} {v}' for k, v in field_name_to_field_type)
-        create = f'CREATE TABLE {label} ({create_fields})'
+        create = f'CREATE TABLE {label} ({create_fields}{create_primary_key})'
 
         cursor.execute(create)
 
-        if frame.columns.depth == 1:
-            insert_fields = ', '.join(f'{k}' for k in frame.columns)
-        else:
-            # insert_fields = ', '.join(' '.join(f"'{sub}'" for sub in k) for k in frame.columns)
-            insert_fields = ', '.join(str(k) for k in frame.columns)
+        # works for IndexHierarchy too
+        insert_fields = ', '.join(f'{k}' for k in field_names)
+        insert_template = ', '.join('?' for _ in field_names)
+        insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
 
-        values = frame.iter_array(1)
-        insert_template = ', '.join('?' for _ in frame.columns)
-        insert = f'insert into {label} ({insert_fields}) values ({insert_template})'
-
-        # import ipdb; ipdb.set_trace()
         # cursor.execute("PRAGMA table_info(f3)")
 
+        if include_index:
+            index_values = index.values
+            def values() -> tp.Iterator[tp.Iterator[tp.Any]]:
+                for idx, row in enumerate(frame.iter_array(1)):
+                    if index.depth > 1:
+                        yield tuple(chain(index_values[idx], row))
+                    else:
+                        row_final = [index_values[idx]]
+                        row_final.extend(row)
+                        yield row_final
+        else:
+            values = partial(frame.iter_array, 1)
+
         # numpy types go in as blobs if they are not individuall converted tp python types
-        cursor.executemany(insert, list(tuple((int(x) for x in v)) for v in values))
+        cursor.executemany(insert, values())
 
 
     def write(self,
@@ -94,25 +140,23 @@ class StoreSQLite(Store):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
-
         # NOTE: register adapters for NP types:
-        # sqlite3.register_adapter(np.int64, int)
+        sqlite3.register_adapter(np.int64, int)
 
         # hierarchical columns might be stored as tuples
-        conn = sqlite3.connect(self._fp)
-        cursor = conn.cursor()
+        with sqlite3.connect(self._fp) as conn:
+            cursor = conn.cursor()
+            for label, frame in items:
+                self._frame_to_table(frame=frame,
+                        label=label,
+                        cursor=cursor,
+                        include_columns=include_columns,
+                        include_index=include_index,
+                        store_filter=store_filter
+                        )
 
-        for label, frame in items:
-            self._frame_to_table(frame=frame,
-                    label=label,
-                    cursor=cursor,
-                    include_columns=include_columns,
-                    include_index=include_index,
-                    store_filter=store_filter
-                    )
-
-        conn.commit()
-        conn.close()
+            conn.commit()
+            # conn.close()
 
 
 
@@ -130,3 +174,11 @@ class StoreSQLite(Store):
             {dtypes}
         '''
         pass
+
+    def labels(self) -> tp.Iterator[str]:
+        with sqlite3.connect(self._fp) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            for row in cursor:
+                yield row[0]
+
