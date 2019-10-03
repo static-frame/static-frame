@@ -225,6 +225,43 @@ class TestUnit(TestCase):
                     b2.status.to_pairs(0),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
             )
 
+
+    def test_bus_keys_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+        f4 = Frame.from_dict(
+                dict(q=(None,None), r=(np.nan,np.nan)),
+                index=(1000, 1001),
+                name='f4')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4))
+
+        self.assertEqual(b1.keys().values.tolist(), ['f1', 'f2', 'f3', 'f4'])
+        self.assertEqual(b1.values[2].name, 'f3')
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+            self.assertFalse(b2._loaded_all)
+
+            self.assertEqual(b2.keys().values.tolist(), ['f1', 'f2', 'f3', 'f4'])
+            self.assertFalse(b2._loaded.any())
+            # accessing values forces loading all
+            self.assertEqual(b2.values[2].name, 'f3')
+            self.assertTrue(b2._loaded_all)
+
+
+
     def test_bus_iloc_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

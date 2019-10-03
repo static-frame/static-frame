@@ -179,16 +179,6 @@ class Bus(ContainerBase):
             self._series = Series(array, index=self._series._index, dtype=object)
             self._loaded_all = self._loaded.all()
 
-        # # alt implementation using assignment; assume that this does not copy
-        # index_assign = self._loc_to_labels(key)
-        # # pre-allocate array and assign in a loop
-        # values_assign = np.empty(len(index_assign), dtype=object)
-        # for idx, label in enumerate(index_assign):
-        #     values_assign[idx] = self._store.read(label)
-        # values_assign.flags.writeable = False
-        # insert = Series(values_assign, index=index_assign)
-        # self._series = self._series.assign[index_assign](insert)
-
     def _update_series_cache_all(self) -> None:
         '''Load all Tables contained in this Bus.
         '''
@@ -276,6 +266,13 @@ class Bus(ContainerBase):
         self._update_series_cache_all()
         yield from self._series.items()
 
+    @property
+    def values(self) -> np.ndarray:
+        '''A 1D array of values.
+        '''
+        self._update_series_cache_all()
+        return self._seires.values
+
 
     #---------------------------------------------------------------------------
     def display(self,
@@ -297,7 +294,7 @@ class Bus(ContainerBase):
         d.extend_display(display_index)
 
         d.extend_display(Display.from_values(
-                self.values,
+                self._series.values, # do not force loading with self.values
                 header='',
                 config=config))
 
@@ -363,7 +360,7 @@ class Bus(ContainerBase):
         '''
         def gen() -> tp.Iterator[Series]:
 
-            yield Series((False if f is FrameDeferred else True for f in self._series.values),
+            yield Series(self._loaded,
                     index=self._series._index,
                     dtype=DTYPE_BOOL,
                     name='loaded')
