@@ -372,8 +372,8 @@ class Frame(ContainerOperand):
 
         Args:
             records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
-            index: Optionally provide an iterable of index labels, equal in length to the number of records.
-            columns: Optionally provide an iterable of column labels, equal in length to the length of each row.
+            index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
+            columns: Optionally provide an iterable of column labels, equal in length to the number of elements in a row.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -535,9 +535,16 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_sql(cls,
             query: str,
+            *,
             connection: sqlite3.Connection,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Frame constructor from an SQL query and a database connection object.
@@ -545,15 +552,47 @@ class Frame(ContainerOperand):
         Args:
             query: A query string.
             connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
         row_gen = connection.execute(query)
 
-        columns = []
-        for bundle in row_gen.description:
-            columns.append(bundle[0])
+        own_columns = False
+        columns = None
+        if columns_depth == 1:
+            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            own_columns = True
+        elif columns_depth > 1:
+            # use IH: get via static attr of columns const
+            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            own_columns = True
+
+        if index_depth > 0:
+            index = [] # lazily populate
+
+            def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                for row in row_gen:
+                    if index_depth == 1:
+                        index.append(row[0])
+                        yield row[1:]
+                    else: # > 1
+                        index.append(row[:index_depth])
+                        yield row[index_depth:]
+        else:
+            index = None
+            row_gen_final = lambda: row_gen
 
         # let default type induction do its work
-        return cls.from_records(row_gen, columns=columns)
+        return cls.from_records(
+                row_gen_final(),
+                columns=columns,
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                own_columns=own_columns,
+                consolidate_blocks=consolidate_blocks
+                )
 
 
     @classmethod

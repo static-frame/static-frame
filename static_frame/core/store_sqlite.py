@@ -173,7 +173,18 @@ class StoreSQLite(Store):
         Args:
             {dtypes}
         '''
-        pass
+        with sqlite3.connect(self._fp) as conn:
+            # cursor = conn.cursor()
+            query = f'SELECT * from {label}'
+            return Frame.from_sql(query=query,
+                    connection=conn,
+                    index_depth=index_depth,
+                    columns_depth=columns_depth,
+                    dtypes=dtypes,
+                    name=label,
+                    )
+
+
 
     def labels(self) -> tp.Iterator[str]:
         with sqlite3.connect(self._fp) as conn:

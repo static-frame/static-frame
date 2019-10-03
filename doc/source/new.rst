@@ -16,6 +16,8 @@ Added ``Frame.to_xarray()``.
 
 Added ``Frame.to_xlsx()``, ``Frame.from_xlsx()``.
 
+The interface of ``Frame.from_csv`` has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``.
+
 
 
 0.4.3

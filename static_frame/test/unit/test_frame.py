@@ -4794,7 +4794,7 @@ class TestUnit(TestCase):
 
         conn: sqlite3.Connection = self.get_test_db_a()
 
-        f1 = sf.Frame.from_sql('select * from events', conn)
+        f1 = sf.Frame.from_sql('select * from events', connection=conn)
 
         # this might be different on windows
         self.assertEqual([x.kind for x in f1.dtypes.values],
