@@ -11,37 +11,24 @@ from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import _DT64_S
-from static_frame.core.util import _DT64_DAY
-from static_frame.core.util import AnyCallable
-# from static_frame.core.util import isna_array
-
-# from static_frame.core.util import REPLACE_DEFAULT
-# from static_frame.core.util import ReplaceToStr
-# from static_frame.core.util import ReplaceFromStr
-# from static_frame.core.util import REPLACE_FROM_STR_DEFAULT
-# from static_frame.core.util import REPLACE_TO_STR_DEFAULT
-# from static_frame.core.util import valid_replace
-
 
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import NUMERIC_TYPES
 
+from static_frame.core.util import _DT64_S
+from static_frame.core.util import _DT64_DAY
+from static_frame.core.util import AnyCallable
+
 
 from static_frame.core.frame import Frame
-# from static_frame.core.exception import ErrorInitStore
-# from static_frame.core.util import PathSpecifier
 
 from static_frame.core.store import Store
-
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
-
-from static_frame.core.frame import Frame
+from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.doc_str import doc_inject
 

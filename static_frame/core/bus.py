@@ -22,6 +22,8 @@ from static_frame.core.util import DTYPE_BOOL
 # from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import NULL_SLICE
+
 from static_frame.core.selector_node import InterfaceGetItem
 
 from static_frame.core.hloc import HLoc
@@ -110,14 +112,20 @@ class Bus(ContainerBase):
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         # do a one time iteration of series
-        for label, value in series.items():
-            if not isinstance(value, Frame) and not value is FrameDeferred:
-                raise ErrorInitBus(f'supplied {value.__class__} is not a frame.')
-            if not isinstance(label, str):
-                raise ErrorInitBus(f'supplied label {label} is not a string.')
+        def gen() -> tp.Iterator[bool]:
+            for label, value in series.items():
+                if not isinstance(label, str):
+                    raise ErrorInitBus(f'supplied label {label} is not a string.')
 
-        # TODO: create _loaded Boolean array cache
+                if isinstance(value, Frame):
+                    yield True
+                elif value is FrameDeferred:
+                    yield False
+                else:
+                    raise ErrorInitBus(f'supplied {value.__class__} is not a Frame or FrameDeferred.')
 
+        self._loaded = np.fromiter(gen(), dtype=DTYPE_BOOL, count=len(series))
+        self._loaded_all = self._loaded.all()
         self._series = series
         self._store = store
 
@@ -137,22 +145,6 @@ class Bus(ContainerBase):
     #---------------------------------------------------------------------------
     # cache management
 
-    # TODO: could maintain a Boolean array equal in size to _series, and update as loaded so as to not do so many iterations
-
-    def _cache_not_complete(self) -> bool:
-        # return (self._series == FrameDeferred).any()
-        for v in self._series.values:
-            if v is FrameDeferred:
-                return True
-        return False
-
-    def _cache_all_incomplete(self) -> bool:
-        # return (self._series == FrameDeferred).all()
-        for v in self._series.values:
-            if v is not FrameDeferred:
-                return False
-        return True
-
     def _iloc_to_labels(self,
             key: GetItemKeyType
             ) -> np.ndarray:
@@ -168,20 +160,24 @@ class Bus(ContainerBase):
         '''
         Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
         '''
-        if self._cache_not_complete():
+
+        # do nothing if all loaded, or if the requested keys are already loadsed
+        if not self._loaded_all and not self._loaded[key].all():
             if self._store is None:
                 raise RuntimeError('no store defined')
 
             labels = set(self._iloc_to_labels(key))
 
-            array = np.empty(shape=len(self._index), dtype=object)
+            array = np.empty(shape=len(self._series._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
                     frame = self._store.read(label)
+                    self._loaded[idx] = True # update loaded status
                 array[idx] = frame
             array.flags.writeable = False
 
-            self._series = Series(array, index=self._index, dtype=object)
+            self._series = Series(array, index=self._series._index, dtype=object)
+            self._loaded_all = self._loaded.all()
 
         # # alt implementation using assignment; assume that this does not copy
         # index_assign = self._loc_to_labels(key)
@@ -196,18 +192,8 @@ class Bus(ContainerBase):
     def _update_series_cache_all(self) -> None:
         '''Load all Tables contained in this Bus.
         '''
-        if self._cache_not_complete():
-            if self._store is None:
-                raise RuntimeError('no store defined')
-
-            array = np.empty(shape=len(self._index), dtype=object)
-            for idx, (label, frame) in enumerate(self._series.items()):
-                if frame is FrameDeferred:
-                    frame = self._store.read(label)
-                array[idx] = frame
-            array.flags.writeable = False
-            self._series = Series(array, index=self._index, dtype=object)
-
+        if not self._loaded_all:
+            self._update_series_cache_iloc(NULL_SLICE)
 
     #---------------------------------------------------------------------------
     # extraction
@@ -328,7 +314,7 @@ class Bus(ContainerBase):
     def mloc(self) -> Series:
         '''Returns a Series of tuples of dtypes, one for each loaded Frame.
         '''
-        if self._cache_all_incomplete():
+        if not self._loaded.any():
             return Series(None, index=self._series._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
@@ -344,7 +330,7 @@ class Bus(ContainerBase):
     def dtypes(self) -> Frame:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
-        if self._cache_all_incomplete():
+        if not self._loaded.any():
             return Frame(index=self._series.index)
 
         f = Frame.from_concat(

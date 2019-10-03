@@ -43,9 +43,6 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelection2D
-from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.util import ufunc_unique
 # from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
@@ -56,6 +53,10 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
+
+from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAsType
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
