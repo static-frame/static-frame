@@ -26,7 +26,7 @@ class TestUnit(TestCase):
     def test_store_sqlite_write_a(self) -> None:
 
         f1 = Frame.from_dict(
-                dict(x=(None,'a',np.inf,np.nan), y=(3,4,-5,-3000)),
+                dict(x=(None,-np.inf,np.inf,None), y=(3,4,-5,-3000)),
                 index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
                 name='f1')
         f2 = Frame.from_dict(
@@ -62,14 +62,15 @@ class TestUnit(TestCase):
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
+            # import ipdb; ipdb.set_tra ce()
+
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
                 f_loaded = st1.read(name,
                         index_depth=f_src.index.depth,
                         columns_depth=f_src.columns.depth
                         )
-                # import ipdb; ipdb.set_trace()
-                # self.assertEqualFrames(f_src, f_loaded)
+                self.assertEqualFrames(f_src, f_loaded)
 
 
 

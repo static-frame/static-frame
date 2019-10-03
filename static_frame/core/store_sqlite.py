@@ -33,6 +33,11 @@ class StoreSQLite(Store):
 
     _EXT: str = '.sqlite'
 
+    _BYTES_ONE = b'1'
+    # _BYTES_NONE = b'None'
+    # _BYTES_NEGINF = b'-Inf'
+    # _BYTES_POSINF = b'Inf'
+
     @staticmethod
     def _dtype_to_affinity_type(
             dtype: np.dtype,
@@ -59,7 +64,7 @@ class StoreSQLite(Store):
             cursor: sqlite3.Cursor,
             include_columns: bool,
             include_index: bool,
-            store_filter: tp.Optional[StoreFilter]
+            # store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
         # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
@@ -137,11 +142,15 @@ class StoreSQLite(Store):
             *,
             include_index: bool = True,
             include_columns: bool = True,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
         # NOTE: register adapters for NP types:
         sqlite3.register_adapter(np.int64, int)
+        # sqlite3.register_adapter(type(None), lambda x: 'None')
+        # bool conversion not useful when we register converter
+        # sqlite3.register_adapter(np.bool_, int)
+        # sqlite3.register_adapter(bool, int)
 
         # hierarchical columns might be stored as tuples
         with sqlite3.connect(self._fp) as conn:
@@ -152,7 +161,7 @@ class StoreSQLite(Store):
                         cursor=cursor,
                         include_columns=include_columns,
                         include_index=include_index,
-                        store_filter=store_filter
+                        # store_filter=store_filter
                         )
 
             conn.commit()
@@ -173,7 +182,28 @@ class StoreSQLite(Store):
         Args:
             {dtypes}
         '''
-        with sqlite3.connect(self._fp) as conn:
+        # def converter(x):
+        #     import ipdb; ipdb.set_trace()
+        #     return x
+
+        sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+
+        # def bytes_to_types(x):
+        #     if x == self._BYTES_NONE:
+        #         return None
+        #     elif x == self._BYTES_NEGINF:
+        #         return -np.inf
+        #     elif x == self._BYTES_POSINF:
+        #         return np.inf
+        #     # import ipdb; ipdb.set_trace()
+        #     return x.decode()
+            # return x
+
+        # sqlite3.register_converter('NONE', bytes_to_types)
+
+        with sqlite3.connect(self._fp,
+                detect_types=sqlite3.PARSE_DECLTYPES
+                ) as conn:
             # cursor = conn.cursor()
             query = f'SELECT * from {label}'
             return Frame.from_sql(query=query,

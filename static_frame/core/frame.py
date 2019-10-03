@@ -4,6 +4,7 @@ import csv
 import json
 from collections import namedtuple
 from functools import partial
+from ast import literal_eval
 
 import numpy as np # type: ignore
 
@@ -363,6 +364,8 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> 'Frame':
@@ -394,8 +397,10 @@ class Frame(ContainerOperand):
             return cls(records,
                     index=index,
                     columns=columns,
+                    index_constructor=index_constructor,
+                    columns_constructor=columns_constructor,
                     own_index=own_index,
-                    own_columns=own_columns
+                    own_columns=own_columns,
                     )
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -404,7 +409,6 @@ class Frame(ContainerOperand):
             if dtypes_is_map:
                 return dtypes.get(columns[col_idx], None)
             return dtypes[col_idx]
-
 
         def blocks():
 
@@ -492,8 +496,10 @@ class Frame(ContainerOperand):
                 columns=columns,
                 name=name,
                 own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 own_index=own_index,
-                own_columns=own_columns
+                own_columns=own_columns,
                 )
 
 
@@ -565,18 +571,33 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns_depth > 1:
             # use IH: get via static attr of columns const
-            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            constructor = (IndexHierarchy.from_labels
+                    if cls._COLUMNS_CONSTRUCTOR.STATIC
+                    else IndexHierarchyGO.from_labels)
+            # assume that all values need to be literal eval
+            columns = constructor(
+                    tuple(literal_eval(x) for x in b[0].split(' '))
+                    for b in row_gen.description[index_depth:]
+                    )
             own_columns = True
+
+        index_constructor = None
 
         if index_depth > 0:
             index = [] # lazily populate
+            if index_depth == 1:
+                index_constructor = Index
 
-            def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                for row in row_gen:
-                    if index_depth == 1:
+                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in row_gen:
                         index.append(row[0])
                         yield row[1:]
-                    else: # > 1
+
+            else: # > 1
+                index_constructor = IndexHierarchy.from_labels
+
+                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in row_gen:
                         index.append(row[:index_depth])
                         yield row[index_depth:]
         else:
@@ -591,7 +612,8 @@ class Frame(ContainerOperand):
                 dtypes=dtypes,
                 name=name,
                 own_columns=own_columns,
-                consolidate_blocks=consolidate_blocks
+                index_constructor=index_constructor,
+                consolidate_blocks=consolidate_blocks,
                 )
 
 
