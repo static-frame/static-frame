@@ -11,6 +11,7 @@ import numpy as np # type: ignore
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 
+from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -60,7 +61,7 @@ class StoreSQLite(Store):
     def _frame_to_table(cls,
             *,
             frame: Frame,
-            label: str,
+            label: tp.Optional[str], # can be None
             cursor: sqlite3.Cursor,
             include_columns: bool,
             include_index: bool,
@@ -69,13 +70,17 @@ class StoreSQLite(Store):
 
         # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
 
+        # for interface compatibility with StoreXLSX, where label can be None
+        if label is None:
+            label = 'None'
+
         index = frame.index
         columns = frame.columns
 
         if not include_index:
             dtypes = frame._blocks.dtypes
             if include_columns:
-                field_names = columns
+                field_names = columns.values
             else: # name fields with integers?
                 field_names = range(frame._blocks.shape[1])
             # no primary key possible
@@ -86,6 +91,7 @@ class StoreSQLite(Store):
                 # cannot use index as it is a keyword in sqlite
                 field_names = [index.name if index.name else 'index0']
             else:
+                assert isinstance(index, IndexHierarchy) # for typing
                 dtypes = index.dtypes.values.tolist()
                 # TODO: use index .name attribute if available
                 field_names = [f'index{d}' for d in range(index.depth)]
@@ -122,7 +128,7 @@ class StoreSQLite(Store):
 
         if include_index:
             index_values = index.values
-            def values() -> tp.Iterator[tp.Iterator[tp.Any]]:
+            def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
                 for idx, row in enumerate(frame.iter_array(1)):
                     if index.depth > 1:
                         yield tuple(chain(index_values[idx], row))
@@ -131,7 +137,7 @@ class StoreSQLite(Store):
                         row_final.extend(row)
                         yield row_final
         else:
-            values = partial(frame.iter_array, 1)
+            values = partial(frame.iter_array, 1) #type: ignore
 
         # numpy types go in as blobs if they are not individuall converted tp python types
         cursor.executemany(insert, values())
@@ -182,9 +188,6 @@ class StoreSQLite(Store):
         Args:
             {dtypes}
         '''
-        # def converter(x):
-        #     import ipdb; ipdb.set_trace()
-        #     return x
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
@@ -206,14 +209,13 @@ class StoreSQLite(Store):
                 ) as conn:
             # cursor = conn.cursor()
             query = f'SELECT * from {label}'
-            return Frame.from_sql(query=query,
+            return tp.cast(Frame, Frame.from_sql(query=query,
                     connection=conn,
                     index_depth=index_depth,
                     columns_depth=columns_depth,
                     dtypes=dtypes,
                     name=label,
-                    )
-
+                    ))
 
 
     def labels(self) -> tp.Iterator[str]:

@@ -104,6 +104,7 @@ class Series(ContainerOperand):
 
     sum: tp.Callable[['Series'], tp.Any]
     values: np.ndarray
+    _index: IndexBase
 
     _NDIM: int = 1
 

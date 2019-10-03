@@ -168,7 +168,7 @@ class Bus(ContainerBase):
 
             labels = set(self._iloc_to_labels(key))
 
-            array = np.empty(shape=len(self._series._index), dtype=object)
+            array = np.empty(shape=len(self._series._index), dtype=object) # type: ignore
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
                     frame = self._store.read(label)
@@ -251,7 +251,7 @@ class Bus(ContainerBase):
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        return reversed(self._series._index) # type: ignore
+        return reversed(self._series._index)
 
     def __len__(self) -> int:
         return self._series.__len__()
@@ -315,7 +315,7 @@ class Bus(ContainerBase):
             return Series(None, index=self._series._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
-            for label, f in zip(self._series._index, self._series.values): # type: ignore
+            for label, f in zip(self._series._index, self._series.values):
                 if f is FrameDeferred:
                     yield label, None
                 else:
