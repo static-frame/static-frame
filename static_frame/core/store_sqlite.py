@@ -1,4 +1,3 @@
-import sys
 
 import sqlite3
 import typing as tp
@@ -13,8 +12,8 @@ from static_frame.core.store import Store
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 
-from static_frame.core.store_filter import StoreFilter
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+# from static_frame.core.store_filter import StoreFilter
+# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
 from static_frame.core.doc_str import doc_inject
 
@@ -33,9 +32,6 @@ from static_frame.core.util import DTYPE_BOOL
 class StoreSQLite(Store):
 
     _EXT: str = '.sqlite'
-
-    # windows reads back bytes of 1 differently
-    # _BYTES_ONE = b'1' if sys.platform != 'win32' else b'\x01'
     _BYTES_ONE = b'1'
 
     # _BYTES_NONE = b'None'
@@ -156,6 +152,8 @@ class StoreSQLite(Store):
 
         # NOTE: register adapters for NP types:
         sqlite3.register_adapter(np.int64, int)
+        sqlite3.register_adapter(np.int32, int)
+
         # sqlite3.register_adapter(type(None), lambda x: 'None')
         # bool conversion not useful when we register converter
         # sqlite3.register_adapter(np.bool_, int)
@@ -185,7 +183,7 @@ class StoreSQLite(Store):
             index_depth: int=1,
             columns_depth: int=1,
             dtypes: DtypesSpecifier = None,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
         Args:

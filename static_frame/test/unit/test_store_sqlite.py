@@ -52,8 +52,7 @@ class TestUnit(TestCase):
                 columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2)),
                 name='f4')
 
-        # frames = (f1, f2, f3, f4)
-        frames = (f2,) # temp for windows testing
+        frames = (f1, f2, f3, f4)
 
         with temp_file('.sqlite') as fp:
 
