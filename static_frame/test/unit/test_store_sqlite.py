@@ -62,8 +62,6 @@ class TestUnit(TestCase):
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
-            # import ipdb; ipdb.set_tra ce()
-
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
                 f_loaded = st1.read(name,
