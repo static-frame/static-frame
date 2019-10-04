@@ -192,8 +192,7 @@ class StoreSQLite(Store):
             {dtypes}
         '''
 
-        if sys.platform != 'win32':
-            sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+        sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         # def bytes_to_types(x):
         #     if x == self._BYTES_NONE:
