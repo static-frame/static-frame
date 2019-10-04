@@ -1,17 +1,14 @@
-import sys
 
-import sqlite3
 import typing as tp
 
-from itertools import chain
-from functools import partial
+# from itertools import chain
 
-import numpy as np # type: ignore
+# import numpy as np # type: ignore
 
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 
-from static_frame.core.index_hierarchy import IndexHierarchy
+# from static_frame.core.index_hierarchy import IndexHierarchy
 
 # from static_frame.core.store_filter import StoreFilter
 # from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -128,7 +125,7 @@ class StoreHDF5(Store):
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
-        import tables
+        import tables # type: ignore
 
         with tables.open_file(self._fp, mode='w') as file:
             for label, frame in items:

@@ -1,7 +1,7 @@
 
 import unittest
 
-import numpy as np  # type: ignore
+# import numpy as np  # type: ignore
 
 
 from static_frame.core.frame import Frame
