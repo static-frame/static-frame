@@ -1,9 +1,8 @@
 
-import typing as tp
+# import typing as tp
 import unittest
-import operator
 
-import numpy as np  # type: ignore
+# import numpy as np  # type: ignore
 
 # from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
@@ -30,3 +29,11 @@ class TestUnit(TestCase):
         if s1.shape[0] > 0:
             self.assertTrue(s1.size > 0)
             self.assertTrue(s1.nbytes > 0)
+
+
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+
