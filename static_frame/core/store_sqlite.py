@@ -1,4 +1,4 @@
-
+import sys
 
 import sqlite3
 import typing as tp
@@ -34,7 +34,9 @@ class StoreSQLite(Store):
 
     _EXT: str = '.sqlite'
 
-    _BYTES_ONE = b'1'
+    # windows reads back bytes of 1 differently
+    _BYTES_ONE = b'1' if sys.platform != 'win32' else b'\x01'
+
     # _BYTES_NONE = b'None'
     # _BYTES_NEGINF = b'-Inf'
     # _BYTES_POSINF = b'Inf'
