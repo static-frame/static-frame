@@ -35,7 +35,8 @@ class StoreSQLite(Store):
     _EXT: str = '.sqlite'
 
     # windows reads back bytes of 1 differently
-    _BYTES_ONE = b'1' if sys.platform != 'win32' else b'\x01'
+    # _BYTES_ONE = b'1' if sys.platform != 'win32' else b'\x01'
+    _BYTES_ONE = b'1'
 
     # _BYTES_NONE = b'None'
     # _BYTES_NEGINF = b'-Inf'
@@ -191,7 +192,8 @@ class StoreSQLite(Store):
             {dtypes}
         '''
 
-        sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+        if sys.platform != 'win32':
+            sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         # def bytes_to_types(x):
         #     if x == self._BYTES_NONE:
