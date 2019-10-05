@@ -124,7 +124,7 @@ class StoreHDF5(Store):
                 for row_src in frame.iter_array(1):
                     row_dst = table.row
                     for k, v in zip(frame._columns, row_src):
-                        row_dst[k] = v
+                        row_dst[k] = v # pylint: disable=E1137
                     row_dst.append()
 
                 table.flush()
