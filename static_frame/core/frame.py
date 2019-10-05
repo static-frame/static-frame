@@ -1076,22 +1076,47 @@ class Frame(ContainerOperand):
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
-            sheet_name: tp.Optional[str] = None,
+            label: tp.Optional[str] = None,
             index_depth: int = 0,
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None
             ) -> 'Frame':
         '''
         Load Frame from the contents of a sheet in an XLSX workbook.
+
+        Args:
+            label: Optionally provide the sheet name from with to read. If not provideded, the first sheet will be used.
         '''
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(fp)
-        return st.read(sheet_name, # should this be called label?
+        return st.read(label,
             index_depth=index_depth,
             columns_depth=index_depth,
             dtypes=dtypes
             )
+
+    @classmethod
+    def from_sqlite(cls,
+            fp: PathSpecifier,
+            *,
+            label: tp.Optional[str] = None,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None
+            ) -> 'Frame':
+        '''
+        Load Frame from the contents of a table in an SQLite database file.
+        '''
+        from static_frame.core.store_sqlite import StoreSQLite
+
+        st = StoreSQLite(fp)
+        return st.read(label, # should this be called label?
+            index_depth=index_depth,
+            columns_depth=index_depth,
+            dtypes=dtypes
+            )
+
 
 
 
@@ -3272,7 +3297,7 @@ class Frame(ContainerOperand):
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet
             *,
-            sheet_name: tp.Optional[str] = None,
+            label: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,
             merge_hierarchical_labels: bool = True
@@ -3281,12 +3306,28 @@ class Frame(ContainerOperand):
         Write the Frame as single-sheet XLSX file.
         '''
         from static_frame.core.store_xlsx import StoreXLSX
-
         st = StoreXLSX(fp)
-        st.write(((sheet_name, self),),
+        st.write(((label, self),),
                 include_index=include_index,
                 include_columns=include_columns,
                 merge_hierarchical_labels=merge_hierarchical_labels
+                )
+
+    def to_sqlite(self,
+            fp: PathSpecifier, # not sure I can take a file like yet
+            *,
+            label: tp.Optional[str] = None,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ) -> None:
+        '''
+        Write the Frame as single-table SQLite file.
+        '''
+        from static_frame.core.store_sqlite import StoreSQLite
+        st = StoreSQLite(fp)
+        st.write(((label, self),),
+                include_index=include_index,
+                include_columns=include_columns,
                 )
 
 

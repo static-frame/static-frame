@@ -25,7 +25,7 @@ class Store:
 
         if not os.path.splitext(fp)[1] == self._EXT:
             raise ErrorInitStore(
-                    f'file path {fp} does not match required extensions: {self._EXT}')
+                    f'file path {fp} does not match required extension: {self._EXT}')
 
         self._fp: str = fp
 

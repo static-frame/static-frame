@@ -3245,6 +3245,49 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_sqlite_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'))
+
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp)
+            f2 = Frame.from_sqlite(fp, index_depth=f1.index.depth)
+            self.assertEqualFrames(f1, f2)
+
+
+    def test_frame_from_sqlite_b(self) -> None:
+
+        f1 = Frame.from_records((
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                (10, 20, 50, False, 10, 20, 50, False),
+                (50.0, 60.4, -50, True, 50.0, 60.4, -50, True),
+                (234, 44452, 0, False, 234, 44452, 0, False),
+                (4, -4, 2000, True, 4, -4, 2000, True),
+                ),
+                index=IndexHierarchy.from_product(('top', 'bottom'), ('far', 'near'), ('left', 'right')),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b'), (1, 2))
+                )
+
+        with temp_file('.sqlite') as fp:
+            f1.to_sqlite(fp)
+            f2 = Frame.from_sqlite(fp,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth)
+            self.assertEqualFrames(f1, f2)
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_and_a(self) -> None:
 
         records = (

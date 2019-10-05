@@ -32,7 +32,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Attribute', 11), ('Constructor', 17), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 10), ('Iterator', 60), ('Method', 50), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 15))
+            (('Attribute', 11), ('Constructor', 18), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 11), ('Iterator', 60), ('Method', 50), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 15))
 
             )
 
