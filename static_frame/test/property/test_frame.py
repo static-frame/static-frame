@@ -14,6 +14,7 @@ from static_frame.core.frame import FrameGO
 from static_frame.core.series import Series
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
+from static_frame.core.container import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.property import strategies as sfst
 
@@ -119,6 +120,21 @@ class TestUnit(TestCase):
         self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
 
 
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.NUMERIC,
+            min_rows=1,
+            min_columns=1))
+    def test_ufunc_axis(self, f1: Frame) -> None:
+        for attr, attrs in UFUNC_AXIS_SKIPNA.items():
+
+            for axis in (0, 1):
+                values = f1.values
+                # must coerce all blocks to same type to compare to what NP does
+                f2 = f1.astype(values.dtype)
+
+                a = getattr(f2, attr)(axis=axis).values # call the method
+                b = attrs.funcna(s1.values, axis=axis)
+                self.assertAlmostEqualArray(a, b)
 
 
     # # TODO: intger tests with pow, mod

@@ -284,7 +284,8 @@ class Series(ContainerOperand):
 
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
-                raise ErrorInitSeries('when supplying values via array, the dtype argument is not required; if provided, it must agree with the dtype of the array')
+                import ipdb; ipdb.set_trace()
+                raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
             if values.shape == (): # handle special case of NP element
                 def values_constructor(shape): #pylint: disable=E0102
                     self.values = np.repeat(values, shape)
@@ -798,10 +799,12 @@ class Series(ContainerOperand):
         '''
         For unary operations, the `name` attribute propagates.
         '''
-        return self.__class__(operator(self.values),
+        values = operator(self.values)
+        return self.__class__(values,
                 index=self._index,
-                dtype=self.dtype,
-                name=self._name)
+                dtype=values.dtype, # some operators might change the dtype
+                name=self._name
+                )
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable,
