@@ -771,7 +771,11 @@ def get_frame(
                 columns=columns
                 )
 
-    return get_shape_2d().flatmap(constructor)
+    return get_shape_2d(min_rows=min_rows,
+            max_rows=max_rows,
+            min_columns=min_columns,
+            max_columns=max_columns
+            ).flatmap(constructor)
 
 
 # label index, columns, values

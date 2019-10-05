@@ -89,24 +89,39 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    # @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
-    # def test_binary_operators_boolean(self, f1: Frame) -> None:
-    #     for op in _UFUNC_BINARY_OPERATORS:
-    #         if op not in {
-    #                 '__and__',
-    #                 '__xor__',
-    #                 '__or__',
-    #                 }:
-    #             continue
-    #         func = getattr(operator, op)
-    #         a = func(f1, f1).values
-    #         values = f1.values
-    #         b = func(values, values)
-    #         self.assertAlmostEqualArray(a, b)
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    def test_binary_operators_boolean(self, f1: Frame) -> None:
+        for op in _UFUNC_BINARY_OPERATORS:
+            if op not in {
+                    '__and__',
+                    '__xor__',
+                    '__or__',
+                    }:
+                continue
+            func = getattr(operator, op)
+            a = func(f1, f1).values
+            values = f1.values
+            b = func(values, values)
+            self.assertAlmostEqualArray(a, b)
+
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC, # type: ignore
+            min_rows=3,
+            max_rows=3,
+            min_columns=3,
+            max_columns=3)
+            )
+    def test_binary_operators_matmul(self,
+            f1: Frame,
+            ) -> None:
+
+        f2 = f1.relabel(columns=f1.index)
+        f3 = f2 @ f1
+        self.assertAlmostEqualArray(f3.values, f2.values @ f1.values)
 
 
-    # TODO: intger tests with pow, mod
-    # TOD0: matmul tests
+
+
+    # # TODO: intger tests with pow, mod
 
     #---------------------------------------------------------------------------
 
