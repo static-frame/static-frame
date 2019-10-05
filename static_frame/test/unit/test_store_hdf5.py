@@ -19,7 +19,7 @@ from static_frame.core.store_hdf5 import StoreHDF5
 class TestUnit(TestCase):
 
 
-    def test_store_xlsx_write_a(self) -> None:
+    def test_store_hdf5_write_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),

@@ -79,26 +79,12 @@ class StoreHDF5(Store):
     #         else: # name fields with integers?
     #             field_names.extend(range(frame._blocks.shape[1]))
 
-    #         primary_fields = ', '.join(field_names[:index.depth])
-    #         # need leading comma
-    #         create_primary_key = f', PRIMARY KEY ({primary_fields})'
 
     #     field_name_to_field_type = (
     #             (field, cls._dtype_to_affinity_type(dtype))
     #             for field, dtype in zip(field_names, dtypes)
     #             )
 
-    #     create_fields = ', '.join(f'{k} {v}' for k, v in field_name_to_field_type)
-    #     create = f'CREATE TABLE {label} ({create_fields}{create_primary_key})'
-
-    #     cursor.execute(create)
-
-    #     # works for IndexHierarchy too
-    #     insert_fields = ', '.join(f'{k}' for k in field_names)
-    #     insert_template = ', '.join('?' for _ in field_names)
-    #     insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
-
-    #     # cursor.execute("PRAGMA table_info(f3)")
 
     #     if include_index:
     #         index_values = index.values
@@ -134,6 +120,14 @@ class StoreHDF5(Store):
                 # note: need to handle hiararchical columns
                 description = {k: tables.Col.from_dtype(v) for k, v in frame.dtypes.items()}
                 table = file.create_table(group, label, description)
+
+                for row_src in frame.iter_array(1):
+                    row_dst = table.row
+                    for k, v in zip(frame._columns, row_src):
+                        row_dst[k] = v
+                    row_dst.append()
+
+                table.flush()
 
 
     @doc_inject(selector='constructor_frame')

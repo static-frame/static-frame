@@ -1,4 +1,4 @@
-numpy==1.15.4
+numpy==1.16.5
 pytest==3.8.0
 pytest-cov>=2.6.0
 hypothesis==4.26.3
