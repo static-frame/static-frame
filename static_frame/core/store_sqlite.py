@@ -2,16 +2,12 @@
 import sqlite3
 import typing as tp
 
-from itertools import chain
-from functools import partial
-
 import numpy as np # type: ignore
 
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 
-from static_frame.core.index_hierarchy import IndexHierarchy
-
+# from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.store_filter import StoreFilter
 # from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
@@ -31,7 +27,9 @@ from static_frame.core.util import DTYPE_BOOL
 
 class StoreSQLite(Store):
 
-    _EXT: str = '.sqlite'
+    _EXT: tp.FrozenSet[str] =  frozenset(('.db', '.sqlite'))
+
+    # _EXT: str = '.sqlite'
     _BYTES_ONE = b'1'
 
     # _BYTES_NONE = b'None'
@@ -73,37 +71,18 @@ class StoreSQLite(Store):
         if label is None:
             label = 'None'
 
-        index = frame.index
-        columns = frame.columns
+        field_names, dtypes = cls._get_field_names_and_dtypes(
+                frame=frame,
+                include_index=include_index,
+                include_columns=include_columns
+                )
+
+        index = frame._index
+        columns = frame._columns
 
         if not include_index:
-            dtypes = frame._blocks.dtypes
-            if include_columns:
-                field_names = columns.values
-            else: # name fields with integers?
-                field_names = range(frame._blocks.shape[1])
-            # no primary key possible
             create_primary_key = ''
         else:
-            if index.depth == 1:
-                dtypes = [index.dtype]
-                # cannot use index as it is a keyword in sqlite
-                field_names = [index.name if index.name else 'index0']
-            else:
-                assert isinstance(index, IndexHierarchy) # for typing
-                dtypes = index.dtypes.values.tolist()
-                # TODO: use index .name attribute if available
-                field_names = [f'index{d}' for d in range(index.depth)]
-
-            # add fram dtypes tp those from index
-            dtypes.extend(frame._blocks.dtypes)
-
-            # add index names in front of column names
-            if include_columns:
-                field_names.extend(columns)
-            else: # name fields with integers?
-                field_names.extend(range(frame._blocks.shape[1]))
-
             primary_fields = ', '.join(field_names[:index.depth])
             # need leading comma
             create_primary_key = f', PRIMARY KEY ({primary_fields})'
@@ -123,22 +102,8 @@ class StoreSQLite(Store):
         insert_template = ', '.join('?' for _ in field_names)
         insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
 
-        # cursor.execute("PRAGMA table_info(f3)")
 
-        if include_index:
-            index_values = index.values
-            def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                for idx, row in enumerate(frame.iter_array(1)):
-                    if index.depth > 1:
-                        yield tuple(chain(index_values[idx], row))
-                    else:
-                        row_final = [index_values[idx]]
-                        row_final.extend(row)
-                        yield row_final
-        else:
-            values = partial(frame.iter_array, 1) #type: ignore
-
-        # numpy types go in as blobs if they are not individuall converted tp python types
+        values = cls._get_row_iterator(frame=frame, include_index=include_index)
         cursor.executemany(insert, values())
 
 
@@ -151,6 +116,7 @@ class StoreSQLite(Store):
             ) -> None:
 
         # NOTE: register adapters for NP types:
+        # numpy types go in as blobs if they are not individualy converted tp python types
         sqlite3.register_adapter(np.int64, int)
         sqlite3.register_adapter(np.int32, int)
 

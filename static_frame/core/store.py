@@ -6,15 +6,23 @@ import pickle
 import os
 from io import StringIO
 
+from itertools import chain
+from functools import partial
+
+import numpy as np # type: ignore
+
+
 from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
+from static_frame.core.index_hierarchy import IndexHierarchy
 
 
 
 class Store:
-    _EXT: str = '' # define in base class
+
+    _EXT: tp.FrozenSet[str]
 
     __slots__ = (
             '_fp',
@@ -23,9 +31,9 @@ class Store:
     def __init__(self, fp: PathSpecifier):
         fp = path_filter(fp)
 
-        if not os.path.splitext(fp)[1] == self._EXT:
+        if not os.path.splitext(fp)[1] in self._EXT:
             raise ErrorInitStore(
-                    f'file path {fp} does not match required extension: {self._EXT}')
+                    f'file path {fp} does not match one of the required extensions: {self._EXT}')
 
         self._fp: str = fp
 
@@ -40,13 +48,74 @@ class Store:
     def labels(self) -> tp.Iterator[str]:
         raise NotImplementedError()
 
+    @staticmethod
+    def _get_field_names_and_dtypes(
+            frame: Frame,
+            include_index: bool,
+            include_columns: bool,
+            ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[np.dtype]]:
+
+        index = frame.index
+        columns = frame.columns
+
+        if not include_index:
+            dtypes = frame._blocks.dtypes
+            if include_columns:
+                field_names = columns.values
+            else: # name fields with integers?
+                field_names = range(frame._blocks.shape[1])
+        else:
+            if index.depth == 1:
+                dtypes = [index.dtype]
+                # cannot use index as it is a keyword in sqlite
+                field_names = [index.name if index.name else 'index0']
+            else:
+                assert isinstance(index, IndexHierarchy) # for typing
+                dtypes = index.dtypes.values.tolist()
+                # TODO: use index .name attribute if available
+                field_names = [f'index{d}' for d in range(index.depth)]
+
+            # add fram dtypes tp those from index
+            dtypes.extend(frame._blocks.dtypes)
+
+            # add index names in front of column names
+            if include_columns:
+                field_names.extend(columns)
+            else: # name fields with integers?
+                field_names.extend(range(frame._blocks.shape[1]))
+
+        return field_names, dtypes
+
+    @staticmethod
+    def _get_row_iterator(
+            frame: Frame,
+            include_index: bool
+            ) -> tp.Callable[[], tp.Iterator[tp.Sequence[tp.Any]]]:
+
+        if include_index:
+            index = frame._index
+            index_values = index.values
+
+            def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                for idx, row in enumerate(frame.iter_array(1)):
+                    if index.depth > 1:
+                        yield tuple(chain(index_values[idx], row))
+                    else:
+                        row_final = [index_values[idx]]
+                        row_final.extend(row)
+                        yield row_final
+
+            return values
+
+        return partial(frame.iter_array, 1) #type: ignore
 
 #-------------------------------------------------------------------------------
 from static_frame.core.util import AnyCallable
 
 class _StoreZip(Store):
 
-    _EXT: str = '.zip' # define in base class
+    _EXT: tp.FrozenSet[str] =  frozenset(('.zip',))
+
     _EXT_CONTAINED: str = ''
 
     _EXPORTER: AnyCallable

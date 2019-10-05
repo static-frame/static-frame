@@ -41,7 +41,9 @@ if tp.TYPE_CHECKING:
 
 class StoreXLSX(Store):
 
-    _EXT: str = '.xlsx'
+    _EXT: tp.FrozenSet[str] =  frozenset(('.xlsx',))
+
+    # _EXT: str = '.xlsx'
 
     @staticmethod
     def _dtype_to_writer_attr(
@@ -157,6 +159,7 @@ class StoreXLSX(Store):
 
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
 
+        # can write by column
         for col, values in columns_iter:
 
             if include_columns:
