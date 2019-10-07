@@ -725,12 +725,13 @@ class Index(IndexBase):
 
 
     def _ufunc_axis_skipna(self, *,
-            axis,
-            skipna,
+            axis: int,
+            skipna: bool,
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...]
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
             ) -> np.ndarray:
         '''
 

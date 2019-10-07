@@ -807,7 +807,8 @@ class IndexHierarchy(IndexBase):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...]
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
             ) -> np.ndarray:
         '''
         Returns:

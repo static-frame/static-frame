@@ -93,7 +93,8 @@ class IndexBase(ContainerOperand):
             ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
-    ) -> np.ndarray:
+            size_one_unity: bool
+            ) -> np.ndarray:
         raise NotImplementedError()
 
     def _update_array_cache(self) -> None:
@@ -309,6 +310,7 @@ class IndexBase(ContainerOperand):
             ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
             ) -> np.ndarray:
         '''
         For Index and IndexHierarchy, _ufunc_shape_skipna and _ufunc_axis_skipna are defined the same.
@@ -322,7 +324,8 @@ class IndexBase(ContainerOperand):
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
                 composable=composable, # shape on axis 1 is never composable
-                dtypes=dtypes
+                dtypes=dtypes,
+                size_one_unity=size_one_unity
                 )
 
 

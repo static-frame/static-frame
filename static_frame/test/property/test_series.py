@@ -99,7 +99,7 @@ class TestUnit(TestCase):
         for attr, attrs in UFUNC_AXIS_SKIPNA.items():
 
             a = getattr(s1, attr)().values # call the method
-            func = attrs.funcna
+            func = attrs.ufunc_skipna
             b = func(s1.values)
             self.assertAlmostEqualArray(a, b)
 

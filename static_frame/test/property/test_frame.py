@@ -133,7 +133,7 @@ class TestUnit(TestCase):
                 # f2 = f1.astype(values.dtype)
 
                 a = getattr(f1, attr)(axis=axis).values # call the method
-                b = attrs.funcna(values, axis=axis)
+                b = attrs.ufunc_skipna(values, axis=axis)
                 try:
                     self.assertAlmostEqualArray(a, b)
                 except:

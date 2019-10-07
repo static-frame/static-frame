@@ -2374,7 +2374,8 @@ class Frame(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...]
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
             ) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
@@ -2402,7 +2403,8 @@ class Frame(ContainerOperand):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...]
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
             ) -> 'Frame':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
