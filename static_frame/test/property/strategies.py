@@ -176,6 +176,11 @@ class DTGroup(Enum):
             hypo_np.complex_number_dtypes
             )
 
+    NUMERIC_REAL = (
+            hypo_np.floating_dtypes,
+            hypo_np.integer_dtypes,
+            )
+
     BOOL = (partial(st.just, DTYPE_BOOL),)
     STRING = (hypo_np.unicode_string_dtypes,)
 

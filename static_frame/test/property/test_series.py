@@ -97,11 +97,10 @@ class TestUnit(TestCase):
     @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))  # type: ignore
     def test_ufunc_axis(self, s1: Series) -> None:
         for attr, attrs in UFUNC_AXIS_SKIPNA.items():
-
-            a = getattr(s1, attr)().values # call the method
+            a = getattr(s1, attr)()
             func = attrs.ufunc_skipna
             b = func(s1.values)
-            self.assertAlmostEqualArray(a, b)
+            self.assertEqualWithNaN(a, b)
 
 
 

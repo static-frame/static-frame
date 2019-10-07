@@ -2387,7 +2387,9 @@ class Frame(ContainerOperand):
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
                 composable=composable,
-                dtypes=dtypes)
+                dtypes=dtypes,
+                size_one_unity=size_one_unity
+                )
 
         # post has been made immutable so Series will own
         if axis == 0:

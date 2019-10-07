@@ -19,6 +19,7 @@ from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 
 from static_frame.core.doc_str import DOC_TEMPLATE
 
@@ -176,7 +177,7 @@ UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'ufunc',
         'ufunc_skipna',
         'dtypes', # iterable of valid dtypes that can be returned; first is default of not match
-        'composable', # if partial solutions can be processed per block
+        'composable', # if partial solutions can be processed per block for axis 1 computations
         'doc_header',
         'size_one_unity', # if the result of the operation on size 1 objects is that value
 ))
@@ -205,13 +206,13 @@ UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
             DTYPES_BOOL,
             True,
             'Logical or over values along the specified axis.',
-            False,
+            False, # Overflow amongst hetergenoust tyes accross columns
             ),
         'sum': UfuncSkipnaAttrs(
             np.sum,
             np.nansum,
             EMPTY_TUPLE, # float or int, row type will match
-            True,
+            False,
             'Sum values along the specified axis.',
             True,
             ),
@@ -250,7 +251,7 @@ UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
         'std': UfuncSkipnaAttrs(
             np.std,
             np.nanstd,
-            DTYPES_INEXACT,
+            (DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
             False,
             'Return the standard deviaton along the specified axis.',
             False,
@@ -258,7 +259,7 @@ UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
         'var': UfuncSkipnaAttrs(
             np.var,
             np.nanvar,
-            DTYPES_INEXACT,
+            (DTYPE_FLOAT_DEFAULT,), # Ufuncs only return real result.
             False,
             'Return the variance along the specified axis.',
             False,
@@ -267,7 +268,7 @@ UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
             np.prod,
             np.nanprod,
             EMPTY_TUPLE, # float or int, row type will match
-            True,
+            False, # Block compbinations with overflow and NaNs require this.
             'Return the product along the specified axis.',
             True,
             ),
