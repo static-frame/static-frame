@@ -99,12 +99,10 @@ class Store:
             def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
                 for idx, row in enumerate(frame.iter_array(1)):
                     if index.depth > 1:
-                        yield tuple(chain(index_values[idx], row))
+                        index_row = index_values[idx] # this is an array
                     else:
-                        row_final = [index_values[idx]]
-                        row_final.extend(row)
-                        yield row_final
-
+                        index_row = tuple(index_values[idx],)
+                    yield tuple(chain(index_row, row))
             return values
 
         return partial(frame.iter_array, 1) #type: ignore

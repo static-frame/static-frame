@@ -45,8 +45,6 @@ class StoreHDF5(Store):
         with tables.open_file(self._fp, mode='w') as file:
             for label, frame in items:
                 # should all tables be under a common group?
-                group = file.create_group('/', label)
-
                 field_names, dtypes = self._get_field_names_and_dtypes(
                         frame=frame,
                         include_index=include_index,
@@ -54,17 +52,20 @@ class StoreHDF5(Store):
                         )
 
                 # note: need to handle hiararchical columns
-                description = {k: tables.Col.from_dtype(v) for k, v in zip(field_names, dtypes)}
-                table = file.create_table(group, label, description)
+                # Must set pos to have stable position
+                description = {k: tables.Col.from_dtype(v, pos=i)
+                        for i, (k, v) in enumerate(zip(field_names, dtypes))
+                        }
+
+                # group = file.create_group('/', label)
+                table = file.create_table('/', # create off root from sring
+                        name=label,
+                        description=description,
+                        expectedrows=len(frame),
+                        )
 
                 values = self._get_row_iterator(frame=frame, include_index=include_index)
-
-                for row_src in values():
-                    row_dst = table.row
-                    for k, v in zip(field_names, row_src):
-                        row_dst[k] = v # pylint: disable=E1137
-                    row_dst.append()
-
+                table.append(tuple(values()))
                 table.flush()
 
 
@@ -80,7 +81,24 @@ class StoreHDF5(Store):
         Args:
             {dtypes}
         '''
+        import tables # type: ignore
 
+        with tables.open_file(self._fp, mode='r') as file:
+            table = file.get_node(f'/{label}')
+            array = table.read()
+            # this works, but does not let us pull off columns yet
+            return Frame.from_structured_array(
+                    table.read(),
+                    name=label
+                    )
 
     def labels(self) -> tp.Iterator[str]:
-        pass
+        '''
+        Iterator of labels.
+        '''
+        import tables # type: ignore
+
+        with tables.open_file(self._fp, mode='r') as file:
+            for node in file.iter_nodes(where='/',
+                    classname=tables.Table.__name__):
+                yield node.name

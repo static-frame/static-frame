@@ -55,20 +55,21 @@ class TestUnit(TestCase):
             st1 = StoreHDF5(fp)
             st1.write((f.name, f) for f in frames)
 
+            sheet_names = tuple(st1.labels()) # this will read from file, not in memory
+            self.assertEqual(tuple(f.name for f in frames), sheet_names)
+
             # import ipdb; ipdb.set_trace()
-            pass
-            # sheet_names = tuple(st1.labels()) # this will read from file, not in memory
-            # self.assertEqual(tuple(f.name for f in frames), sheet_names)
+            # pass
 
-            # for i, name in enumerate(sheet_names):
-            #     f_src = frames[i]
-            #     f_loaded = st1.read(name,
-            #             index_depth=f_src.index.depth,
-            #             columns_depth=f_src.columns.depth
-            #             )
+            for i, name in enumerate(sheet_names):
+                f_src = frames[i]
+                f_loaded = st1.read(name,
+                        index_depth=f_src.index.depth,
+                        columns_depth=f_src.columns.depth
+                        )
             #     self.assertEqualFrames(f_src, f_loaded)
-
-
+                print(name)
+                print(f_loaded)
 
 
 if __name__ == '__main__':
