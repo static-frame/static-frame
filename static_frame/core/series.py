@@ -284,7 +284,6 @@ class Series(ContainerOperand):
 
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
-                import ipdb; ipdb.set_trace()
                 raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
             if values.shape == (): # handle special case of NP element
                 def values_constructor(shape): #pylint: disable=E0102
