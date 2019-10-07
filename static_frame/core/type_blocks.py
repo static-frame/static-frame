@@ -11,6 +11,7 @@ import numpy as np  # type: ignore
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -715,7 +716,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtype: tp.Optional[np.dtype] = None
+            dtypes: tp.Tuple[np.dtype, ...] = EMPTY_TUPLE
             ) -> np.ndarray:
         '''Apply a function that reduces blocks to a single axis. Note that this only works in axis 1 if the operation can be applied more than once, first by block, then by reduced blocks. This will not work for a ufunc like argmin, argmax, where the result of the function cannot be compared to the result of the function applied on a different block.
 
@@ -748,6 +749,7 @@ class TypeBlocks(ContainerOperand):
                 # reduce all columns to 2d blocks with 1 column
                 shape = (self._shape[0], len(self._blocks))
             else: # axis 1, not block composable
+                # Cannot do block-wise processing, must resolve to single array and return
                 array = self._blocks_to_array(
                         blocks=self._blocks,
                         shape=self._shape,
@@ -758,15 +760,27 @@ class TypeBlocks(ContainerOperand):
                 return result
 
             # this will be uninitialzied and thus, if a value is not assigned, will have garbage
-            out = np.empty(shape, dtype=dtype or self._row_dtype)
+            # dtype = None if not dtypes else dtypes[0]
+            if dtypes:
+                # Favor self._row_dtype if it is in dtypes, else take first of passed dtypes
+                dtype = self._row_dtype if self._row_dtype in dtypes else dtypes[0]
+            else:
+                dtype = self._row_dtype
+
+            out = np.empty(shape, dtype=dtype)
+            # print('out', out, out.dtype, self._row_dtype)
             for idx, b in enumerate(self._blocks):
                 if axis == 0:
                     if b.ndim == 1:
                         end = pos + 1
+                        # print('pre1d', func, idx, b, pos, end, func(array=b, axis=axis))
                         out[pos] = func(array=b, axis=axis)
                     else:
                         end = pos + b.shape[1]
+                        # print('pre2d', func, idx, b, pos, end, func(array=b, axis=axis))
                         func(array=b, axis=axis, out=out[pos: end])
+                    # print('post', idx, b, b.shape, pos, end, out)
+
                     pos = end
                 else:
                     if b.ndim == 1: # cannot process yet
@@ -1617,7 +1631,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtype: np.dtype
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()
@@ -1628,7 +1642,7 @@ class TypeBlocks(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtype: np.dtype
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> np.ndarray:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError()

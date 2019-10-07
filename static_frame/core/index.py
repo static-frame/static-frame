@@ -730,7 +730,7 @@ class Index(IndexBase):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtype=None
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> np.ndarray:
         '''
 

@@ -859,7 +859,7 @@ class Series(ContainerOperand):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtype=None
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> np.ndarray:
         '''
         For a Series, all functions of this type reduce the single axis of the Series to a single element, so Index has no use here.
@@ -881,13 +881,13 @@ class Series(ContainerOperand):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtype=None
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> 'Series':
         '''
         NumPy ufunc proccessors that retain the shape of the processed.
 
         Args:
-            dtype: not used, part of signature for a common interface
+            dtypes: not used, part of signature for a common interface
         '''
         values = ufunc_axis_skipna(
                 array=self.values,

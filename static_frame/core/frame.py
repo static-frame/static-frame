@@ -2374,7 +2374,8 @@ class Frame(ContainerOperand):
             ufunc: UFunc,
             ufunc_skipna: UFunc,
             composable: bool,
-            dtype) -> 'Series':
+            dtypes: tp.Tuple[np.dtype, ...]
+            ) -> 'Series':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2
@@ -2385,7 +2386,7 @@ class Frame(ContainerOperand):
                 ufunc=ufunc,
                 ufunc_skipna=ufunc_skipna,
                 composable=composable,
-                dtype=dtype)
+                dtypes=dtypes)
 
         # post has been made immutable so Series will own
         if axis == 0:
@@ -2401,10 +2402,13 @@ class Frame(ContainerOperand):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtype) -> 'Frame':
+            dtypes: tp.Tuple[np.dtype, ...]
+            ) -> 'Frame':
         # axis 0 processes ros, deliveres column index
         # axis 1 processes cols, delivers row index
         assert axis < 2
+
+        dtype = None if not dtypes else dtypes[0]
 
         # assumed not composable for axis 1, full-shape processing requires processing contiguous values
         v = self.values

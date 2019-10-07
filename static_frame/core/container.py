@@ -9,11 +9,17 @@ from collections import namedtuple
 
 import numpy as np  # type: ignore
 
+from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_NAN_KIND
+# from static_frame.core.util import DTYPE_BOOL
+# from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+
+from static_frame.core.util import DTYPES_BOOL
+from static_frame.core.util import DTYPES_INEXACT
+
 from static_frame.core.doc_str import DOC_TEMPLATE
 
 from static_frame.core.display import Display
@@ -91,10 +97,9 @@ def _ufunc_logical_skipna(
         return ufunc == np.all
 
     if array.dtype.kind == 'b':
-        # if boolean execute first
         return ufunc(array, axis=axis, out=out)
 
-    if array.dtype.kind == 'f':
+    if array.dtype.kind in DTYPE_NAN_KIND:
         if skipna:
             # replace nans with nonzero value; faster to use masked array?
             v = array.copy()
@@ -105,7 +110,7 @@ def _ufunc_logical_skipna(
     if array.dtype.kind in DTYPE_INT_KIND:
         return ufunc(array, axis=axis, out=out)
 
-    # all types other than strings or objects" assume truthy
+    # all types other than strings or objects assume truthy
     if array.dtype.kind != 'O' and array.dtype.kind not in DTYPE_STR_KIND:
         if array.ndim == 1:
             return True
@@ -170,78 +175,80 @@ def _nanany(array: np.ndarray,
 UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'func',
         'funcna',
-        'dtype',
+        'dtypes', # iterable of valid dtypes that can be returned; first is default of not match
         'composable', # if partial solutions can be processed per block
         'doc_header',
 ))
 
-# ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemetned on direved containers
+
+
+# ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemetned on derived containers
 UFUNC_AXIS_SKIPNA = {
         'all': UfuncSkipnaAttrs(
             _all,
             _nanall,
-            DTYPE_BOOL,
+            DTYPES_BOOL,
             True,
             'Logical and over values along the specified axis.',
             ),
         'any': UfuncSkipnaAttrs(
             _any,
             _nanany,
-            DTYPE_BOOL,
+            DTYPES_BOOL,
             True,
             'Logical or over values along the specified axis.'
             ),
         'sum': UfuncSkipnaAttrs(
             np.sum,
             np.nansum,
-            None, # float or int, row type will match
+            EMPTY_TUPLE, # float or int, row type will match
             True,
             'Sum values along the specified axis.'
             ),
         'min': UfuncSkipnaAttrs(
             np.min,
             np.nanmin,
-            None,
+            EMPTY_TUPLE,
             True,
             'Return the minimum along the specified axis.'
             ),
         'max': UfuncSkipnaAttrs(
             np.max,
             np.nanmax,
-            None,
+            EMPTY_TUPLE,
             True,
             'Return the maximum along the specified axis.'),
         'mean': UfuncSkipnaAttrs(
             np.mean,
             np.nanmean,
-            DTYPE_FLOAT_DEFAULT, # np always returns float
+            DTYPES_INEXACT, # neads to at least be float, but complex if necessary
             False,
             'Return the mean along the specified axis.'
             ),
         'median': UfuncSkipnaAttrs(
             np.median,
             np.nanmedian,
-            DTYPE_FLOAT_DEFAULT,
+            DTYPES_INEXACT,
             False,
             'Return the median along the specified axis.'
             ),
         'std': UfuncSkipnaAttrs(
             np.std,
             np.nanstd,
-            DTYPE_FLOAT_DEFAULT,
+            DTYPES_INEXACT,
             False,
             'Return the standard deviaton along the specified axis.'),
         'var': UfuncSkipnaAttrs(
             np.var,
             np.nanvar,
-            DTYPE_FLOAT_DEFAULT,
+            DTYPES_INEXACT,
             False,
             'Return the variance along the specified axis.'
             ),
         'prod': UfuncSkipnaAttrs(
             np.prod,
             np.nanprod,
-            None, # float or int, row type will match
+            EMPTY_TUPLE, # float or int, row type will match
             True,
             'Return the product along the specified axis.'
             ),
@@ -252,14 +259,14 @@ UFUNC_SHAPE_SKIPNA = {
         'cumsum': UfuncSkipnaAttrs(
             np.cumsum,
             np.nancumsum,
-            None,
+            EMPTY_TUPLE,
             False,
             'Return the cumulative sum over the specified axis.'
             ),
         'cumprod': UfuncSkipnaAttrs(
             np.cumprod,
             np.nancumprod,
-            None,
+            EMPTY_TUPLE,
             False,
             'Return the cumulative product over the specified axis.'
             ),
@@ -321,7 +328,7 @@ class ContainerOperandMeta(ContainerMeta):
 
     @staticmethod
     def create_ufunc_axis_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype, composable, doc = UFUNC_AXIS_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtypes, composable, doc = UFUNC_AXIS_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
         def func(self: tp.Any,
@@ -335,7 +342,7 @@ class ContainerOperandMeta(ContainerMeta):
                     ufunc=ufunc,
                     ufunc_skipna=ufunc_skipna,
                     composable=composable,
-                    dtype=dtype)
+                    dtypes=dtypes)
 
         # f = wraps(ufunc)(func) # not sure if this is correct
         func.__name__ = func_name
@@ -345,7 +352,7 @@ class ContainerOperandMeta(ContainerMeta):
 
     @staticmethod
     def create_ufunc_shape_skipna(func_name: str) -> AnyCallable:
-        ufunc, ufunc_skipna, dtype, composable, doc = UFUNC_SHAPE_SKIPNA[func_name]
+        ufunc, ufunc_skipna, dtypes, composable, doc = UFUNC_SHAPE_SKIPNA[func_name]
 
         # these become the common defaults for all of these functions
         def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
@@ -355,7 +362,7 @@ class ContainerOperandMeta(ContainerMeta):
                     ufunc=ufunc,
                     ufunc_skipna=ufunc_skipna,
                     composable=composable,
-                    dtype=dtype)
+                    dtypes=dtypes)
 
         func.__name__ = func_name
         func.__doc__ = DOC_TEMPLATE.ufunc_skipna.format(header=doc)

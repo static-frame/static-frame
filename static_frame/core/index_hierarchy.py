@@ -807,7 +807,7 @@ class IndexHierarchy(IndexBase):
             ufunc,
             ufunc_skipna,
             composable: bool,
-            dtype=None
+            dtypes: tp.Tuple[np.dtype, ...]
             ) -> np.ndarray:
         '''
         Returns:
@@ -815,6 +815,8 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
+
+        dtype = None if not dtypes else dtypes[0]
 
         if skipna:
             post = ufunc_skipna(self._labels, axis=axis, dtype=dtype)

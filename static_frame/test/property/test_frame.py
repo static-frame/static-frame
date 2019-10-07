@@ -130,12 +130,15 @@ class TestUnit(TestCase):
             for axis in (0, 1):
                 values = f1.values
                 # must coerce all blocks to same type to compare to what NP does
-                f2 = f1.astype(values.dtype)
+                # f2 = f1.astype(values.dtype)
 
-                a = getattr(f2, attr)(axis=axis).values # call the method
-                b = attrs.funcna(s1.values, axis=axis)
-                self.assertAlmostEqualArray(a, b)
-
+                a = getattr(f1, attr)(axis=axis).values # call the method
+                b = attrs.funcna(values, axis=axis)
+                try:
+                    self.assertAlmostEqualArray(a, b)
+                except:
+                    # import ipdb; ipdb.set_trace()
+                    raise
 
     # # TODO: intger tests with pow, mod
 
