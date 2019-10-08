@@ -3,6 +3,7 @@ import unittest
 import numpy as np  # type: ignore
 
 
+from static_frame.core.container_util import is_static
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 
@@ -12,7 +13,9 @@ from static_frame import Frame
 from static_frame import Index
 from static_frame import IndexGO
 # from static_frame import IndexDate
-# from static_frame import IndexHierarchy
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+
 # from static_frame import IndexYearMonth
 # from static_frame import IndexYear
 from static_frame import IndexSecond
@@ -23,6 +26,30 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
+
+
+    def test_is_static_a(self) -> None:
+        self.assertTrue(is_static(Index))
+        self.assertFalse(is_static(IndexGO))
+
+        self.assertTrue(is_static(IndexHierarchy))
+        self.assertFalse(is_static(IndexHierarchyGO))
+
+    def test_is_static_b(self) -> None:
+
+        self.assertTrue(is_static(Index.from_labels))
+        self.assertTrue(is_static(IndexHierarchy.from_labels))
+        self.assertTrue(is_static(IndexHierarchy.from_product))
+        self.assertTrue(is_static(IndexHierarchy.from_labels_delimited))
+        self.assertTrue(is_static(IndexHierarchy.from_tree))
+        self.assertTrue(is_static(IndexHierarchy.from_index_items))
+
+        self.assertFalse(is_static(IndexGO.from_labels))
+        self.assertFalse(is_static(IndexHierarchyGO.from_labels))
+        self.assertFalse(is_static(IndexHierarchyGO.from_product))
+        self.assertFalse(is_static(IndexHierarchyGO.from_labels_delimited))
+        self.assertFalse(is_static(IndexHierarchyGO.from_tree))
+        self.assertFalse(is_static(IndexHierarchyGO.from_index_items))
 
 
     def test_index_from_optional_constructor_a(self) -> None:
@@ -45,6 +72,42 @@ class TestUnit(TestCase):
                 IndexSecond((1, 3, 4)),
                 default_constructor=Index)
         self.assertEqual(idx4.__class__, IndexSecond)
+
+
+    def test_index_from_optional_constructor_b(self) -> None:
+        idx0 = IndexHierarchy.from_labels(
+                [('a', 0), ('a', 1), ('b', 0), ('b', 1)])
+        idx1 = index_from_optional_constructor(
+                idx0,
+                default_constructor=IndexHierarchy.from_labels)
+
+        # Since the default constructo is static, we should be able to reuse the index
+        self.assertEqual(id(idx0), id(idx1))
+
+
+    def test_index_from_optional_constructor_c(self) -> None:
+        idx0 = IndexHierarchyGO.from_labels(
+                [('a', 0), ('a', 1), ('b', 0), ('b', 1)])
+        idx1 = index_from_optional_constructor(
+                idx0,
+                default_constructor=IndexHierarchy.from_labels)
+
+        # Since the default constructo is static, we should be able to reuse the index
+        self.assertNotEqual(id(idx0), id(idx1))
+        self.assertTrue(idx1.STATIC)
+
+
+    def test_index_from_optional_constructor_d(self) -> None:
+        idx0 = IndexHierarchy.from_labels(
+                [('a', 0), ('a', 1), ('b', 0), ('b', 1)])
+        idx1 = index_from_optional_constructor(
+                idx0,
+                default_constructor=IndexHierarchyGO.from_labels)
+
+        # Since the default constructo is static, we should be able to reuse the index
+        self.assertNotEqual(id(idx0), id(idx1))
+        self.assertFalse(idx1.STATIC)
+
 
 
     def test_matmul_a(self) -> None:

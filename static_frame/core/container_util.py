@@ -16,6 +16,16 @@ from static_frame.core.util import STATIC_ATTR
 from static_frame.core.index_base import IndexBase
 
 
+def is_static(value: IndexConstructor) -> bool:
+    try:
+        # if this is a class constructor
+        return getattr(value, STATIC_ATTR)
+    except AttributeError:
+        pass
+    # assume this is a class method
+    return getattr(value.__self__, STATIC_ATTR)
+
+
 def index_from_optional_constructor(
         value: IndexInitializer,
         *,
@@ -31,9 +41,9 @@ def index_from_optional_constructor(
         return explicit_constructor(value)
 
     # default constructor could be a function with a STATIC attribute
-    if isinstance(value, IndexBase) and hasattr(default_constructor, STATIC_ATTR):
+    if isinstance(value, IndexBase):
         # if default is STATIC, and value is not STATIC, get an immutabel
-        if default_constructor.STATIC: # type: ignore
+        if is_static(default_constructor): # type: ignore
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
                 return value._IMMUTABLE_CONSTRUCTOR(value)
