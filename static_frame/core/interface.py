@@ -82,6 +82,7 @@ class InterfaceSummary:
         '__setstate__',
         '__setitem__',
         '__slots__',
+        '__slotnames__',
         '__subclasshook__',
         '__weakref__',
         '__reduce__',

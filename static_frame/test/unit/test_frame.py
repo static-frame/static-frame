@@ -3069,6 +3069,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_tsv_a(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
+                file.close()
+
+            f = Frame.from_tsv(fp, index_depth=1, dtypes={'a': bool})
+            self.assertEqual(
+                    f.to_pairs(0),
+                    (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3))))
+                    )
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (
@@ -3149,6 +3164,26 @@ class TestUnit(TestCase):
         file.seek(0)
         self.assertEqual(file.read(),
 'index\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
+
+
+    def test_frame_to_tsv_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=IndexHierarchy.from_product(('A', 'B'), (1, 2))
+                )
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp, include_index=True)
+            f2 = Frame.from_tsv(fp, index_depth=2)
+            self.assertEqualFrames(f1, f2)
+
+
 
 
     #---------------------------------------------------------------------------

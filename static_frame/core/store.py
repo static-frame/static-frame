@@ -30,7 +30,8 @@ class Store:
             )
 
     def __init__(self, fp: PathSpecifier):
-        fp = path_filter(fp)
+        # Redefine fp variable as only string after the filter.
+        fp = tp.cast(str, path_filter(fp))
 
         if not os.path.splitext(fp)[1] in self._EXT:
             raise ErrorInitStore(

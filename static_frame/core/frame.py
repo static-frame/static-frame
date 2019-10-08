@@ -852,7 +852,6 @@ class Frame(ContainerOperand):
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
-                # import ipdb; ipdb.set_trace()
                 if col_idx >= index_start_pos and col_idx < index_start_pos + index_depth:
                     # nonlocal index_arrays
                     index_arrays.append(array_final)
@@ -995,7 +994,7 @@ class Frame(ContainerOperand):
     def from_delimited(cls,
             fp: PathSpecifierOrFileLike,
             *,
-            delimiter: str = ',',
+            delimiter: str,
             index_depth: int = 0,
             index_column: tp.Optional[tp.Union[int, str]] = None,
             columns_depth: int = 1,
@@ -3313,10 +3312,10 @@ class Frame(ContainerOperand):
                 own_columns=False # need to make grow only
                 )
 
-    def to_csv(self,
+    def to_delimited(self,
             fp: PathSpecifierOrFileLike,
             *,
-            delimiter: str = ',',
+            delimiter: str,
             include_index: bool = True,
             include_columns: bool = True,
             encoding: tp.Optional[str] = None,
@@ -3329,7 +3328,7 @@ class Frame(ContainerOperand):
         Args:
             delimiter: character to be used for delimiterarating elements.
         '''
-        # to_str = str
+        fp = path_filter(fp)
 
         if isinstance(fp, str):
             f = open(fp, 'w', encoding=encoding)
@@ -3338,8 +3337,19 @@ class Frame(ContainerOperand):
             f = fp # assume an open file like
             is_file = False
 
+        index = self._index
+
         if include_index:
-            index_values = self._index.values # get once for caching
+            index_values = index.values # get once for caching
+
+            # TODO: use common routine in IndexBase
+            if index.depth == 1:
+                if index.name:
+                    index_names = (index.name,)
+                else:
+                    index_names = ('index',)
+            else:
+                index_names = tuple(f'index{d}' for d in range(index.depth))
 
         if store_filter:
             filter_func = store_filter.from_type_filter_element
@@ -3348,10 +3358,9 @@ class Frame(ContainerOperand):
             if include_columns:
                 if include_index:
                     # if this is included should be controlled by a Boolean switch
-                    if self._index.name is not None:
-                        f.write(f'{self._index.name}{delimiter}')
-                    else:
-                        f.write(f'index{delimiter}')
+                    for name in index_names:
+                        f.write(f'{name}{delimiter}')
+
                 # iter directly over columns in case it is an IndexGO and needs to update cache
                 # TODO: support IndexHierarchy
                 if store_filter:
@@ -3368,11 +3377,19 @@ class Frame(ContainerOperand):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        # TODO: support IndexHierarchy
-                        if store_filter:
-                            f.write(f'{filter_func(index_values[row_idx])}{delimiter}')
+                        if index.depth == 1:
+                            index_value = index_values[row_idx]
+                            if store_filter:
+                                f.write(f'{filter_func(index_value)}{delimiter}')
+                            else:
+                                f.write(f'{index_value}{delimiter}')
                         else:
-                            f.write(f'{index_values[row_idx]}{delimiter}')
+                            for index_value in index_values[row_idx]:
+                                if store_filter:
+                                    f.write(f'{filter_func(index_value)}{delimiter}')
+                                else:
+                                    f.write(f'{index_value}{delimiter}')
+
                     row_current_idx = row_idx
                 if store_filter:
                     f.write(f'{filter_func(element)}')
@@ -3388,13 +3405,48 @@ class Frame(ContainerOperand):
         if is_file:
             f.close()
 
-    def to_tsv(self,
+
+    def to_csv(self,
             fp: PathSpecifierOrFileLike,
-            **kwargs):
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            encoding: tp.Optional[str] = None,
+            line_terminator: str = '\n',
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ):
         '''
         Given a file path or file-like object, write the Frame as tab-delimited text.
         '''
-        return self.to_csv(fp=fp, delimiter='\t', **kwargs)
+        return self.to_delimited(fp=fp,
+                delimiter=',',
+                include_index=include_index,
+                include_columns=include_columns,
+                encoding=encoding,
+                line_terminator=line_terminator,
+                store_filter=store_filter
+                )
+
+    def to_tsv(self,
+            fp: PathSpecifierOrFileLike,
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            encoding: tp.Optional[str] = None,
+            line_terminator: str = '\n',
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ):
+        '''
+        Given a file path or file-like object, write the Frame as tab-delimited text.
+        '''
+        return self.to_delimited(fp=fp,
+                delimiter='\t',
+                include_index=include_index,
+                include_columns=include_columns,
+                encoding=encoding,
+                line_terminator=line_terminator,
+                store_filter=store_filter
+                )
 
 
     def to_xlsx(self,
@@ -3485,6 +3537,8 @@ class Frame(ContainerOperand):
                 display_format=DisplayFormats.HTML_DATATABLES,
                 )
         content = repr(self.display(config))
+
+        # path_filter called internally
         fp = write_optional_file(content=content, fp=fp)
 
         if show:

@@ -162,7 +162,7 @@ def is_callable_or_mapping(value: CallableOrMapping) -> bool:
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
 PathSpecifier = tp.Union[str, Path]
-PathSpecifierOrFileLike = tp.Union[str, tp.TextIO]
+PathSpecifierOrFileLike = tp.Union[str, Path, tp.TextIO]
 
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
@@ -1630,8 +1630,8 @@ def slices_from_targets(
 #-------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 
-def path_filter(fp: PathSpecifier) -> str:
-    '''Realize Path objects as strings
+def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
+    '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
     if isinstance(fp, Path):
         return str(fp)
@@ -1647,6 +1647,9 @@ def write_optional_file(
         content: str,
         fp: tp.Optional[PathSpecifierOrFileLike] = None,
         ) -> tp.Optional[str]:
+
+    if fp is not None:
+        fp = path_filter(fp)
 
     fd = f = None
     if not fp: # get a temp file

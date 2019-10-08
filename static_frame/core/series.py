@@ -1589,6 +1589,7 @@ class Series(ContainerOperand):
                 display_format=DisplayFormats.HTML_DATATABLES,
                 )
         content = repr(self.display(config))
+        # path_filter applied in call
         fp = write_optional_file(content=content, fp=fp)
 
         if show:

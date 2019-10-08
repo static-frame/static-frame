@@ -374,6 +374,7 @@ class IndexBase(ContainerOperand):
                 display_format=DisplayFormats.HTML_DATATABLES,
                 )
         content = repr(self.display(config))
+        # path_filter called internally
         fp = write_optional_file(content=content, fp=fp)
 
         if fp and show:

@@ -10,6 +10,7 @@ import cmath
 import sqlite3
 import contextlib
 import tempfile
+from pathlib import Path
 
 import numpy as np  # type: ignore
 import pytest  # type: ignore
@@ -19,6 +20,8 @@ from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
 from static_frame.core.index_base import IndexBase
 from static_frame.core.frame import Frame
+from static_frame.core.util import PathSpecifier
+
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
@@ -30,12 +33,17 @@ skip_win = pytest.mark.skipif(
         )
 
 @contextlib.contextmanager
-def temp_file(suffix: tp.Optional[str] = None) -> tp.Iterator[str]:
+def temp_file(suffix: tp.Optional[str] = None,
+        path: bool = False
+        ) -> tp.Iterator[PathSpecifier]:
     try:
         f = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
         tmp_name = f.name
         f.close()
-        yield tmp_name
+        if path:
+            yield Path(tmp_name)
+        else:
+            yield tmp_name
     finally:
         os.unlink(tmp_name)
 

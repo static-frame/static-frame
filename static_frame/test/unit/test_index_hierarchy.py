@@ -23,6 +23,7 @@ from static_frame import IndexLevel
 from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
 
+from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 from static_frame.core.exception import ErrorInitIndex
 
@@ -1053,6 +1054,21 @@ class TestUnit(TestCase):
                 match,
                 (['<IndexHierarchy: q>', ''], ['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['<<U1>', '<<U1>'])
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_to_html_datatables(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+
+
+        with temp_file('.html', path=True) as fp:
+            ih1.to_html_datatables(fp, show=False)
+            with open(fp) as file:
+                data = file.read()
+                self.assertTrue('SFTable' in data)
+                self.assertTrue(len(data) > 1000)
+
 
     def test_hierarchy_to_pandas_a(self) -> None:
 

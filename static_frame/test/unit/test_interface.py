@@ -27,13 +27,11 @@ class TestUnit(TestCase):
     def test_interface_summary_b(self) -> None:
 
         post = FrameGO.interface
-
         counts = post.iter_group('group').apply(lambda x: len(x))
 
         self.assertEqual(
             counts.to_pairs(),
-            (('Attribute', 10), ('Constructor', 20), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 12), ('Iterator', 60), ('Method', 50), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 15))
-
+            (('Attribute', 10), ('Constructor', 20), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 13), ('Iterator', 60), ('Method', 50), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 15))
             )
 
 

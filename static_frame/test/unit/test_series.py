@@ -10,6 +10,7 @@ from io import StringIO
 import numpy as np  # type: ignore
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import temp_file
 
 import static_frame as sf
 # assuming located in the same directory
@@ -1672,6 +1673,20 @@ class TestUnit(TestCase):
         self.assertEqual(post, None)
 
         self.assertTrue(len(sio.read()) > 1500)
+
+
+    def test_series_to_html_datatables_b(self) -> None:
+
+        s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
+
+        with temp_file('.html', path=True) as fp:
+            s1.to_html_datatables(fp, show=False)
+            with open(fp) as file:
+                data = file.read()
+                self.assertTrue('SFTable' in data)
+                self.assertTrue(len(data) > 1500)
+
+
 
 
     def test_series_disply_a(self) -> None:
