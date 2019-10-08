@@ -13,6 +13,8 @@ from static_frame.core.store import StoreZipCSV
 from static_frame.core.store import StoreZipTSV
 from static_frame.core.store import StoreZipPickle
 from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_hdf5 import StoreHDF5
 
 
 from static_frame.core.exception import ErrorInitBus
@@ -97,6 +99,16 @@ class Bus(ContainerBase):
     @classmethod
     def from_xlsx(cls, fp: PathSpecifier) -> 'Bus':
         store = StoreXLSX(fp)
+        return cls(cls._deferred_series(store.labels()), store=store)
+
+    @classmethod
+    def from_sqlite(cls, fp: PathSpecifier) -> 'Bus':
+        store = StoreSQLite(fp)
+        return cls(cls._deferred_series(store.labels()), store=store)
+
+    @classmethod
+    def from_hdf5(cls, fp: PathSpecifier) -> 'Bus':
+        store = StoreHDF5(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
 
@@ -394,5 +406,13 @@ class Bus(ContainerBase):
 
     def to_xlsx(self, fp: PathSpecifier) -> None:
         store = StoreXLSX(fp)
+        store.write(self.items())
+
+    def to_sqlite(self, fp: PathSpecifier) -> None:
+        store = StoreSQLite(fp)
+        store.write(self.items())
+
+    def to_hdf5(self, fp: PathSpecifier) -> None:
+        store = StoreHDF5(fp)
         store.write(self.items())
 

@@ -341,5 +341,56 @@ class TestUnit(TestCase):
 
 
 
+    def test_bus_to_sqlite_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.sqlite') as fp:
+            b1.to_sqlite(fp)
+            b2 = Bus.from_sqlite(fp)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2, f3):
+            self.assertEqualFrames(frame, b2[frame.name])
+
+
+    def test_bus_to_hdf5_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.h5') as fp:
+            b1.to_hdf5(fp)
+            b2 = Bus.from_hdf5(fp)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2, f3):
+            self.assertEqualFrames(frame, b2[frame.name])
+
+
+
 if __name__ == '__main__':
     unittest.main()
