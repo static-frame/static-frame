@@ -51,7 +51,7 @@ class Store:
         raise NotImplementedError()
 
     @staticmethod
-    def _get_field_names_and_dtypes(
+    def get_field_names_and_dtypes(
             frame: Frame,
             include_index: bool,
             include_columns: bool,
@@ -111,6 +111,29 @@ class Store:
             return values
 
         return partial(frame.iter_array, 1) #type: ignore
+
+    @staticmethod
+    def get_column_iterator(
+            frame: Frame,
+            include_index: bool
+            ) -> tp.Iterator[np.ndarray]:
+        if include_index:
+            index_values = frame._index.values
+            index_depth = frame._index.depth
+
+            if index_depth == 1:
+                return chain(
+                        (index_values,),
+                        frame._blocks.axis_values(0)
+                        )
+            # this approach is the same as IndexHierarchy.values_at_depth
+            return chain(
+                    (index_values[:, d] for d in range(index_depth)),
+                    frame._blocks.axis_values(0)
+                    )
+        # avoid creating a Series per column by going to blocks
+        return frame._blocks.axis_values(0)
+
 
 #-------------------------------------------------------------------------------
 from static_frame.core.util import AnyCallable

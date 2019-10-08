@@ -45,7 +45,7 @@ class StoreHDF5(Store):
         with tables.open_file(self._fp, mode='w') as file:
             for label, frame in items:
                 # should all tables be under a common group?
-                field_names, dtypes = self._get_field_names_and_dtypes(
+                field_names, dtypes = self.get_field_names_and_dtypes(
                         frame=frame,
                         include_index=include_index,
                         include_columns=include_columns

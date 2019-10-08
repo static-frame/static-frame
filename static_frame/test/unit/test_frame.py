@@ -370,6 +370,7 @@ class TestUnit(TestCase):
                 (('a', ((0, 1), (1, 2))), ('b', ((0, 3), (1, 4))))
                 )
 
+    #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
         records = (
@@ -410,6 +411,50 @@ class TestUnit(TestCase):
                 [[1, 1]]
                 )
 
+
+    #---------------------------------------------------------------------------
+
+
+    def test_frame_to_arrow_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        at = f1.to_arrow()
+        self.assertEqual(at.shape, (4, 6))
+        self.assertEqual(at.column_names,
+                ['__index0__', '__index1__', "['a' 1]", "['a' 2]", "['b' 1]", "['b' 2]"])
+        self.assertEqual(at.to_pydict(),
+                {'__index0__': [100, 100, 200, 200], '__index1__': [True, False, True, False], "['a' 1]": [1, 30, 54, 65], "['a' 2]": [2, 34, 95, 73], "['b' 1]": ['a', 'b', 'c', 'd'], "['b' 2]": [False, True, False, True]}
+                )
+
+
+    def test_frame_to_parquet_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            pass
+
+    #---------------------------------------------------------------------------
 
     def test_frame_to_xarray_a(self) -> None:
         records = (

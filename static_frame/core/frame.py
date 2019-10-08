@@ -3231,6 +3231,7 @@ class Frame(ContainerOperand):
         Return a Pandas DataFrame.
         '''
         import pandas
+        # NOTE: could alternatively iter columns to maintain types
         df = pandas.DataFrame(self.values.copy(),
                 index=self._index.to_pandas(),
                 columns=self._columns.to_pandas(),
@@ -3239,6 +3240,43 @@ class Frame(ContainerOperand):
             df.name = self._name
         return df
 
+    def to_arrow(self,
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ):
+        '''
+        Return a ``pyarrow.Table`` from this :obj:`Frame`.
+        '''
+        import pyarrow
+        from static_frame.core.store import Store
+
+        field_names, _ = Store.get_field_names_and_dtypes(
+                frame=self,
+                include_index=include_index,
+                include_columns=include_columns
+                )
+        arrays = tuple(Store.get_column_iterator(
+                frame=self,
+                include_index=include_index)
+                )
+        return pyarrow.Table.from_arrays(arrays, names=field_names)
+
+    def to_parquet(self,
+            fp: PathSpecifier,
+            *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ) -> None:
+        '''
+        Write an Arrow Parquet binary file.
+        '''
+        import pyarrow.parquet as pq
+
+        table = self.to_arrow()
+
+        fp = path_filter(fp)
+        pq.write_table(table, fp)
 
     def to_xarray(self) -> 'Dataset':
         '''

@@ -71,7 +71,7 @@ class StoreSQLite(Store):
         if label is None:
             label = 'None'
 
-        field_names, dtypes = cls._get_field_names_and_dtypes(
+        field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
                 include_columns=include_columns

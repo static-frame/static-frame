@@ -1,6 +1,5 @@
 
 import typing as tp
-from itertools import chain
 
 import numpy as np # type: ignore
 
@@ -127,28 +126,9 @@ class StoreXLSX(Store):
             store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
-
-        # iterating by columns avoids type coercion
-        if include_index:
-            # apply store_filter below
-            index_values = frame._index.values
-            index_depth = frame._index.depth
-
-            if index_depth == 1:
-                columns_iter = enumerate(chain(
-                        (index_values,),
-                        frame._blocks.axis_values(0)
-                        ))
-            else:
-                # this approach is the same as IndexHierarchy.values_at_depth
-                columns_iter = enumerate(chain(
-                        (index_values[:, d] for d in range(index_depth)),
-                        frame._blocks.axis_values(0)
-                        ))
-        else:
-            index_depth = 0
-            # avoid creating a Series per column by going to blocks
-            columns_iter = enumerate(frame._blocks.axis_values(0))
+        index_depth = frame._index.depth
+        columns_iter = cls.get_column_iterator(frame=frame,
+                include_index=include_index)
 
         if include_columns:
             columns_depth = frame._columns.depth
@@ -160,7 +140,7 @@ class StoreXLSX(Store):
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
 
         # can write by column
-        for col, values in columns_iter:
+        for col, values in enumerate(columns_iter):
 
             if include_columns:
                 # col integers will include index depth
