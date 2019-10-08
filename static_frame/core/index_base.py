@@ -19,7 +19,7 @@ from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # type: ignore #pylint: disable=W0611
+    import pandas  # type: ignore #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound='IndexBase')
@@ -119,7 +119,7 @@ class IndexBase(ContainerOperand):
 
     @classmethod
     def from_pandas(cls,
-            value: 'pd.DataFrame',
+            value: 'pandas.DataFrame',
             *,
             is_static: bool = True) -> 'IndexBase':
         '''

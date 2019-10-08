@@ -101,7 +101,7 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    import pandas as pd # type: ignore #pylint: disable=W0611
+    import pandas # type: ignore #pylint: disable=W0611
     from xarray import Dataset # type: ignore #pylint: disable=W0611
     import pyarrow
 
@@ -1217,7 +1217,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject()
     def from_pandas(cls,
-            value,
+            value: 'pandas.DataFrame',
             *,
             own_data: bool = False) -> 'Frame':
         '''Given a Pandas DataFrame, return a Frame.
@@ -3226,7 +3226,7 @@ class Frame(ContainerOperand):
                 zip(major, (tuple(zip(minor, v))
                 for v in self._blocks.axis_values(axis))))
 
-    def to_pandas(self) -> 'pd.DataFrame':
+    def to_pandas(self) -> 'pandas.DataFrame':
         '''
         Return a Pandas DataFrame.
         '''

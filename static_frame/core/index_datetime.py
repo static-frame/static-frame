@@ -38,7 +38,7 @@ from static_frame.core.index_base import IndexBase
 
 
 if tp.TYPE_CHECKING:
-    import pandas as pd #pylint: disable=W0611
+    import pandas #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound=IndexBase)
@@ -127,7 +127,7 @@ class _IndexDatetime(Index):
                 key_transform=key_to_datetime_key)
 
     #---------------------------------------------------------------------------
-    def to_pandas(self) -> 'pd.DatetimeIndex':
+    def to_pandas(self) -> 'pandas.DatetimeIndex':
         '''Return a Pandas Index.
         '''
         import pandas

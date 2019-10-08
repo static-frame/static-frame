@@ -64,7 +64,7 @@ from static_frame.core.exception import ErrorInitIndex
 
 
 if tp.TYPE_CHECKING:
-    import pandas as pd #pylint: disable=W0611
+    import pandas #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound=IndexBase)
@@ -836,7 +836,7 @@ class Index(IndexBase):
         from static_frame import IndexHierarchy
         return IndexHierarchy.from_tree({level: self.values})
 
-    def to_pandas(self) -> 'pd.Index':
+    def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.
         '''
         import pandas
