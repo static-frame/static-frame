@@ -15,7 +15,7 @@ from static_frame.core.store import Store
 
 from static_frame.core.doc_str import doc_inject
 
-from static_frame.core.util import DtypesSpecifier
+# from static_frame.core.util import DtypesSpecifier
 # from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 # from static_frame.core.util import DTYPE_NAN_KIND

@@ -16,7 +16,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
-from static_frame.core.util import array2d_to_tuples
+# from static_frame.core.util import array2d_to_tuples
 from static_frame.core.index_hierarchy import IndexHierarchy
 
 
