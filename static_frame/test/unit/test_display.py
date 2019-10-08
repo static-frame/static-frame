@@ -645,9 +645,6 @@ class TestUnit(TestCase):
         f = sf.Frame(np.empty((8, 8), dtype='U1'), columns=columns, index=index)
         print(f)
 
-        # f.display(sf.DisplayActive.get(display_format='html_datatables'))
-
-        # f.to_html_datatables()
         columns = tuple('efgh')
         index = range(3, 0, -1)
 

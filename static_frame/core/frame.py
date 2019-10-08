@@ -3658,7 +3658,18 @@ class Frame(ContainerOperand):
             webbrowser.open_new_tab(fp)
         return fp
 
-
+    def to_rst(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> str:
+        '''
+        Display the Frame as an RST formatted table.
+        '''
+        # if a config is given, try to use all settings; if using active, hide types
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
+                display_format=DisplayFormats.RST,
+                )
+        return repr(self.display(config))
 
 
 class FrameGO(Frame):

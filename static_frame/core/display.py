@@ -5,6 +5,8 @@ import os
 import html
 import inspect
 import platform
+import re
+
 
 from enum import Enum
 
@@ -174,11 +176,11 @@ class DisplayFormats(str, Enum):
     '''
     Define display output format.
     '''
-
     HTML_PRE = 'html_pre'
     HTML_TABLE = 'html_table'
     HTML_DATATABLES = 'html_datatables'
     TERMINAL = 'terminal'
+    RST = 'rst'
 
 _DISPLAY_FORMAT_HTML = {
         DisplayFormats.HTML_PRE,
@@ -197,7 +199,7 @@ class DisplayFormat:
     def markup_row(
             row: tp.Iterable[str],
             header_depth: int #pylint: disable=W0613
-            ) -> tp.Generator[str, None, None]:
+            ) -> tp.Iterator[str]:
         '''
         Args:
             header_depth: number of columns that should be treated as headers.
@@ -294,11 +296,51 @@ class DisplayFormatHTMLPre(DisplayFormat):
                 msg=msg)
 
 
+class DisplayFormatRST(DisplayFormat):
+
+    CELL_WIDTH_NORMALIZE = True
+    LINE_SEP = '\n'
+    _RE_NOT_PIPE = re.compile(r'[^|]')
+
+    @staticmethod
+    def markup_row(
+            row: tp.Iterable[str],
+            header_depth: int) -> tp.Generator[str, None, None]:
+        '''
+        Args:
+            header_depth: number of columns that should be treated as headers.
+        '''
+        yield f"|{'|'.join(row)}|"
+
+    @classmethod
+    def markup_header(cls, msg: str) -> str:
+        # header does boundary lines above, and one additional = line below
+        def lines() -> tp.Iterator[str]:
+            for line in msg.split(cls.LINE_SEP):
+                yield cls._RE_NOT_PIPE.sub('-', line).replace('|', '+')
+                yield line
+            yield cls._RE_NOT_PIPE.sub('=', line).replace('|', '+')
+        return cls.LINE_SEP.join(lines())
+
+    @classmethod
+    def markup_body(cls, msg: str) -> str:
+        # body lines add boundary lines below
+        def lines() -> tp.Iterator[str]:
+            for line in msg.split(cls.LINE_SEP):
+                # import ipdb; ipdb.set_trace()
+                yield line
+                yield cls._RE_NOT_PIPE.sub('-', line).replace('|', '+')
+
+        return cls.LINE_SEP.join(lines())
+
+
+
 _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
         DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
         DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
         DisplayFormats.TERMINAL: DisplayFormatTerminal,
+        DisplayFormats.RST: DisplayFormatRST,
         }
 
 #-------------------------------------------------------------------------------
@@ -686,8 +728,8 @@ class Display:
             # if not a compatible terminal, return label unaltered
             return FORMAT_EMPTY
 
-        raise NotImplementedError('no handling for display format:',
-                config.display_format)
+        # RST and other text displays
+        return FORMAT_EMPTY
 
     @classmethod
     def to_cell(cls,

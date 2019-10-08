@@ -3308,6 +3308,34 @@ class TestUnit(TestCase):
         self.assertTrue(len(sio.read()) > 1600)
 
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_to_rst_a(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+        post = f1.to_rst()
+        msg = '''
+                +--------+--+--+-----+
+                |<Frame> |  |  |     |
+                +--------+--+--+-----+
+                |<Index> |r |s |t    |
+                +--------+--+--+-----+
+                |<Index> |  |  |     |
+                +========+==+==+=====+
+                |w       |2 |a |False|
+                +--------+--+--+-----+
+                |x       |3 |b |False|
+                +--------+--+--+-----+
+                '''
+        self.assertEqualLines(post, msg)
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:
         records = (

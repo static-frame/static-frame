@@ -228,3 +228,17 @@ class TestCase(unittest.TestCase):
 
         if check_dtypes:
             self.assertTrue((f1.dtypes.values == f2.dtypes.values).all())
+
+
+    def assertEqualLines(self, lines1: str, lines2: str) -> None:
+        '''After splitting and stripping, compare non-empty lines.
+        '''
+        def clean_lines(lines: str) -> tp.Iterator[str]:
+            for line in lines.split('\n'):
+                line = line.strip()
+                if line:
+                    yield line
+        for l1, l2 in zip(clean_lines(lines1), clean_lines(lines2)):
+            self.assertEqual(l1, l2)
+
+
