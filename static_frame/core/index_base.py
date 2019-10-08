@@ -176,7 +176,7 @@ class IndexBase(ContainerOperand):
 
         names = tuple(gen())
         if len(names) != self.depth:
-            raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {depth}')
+            raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {self.depth}')
         return names
 
     #---------------------------------------------------------------------------
