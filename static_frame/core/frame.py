@@ -103,7 +103,7 @@ from static_frame.core.doc_str import doc_inject
 if tp.TYPE_CHECKING:
     import pandas # type: ignore #pylint: disable=W0611
     from xarray import Dataset # type: ignore #pylint: disable=W0611
-    import pyarrow
+    import pyarrow # type: ignore #pylint: disable=W0611
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
     '''
