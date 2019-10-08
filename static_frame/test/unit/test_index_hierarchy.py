@@ -406,6 +406,50 @@ class TestUnit(TestCase):
 
 
 
+    def test_hierarchy_from_labels_delimited_a(self) -> None:
+
+        labels = ("'I' 'A'", "'I' 'B'")
+
+        ih = IndexHierarchy.from_labels_delimited(labels)
+
+        self.assertEqual(ih.values.tolist(),
+                [['I', 'A'], ['I', 'B']])
+
+
+
+    def test_hierarchy_from_labels_delimited_b(self) -> None:
+
+        labels = (
+                "'I' 'A' 0",
+                "'I' 'A' 1",
+                "'I' 'B' 0",
+                "'I' 'B' 1",
+                "'II' 'A' 0",
+                )
+
+        ih = IndexHierarchy.from_labels_delimited(labels)
+
+        self.assertEqual(ih.values.tolist(),
+                [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
+                )
+
+
+    def test_hierarchy_from_labels_delimited_c(self) -> None:
+
+        labels = (
+                "['I' 'A' 0]",
+                "['I' 'A' 1]",
+                "['I' 'B' 0]",
+                "['I' 'B' 1]",
+                "['II' 'A' 0]",
+                )
+
+        ih = IndexHierarchy.from_labels_delimited(labels)
+
+        self.assertEqual(ih.values.tolist(),
+                [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
+                )
+
 
 
     def test_hierarchy_loc_to_iloc_b(self) -> None:

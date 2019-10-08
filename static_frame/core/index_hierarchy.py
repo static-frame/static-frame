@@ -2,6 +2,7 @@
 import typing as tp
 from collections.abc import KeysView
 from itertools import chain
+from ast import literal_eval
 
 import numpy as np
 
@@ -28,6 +29,7 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_shift
+
 
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
@@ -231,7 +233,7 @@ class IndexHierarchy(IndexBase):
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
-            :py:class:`static_frame.IndexHierarchy`
+            :obj:`static_frame.IndexHierarchy`
         '''
         labels_iter = iter(labels)
         try:
@@ -442,6 +444,40 @@ class IndexHierarchy(IndexBase):
                 own_index=True
                 ))
 
+
+    @classmethod
+    def from_labels_delimited(cls: tp.Type[IH],
+            labels: tp.Iterable[str],
+            *,
+            delimiter: str = ' ',
+            name: tp.Hashable = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
+            ) -> IH:
+        '''
+        Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
+
+        Args:
+            labels: an iterator or generator of tuples.
+
+        Returns:
+            :obj:`static_frame.IndexHierarchy`
+        '''
+        def trim_outer(label: str) -> str:
+            start, stop = 0, len(label)
+            if label[0] in ('[', '('):
+                start = 1
+            if label[-1] in (']', ')'):
+                stop = -1
+            return label[start: stop]
+
+        labels = (tuple(literal_eval(x)
+                for x in trim_outer(label).split(delimiter))
+                for label in labels
+                )
+        return cls.from_labels(labels,
+                name=name,
+                index_constructors=index_constructors
+                )
 
     #---------------------------------------------------------------------------
     def __init__(self,

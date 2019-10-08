@@ -94,7 +94,7 @@ class StoreSQLite(Store):
 
         create_fields = ', '.join(f'{k} {v}' for k, v in field_name_to_field_type)
         create = f'CREATE TABLE {label} ({create_fields}{create_primary_key})'
-
+        print(create)
         cursor.execute(create)
 
         # works for IndexHierarchy too

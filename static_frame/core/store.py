@@ -16,6 +16,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
+from static_frame.core.util import array2d_to_tuples
 from static_frame.core.index_hierarchy import IndexHierarchy
 
 
@@ -57,11 +58,16 @@ class Store:
 
         index = frame.index
         columns = frame.columns
+        columns_values = columns.values
+
+        if columns.depth > 1:
+            # The str() of an array produces a space-delimited representation that includes list brackets; we can trim thise brackets here, but need them for SQLite usage
+            columns_values = tuple(str(c) for c in columns_values)
 
         if not include_index:
             dtypes = frame._blocks.dtypes
             if include_columns:
-                field_names = columns.values
+                field_names = columns_values
             else: # name fields with integers?
                 field_names = range(frame._blocks.shape[1])
         else:
@@ -80,7 +86,7 @@ class Store:
 
             # add index names in front of column names
             if include_columns:
-                field_names.extend(columns)
+                field_names.extend(columns_values)
             else: # name fields with integers?
                 field_names.extend(range(frame._blocks.shape[1]))
 

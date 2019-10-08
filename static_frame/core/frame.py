@@ -4,7 +4,6 @@ import csv
 import json
 from collections import namedtuple
 from functools import partial
-from ast import literal_eval
 
 import numpy as np # type: ignore
 
@@ -571,14 +570,11 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns_depth > 1:
             # use IH: get via static attr of columns const
-            constructor = (IndexHierarchy.from_labels
+            constructor = (IndexHierarchy.from_labels_delimited
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
-                    else IndexHierarchyGO.from_labels)
-            # assume that all values need to be literal eval
-            columns = constructor(
-                    tuple(literal_eval(x) for x in b[0].split(' '))
-                    for b in row_gen.description[index_depth:]
-                    )
+                    else IndexHierarchyGO.from_labels_delimited)
+            labels = (b[0] for b in row_gen.description[index_depth:])
+            columns = constructor(labels, delimiter=' ')
             own_columns = True
 
         index_constructor = None
@@ -791,6 +787,7 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             index_column: tp.Optional[IndexSpecifier] = None,
+            columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False,
@@ -868,25 +865,42 @@ class Frame(ContainerOperand):
         else:
             block_gen = blocks
 
+        columns_constructor = None
+        if columns_depth == 0:
+            columns = None
+        elif columns_depth > 1:
+            columns_constructor = partial(IndexHierarchy.from_labels_delimited
+                    if cls._COLUMNS_CONSTRUCTOR.STATIC
+                    else IndexHierarchyGO.from_labels_delimited,
+                    delimiter=' ')
+            # columns = constructor(columns, delimiter=' ')
+            # own_columns = True
+
         if index_depth == 0:
             return cls(TypeBlocks.from_blocks(block_gen()),
                     columns=columns,
                     index=None,
                     name=name,
-                    own_data=True)
+                    own_data=True,
+                    columns_constructor=columns_constructor,
+                    )
         if index_depth == 1:
             return cls(TypeBlocks.from_blocks(block_gen()),
                     columns=columns,
                     index=index_arrays[0],
                     name=name,
-                    own_data=True)
+                    own_data=True,
+                    columns_constructor=columns_constructor,
+                    )
         if index_depth > 1:
             return cls(TypeBlocks.from_blocks(block_gen()),
                     columns=columns,
                     index=zip(*index_arrays),
                     index_constructor=IndexHierarchy.from_labels,
                     name=name,
-                    own_data=True)
+                    own_data=True,
+                    columns_constructor=columns_constructor,
+                    )
 
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be

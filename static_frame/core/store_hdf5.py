@@ -17,7 +17,7 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.util import DtypesSpecifier
 # from static_frame.core.util import DTYPE_INT_KIND
-# from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KIND
 # from static_frame.core.util import DTYPE_NAN_KIND
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 # from static_frame.core.util import DTYPE_BOOL
@@ -51,12 +51,11 @@ class StoreHDF5(Store):
                         include_columns=include_columns
                         )
 
-                # note: need to handle hiararchical columns
                 # Must set pos to have stable position
                 description = {k: tables.Col.from_dtype(v, pos=i)
                         for i, (k, v) in enumerate(zip(field_names, dtypes))
                         }
-
+                # print(description)
                 # group = file.create_group('/', label)
                 table = file.create_table('/', # create off root from sring
                         name=label,
@@ -64,7 +63,8 @@ class StoreHDF5(Store):
                         expectedrows=len(frame),
                         )
 
-                values = self._get_row_iterator(frame=frame, include_index=include_index)
+                values = self._get_row_iterator(frame=frame,
+                        include_index=include_index)
                 table.append(tuple(values()))
                 table.flush()
 
@@ -75,30 +75,47 @@ class StoreHDF5(Store):
             *,
             index_depth: int=1,
             columns_depth: int=1,
-            dtypes: DtypesSpecifier = None,
             ) -> Frame:
         '''
         Args:
             {dtypes}
         '''
-        import tables # type: ignore
+        import tables
 
         with tables.open_file(self._fp, mode='r') as file:
             table = file.get_node(f'/{label}')
             array = table.read()
+
+            # Discover all string dtypes and replace the dtype with a generic `str` function; first element in values array is the dtype object.
+            dtypes =  {k: str
+                    for i, (k, v) in enumerate(array.dtype.fields.items())
+                    if v[0].kind in DTYPE_STR_KIND
+                    }
+
+            # if columns_depth > 1:
+            #     names = array.dtype.names[index_depth:]
+            #     import ipdb; ipdb.set_trace()
+
             # this works, but does not let us pull off columns yet
-            return Frame.from_structured_array(
-                    table.read(),
-                    name=label
-                    )
+            f = tp.cast(Frame,
+                    Frame.from_structured_array(
+                            array,
+                            name=label,
+                            index_depth=index_depth,
+                            columns_depth=columns_depth,
+                            dtypes=dtypes,
+                    ))
+            # import ipdb; ipdb.set_trace()
+            return f
 
     def labels(self) -> tp.Iterator[str]:
         '''
         Iterator of labels.
         '''
-        import tables # type: ignore
+        import tables
 
         with tables.open_file(self._fp, mode='r') as file:
             for node in file.iter_nodes(where='/',
                     classname=tables.Table.__name__):
+                # NOTE: this is not the complete path
                 yield node.name
