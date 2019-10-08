@@ -811,6 +811,7 @@ class Frame(ContainerOperand):
         names = array.dtype.names
 
         index_start_pos = -1 # will be ignored
+        index_end_pos = -1
         if index_column is not None:
             if index_depth <= 0:
                 raise ErrorInitFrame('index_column specified but index_depth is 0')
@@ -818,10 +819,12 @@ class Frame(ContainerOperand):
                 index_start_pos = index_column
             else:
                 index_start_pos = names.index(index_column) # linear performance
+            index_end_pos = index_start_pos + index_depth - 1
         else: # no index_column specified, if index depth > 0, set start to 0
             if index_depth > 0:
                 index_start_pos = 0
-
+                # Subtract one for inclusive boun
+                index_end_pos = index_start_pos + index_depth - 1
 
         # assign in generator; requires  reading through gen first
         # index_array = None
@@ -852,8 +855,7 @@ class Frame(ContainerOperand):
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
-                if col_idx >= index_start_pos and col_idx < index_start_pos + index_depth:
-                    # nonlocal index_arrays
+                if col_idx >= index_start_pos and col_idx <= index_end_pos:
                     index_arrays.append(array_final)
                     continue
 
@@ -873,34 +875,24 @@ class Frame(ContainerOperand):
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
                     else IndexHierarchyGO.from_labels_delimited,
                     delimiter=' ')
-            # columns = constructor(columns, delimiter=' ')
-            # own_columns = True
+
+        kwargs = dict(
+                data=TypeBlocks.from_blocks(block_gen()),
+                own_data=True,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                name=name
+                )
 
         if index_depth == 0:
-            return cls(TypeBlocks.from_blocks(block_gen()),
-                    columns=columns,
-                    index=None,
-                    name=name,
-                    own_data=True,
-                    columns_constructor=columns_constructor,
-                    )
+            return cls(index=None, **kwargs)
         if index_depth == 1:
-            return cls(TypeBlocks.from_blocks(block_gen()),
-                    columns=columns,
-                    index=index_arrays[0],
-                    name=name,
-                    own_data=True,
-                    columns_constructor=columns_constructor,
-                    )
-        if index_depth > 1:
-            return cls(TypeBlocks.from_blocks(block_gen()),
-                    columns=columns,
-                    index=zip(*index_arrays),
-                    index_constructor=IndexHierarchy.from_labels,
-                    name=name,
-                    own_data=True,
-                    columns_constructor=columns_constructor,
-                    )
+            return cls(index=index_arrays[0], **kwargs)
+        return cls(
+                index=zip(*index_arrays),
+                index_constructor=IndexHierarchy.from_labels,
+                **kwargs
+                )
 
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be
@@ -1274,6 +1266,78 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True
                 )
+
+
+    @classmethod
+    def from_arrow(cls,
+            value: 'pyarrow.Table',
+            *,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            consolidate_blocks: bool = False,
+            name: tp.Hashable = None
+            ) -> 'Frame':
+        '''Convert an Arrow Table into a Frame.
+        '''
+        # this is similar to from_structured_array
+        index_start_pos = -1 # will be ignored
+        index_end_pos = -1
+        if index_depth > 0:
+            index_start_pos = 0
+            index_end_pos = index_start_pos + index_depth - 1
+
+        index_arrays = []
+        if columns_depth > 0:
+            columns = []
+
+        def blocks():
+            for col_idx, (name, chunked_array) in enumerate(
+                    zip(value.column_names, value.columns)):
+                # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray
+                array_final = chunked_array.to_pandas(
+                        ignore_metadata=True).values
+                if col_idx >= index_start_pos and col_idx <= index_end_pos:
+                    index_arrays.append(array_final)
+                    continue
+                if columns_depth > 0:
+                    columns.append(name)
+                yield array_final
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        columns_constructor = None
+        if columns_depth == 0:
+            columns = None
+        elif columns_depth > 1:
+            columns_constructor = partial(
+                    IndexHierarchy.from_labels_delimited
+                    if cls._COLUMNS_CONSTRUCTOR.STATIC
+                    else IndexHierarchyGO.from_labels_delimited,
+                    delimiter=' ')
+
+        kwargs = dict(
+                data=TypeBlocks.from_blocks(block_gen()),
+                own_data=True,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                name=name
+                )
+
+        if index_depth == 0:
+            return cls(index=None, **kwargs)
+        if index_depth == 1:
+            return cls(index=index_arrays[0], **kwargs)
+        return cls(
+                index=zip(*index_arrays),
+                index_constructor=IndexHierarchy.from_labels,
+                **kwargs
+                )
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -3274,7 +3338,6 @@ class Frame(ContainerOperand):
         import pyarrow.parquet as pq
 
         table = self.to_arrow()
-
         fp = path_filter(fp)
         pq.write_table(table, fp)
 

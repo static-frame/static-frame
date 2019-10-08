@@ -437,6 +437,27 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_arrow_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+        at = f1.to_arrow()
+
+        f2 = Frame.from_arrow(at,
+                index_depth=f1.index.depth,
+                columns_depth=f1.columns.depth
+                )
+        # String arrays will come in as objects
+        self.assertEqualFrames(f1, f2, check_dtypes=False)
+
     def test_frame_to_parquet_a(self) -> None:
         records = (
                 (1, 2, 'a', False),
@@ -453,6 +474,9 @@ class TestUnit(TestCase):
         with temp_file('.parquet') as fp:
             f1.to_parquet(fp)
             pass
+
+
+
 
     #---------------------------------------------------------------------------
 

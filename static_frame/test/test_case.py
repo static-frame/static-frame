@@ -208,7 +208,11 @@ class TestCase(unittest.TestCase):
             self.assertAlmostEqualItems(v1, v2)
 
 
-    def assertEqualFrames(self, f1: Frame, f2: Frame) -> None:
+    def assertEqualFrames(self,
+            f1: Frame,
+            f2: Frame,
+            check_dtypes: bool = True
+            ) -> None:
         self.assertEqual(f1.shape, f2.shape)
         self.assertEqual(f1.__class__, f2.__class__)
         self.assertEqual(f1.name, f2.name)
@@ -221,3 +225,6 @@ class TestCase(unittest.TestCase):
 
         # NOTE: this will not handle types
         self.assertAlmostEqualFramePairs(f1.to_pairs(0), f2.to_pairs(0))
+
+        if check_dtypes:
+            self.assertTrue((f1.dtypes.values == f2.dtypes.values).all())
