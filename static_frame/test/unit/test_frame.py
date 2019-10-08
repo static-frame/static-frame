@@ -3286,6 +3286,24 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f2)
 
 
+    def test_frame_from_hdf5_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                name='f1'
+                )
+
+        with temp_file('.h5') as fp:
+            f1.to_hdf5(fp)
+            f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
+            self.assertEqualFrames(f1, f2)
+
     #---------------------------------------------------------------------------
 
     def test_frame_and_a(self) -> None:

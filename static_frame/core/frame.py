@@ -1099,14 +1099,14 @@ class Frame(ContainerOperand):
         Load Frame from the contents of a sheet in an XLSX workbook.
 
         Args:
-            label: Optionally provide the sheet name from with to read. If not provideded, the first sheet will be used.
+            label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
         '''
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(fp)
         return st.read(label,
             index_depth=index_depth,
-            columns_depth=index_depth,
+            columns_depth=columns_depth,
             dtypes=dtypes
             )
 
@@ -1127,11 +1127,28 @@ class Frame(ContainerOperand):
         st = StoreSQLite(fp)
         return st.read(label, # should this be called label?
             index_depth=index_depth,
-            columns_depth=index_depth,
+            columns_depth=columns_depth,
             dtypes=dtypes
             )
 
+    @classmethod
+    def from_hdf5(cls,
+            fp: PathSpecifier,
+            *,
+            label: str,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            ) -> 'Frame':
+        '''
+        Load Frame from the contents of a table in an HDF5 file.
+        '''
+        from static_frame.core.store_hdf5 import StoreHDF5
 
+        st = StoreHDF5(fp)
+        return st.read(label, # should this be called label?
+            index_depth=index_depth,
+            columns_depth=index_depth,
+            )
 
 
     @classmethod
@@ -3352,11 +3369,34 @@ class Frame(ContainerOperand):
                 include_columns=include_columns,
                 )
 
+    def to_hdf5(self,
+            fp: PathSpecifier, # not sure I can take a file like yet
+            *,
+            label: tp.Optional[str] = None,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ) -> None:
+        '''
+        Write the Frame as single-table SQLite file.
+        '''
+        from static_frame.core.store_hdf5 import StoreHDF5
+
+        if not label:
+            if not self.name:
+                raise RuntimeError('must provide a label or define Frame name.')
+            label = self.name
+
+        st = StoreHDF5(fp)
+        st.write(((label, self),),
+                include_index=include_index,
+                include_columns=include_columns,
+                )
+
 
     @doc_inject(class_name='Frame')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None
-            ):
+            ) -> str:
         '''
         {}
         '''
