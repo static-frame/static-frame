@@ -23,6 +23,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.util import path_filter
 
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
@@ -991,7 +992,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     @doc_inject(selector='constructor_frame')
-    def from_csv(cls,
+    def from_delimited(cls,
             fp: PathSpecifierOrFileLike,
             *,
             delimiter: str = ',',
@@ -1032,6 +1033,7 @@ class Frame(ContainerOperand):
         if columns_depth > 1:
             raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
 
+        fp = path_filter(fp)
         delimiter_native = '\t'
 
         if delimiter != delimiter_native:
@@ -1074,17 +1076,79 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
-    def from_tsv(cls,
+    def from_csv(cls,
             fp: PathSpecifierOrFileLike,
-            **kwargs
+            *,
+            index_depth: int = 0,
+            index_column: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
-        Specialized version of :py:meth:`Frame.from_csv` for TSV files.
+        Specialized version of :py:meth:`Frame.from_delimited` for CSV files.
 
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        return cls.from_csv(fp, delimiter='\t', **kwargs)
+        return cls.from_delimited(fp,
+                delimiter=',',
+                index_depth=index_depth,
+                index_column=index_column,
+                columns_depth=columns_depth,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                quote_char=quote_char,
+                encoding=encoding,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
+
+    @classmethod
+    def from_tsv(cls,
+            fp: PathSpecifierOrFileLike,
+            *,
+            index_depth: int = 0,
+            index_column: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        '''
+        Specialized version of :py:meth:`Frame.from_delimited` for TSV files.
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        return cls.from_delimited(fp,
+                delimiter='\t',
+                index_depth=index_depth,
+                index_column=index_column,
+                columns_depth=columns_depth,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                quote_char=quote_char,
+                encoding=encoding,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
+
 
     @classmethod
     def from_xlsx(cls,

@@ -85,16 +85,13 @@ class StoreHDF5(Store):
         with tables.open_file(self._fp, mode='r') as file:
             table = file.get_node(f'/{label}')
             array = table.read()
+            array.flags.writeable = False
 
             # Discover all string dtypes and replace the dtype with a generic `str` function; first element in values array is the dtype object.
             dtypes =  {k: str
                     for i, (k, v) in enumerate(array.dtype.fields.items())
                     if v[0].kind in DTYPE_STR_KIND
                     }
-
-            # if columns_depth > 1:
-            #     names = array.dtype.names[index_depth:]
-            #     import ipdb; ipdb.set_trace()
 
             # this works, but does not let us pull off columns yet
             f = tp.cast(Frame,
@@ -105,7 +102,6 @@ class StoreHDF5(Store):
                             columns_depth=columns_depth,
                             dtypes=dtypes,
                     ))
-            # import ipdb; ipdb.set_trace()
             return f
 
     def labels(self) -> tp.Iterator[str]:
