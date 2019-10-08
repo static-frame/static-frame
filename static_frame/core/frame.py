@@ -103,7 +103,7 @@ from static_frame.core.doc_str import doc_inject
 if tp.TYPE_CHECKING:
     import pandas as pd # type: ignore #pylint: disable=W0611
     from xarray import Dataset # type: ignore #pylint: disable=W0611
-
+    import pyarrow
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
     '''
@@ -3244,7 +3244,7 @@ class Frame(ContainerOperand):
             *,
             include_index: bool = True,
             include_columns: bool = True,
-            ):
+            ) -> 'pyarrow.Table':
         '''
         Return a ``pyarrow.Table`` from this :obj:`Frame`.
         '''
