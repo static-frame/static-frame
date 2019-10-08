@@ -62,7 +62,7 @@ class Store:
         columns_values = columns.values
 
         if columns.depth > 1:
-            # The str() of an array produces a space-delimited representation that includes list brackets; we can trim thise brackets here, but need them for SQLite usage
+            # The str() of an array produces a space-delimited representation that includes list brackets; we could trim these brackets here, but need them for SQLite usage; thus, clients will have to trim if necessary.
             columns_values = tuple(str(c) for c in columns_values)
 
         if not include_index:
@@ -74,13 +74,11 @@ class Store:
         else:
             if index.depth == 1:
                 dtypes = [index.dtype]
-                # cannot use index as it is a keyword in sqlite
-                field_names = [index.name if index.name else 'index0']
             else:
                 assert isinstance(index, IndexHierarchy) # for typing
                 dtypes = index.dtypes.values.tolist()
-                # TODO: use index .name attribute if available
-                field_names = [f'index{d}' for d in range(index.depth)]
+            # Get a list to mutate.
+            field_names = list(index.names)
 
             # add fram dtypes tp those from index
             dtypes.extend(frame._blocks.dtypes)

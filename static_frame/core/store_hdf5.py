@@ -92,7 +92,6 @@ class StoreHDF5(Store):
                     for i, (k, v) in enumerate(array.dtype.fields.items())
                     if v[0].kind in DTYPE_STR_KIND
                     }
-
             # this works, but does not let us pull off columns yet
             f = tp.cast(Frame,
                     Frame.from_structured_array(

@@ -154,6 +154,31 @@ class IndexBase(ContainerOperand):
     def name(self) -> tp.Hashable:
         return self._name
 
+    @property
+    def names(self) -> tp.Tuple[str, ...]:
+        '''
+        Provide a suitable iterable of names for usage in output formats that require a field name for the index.
+        '''
+        template = '__index{}__' # arrow does __index_level_0__
+
+        def gen() -> tp.Iterator[str]:
+            if self._name and isinstance(self._name, tuple):
+                for name in self._name:
+                    yield name
+            else:
+                start = 0
+                if self._name:
+                    # If self._name is defined, try to use it as the first label
+                    yield str(self._name) # might be other hashable
+                    start = 1
+                for i in range(start, self.depth):
+                    yield template.format(i)
+
+        names = tuple(gen())
+        if len(names) != self.depth:
+            raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {depth}')
+        return names
+
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 

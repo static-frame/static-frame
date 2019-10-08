@@ -3252,14 +3252,12 @@ class Frame(ContainerOperand):
         index = self.index
 
         if index.depth == 1:
-            index_name = index.name if index.name else 'index'
+            index_name = index.names[0]
             coords = {index_name: index.values}
         else:
-            # NOTE: not checking the index name attr, as may not be tuple
-            index_name = tuple(f'level_{x}' for x in range(index.depth))
-
+            index_name = index.names
             # index values are reduced to unique values for 2d presentation
-            coords = {f'level_{d}': np.unique(index.values_at_depth(d))
+            coords = {index_name[d]: np.unique(index.values_at_depth(d))
                     for d in range(index.depth)}
             # create dictionary version
             coords_index = {k: Index(v) for k, v in coords.items()}
@@ -3341,15 +3339,7 @@ class Frame(ContainerOperand):
 
         if include_index:
             index_values = index.values # get once for caching
-
-            # TODO: use common routine in IndexBase
-            if index.depth == 1:
-                if index.name:
-                    index_names = (index.name,)
-                else:
-                    index_names = ('index',)
-            else:
-                index_names = tuple(f'index{d}' for d in range(index.depth))
+            index_names = index.names
 
         if store_filter:
             filter_func = store_filter.from_type_filter_element

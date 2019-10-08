@@ -489,9 +489,11 @@ class TestUnit(TestCase):
 
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
         self.assertEqual(idx1.name, 'foo')
+        self.assertEqual(idx1.names, ('foo',))
 
         idx2 = idx1.rename('bar')
         self.assertEqual(idx2.name, 'bar')
+        self.assertEqual(idx2.names, ('bar',))
 
     def test_name_b(self) -> None:
 

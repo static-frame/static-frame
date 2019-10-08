@@ -12,14 +12,21 @@ Added ``display_tall()`` and ``display_wide()`` convenience methods to all conta
 
 Added ``label_widths_at_depth()`` on ``Index`` and ``IndexHierarchy``.
 
+Added ``Series.from_concat_items()`` and ``Frame.from_concat_items()``.
+
 Added ``Frame.to_xarray()``.
 
 Added ``Frame.to_xlsx()``, ``Frame.from_xlsx()``.
 
 Added ``Frame.to_sqlite()``, ``Frame.from_sqlite()``.
 
-The interface of ``Frame.from_csv`` has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``.
+Added ``Frame.to_hdf5()``, ``Frame.from_hdf5()``.
 
+The interface of ``Frame.from_delimited`` (as well as ``Frame.from_csv`` and ``Frame.from_tsv``) has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``. IndexHierarchy are now supported when ``index_depth`` is greater than one.
+
+Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delimited``.
+
+Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
 
 0.4.3

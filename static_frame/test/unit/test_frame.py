@@ -429,14 +429,14 @@ class TestUnit(TestCase):
                 (('a', 1), ('a', 2), ('b', 1), ('b', 2))
                 )
         self.assertEqual(tuple(ds1.coords.keys()),
-                ('level_0', 'level_1', 'level_2')
+                ('__index0__', '__index1__', '__index2__')
                 )
         self.assertEqual(ds1[('b', 1)].values.ndim, 3)
 
         f2 = Frame.from_records(records)
         ds2 = f2.to_xarray()
         self.assertEqual(tuple(ds2.data_vars.keys()), (0, 1, 2, 3))
-        self.assertEqual(tuple(ds2.coords.keys()), ('index',))
+        self.assertEqual(tuple(ds2.coords.keys()), ('__index0__',))
         self.assertEqual(ds2[3].values.tolist(),
                 [False, True, False, True])
 
@@ -3100,7 +3100,7 @@ class TestUnit(TestCase):
         f1.to_csv(file)
         file.seek(0)
         self.assertEqual(file.read(),
-'index,p,q,r,s,t\nw,2,2,a,False,False\nx,30,34,b,True,False\ny,2,95,c,False,False\nz,30,73,d,True,True')
+'__index0__,p,q,r,s,t\nw,2,2,a,False,False\nx,30,34,b,True,False\ny,2,95,c,False,False\nz,30,73,d,True,True')
 
         file = StringIO()
         f1.to_csv(file, include_index=False)
@@ -3163,7 +3163,7 @@ class TestUnit(TestCase):
         f1.to_tsv(file)
         file.seek(0)
         self.assertEqual(file.read(),
-'index\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
+'__index0__\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
 
 
     def test_frame_to_tsv_b(self) -> None:

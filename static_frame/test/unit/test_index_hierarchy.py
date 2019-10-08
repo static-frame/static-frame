@@ -1003,6 +1003,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records, columns=list('abc'))
 
         f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
+        self.assertEqual(f1.index.names, ('a', 'b'))
 
         f2 = f1.loc[f1['b'] == 999999]
 
@@ -1021,6 +1022,8 @@ class TestUnit(TestCase):
 
         idx2 = idx1.rename('w')
         self.assertEqual(idx2.name, 'w')
+        # will provide one for each level
+        self.assertEqual(idx2.names, ('w', '__index1__'))
 
 
     def test_hierarchy_name_b(self) -> None:
@@ -1060,7 +1063,6 @@ class TestUnit(TestCase):
     def test_hierarchy_to_html_datatables(self) -> None:
 
         ih1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
-
 
         with temp_file('.html', path=True) as fp:
             ih1.to_html_datatables(fp, show=False)
