@@ -53,7 +53,7 @@ def _get_requirements(file_name: str) -> tp.Iterator[str]:
 def get_install_requires() -> tp.Iterator[str]:
     yield from _get_requirements('requirements.txt')
 
-def get_extras_require() -> tp.Dict[str, tp.Iterator[str]]:
+def get_extras_require() -> tp.Dict[str, tp.List[str]]:
     # For now, have only one group that installs all extras; in the future, can create specialized groups if necessary.
     return {'extras': list(_get_requirements('requirements-extras.txt'))}
 
