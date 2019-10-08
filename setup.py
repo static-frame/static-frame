@@ -33,7 +33,8 @@ Packages: https://pypi.org/project/static-frame
 '''
 
 def get_version() -> str:
-    with open(path.join(root_dir_fp, 'static_frame', '__init__.py'), encoding='utf-8') as f:
+    with open(path.join(root_dir_fp, 'static_frame', '__init__.py'),
+            encoding='utf-8') as f:
         for l in f:
             if l.startswith('__version__'):
                 if '#' in l:
@@ -41,12 +42,20 @@ def get_version() -> str:
                 return l.split('=')[-1].strip()[1:-1]
     raise ValueError("__version__ not found!")
 
-def get_install_requires() -> tp.Iterator[str]:
-    with open(path.join(root_dir_fp, 'requirements.txt')) as f:
+
+def _get_requirements(file_name: str) -> tp.Iterator[str]:
+    with open(path.join(root_dir_fp, file_name)) as f:
         for line in f:
             line = line.strip()
             if line:
                 yield line
+
+def get_install_requires() -> tp.Iterator[str]:
+    yield from _get_requirements('requirements.txt')
+
+def get_extras_require() -> tp.Dict[str, tp.Iterator[str]]:
+    # For now, have only one group that installs all extras; in the future, can create specialized groups if necessary.
+    return {'extras': list(_get_requirements('requirements-extras.txt'))}
 
 setup(
     name='static-frame',
@@ -55,6 +64,7 @@ setup(
     long_description=get_long_description(),
     python_requires='>3.6.0',
     install_requires=list(get_install_requires()),
+    extras_require=get_extras_require(),
     url='https://github.com/InvestmentSystems/static-frame',
     author='Christopher Ariza',
     license='MIT',
@@ -78,4 +88,4 @@ setup(
             'static_frame.core',
             'static_frame.performance',
             ],
-)
+    )
