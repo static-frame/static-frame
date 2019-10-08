@@ -1337,6 +1337,27 @@ class Frame(ContainerOperand):
                 )
 
 
+    @classmethod
+    def from_parquet(cls,
+            fp: PathSpecifier,
+            *,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            consolidate_blocks: bool = False,
+            name: tp.Hashable = None,
+            ) -> 'Frame':
+        '''
+        Realize a ``Frame`` from a Parquet file.
+        '''
+        import pyarrow.parquet as pq
+
+        table = pq.read_table(fp)
+        return cls.from_arrow(table,
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                consolidate_blocks=consolidate_blocks,
+                name=name
+                )
 
 
     #---------------------------------------------------------------------------

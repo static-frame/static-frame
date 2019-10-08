@@ -477,6 +477,27 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_parquet_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth)
+
+        self.assertEqualFrames(f1, f2, check_dtypes=False)
+
 
     #---------------------------------------------------------------------------
 

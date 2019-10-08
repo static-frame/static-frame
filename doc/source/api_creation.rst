@@ -50,8 +50,6 @@ Frame
 
 .. automethod:: static_frame.Frame.from_dict
 
-
-
 .. automethod:: static_frame.Frame.from_concat
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
@@ -59,6 +57,10 @@ Frame
    :start-after: start_frame_from_concat_a
    :end-before: end_frame_from_concat_a
 
+
+.. automethod:: static_frame.Series.from_concat_items
+
+.. automethod:: static_frame.Frame.from_delimited
 
 .. automethod:: static_frame.Frame.from_csv
 
@@ -93,7 +95,13 @@ Frame
 
 .. automethod:: static_frame.Frame.from_pandas
 
+.. automethod:: static_frame.Frame.from_sqlite
 
+.. automethod:: static_frame.Frame.from_hdf5
+
+.. automethod:: static_frame.Frame.from_arrow
+
+.. automethod:: static_frame.Frame.from_parquet
 
 
 
@@ -101,6 +109,7 @@ Index
 -----------------
 
 While indices are often specified with their data at container creation, in some cases explicitly creating indices in advance of the data is practical.
+
 
 
 .. automethod:: static_frame.Index.from_labels
