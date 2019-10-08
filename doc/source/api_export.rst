@@ -57,11 +57,19 @@ Frame
 
 .. automethod:: static_frame.Frame.to_xarray
 
+.. automethod:: static_frame.Frame.to_arrow
+
 .. automethod:: static_frame.Frame.to_csv
 
 .. automethod:: static_frame.Frame.to_tsv
 
 .. automethod:: static_frame.Frame.to_xlsx
+
+.. automethod:: static_frame.Frame.to_sqlite
+
+.. automethod:: static_frame.Frame.to_hdf5
+
+.. automethod:: static_frame.Frame.to_parquet
 
 .. automethod:: static_frame.Frame.to_html
 
