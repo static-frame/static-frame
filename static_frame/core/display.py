@@ -181,6 +181,7 @@ class DisplayFormats(str, Enum):
     HTML_DATATABLES = 'html_datatables'
     TERMINAL = 'terminal'
     RST = 'rst'
+    MARKDOWN = 'markdown'
 
 _DISPLAY_FORMAT_HTML = {
         DisplayFormats.HTML_PRE,
@@ -306,10 +307,7 @@ class DisplayFormatRST(DisplayFormat):
     def markup_row(
             row: tp.Iterable[str],
             header_depth: int) -> tp.Generator[str, None, None]:
-        '''
-        Args:
-            header_depth: number of columns that should be treated as headers.
-        '''
+
         yield f"|{'|'.join(row)}|"
 
     @classmethod
@@ -320,6 +318,7 @@ class DisplayFormatRST(DisplayFormat):
                 yield cls._RE_NOT_PIPE.sub('-', line).replace('|', '+')
                 yield line
             yield cls._RE_NOT_PIPE.sub('=', line).replace('|', '+')
+
         return cls.LINE_SEP.join(lines())
 
     @classmethod
@@ -334,6 +333,33 @@ class DisplayFormatRST(DisplayFormat):
         return cls.LINE_SEP.join(lines())
 
 
+class DisplayFormatMarkdown(DisplayFormat):
+
+    CELL_WIDTH_NORMALIZE = True
+    LINE_SEP = '\n'
+    _RE_NOT_PIPE = re.compile(r'[^|]')
+
+    @staticmethod
+    def markup_row(
+            row: tp.Iterable[str],
+            header_depth: int) -> tp.Generator[str, None, None]:
+        yield f"|{'|'.join(row)}|"
+
+    @classmethod
+    def markup_header(cls, msg: str) -> str:
+        # header does boundary lines above, and one additional = line below
+        def lines() -> tp.Iterator[str]:
+            for line in msg.split(cls.LINE_SEP):
+                yield line
+            yield cls._RE_NOT_PIPE.sub('-', line)
+
+        return cls.LINE_SEP.join(lines())
+
+    # @classmethod
+    # def markup_body(cls, msg: str) -> str:
+    #     return msg
+
+
 
 _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
@@ -341,6 +367,7 @@ _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
         DisplayFormats.TERMINAL: DisplayFormatTerminal,
         DisplayFormats.RST: DisplayFormatRST,
+        DisplayFormats.MARKDOWN: DisplayFormatMarkdown,
         }
 
 #-------------------------------------------------------------------------------

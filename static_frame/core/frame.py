@@ -3671,6 +3671,19 @@ class Frame(ContainerOperand):
                 )
         return repr(self.display(config))
 
+    def to_markdown(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> str:
+        '''
+        Display the Frame as a Markdown formatted table.
+        '''
+        # if a config is given, try to use all settings; if using active, hide types
+        config = config or DisplayActive.get(type_show=False)
+        config = config.to_display_config(
+                display_format=DisplayFormats.MARKDOWN,
+                )
+        return repr(self.display(config))
+
 
 class FrameGO(Frame):
     '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.
