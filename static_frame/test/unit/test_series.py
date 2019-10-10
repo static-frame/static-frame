@@ -1657,8 +1657,7 @@ class TestUnit(TestCase):
 
         post = s1.to_html(config=DisplayConfig(type_show=False, type_color=False))
 
-        html = '''<table border="1"><thead><tr><th>&lt;Series&gt;</th><th></th></tr><tr><th>&lt;Index&gt;</th><th></th></tr></thead><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>
-        '''
+        html = '<table border="1"><thead></thead><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>'
         self.assertEqual(post.strip(), html.strip())
 
 
@@ -1672,7 +1671,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(post, None)
 
-        self.assertTrue(len(sio.read()) > 1500)
+        self.assertTrue(len(sio.read()) > 1400)
 
 
     def test_series_to_html_datatables_b(self) -> None:
@@ -1684,7 +1683,7 @@ class TestUnit(TestCase):
             with open(fp) as file:
                 data = file.read()
                 self.assertTrue('SFTable' in data)
-                self.assertTrue(len(data) > 1500)
+                self.assertTrue(len(data) > 800)
 
 
 

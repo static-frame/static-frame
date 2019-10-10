@@ -2070,7 +2070,7 @@ class Frame(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=self._index.depth,
-                columns_depth=self._columns.depth + 2)
+                header_depth=self._columns.depth + 2)
 
         display_index = self._index.display(config=config)
         d.extend_display(display_index)

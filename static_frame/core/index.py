@@ -507,7 +507,7 @@ class Index(IndexBase):
                 config=config,
                 outermost=True,
                 index_depth=0,
-                columns_depth=1
+                header_depth=1
                 )
 
     #---------------------------------------------------------------------------

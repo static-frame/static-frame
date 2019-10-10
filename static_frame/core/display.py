@@ -249,6 +249,7 @@ class DisplayFormatHTMLTable(DisplayFormat):
             header_depth: int) -> tp.Generator[str, None, None]:
         yield '<tr>'
         for count, msg in enumerate(row):
+            # header depth here refers potentially to a header that is the index
             if count < header_depth:
                 yield '<th>{}</th>'.format(msg)
             else:
@@ -741,7 +742,7 @@ class Display:
         '_config',
         '_outermost',
         '_index_depth',
-        '_columns_depth',
+        '_header_depth',
         )
 
     CHAR_MARGIN = 1
@@ -856,7 +857,7 @@ class Display:
         return DisplayCell(FORMAT_EMPTY, msg)
 
     #---------------------------------------------------------------------------
-    # aalternate constructor
+    # alternate constructor
 
     @classmethod
     def from_values(cls,
@@ -865,7 +866,7 @@ class Display:
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
-            columns_depth: int = 0
+            header_depth: int = 0
             ) -> 'Display':
         '''
         Given a 1 or 2D ndarray, return a Display instance. Generally 2D arrays are passed here only from TypeBlocks.
@@ -876,7 +877,10 @@ class Display:
         # create a list of lists, always starting with the header
         rows = []
         if header is not None:
-            rows.append([cls.to_cell(header, config=config)])
+            if config.type_show:
+                rows.append([cls.to_cell(header, config=config)])
+            else:
+                rows.append([cls.CELL_EMPTY])
 
         if isinstance(values, np.ndarray) and values.ndim == 2:
             # get rows from numpy string formatting
@@ -916,7 +920,7 @@ class Display:
                 config=config,
                 outermost=outermost,
                 index_depth=index_depth,
-                columns_depth=columns_depth)
+                header_depth=header_depth)
 
 
     #---------------------------------------------------------------------------
@@ -985,14 +989,14 @@ class Display:
         return max_width, pad_width
 
     @classmethod
-    def _to_rows(cls,
+    def _to_rows_cells(cls,
             display: 'Display',
             config: tp.Optional[DisplayConfig] = None,
-            index_depth: int = 0,
-            columns_depth: int = 0,
-            ) -> tp.Iterable[str]:
+            # index_depth: int = 0,
+            # columns_depth: int = 0,
+            ) -> tp.Iterable[tp.Iterable[str]]:
         '''
-        Given a Display object, return an iterable of strings, where each string is the combination of all cells in that row, and appropriate padding (if necessary), as been applied. Based on configruation, align cells left or right with space and return one joined string per row.
+        Given a Display object, return an iterable of iterables of strings, where each iterable contains strings for all cells in that row, with appropriate padding (if necessary) applied. Based on configruation, align cells left or right with space and return one joined string per row.
 
         Returns:
             Returns an iterable of formatted strings, generally one per row.
@@ -1067,15 +1071,25 @@ class Display:
 
                 rows[row_idx_src].append(msg)
 
-        post = []
-        for row_idx, row in enumerate(rows):
-            # make sure the entire row is marked as head if row index less than column depth
-            added_depth = col_count_src if row_idx < columns_depth else 0
-            # rstrip to remove extra white space on last column
-            post.append(''.join(dfc.markup_row(row,
-                    header_depth=index_depth + added_depth)).rstrip()
-                    )
-        return post
+        return rows
+
+        # post = []
+        # for row_idx, row in enumerate(rows):
+        #     # make sure the entire row is marked as head if row index less than column depth
+        #     added_depth = col_count_src if row_idx < columns_depth else 0
+                # rstrip to remove extra white space on last column
+        #     post.append(''.join(dfc.markup_row(row,
+        #             header_depth=index_depth + added_depth)).rstrip()
+        #             )
+        # return post
+
+    @staticmethod
+    def _row_empty(line: tp.Iterable[str]) -> bool:
+        for cell in line:
+            if cell.strip() != '':
+                return False
+        return True
+
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -1083,9 +1097,12 @@ class Display:
             config: tp.Optional[DisplayConfig] = None,
             outermost: bool = False,
             index_depth: int = 0,
-            columns_depth: int = 0,
+            header_depth: int = 0,
             ) -> None:
-        '''Define rows as a list of lists, for each row; the strings may be of different size, but they are expected to be aligned vertically in final presentation.
+        '''Define rows as a list of lists, for each row; the contained DisplayCell instances may be of different size, but they are expected to be aligned vertically in final presentation.
+
+        Args:
+            header_depth: columns depth plus any addtional lines used for headers
         '''
         config = config or DisplayActive.get()
 
@@ -1093,13 +1110,13 @@ class Display:
         self._config = config
         self._outermost = outermost
         self._index_depth = index_depth
-        self._columns_depth = columns_depth
+        self._header_depth = header_depth
 
     def __repr__(self) -> str:
-        rows = self._to_rows(self,
+        rows = self._to_rows_cells(self,
                 self._config,
-                index_depth=self._index_depth,
-                columns_depth=self._columns_depth
+                # index_depth=self._index_depth,
+                # header_depth=self._header_depth
                 )
 
         if self._outermost:
@@ -1107,19 +1124,34 @@ class Display:
             header = []
             body = []
             for idx, row in enumerate(rows):
-                if idx < self._columns_depth:
+                if idx < self._header_depth:
+                    # if we find an empty header, it is due to setting type_show to False; we can skip them here
+                    if self._row_empty(row):
+                        continue
+                    row = ''.join(dfc.markup_row(row, header_depth=np.inf)).rstrip()
                     header.append(row)
                 else:
+                    row = ''.join(dfc.markup_row(row, header_depth=self._index_depth)).rstrip()
                     body.append(row)
             header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
             # NOTE: this function might take additional arguments (like identifier and caption); presently there is now way to get these args here via container display methods; likely best option is to take a new / specialzied confiig. Using the same config would be akward, as that config is for all outputs, not just one table's output.
             return dfc.markup_outermost(header_str + dfc.LINE_SEP + body_str)
 
-        return dfc.LINE_SEP.join(rows)
+        return dfc.LINE_SEP.join(''.join(r) for r in rows)
 
     def to_rows(self) -> tp.Iterable[str]:
-        return self._to_rows(self, self._config)
+        '''
+        Alternate output method for observing rows as strings within a list. Useful for testing.
+        '''
+        post = []
+        for idx, row in enumerate(self._to_rows_cells(self, self._config)):
+            line = ''.join(row).rstrip()
+            if idx < self._header_depth:
+                if line == '': # type removal led to an empty line
+                    continue
+            post.append(line)
+        return post
 
     def __iter__(self) -> tp.Iterator[tp.List[str]]:
         for row in self._rows:

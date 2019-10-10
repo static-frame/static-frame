@@ -619,9 +619,8 @@ class TestUnit(TestCase):
     def test_index_to_html_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c'))
-
         self.assertEqual(idx1.to_html(),
-                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexGO&gt;</span></th></tr></thead><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
+                '<table border="1"><thead></thead><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
 
     def test_index_to_html_datatables_a(self) -> None:
 
@@ -632,8 +631,7 @@ class TestUnit(TestCase):
         post = idx1.to_html_datatables(sio, show=False)
 
         self.assertEqual(post, None)
-
-        self.assertTrue(len(sio.read()) > 1300)
+        self.assertTrue(len(sio.read()) > 1200)
 
 
     def test_index_empty_a(self) -> None:

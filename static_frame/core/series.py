@@ -917,7 +917,7 @@ class Series(ContainerOperand):
                 config=config,
                 outermost=True,
                 index_depth=1,
-                columns_depth=2) # series and index header
+                header_depth=2) # series and index header
 
         display_index = self._index.display(config=config)
         d.extend_display(display_index)

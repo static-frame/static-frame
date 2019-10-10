@@ -625,7 +625,7 @@ class IndexHierarchy(IndexBase):
                         config=sub_config,
                         outermost=True,
                         index_depth=0,
-                        columns_depth=1)
+                        header_depth=1)
             else:
                 sub_display.extend_iterable(col, header='')
 

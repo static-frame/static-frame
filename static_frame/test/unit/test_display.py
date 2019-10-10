@@ -121,7 +121,7 @@ class TestUnit(TestCase):
         config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
 
         records = (
-                    (2, 2, 'a', False, False),
+                (2, 2, 'a', False, False),
                 (30, 34, 'b', True, False),
                 (2, 95, 'c', False, False),
                 )
@@ -130,14 +130,14 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y'))
 
+
         self.assertEqual(f1.display(config_type_show_false).to_rows(),
-                ['<Frame>',
-                '<Index> p  q  r s     t',
-                '<Index>',
-                'w       2  2  a False False',
-                'x       30 34 b True  False',
-                'y       2  95 c False False',
-                ])
+                ['  p  q  r s     t',
+                 'w 2  2  a False False',
+                 'x 30 34 b True  False',
+                 'y 2  95 c False False'
+                 ]
+                 )
 
         self.assertEqual(f1.display(config_type_show_true).to_rows(),
                 ['<Frame>',
@@ -419,14 +419,15 @@ class TestUnit(TestCase):
         expected = f.display(sf.DisplayConfig(
                 display_format='html_pre', type_color=False))
 
-        html = '''<div style="white-space: pre; font-family: monospace">&lt;Frame&gt;
+        html = '''
+<div style="white-space: pre; font-family: monospace">&lt;Frame&gt;
 &lt;Index&gt; a       b         c      &lt;&lt;U1&gt;
 &lt;Index&gt;
 0       1       1.2       False
 1       2       3.4       True
 &lt;int64&gt; &lt;int64&gt; &lt;float64&gt; &lt;bool&gt;</div>'''
 
-        self.assertEqual(html.strip(), str(expected).strip())
+        self.assertEqualLines(html, str(expected))
 
 
     @skip_win  # type: ignore
@@ -454,9 +455,8 @@ class TestUnit(TestCase):
         f = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('w', 'x'))
-
         self.assertEqual(f._repr_html_(),
-            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Frame&gt;</span></th><th></th><th></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th>p</th><th>q</th><th>r</th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>30</td><td>b</td><td>False</td></tr></tbody></table>')
+            '<table border="1"><thead><tr><th></th><th>p</th><th>q</th><th>r</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>30</td><td>b</td><td>False</td></tr></tbody></table>')
 
 
     def test_display_html_series_a(self) -> None:
@@ -467,8 +467,9 @@ class TestUnit(TestCase):
         f = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
                 index=('w', 'x'))
+
         self.assertEqual(f['q']._repr_html_(),
-            '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Series: q&gt;</span></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th></tr></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
+            '<table border="1"><thead></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
 
     def test_display_html_index_a(self) -> None:
         records = (
@@ -480,11 +481,11 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
 
         self.assertEqual(f.index._repr_html_(),
-                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Index&gt;</span></th></tr></thead><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
+                '<table border="1"><thead></thead><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
 
         f1 = f.set_index_hierarchy(('p', 'q'))
         self.assertEqual(f1.index._repr_html_(),
-                '<table border="1"><thead><tr><th><span style="color: #777777">&lt;IndexHierarchy: (&#x27;p&#x27;, &#x27;q&#x27;)&gt;</span></th><th></th></tr></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
+                '<table border="1"><thead></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
 
     def test_display_html_index_b(self) -> None:
@@ -690,4 +691,15 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
+
+    # records = (
+    #         (2, 'a', False),
+    #         (30, 'b', False),
+    #         )
+    # f = Frame.from_records(records,
+    #         columns=('p', 'q', 'r'),
+    #         index=('w', 'x'))
+    # f = f.relabel_add_level(columns='I', index='J')
+    # import ipdb; ipdb.set_trace()
+
     unittest.main()

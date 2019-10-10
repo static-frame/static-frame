@@ -3286,7 +3286,7 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
         post = f1.to_html()
-        self.assertEqual(post, '<table border="1"><thead><tr><th><span style="color: #777777">&lt;Frame&gt;</span></th><th></th><th></th><th></th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th>r</th><th>s</th><th>t</th></tr><tr><th><span style="color: #777777">&lt;Index&gt;</span></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
+        self.assertEqual(post, '<table border="1"><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )
 
 
@@ -3304,8 +3304,7 @@ class TestUnit(TestCase):
         post = f1.to_html_datatables(sio, show=False)
 
         self.assertEqual(post, None)
-
-        self.assertTrue(len(sio.read()) > 1600)
+        self.assertTrue(len(sio.read()) > 1300)
 
 
     #---------------------------------------------------------------------------
@@ -3320,17 +3319,13 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
         post = f1.to_rst()
         msg = '''
-                +--------+--+--+-----+
-                |<Frame> |  |  |     |
-                +--------+--+--+-----+
-                |<Index> |r |s |t    |
-                +--------+--+--+-----+
-                |<Index> |  |  |     |
-                +========+==+==+=====+
-                |w       |2 |a |False|
-                +--------+--+--+-----+
-                |x       |3 |b |False|
-                +--------+--+--+-----+
+                +--+--+--+-----+
+                |  |r |s |t    |
+                +==+==+==+=====+
+                |w |2 |a |False|
+                +--+--+--+-----+
+                |x |3 |b |False|
+                +--+--+--+-----+
                 '''
         self.assertEqualLines(post, msg)
 
@@ -3346,12 +3341,10 @@ class TestUnit(TestCase):
         post = f1.to_markdown()
 
         msg = '''
-                |<Frame> |  |  |     |
-                |<Index> |r |s |t    |
-                |<Index> |  |  |     |
-                |--------|--|--|-----|
-                |w       |2 |a |False|
-                |x       |3 |b |False|
+                |  |r |s |t    |
+                |--|--|--|-----|
+                |w |2 |a |False|
+                |x |3 |b |False|
                 '''
         self.assertEqualLines(post, msg)
 
@@ -3370,12 +3363,10 @@ class TestUnit(TestCase):
                 \centering
                 \begin{tabular}{c c c c}
                 \hline\hline
-                $<$Frame$>$  &    &    &       \\
-                $<$Index$>$  & r  & s  & t     \\
-                $<$Index$>$  &    &    &       \\
+                   & r  & s  & t     \\
                 \hline
-                w            & 2  & a  & False \\
-                x            & 3  & b  & False \\
+                w  & 2  & a  & False \\
+                x  & 3  & b  & False \\
                 \hline\end{tabular}
                 \end{table}
                 '''
