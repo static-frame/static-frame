@@ -877,6 +877,7 @@ class Display:
         # create a list of lists, always starting with the header
         rows = []
         if header is not None:
+            # assume that all headers are SF types; skip if type_show is False
             if config.type_show:
                 rows.append([cls.to_cell(header, config=config)])
             else:

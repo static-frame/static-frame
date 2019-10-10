@@ -6,6 +6,8 @@ What is New in Static Frame
 0.5.0-dev
 -----------
 
+Introduced the ``Bus``, a ``Series``-like container of mulitple ``Frame``, supporting lazily reading from and writing to XLSX, SQLite, and HDF5 data stores, as well as zipped pickles and delimited files.
+
 Added ``interface`` attribute to all containers, providing a hierarchical presentation of all interfaces.
 
 Added ``display_tall()`` and ``display_wide()`` convenience methods to all containers.
@@ -22,11 +24,19 @@ Added ``Frame.to_sqlite()``, ``Frame.from_sqlite()``.
 
 Added ``Frame.to_hdf5()``, ``Frame.from_hdf5()``.
 
+Added ``Frame.to_rst()``.
+
+Added ``Frame.to_markdown()``.
+
+Added ``Frame.to_latex()``.
+
 The interface of ``Frame.from_delimited`` (as well as ``Frame.from_csv`` and ``Frame.from_tsv``) has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``. IndexHierarchy are now supported when ``index_depth`` is greater than one.
 
 Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delimited``.
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
+
+``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 
 0.4.3
