@@ -68,6 +68,7 @@ Frame
 
 .. automethod:: static_frame.Frame.set_index_hierarchy
 
+.. automethod:: static_frame.Frame.unset_index
 
 
 .. admonition:: Deviations from Pandas

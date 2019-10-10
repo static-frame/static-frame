@@ -38,6 +38,9 @@ Added ``IndexBase.names`` attribute to provide normalized names equal in length 
 
 ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
+Added ``Frame.unset_index()``.
+
+
 
 0.4.3
 -----------

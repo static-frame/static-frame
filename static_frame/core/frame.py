@@ -4,6 +4,7 @@ import csv
 import json
 from collections import namedtuple
 from functools import partial
+from itertools import chain
 
 import numpy as np # type: ignore
 
@@ -3099,6 +3100,39 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 own_index=True
                 )
+
+    def unset_index(self,
+            # index_column: tp.Optional[tp.Union[int, str]] = 0,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''
+        Return a new ``Frame`` where the index is added to the front of the data, and an ``IndexAutoFactory`` is used to populate a new index. If the ``Index`` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
+        '''
+
+        def blocks():
+            yield self.index.values # 2D immutable array
+            for b in self._blocks._blocks:
+                yield b
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        if self._columns.depth > 1:
+            raise ErrorInitFrame('cannot unset index with a columns with depth greater than 1')
+
+        columns = chain(self._index.names, self._columns)
+
+        return self.__class__(
+                TypeBlocks.from_blocks(block_gen()),
+                columns=columns,
+                index=None,
+                own_data=True,
+                )
+
+
+
 
     def roll(self,
             index: int = 0,

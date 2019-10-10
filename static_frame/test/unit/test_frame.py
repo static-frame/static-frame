@@ -5199,6 +5199,52 @@ class TestUnit(TestCase):
                 (('x', 0), ('y', 1), ('z', 0)))
 
 
+    def test_frame_unset_index_a(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        self.assertEqual(f1.unset_index().to_pairs(0),
+                (('__index0__', ((0, 'x'), (1, 'y'), (2, 'z'))), ('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2.0), (1, 3), (2, -95.0))))
+                )
+
+
+    def test_frame_unset_index_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        with self.assertRaises(ErrorInitFrame):
+            f1.unset_index()
+
+
+    def test_frame_unset_index_c(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        index = IndexHierarchy.from_product((100, 200), (True, False), name=('a', 'b'))
+        f1 = Frame.from_records(records,
+                index=index)
+        self.assertEqual(f1.unset_index().to_pairs(0),
+                (('a', ((0, 100), (1, 100), (2, 200), (3, 200))), ('b', ((0, True), (1, False), (2, True), (3, False))), (0, ((0, 1), (1, 30), (2, 54), (3, 65))), (1, ((0, 2), (1, 34), (2, 95), (3, 73))), (2, ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), (3, ((0, False), (1, True), (2, False), (3, True))))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
