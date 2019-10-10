@@ -76,3 +76,7 @@ Frame
 .. automethod:: static_frame.Frame.to_html_datatables
 
 .. automethod:: static_frame.Frame.to_rst
+
+.. automethod:: static_frame.Frame.to_markdown
+
+.. automethod:: static_frame.Frame.to_latex

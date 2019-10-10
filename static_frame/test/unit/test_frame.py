@@ -3356,6 +3356,33 @@ class TestUnit(TestCase):
         self.assertEqualLines(post, msg)
 
 
+    def test_frame_to_latex_a(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+        post = f1.to_latex()
+        msg = r'''
+                \begin{table}[ht]
+                \centering
+                \begin{tabular}{c c c c}
+                \hline\hline
+                $<$Frame$>$  &    &    &       \\
+                $<$Index$>$  & r  & s  & t     \\
+                $<$Index$>$  &    &    &       \\
+                \hline
+                w            & 2  & a  & False \\
+                x            & 3  & b  & False \\
+                \hline\end{tabular}
+                \end{table}
+                '''
+        self.assertEqualLines(post, msg)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:

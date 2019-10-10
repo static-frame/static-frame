@@ -182,6 +182,7 @@ class DisplayFormats(str, Enum):
     TERMINAL = 'terminal'
     RST = 'rst'
     MARKDOWN = 'markdown'
+    LATEX = 'latex'
 
 _DISPLAY_FORMAT_HTML = {
         DisplayFormats.HTML_PRE,
@@ -202,6 +203,8 @@ class DisplayFormat:
             header_depth: int #pylint: disable=W0613
             ) -> tp.Iterator[str]:
         '''
+        Called with each row, post cell-width normalization (if enabled).
+
         Args:
             header_depth: number of columns that should be treated as headers.
         '''
@@ -210,17 +213,27 @@ class DisplayFormat:
 
     @staticmethod
     def markup_header(msg: str) -> str:
+        '''
+        Called with all `LINE_SEP` joined header lines..
+        '''
         return msg
 
     @staticmethod
     def markup_body(msg: str) -> str:
+        '''
+        Called with all `LINE_SEP` joined body lines.
+        '''
         return msg
 
     @staticmethod
     def markup_outermost(msg: str,
             identifier: tp.Optional[str] = None #pylint: disable=W0613
             ) -> str:
+        '''
+        Called with combination of header and body joined with `LINE_SEP`.
+        '''
         return msg
+
 
 class DisplayFormatTerminal(DisplayFormat):
     pass
@@ -234,10 +247,6 @@ class DisplayFormatHTMLTable(DisplayFormat):
     def markup_row(
             row: tp.Iterable[str],
             header_depth: int) -> tp.Generator[str, None, None]:
-        '''
-        Args:
-            header_depth: number of columsn that should be treated as headers.
-        '''
         yield '<tr>'
         for count, msg in enumerate(row):
             if count < header_depth:
@@ -290,11 +299,7 @@ class DisplayFormatHTMLPre(DisplayFormat):
 
         style = 'style="white-space: pre; font-family: monospace"'
         id_str = 'id="{}" '.format(identifier) if identifier else ''
-
-        return '<div {id_str}{style}>{msg}</div>'.format(
-                style=style,
-                id_str=id_str,
-                msg=msg)
+        return f'<div {id_str}{style}>{msg}</div>'
 
 
 class DisplayFormatRST(DisplayFormat):
@@ -355,11 +360,57 @@ class DisplayFormatMarkdown(DisplayFormat):
 
         return cls.LINE_SEP.join(lines())
 
-    # @classmethod
-    # def markup_body(cls, msg: str) -> str:
-    #     return msg
 
 
+class DisplayFormatLaTeX(DisplayFormat):
+
+    CELL_WIDTH_NORMALIZE = True
+    LINE_SEP = '\n'
+    _CELL_SEP = ' & '
+
+    @classmethod
+    def markup_row(cls,
+            row: tp.Iterable[str],
+            header_depth: int) -> tp.Generator[str, None, None]:
+        yield f'{cls._CELL_SEP.join(row)} \\\\' # need 2 backslashes
+
+    @classmethod
+    def markup_header(cls, msg: str) -> str:
+        # assume that the header is small and the wasteful split is acceptable
+        def lines() -> tp.Iterator[str]:
+            lines_header = msg.split('\n')
+            col_count = lines_header[0].count(cls._CELL_SEP) + 1
+            col_spec = ' '.join('c' * col_count)
+            yield f'\\begin{{tabular}}{{{col_spec}}}'
+            yield r'\hline\hline'
+            yield from lines_header
+            yield r'\hline'
+
+        return cls.LINE_SEP.join(lines())
+
+    @classmethod
+    def markup_body(cls,
+            msg: str) -> str:
+        return msg + cls.LINE_SEP + r'\hline\end{tabular}'
+
+    @classmethod
+    def markup_outermost(cls,
+            msg: str,
+            # caption: tp.Optional[str] = None,
+            identifier: tp.Optional[str] = None
+            ) -> str:
+
+        def lines() -> tp.Iterator[str]:
+            yield r'\begin{table}[ht]'
+            # if caption:
+            #     yield f'\caption{{caption}}'
+            yield r'\centering'
+            yield msg
+            if identifier:
+                yield f'\\label{{table:{identifier}}}'
+            yield r'\end{table}'
+
+        return cls.LINE_SEP.join(lines())
 
 _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
@@ -368,6 +419,7 @@ _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         DisplayFormats.TERMINAL: DisplayFormatTerminal,
         DisplayFormats.RST: DisplayFormatRST,
         DisplayFormats.MARKDOWN: DisplayFormatMarkdown,
+        DisplayFormats.LATEX: DisplayFormatLaTeX,
         }
 
 #-------------------------------------------------------------------------------
@@ -1061,6 +1113,7 @@ class Display:
                     body.append(row)
             header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
+            # NOTE: this function might take additional arguments (like identifier and caption); presently there is now way to get these args here via container display methods; likely best option is to take a new / specialzied confiig. Using the same config would be akward, as that config is for all outputs, not just one table's output.
             return dfc.markup_outermost(header_str + dfc.LINE_SEP + body_str)
 
         return dfc.LINE_SEP.join(rows)
