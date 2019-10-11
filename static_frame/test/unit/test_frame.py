@@ -5311,5 +5311,33 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_pivot_d(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+
+        self.assertEqual(f2.pivot('z', 'x', 'a').to_pairs(0),
+                (('left', (('far', 2), ('near', 10))), ('right', (('far', 4), ('near', 12))))
+                )
+
+        self.assertEqual(f2.pivot('z', 'x', 'b').to_pairs(0),
+                (('left', (('far', 40), ('near', 42))), ('right', (('far', 42), ('near', 44))))
+                )
+
+        self.assertEqual(f2.pivot('x', 'y', 'a').to_pairs(0),
+                (('down', (('left', 8), ('right', 10))), ('up', (('left', 4), ('right', 6))))
+                )
+
+        self.assertEqual(f2.pivot('x', 'y', 'b').to_pairs(0),
+                (('down', (('left', 43), ('right', 45))), ('up', (('left', 39), ('right', 41))))
+                )
+
 if __name__ == '__main__':
     unittest.main()

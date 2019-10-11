@@ -3304,27 +3304,28 @@ class Frame(ContainerOperand):
         return Series(post, index=self._index)
 
     def pivot(self,
-            index_fields: tp.Iterable[tp.Hashable],
-            columns_fields: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
-            values_fields: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+            index_fields: KeyOrKeys,
+            columns_fields: KeyOrKeys = EMPTY_TUPLE,
+            values_fields: KeyOrKeys = EMPTY_TUPLE,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and values_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if oen ``values_fields`` is selected, that is the values that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns.
         '''
-        if not isinstance(index_fields, list):
-            index_fields = list(index_fields)
+        def normalize_key(key: KeyOrKeys) -> tp.List[tp.Hashable]:
+            if isinstance(key, str) or not hasattr(key, '__len__'):
+                return [key]
+            return key if isinstance(key, list) else list(key)
+
+        index_fields = normalize_key(index_fields)
+        columns_fields = normalize_key(columns_fields)
+        values_fields = normalize_key(values_fields)
         idx_start_columns = len(index_fields)
 
         if not columns_fields and not values_fields:
             raise ErrorInitFrame('must specify one of, or both of, columns_fields, values_fields')
 
-        if not isinstance(columns_fields, list):
-            columns_fields = list(columns_fields)
-        if not isinstance(values_fields, list):
-            values_fields = list(values_fields)
-
         # Take fields_group before extending columns with values
-        fields_group = list(index_fields + columns_fields)
+        fields_group = index_fields + columns_fields
         for field in fields_group:
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
