@@ -1241,6 +1241,8 @@ class Series(ContainerOperand):
                 valid = False
 
             if valid:
+                if window_func:
+                    window = window_func(window)
                 yield label, window
 
             idx_left += step

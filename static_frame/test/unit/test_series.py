@@ -1960,7 +1960,6 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-
         post = tuple(s1._axis_window_items(size=5, start_shift=-5, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
@@ -2082,6 +2081,19 @@ class TestUnit(TestCase):
         self.assertEqual(post[-1][1].tolist(), [18, 19, 20])
 
 
+
+    def test_series_axis_window_items_m(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        # adjacent windows with label on first value, keeping incomplete windows
+        weight = np.array([.25, .5, .5, .25])
+        post = tuple(s1._axis_window_items(size=4, window_func=lambda a: a * weight))
+
+        self.assertEqual(post[0][0], 'd')
+        self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), [4.25, 9, 9.5, 5])
 
 if __name__ == '__main__':
     unittest.main()
