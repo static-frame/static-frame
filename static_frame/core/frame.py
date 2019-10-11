@@ -940,7 +940,9 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             fill_value: object = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
-            columns_constructor: IndexConstructor = None
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False,
             ) -> 'Frame':
         '''
         This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
@@ -952,15 +954,17 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        index = index_from_optional_constructor(index,
-                default_constructor=Index,
-                explicit_constructor=index_constructor
-                )
+        if not own_index:
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
 
-        columns = index_from_optional_constructor(columns,
-                default_constructor=cls._COLUMNS_CONSTRUCTOR,
-                explicit_constructor=columns_constructor
-                )
+        if not own_columns:
+            columns = index_from_optional_constructor(columns,
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
 
         items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                 for k, v in items)
@@ -978,7 +982,7 @@ class Frame(ContainerOperand):
                 columns=columns,
                 name=name,
                 own_data=True,
-                own_index=True,
+                own_index=True, # always true as either provided or created new
                 own_columns=True
                 )
 
@@ -3306,10 +3310,12 @@ class Frame(ContainerOperand):
     def pivot(self,
             index_fields: KeyOrKeys,
             columns_fields: KeyOrKeys = EMPTY_TUPLE,
-            values_fields: KeyOrKeys = EMPTY_TUPLE,
+            data_fields: KeyOrKeys = EMPTY_TUPLE,
+            *,
+            fill_value: object = FILL_VALUE_DEFAULT,
             ) -> 'Frame':
         '''
-        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and values_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if oen ``values_fields`` is selected, that is the values that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns.
+        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if not ``data_fields`` ar provided, all unused fiels will be displayed.
         '''
         def normalize_key(key: KeyOrKeys) -> tp.List[tp.Hashable]:
             if isinstance(key, str) or not hasattr(key, '__len__'):
@@ -3318,11 +3324,14 @@ class Frame(ContainerOperand):
 
         index_fields = normalize_key(index_fields)
         columns_fields = normalize_key(columns_fields)
-        values_fields = normalize_key(values_fields)
-        idx_start_columns = len(index_fields)
+        data_fields = normalize_key(data_fields)
+        if len(data_fields) == 0:
+            used = set(chain(index_fields, columns_fields))
+            data_fields = [x for x in self.columns if x not in used]
+            if not data_fields:
+                raise ErrorInitFrame('no fields remain to populate data.')
 
-        if not columns_fields and not values_fields:
-            raise ErrorInitFrame('must specify one of, or both of, columns_fields, values_fields')
+        idx_start_columns = len(index_fields)
 
         # Take fields_group before extending columns with values
         fields_group = index_fields + columns_fields
@@ -3330,7 +3339,7 @@ class Frame(ContainerOperand):
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
 
-        # get 2d arrays for index, columns
+        # Get 2d arrays for index; can use from_labels.
         index_values = np.unique(
                 self._blocks._extract(column_key=self._columns.loc_to_iloc(index_fields)).values,
                 axis=0)
@@ -3339,60 +3348,73 @@ class Frame(ContainerOperand):
         else:
             index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
 
-        # the columns index will need hierarchies if vlaues fields is greater than 1
-
-        product = []
+        # Colect bundle of values for from_product constrcution if columns.
+        columns_product = []
         for field in columns_fields:
-            product.append(np.unique(
-                    self._blocks._extract(column_key=self._columns.loc_to_iloc(columns_fields)).values))
-        if len(values_fields) >= 1:
-            if len(values_fields) > 1 or not columns_fields:
-                # if no columns fields, have to add values fields
-                product.append(values_fields)
-            name = tuple(chain(*columns_fields, ('values',)))
-        else:
-            name = tuple(columns_fields)
+            # Take one at a time
+            columns_product.append(np.unique(
+                    self._blocks._extract(column_key=self._columns.loc_to_iloc(field)).values))
 
-        if len(product) > 1:
+        # For data fields, we add the field name, not the field values, to the columns.
+        columns_name = tuple(columns_fields)
+        if len(data_fields) > 1 or not columns_fields:
+            # if no columns fields, have to add values fields
+            columns_product.append(data_fields)
+            columns_name = tuple(chain(*columns_fields, ('values',)))
+
+
+        if len(columns_product) > 1:
             if self._COLUMNS_CONSTRUCTOR.STATIC:
-                columns = IndexHierarchy.from_product(*product, name=name)
+                columns = IndexHierarchy.from_product(*columns_product, name=columns_name)
             else:
-                columns = IndexHierarchyGO.from_product(*product, name=name)
+                columns = IndexHierarchyGO.from_product(*columns_product, name=columns_name)
         else:
             if self._COLUMNS_CONSTRUCTOR.STATIC:
-                columns = Index(product[0])
+                columns = Index(columns_product[0], name=columns_name[0])
             else:
-                columns = IndexGO(product[0])
+                columns = IndexGO(columns_product[0], name=columns_name[0])
+
 
         def items():
             for group, sub in self.iter_group_items(fields_group):
                 index_label = group[:idx_start_columns]
                 index_label = tuple(index_label) if len(index_label) > 1 else index_label[0]
 
+                # get the found parts of the columns labels
                 columns_label_raw = group[idx_start_columns:]
-                if len(columns_label_raw) == 0:
-                    columns_labels = values_fields
-                elif len(columns_label_raw) == 1 and len(values_fields) == 1:
-                    columns_labels = repeat(columns_label_raw[0])
-                elif len(columns_label_raw) >= 1 and len(values_fields) == 1:
-                    columns_labels = repeat(columns_label_raw)
-                elif len(columns_label_raw) >= 1 and len(values_fields) > 1:
-                    columns_labels = (tuple(chain(columns_label_raw, (v,))) for v in values_fields)
 
-                for field, column_label in zip(values_fields, columns_labels):
-                    if len(values_fields) == 1:
-                        yield (index_label, column_label), sub[field].sum()
+                if len(columns_label_raw) == 0:
+                    # if none, it means we just have data fields
+                    columns_labels = data_fields
+                elif len(columns_label_raw) == 1 and len(data_fields) == 1:
+                    # only one data field, do not need to display it
+                    columns_labels = repeat(columns_label_raw[0])
+                elif len(columns_label_raw) > 1 and len(data_fields) == 1:
+                    # only one data field
+                    columns_labels = repeat(tuple(columns_label_raw))
+                elif len(columns_label_raw) >= 1 and len(data_fields) > 1:
+                    # create column labels that has an entry for each data field
+                    if len(columns_label_raw) == 1:
+                        columns_labels = ((columns_label_raw[0], v) for v in data_fields)
                     else:
-                        yield (index_label, column_label), sub[field].sum()
+                        columns_labels = (tuple(chain(columns_label_raw, (v,))) for v in data_fields)
+
+                for field, column_label in zip(data_fields, columns_labels):
+                    yield (index_label, column_label), sub[field].sum()
+
 
         # items = tuple(items())
         # print(items)
         # import ipdb; ipdb.set_trace()
+
         return self.__class__.from_element_loc_items(
                 items(),
                 index=index,
                 columns=columns,
-                dtype=None # supply if possible
+                dtype=None, # supply if possible,
+                fill_value=fill_value,
+                own_index=True,
+                own_columns=True
                 )
 
 
