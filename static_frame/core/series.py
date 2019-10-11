@@ -30,7 +30,7 @@ from static_frame.core.util import iterable_to_array
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import is_callable_or_mapping
 
-
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import SeriesInitializer
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -465,6 +465,15 @@ class Series(ContainerOperand):
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
                 yield_type=IterNodeType.ITEMS
+                )
+
+    @property
+    def iter_window_items(self) -> IterNode:
+        return IterNode(
+                container=self,
+                function_items=self._axis_window_items,
+                # function_values=self._axis_window,
+                yield_type=IterNodeType.VALUES
                 )
 
     #---------------------------------------------------------------------------
@@ -1124,13 +1133,14 @@ class Series(ContainerOperand):
     def _axis_group(self, *, axis=0):
         yield from (x for _, x in self._axis_group_items(axis=axis))
 
+
     def _axis_element_items(self, *,
             axis=0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
         '''
         if self._index.depth > 1:
-            # use getutem to ensure we get a hashaable back
+            # use getitem to ensure we get a hashaable back
             yield from ((self._index[j], k) for j, k in enumerate(self.values))
         else:
             yield from zip(self._index.values, self.values)
@@ -1138,7 +1148,6 @@ class Series(ContainerOperand):
     def _axis_element(self, *, axis=0) -> tp.Iterator[tp.Any]:
         yield from self.values
 
-        # yield from (x for _, x in self._axis_element_items(axis=axis))
 
 
     def _axis_group_index_items(self,
@@ -1162,6 +1171,35 @@ class Series(ContainerOperand):
             ):
         yield from (x for _, x in self._axis_group_index_items(
                 depth_level=depth_level))
+
+
+
+    def _axis_window_items(self, *,
+            axis: int = 0,
+            # func: AnyCallable, # available in apply
+            size: int = 0,
+            step: int = 1,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, processed-window pairs pairs.
+
+        Args:
+            size: integer greater than 0
+            step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
+            window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
+            window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
+            label_shift: shift, relative to the right-most data point contained in the window, to derive the label
+            start_shift: shift from 0 to determine where the collection of windows begins.
+            size_increment: value to be added to each window aftert the first, so as to permit expanding windows.
+        '''
+
+        pass
+
+
 
 
     #---------------------------------------------------------------------------
