@@ -1911,5 +1911,177 @@ class TestUnit(TestCase):
                 ((('x', 'b'), 3.0), (('y', 'b'), np.nan)))
 
 
+    def test_series_axis_window_items_a(self) -> None:
+
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        post = tuple(s1._axis_window_items(size=2, step=1, label_shift=0))
+
+        # first window has second label, and first two values
+        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][0], 'b')
+
+        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][0], 't')
+
+
+    def test_series_axis_window_items_b(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        post = tuple(s1._axis_window_items(size=2, step=1, label_shift=-1))
+
+        # first window has first label, and first two values
+        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][0], 'a')
+
+        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][0], 's')
+
+
+
+    def test_series_axis_window_items_c(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        # this is an expanding window anchored at the first index
+        post = tuple(s1._axis_window_items(size=1, step=0, size_increment=1))
+
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), list(range(1, 21)))
+
+
+
+    def test_series_axis_window_items_d(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+
+        post = tuple(s1._axis_window_items(size=5, start_shift=-5, window_sized=False))
+
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1])
+
+        self.assertEqual(post[1][0], 'b')
+        self.assertEqual(post[1][1].tolist(), [1, 2])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+
+
+
+    def test_series_axis_window_items_e(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        # start shift needs to be 1 less than window to go to start of window
+        post = tuple(s1._axis_window_items(size=5, label_shift=-4, window_sized=False))
+
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+
+        self.assertEqual(post[1][0], 'b')
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), [20])
+
+
+
+    def test_series_axis_window_items_f(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        # start shift needs to be 1 less than window to go to start of window
+        post = tuple(s1._axis_window_items(size=5, label_shift=-4, window_sized=True))
+
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+
+        self.assertEqual(post[1][0], 'b')
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+
+        self.assertEqual(post[-1][0], 'p')
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+
+
+    def test_series_axis_window_items_g(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        with self.assertRaises(RuntimeError):
+            tuple(s1._axis_window_items(size=0))
+
+        with self.assertRaises(RuntimeError):
+            tuple(s1._axis_window_items(step=-1))
+
+
+    def test_series_axis_window_items_h(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        post = tuple(s1._axis_window_items(size=1))
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), [20])
+
+
+
+    def test_series_axis_window_items_i(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        # step equal to window size produces adaject windows
+        post = tuple(s1._axis_window_items(size=3, step=3))
+
+        self.assertEqual(post[0][0], 'c')
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+
+        self.assertEqual(post[1][0], 'f')
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+
+        self.assertEqual(post[-1][0], 'r')
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18])
+
+
+    def test_series_axis_window_items_j(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        # adjacent windows with label on first value, keeping incomplete windows
+        post = tuple(s1._axis_window_items(size=3, step=3, label_shift=-2, window_sized=False))
+
+        self.assertEqual(post[0][0], 'a')
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+
+        self.assertEqual(post[1][0], 'd')
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+
+        self.assertEqual(post[-1][0], 's')
+        self.assertEqual(post[-1][1].tolist(), [19, 20])
+
+
+
+    def test_series_axis_window_items_k(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        # adjacent windows with label on first value, keeping incomplete windows
+        post = tuple(s1._axis_window_items(size=3, window_valid=lambda w: np.sum(w) % 2 == 1))
+
+        self.assertEqual(post[0][0], 'd')
+        self.assertEqual(post[0][1].tolist(), [2, 3, 4])
+
+        self.assertEqual(post[1][0], 'f')
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+
+        self.assertEqual(post[-1][0], 't')
+        self.assertEqual(post[-1][1].tolist(), [18, 19, 20])
+
+
+
 if __name__ == '__main__':
     unittest.main()
