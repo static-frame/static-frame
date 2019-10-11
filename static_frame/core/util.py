@@ -158,6 +158,7 @@ def is_callable_or_mapping(value: CallableOrMapping) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
 
+CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallable]]
 
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
@@ -434,8 +435,9 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
     raise NotImplementedError('no support for this dtype', kind)
 
 
-def ufunc_axis_skipna(*,
+def ufunc_axis_skipna(
         array: np.ndarray,
+        *,
         skipna: bool,
         axis: int,
         ufunc: UFunc,

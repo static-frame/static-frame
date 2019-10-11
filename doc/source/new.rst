@@ -40,6 +40,7 @@ Added ``IndexBase.names`` attribute to provide normalized names equal in length 
 
 Added ``Frame.unset_index()``.
 
+Added ``Frame.pivot()``.
 
 
 0.4.3

@@ -53,6 +53,8 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import CallableOrCallableMap
+from static_frame.core.util import ufunc_axis_skipna
 
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
@@ -3312,11 +3314,33 @@ class Frame(ContainerOperand):
             columns_fields: KeyOrKeys = EMPTY_TUPLE,
             data_fields: KeyOrKeys = EMPTY_TUPLE,
             *,
+            func: CallableOrCallableMap = None,
             fill_value: object = FILL_VALUE_DEFAULT,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if not ``data_fields`` ar provided, all unused fiels will be displayed.
+
+        Args:
+            index_fields
+            columns_fields
+            data_fields
+            fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
+            func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
         '''
+        if func is None:
+            # form the equivalent Series function for summing
+            func = partial(ufunc_axis_skipna,
+                    skipna=True,
+                    axis=0,
+                    ufunc=np.sum,
+                    ufunc_skipna=np.nansum
+                    )
+            func_map = (('', func),)
+        elif callable(func):
+            func_map = (('', func),) # store iterable of pairs
+        else:
+            func_map = tuple(func.items())
+
         def normalize_key(key: KeyOrKeys) -> tp.List[tp.Hashable]:
             if isinstance(key, str) or not hasattr(key, '__len__'):
                 return [key]
@@ -3325,6 +3349,7 @@ class Frame(ContainerOperand):
         index_fields = normalize_key(index_fields)
         columns_fields = normalize_key(columns_fields)
         data_fields = normalize_key(data_fields)
+
         if len(data_fields) == 0:
             used = set(chain(index_fields, columns_fields))
             data_fields = [x for x in self.columns if x not in used]
@@ -3362,25 +3387,29 @@ class Frame(ContainerOperand):
             columns_product.append(data_fields)
             columns_name = tuple(chain(*columns_fields, ('values',)))
 
+        if len(func_map) > 1:
+            # add the labels as another product level
+            labels = tuple(x for x, _ in func_map)
+            columns_product.append(labels)
+            columns_name = columns_name + ('func',)
 
         if len(columns_product) > 1:
-            if self._COLUMNS_CONSTRUCTOR.STATIC:
-                columns = IndexHierarchy.from_product(*columns_product, name=columns_name)
-            else:
-                columns = IndexHierarchyGO.from_product(*columns_product, name=columns_name)
+            cls = IndexHierarchy if self._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO
+            columns = cls.from_product(*columns_product, name=columns_name)
         else:
-            if self._COLUMNS_CONSTRUCTOR.STATIC:
-                columns = Index(columns_product[0], name=columns_name[0])
-            else:
-                columns = IndexGO(columns_product[0], name=columns_name[0])
+            cls = Index if self._COLUMNS_CONSTRUCTOR.STATIC else IndexGO
+            columns = cls(columns_product[0], name=columns_name[0])
 
 
         def items():
+
+            func_single = func_map[0][1] if len(func_map) == 1 else None
+
             for group, sub in self.iter_group_items(fields_group):
                 index_label = group[:idx_start_columns]
                 index_label = tuple(index_label) if len(index_label) > 1 else index_label[0]
 
-                # get the found parts of the columns labels
+                # get the found parts of the columns labels from the group; this will never have data_fields
                 columns_label_raw = group[idx_start_columns:]
 
                 if len(columns_label_raw) == 0:
@@ -3400,7 +3429,17 @@ class Frame(ContainerOperand):
                         columns_labels = (tuple(chain(columns_label_raw, (v,))) for v in data_fields)
 
                 for field, column_label in zip(data_fields, columns_labels):
-                    yield (index_label, column_label), sub[field].sum()
+                    # NOTE: sub[field] produces a Series, which is not needed; better to go to blocks and extract array
+                    if func_single:
+                        yield (index_label, column_label), func_single(sub[field].values)
+                    else:
+                        for label, func in func_map:
+                            if isinstance(column_label, tuple):
+                                column_label_final = column_label + (label,)
+                            else: # a single hashable
+                                column_label_final = (column_label, label)
+                            yield (index_label, column_label_final), func(sub[field].values)
+
 
 
         # items = tuple(items())
