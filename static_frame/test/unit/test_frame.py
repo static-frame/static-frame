@@ -5246,5 +5246,70 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_pivot_a(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+        post = f2.pivot(
+                index_fields=('x', 'y'), # values in this field become the index
+                columns_fields=('z',), # values in this field become columns
+                values_fields=('a', 'b')
+                )
+
+        self.assertEqual(post.to_pairs(0),
+                ((('far', 'a'), ((('left', 'down'), 2), (('left', 'up'), 0), (('right', 'down'), 3), (('right', 'up'), 1))), (('far', 'b'), ((('left', 'down'), 21), (('left', 'up'), 19), (('right', 'down'), 22), (('right', 'up'), 20))), (('near', 'a'), ((('left', 'down'), 6), (('left', 'up'), 4), (('right', 'down'), 7), (('right', 'up'), 5))), (('near', 'b'), ((('left', 'down'), 22), (('left', 'up'), 20), (('right', 'down'), 23), (('right', 'up'), 21))))
+                )
+
+
+    def test_frame_pivot_b(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+        post = f2.pivot(
+                index_fields=('x', 'y'), # values in this field become the index
+                columns_fields=('z',), # values in this field become columns
+                values_fields=('a',)
+                )
+
+        self.assertEqual(post.to_pairs(0),
+                (('far', ((('left', 'down'), 2), (('left', 'up'), 0), (('right', 'down'), 3), (('right', 'up'), 1))), ('near', ((('left', 'down'), 6), (('left', 'up'), 4), (('right', 'down'), 7), (('right', 'up'), 5))))
+                )
+
+
+    def test_frame_pivot_c(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+        post = f2.pivot(
+                index_fields=('x', 'y'), # values in this field become the index
+                values_fields=('b',)
+                )
+
+        self.assertEqual(post.to_pairs(0),
+                (('b', ((('left', 'down'), 43), (('left', 'up'), 39), (('right', 'down'), 45), (('right', 'up'), 41))),)
+                )
+
+
 if __name__ == '__main__':
     unittest.main()

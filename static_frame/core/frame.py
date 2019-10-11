@@ -5,6 +5,7 @@ import json
 from collections import namedtuple
 from functools import partial
 from itertools import chain
+from itertools import repeat
 
 import numpy as np # type: ignore
 
@@ -13,6 +14,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -977,7 +979,8 @@ class Frame(ContainerOperand):
                 name=name,
                 own_data=True,
                 own_index=True,
-                own_columns=True)
+                own_columns=True
+                )
 
     #---------------------------------------------------------------------------
     # file, data format loaders
@@ -3132,8 +3135,6 @@ class Frame(ContainerOperand):
                 )
 
 
-
-
     def roll(self,
             index: int = 0,
             columns: int = 0,
@@ -3201,7 +3202,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # transformations resulting in reduced dimensionality
+    # transformations resulting in changed dimensionality
 
     def head(self, count: int = 5) -> 'Frame':
         '''Return a Frame consisting only of the top rows as specified by ``count``.
@@ -3301,6 +3302,96 @@ class Frame(ContainerOperand):
         if axis == 0:
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
+
+    def pivot(self,
+            index_fields: tp.Iterator[tp.Hashable],
+            columns_fields: tp.Iterator[tp.Hashable] = EMPTY_TUPLE,
+            values_fields: tp.Iterator[tp.Hashable] = EMPTY_TUPLE,
+            ) -> 'Frame':
+        '''
+        Produce a pivot table, where...
+        '''
+        if not isinstance(index_fields, list):
+            index_fields = list(index_fields)
+        idx_start_columns = len(index_fields)
+
+        if not columns_fields and not values_fields:
+            raise ErrorInitFrame('must specify one of, or both of, columns_fields, values_fields')
+
+        if not isinstance(columns_fields, list):
+            columns_fields = list(columns_fields)
+        if not isinstance(values_fields, list):
+            values_fields = list(values_fields)
+
+        # Take fields_group before extending columns with values
+        fields_group = list(index_fields + columns_fields)
+        for field in fields_group:
+            if field not in self._columns:
+                raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
+
+
+        # get 2d arrays for index, columns
+        index_values = np.unique(
+                self._blocks._extract(column_key=self._columns.loc_to_iloc(index_fields)).values,
+                axis=0)
+        if len(index_fields) == 1:
+            index = Index(index_values.flatten(), name=index_fields[0])
+        else:
+            index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
+
+        # the columns index will need hierarchies if vlaues fields is greater than 1
+
+        product = []
+        for field in columns_fields:
+            product.append(np.unique(
+                    self._blocks._extract(column_key=self._columns.loc_to_iloc(columns_fields)).values))
+        if len(values_fields) >= 1:
+            product.append(values_fields)
+            name = tuple(chain(*columns_fields, ('values',)))
+        else:
+            name = tuple(columns_fields)
+
+        if len(product) > 1:
+            if self._COLUMNS_CONSTRUCTOR.STATIC:
+                columns = IndexHierarchy.from_product(*product, name=name)
+            else:
+                columns = IndexHierarchyGO.from_product(*product, name=name)
+        else:
+            if self._COLUMNS_CONSTRUCTOR.STATIC:
+                columns = Index(product[0])
+            else:
+                columns = IndexGO(product[0])
+
+        def items():
+            for group, sub in self.iter_group_items(fields_group):
+                index_label = group[:idx_start_columns]
+                index_label = tuple(index_label) if len(index_label) > 1 else index_label[0]
+
+                columns_label_raw = group[idx_start_columns:]
+                if len(columns_label_raw) == 0:
+                    columns_labels = values_fields
+                elif len(columns_label_raw) == 1 and len(values_fields) == 1:
+                    columns_labels = repeat(columns_label_raw[0])
+                elif len(columns_label_raw) >= 1 and len(values_fields) == 1:
+                    columns_labels = repeat(columns_label_raw)
+                elif len(columns_label_raw) >= 1 and len(values_fields) > 1:
+                    columns_labels = (tuple(chain(columns_label_raw, (v,))) for v in values_fields)
+
+                for field, column_label in zip(values_fields, columns_labels):
+                    if len(values_fields) == 1:
+                        yield (index_label, column_label), sub[field].sum()
+                    else:
+                        yield (index_label, column_label), sub[field].sum()
+
+        # items = tuple(items())
+        # print(items)
+        # import ipdb; ipdb.set_trace()
+        return self.__class__.from_element_loc_items(
+                items(),
+                index=index,
+                columns=columns,
+                dtype=None # supply if possible
+                )
 
 
 
@@ -3734,7 +3825,7 @@ class Frame(ContainerOperand):
                 )
         return repr(self.display(config))
 
-
+#-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
     '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.
