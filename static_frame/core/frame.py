@@ -3304,12 +3304,12 @@ class Frame(ContainerOperand):
         return Series(post, index=self._index)
 
     def pivot(self,
-            index_fields: tp.Iterator[tp.Hashable],
-            columns_fields: tp.Iterator[tp.Hashable] = EMPTY_TUPLE,
-            values_fields: tp.Iterator[tp.Hashable] = EMPTY_TUPLE,
+            index_fields: tp.Iterable[tp.Hashable],
+            columns_fields: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
+            values_fields: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
             ) -> 'Frame':
         '''
-        Produce a pivot table, where...
+        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and values_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if oen ``values_fields`` is selected, that is the values that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns.
         '''
         if not isinstance(index_fields, list):
             index_fields = list(index_fields)
@@ -3329,7 +3329,6 @@ class Frame(ContainerOperand):
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
 
-
         # get 2d arrays for index, columns
         index_values = np.unique(
                 self._blocks._extract(column_key=self._columns.loc_to_iloc(index_fields)).values,
@@ -3346,7 +3345,9 @@ class Frame(ContainerOperand):
             product.append(np.unique(
                     self._blocks._extract(column_key=self._columns.loc_to_iloc(columns_fields)).values))
         if len(values_fields) >= 1:
-            product.append(values_fields)
+            if len(values_fields) > 1 or not columns_fields:
+                # if no columns fields, have to add values fields
+                product.append(values_fields)
             name = tuple(chain(*columns_fields, ('values',)))
         else:
             name = tuple(columns_fields)

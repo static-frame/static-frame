@@ -54,6 +54,7 @@ Frame
 
 .. automethod:: static_frame.Frame.isin
 
+
 .. automethod:: static_frame.Frame.transpose
 
 .. automethod:: static_frame.Frame.unique
@@ -61,6 +62,12 @@ Frame
 .. automethod:: static_frame.Frame.duplicated
 
 .. automethod:: static_frame.Frame.drop_duplicated
+
+.. admonition:: Deviations from Pandas
+    :class: Warning
+
+    Pandas ``pd.DataFrame.duplicated()`` is equivalent to ``Frame.duplicated(exclude_first=True)``. Pandas ``pd.DataFrame.drop_duplicates()`` is equivalent to ``Frame.drop_duplicated(exclude_first=True)``.
+
 
 .. automethod:: static_frame.Frame.roll
 
@@ -72,9 +79,7 @@ Frame
 .. automethod:: static_frame.Frame.tail
 
 
-.. admonition:: Deviations from Pandas
-    :class: Warning
+.. automethod:: static_frame.Frame.pivot
 
-    Pandas ``pd.DataFrame.duplicated()`` is equivalent to ``Frame.duplicated(exclude_first=True)``. Pandas ``pd.DataFrame.drop_duplicates()`` is equivalent to ``Frame.drop_duplicated(exclude_first=True)``.
 
 
