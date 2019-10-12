@@ -36,11 +36,16 @@ Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delim
 
 Added ``IndexBase.names`` attribute to provide normalized names equal in length to depth.
 
-``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
+The ``DisplayConfig`` parameter ``type_show`` now, if False, hides, native class types used as headers. This is the default display for all specialized string output via ``Frame.to_html``, ``Frame.to_rst``, ``Frame.to_markdown``, ``Frame.to_latex``, as well as Jupyter display methods.
 
 Added ``Frame.unset_index()``.
 
 Added ``Frame.pivot()``.
+
+Added ``Frame.iter_window``, ``Frame.iter_window_items``, ``Frame.iter_window_array``, ``Frame.iter_window_array_items``.
+
+Added ``Series.iter_window``, ``Series.iter_window_items``, ``Series.iter_window_array``, ``Series.iter_window_array_items``.
+
 
 
 0.4.3
