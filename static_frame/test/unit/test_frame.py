@@ -5534,6 +5534,21 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_iter_window_a(self) -> None:
+
+        base = np.array([1, 2, 3, 4])
+        records = (base * n for n in range(1, 21))
+
+        f1 = Frame.from_records(records,
+                columns=list('ABCD'),
+                index=self.get_letters(20))
+
+        self.assertEqual(
+                f1.iter_window(size=3).apply(lambda f: f['B'].sum()).to_pairs(),
+                (('c', 12), ('d', 18), ('e', 24), ('f', 30), ('g', 36), ('h', 42), ('i', 48), ('j', 54), ('k', 60), ('l', 66), ('m', 72), ('n', 78), ('o', 84), ('p', 90), ('q', 96), ('r', 102), ('s', 108), ('t', 114))
+        )
+
+
 
 if __name__ == '__main__':
     unittest.main()

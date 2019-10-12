@@ -2098,7 +2098,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_iter_window_a(self) -> None:
+    def test_series_iter_window_array_a(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
@@ -2107,7 +2107,7 @@ class TestUnit(TestCase):
                 ((1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20))
                 )
 
-    def test_series_iter_window_b(self) -> None:
+    def test_series_iter_window_arrray_b(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
         s2 = s1.iter_window_array().apply(lambda x: np.mean(x))
@@ -2115,6 +2115,20 @@ class TestUnit(TestCase):
                 (('b', 1.5), ('c', 2.5), ('d', 3.5), ('e', 4.5), ('f', 5.5), ('g', 6.5), ('h', 7.5), ('i', 8.5), ('j', 9.5), ('k', 10.5), ('l', 11.5), ('m', 12.5), ('n', 13.5), ('o', 14.5), ('p', 15.5), ('q', 16.5), ('r', 17.5), ('s', 18.5), ('t', 19.5))
         )
 
+    def test_series_iter_window_a(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        self.assertEqual(
+                tuple(s.index.values.tolist() for s in s1.iter_window()), # type: ignore
+                (['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'e'], ['e', 'f'], ['f', 'g'], ['g', 'h'], ['h', 'i'], ['i', 'j'], ['j', 'k'], ['k', 'l'], ['l', 'm'], ['m', 'n'], ['n', 'o'], ['o', 'p'], ['p', 'q'], ['q', 'r'], ['r', 's'], ['s', 't'])
+                )
+
+        self.assertEqual(
+            s1.iter_window(size=5, label_shift=-4, step=6, window_sized=False
+                    ).apply(lambda s: len(s.index)).to_pairs(),
+            (('a', 5), ('g', 5), ('m', 5), ('s', 2))
+        )
 
 if __name__ == '__main__':
     unittest.main()
