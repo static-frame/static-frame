@@ -55,6 +55,7 @@ from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import CallableOrCallableMap
 from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import AnyCallable
 
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
@@ -66,8 +67,10 @@ from static_frame.core.selector_node import InterfaceAsType
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
+
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import axis_window_items
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -949,7 +952,7 @@ class Frame(ContainerOperand):
         '''
         This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
 
-        Args:
+        Args:s
             items: an iterable of pairs of 2-tuples of row, column loc labels and values.
 
 
@@ -1676,7 +1679,57 @@ class Frame(ContainerOperand):
             yield_type=IterNodeType.ITEMS
             )
 
+    #---------------------------------------------------------------------------
 
+
+    @property
+    def iter_window(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=False)
+        function_items = partial(self._axis_window_items, window_array=False)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_window_items(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=False)
+        function_items = partial(self._axis_window_items, window_array=False)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.ITEMS
+            )
+
+
+
+    @property
+    def iter_window_array(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=True)
+        function_items = partial(self._axis_window_items, window_array=True)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_window_array_items(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=True)
+        function_items = partial(self._axis_window_items, window_array=True)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.ITEMS
+            )
+
+
+    #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNode:
         return IterNode(
@@ -2755,6 +2808,63 @@ class Frame(ContainerOperand):
             axis=0):
         yield from (x for _, x in self._axis_group_index_items(
                 depth_level=depth_level, axis=axis))
+
+
+    def _axis_window_items(self, *,
+            axis: int = 0,
+            size: int = 2,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            window_array: bool = False,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+        '''Generator of index, processed-window pairs.
+        '''
+        yield from axis_window_items(
+                source=self,
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                window_array=window_array
+                )
+
+
+    def _axis_window(self, *,
+            axis: int = 0,
+            size: int = 2,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            window_array: bool = False,
+            ):
+        yield from (x for _, x in self._axis_window_items(
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                window_array=window_array
+                ))
+
+
 
 
     #---------------------------------------------------------------------------

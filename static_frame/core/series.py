@@ -1,4 +1,5 @@
 import typing as tp
+from functools import partial
 
 import numpy as np # type: ignore
 
@@ -68,6 +69,7 @@ from static_frame.core.index_base import IndexBase
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import axis_window_items
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -467,24 +469,51 @@ class Series(ContainerOperand):
                 yield_type=IterNodeType.ITEMS
                 )
 
+    #---------------------------------------------------------------------------
     @property
     def iter_window(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=False)
+        function_items = partial(self._axis_window_items, window_array=False)
         return IterNode(
-                container=self,
-                function_items=self._axis_window_items,
-                function_values=self._axis_window,
-                yield_type=IterNodeType.VALUES
-                )
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.VALUES
+            )
 
     @property
     def iter_window_items(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=False)
+        function_items = partial(self._axis_window_items, window_array=False)
         return IterNode(
-                container=self,
-                function_items=self._axis_window_items,
-                function_values=self._axis_window,
-                yield_type=IterNodeType.VALUES
-                )
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.ITEMS
+            )
 
+
+    @property
+    def iter_window_array(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=True)
+        function_items = partial(self._axis_window_items, window_array=True)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.VALUES
+            )
+
+    @property
+    def iter_window_array_items(self) -> IterNode:
+        function_values = partial(self._axis_window, window_array=True)
+        function_items = partial(self._axis_window_items, window_array=True)
+        return IterNode(
+            container=self,
+            function_values=function_values,
+            function_items=function_items,
+            yield_type=IterNodeType.ITEMS
+            )
     #---------------------------------------------------------------------------
     # index manipulation
 
@@ -1193,64 +1222,23 @@ class Series(ContainerOperand):
             label_shift: int = 0,
             start_shift: int = 0,
             size_increment: int = 0,
+            window_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-        '''Generator of index, processed-window pairs pairs.
-
-        Args:
-            size: integer greater than 0
-            step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
-            window_sized: if True, windows that do not meet the size are skipped.
-            window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
-            window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-            label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., o return the first label of the window, the shift will be the size minus one.
-            start_shift: shift from 0 to determine where the collection of windows begins.
-            size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
+        '''Generator of index, processed-window pairs.
         '''
-        if size <= 0:
-            raise RuntimeError('window size must be greater than 0')
-        if step < 0:
-            raise RuntimeError('window step cannot be less than than 0')
-
-        values = self.values
-        labels = self._index # generic name for axis 1 usage
-        count_window_max = len(values)
-        idx_left_max = len(values) - 1
-
-        idx_left = start_shift
-        count = 0
-
-        while True:
-            idx_right = idx_left + size - 1
-            # print(count, 'slice', idx_left, idx_left + size)
-            # floor idx_left at 0
-            window = values[max(idx_left, 0): idx_left + size]
-
-            valid = True
-            try:
-                idx_label = idx_right + label_shift
-                if idx_label < 0: # do not wrap around
-                    raise IndexError()
-                label = labels.iloc[idx_label]
-            except IndexError:
-                # an invalid label has to be dropped
-                valid = False
-
-            if valid and window_sized and len(window) != size:
-                valid = False
-            if valid and window_valid and not window_valid(window):
-                valid = False
-
-            if valid:
-                if window_func:
-                    window = window_func(window)
-                yield label, window
-
-            idx_left += step
-            size += size_increment
-            count += 1
-
-            if count > count_window_max or idx_left > idx_left_max:
-                break
+        yield from axis_window_items(
+                source=self,
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                window_array=window_array
+                )
 
     def _axis_window(self, *,
             axis: int = 0,
@@ -1261,7 +1249,9 @@ class Series(ContainerOperand):
             window_valid: tp.Optional[AnyCallable] = None,
             label_shift: int = 0,
             start_shift: int = 0,
-            size_increment: int = 0,            ):
+            size_increment: int = 0,
+            window_array: bool = False,
+            ):
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
                 size=size,
@@ -1272,6 +1262,7 @@ class Series(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
+                window_array=window_array
                 ))
 
 

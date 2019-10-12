@@ -12,6 +12,8 @@ if tp.TYPE_CHECKING:
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.index_base import IndexBase
 
@@ -225,3 +227,103 @@ def matmul(
             own_index=own_index,
             columns=columns
             )
+
+
+
+
+def axis_window_items( *,
+        source: tp.Union['Series', 'Frame'],
+        axis: int = 0,
+        size: int = 2,
+        step: int = 1,
+        window_sized: bool = True,
+        window_func: tp.Optional[AnyCallable] = None,
+        window_valid: tp.Optional[AnyCallable] = None,
+        label_shift: int = 0,
+        start_shift: int = 0,
+        size_increment: int = 0,
+        window_array: bool = False,
+        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+    '''Generator of index, window pairs pairs.
+
+    Args:
+        size: integer greater than 0
+        step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
+        window_sized: if True, windows that do not meet the size are skipped.
+        window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
+        window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
+        label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., o return the first label of the window, the shift will be the size minus one.
+        start_shift: shift from 0 to determine where the collection of windows begins.
+        size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
+        window_array: if True, the window is returned as an array instead of a SF object.
+    '''
+    if size <= 0:
+        raise RuntimeError('window size must be greater than 0')
+    if step < 0:
+        raise RuntimeError('window step cannot be less than than 0')
+
+    source_ndim = source.ndim
+
+    if source_ndim == 1:
+        labels = source._index
+        if window_array:
+            values = source.values
+    else:
+        labels = source._index if axis == 0 else source._columns
+        if window_array:
+            values = source._blocks.values
+
+    count_window_max = len(labels)
+    idx_left_max = count_window_max - 1
+
+    idx_left = start_shift
+    count = 0
+
+    while True:
+        idx_right = idx_left + size - 1
+
+        # floor idx_left at 0
+        key = slice(max(idx_left, 0), idx_right + 1)
+
+        if source_ndim == 1:
+            if window_array:
+                window = values[key]
+            else:
+                window = source._extract_iloc(key)
+        else:
+            if axis == 0:
+                if window_array:
+                    window = values[key]
+                else: # use low level iloc selector
+                    window = source._extract(row_key=key)
+            else:
+                if window_array:
+                    window = values[NULL_SLICE, key]
+                else:
+                    window = source._extract(column_key=key)
+
+        valid = True
+        try:
+            idx_label = idx_right + label_shift
+            if idx_label < 0: # do not wrap around
+                raise IndexError()
+            label = labels.iloc[idx_label]
+        except IndexError: # an invalid label has to be dropped
+            valid = False
+
+        if valid and window_sized and window.shape[axis] != size:
+            valid = False
+        if valid and window_valid and not window_valid(window):
+            valid = False
+
+        if valid:
+            if window_func:
+                window = window_func(window)
+            yield label, window
+
+        idx_left += step
+        size += size_increment
+        count += 1
+
+        if count > count_window_max or idx_left > idx_left_max:
+            break

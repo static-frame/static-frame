@@ -5470,5 +5470,70 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_axis_window_items_a(self) -> None:
+
+        base = np.array([1, 2, 3, 4])
+        records = (base * n for n in range(1, 21))
+
+        f1 = Frame.from_records(records,
+                columns=list('ABCD'),
+                index=self.get_letters(20))
+
+        post0 = tuple(f1._axis_window_items(axis=0))
+        self.assertEqual(len(post0), 19)
+        self.assertEqual(post0[0][0], 'b')
+        self.assertEqual(post0[0][1].__class__, Frame)
+        self.assertEqual(post0[0][1].shape, (2, 4))
+
+        self.assertEqual(post0[-1][0], 't')
+        self.assertEqual(post0[-1][1].__class__, Frame)
+        self.assertEqual(post0[-1][1].shape, (2, 4))
+
+        post1 = tuple(f1._axis_window_items(axis=1))
+        self.assertEqual(len(post1), 3)
+
+        self.assertEqual(post1[0][0], 'B')
+        self.assertEqual(post1[0][1].__class__, Frame)
+        self.assertEqual(post1[0][1].shape, (20, 2))
+
+        self.assertEqual(post1[-1][0], 'D')
+        self.assertEqual(post1[-1][1].__class__, Frame)
+        self.assertEqual(post1[-1][1].shape, (20, 2))
+
+
+
+    def test_frame_axis_window_items_b(self) -> None:
+
+        base = np.array([1, 2, 3, 4])
+        records = (base * n for n in range(1, 21))
+
+        f1 = Frame.from_records(records,
+                columns=list('ABCD'),
+                index=self.get_letters(20))
+
+        post0 = tuple(f1._axis_window_items(axis=0, window_array=True))
+        self.assertEqual(len(post0), 19)
+        self.assertEqual(post0[0][0], 'b')
+        self.assertEqual(post0[0][1].__class__, np.ndarray)
+        self.assertEqual(post0[0][1].shape, (2, 4))
+
+        self.assertEqual(post0[-1][0], 't')
+        self.assertEqual(post0[-1][1].__class__, np.ndarray)
+        self.assertEqual(post0[-1][1].shape, (2, 4))
+
+        post1 = tuple(f1._axis_window_items(axis=1, window_array=True))
+        self.assertEqual(len(post1), 3)
+
+        self.assertEqual(post1[0][0], 'B')
+        self.assertEqual(post1[0][1].__class__, np.ndarray)
+        self.assertEqual(post1[0][1].shape, (20, 2))
+
+        self.assertEqual(post1[-1][0], 'D')
+        self.assertEqual(post1[-1][1].__class__, np.ndarray)
+        self.assertEqual(post1[-1][1].shape, (20, 2))
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
