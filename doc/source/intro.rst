@@ -16,7 +16,7 @@ The StaticFrame library consists of the Series and Frame, immutable data structu
 
 StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due to the immutable data model) or by choice (offering more uniform, less redundant, and more explicit interfaces). As StaticFrame does not support in-place mutation, architectures that made significant use of mutability in Pandas will require refactoring.
 
-StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency). The core library is less than 10,000 lines of code, less than 5% the size of the Pandas code base [#]_.
+StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency).
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures with consistent, clear, and stable interfaces.
 
@@ -87,8 +87,4 @@ These members of the Investment Systems team have contributed greatly to the des
 Thanks also for additional contributions from GitHub users.
 
 https://github.com/InvestmentSystems/static-frame/graphs/contributors
-
-
-.. [#] The Pandas 2.0 Design Docs state that the Pandas codebase has over 200,000 lines of code: https://pandas-dev.github.io/pandas2/goals.html
-
 
