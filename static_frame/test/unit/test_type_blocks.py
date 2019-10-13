@@ -838,12 +838,6 @@ class TestUnit(TestCase):
 
         disp = tb.display()
         self.assertEqual(len(disp), 5)
-        # self.assertEqual(list(disp),
-        #     [['<TypeBlocks> ', '                  ', '          '],
-        #     ['1 2 3        ', 'False False  True ', "'a' 'b'   "],
-        #     ['4 5 6        ', ' True False  True ', "'c' 'd'   "],
-        #     ['0 0 1        ', ' True False  True ', "'oe' 'od' "],
-        #     ['int64        ', 'bool              ', '<U2       ']])
 
 
     def test_type_blocks_axis_values_a(self) -> None:
@@ -2086,6 +2080,49 @@ class TestUnit(TestCase):
         self.assertEqual(len(tb.shapes), 1)
 
 
+
+
+    def test_type_blocks_extract_bloc_assign_a(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, -5, 6], [0, 0, 1]])
+        a2 = np.array([1.5, 5.2, 5.5])
+        a3 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        coords = ((1, 1), (2, 4), (0, 3))
+
+        targets = np.full(tb1.shape, False)
+        for coord in coords:
+            targets[coord] = True
+
+        tb2 = tb1.extract_bloc_assign(targets, None)
+        self.assertEqual(tb2.values.tolist(),
+                [[1, 2, 3, None, False, False, True], [4, None, 6, 5.2, True, False, True], [0, 0, 1, 5.5, None, False, True]]
+                )
+
+
+
+    def test_type_blocks_extract_bloc_assign_b(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, -5, 6], [0, 0, 1]])
+        a2 = np.array([1.5, 5.2, 5.5])
+        a3 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        coords = ((1, 1), (0, 4), (2, 5), (0, 3), (1, 3), (1, 6 ))
+
+        targets = np.full(tb1.shape, False)
+        for coord in coords:
+            targets[coord] = True
+
+        values = np.arange(np.prod(tb1.shape)).reshape(tb1.shape) * -100
+        tb2 = tb1.extract_bloc_assign(targets, values)
+
+        self.assertEqual(tb2.values.tolist(),
+            [[1, 2, 3, -300.0, -400, False, True], [4, -800, 6, -1000.0, True, False, -1300], [0, 0, 1, 5.5, True, -1900, True]]
+            )
 
 
 

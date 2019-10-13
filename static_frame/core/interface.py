@@ -33,6 +33,8 @@ from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
 # from static_frame.core.util import InterfaceSelection1D # used on index.drop
 from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAssign2D
+
 from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
 
@@ -240,6 +242,16 @@ class InterfaceSummary:
                     display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
                     doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+
+            elif isinstance(obj, InterfaceAssign2D):
+                for field in cls.ATTR_SELECTOR_NODE:
+                    display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
+                    doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
+                    yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+
+                display = f'{name}.bloc()'
+                doc = cls.scrub_doc(getattr(InterfaceAssign2D, 'bloc').__doc__)
+                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
             elif callable(obj):
                 display = f'{name}()'

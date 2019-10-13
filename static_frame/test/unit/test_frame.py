@@ -1339,6 +1339,31 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', None), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False)))))
 
 
+
+    def test_frame_assign_bloc_a(self) -> None:
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        sel = np.array([[False, True, False, True, False],
+                [True, False, True, False, True]])
+        f2 = f1.assign.bloc(sel)(-10)
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('x', 1), ('y', -10))), ('q', (('x', -10), ('y', 50))), ('r', (('x', 'a'), ('y', -10))), ('s', (('x', -10), ('y', True))), ('t', (('x', True), ('y', -10))))
+                )
+
+        f3 = f1.assign.bloc(sel)(None)
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('x', 1), ('y', None))), ('q', (('x', None), ('y', 50))), ('r', (('x', 'a'), ('y', None))), ('s', (('x', None), ('y', True))), ('t', (('x', True), ('y', None))))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
 
         records = (

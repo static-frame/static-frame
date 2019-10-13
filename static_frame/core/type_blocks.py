@@ -1227,8 +1227,7 @@ class TypeBlocks(ContainerOperand):
                 elif column_shift < 0:
                     block_tail_iter = (empty,)
 
-            # TODO: might consider not rolling when yielding an empty array
-            # toll rows on one arrays
+            # NOTE: might consider not rolling when yielding an empty array
             for b in chain(block_head_iter, block_tail_iter):
                 if (wrap and row_start_pos == 0) or (not wrap and row_shift == 0):
                     yield b
@@ -1246,7 +1245,8 @@ class TypeBlocks(ContainerOperand):
     def _assign_blocks_from_keys(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            value: object = None) -> tp.Iterator[np.ndarray]:
+            value: object = None
+            ) -> tp.Iterator[np.ndarray]:
         '''Assign value into all blocks, returning blocks of the same size and shape.
         '''
         if isinstance(value, np.ndarray):
@@ -1328,7 +1328,8 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
-            value: object = None) -> tp.Iterator[np.ndarray]:
+            value: object
+            ) -> tp.Iterator[np.ndarray]:
         '''Assign value into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
@@ -1352,11 +1353,62 @@ class TypeBlocks(ContainerOperand):
                 else:
                     assigned = block.astype(assigned_dtype)
 
-                assert assigned.shape == target.shape
+                # assert assigned.shape == target.shape
                 assigned[target] = value
                 assigned.flags.writeable = False
                 yield assigned
 
+
+    def _assign_blocks_from_bloc_key(self,
+            bloc_key: np.ndarray,
+            value: tp.Any
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Given an Boolean array of targets, fill targets from value, where value is either a single value or an array.
+        '''
+
+        if isinstance(value, np.ndarray):
+            value_dtype = value.dtype
+            is_element = False
+            assert value.shape == self.shape
+        else:
+            value_dtype = np.array(value).dtype
+            is_element = True
+
+        start = 0
+        target_slice: tp.Union[int, slice]
+
+        for block in self._blocks:
+
+            if block.ndim == 1:
+                end = start + 1
+                target_slice = start
+            else:
+                end = start + block.shape[1]
+                target_slice = slice(start, end)
+
+            target = bloc_key[NULL_SLICE, target_slice]
+
+            if not target.any():
+                yield block
+            else:
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                assert assigned.shape == target.shape
+
+                if is_element:
+                    assigned[target] = value
+                else:
+                    assigned[target] = value[NULL_SLICE, target_slice][target]
+
+                assigned.flags.writeable = False
+                yield assigned
+
+            start = end # always update start
 
     def _slice_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
@@ -1511,27 +1563,35 @@ class TypeBlocks(ContainerOperand):
     def _extract_iloc(self,
             key: GetItemKeyTypeCompound
             ) -> 'TypeBlocks':
-        # NOTE: this optimization does not handle all types of keys correctly (such as when a key is an integer on a 1D array and returns a single value to a block constructor)
-        # if self.unified:
-        #     # perform slicing directly on block if possible
-        #     return self.from_blocks(self._blocks[0][key])
         if isinstance(key, tuple):
             return self._extract(*key)
         return self._extract(row_key=key)
 
     def extract_iloc_mask(self,
-            key: GetItemKeyTypeCompound) -> 'TypeBlocks':
+            key: GetItemKeyTypeCompound
+            ) -> 'TypeBlocks':
         if isinstance(key, tuple):
             return TypeBlocks.from_blocks(self._mask_blocks(*key))
         return TypeBlocks.from_blocks(self._mask_blocks(row_key=key))
 
     def extract_iloc_assign(self,
             key: GetItemKeyTypeCompound,
-            value: object) -> 'TypeBlocks':
+            value: object
+            ) -> 'TypeBlocks':
         if isinstance(key, tuple):
             key = tp.cast(tp.Tuple[int, int], key)
             return TypeBlocks.from_blocks(self._assign_blocks_from_keys(*key, value=value))
         return TypeBlocks.from_blocks(self._assign_blocks_from_keys(row_key=key, value=value))
+
+    def extract_bloc_assign(self,
+            key: np.ndarray,
+            value: tp.Any
+            ) -> 'TypeBlocks':
+        return TypeBlocks.from_blocks(self._assign_blocks_from_bloc_key(
+                bloc_key=key,
+                value=value
+                ))
+
 
     def drop(self, key: GetItemKeyTypeCompound) -> 'TypeBlocks':
         '''

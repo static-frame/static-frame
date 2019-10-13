@@ -50,7 +50,6 @@ class InterfaceSelection1D(tp.Generic[TContainer]):
 
 
 #-------------------------------------------------------------------------------
-
 class InterfaceSelection2D(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
@@ -58,13 +57,14 @@ class InterfaceSelection2D(tp.Generic[TContainer]):
     __slots__ = (
             '_func_iloc',
             '_func_loc',
-            '_func_getitem'
+            '_func_getitem',
             )
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
             func_loc: GetItemFunc,
-            func_getitem: GetItemFunc) -> None:
+            func_getitem: GetItemFunc,
+            ) -> None:
 
         self._func_iloc = func_iloc
         self._func_loc = func_loc
@@ -74,6 +74,50 @@ class InterfaceSelection2D(tp.Generic[TContainer]):
         '''Label-based selection.
         '''
         return self._func_getitem(key)
+
+    @property
+    def iloc(self) -> InterfaceGetItem[TContainer]:
+        '''Integer-position based selection.'''
+        return InterfaceGetItem(self._func_iloc)
+
+    @property
+    def loc(self) -> InterfaceGetItem[TContainer]:
+        '''Label-based selection.
+        '''
+        return InterfaceGetItem(self._func_loc)
+
+class InterfaceAssign2D(tp.Generic[TContainer]):
+    '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
+    '''
+
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            '_func_bloc',
+            )
+
+    def __init__(self, *,
+            func_iloc: GetItemFunc,
+            func_loc: GetItemFunc,
+            func_getitem: GetItemFunc,
+            func_bloc: tp.Any = None, # not sure this is the right type
+            ) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
+        self._func_bloc = func_bloc
+
+    def __getitem__(self, key: GetItemKeyType) -> tp.Any:
+        '''Label-based selection.
+        '''
+        return self._func_getitem(key)
+
+    def bloc(self, key: GetItemKeyType) -> tp.Any:
+        '''2D Boolean-based assignment.
+        '''
+        return self._func_bloc(key)
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:

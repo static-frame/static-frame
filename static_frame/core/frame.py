@@ -63,6 +63,7 @@ from static_frame.core.util import resolve_dtype
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAssign2D
 from static_frame.core.selector_node import InterfaceAsType
 
 from static_frame.core.index_correspondence import IndexCorrespondence
@@ -1575,11 +1576,14 @@ class Frame(ContainerOperand):
             func_getitem=self._extract_getitem_masked_array)
 
     @property
-    def assign(self) -> InterfaceSelection2D:
-        return InterfaceSelection2D(
+    def assign(self) -> InterfaceAssign2D:
+        # all functions that return a FrameAssign
+        return InterfaceAssign2D(
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
-            func_getitem=self._extract_getitem_assign)
+            func_getitem=self._extract_getitem_assign,
+            func_bloc=self._extract_bloc_assign
+            )
 
     @property
     def astype(self) -> InterfaceAsType:
@@ -1681,7 +1685,6 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-
     @property
     def iter_window(self) -> IterNode:
         function_values = partial(self._axis_window, window_array=False)
@@ -1704,8 +1707,6 @@ class Frame(ContainerOperand):
             yield_type=IterNodeType.ITEMS
             )
 
-
-
     @property
     def iter_window_array(self) -> IterNode:
         function_values = partial(self._axis_window, window_array=True)
@@ -1727,7 +1728,6 @@ class Frame(ContainerOperand):
             function_items=function_items,
             yield_type=IterNodeType.ITEMS
             )
-
 
     #---------------------------------------------------------------------------
     @property
@@ -1790,7 +1790,7 @@ class Frame(ContainerOperand):
                         columns=target_column_index,
                         fill_value=fill_value)
         if v is None:
-            raise Exception(('cannot assign '
+            raise RuntimeError(('cannot assign '
                     + value.__class__.__name__
                     + ' with key configuration'), (nm_row, nm_column))
         return v
@@ -2507,6 +2507,9 @@ class Frame(ContainerOperand):
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
 
+    def _extract_bloc_assign(self, key: tp.Union['Frame', np.ndarray]) -> 'FrameAssign':
+        '''Assignment based on a Boolean Frame or array.'''
+        return FrameAssign(self, bloc_key=key)
 
     #---------------------------------------------------------------------------
 
@@ -4125,31 +4128,69 @@ class FrameGO(Frame):
 # utility delegates returned from selection routines and exposing the __call__ interface.
 
 class FrameAssign:
-    __slots__ = ('container', 'iloc_key',)
+    __slots__ = (
+        'container',
+        'iloc_key',
+        'bloc_key',
+        )
 
     def __init__(self,
             container: Frame,
-            iloc_key: GetItemKeyTypeCompound
+            iloc_key: GetItemKeyTypeCompound = None,
+            bloc_key: tp.Optional[tp.Union[Frame, np.ndarray]] = None,
             ) -> None:
-        # NOTE: the stored container reference here migth be best as weak reference
+        '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
+        '''
         self.container = container
         self.iloc_key = iloc_key
+        self.bloc_key = bloc_key
 
-    def __call__(self, value, fill_value=np.nan) -> 'Frame':
-        if isinstance(value, (Series, Frame)):
-            value = self.container._reindex_other_like_iloc(value,
-                    self.iloc_key,
-                    fill_value=fill_value).values
+        if not (self.iloc_key is not None) ^ (self.bloc_key is not None):
+            raise RuntimeError('must set only one of ``iloc_key``, ``bloc_key``')
 
-        blocks = self.container._blocks.extract_iloc_assign(self.iloc_key, value)
-        # can own the newly created block given by extract
-        # pass Index objects unchanged, so as to let types be handled elsewhere
+    def __call__(self,
+            value,
+            fill_value: tp.Any = np.nan
+            ) -> 'Frame':
+        '''
+        Called with ``file_value`` to execute assignment configured fromthe init key.
+        '''
+        if self.iloc_key is not None:
+            if isinstance(value, (Series, Frame)):
+                value = self.container._reindex_other_like_iloc(value,
+                        self.iloc_key,
+                        fill_value=fill_value).values
+            blocks = self.container._blocks.extract_iloc_assign(self.iloc_key, value)
+
+        else: # use bloc
+            if isinstance(value, Frame):
+                # not sure if we need to reindex the value Frame.
+                value = value.values
+
+            if self.bloc_key.dtype != bool:
+                raise RuntimeError(f'invalid bloc_key, must Boolean Frame or array, not {self.bloc_key}')
+
+            if isinstance(self.bloc_key, Frame):
+                bloc_frame = self.bloc_key.reindex(
+                        index=self.container._index,
+                        columns=self.container._columns,
+                        fill_value=False
+                        )
+                bloc_key = bloc_frame.values
+
+            elif isinstance(self.bloc_key, np.ndarray):
+                bloc_key = self.bloc_key
+
+            blocks = self.container._blocks.extract_bloc_assign(bloc_key, value)
+
+
         return self.container.__class__(
                 data=blocks,
-                columns=self.container.columns,
-                index=self.container.index,
+                columns=self.container._columns,
+                index=self.container._index,
                 name=self.container._name,
-                own_data=True)
+                own_data=True
+                )
 
 
 class FrameAsType:
