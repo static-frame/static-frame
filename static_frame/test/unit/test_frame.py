@@ -1362,6 +1362,72 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', None))), ('q', (('x', None), ('y', 50))), ('r', (('x', 'a'), ('y', None))), ('s', (('x', None), ('y', True))), ('t', (('x', True), ('y', None))))
                 )
 
+    def test_frame_assign_bloc_b(self) -> None:
+
+        records = (
+                (1, 2, 20, 40),
+                (30, 50, -4, 5))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's',),
+                index=('x','y'))
+
+        sel = np.array([[False, True, False, True],
+                [True, False, True, False]])
+
+        # assignment from a frame of the same size
+        f2 =f1.assign.bloc(sel)(f1 * 100)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('x', 1), ('y', 3000))), ('q', (('x', 200), ('y', 50))), ('r', (('x', 20), ('y', -400))), ('s', (('x', 4000), ('y', 5))))
+                )
+
+
+    def test_frame_assign_bloc_c(self) -> None:
+
+        records = (
+                (1, 2, 20, 40),
+                (30, 50, -4, 5))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's',),
+                index=('x','y'))
+
+        sel = f1 >= 20
+
+        f2 = f1.assign.bloc(sel)(f1 * 100)
+
+        match = (('p', (('x', 1), ('y', 3000))), ('q', (('x', 2), ('y', 5000))), ('r', (('x', 2000), ('y', -4))), ('s', (('x', 4000), ('y', 5))))
+
+        self.assertEqual(f2.to_pairs(0), match)
+
+        # reording the value will have no affect
+        f3 = f1.reindex(columns=('r','q','s','p'))
+        f4 = f1.assign.bloc(sel)(f3 * 100)
+
+        self.assertEqual(f4.to_pairs(0), match)
+
+
+    def test_frame_assign_bloc_d(self) -> None:
+
+        records = (
+                (1, 2, 20, 40),
+                (30, 50, 4, 5))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's',),
+                index=('x','y'))
+
+        sel = f1 < 100 # get all true
+
+        # get a value that will require reindexing
+        f2 = Frame(-100,
+                columns=('q', 'r',),
+                index=('y',))
+
+        self.assertEqual(f1.assign.bloc(sel)(f2).to_pairs(0),
+                (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', -100))), ('r', (('x', 20), ('y', -100))), ('s', (('x', 40), ('y', 5))))
+            )
 
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:

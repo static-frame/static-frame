@@ -1361,7 +1361,7 @@ class TypeBlocks(ContainerOperand):
 
     def _assign_blocks_from_bloc_key(self,
             bloc_key: np.ndarray,
-            value: tp.Any
+            value: tp.Any # an array, or element for single assigment
             ) -> tp.Iterator[np.ndarray]:
         '''
         Given an Boolean array of targets, fill targets from value, where value is either a single value or an array.

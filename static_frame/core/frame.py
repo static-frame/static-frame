@@ -4163,12 +4163,6 @@ class FrameAssign:
             blocks = self.container._blocks.extract_iloc_assign(self.iloc_key, value)
 
         else: # use bloc
-            if isinstance(value, Frame):
-                # not sure if we need to reindex the value Frame.
-                value = value.values
-
-            if self.bloc_key.dtype != bool:
-                raise RuntimeError(f'invalid bloc_key, must Boolean Frame or array, not {self.bloc_key}')
 
             if isinstance(self.bloc_key, Frame):
                 bloc_frame = self.bloc_key.reindex(
@@ -4176,10 +4170,36 @@ class FrameAssign:
                         columns=self.container._columns,
                         fill_value=False
                         )
-                bloc_key = bloc_frame.values
-
+                bloc_key = bloc_frame.values # shape must match post reindex
             elif isinstance(self.bloc_key, np.ndarray):
                 bloc_key = self.bloc_key
+                if bloc_key.shape != self.container.shape:
+                    raise RuntimeError(f'bloc {bloc_key.shape} must match shape {self.container.shape}')
+            else:
+                raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {self.bloc_key}')
+
+
+            if not bloc_key.dtype == bool:
+                raise RuntimeError('cannot use non-Bolean dtype as bloc key')
+
+
+            if isinstance(value, Frame):
+                invalid = object()
+                value = value.reindex(
+                        index=self.container._index,
+                        columns=self.container._columns,
+                        fill_value=invalid
+                        ).values
+
+                # if we produced any invalid entries, cannot select them
+                invalid_found = value == invalid
+                if invalid_found.any():
+                    bloc_key = bloc_key.copy() # mutate a copy
+                    bloc_key[invalid_found] = False
+
+            elif isinstance(value, np.ndarray):
+                if value.shape != self.container.shape:
+                    raise RuntimeError(f'value must match shape {self.container.shape}')
 
             blocks = self.container._blocks.extract_bloc_assign(bloc_key, value)
 
