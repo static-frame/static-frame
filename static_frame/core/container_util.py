@@ -14,6 +14,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import Bloc2DKeyType
 
 from static_frame.core.index_base import IndexBase
 
@@ -61,9 +62,6 @@ def index_from_optional_constructor(
     # cannot always deterine satic status from constructors; fallback on using default constructor
     return default_constructor(value)
 
-
-
-# matmul of two series reduces to a single value
 
 def matmul(
         lhs: tp.Union['Series', 'Frame', tp.Iterable],
@@ -229,8 +227,6 @@ def matmul(
             )
 
 
-
-
 def axis_window_items( *,
         source: tp.Union['Series', 'Frame'],
         axis: int = 0,
@@ -327,3 +323,35 @@ def axis_window_items( *,
 
         if count > count_window_max or idx_left > idx_left_max:
             break
+
+
+def bloc_key_normalize(
+        key: Bloc2DKeyType,
+        container: 'Frame'
+        ) -> np.ndarray:
+    '''
+    Normalize and validate a bloc key. Return a same sized Boolean array.
+    '''
+    from static_frame.core.frame import Frame
+
+    if isinstance(key, Frame):
+        bloc_frame = key.reindex(
+                index=container._index,
+                columns=container._columns,
+                fill_value=False
+                )
+        bloc_key = bloc_frame.values # shape must match post reindex
+    elif isinstance(key, np.ndarray):
+        bloc_key = key
+        if bloc_key.shape != container.shape:
+            raise RuntimeError(f'bloc {bloc_key.shape} must match shape {container.shape}')
+    else:
+        raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {key}')
+
+    if not bloc_key.dtype == bool:
+        raise RuntimeError('cannot use non-Bolean dtype as bloc key')
+
+    return bloc_key
+
+
+

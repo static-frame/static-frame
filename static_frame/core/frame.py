@@ -27,6 +27,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import path_filter
+from static_frame.core.util import Bloc2DKeyType
 
 from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
@@ -72,6 +73,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import axis_window_items
+from static_frame.core.container_util import bloc_key_normalize
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -804,10 +806,11 @@ class Frame(ContainerOperand):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
-        Convert a NumPy structed array into a Frame. Presently this always uses
+        Convert a NumPy structed array into a Frame.
 
         Args:
             array: Structured NumPy array.
+            index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
             index_column: Optionally provide the name or position offset of the column to use as the index.
             {dtypes}
             {name}
@@ -2411,13 +2414,23 @@ class Frame(ContainerOperand):
                 column_key=iloc_column_key)
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType):
+    def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
         '''Selector of columns by label.
 
         Args:
             key: {key_loc}
         '''
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
+
+
+    def bloc(self, key: Bloc2DKeyType):
+        '''
+        Boolean selector, selected by either a Boolean 2D Frame or array.
+        '''
+        bloc_key = bloc_key_normalize(key=key, container=self)
+        # TODO: get indicies for index from bloc_key
+        values = self.values[bloc_key]
+
 
     #---------------------------------------------------------------------------
 
@@ -2507,7 +2520,7 @@ class Frame(ContainerOperand):
         key = self._compound_loc_to_getitem_iloc(key)
         return self._extract_iloc_assign(key=key)
 
-    def _extract_bloc_assign(self, key: tp.Union['Frame', np.ndarray]) -> 'FrameAssign':
+    def _extract_bloc_assign(self, key: Bloc2DKeyType) -> 'FrameAssign':
         '''Assignment based on a Boolean Frame or array.'''
         return FrameAssign(self, bloc_key=key)
 
@@ -4116,7 +4129,6 @@ class FrameGO(Frame):
                 own_columns=False # need to make static only
                 )
 
-
     def to_frame_go(self):
         '''
         Return a FrameGO version of this Frame.
@@ -4137,7 +4149,7 @@ class FrameAssign:
     def __init__(self,
             container: Frame,
             iloc_key: GetItemKeyTypeCompound = None,
-            bloc_key: tp.Optional[tp.Union[Frame, np.ndarray]] = None,
+            bloc_key: tp.Optional[Bloc2DKeyType] = None,
             ) -> None:
         '''Store a reference to ``Frame``, as well as a key to be used for assignment with ``__call__``
         '''
@@ -4163,25 +4175,28 @@ class FrameAssign:
             blocks = self.container._blocks.extract_iloc_assign(self.iloc_key, value)
 
         else: # use bloc
+            bloc_key = bloc_key_normalize(
+                    key=self.bloc_key,
+                    container=self.container
+                    )
 
-            if isinstance(self.bloc_key, Frame):
-                bloc_frame = self.bloc_key.reindex(
-                        index=self.container._index,
-                        columns=self.container._columns,
-                        fill_value=False
-                        )
-                bloc_key = bloc_frame.values # shape must match post reindex
-            elif isinstance(self.bloc_key, np.ndarray):
-                bloc_key = self.bloc_key
-                if bloc_key.shape != self.container.shape:
-                    raise RuntimeError(f'bloc {bloc_key.shape} must match shape {self.container.shape}')
-            else:
-                raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {self.bloc_key}')
+            # if isinstance(self.bloc_key, Frame):
+            #     bloc_frame = self.bloc_key.reindex(
+            #             index=self.container._index,
+            #             columns=self.container._columns,
+            #             fill_value=False
+            #             )
+            #     bloc_key = bloc_frame.values # shape must match post reindex
+            # elif isinstance(self.bloc_key, np.ndarray):
+            #     bloc_key = self.bloc_key
+            #     if bloc_key.shape != self.container.shape:
+            #         raise RuntimeError(f'bloc {bloc_key.shape} must match shape {self.container.shape}')
+            # else:
+            #     raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {self.bloc_key}')
 
 
-            if not bloc_key.dtype == bool:
-                raise RuntimeError('cannot use non-Bolean dtype as bloc key')
-
+            # if not bloc_key.dtype == bool:
+            #     raise RuntimeError('cannot use non-Bolean dtype as bloc key')
 
             if isinstance(value, Frame):
                 invalid = object()

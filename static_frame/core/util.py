@@ -149,6 +149,10 @@ GetItemKeyType = tp.Union[
 GetItemKeyTypeCompound = tp.Union[
         tp.Tuple[tp.Any, ...], int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
 
+
+Bloc2DKeyType = tp.Union['Frame', np.ndarray]
+# Bloc1DKeyType = tp.Union['Series', np.ndarray]
+
 UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 

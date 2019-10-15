@@ -46,6 +46,8 @@ Added ``Frame.iter_window``, ``Frame.iter_window_items``, ``Frame.iter_window_ar
 
 Added ``Series.iter_window``, ``Series.iter_window_items``, ``Series.iter_window_array``, ``Series.iter_window_array_items``.
 
+Added ``Frame.bloc`` and ``Frmae.assign.bloc``
+
 
 
 0.4.3
