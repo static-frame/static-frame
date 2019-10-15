@@ -5290,6 +5290,39 @@ class TestUnit(TestCase):
                 (('x', 0), ('y', 1), ('z', 0)))
 
 
+    def test_frame_bloc_a(self) -> None:
+
+        f1= Frame.from_dict(
+                dict(a=(3,2,1), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f2 = Frame.from_dict(
+                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
+                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+        f3 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f3')
+
+        s1 = f1.bloc((f1 <= 2) | (f1 > 4))
+        self.assertEqual(s1.to_pairs(),
+                ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
+                )
+
+        s2 = f2.bloc((f2 < 0))
+        self.assertEquals(s2.to_pairs(),
+                (((('II', 'a'), 'x'), -5), ((('II', 'a'), 'y'), -5), ((('II', 'b'), 'y'), -3000))
+                )
+
+        s3 = f3.bloc(f3 < 11)
+        self.assertEqual(s3.to_pairs(),
+                ((('p', ('I', 'a')), 10), (('q', ('II', 'a')), -50), (('q', ('II', 'b')), -60))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_frame_unset_index_a(self) -> None:
         records = (
                 (2, 2),

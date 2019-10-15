@@ -2423,14 +2423,19 @@ class Frame(ContainerOperand):
         return self._extract(*self._compound_loc_to_getitem_iloc(key))
 
 
-    def bloc(self, key: Bloc2DKeyType):
+    def bloc(self, key: Bloc2DKeyType) -> Series:
         '''
         Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
-        # TODO: get indicies for index from bloc_key
         values = self.values[bloc_key]
+        values.flags.writeable = False
 
+        index = Index(
+                (self._index[x], self._columns[y])
+                for x, y in zip(*np.nonzero(bloc_key))
+                )
+        return Series(values, index=index, own_index=True)
 
     #---------------------------------------------------------------------------
 
