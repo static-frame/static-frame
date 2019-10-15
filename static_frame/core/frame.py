@@ -2425,7 +2425,7 @@ class Frame(ContainerOperand):
 
     def bloc(self, key: Bloc2DKeyType) -> Series:
         '''
-        Boolean selector, selected by either a Boolean 2D Frame or array.
+        2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
         values = self.values[bloc_key]

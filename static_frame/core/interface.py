@@ -237,6 +237,10 @@ class InterfaceSummary:
                 display = f'{name}[]' if name != cls.GETITEM else '[]'
                 yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
+            elif name == 'bloc':
+                display = f'{name}()'
+                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+
             elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
                     display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
