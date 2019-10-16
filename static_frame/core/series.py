@@ -1314,6 +1314,7 @@ class Series(ContainerOperand):
     # transformations resulting in the same dimensionality
 
     def sort_index(self,
+            *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Series':
         '''
@@ -1343,7 +1344,8 @@ class Series(ContainerOperand):
                 )
 
     def sort_values(self,
-            ascending: bool = True,
+            *,
+            ascending: bool = True,s
             kind: str = DEFAULT_SORT_KIND) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.

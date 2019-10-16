@@ -2920,6 +2920,7 @@ class Frame(ContainerOperand):
         return reversed(self._columns)
 
     def sort_index(self,
+            *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
@@ -2948,6 +2949,7 @@ class Frame(ContainerOperand):
                 )
 
     def sort_columns(self,
+            *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
@@ -2977,6 +2979,7 @@ class Frame(ContainerOperand):
 
     def sort_values(self,
             key: KeyOrKeys,
+            *,
             ascending: bool = True,
             axis: int = 1,
             kind=DEFAULT_SORT_KIND) -> 'Frame':
@@ -3012,7 +3015,6 @@ class Frame(ContainerOperand):
                 order = np.lexsort(sort_array)
         else:
             raise NotImplementedError()
-
 
         if not ascending:
             order = order[::-1]
