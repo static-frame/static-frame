@@ -5324,6 +5324,7 @@ class TestUnit(TestCase):
 
     def test_frame_bloc_b(self) -> None:
 
+        f = sf.Frame([[True, False], [False, True]], index=('a', 'b'), columns=['d', 'c'])
         self.assertEqual(
                 f.assign.bloc(f)('T').assign.bloc(~f)('').to_pairs(0),
                 (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))
