@@ -5322,6 +5322,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_bloc_b(self) -> None:
+
+        self.assertEqual(
+                f.assign.bloc(f)('T').assign.bloc(~f)('').to_pairs(0),
+                (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))
+                )
+
     #---------------------------------------------------------------------------
     def test_frame_unset_index_a(self) -> None:
         records = (
