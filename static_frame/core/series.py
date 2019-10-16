@@ -1316,7 +1316,8 @@ class Series(ContainerOperand):
     def sort_index(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Series':
+            kind: str = DEFAULT_SORT_KIND
+            ) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
         '''
@@ -1345,8 +1346,9 @@ class Series(ContainerOperand):
 
     def sort_values(self,
             *,
-            ascending: bool = True,s
-            kind: str = DEFAULT_SORT_KIND) -> 'Series':
+            ascending: bool = True,
+            kind: str = DEFAULT_SORT_KIND
+            ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
         '''
