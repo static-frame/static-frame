@@ -4,7 +4,7 @@ pytest-cov>=2.6.0
 hypothesis==4.26.3
 mypy==0.711
 codecov>=2.0.15
-pylint==2.3.1
+pylint==2.3.1 # move to 2.4.2
 Pygments==2.2.0
 ipython==7.4.0
 sphinx==2.2.0

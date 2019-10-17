@@ -3265,6 +3265,21 @@ class TestUnit(TestCase):
                     )
 
 
+    def test_frame_from_tsv_b(self) -> None:
+        # a generator of delimited strings also works
+
+        def lines() -> tp.Iterator[str]:
+            yield 'a\tb\tc\td'
+            for i in range(4):
+                yield f'{i}\t{i + 1}\t{i + 2}\t{i + 3}'
+
+        f = Frame.from_tsv(lines())
+        self.assertEqual(f.to_pairs(0),
+                (('a', ((0, 0), (1, 1), (2, 2), (3, 3))), ('b', ((0, 1), (1, 2), (2, 3), (3, 4))), ('c', ((0, 2), (1, 3), (2, 4), (3, 5))), ('d', ((0, 3), (1, 4), (2, 5), (3, 6))))
+                )
+
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (
