@@ -794,32 +794,19 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks)
 
 
+
     @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_structured_array(cls,
+    def _structured_array_to_blocks_and_index(cls,
             array: np.ndarray,
             *,
             index_depth: int = 0,
             index_column: tp.Optional[IndexSpecifier] = None,
-            columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> 'Frame':
+            ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
-        Convert a NumPy structed array into a Frame.
-
-        Args:
-            array: Structured NumPy array.
-            index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
-            index_column: Optionally provide the name or position offset of the column to use as the index.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :py:class:`static_frame.Frame`
+        Utility function for creating TypeBlocks from structure array while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
         '''
         names = array.dtype.names
         if names is None:
@@ -841,11 +828,9 @@ class Frame(ContainerOperand):
                 # Subtract one for inclusive boun
                 index_end_pos = index_start_pos + index_depth - 1
 
-        # assign in generator; requires  reading through gen first
-        # index_array = None
+        # assign in generator
         index_arrays = []
-        # cannot use names if we remove an index; might be a more efficient way as we know the size
-        columns_labels = []
+        columns_labels = [] # collect whatever labels are found on structured arrays
         columns_by_col_idx = []
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -878,9 +863,48 @@ class Frame(ContainerOperand):
                 yield array_final
 
         if consolidate_blocks:
-            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+            data = TypeBlocks.consolidate_blocks(blocks())
         else:
-            block_gen = blocks
+            data = TypeBlocks.from_blocks(blocks())
+
+        return data, index_arrays, columns_labels
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_structured_array(cls,
+            array: np.ndarray,
+            *,
+            index_depth: int = 0,
+            index_column: tp.Optional[IndexSpecifier] = None,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        '''
+        Convert a NumPy structed array into a Frame.
+
+        Args:
+            array: Structured NumPy array.
+            index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
+            index_column: Optionally provide the name or position offset of the column to use as the index.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
+                array=array,
+                index_depth=index_depth,
+                index_column=index_column,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
 
         columns_constructor = None
         if columns_depth == 0:
@@ -888,6 +912,7 @@ class Frame(ContainerOperand):
         elif columns_depth == 1:
             columns = columns_labels
         elif columns_depth > 1:
+            # assume deliminted IH extracted from SA labels
             columns = columns_labels
             columns_constructor = partial(IndexHierarchy.from_labels_delimited
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
@@ -895,7 +920,7 @@ class Frame(ContainerOperand):
                     delimiter=' ')
 
         kwargs = dict(
-                data=TypeBlocks.from_blocks(block_gen()),
+                data=data,
                 own_data=True,
                 columns=columns,
                 columns_constructor=columns_constructor,
@@ -903,9 +928,13 @@ class Frame(ContainerOperand):
                 )
 
         if index_depth == 0:
-            return cls(index=None, **kwargs)
+            return cls(
+                index=None,
+                **kwargs)
         if index_depth == 1:
-            return cls(index=index_arrays[0], **kwargs)
+            return cls(
+                index=index_arrays[0],
+                **kwargs)
         return cls(
                 index=zip(*index_arrays),
                 index_constructor=IndexHierarchy.from_labels,
@@ -1046,73 +1075,112 @@ class Frame(ContainerOperand):
 
         # if columns_depth > 1:
         #     raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
+        if skip_header < 0:
+            raise RuntimeError('skip_header must be greater than or equal to 0')
 
         fp = path_filter(fp)
         delimiter_native = '\t'
 
         if delimiter != delimiter_native:
             # this is necessary if there are quoted cells that include the delimiter
-            def to_tsv():
+            def file_like() -> tp.Iterator[str]:
                 if isinstance(fp, str):
                     with open(fp, 'r') as f:
                         for row in csv.reader(f, delimiter=delimiter, quotechar=quote_char):
                             yield delimiter_native.join(row)
-                else:
-                    # handling file like object works for stringio but not for bytesio
+                else: # handling file like object works for stringio but not for bytesio
                     for row in csv.reader(fp, delimiter=delimiter, quotechar=quote_char):
                         yield delimiter_native.join(row)
-            file_like = to_tsv()
         else:
-            file_like = fp
+            def file_like() -> tp.Iterator[str]: # = fp
+                if isinstance(fp, str):
+                    with open(fp, 'r') as f:
+                        for row in f:
+                            yield row
+                else: # iterable of string lines, StringIO
+                    for row in fp:
+                        yield row
+
+        if columns_depth > 1:
+            columns_rows = []
+
+        def row_source() -> tp.Iterator[str]:
+            # set equal to skip header unless column depth is > 1
+            column_max = skip_header + (columns_depth if columns_depth > 1 else 0)
+            for i, row in enumerate(file_like()):
+                if i < skip_header:
+                    continue
+                if i < column_max:
+                    columns_rows.append(row)
+                    continue
+                yield row
+
 
         # genfromtxt takes a missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
 
-        array = np.genfromtxt(file_like,
+        array = np.genfromtxt(
+                row_source(),
                 delimiter=delimiter_native,
-                skip_header=skip_header,
+                skip_header=0, # done in row_source
                 skip_footer=skip_footer,
                 # strange NP convention for this parameter: False is not supported, must convert to None
                 names=True if columns_depth == 1 else None,
-                #names=None if columns_depth == 0 else True,
                 dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
                 )
 
         if array.ndim > 1:
-            # did not get a structured array, as genfromtxt
+            # genfromtxt may, in some situations, not return a structured array
             raise NotImplementedError('no handling for 2D array from genfromtxt')
 
-        columns = None
-        # As structure array has already been created based on columns_depth, it either has the appropriate depth 1 row as as column, or an automatically generated label (depth 0 or > 1).
-        if columns_depth <= 1:
-            columns_depth_for_structured_array = columns_depth
-        if columns_depth > 1:
-            raise NotImplementedError('no handling columns_depth > 1')
 
-            # columns_constructor = (IndexHierarchy.from_labels
-            #         if cls._COLUMNS_CONSTRUCTOR.STATIC
-            #         else IndexHierarchyGO.from_labels)
-            # columns = columns_constructor(
-            #         zip(*(x[index_depth:] for x in array[:columns_depth]))
-            #         )
-            # columns_depth_for_structured_array = 0
-            # array = array[columns_depth:]
-
-        # can own this array so set it as immutable
         array.flags.writeable = False
-        return cls.from_structured_array(
-                array,
+
+        data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
+                array=array,
                 index_depth=index_depth,
                 index_column=index_column,
-                columns_depth=columns_depth_for_structured_array, # if > 1, interpets header as delimited
                 dtypes=dtypes,
-                name=name,
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
                 )
 
+        # Structure array either has the appropriate depth 1 row as as column, or an automatically generated label.
+        columns_constructor = None
+        if columns_depth == 0:
+            columns = None
+        elif columns_depth == 1:
+            columns = columns_labels
+        else:
+            columns_constructor = (IndexHierarchy.from_labels
+                    if cls._COLUMNS_CONSTRUCTOR.STATIC
+                    else IndexHierarchyGO.from_labels)
+            columns = columns_constructor(
+                    zip(*(x.split(delimiter_native)[index_depth:] for x in columns_rows))
+                    )
 
+        kwargs = dict(
+                data=data,
+                own_data=True,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                name=name
+                )
+
+        if index_depth == 0:
+            return cls(
+                index=None,
+                **kwargs)
+        if index_depth == 1:
+            return cls(
+                index=index_arrays[0],
+                **kwargs)
+        return cls(
+                index=zip(*index_arrays),
+                index_constructor=IndexHierarchy.from_labels,
+                **kwargs
+                )
 
 
     @classmethod

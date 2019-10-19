@@ -3369,8 +3369,10 @@ class TestUnit(TestCase):
                     ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
                     )
 
-            # f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
-
+            f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
+            self.assertEqual(f2.to_pairs(0),
+                    ((('I', 'a'), (('p', 10), ('q', 50))), (('I', 'b'), (('p', 20), ('q', 60))), (('II', 'a'), (('p', 50), ('q', -50))), (('II', 'b'), (('p', 60), ('q', -60))))
+                    )
 
 
     def test_frame_to_csv_e(self) -> None:
@@ -3390,7 +3392,12 @@ class TestUnit(TestCase):
                     ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
                     )
 
-            # f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
+            # NOTE: numbers in the IndexHiearchy come in as strings; this could only be avoided if we quote strings and literal eval column values
+            f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
+            self.assertEqual(
+                    f2.to_pairs(0),
+                    ((('10', 'I'), (('p', 10), ('q', 50))), (('10', 'II'), (('p', 20), ('q', 60))), (('20', 'I'), (('p', 50), ('q', -50))), (('20', 'II'), (('p', 60), ('q', -60))))
+                    )
 
 
     #---------------------------------------------------------------------------
