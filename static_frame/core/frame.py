@@ -24,6 +24,8 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
+
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import path_filter
@@ -1001,7 +1003,7 @@ class Frame(ContainerOperand):
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
-            fp: PathSpecifierOrFileLike,
+            fp: PathSpecifierOrFileLikeOrIterator,
             *,
             delimiter: str,
             index_depth: int = 0,
@@ -1085,7 +1087,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_csv(cls,
-            fp: PathSpecifierOrFileLike,
+            fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
             index_column: tp.Optional[tp.Union[int, str]] = None,
@@ -1122,7 +1124,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_tsv(cls,
-            fp: PathSpecifierOrFileLike,
+            fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
             index_column: tp.Optional[tp.Union[int, str]] = None,
@@ -1894,8 +1896,8 @@ class Frame(ContainerOperand):
             own_index = True
         elif index is None:
             index = self._index
-        else: # assume index IndexInitializer
-            index = index
+        # else: # assume index IndexInitializer
+        #     index = index
 
         own_columns = False
         if columns is IndexAutoFactory:
@@ -1905,8 +1907,8 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns is None:
             columns = self._columns
-        else: # assume IndexInitializer
-            columns = columns
+        # else: # assume IndexInitializer
+        #     columns = columns
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
@@ -3779,28 +3781,33 @@ class Frame(ContainerOperand):
             is_file = False
 
         index = self._index
+        columns = self._columns
 
         if include_index:
             index_values = index.values # get once for caching
-            index_names = index.names
+            index_names = index.names # normalized presentation
 
         if store_filter:
             filter_func = store_filter.from_type_filter_element
 
         try:
             if include_columns:
-                if include_index:
-                    # if this is included should be controlled by a Boolean switch
-                    for name in index_names:
-                        f.write(f'{name}{delimiter}')
-
-                # iter directly over columns in case it is an IndexGO and needs to update cache
-                # TODO: support IndexHierarchy
-                if store_filter:
-                    f.write(delimiter.join(f'{filter_func(x)}' for x in self._columns))
+                if columns.depth == 1:
+                    columns_rows = (columns,)
                 else:
-                    f.write(delimiter.join(f'{x}' for x in self._columns))
-                f.write(line_terminator)
+                    columns_rows = columns.values.T
+                for row_idx, columns_row in enumerate(columns_rows):
+                    if include_index:
+                        for name in index_names:
+                            if row_idx == 0:
+                                f.write(f'{name}{delimiter}')
+                            else:
+                                f.write(f'{delimiter}')
+                    if store_filter:
+                        f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
+                    else:
+                        f.write(delimiter.join(f'{x}' for x in columns_row))
+                    f.write(line_terminator)
 
             col_idx_last = self._blocks._shape[1] - 1
             # avoid row creation to avoid joining types; avoide creating a list for each row

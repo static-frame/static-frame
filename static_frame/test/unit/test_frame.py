@@ -3343,6 +3343,24 @@ class TestUnit(TestCase):
                 self.assertEqual(lines[4], 'z,30,-inf,d,True,None')
 
 
+    def test_frame_to_csv_d(self) -> None:
+        f1 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f3')
+
+        with temp_file('.csv') as fp:
+            f1.to_csv(fp)
+
+            with open(fp) as f:
+                lines = f.readlines()
+
+            self.assertEqual(lines,
+                    ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
+                    )
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_tsv_a(self) -> None:
         records = (

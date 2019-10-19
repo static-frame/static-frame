@@ -295,15 +295,15 @@ class StoreXLSX(Store):
                     # NOTE: this orientation will need to be rotated
                     columns_values.append(row[index_depth:])
                 continue
+
+            if index_depth == 0:
+                data.append(row)
+            elif index_depth == 1:
+                index_values.append(row[0])
+                data.append(row[1:])
             else:
-                if index_depth == 0:
-                    data.append(row)
-                elif index_depth == 1:
-                    index_values.append(row[0])
-                    data.append(row[1:])
-                else:
-                    index_values.append(row[:index_depth])
-                    data.append(row[index_depth:])
+                index_values.append(row[:index_depth])
+                data.append(row[index_depth:])
 
         wb.close()
 

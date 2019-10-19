@@ -215,9 +215,9 @@ class IndexLevel:
             if node.targets is not None:
                 node = node.targets[node.index.loc_to_iloc(k)]
                 continue
-            else: # targets is None, meaning we are done
-                node.index.loc_to_iloc(k)
-                return True # if above does not raise
+
+            node.index.loc_to_iloc(k)
+            return True # if above does not raise
 
         return False
 

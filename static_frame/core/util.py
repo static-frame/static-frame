@@ -168,6 +168,7 @@ KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
 PathSpecifier = tp.Union[str, Path]
 PathSpecifierOrFileLike = tp.Union[str, Path, tp.TextIO]
+PathSpecifierOrFileLikeOrIterator = tp.Union[str, Path, tp.TextIO, tp.Iterator[str]]
 
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
@@ -1598,7 +1599,7 @@ def slices_from_targets(
     for target_slice, value in zip(target_slices, target_values):
 
         # all conditions that are noop slices
-        if target_slice.start == target_slice.stop:
+        if target_slice.start == target_slice.stop: #pylint: disable=R1724
             continue
         elif (directional_forward
                 and target_slice.start is not None

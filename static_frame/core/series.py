@@ -586,8 +586,8 @@ class Series(ContainerOperand):
             own_index = True
         elif index is None:
             index = self._index
-        else: # assume index IndexInitializer
-            index = index
+        # else: # assume index IndexInitializer
+        #     index = index
 
         return self.__class__(self.values,
                 index=index,

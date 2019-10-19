@@ -1056,23 +1056,23 @@ class TypeBlocks(ContainerOperand):
                     part_start_last = 1
                     target_block_idx = target_slice = None
                     break
-                else:
-                    assert target_slice is not None
-                    # target_slice can be a slice or an integer
-                    if isinstance(target_slice, slice):
-                        target_start = target_slice.start
-                        target_stop = target_slice.stop
-                    else: # it is an integer
-                        target_start = target_slice
-                        target_stop = target_slice + 1
 
-                    assert target_start is not None and target_stop is not None
-                    if target_start > part_start_last:
-                        # yield un changed components before and after
-                        parts.append(b[:, slice(part_start_last, target_start)])
+                assert target_slice is not None
+                # target_slice can be a slice or an integer
+                if isinstance(target_slice, slice):
+                    target_start = target_slice.start
+                    target_stop = target_slice.stop
+                else: # it is an integer
+                    target_start = target_slice
+                    target_stop = target_slice + 1
 
-                    parts.append(b[:, target_slice].astype(dtype))
-                    part_start_last = target_stop
+                assert target_start is not None and target_stop is not None
+                if target_start > part_start_last:
+                    # yield un changed components before and after
+                    parts.append(b[:, slice(part_start_last, target_start)])
+
+                parts.append(b[:, target_slice].astype(dtype))
+                part_start_last = target_stop
 
                 target_block_idx = target_slice = None
 
@@ -1138,25 +1138,25 @@ class TypeBlocks(ContainerOperand):
                     target_block_idx = target_slice = None
                     drop_block = True
                     break
-                else:
-                    # target_slice can be a slice or an integer
-                    if isinstance(target_slice, slice):
-                        target_start = target_slice.start
-                        target_stop = target_slice.stop
-                    else: # it is an integer
-                        target_start = target_slice # can be zero
-                        target_stop = target_slice + 1
 
-                    assert target_start is not None and target_stop is not None
-                    # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
-                    if target_start == 0 and target_stop == b.shape[1]:
-                        drop_block = True
-                    elif target_start > part_start_last:
-                        # yield retained components before and after
-                        parts.append(b[:, slice(part_start_last, target_start)])
-                    part_start_last = target_stop
-                    # reset target block index, forcing fetchin next target info
-                    target_block_idx = target_slice = None
+                # target_slice can be a slice or an integer
+                if isinstance(target_slice, slice):
+                    target_start = target_slice.start
+                    target_stop = target_slice.stop
+                else: # it is an integer
+                    target_start = target_slice # can be zero
+                    target_stop = target_slice + 1
+
+                assert target_start is not None and target_stop is not None
+                # if the target start (what we want to remove) is greater than 0 or our last starting point, then we need to slice off everything that came before, so as to keep it
+                if target_start == 0 and target_stop == b.shape[1]:
+                    drop_block = True
+                elif target_start > part_start_last:
+                    # yield retained components before and after
+                    parts.append(b[:, slice(part_start_last, target_start)])
+                part_start_last = target_stop
+                # reset target block index, forcing fetchin next target info
+                target_block_idx = target_slice = None
 
             # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
             if b.ndim != 1 and 0 < part_start_last < b.shape[1]:
@@ -1305,7 +1305,6 @@ class TypeBlocks(ContainerOperand):
                         value = value[slice(width, None)]
                 else: # not sliceable; this can be a single column
                     value_piece = value
-                    value = value # reuse the value repeatedly
 
                 if b.ndim == 1: # given 1D array, our row key is all we need
                     # TODO: handle row_key of None
@@ -2136,7 +2135,7 @@ class TypeBlocks(ContainerOperand):
                             # truncate sel_slice by limit-
                             sided_len = len(range(*sel_slice.indices(length)))
 
-                            if limit and bridging_count[idx] >= limit: # type: ignore
+                            if limit and bridging_count[idx] >= limit: # type: ignore #pylint: disable=R1724
                                 # if already at limit, do not assign
                                 bridging_count[idx] += sided_len # type: ignore
                                 continue
