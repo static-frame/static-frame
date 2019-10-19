@@ -3205,7 +3205,7 @@ class TestUnit(TestCase):
                 columns_depth=0)
 
         self.assertEqual(f1.to_pairs(0),
-                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))),))
+                ((0, ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))),))
 
         input_stream = StringIO('''
         196412	0.0	0.1
@@ -3223,7 +3223,7 @@ class TestUnit(TestCase):
                 columns_depth=0)
 
         self.assertEqual(f2.to_pairs(0),
-                (('f1', ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), ('f2', ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
+                ((0, ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), (1, ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
 
     def test_frame_from_csv_e(self) -> None:
         s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
@@ -3248,6 +3248,15 @@ class TestUnit(TestCase):
         self.assertAlmostEqualFramePairs(f1.to_pairs(0),
                 (('count', (('A', np.nan), ('B', np.nan), ('C', np.nan), ('D', np.nan))), ('score', (('A', 1.3), ('B', 5.2), ('C', 3.4), ('D', 9.0))), ('color', (('A', 'red'), ('B', 'green'), ('C', 'blue'), ('D', 'black'))))
                 )
+
+
+    def test_frame_from_csv_g(self) -> None:
+        filelike = StringIO('''0,4,234.5,5.3,'red',False
+30,50,9.234,5.434,'blue',True''')
+        f1 = Frame.from_csv(filelike, columns_depth=0)
+        self.assertEqual(f1.to_pairs(0),
+            ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
+            )
 
 
     def test_frame_from_tsv_a(self) -> None:
@@ -3359,6 +3368,29 @@ class TestUnit(TestCase):
             self.assertEqual(lines,
                     ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
                     )
+
+            # f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
+
+
+
+    def test_frame_to_csv_e(self) -> None:
+        f1 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=IndexHierarchy.from_product((10, 20),('I', 'II'),),
+                name='f3')
+
+        with temp_file('.csv') as fp:
+            f1.to_csv(fp)
+
+            with open(fp) as f:
+                lines = f.readlines()
+
+            self.assertEqual(lines,
+                    ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
+                    )
+
+            # f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
 
 
     #---------------------------------------------------------------------------

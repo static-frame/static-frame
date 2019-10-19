@@ -821,8 +821,9 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        # will be the header if this was parsed from a delimited file
         names = array.dtype.names
+        if names is None:
+            raise ErrorInitFrame('array is not a structured array')
 
         index_start_pos = -1 # will be ignored
         index_end_pos = -1
@@ -844,7 +845,7 @@ class Frame(ContainerOperand):
         # index_array = None
         index_arrays = []
         # cannot use names if we remove an index; might be a more efficient way as we know the size
-        columns = []
+        columns_labels = []
         columns_by_col_idx = []
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -873,7 +874,7 @@ class Frame(ContainerOperand):
                     index_arrays.append(array_final)
                     continue
 
-                columns.append(name)
+                columns_labels.append(name)
                 yield array_final
 
         if consolidate_blocks:
@@ -884,7 +885,10 @@ class Frame(ContainerOperand):
         columns_constructor = None
         if columns_depth == 0:
             columns = None
+        elif columns_depth == 1:
+            columns = columns_labels
         elif columns_depth > 1:
+            columns = columns_labels
             columns_constructor = partial(IndexHierarchy.from_labels_delimited
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
                     else IndexHierarchyGO.from_labels_delimited,
@@ -1040,8 +1044,8 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        if columns_depth > 1:
-            raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
+        # if columns_depth > 1:
+        #     raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
 
         fp = path_filter(fp)
         delimiter_native = '\t'
@@ -1067,23 +1071,49 @@ class Frame(ContainerOperand):
                 delimiter=delimiter_native,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
-                # strange NP convention for this parameter: False it not supported, must convert to None
-                names=None if columns_depth == 0 else True,
+                # strange NP convention for this parameter: False is not supported, must convert to None
+                names=True if columns_depth == 1 else None,
+                #names=None if columns_depth == 0 else True,
                 dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
                 )
 
+        if array.ndim > 1:
+            # did not get a structured array, as genfromtxt
+            raise NotImplementedError('no handling for 2D array from genfromtxt')
+
+        columns = None
+        # As structure array has already been created based on columns_depth, it either has the appropriate depth 1 row as as column, or an automatically generated label (depth 0 or > 1).
+        if columns_depth <= 1:
+            columns_depth_for_structured_array = columns_depth
+        if columns_depth > 1:
+            raise NotImplementedError('no handling columns_depth > 1')
+
+            # columns_constructor = (IndexHierarchy.from_labels
+            #         if cls._COLUMNS_CONSTRUCTOR.STATIC
+            #         else IndexHierarchyGO.from_labels)
+            # columns = columns_constructor(
+            #         zip(*(x[index_depth:] for x in array[:columns_depth]))
+            #         )
+            # columns_depth_for_structured_array = 0
+            # array = array[columns_depth:]
+
         # can own this array so set it as immutable
         array.flags.writeable = False
-        return cls.from_structured_array(array,
+        return cls.from_structured_array(
+                array,
                 index_depth=index_depth,
                 index_column=index_column,
+                columns_depth=columns_depth_for_structured_array, # if > 1, interpets header as delimited
                 dtypes=dtypes,
                 name=name,
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
                 )
+
+
+
 
     @classmethod
     def from_csv(cls,
