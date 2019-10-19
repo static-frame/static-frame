@@ -143,9 +143,6 @@ class StoreFilter:
             raise NotImplementedError() # np.isnat
 
         if dtype == DTYPE_OBJECT:
-            # if all(v is None for _, v in self._EQUAL_FUNC_TO_FROM):
-            #     return array
-
             post = None
             for func, value_replace in self._EQUAL_FUNC_TO_FROM:
                 if value_replace is not None:
@@ -217,6 +214,11 @@ class StoreFilter:
                 if value in matching:
                     return value_replace
         return value
+
+    def to_type_filter_iterable(self, iterable: tp.Iterable[tp.Any]) -> tp.Iterator[tp.Any]:
+        for value in iterable:
+            yield self.to_type_filter_element(value)
+
 
 
 STORE_FILTER_DEFAULT = StoreFilter()

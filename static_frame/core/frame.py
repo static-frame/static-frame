@@ -855,6 +855,8 @@ class Frame(ContainerOperand):
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
+                array_final.flags.writeable = False
+
                 if col_idx >= index_start_pos and col_idx <= index_end_pos:
                     index_arrays.append(array_final)
                     continue
@@ -1115,7 +1117,6 @@ class Frame(ContainerOperand):
                     continue
                 yield row
 
-
         # genfromtxt takes a missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
 
         array = np.genfromtxt(
@@ -1133,7 +1134,6 @@ class Frame(ContainerOperand):
         if array.ndim > 1:
             # genfromtxt may, in some situations, not return a structured array
             raise NotImplementedError('no handling for 2D array from genfromtxt')
-
 
         array.flags.writeable = False
 
@@ -1157,7 +1157,11 @@ class Frame(ContainerOperand):
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
                     else IndexHierarchyGO.from_labels)
             columns = columns_constructor(
-                    zip(*(x.split(delimiter_native)[index_depth:] for x in columns_rows))
+                    zip(*(store_filter.to_type_filter_iterable(
+                            x.split(delimiter_native)[index_depth:]
+                            )
+                            for x in columns_rows)
+                            )
                     )
 
         kwargs = dict(
