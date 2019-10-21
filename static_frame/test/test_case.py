@@ -25,6 +25,8 @@ from static_frame.core.util import PathSpecifier
 
 # for running with coverage
 # pytest -s --color no --disable-pytest-warnings --cov=static_frame --cov-report html static_frame/test
+# for running with native traveback
+# pytest -s --color no --disable-pytest-warnings --tb=native
 
 
 skip_win = pytest.mark.skipif(

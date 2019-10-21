@@ -1153,15 +1153,25 @@ class Frame(ContainerOperand):
         elif columns_depth == 1:
             columns = columns_labels
         else:
+            # Process each row one at a time, as types align by row.
+            columns_arrays = []
+            for row in columns_rows:
+                columns_array = np.genfromtxt(
+                        (row,),
+                        delimiter=delimiter_native,
+                        names=None,
+                        dtype=None,
+                        encoding=encoding,
+                        invalid_raise=False,
+                        )
+                # the array might be ndim=1, or ndim=0; must get a list before slicing
+                columns_arrays.append(columns_array.tolist()[index_depth:])
+
             columns_constructor = (IndexHierarchy.from_labels
                     if cls._COLUMNS_CONSTRUCTOR.STATIC
                     else IndexHierarchyGO.from_labels)
             columns = columns_constructor(
-                    zip(*(store_filter.to_type_filter_iterable(
-                            x.split(delimiter_native)[index_depth:]
-                            )
-                            for x in columns_rows)
-                            )
+                    zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
                     )
 
         kwargs = dict(

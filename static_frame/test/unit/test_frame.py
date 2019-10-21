@@ -3391,12 +3391,10 @@ class TestUnit(TestCase):
             self.assertEqual(lines,
                     ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
                     )
-
-            # NOTE: numbers in the IndexHiearchy come in as strings; this could only be avoided if we quote strings and literal eval column values
             f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
             self.assertEqual(
                     f2.to_pairs(0),
-                    ((('10', 'I'), (('p', 10), ('q', 50))), (('10', 'II'), (('p', 20), ('q', 60))), (('20', 'I'), (('p', 50), ('q', -50))), (('20', 'II'), (('p', 60), ('q', -60))))
+                    (((10, 'I'), (('p', 10), ('q', 50))), ((10, 'II'), (('p', 20), ('q', 60))), ((20, 'I'), (('p', 50), ('q', -50))), ((20, 'II'), (('p', 60), ('q', -60))))
                     )
 
 
@@ -3436,7 +3434,17 @@ class TestUnit(TestCase):
             f2 = Frame.from_tsv(fp, index_depth=2)
             self.assertEqualFrames(f1, f2)
 
+    def test_frame_to_tsv_c(self) -> None:
+        f1 = sf.Frame(
+                np.arange(16).reshape((4,4)),
+                index=sf.IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                columns=sf.IndexHierarchy.from_product(('III', 'IV'), (10, 20))
+                )
 
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp, include_index=True)
+            f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
+            self.assertEqualFrames(f1, f2)
 
 
     #---------------------------------------------------------------------------
