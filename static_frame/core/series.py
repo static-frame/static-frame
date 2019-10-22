@@ -632,6 +632,20 @@ class Series(ContainerOperand):
                 name=self._name)
 
 
+    def rehierarch(self,
+            depth_map: tp.Iterable[int]
+            ) -> 'Series':
+        '''
+        Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
+        '''
+        index, iloc_map = self.index._rehierarch_and_map(depth_map=depth_map)
+        values = self.values[iloc_map]
+        values.flags.writeable = False
+        return self.__class__(values,
+                index=index,
+                name=self._name)
+
+
     #---------------------------------------------------------------------------
     # na handling
 

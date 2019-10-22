@@ -1242,6 +1242,34 @@ class TestUnit(TestCase):
                 ((0, 0), (1, 1), (2, 2), (3, 3))
                 )
 
+    def test_series_rehierarch_a(self) -> None:
+
+        colors = ('red', 'green')
+        shapes = ('square', 'circle', 'triangle')
+        textures = ('smooth', 'rough')
+
+        s1 = sf.Series(range(12), index=sf.IndexHierarchy.from_product(shapes, colors, textures))
+
+        s2 = s1.rehierarch((2,1,0))
+
+        self.assertEqual(s2.to_pairs(),
+                ((('smooth', 'red', 'square'), 0), (('smooth', 'red', 'circle'), 4), (('smooth', 'red', 'triangle'), 8), (('smooth', 'green', 'square'), 2), (('smooth', 'green', 'circle'), 6), (('smooth', 'green', 'triangle'), 10), (('rough', 'red', 'square'), 1), (('rough', 'red', 'circle'), 5), (('rough', 'red', 'triangle'), 9), (('rough', 'green', 'square'), 3), (('rough', 'green', 'circle'), 7), (('rough', 'green', 'triangle'), 11))
+                )
+
+
+    def test_series_rehierarch_b(self) -> None:
+        s1 = sf.Series(range(8), index=sf.IndexHierarchy.from_product(('B', 'A'), (100, 2), ('iv', 'ii')))
+
+        self.assertEqual(s1.rehierarch((2,1,0)).to_pairs(),
+                ((('iv', 100, 'B'), 0), (('iv', 100, 'A'), 4), (('iv', 2, 'B'), 2), (('iv', 2, 'A'), 6), (('ii', 100, 'B'), 1), (('ii', 100, 'A'), 5), (('ii', 2, 'B'), 3), (('ii', 2, 'A'), 7))
+                )
+
+        self.assertEqual(s1.rehierarch((1,2,0)).to_pairs(),
+                (((100, 'iv', 'B'), 0), ((100, 'iv', 'A'), 4), ((100, 'ii', 'B'), 1), ((100, 'ii', 'A'), 5), ((2, 'iv', 'B'), 2), ((2, 'iv', 'A'), 6), ((2, 'ii', 'B'), 3), ((2, 'ii', 'A'), 7))
+                )
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_series_get_a(self) -> None:
