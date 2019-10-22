@@ -801,6 +801,53 @@ class TestUnit(TestCase):
 
 
 
+    def test_hierarchy_rehierarch_a(self) -> None:
+        ih1 = IndexHierarchy.from_product(('I', 'II'), ('B', 'A'), (2, 1))
+        ih2 = ih1.rehierarch((1, 0, 2))
+
+        self.assertEqual(ih2.values.tolist(),
+                [['B', 'I', 2], ['B', 'I', 1], ['B', 'II', 2], ['B', 'II', 1], ['A', 'I', 2], ['A', 'I', 1], ['A', 'II', 2], ['A', 'II', 1]]
+                )
+
+        ih3 = ih1.rehierarch((2, 1, 0))
+        self.assertEqual(
+                ih3.values.tolist(),
+                [[2, 'B', 'I'], [2, 'B', 'II'], [2, 'A', 'I'], [2, 'A', 'II'], [1, 'B', 'I'], [1, 'B', 'II'], [1, 'A', 'I'], [1, 'A', 'II']]
+                )
+
+
+    def test_hierarchy_rehierarch_b(self) -> None:
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'C'),
+                ('II', 'B'),
+                ('II', 'D'),
+                ('III', 'D'),
+                ('IV', 'A'),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        self.assertEqual(ih1.rehierarch([1, 0]).values.tolist(),
+                [['A', 'I'], ['A', 'IV'], ['B', 'I'], ['B', 'II'], ['C', 'II'], ['D', 'II'], ['D', 'III']]
+                )
+
+    def test_hierarchy_rehierarch_c(self) -> None:
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        with self.assertRaises(RuntimeError):
+            ih1.rehierarch([0, 0])
+
+        with self.assertRaises(RuntimeError):
+            ih1.rehierarch([0,])
+
+
     def test_hierarchy_intersection_a(self) -> None:
 
         labels = (
