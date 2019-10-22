@@ -2914,6 +2914,24 @@ class TestUnit(TestCase):
                 (((1, 'a'), (((True, 100), 1), ((True, 200), 54), ((False, 100), 30), ((False, 200), 65))), ((1, 'b'), (((True, 100), 'a'), ((True, 200), 'c'), ((False, 100), 'b'), ((False, 200), 'd'))), ((2, 'a'), (((True, 100), 2), ((True, 200), 95), ((False, 100), 34), ((False, 200), 73))), ((2, 'b'), (((True, 100), False), ((True, 200), False), ((False, 100), True), ((False, 200), True))))
                 )
 
+    def test_frame_rehierarch_b(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=tuple('pqrs'),
+                index=tuple('ab'),
+                name='foo')
+
+        # no hierarchy fails
+        with self.assertRaises(RuntimeError):
+            f1.rehierarch(index=(0, 1))
+
+        with self.assertRaises(RuntimeError):
+            f1.rehierarch(columns=(0, 1))
+
 
 
     #---------------------------------------------------------------------------
