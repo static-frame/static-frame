@@ -638,6 +638,9 @@ class Series(ContainerOperand):
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
         '''
+        if self.index.depth == 1:
+            raise RuntimeError('cannot rehierarch when there is no hierarchy')
+
         index, iloc_map = self.index._rehierarch_and_map(depth_map=depth_map)
         values = self.values[iloc_map]
         values.flags.writeable = False

@@ -2105,6 +2105,45 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
+    def rehierarch(self,
+            index: tp.Optional[tp.Iterable[int]] = None,
+            columns: tp.Optional[tp.Iterable[int]] = None,
+            ) -> 'Frame':
+        '''
+        Produce a new `Frame` with index and/or columns constructed with a transformed hierarchy.
+        '''
+        if index and self.index.depth == 1:
+            raise RuntimeError('cannot rehierarch on index when there is no hierarchy')
+        if columns and self.columns.depth == 1:
+            raise RuntimeError('cannot rehierarch on columns when there is no hierarchy')
+
+        if index:
+            index, index_iloc = self._index._rehierarch_and_map(depth_map=index)
+        else:
+            index = self._index
+            index_iloc = None
+
+        if columns:
+            columns, columns_iloc = self._columns._rehierarch_and_map(depth_map=columns)
+            own_columns = True
+        else:
+            columns = self._columns
+            own_columns = False # let constructor determine
+            columns_iloc = None
+
+        blocks = self._blocks._extract(index_iloc, columns_iloc)
+
+        return self.__class__(
+                blocks,
+                index=index,
+                columns=columns,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=own_columns
+                )
+
+
 
     #---------------------------------------------------------------------------
     # na handling

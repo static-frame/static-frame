@@ -2896,6 +2896,27 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_rehierarch_a(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        f2 = f1.rehierarch(index=(1,0), columns=(1,0))
+        self.assertEqual(f2.to_pairs(0),
+                (((1, 'a'), (((True, 100), 1), ((True, 200), 54), ((False, 100), 30), ((False, 200), 65))), ((1, 'b'), (((True, 100), 'a'), ((True, 200), 'c'), ((False, 100), 'b'), ((False, 200), 'd'))), ((2, 'a'), (((True, 100), 2), ((True, 200), 95), ((False, 100), 34), ((False, 200), 73))), ((2, 'b'), (((True, 100), False), ((True, 200), False), ((False, 100), True), ((False, 200), True))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_get_a(self) -> None:
         # reindex both axis
         records = (
