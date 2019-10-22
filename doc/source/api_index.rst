@@ -33,6 +33,8 @@ Series
 .. automethod:: static_frame.Series.relabel_drop_level
 
 
+.. automethod:: static_frame.Series.rehierarch
+
 
 Frame
 ---------
@@ -62,6 +64,8 @@ Frame
 
 
 .. automethod:: static_frame.Frame.relabel_drop_level
+
+.. automethod:: static_frame.Frame.rehierarch
 
 
 .. automethod:: static_frame.Frame.set_index

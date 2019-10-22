@@ -48,6 +48,8 @@ Added ``Series.iter_window``, ``Series.iter_window_items``, ``Series.iter_window
 
 Added ``Frame.bloc`` and ``Frmae.assign.bloc``
 
+Added ``IndexHierarchy.rehierarch``, ``Series.rehierarch``, and ``Frame.rehierarch``.
+
 
 
 0.4.3
