@@ -773,7 +773,7 @@ class IndexHierarchy(IndexBase):
         return self.__class__.from_labels(labels_post), order_lex
 
     def rehierarch(self,
-            depth_map: tp.Iterator[int]
+            depth_map: tp.Iterable[int]
             ) -> 'IndexHierarchy':
         '''
         Return a new `IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
