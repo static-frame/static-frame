@@ -6,6 +6,12 @@ matrix:
 
   include:
 
+    - name: CPython 3.8.0 on Ubuntu 16.04 (Xenial Xerus)
+      language: python
+      os: linux
+      dist: xenial
+      python: 3.8.0
+
     - name: CPython 3.7.4 on Ubuntu 16.04 (Xenial Xerus)
       language: python
       os: linux
