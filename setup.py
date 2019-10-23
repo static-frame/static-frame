@@ -44,11 +44,15 @@ def get_version() -> str:
 
 
 def _get_requirements(file_name: str) -> tp.Iterator[str]:
+    print('HERE', file_name, root_dir_fp)
+    import os
+    print(os.listdir(root_dir_fp))
     with open(path.join(root_dir_fp, file_name)) as f:
         for line in f:
             line = line.strip()
             if line:
                 yield line
+
 
 def get_install_requires() -> tp.Iterator[str]:
     yield from _get_requirements('requirements.txt')
