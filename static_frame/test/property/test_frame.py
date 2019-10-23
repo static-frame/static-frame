@@ -17,6 +17,7 @@ from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.property import strategies as sfst
+# from static_frame.test.test_case import temp_file
 
 from static_frame.test.test_case import TestCase
 
@@ -190,6 +191,45 @@ class TestUnit(TestCase):
         f1.extend_items(items())
 
         self.assertEqual(f1.shape[1], shape[1] + len(series_arrays))
+
+
+    #---------------------------------------------------------------------------
+    # exporters
+
+    @given(sfst.get_frame_or_frame_go())  # type: ignore
+    def test_frame_to_pairs(self, f1: Frame) -> None:
+        for i in range(0, 1):
+            post = f1.to_pairs(i)
+            if i == 1:
+                self.assertEqual(len(post), f1.shape[1]) # type: ignore
+            else:
+                self.assertEqual(len(post[0][1]), f1.shape[0]) # type: ignore
+            self.assertTrue(isinstance(post, tuple))
+
+
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_pandas(self, f1: Frame) -> None:
+        post = f1.to_pandas()
+        self.assertTrue(post.shape == f1.shape)
+        if not f1.isna().any().any(): # type: ignore
+            self.assertTrue((post.values == f1.values).all())
+
+
+    # @given(sfst.get_frame_or_frame_go(
+    #         dtype_group=sfst.DTGroup.BASIC,
+    #         index_dtype_group=sfst.DTGroup.BASIC,
+    #         ))  # type: ignore
+    # def test_frame_to_parquet(self, f1: Frame) -> None:
+
+    #     with temp_file('.parquet') as fp:
+    #         f1.to_parquet(fp)
+
+
+
+
 
 
 

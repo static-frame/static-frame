@@ -176,11 +176,6 @@ class DTGroup(Enum):
             hypo_np.complex_number_dtypes
             )
 
-    NUMERIC_REAL = (
-            hypo_np.floating_dtypes,
-            hypo_np.integer_dtypes,
-            )
-
     BOOL = (partial(st.just, DTYPE_BOOL),)
     STRING = (hypo_np.unicode_string_dtypes,)
 
@@ -190,6 +185,13 @@ class DTGroup(Enum):
     SECOND = (partial(hypo_np.datetime64_dtypes, min_period='s', max_period='s'),)
     MILLISECOND = (partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),)
 
+    # derived
+
+    BASIC = NUMERIC + BOOL + STRING # type: ignore
+    NUMERIC_REAL = (
+            hypo_np.floating_dtypes,
+            hypo_np.integer_dtypes,
+            )
 
 def get_dtype(dtype_group: DTGroup = DTGroup.ALL) -> st.SearchStrategy:
 
