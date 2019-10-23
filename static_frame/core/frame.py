@@ -2034,7 +2034,8 @@ class Frame(ContainerOperand):
     @doc_inject(selector='relabel_flat', class_name='Frame')
     def relabel_flat(self,
             index: bool = False,
-            columns: bool = False) -> 'Frame':
+            columns: bool = False
+            ) -> 'Frame':
         '''
         {doc}
 
@@ -2042,6 +2043,8 @@ class Frame(ContainerOperand):
             index: Boolean to flag flatening on the index.
             columns: Boolean to flag flatening on the columns.
         '''
+        if not index and not columns:
+            raise RuntimeError('must specify one or both of columns, index')
 
         index = self._index.flat() if index else self._index.copy()
         columns = self._columns.flat() if columns else self._columns.copy()
@@ -3604,7 +3607,7 @@ class Frame(ContainerOperand):
             fill_value: object = FILL_VALUE_DEFAULT,
             ) -> 'Frame':
         '''
-        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if not ``data_fields`` ar provided, all unused fiels will be displayed.
+        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if not ``data_fields`` ar provided, all unused fields will be displayed.
 
         Args:
             index_fields
@@ -3627,6 +3630,7 @@ class Frame(ContainerOperand):
         else:
             func_map = tuple(func.items())
 
+        # move to util
         def normalize_key(key: KeyOrKeys) -> tp.List[tp.Hashable]:
             if isinstance(key, str) or not hasattr(key, '__len__'):
                 return [key]
@@ -3636,7 +3640,7 @@ class Frame(ContainerOperand):
         columns_fields = normalize_key(columns_fields)
         data_fields = normalize_key(data_fields)
 
-        if len(data_fields) == 0:
+        if not data_fields:
             used = set(chain(index_fields, columns_fields))
             data_fields = [x for x in self.columns if x not in used]
             if not data_fields:
@@ -3651,10 +3655,11 @@ class Frame(ContainerOperand):
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
 
         # Get 2d arrays for index; can use from_labels.
+        # TODO: this fails for some object arrays
         index_values = np.unique(
                 self._blocks._extract(column_key=self._columns.loc_to_iloc(index_fields)).values,
                 axis=0)
-        if len(index_fields) == 1:
+        if idx_start_columns == 1:
             index = Index(index_values.flatten(), name=index_fields[0])
         else:
             index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
@@ -3688,7 +3693,6 @@ class Frame(ContainerOperand):
 
 
         def items():
-
             func_single = func_map[0][1] if len(func_map) == 1 else None
 
             for group, sub in self.iter_group_items(fields_group):
@@ -3725,12 +3729,6 @@ class Frame(ContainerOperand):
                             else: # a single hashable
                                 column_label_final = (column_label, label)
                             yield (index_label, column_label_final), func(sub[field].values)
-
-
-
-        # items = tuple(items())
-        # print(items)
-        # import ipdb; ipdb.set_trace()
 
         return self.__class__.from_element_loc_items(
                 items(),
