@@ -63,6 +63,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
+from static_frame.core.util import key_normalize
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -3630,15 +3631,9 @@ class Frame(ContainerOperand):
         else:
             func_map = tuple(func.items())
 
-        # move to util
-        def normalize_key(key: KeyOrKeys) -> tp.List[tp.Hashable]:
-            if isinstance(key, str) or not hasattr(key, '__len__'):
-                return [key]
-            return key if isinstance(key, list) else list(key)
-
-        index_fields = normalize_key(index_fields)
-        columns_fields = normalize_key(columns_fields)
-        data_fields = normalize_key(data_fields)
+        index_fields = key_normalize(index_fields)
+        columns_fields = key_normalize(columns_fields)
+        data_fields = key_normalize(data_fields)
 
         if not data_fields:
             used = set(chain(index_fields, columns_fields))
@@ -3654,13 +3649,19 @@ class Frame(ContainerOperand):
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
 
-        # Get 2d arrays for index; can use from_labels.
-        # TODO: this fails for some object arrays
-        index_values = np.unique(
-                self._blocks._extract(column_key=self._columns.loc_to_iloc(index_fields)).values,
-                axis=0)
         if idx_start_columns == 1:
-            index = Index(index_values.flatten(), name=index_fields[0])
+            # reduce loc to single itme to get 1D array
+            index_loc = index_fields[0]
+        else:
+            index_loc = index_fields
+        # will return np.array or frozen set
+        index_values = ufunc_unique(
+                self._blocks._extract_array(
+                        column_key=self._columns.loc_to_iloc(index_loc)),
+                axis=0)
+        # import ipdb; ipdb.set_trace()
+        if idx_start_columns == 1:
+            index = Index(index_values, name=index_fields[0])
         else:
             index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
 
@@ -3668,8 +3669,10 @@ class Frame(ContainerOperand):
         columns_product = []
         for field in columns_fields:
             # Take one at a time
-            columns_product.append(np.unique(
-                    self._blocks._extract(column_key=self._columns.loc_to_iloc(field)).values))
+            columns_product.append(ufunc_unique(
+                    self._blocks._extract_array(
+                            column_key=self._columns.loc_to_iloc(field))
+                    ))
 
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
@@ -3690,7 +3693,6 @@ class Frame(ContainerOperand):
         else:
             cls = Index if self._COLUMNS_CONSTRUCTOR.STATIC else IndexGO
             columns = cls(columns_product[0], name=columns_name[0])
-
 
         def items():
             func_single = func_map[0][1] if len(func_map) == 1 else None
@@ -3851,6 +3853,7 @@ class Frame(ContainerOperand):
         else:
             index_name = index.names
             # index values are reduced to unique values for 2d presentation
+            # NOTE: might need ufunc_unique
             coords = {index_name[d]: np.unique(index.values_at_depth(d))
                     for d in range(index.depth)}
             # create dictionary version

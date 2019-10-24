@@ -5721,6 +5721,26 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_pivot_k(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+        post1 = f2.pivot('z', 'y', 'a')
+
+        self.assertEqual(post1.to_pairs(0),
+                ((None, (('far', 1), (20, 9))), ('down', (('far', 5), (20, 13))))
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_axis_window_items_a(self) -> None:
 
         base = np.array([1, 2, 3, 4])

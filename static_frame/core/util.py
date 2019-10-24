@@ -498,6 +498,7 @@ def ufunc_unique(
             try:
                 return np.unique(array)
             except TypeError: # if unorderable types
+                # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
                 pass
             # this may or may not work, depending on contained types
             if array.ndim > 1: # need to flatten
@@ -507,7 +508,6 @@ def ufunc_unique(
             return frozenset(array_iter)
 
         # ndim == 2 and axis is not None
-        # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
         if axis == 0:
             array_iter = array
         else:
@@ -1678,3 +1678,15 @@ def write_optional_file(
         f.write(content)
         f.seek(0)
     return tp.cast(str, fp)
+
+
+#-------------------------------------------------------------------------------
+# trivial, non NP util
+
+def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
+    '''
+    Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
+    '''
+    if isinstance(key, str) or not hasattr(key, '__len__'):
+        return [key]
+    return key if isinstance(key, list) else list(key) # type: ignore
