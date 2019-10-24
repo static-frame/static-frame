@@ -17,4 +17,5 @@ xlsxwriter==1.1.2
 openpyxl==3.0.0
 xarray==0.13.0
 tables==3.5.1
-pyarrow==0.15.2
+https://files.pythonhosted.org/packages/cc/f5/f618f8423fe674a60461e58683edfeead93f4bbf95b9fca0e9699e765b35/arrow-0.15.2-py2.py3-none-any.whl
+
