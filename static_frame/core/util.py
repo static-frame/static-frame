@@ -488,10 +488,15 @@ def ufunc_axis_skipna(
 
 def ufunc_unique(
         array: np.ndarray,
-        axis: tp.Optional[int] = None
-        ) -> tp.Union[tp.FrozenSet[tp.Any], np.ndarray]:
+        *,
+        axis: tp.Optional[int] = None,
+        non_array_type: type = frozenset,
+        ) -> np.ndarray:
     '''
     Extended functionality of the np.unique ufunc, to handle cases of mixed typed objects, where NP will fail in finding unique values for a hetergenous object type.
+
+    Args:
+        non_array_type: for cases where unique will not work, determine type to return. This can be frozenset or a
     '''
     if array.dtype.kind == 'O':
         if axis is None or array.ndim < 2:
@@ -501,18 +506,23 @@ def ufunc_unique(
                 # np.unique will give TypeError: The axis argument to unique is not supported for dtype object
                 pass
             # this may or may not work, depending on contained types
-            if array.ndim > 1: # need to flatten
+            if array.ndim > 1: # axis is None, need to flatten
                 array_iter = array.flat
             else:
                 array_iter = array
-            return frozenset(array_iter)
-
-        # ndim == 2 and axis is not None
-        if axis == 0:
-            array_iter = array
         else:
-            array_iter = array.T
-        return frozenset(tuple(x) for x in array_iter)
+            # ndim == 2 and axis is not None
+            if axis == 0:
+                array_iter = array2d_to_tuples(array)
+            else:
+                array_iter = array2d_to_tuples(array.T)
+
+        # Use a dict to retain order; this will break for non hashables
+        store = dict.fromkeys(array_iter)
+        array = np.empty(len(store), dtype=object)
+        array[:] = tuple(store)
+        return array
+
     # all other types, use the main ufunc
     return np.unique(array, axis=axis)
 

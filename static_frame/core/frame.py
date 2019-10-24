@@ -3659,7 +3659,7 @@ class Frame(ContainerOperand):
                 self._blocks._extract_array(
                         column_key=self._columns.loc_to_iloc(index_loc)),
                 axis=0)
-        # import ipdb; ipdb.set_trace()
+
         if idx_start_columns == 1:
             index = Index(index_values, name=index_fields[0])
         else:
@@ -3669,10 +3669,9 @@ class Frame(ContainerOperand):
         columns_product = []
         for field in columns_fields:
             # Take one at a time
-            columns_product.append(ufunc_unique(
-                    self._blocks._extract_array(
-                            column_key=self._columns.loc_to_iloc(field))
-                    ))
+            columns_values = ufunc_unique(
+                    self._blocks._extract_array(column_key=self._columns.loc_to_iloc(field)))
+            columns_product.append(columns_values)
 
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
@@ -3853,8 +3852,7 @@ class Frame(ContainerOperand):
         else:
             index_name = index.names
             # index values are reduced to unique values for 2d presentation
-            # NOTE: might need ufunc_unique
-            coords = {index_name[d]: np.unique(index.values_at_depth(d))
+            coords = {index_name[d]: ufunc_unique(index.values_at_depth(d))
                     for d in range(index.depth)}
             # create dictionary version
             coords_index = {k: Index(v) for k, v in coords.items()}

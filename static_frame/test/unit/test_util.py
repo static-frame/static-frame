@@ -901,7 +901,8 @@ class TestUnit(TestCase):
 
         a3 = np.array([1, 'x', 1, None, 2], dtype=object)
         post = ufunc_unique(a3)
-        self.assertEqual(post, {None, 1, 2, 'x'})
+        # order is as used
+        self.assertEqual(post.tolist(), [1, 'x', None, 2])
 
 
     def test_ufunc_unique_b(self) -> None:
@@ -925,13 +926,13 @@ class TestUnit(TestCase):
         a1 = np.array([[1, 'x', 1], [1, None, 1], [1, 'x', 1]], dtype=object)
 
         post = ufunc_unique(a1)
-        self.assertEqual(post, {'x', 1, None})
+        self.assertEqual(post.tolist(), [1, 'x', None])
 
         post = ufunc_unique(a1, axis=0)
-        self.assertEqual(post, {(1, 'x', 1), (1, None, 1)})
+        self.assertEqual(post.tolist(), [(1, 'x', 1), (1, None, 1)])
 
         post = ufunc_unique(a1, axis=1)
-        self.assertEqual(post, {(1, 1, 1), ('x', None, 'x')})
+        self.assertEqual(post.tolist(), [(1, 1, 1), ('x', None, 'x')])
 
 
     def test_concat_resolved_a(self) -> None:
