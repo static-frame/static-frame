@@ -18,22 +18,28 @@ import typing as tp
 # submit PR to conda-forge/static-frame-feedstock from fork
 # merge into conda forge feedstock after all checks pass
 
-root_dir_fp = path.abspath(path.dirname(__file__))
+ROOT_DIR_FP = path.abspath(path.dirname(__file__))
 
 def get_long_description() -> str:
-#     with open(path.join(root_dir_fp, 'README.rst'), encoding='utf-8') as f:
-#         return f.read()
-    return '''The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame meets the need for an immutable Pandas DataFrame with a consistent, functional interface. While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and indices are always unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and flexible approaches to element, row, and column iteration and function application are provided in a uniform interface.
+    with open(path.join(ROOT_DIR_FP, 'README.rst'), encoding='utf-8') as f:
+        msg = []
+        collect = False
+        start = -1
+        for i, line in enumerate(f):
+            if line.startswith('static-frame'):
+                start = i + 2 # skip this line and the next
+            if i == start:
+                collect = True
+            if line.startswith('Installation'):
+                collect = False
+            if collect:
+                msg.append(line)
 
-Code: https://github.com/InvestmentSystems/static-frame
+    return ''.join(msg).strip()
 
-Docs: http://static-frame.readthedocs.io
-
-Packages: https://pypi.org/project/static-frame
-'''
 
 def get_version() -> str:
-    with open(path.join(root_dir_fp, 'static_frame', '__init__.py'),
+    with open(path.join(ROOT_DIR_FP, 'static_frame', '__init__.py'),
             encoding='utf-8') as f:
         for l in f:
             if l.startswith('__version__'):
@@ -44,15 +50,11 @@ def get_version() -> str:
 
 
 def _get_requirements(file_name: str) -> tp.Iterator[str]:
-    print('HERE', file_name, root_dir_fp)
-    import os
-    print(os.listdir(root_dir_fp))
-    with open(path.join(root_dir_fp, file_name)) as f:
+    with open(path.join(ROOT_DIR_FP, file_name)) as f:
         for line in f:
             line = line.strip()
             if line:
                 yield line
-
 
 def get_install_requires() -> tp.Iterator[str]:
     yield from _get_requirements('requirements.txt')
@@ -75,15 +77,18 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-            'Development Status :: 3 - Alpha',
+            'Development Status :: 5 - Production/Stable',
             'Intended Audience :: Developers',
             'Topic :: Software Development',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Information Analysis',
             'License :: OSI Approved :: MIT License',
             'Operating System :: MacOS :: MacOS X',
             'Operating System :: Microsoft :: Windows',
             'Operating System :: POSIX',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
             ],
 
     keywords='staticframe pandas numpy immutable array',

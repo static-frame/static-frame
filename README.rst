@@ -32,7 +32,11 @@
 static-frame
 =============
 
-The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame meets the need for an immutable Pandas DataFrame with a consistent, functional interface. While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and indices are always unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and flexible approaches to element, row, and column iteration and function application are provided in a uniform interface.
+The StaticFrame Python library defines the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame meets the need for an immutable, Pandas-like DataFrame with a consistent, functional interface. StaticFrame is suitable for production applications in data science, data engineering, finance, scientific computing, and other fields where stability and reducing opportunities for error is critical.
+
+While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and uniform, flexible approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy: Pandas is not a dependency.
+
+A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks.
 
 Code: https://github.com/InvestmentSystems/static-frame
 
@@ -56,7 +60,19 @@ Or, install StaticFrame via conda::
 Dependencies
 --------------
 
-StaticFrame requires Python 3.6+ and NumPy 1.14.1+.
+Core StaticFrame requires the following:
+
+- Python >= 3.6
+- NumPy >= 1.16.5
+
+For extended input and output, the following packages are required:
+
+- pandas >= 0.23.4
+- xlsxwriter >= 1.1.2
+- openpyxl >= 3.0.0
+- xarray >= 0.13.0
+- tables >= 3.5.1
+- pyarrow >= 0.15.0
 
 
 Quick-Start Guide
