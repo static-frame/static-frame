@@ -2,6 +2,7 @@
 import typing as tp
 import unittest
 import operator
+import os
 
 import numpy as np  # type: ignore
 
@@ -17,7 +18,7 @@ from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.property import strategies as sfst
-# from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import temp_file
 
 from static_frame.test.test_case import TestCase
 
@@ -218,15 +219,19 @@ class TestUnit(TestCase):
             self.assertTrue((post.values == f1.values).all())
 
 
-    # @given(sfst.get_frame_or_frame_go(
-    #         dtype_group=sfst.DTGroup.BASIC,
-    #         index_dtype_group=sfst.DTGroup.BASIC,
-    #         ))  # type: ignore
-    # def test_frame_to_parquet(self, f1: Frame) -> None:
-
-    #     with temp_file('.parquet') as fp:
-    #         f1.to_parquet(fp)
-
+    @given(sfst.get_frame_or_frame_go(
+            dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC,
+            ))  # type: ignore
+    def test_frame_to_parquet(self, f1: Frame) -> None:
+        import pyarrow
+        with temp_file('.parquet') as fp:
+            try:
+                f1.to_parquet(fp)
+                self.assertTrue(os.stat(fp).st_size > 0)
+            except pyarrow.lib.ArrowNotImplementedError:
+                # could be Byte-swapped arrays not supported
+                pass
 
 
 

@@ -47,7 +47,8 @@ def temp_file(suffix: tp.Optional[str] = None,
         else:
             yield tmp_name
     finally:
-        os.unlink(tmp_name)
+        if os.path.exists(tmp_name):
+            os.unlink(tmp_name)
 
 
 class TestCase(unittest.TestCase):

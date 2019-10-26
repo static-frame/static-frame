@@ -245,7 +245,6 @@ class Frame(ContainerOperand):
                         union=union,
                         assume_unique=True
                         )
-                # import ipdb; ipdb.set_trace()
                 columns.flags.writeable = False
                 from_array_columns = True
 
@@ -1356,7 +1355,6 @@ class Frame(ContainerOperand):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks():
-            #import ipdb; ipdb.set_trace()
             pairs = value.dtypes.items()
             column_start, dtype_current = next(pairs)
 
@@ -3818,7 +3816,10 @@ class Frame(ContainerOperand):
                 frame=self,
                 include_index=include_index)
                 )
+        # field_names have to be strings
+        field_names = [str(x) for x in field_names]
         return pyarrow.Table.from_arrays(arrays, names=field_names)
+
 
     def to_parquet(self,
             fp: PathSpecifier,

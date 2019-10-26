@@ -733,6 +733,7 @@ class FrameFloat_sum_skipna_axis1(PerfTest):
 
 
 class FrameFloat_dropna_any_axis0(PerfTest):
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -746,6 +747,7 @@ class FrameFloat_dropna_any_axis0(PerfTest):
 
 
 class FrameFloat_dropna_any_axis1(PerfTest):
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -952,7 +954,7 @@ class FrameFloat_H1D_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
 
-    NUMBER = 50
+    NUMBER = 30
 
     # 325 two character strings
     _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
@@ -977,7 +979,7 @@ class FrameFloat_H1D_add_series_partial(PerfTest):
 class FrameFloat_H2D_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
-    NUMBER = 50
+    NUMBER = 30
     _index_leaves = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
 
     @classmethod

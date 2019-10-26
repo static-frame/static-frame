@@ -3,13 +3,11 @@
 About StaticFrame
 *******************
 
-The StaticFrame library consists of the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame offers an alternative to Pandas. While many interfaces for data extraction and manipulation are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices must be unique; all vector processing uses NumPy, and the full range of NumPy data types is preserved; the implementation is concise and lightweight; consistent naming and interfaces are used throughout; and flexible approaches to iteration and function application, with built-in options for parallelization, are provided.
-
 
 .. admonition:: Alpha Release
     :class: Warning
 
-    The current release of StaticFrame is an alpha release, meaning that interfaces may change, functionality may be incomplete, and there may be significant flaws. Please assist in development by reporting any bugs or request any missing features.
+    Prior to the 1.0 release, interfaces may change. Please assist in development by reporting any bugs or request any missing features.
 
     https://github.com/InvestmentSystems/static-frame/issues
 
@@ -22,7 +20,7 @@ StaticFrame does not aspire to be an all-in-one framework for all aspects of dat
 
 StaticFrame aspires to have comparable or better performance than Pandas. While this is already the case for some core operations (See :ref:`performance`), some important functions are far more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
 
-StaticFrame does not implement its own types or numeric computation routines, relying entirely on NumPy. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays.
+StaticFrame relyies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
 
 
 

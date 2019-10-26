@@ -154,6 +154,7 @@ def main() -> None:
                     return ''
                 return str(round(v, 4))
             return str(v)
+
         present = frame.iter_element().apply(format)
         present = present[[c for c in present.columns if '/' not in c]]
         print(present.display(config))

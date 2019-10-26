@@ -32,11 +32,11 @@
 static-frame
 =============
 
-The StaticFrame Python library defines the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame meets the need for an immutable, Pandas-like DataFrame with a consistent, functional interface. StaticFrame is suitable for production applications in data science, data engineering, finance, scientific computing, and other fields where stability and reducing opportunities for error is critical.
+The StaticFrame library defines the Series and Frame, immutable data structures for one- and two-dimensional calculations with self-aligning, labelled axes. StaticFrame meets the need for an immutable, Pandas-like DataFrame with a consistent, functional interface. StaticFrame is suitable for production applications in data science, data engineering, finance, scientific computing, and other fields where stability and reducing opportunities for error is critical.
 
 While many interfaces are similar to Pandas, StaticFrame deviates from Pandas in many ways: all data is immutable, and all indices are unique; the full range of NumPy data types is preserved, and date-time indices use discrete NumPy types; hierarchical indices are seamlessly integrated; and uniform, flexible approaches to element, row, and column iteration and function application are provided. Core StaticFrame depends only on NumPy: Pandas is not a dependency.
 
-A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks.
+A wide variety of table storage and representation formats are supported, including input from and output to CSV, TSV, JSON, Excel XLSX, SQLite, HDF5, NumPy, Pandas, Arrow, and Parquet; additionally, output to xarray, HTML, RST, Markdown, and LaTeX is supported, as well as HTML representations in Jupyter notebooks. The Bus, a container of heterogenous Frames, permits writing to and lazily reading from multi table storage formats, including zipped pickles, XLSX workbooks, SQLite, and HDF5.
 
 Code: https://github.com/InvestmentSystems/static-frame
 
@@ -46,7 +46,7 @@ Packages: https://pypi.org/project/static-frame
 
 
 Installation
--------------
+-------------------------------
 
 Install StaticFrame via PIP::
 
@@ -55,6 +55,11 @@ Install StaticFrame via PIP::
 Or, install StaticFrame via conda::
 
     conda install -c conda-forge static-frame
+
+To install full support of input and output routines via PIP::
+
+    pip install static-frame [extras]
+
 
 
 Dependencies
