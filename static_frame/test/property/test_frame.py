@@ -21,6 +21,7 @@ from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import temp_file
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 from static_frame import Frame
 
@@ -251,7 +252,7 @@ class TestUnit(TestCase):
         f2['__new__'] = 10
         self.assertTrue(len(f2.columns) == len(f1.columns) + 1)
 
-
+    @skip_win  # type: ignore # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
     @given(sfst.get_frame_or_frame_go( # type: ignore
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -266,6 +267,7 @@ class TestUnit(TestCase):
             #         columns_depth=f1.columns.depth)
 
 
+    @skip_win  # type: ignore # UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
     @given(sfst.get_frame_or_frame_go( # type: ignore
             dtype_group=sfst.DTGroup.BASIC,
             ))
