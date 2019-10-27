@@ -6,10 +6,10 @@ matrix:
 
   include:
 
-    - name: CPython 3.8.0 on Ubuntu 18.04
+    - name: CPython 3.8.0 on Ubuntu 16.04
       language: python
       os: linux
-      dist: bionic
+      dist: xenial
       python: 3.8.0
       before_install:
         - pip install --upgrade pip
