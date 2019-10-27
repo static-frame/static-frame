@@ -254,7 +254,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             apply_constructor = Series.from_items
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
-            # import ipdb; ipdb.set_trace()
+            assert isinstance(self._container, Frame) # for typing
             apply_constructor = partial(
                     self._container.__class__.from_element_loc_items,
                     index=self._container._index,
