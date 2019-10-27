@@ -6,77 +6,77 @@ matrix:
 
   include:
 
-    # - name: CPython 3.8.0 on Ubuntu 16.04
+    - name: CPython 3.8.0 on Ubuntu 16.04
+      language: python
+      os: linux
+      dist: xenial
+      python: 3.8.0
+      before_install:
+        - sudo apt-get install -y libhdf5-dev
+
+    # - name: CPython 3.7.4 on Ubuntu 16.04
     #   language: python
     #   os: linux
     #   dist: xenial
-    #   python: 3.8.0
+    #   python: 3.7.4
+
+    # - name: CPython 3.6.8 on Ubuntu 16.04
+    #   language: python
+    #   os: linux
+    #   dist: xenial
+    #   python: 3.6.8
+
+
+    # - name: CPython 3.7.4 on Windows 10 (64-bit)
+    #   language: shell
+    #   os: windows
     #   before_install:
-    #     - sudo apt-get install -y libhdf5-dev
+    #     - export PATH=/c/Python37:/c/Python37/Scripts:$PATH
+    #     - choco install python --version 3.7.4
 
-    - name: CPython 3.7.4 on Ubuntu 16.04
-      language: python
-      os: linux
-      dist: xenial
-      python: 3.7.4
-
-    - name: CPython 3.6.8 on Ubuntu 16.04
-      language: python
-      os: linux
-      dist: xenial
-      python: 3.6.8
+    # - name: CPython 3.6.8 on Windows 10 (64-bit)
+    #   language: shell
+    #   os: windows
+    #   before_install:
+    #     - export PATH=/c/Python36:/c/Python36/Scripts:$PATH
+    #     - choco install python --version 3.6.8
 
 
-    - name: CPython 3.7.4 on Windows 10 (64-bit)
-      language: shell
-      os: windows
-      before_install:
-        - export PATH=/c/Python37:/c/Python37/Scripts:$PATH
-        - choco install python --version 3.7.4
+    # - name: CPython 3.7.4 on macOS 10.14
+    #   language: shell
+    #   os: osx
+    #   osx_image: xcode10.2
+    #   before_install:
+    #     - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.4
+    #     - travis_wait brew upgrade pyenv && pyenv install $PYENV_VERSION
 
-    - name: CPython 3.6.8 on Windows 10 (64-bit)
-      language: shell
-      os: windows
-      before_install:
-        - export PATH=/c/Python36:/c/Python36/Scripts:$PATH
-        - choco install python --version 3.6.8
-
-
-    - name: CPython 3.7.4 on macOS 10.14
-      language: shell
-      os: osx
-      osx_image: xcode10.2
-      before_install:
-        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.4
-        - travis_wait brew upgrade pyenv && pyenv install $PYENV_VERSION
-
-    - name: CPython 3.6.8 on macOS 10.14
-      language: shell
-      os: osx
-      osx_image: xcode10.2
-      before_install:
-        - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
-        - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
-        - pyenv install $PYENV_VERSION
+    # - name: CPython 3.6.8 on macOS 10.14
+    #   language: shell
+    #   os: osx
+    #   osx_image: xcode10.2
+    #   before_install:
+    #     - export CFLAGS="-I$(xcrun --show-sdk-path)/usr/include"
+    #     - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.6.8
+    #     - pyenv install $PYENV_VERSION
 
 
-    - name: mypy
-      python: 3.7
-      dist: xenial
-      language: python
-      script: mypy --strict
+    # - name: mypy
+    #   python: 3.7
+    #   dist: xenial
+    #   language: python
+    #   script: mypy --strict
 
-    - name: pylint
-      python: 3.7
-      dist: xenial
-      language: python
-      script: pylint static_frame
+    # - name: pylint
+    #   python: 3.7
+    #   dist: xenial
+    #   language: python
+    #   script: pylint static_frame
 
-    - name: tox
-      python: 3.7
-      dist: xenial
-      language: python
-      script: tox
+    # - name: tox
+    #   python: 3.7
+    #   dist: xenial
+    #   language: python
+    #   script: tox
 
 # Change anything below to suit your CI needs.
 # Python and pip exectuables are just named "python" and "pip" on all platforms!
