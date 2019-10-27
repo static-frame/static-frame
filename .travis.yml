@@ -6,21 +6,22 @@ matrix:
 
   include:
 
-    - name: CPython 3.8.0 on Ubuntu 16.04 (Xenial Xerus)
+    - name: CPython 3.8.0 on Ubuntu 18.04
       language: python
       os: linux
       dist: bionic
       python: 3.8.0
       before_install:
+        - pip install --upgrade pip
         - sudo apt-get install -y libhdf5-dev
 
-    # - name: CPython 3.7.4 on Ubuntu 16.04 (Xenial Xerus)
+    # - name: CPython 3.7.4 on Ubuntu 16.04
     #   language: python
     #   os: linux
     #   dist: xenial
     #   python: 3.7.4
 
-    # - name: CPython 3.6.8 on Ubuntu 16.04 (Xenial Xerus)
+    # - name: CPython 3.6.8 on Ubuntu 16.04
     #   language: python
     #   os: linux
     #   dist: xenial
