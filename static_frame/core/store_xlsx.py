@@ -10,6 +10,7 @@ from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import COMPLEX_TYPES
 
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import NUMERIC_TYPES
@@ -97,6 +98,10 @@ class StoreXLSX(Store):
                 value: tp.Any,
                 cell_format: tp.Optional[xlsxwriter.format.Format] = None
                 ) -> tp.Any:
+
+            # cannot yet write complex types directly, so covert to string
+            if isinstance(value, COMPLEX_TYPES):
+                return ws.write_string(row, col, str(value), cell_format)
 
             if writer_attr == 'write':
                 # determine type for aach value

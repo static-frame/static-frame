@@ -281,14 +281,14 @@ def get_array_from_dtype_group(
 
     # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
 
-    def fill_na(array: np.ndarray) -> np.ndarray:
-        if array.dtype.kind in DTYPE_NAN_KIND:
-            is_nan = np.isnan(array)
-            if is_nan.any():
-                fill = np.empty(array.shape, dtype=array.dtype)
-                array[is_nan] = fill[is_nan]
-                return array
-        return array
+    # def fill_na(array: np.ndarray) -> np.ndarray:
+    #     if array.dtype.kind in DTYPE_NAN_KIND:
+    #         is_nan = np.isnan(array)
+    #         if is_nan.any():
+    #             fill = np.empty(array.shape, dtype=array.dtype)
+    #             array[is_nan] = fill[is_nan]
+    #             return array
+    #     return array
 
     array_object = get_array_object(
             shape=shape,
@@ -557,6 +557,7 @@ def get_index(
         dtype_group: tp.Optional[DTGroup] = None,
         cls: tp.Type[Index] = Index
         ) -> st.SearchStrategy:
+    # NOTE: have observed cases where a non-unqiue index is returned: with float/int 0, or two NaNs. Need to filter
     # using get_labels here forces Index construction from lists, rather than from arrays
     if dtype_group is not None:
         return st.builds(cls, get_array_1d(

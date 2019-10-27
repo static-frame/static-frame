@@ -847,7 +847,10 @@ class Frame(ContainerOperand):
 
                 # this is not expected to make a copy
                 array_final = array[name]
-                # do StoreFilter conversions before dtyp
+                # do StoreFilter conversions before dtype
+                if array_final.ndim == 0:
+                    # some structured arrays give 0 ndim arrays by name
+                    array_final = np.reshape(array_final, (1,))
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
                 if dtypes:

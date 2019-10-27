@@ -219,12 +219,12 @@ class TestUnit(TestCase):
             self.assertTrue((post.values == f1.values).all())
 
 
-    @given(sfst.get_frame_or_frame_go(
+    @given(sfst.get_frame_or_frame_go( # type: ignore
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
-            ))  # type: ignore
+            ))
     def test_frame_to_parquet(self, f1: Frame) -> None:
-        import pyarrow
+        import pyarrow # type: ignore
         with temp_file('.parquet') as fp:
             try:
                 f1.to_parquet(fp)
@@ -233,11 +233,59 @@ class TestUnit(TestCase):
                 # could be Byte-swapped arrays not supported
                 pass
 
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_xarray(self, f1: Frame) -> None:
+        xa = f1.to_xarray()
+        self.assertTrue(tuple(xa.keys()) == tuple(f1.columns))
 
 
+    @given(sfst.get_frame( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_frame_go(self, f1: Frame) -> None:
+        f2 = f1.to_frame_go()
+        f2['__new__'] = 10
+        self.assertTrue(len(f2.columns) == len(f1.columns) + 1)
 
 
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_csv(self, f1: Frame) -> None:
+        with temp_file('.csv') as fp:
+            f1.to_csv(fp)
+            self.assertTrue(os.stat(fp).st_size > 0)
 
+            # not yet validating result, as edge cases with unusual unicode and non-unique indices are a problem
+            # f2 = Frame.from_csv(fp,
+            #         index_depth=f1.index.depth,
+            #         columns_depth=f1.columns.depth)
+
+
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_tsv(self, f1: Frame) -> None:
+        with temp_file('.txt') as fp:
+            f1.to_tsv(fp)
+            self.assertTrue(os.stat(fp).st_size > 0)
+
+            # f2 = Frame.from_tsv(fp,
+            #         index_depth=f1.index.depth,
+            #         columns_depth=f1.columns.depth)
+
+
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_xlsx(self, f1: Frame) -> None:
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            self.assertTrue(os.stat(fp).st_size > 0)
 
 if __name__ == '__main__':
     unittest.main()

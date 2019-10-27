@@ -7,6 +7,7 @@ from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.core.util import DTYPE_NAT_KIND
+from static_frame.core.util import DTYPE_COMPLEX_KIND
 
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_BOOL
@@ -131,7 +132,12 @@ class StoreFilter:
             post = None # defer creating until we have a match
             for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None:
+                    # cannot use these ufuncs on complex array
+                    if (array.dtype.kind == DTYPE_COMPLEX_KIND
+                            and (func == np.isposinf or func == np.isneginf)):
+                        continue
                     found = func(array)
+
                     if found.any():
                         if post is None:
                             # need to store string replacements in object type

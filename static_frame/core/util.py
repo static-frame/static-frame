@@ -55,6 +55,7 @@ DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
 DTYPE_NAN_KIND = ('f', 'c') # kinds that support NaN values
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
+DTYPE_COMPLEX_KIND = 'c'
 DTYPE_NAT_KIND = ('M', 'm')
 # DTYPE_BOOL_KIND = ('b',)
 
