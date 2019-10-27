@@ -16,7 +16,7 @@ import numpy as np  # type: ignore
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_NAN_KIND
+# from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame import TypeBlocks
 from static_frame import Index
