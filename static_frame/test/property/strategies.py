@@ -41,7 +41,9 @@ MAX_COLUMNS = 10
 
 
 hypo_settings.register_profile("sf",
-        suppress_health_check=[HealthCheck.too_slow])
+        suppress_health_check=[HealthCheck.too_slow],
+        deadline=None,
+        )
 hypo_settings.load_profile("sf")
 
 #-------------------------------------------------------------------------------
