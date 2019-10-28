@@ -3227,7 +3227,71 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('count', (('red', 1), ('green', 3), ('blue', 100), ('black', 4))), ('score', (('red', 1.3), ('green', 5.2), ('blue', 3.4), ('black', 9.0)))))
 
-    def test_frame_from_csv_d(self) -> None:
+
+    def test_frame_from_csv_e(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=2,
+                columns_depth=1)
+        self.assertEqual(f1.index.__class__, IndexHierarchy)
+        self.assertEqual(f1.to_pairs(0),
+                (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
+
+
+    def test_frame_from_csv_f(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1)
+
+        self.assertAlmostEqualFramePairs(f1.to_pairs(0),
+                (('count', (('A', np.nan), ('B', np.nan), ('C', np.nan), ('D', np.nan))), ('score', (('A', 1.3), ('B', 5.2), ('C', 3.4), ('D', 9.0))), ('color', (('A', 'red'), ('B', 'green'), ('C', 'blue'), ('D', 'black'))))
+                )
+
+
+    def test_frame_from_csv_g(self) -> None:
+        filelike = StringIO('''0,4,234.5,5.3,'red',False
+30,50,9.234,5.434,'blue',True''')
+        f1 = Frame.from_csv(filelike, columns_depth=0)
+        self.assertEqual(f1.to_pairs(0),
+            ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
+            )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_tsv_a(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
+                file.close()
+
+            f = Frame.from_tsv(fp, index_depth=1, dtypes={'a': bool})
+            self.assertEqual(
+                    f.to_pairs(0),
+                    (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3))))
+                    )
+
+
+    def test_frame_from_tsv_b(self) -> None:
+        # a generator of delimited strings also works
+
+        def lines() -> tp.Iterator[str]:
+            yield 'a\tb\tc\td'
+            for i in range(4):
+                yield f'{i}\t{i + 1}\t{i + 2}\t{i + 3}'
+
+        f = Frame.from_tsv(lines())
+        self.assertEqual(f.to_pairs(0),
+                (('a', ((0, 0), (1, 1), (2, 2), (3, 3))), ('b', ((0, 1), (1, 2), (2, 3), (3, 4))), ('c', ((0, 2), (1, 3), (2, 4), (3, 5))), ('d', ((0, 3), (1, 4), (2, 5), (3, 6))))
+                )
+
+    def test_frame_from_tsv_c(self) -> None:
         input_stream = StringIO('''
         196412	0.0
         196501	0.0
@@ -3264,67 +3328,17 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((196412, 0.0), (196501, 0.0), (196502, 0.0), (196503, 0.0), (196504, 0.0), (196505, 0.0))), (1, ((196412, 0.1), (196501, 0.1), (196502, 0.1), (196503, 0.1), (196504, 0.1), (196505, 0.1)))))
 
-    def test_frame_from_csv_e(self) -> None:
-        s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
-
-        f1 = sf.Frame.from_csv(
-                s1,
-                index_depth=2,
-                columns_depth=1)
-        self.assertEqual(f1.index.__class__, IndexHierarchy)
-        self.assertEqual(f1.to_pairs(0),
-                (('score', ((('A', 1), 1.3), (('A', 3), 5.2), (('B', 100), 3.4), (('B', 4), 9.0))), ('color', ((('A', 1), 'red'), (('A', 3), 'green'), (('B', 100), 'blue'), (('B', 4), 'black')))))
 
 
-    def test_frame_from_csv_f(self) -> None:
-        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+    def test_frame_from_tsv_d(self) -> None:
 
-        f1 = sf.Frame.from_csv(
-                s1,
-                index_depth=1,
-                columns_depth=1)
-
-        self.assertAlmostEqualFramePairs(f1.to_pairs(0),
-                (('count', (('A', np.nan), ('B', np.nan), ('C', np.nan), ('D', np.nan))), ('score', (('A', 1.3), ('B', 5.2), ('C', 3.4), ('D', 9.0))), ('color', (('A', 'red'), ('B', 'green'), ('C', 'blue'), ('D', 'black'))))
-                )
-
-
-    def test_frame_from_csv_g(self) -> None:
-        filelike = StringIO('''0,4,234.5,5.3,'red',False
-30,50,9.234,5.434,'blue',True''')
-        f1 = Frame.from_csv(filelike, columns_depth=0)
-        self.assertEqual(f1.to_pairs(0),
-            ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
-            )
-
-
-    def test_frame_from_tsv_a(self) -> None:
+        f1 = sf.Frame([1], columns=['a'])
 
         with temp_file('.txt', path=True) as fp:
-
-            with open(fp, 'w') as file:
-                file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
-                file.close()
-
-            f = Frame.from_tsv(fp, index_depth=1, dtypes={'a': bool})
-            self.assertEqual(
-                    f.to_pairs(0),
-                    (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3))))
-                    )
-
-
-    def test_frame_from_tsv_b(self) -> None:
-        # a generator of delimited strings also works
-
-        def lines() -> tp.Iterator[str]:
-            yield 'a\tb\tc\td'
-            for i in range(4):
-                yield f'{i}\t{i + 1}\t{i + 2}\t{i + 3}'
-
-        f = Frame.from_tsv(lines())
-        self.assertEqual(f.to_pairs(0),
-                (('a', ((0, 0), (1, 1), (2, 2), (3, 3))), ('b', ((0, 1), (1, 2), (2, 3), (3, 4))), ('c', ((0, 2), (1, 3), (2, 4), (3, 5))), ('d', ((0, 3), (1, 4), (2, 5), (3, 6))))
-                )
+            f1.to_tsv(fp)
+            f2 = sf.Frame.from_tsv(fp, index_depth=1)
+            self.assertEqual(f2.to_pairs(0),
+                    (('a', ((0, 1),)),))
 
 
 
