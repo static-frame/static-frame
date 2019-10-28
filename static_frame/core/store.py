@@ -55,6 +55,8 @@ class Store:
             frame: Frame,
             include_index: bool,
             include_columns: bool,
+            force_str_names: bool = False,
+            force_brackets: bool = False
             ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[np.dtype]]:
 
         index = frame.index
@@ -89,6 +91,18 @@ class Store:
             else: # name fields with integers?
                 field_names.extend(range(frame._blocks.shape[1]))
 
+        if force_str_names:
+            field_names = [str(n) for n in field_names]
+        if force_brackets:
+            def gen():
+                for name in field_names:
+                    name = str(name)
+                    if name.startswith('[') and name.endswith(']'):
+                        yield name
+                    else:
+                        yield f'[{name}]'
+            field_names = tuple(gen())
+
         return field_names, dtypes
 
     @staticmethod
@@ -106,7 +120,7 @@ class Store:
                     if index.depth > 1:
                         index_row = index_values[idx] # this is an array
                     else:
-                        index_row = tuple(index_values[idx],)
+                        index_row = (index_values[idx],)
                     yield tuple(chain(index_row, row))
             return values
 

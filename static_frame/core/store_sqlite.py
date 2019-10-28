@@ -1,6 +1,7 @@
 
 import sqlite3
 import typing as tp
+from fractions import Fraction
 
 import numpy as np # type: ignore
 
@@ -74,7 +75,8 @@ class StoreSQLite(Store):
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
-                include_columns=include_columns
+                include_columns=include_columns,
+                force_brackets=True # needed for having nu7mbers as field names
                 )
 
         index = frame._index
@@ -101,7 +103,6 @@ class StoreSQLite(Store):
         insert_template = ', '.join('?' for _ in field_names)
         insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
 
-
         values = cls._get_row_iterator(frame=frame, include_index=include_index)
         cursor.executemany(insert, values())
 
@@ -118,14 +119,14 @@ class StoreSQLite(Store):
         # numpy types go in as blobs if they are not individualy converted tp python types
         sqlite3.register_adapter(np.int64, int)
         sqlite3.register_adapter(np.int32, int)
+        sqlite3.register_adapter(np.int16, int)
+        # common python types
+        sqlite3.register_adapter(Fraction, lambda x: str(x))
+        sqlite3.register_adapter(complex, lambda x: f'{x.real}:{x.imag}')
 
-        # sqlite3.register_adapter(type(None), lambda x: 'None')
-        # bool conversion not useful when we register converter
-        # sqlite3.register_adapter(np.bool_, int)
-        # sqlite3.register_adapter(bool, int)
 
         # hierarchical columns might be stored as tuples
-        with sqlite3.connect(self._fp) as conn:
+        with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
                 self._frame_to_table(frame=frame,

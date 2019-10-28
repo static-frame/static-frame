@@ -3,6 +3,7 @@ import typing as tp
 import unittest
 import operator
 import os
+import sqlite3
 
 import numpy as np  # type: ignore
 
@@ -288,6 +289,24 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
             self.assertTrue(os.stat(fp).st_size > 0)
+
+
+
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            ))
+    def test_frame_to_sqlite(self, f1: Frame) -> None:
+        with temp_file('.sqlite') as fp:
+
+            try:
+                f1.to_sqlite(fp)
+                self.assertTrue(os.stat(fp).st_size > 0)
+            except (sqlite3.IntegrityError, OverflowError):
+                # some indices, after translation, are not unique
+                # OverflowError: Python int too large to convert to SQLite INTEGER
+                pass
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,6 +5,7 @@
 
 
 import unittest
+from fractions import Fraction
 
 import numpy as np  # type: ignore
 
@@ -63,15 +64,67 @@ class TestUnit(TestCase):
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
             for i, name in enumerate(sheet_names):
-                f_src = frames[i]
+                f1 = frames[i]
                 f_loaded = st1.read(name,
-                        index_depth=f_src.index.depth,
-                        columns_depth=f_src.columns.depth
+                        index_depth=f1.index.depth,
+                        columns_depth=f1.columns.depth
                         )
-                self.assertEqualFrames(f_src, f_loaded)
+                self.assertEqualFrames(f1, f_loaded)
 
 
 
+    def test_store_sqlite_write_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(
+                        x=(Fraction(3,2), Fraction(1,2), Fraction(2,3), Fraction(3,7)),
+                        y=(3,4,-5,-3000)),
+                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+
+        frames = (f1,)
+
+        with temp_file('.sqlite') as fp:
+
+            st1 = StoreSQLite(fp)
+            st1.write((f.name, f) for f in frames)
+
+            f_loaded = st1.read(f1.name,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth
+                    )
+
+            # for now, Fractions come back as strings
+            self.assertEqual(
+                    f_loaded['x'].to_pairs(),
+                    ((('I', 'a'), '3/2'), (('I', 'b'), '1/2'), (('II', 'a'), '2/3'), (('II', 'b'), '3/7'))
+            )
+
+
+
+    def test_store_sqlite_write_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(
+                        x=np.array([1.2, 4.5, 3.2, 6.5], dtype=np.float16),
+                        y=(3,4,-5,-3000)),
+                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+
+        frames = (f1,)
+
+        with temp_file('.sqlite') as fp:
+            st1 = StoreSQLite(fp)
+            st1.write((f.name, f) for f in frames)
+
+            f_loaded = st1.read(f1.name,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth
+                    )
+
+            self.assertAlmostEqualItems(f_loaded['x'].to_pairs(),
+                    ((('I', 'a'), 1.2001953125), (('I', 'b'), 4.5), (('II', 'a'), 3.19921875), (('II', 'b'), 6.5))
+                    )
 
 if __name__ == '__main__':
     unittest.main()

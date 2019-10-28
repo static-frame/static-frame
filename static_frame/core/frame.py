@@ -3813,14 +3813,14 @@ class Frame(ContainerOperand):
         field_names, _ = Store.get_field_names_and_dtypes(
                 frame=self,
                 include_index=include_index,
-                include_columns=include_columns
+                include_columns=include_columns,
+                force_str_names=True
                 )
         arrays = tuple(Store.get_column_iterator(
                 frame=self,
                 include_index=include_index)
                 )
         # field_names have to be strings
-        field_names = [str(x) for x in field_names]
         return pyarrow.Table.from_arrays(arrays, names=field_names)
 
 
