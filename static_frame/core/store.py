@@ -94,7 +94,7 @@ class Store:
         if force_str_names:
             field_names = [str(n) for n in field_names]
         if force_brackets:
-            def gen():
+            def gen() -> tp.Iterator[str]:
                 for name in field_names:
                     name = str(name)
                     if name.startswith('[') and name.endswith(']'):
