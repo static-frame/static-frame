@@ -807,6 +807,9 @@ class Frame(ContainerOperand):
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
         Utility function for creating TypeBlocks from structure array while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
+
+        Args:
+            index_column: optionally name the column that will start the block of index columns.
         '''
         names = array.dtype.names
         if names is None:
@@ -1078,8 +1081,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
-        # if columns_depth > 1:
-        #     raise NotImplementedError('reading hierarchical columns from a delimited file is not yet sypported')
+
         if skip_header < 0:
             raise RuntimeError('skip_header must be greater than or equal to 0')
 
@@ -1106,12 +1108,12 @@ class Frame(ContainerOperand):
                     for row in fp:
                         yield row
 
-        if columns_depth > 1:
-            columns_rows = []
+        # always accumulate columns rows, as np.genfromtxt will mutate the headers: adding enderscore, removing invalid characters, etc.
+        columns_rows = []
 
         def row_source() -> tp.Iterator[str]:
             # set equal to skip header unless column depth is > 1
-            column_max = skip_header + (columns_depth if columns_depth > 1 else 0)
+            column_max = skip_header + columns_depth
             for i, row in enumerate(file_like()):
                 if i < skip_header:
                     continue
@@ -1127,34 +1129,45 @@ class Frame(ContainerOperand):
                 delimiter=delimiter_native,
                 skip_header=0, # done in row_source
                 skip_footer=skip_footer,
-                # strange NP convention for this parameter: False is not supported, must convert to None
-                names=True if columns_depth == 1 else None,
+                # strange NP convention for this parameter: False is not supported, must use None to not parase headers
+                names= None,
                 dtype=None,
                 encoding=encoding,
                 invalid_raise=False,
                 )
-
-        if array.ndim > 1:
-            # genfromtxt may, in some situations, not return a structured array
-            raise NotImplementedError('no handling for 2D array from genfromtxt')
-
         array.flags.writeable = False
 
-        data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
-                array=array,
-                index_depth=index_depth,
-                index_column=index_column,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks,
-                store_filter=store_filter,
-                )
+        if array.dtype.names is None: # not a structured array
+            if array.ndim == 1:
+                # got a single row
+                array = array.reshape((1, len(array)))
+            # genfromtxt may, in some situations, not return a structured array
+            # if a 2D array, assume that we can use it after pulling off the index
+            index_arrays = []
+            if index_depth > 0:
+                for i in range(index_depth):
+                    index_arrays.append(array[:, i])
+                data = array[:, index_depth:]
+                data.flags.writeable = False
+            else:
+                data = array
+        else:
+            # never used the returned columns_labels, as they will be mutated in undesirable ways
+            data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
+                    array=array,
+                    index_depth=index_depth,
+                    index_column=index_column,
+                    dtypes=dtypes,
+                    consolidate_blocks=consolidate_blocks,
+                    store_filter=store_filter,
+                    )
 
         # Structure array either has the appropriate depth 1 row as as column, or an automatically generated label.
         columns_constructor = None
         if columns_depth == 0:
             columns = None
-        elif columns_depth == 1:
-            columns = columns_labels
+        # elif columns_depth == 1:
+        #     columns = columns_labels
         else:
             # Process each row one at a time, as types align by row.
             columns_arrays = []
@@ -1170,12 +1183,15 @@ class Frame(ContainerOperand):
                 # the array might be ndim=1, or ndim=0; must get a list before slicing
                 columns_arrays.append(columns_array.tolist()[index_depth:])
 
-            columns_constructor = (IndexHierarchy.from_labels
-                    if cls._COLUMNS_CONSTRUCTOR.STATIC
-                    else IndexHierarchyGO.from_labels)
-            columns = columns_constructor(
-                    zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
-                    )
+            if columns_depth == 1:
+                columns = columns_arrays[0]
+            else:
+                columns_constructor = (IndexHierarchy.from_labels
+                        if cls._COLUMNS_CONSTRUCTOR.STATIC
+                        else IndexHierarchyGO.from_labels)
+                columns = columns_constructor(
+                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
+                        )
 
         kwargs = dict(
                 data=data,

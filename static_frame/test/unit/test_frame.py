@@ -3182,6 +3182,7 @@ class TestUnit(TestCase):
         s1 = StringIO('count,score,color\n1,1.3,red\n3,5.2,green\n100,3.4,blue\n4,9.0,black')
 
         f1 = Frame.from_csv(s1)
+
         post = f1.iloc[:, :2].sum(axis=0)
         self.assertEqual(post.to_pairs(),
                 (('count', 108.0), ('score', 18.9)))
@@ -3341,6 +3342,28 @@ class TestUnit(TestCase):
                     (('a', ((0, 1),)),))
 
 
+    def test_frame_from_tsv_e(self) -> None:
+
+        f1 = sf.Frame([1], columns=['with space'])
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp)
+            f2 = sf.Frame.from_tsv(fp, index_depth=1)
+            self.assertEqual(
+                    f2.columns.values.tolist(),
+                    ['with space']
+                    )
+
+    def test_frame_from_tsv_f(self) -> None:
+
+        f1 = sf.Frame([1], columns=[':with:colon:'])
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp)
+            f2 = sf.Frame.from_tsv(fp, index_depth=1)
+            self.assertEqual(f2.to_pairs(0),
+                    ((':with:colon:', ((0, 1),)),)
+                    )
 
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
