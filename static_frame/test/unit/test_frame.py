@@ -3262,6 +3262,20 @@ class TestUnit(TestCase):
             ((0, ((0, 0), (1, 30))), (1, ((0, 4), (1, 50))), (2, ((0, 234.5), (1, 9.234))), (3, ((0, 5.3), (1, 5.434))), (4, ((0, "'red'"), (1, "'blue'"))), (5, ((0, False), (1, True))))
             )
 
+    def test_frame_from_csv_h(self) -> None:
+        s1 = StringIO('group,count,score,color\nA,nan,1.3,red\nB,NaN,5.2,green\nC,NULL,3.4,blue\nD,,9.0,black')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=1,
+                columns_depth=1,
+                dtypes=dict(score=np.float16))
+
+        self.assertEqual(f1.dtypes.to_pairs(),
+                (('count', np.dtype('O')),
+                ('score', np.dtype('float16')),
+                ('color', np.dtype('<U5'))))
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:

@@ -803,13 +803,15 @@ class Frame(ContainerOperand):
             index_column: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
         Utility function for creating TypeBlocks from structure array while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
 
         Args:
             index_column: optionally name the column that will start the block of index columns.
+            columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names
         if names is None:
@@ -833,20 +835,40 @@ class Frame(ContainerOperand):
 
         # assign in generator
         index_arrays = []
-        columns_labels = [] # collect whatever labels are found on structured arrays
+        # collect whatever labels are found on structured arrays; these may not be the same as the passed in columns, if columns are provided
+        columns_labels = []
+
+        index_field_placeholder = object()
         columns_by_col_idx = []
 
+        if columns is None:
+            use_dtype_names = True
+        else:
+            use_dtype_names = False
+            columns_idx = 0 # relative position in index object
+            # construct columns_by_col_idx from columns, adding Nones for index columns
+            for i in range(len(names)):
+                if i >= index_start_pos and i <= index_end_pos:
+                    columns_by_col_idx.append(index_field_placeholder)
+                    continue
+                columns_by_col_idx.append(columns[columns_idx])
+                columns_idx += 1
+
         dtypes_is_map = dtypes_mappable(dtypes)
-        def get_col_dtype(col_idx):
+
+        def get_col_dtype(col_idx: int):
             if dtypes_is_map:
+                # columns_by_col_idx may have a index_field_placeholder: will return None
                 return dtypes.get(columns_by_col_idx[col_idx], None)
+            # assume dytpes is an ordered sequences
             return dtypes[col_idx]
 
         def blocks():
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
-                # append here as we iterate for usage in get_col_dtype
-                columns_by_col_idx.append(name)
+                if use_dtype_names:
+                    # append here as we iterate for usage in get_col_dtype
+                    columns_by_col_idx.append(name)
 
                 # this is not expected to make a copy
                 array_final = array[name]
@@ -905,6 +927,7 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
+        # from a structured array, we assume we want to get the columns labels
         data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
                 array=array,
                 index_depth=index_depth,
@@ -1137,10 +1160,46 @@ class Frame(ContainerOperand):
                 )
         array.flags.writeable = False
 
+
+        # construct columns prior to preparing data from structured array, as need columns to map dtypes
+        # columns_constructor = None
+        if columns_depth == 0:
+            columns = None
+            own_columns = False
+        else:
+            # Process each row one at a time, as types align by row.
+            columns_arrays = []
+            for row in columns_rows:
+                columns_array = np.genfromtxt(
+                        (row,),
+                        delimiter=delimiter_native,
+                        names=None,
+                        dtype=None,
+                        encoding=encoding,
+                        invalid_raise=False,
+                        )
+                # the array might be ndim=1, or ndim=0; must get a list before slicing
+                columns_arrays.append(columns_array.tolist()[index_depth:])
+
+            if columns_depth == 1:
+                columns_constructor = cls._COLUMNS_CONSTRUCTOR
+                columns = columns_constructor(columns_arrays[0])
+                own_columns = True
+            else:
+                columns_constructor = (IndexHierarchy.from_labels
+                        if cls._COLUMNS_CONSTRUCTOR.STATIC
+                        else IndexHierarchyGO.from_labels)
+                columns = columns_constructor(
+                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
+                        )
+                own_columns = True
+
         if array.dtype.names is None: # not a structured array
             if array.ndim == 1:
                 # got a single row
                 array = array.reshape((1, len(array)))
+            # TODO: apply dtypes!
+
             # genfromtxt may, in some situations, not return a structured array
             # if a 2D array, assume that we can use it after pulling off the index
             index_arrays = []
@@ -1160,44 +1219,14 @@ class Frame(ContainerOperand):
                     dtypes=dtypes,
                     consolidate_blocks=consolidate_blocks,
                     store_filter=store_filter,
+                    columns = columns
                     )
-
-        # Structure array either has the appropriate depth 1 row as as column, or an automatically generated label.
-        columns_constructor = None
-        if columns_depth == 0:
-            columns = None
-        # elif columns_depth == 1:
-        #     columns = columns_labels
-        else:
-            # Process each row one at a time, as types align by row.
-            columns_arrays = []
-            for row in columns_rows:
-                columns_array = np.genfromtxt(
-                        (row,),
-                        delimiter=delimiter_native,
-                        names=None,
-                        dtype=None,
-                        encoding=encoding,
-                        invalid_raise=False,
-                        )
-                # the array might be ndim=1, or ndim=0; must get a list before slicing
-                columns_arrays.append(columns_array.tolist()[index_depth:])
-
-            if columns_depth == 1:
-                columns = columns_arrays[0]
-            else:
-                columns_constructor = (IndexHierarchy.from_labels
-                        if cls._COLUMNS_CONSTRUCTOR.STATIC
-                        else IndexHierarchyGO.from_labels)
-                columns = columns_constructor(
-                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
-                        )
 
         kwargs = dict(
                 data=data,
                 own_data=True,
                 columns=columns,
-                columns_constructor=columns_constructor,
+                own_columns=own_columns,
                 name=name
                 )
 
