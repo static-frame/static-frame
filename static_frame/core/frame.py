@@ -1199,6 +1199,8 @@ class Frame(ContainerOperand):
                 # got a single row
                 array = array.reshape((1, len(array)))
             # TODO: apply dtypes!
+            if dtypes is not None:
+                raise NotImplementedError('not yet applying dtypes to non structured arrays returned from np.genfromtxt')
 
             # genfromtxt may, in some situations, not return a structured array
             # if a 2D array, assume that we can use it after pulling off the index
