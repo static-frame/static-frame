@@ -290,8 +290,6 @@ class TestUnit(TestCase):
             f1.to_xlsx(fp)
             self.assertTrue(os.stat(fp).st_size > 0)
 
-
-
     @given(sfst.get_frame_or_frame_go( # type: ignore
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -301,8 +299,9 @@ class TestUnit(TestCase):
             try:
                 f1.to_sqlite(fp)
                 self.assertTrue(os.stat(fp).st_size > 0)
-            except (sqlite3.IntegrityError, OverflowError):
+            except (sqlite3.IntegrityError, sqlite3.OperationalError, OverflowError):
                 # some indices, after translation, are not unique
+                # SQLite is no case sensitive, and does not support unicide
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
 
