@@ -52,11 +52,12 @@ class StoreHDF5(Store):
                         )
 
                 # Must set pos to have stable position
-                description = {k: tables.Col.from_dtype(v, pos=i)
-                        for i, (k, v) in enumerate(zip(field_names, dtypes))
-                        }
-                # print(description)
-                # group = file.create_group('/', label)
+                description = {}
+                for i, (k, v) in enumerate(zip(field_names, dtypes)):
+                    if v == object:
+                        raise RuntimeError('cannot store object dtypes in HDF5')
+                    description[k] = tables.Col.from_dtype(v, pos=i)
+
                 table = file.create_table('/', # create off root from sring
                         name=label,
                         description=description,

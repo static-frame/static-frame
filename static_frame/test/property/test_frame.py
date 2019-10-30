@@ -109,7 +109,9 @@ class TestUnit(TestCase):
             b = func(values, values)
             self.assertAlmostEqualArray(a, b)
 
-    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC, # type: ignore
+    @given(sfst.get_frame_or_frame_go(  # type: ignore
+            dtype_group=sfst.DTGroup.NUMERIC,
+            index_dtype_group=sfst.DTGroup.STRING,
             min_rows=3,
             max_rows=3,
             min_columns=3,
@@ -305,6 +307,49 @@ class TestUnit(TestCase):
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
 
+
+    @given(sfst.get_frame_or_frame_go( # type: ignore
+            dtype_group=sfst.DTGroup.BASIC,
+            columns_dtype_group=sfst.DTGroup.STRING,
+            index_dtype_group=sfst.DTGroup.STRING
+            ))
+    def test_frame_to_hdf5(self, f1: Frame) -> None:
+        f1 = f1.rename('f1')
+        with temp_file('.hdf5') as fp:
+
+            try:
+                f1.to_hdf5(fp)
+                self.assertTrue(os.stat(fp).st_size > 0)
+            except ValueError:
+                # will happen for empty strings and unicde that cannot be handled by HDF5
+                pass
+
+
+    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    def test_frame_to_html(self, f1: Frame) -> None:
+        post = f1.to_html()
+        self.assertTrue(len(post) > 0)
+
+
+    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    def test_frame_to_html_datatables(self, f1: Frame) -> None:
+        post = f1.to_html_datatables(show=False)
+        self.assertTrue(len(post) > 0)
+
+    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    def test_frame_to_rst(self, f1: Frame) -> None:
+        post = f1.to_rst()
+        self.assertTrue(len(post) > 0)
+
+    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    def test_frame_to_markdown(self, f1: Frame) -> None:
+        post = f1.to_markdown()
+        self.assertTrue(len(post) > 0)
+
+    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    def test_frame_to_latex(self, f1: Frame) -> None:
+        post = f1.to_latex()
+        self.assertTrue(len(post) > 0)
 
 
 if __name__ == '__main__':
