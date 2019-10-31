@@ -72,6 +72,7 @@ class IndexBase(ContainerOperand):
     __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
     __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
     __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
@@ -414,4 +415,3 @@ class IndexBase(ContainerOperand):
             webbrowser.open_new_tab(fp)
 
         return fp
-

@@ -180,7 +180,7 @@ class Bus(ContainerBase):
 
             labels = set(self._iloc_to_labels(key))
 
-            array = np.empty(shape=len(self._series._index), dtype=object) # type: ignore
+            array = np.empty(shape=len(self._series._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
                     frame = self._store.read(label)
