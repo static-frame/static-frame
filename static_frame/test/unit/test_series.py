@@ -2159,7 +2159,7 @@ class TestUnit(TestCase):
         )
 
 
-    def test_series_bool_a(self):
+    def test_series_bool_a(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20))
         self.assertTrue(bool(s1))
 
