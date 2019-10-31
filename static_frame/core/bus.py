@@ -254,11 +254,11 @@ class Bus(ContainerBase):
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)
+        return InterfaceGetItem(self._extract_loc)  # type: ignore
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc)
+        return InterfaceGetItem(self._extract_iloc)  # type: ignore
 
 
     # ---------------------------------------------------------------------------
@@ -415,4 +415,3 @@ class Bus(ContainerBase):
     def to_hdf5(self, fp: PathSpecifier) -> None:
         store = StoreHDF5(fp)
         store.write(self.items())
-

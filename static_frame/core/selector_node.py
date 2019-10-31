@@ -8,6 +8,17 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Bloc2DKeyType
 
 from static_frame.core.doc_str import doc_inject
+
+
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.bus import Bus
+    from static_frame.core.frame import Frame
+    from static_frame.core.frame import FrameAsType
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+    from static_frame.core.type_blocks import TypeBlocks
+
 #-------------------------------------------------------------------------------
 
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus')
@@ -159,5 +170,3 @@ class InterfaceAsType:
 
     def __call__(self, dtype: np.dtype) -> 'Frame':
         return self._func_getitem(NULL_SLICE)(dtype)
-
-
