@@ -52,6 +52,7 @@ Added ``IndexHierarchy.rehierarch``, ``Series.rehierarch``, and ``Frame.rehierar
 
 Defined ``__bool__`` for all containers, where the result is determined based on if the underlying NumPy array has ``size`` greater than zero.
 
+Improved ``Frame.to_pandas()`` to preserve columnar types.
 
 
 0.4.3
