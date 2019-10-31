@@ -398,6 +398,10 @@ class TestUnit(TestCase):
         self.assertEqual(df.values.tolist(),
             [[1, 2, 'a', False], [30, 34, 'b', True], [54, 95, 'c', False], [65, 73, 'd', True]])
 
+        self.assertEqual( df.dtypes.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('bool')]
+                )
+
 
     def test_frame_to_pandas_b(self) -> None:
         f1 = sf.Frame.from_records(
@@ -410,6 +414,15 @@ class TestUnit(TestCase):
         self.assertEqual(df.values.tolist(),
                 [[1, 1]]
                 )
+
+
+    def test_frame_to_pandas_c(self) -> None:
+        f = sf.FrameGO(['a' for x in range(5)], columns=['a'])
+        f['b'] = [1.0 for i in range(5)]
+        df = f.to_pandas()
+        self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
+
+
 
 
     #---------------------------------------------------------------------------

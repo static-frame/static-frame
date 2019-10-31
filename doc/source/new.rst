@@ -50,6 +50,8 @@ Added ``Frame.bloc`` and ``Frmae.assign.bloc``
 
 Added ``IndexHierarchy.rehierarch``, ``Series.rehierarch``, and ``Frame.rehierarch``.
 
+Defined ``__bool__`` for all containers, where the result is determined based on if the underlying NumPy array has ``size`` greater than zero.
+
 
 
 0.4.3

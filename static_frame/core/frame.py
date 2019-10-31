@@ -3845,11 +3845,16 @@ class Frame(ContainerOperand):
         Return a Pandas DataFrame.
         '''
         import pandas
-        # NOTE: could alternatively iter columns to maintain types
-        df = pandas.DataFrame(self.values.copy(),
-                index=self._index.to_pandas(),
-                columns=self._columns.to_pandas(),
-                )
+
+        df = pandas.DataFrame(index=self._index.to_pandas())
+
+        # iter columns to preserve types
+        # use integer columns for initial loading
+        for i, array in enumerate(self._blocks.axis_values(0)):
+            df[i] = array
+
+        df.columns = self._columns.to_pandas()
+
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name
         return df
