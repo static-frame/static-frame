@@ -8,6 +8,12 @@ from static_frame.core.util import intersect2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import DTYPE_BOOL
 
+
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.index import Index
+
+
 class IndexCorrespondence:
     '''
     All iloc data necessary for reindexing.
@@ -137,5 +143,3 @@ class IndexCorrespondence:
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
         return [[x] for x in tp.cast(tp.Iterable[int], self.iloc_src)]
-
-
