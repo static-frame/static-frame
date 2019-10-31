@@ -2495,6 +2495,14 @@ class Frame(ContainerOperand):
         '''
         return self._blocks.nbytes
 
+    def __bool__(self) -> bool:
+        '''
+        True if this container has size.
+        '''
+        return bool(self._blocks.size)
+
+
+
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_axis_not_multi(row_key, column_key) -> tp.Tuple[bool, bool]:

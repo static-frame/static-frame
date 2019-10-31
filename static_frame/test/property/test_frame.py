@@ -270,7 +270,7 @@ class TestUnit(TestCase):
             #         columns_depth=f1.columns.depth)
 
 
-    @skip_win  # type: ignore # UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
+    @skip_win  # type: ignore # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go( # type: ignore
             dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -278,10 +278,6 @@ class TestUnit(TestCase):
         with temp_file('.txt') as fp:
             f1.to_tsv(fp)
             self.assertTrue(os.stat(fp).st_size > 0)
-
-            # f2 = Frame.from_tsv(fp,
-            #         index_depth=f1.index.depth,
-            #         columns_depth=f1.columns.depth)
 
 
     @given(sfst.get_frame_or_frame_go( # type: ignore
@@ -330,7 +326,7 @@ class TestUnit(TestCase):
         post = f1.to_html()
         self.assertTrue(len(post) > 0)
 
-
+    @skip_win  # type: ignore # UnicodeEncodeError
     @given(sfst.get_frame_or_frame_go()) # type: ignore
     def test_frame_to_html_datatables(self, f1: Frame) -> None:
         post = f1.to_html_datatables(show=False)

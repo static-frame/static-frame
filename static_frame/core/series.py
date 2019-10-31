@@ -1068,6 +1068,13 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes
 
+    def __bool__(self) -> bool:
+        '''
+        True if this container has size.
+        '''
+        return bool(self.values.size)
+
+
     #---------------------------------------------------------------------------
     # extraction
 

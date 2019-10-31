@@ -659,6 +659,13 @@ class TestUnit(TestCase):
             )
 
 
+    def test_index_bool_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertTrue(bool(idx1))
+
+        idx2 = IndexGO(())
+        self.assertFalse(bool(idx2))
 
 
 if __name__ == '__main__':

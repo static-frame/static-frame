@@ -2158,5 +2158,14 @@ class TestUnit(TestCase):
             (('a', 5), ('g', 5), ('m', 5), ('s', 2))
         )
 
+
+    def test_series_bool_a(self):
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        self.assertTrue(bool(s1))
+
+        s2 = Series(())
+        self.assertFalse(bool(s2))
+
+
 if __name__ == '__main__':
     unittest.main()

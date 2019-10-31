@@ -251,6 +251,13 @@ class IndexBase(ContainerOperand):
             self._update_array_cache()
         return tp.cast(int, self._labels.nbytes)
 
+    def __bool__(self) -> bool:
+        '''
+        True if this container has size.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return bool(self._labels.size)
 
     #---------------------------------------------------------------------------
     # set operations

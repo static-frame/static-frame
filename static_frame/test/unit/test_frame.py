@@ -2562,7 +2562,6 @@ class TestUnit(TestCase):
                 (('p', (('w', 200), ('x', 30), ('y', 200), ('z', 30))), ('q', (('w', 200), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', 200), ('x', True), ('y', 200), ('z', True))), ('t', (('w', 200), ('x', 200), ('y', 200), ('z', True))))
                 )
 
-    # @unittest.skip('in development')
     def test_frame_iter_element_c(self) -> None:
 
         a2 = np.array([
@@ -4712,7 +4711,6 @@ class TestUnit(TestCase):
                 )
 
 
-    @unittest.skip('non required dependency')
     def test_frame_from_from_pandas_a(self) -> None:
         import pandas as pd
 
@@ -5869,6 +5867,29 @@ class TestUnit(TestCase):
                 f1.iter_window(size=3).apply(lambda f: f['B'].sum()).to_pairs(),
                 (('c', 12), ('d', 18), ('e', 24), ('f', 30), ('g', 36), ('h', 42), ('i', 48), ('j', 54), ('k', 60), ('l', 66), ('m', 72), ('n', 78), ('o', 84), ('p', 90), ('q', 96), ('r', 102), ('s', 108), ('t', 114))
         )
+
+
+
+    def test_frame_bool_a(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        self.assertTrue(bool(f1))
+        self.assertTrue(bool(f1.T))
+
+
+
+    def test_frame_bool_b(self) -> None:
+        f1 = Frame(columns=('a', 'b'))
+
+        self.assertFalse(bool(f1))
+        self.assertFalse(bool(f1.T))
 
 
 
