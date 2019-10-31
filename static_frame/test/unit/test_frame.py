@@ -398,10 +398,6 @@ class TestUnit(TestCase):
         self.assertEqual(df.values.tolist(),
             [[1, 2, 'a', False], [30, 34, 'b', True], [54, 95, 'c', False], [65, 73, 'd', True]])
 
-        self.assertEqual( df.dtypes.tolist(),
-                [np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('bool')]
-                )
-
 
     def test_frame_to_pandas_b(self) -> None:
         f1 = sf.Frame.from_records(
@@ -422,6 +418,26 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
 
+
+    @skip_win  # type: ignore
+    def test_frame_to_pandas_d(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        df = f1.to_pandas()
+
+        self.assertEqual( df.dtypes.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('bool')]
+                )
 
 
 
