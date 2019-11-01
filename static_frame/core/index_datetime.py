@@ -1,7 +1,7 @@
 import typing as tp
 import datetime
 
-import numpy as np
+import numpy as np  # type: ignore
 
 
 # from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -38,10 +38,10 @@ from static_frame.core.index_base import IndexBase
 
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611
+    import pandas  # type: ignore #pylint: disable=W0611
 
 
-I = tp.TypeVar('I', bound=IndexBase)
+I = tp.TypeVar('I', bound='_IndexDatetime')
 
 
 
@@ -68,7 +68,7 @@ class _IndexDatetime(Index):
     def __init__(self,
             labels: IndexInitializer,
             *,
-            name: tp.Hashable = None
+            name: tp.Optional[tp.Hashable] = None
             ):
         # reduce to arguments relevant for these derived classes
         Index.__init__(self, labels=labels, name=name)
@@ -76,7 +76,7 @@ class _IndexDatetime(Index):
     #---------------------------------------------------------------------------
     # dict like interface
 
-    def __contains__(self, value) -> bool:
+    def __contains__(self, value: object) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
         return self._map.__contains__(to_datetime64(value))
@@ -85,8 +85,8 @@ class _IndexDatetime(Index):
     # operators
 
     def _ufunc_binary_operator(self, *,
-            operator: tp.Callable,
-            other) -> np.ndarray:
+            operator: tp.Callable[..., tp.Any],
+            other: object) -> np.ndarray:
 
         if self._recache:
             self._update_array_cache()
@@ -94,7 +94,7 @@ class _IndexDatetime(Index):
         if operator.__name__ == 'matmul' or operator.__name__ == 'rmatmul':
             raise NotImplementedError('matrix multiplication not supported')
 
-        if issubclass(other.__class__, Index):
+        if isinstance(other, Index):
             other = other.values # operate on labels to labels
         elif isinstance(other, str):
             # do not pass dtype, as want to coerce to this parsed type, not the type of sled
@@ -113,7 +113,7 @@ class _IndexDatetime(Index):
         return array
 
 
-    def loc_to_iloc(self,
+    def loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
             ) -> GetItemKeyType:
@@ -156,12 +156,12 @@ class IndexYear(_IndexDatetime):
             )
 
     @classmethod
-    def from_date_range(cls,
+    def from_date_range(cls: tp.Type[I],
             start: DateInitializer,
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None):
+            name: tp.Optional[tp.Hashable] = None) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
@@ -174,13 +174,13 @@ class IndexYear(_IndexDatetime):
         return cls(labels, name=name)
 
     @classmethod
-    def from_year_month_range(cls,
+    def from_year_month_range(cls: tp.Type[I],
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -195,13 +195,13 @@ class IndexYear(_IndexDatetime):
 
 
     @classmethod
-    def from_year_range(cls,
+    def from_year_range(cls: tp.Type[I],
             start: YearInitializer,
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
@@ -214,7 +214,7 @@ class IndexYear(_IndexDatetime):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
-    def to_pandas(self):
+    def to_pandas(self) -> None:
         '''Return a Pandas Index.
         '''
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
@@ -239,13 +239,13 @@ class IndexYearMonth(_IndexDatetime):
             )
 
     @classmethod
-    def from_date_range(cls,
+    def from_date_range(cls: tp.Type[I],
             start: DateInitializer,
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
@@ -259,13 +259,13 @@ class IndexYearMonth(_IndexDatetime):
         return cls(labels, name=name)
 
     @classmethod
-    def from_year_month_range(cls,
+    def from_year_month_range(cls: tp.Type[I],
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexYearMonth instance over a range of months, where start and end are inclusive.
         '''
@@ -280,13 +280,13 @@ class IndexYearMonth(_IndexDatetime):
 
 
     @classmethod
-    def from_year_range(cls,
+    def from_year_range(cls: tp.Type[I],
             start: YearInitializer,
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
         '''
@@ -299,7 +299,7 @@ class IndexYearMonth(_IndexDatetime):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
-    def to_pandas(self):
+    def to_pandas(self) -> None:
         '''Return a Pandas Index.
         '''
         raise NotImplementedError('Pandas does not support a year month type, and it is ambiguous if a date proxy should be the first of the month or the last of the month.')
@@ -324,13 +324,13 @@ class IndexDate(_IndexDatetime):
             )
 
     @classmethod
-    def from_date_range(cls,
+    def from_date_range(cls: tp.Type[I],
             start: DateInitializer,
             stop: DateInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
@@ -342,12 +342,12 @@ class IndexDate(_IndexDatetime):
         return cls(labels, name=name)
 
     @classmethod
-    def from_year_month_range(cls,
+    def from_year_month_range(cls: tp.Type[I],
             start: YearMonthInitializer,
             stop: YearMonthInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None):
+            name: tp.Optional[tp.Hashable] = None) -> I:
         '''
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
@@ -360,13 +360,13 @@ class IndexDate(_IndexDatetime):
         return cls(labels, name=name)
 
     @classmethod
-    def from_year_range(cls,
+    def from_year_range(cls: tp.Type[I],
             start: YearInitializer,
             stop: YearInitializer,
             step: int = 1,
             *,
-            name: tp.Hashable = None
-            ):
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         '''
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
@@ -415,4 +415,3 @@ class IndexMillisecond(_IndexDatetime):
             '_loc_is_iloc',
             '_name',
             )
-

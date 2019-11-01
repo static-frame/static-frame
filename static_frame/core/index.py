@@ -350,7 +350,7 @@ class Index(IndexBase):
             labels: IndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: tp.Hashable = None,
+            name: tp.Optional[tp.Hashable] = None,
             dtype: DtypeSpecifier = None
             ) -> None:
 
