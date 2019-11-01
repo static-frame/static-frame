@@ -3304,7 +3304,7 @@ class TestUnit(TestCase):
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
-
+    @skip_win  # type: ignore
     def test_frame_from_csv_i(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
 
@@ -3318,7 +3318,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.dtypes.values.tolist(),
                 [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64')]
                 )
-
 
     def test_frame_from_csv_j(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
