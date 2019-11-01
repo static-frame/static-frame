@@ -795,8 +795,8 @@ class Frame(ContainerOperand):
 
 
 
-    @classmethod
-    def _structured_array_to_blocks_and_index(cls,
+    @staticmethod
+    def _structured_array_to_blocks_and_index(
             array: np.ndarray,
             *,
             index_depth: int = 0,
@@ -807,15 +807,20 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
-        Utility function for creating TypeBlocks from structure array while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
+        Utility function for creating TypeBlocks from structure array (or a 2D array that np.genfromtxt might have returned) while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
 
         Args:
             index_column_first: optionally name the column that will start the block of index columns.
             columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names
+        is_structured_array = True
         if names is None:
-            raise ErrorInitFrame('array is not a structured array')
+            is_structured_array = False
+            # raise ErrorInitFrame('array is not a structured array')
+            # could use np.rec.fromarrays, but that makes a copy; better to use the passed in array
+            # must be a 2D array
+            names = tuple(range(array.shape[1]))
 
         index_start_pos = -1 # will be ignored
         index_end_pos = -1
@@ -871,13 +876,19 @@ class Frame(ContainerOperand):
                     columns_by_col_idx.append(name)
 
                 # this is not expected to make a copy
-                array_final = array[name]
+                if is_structured_array:
+                    array_final = array[name]
+                else: # a 2D array, name is integer for column
+                    array_final = array[NULL_SLICE, name]
+
                 # do StoreFilter conversions before dtype
                 if array_final.ndim == 0:
                     # some structured arrays give 0 ndim arrays by name
                     array_final = np.reshape(array_final, (1,))
+
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
+
                 if dtypes:
                     dtype = get_col_dtype(col_idx)
                     if dtype is not None:
@@ -1160,7 +1171,6 @@ class Frame(ContainerOperand):
                 )
         array.flags.writeable = False
 
-
         # construct columns prior to preparing data from structured array, as need columns to map dtypes
         # columns_constructor = None
         if columns_depth == 0:
@@ -1195,34 +1205,20 @@ class Frame(ContainerOperand):
                 own_columns = True
 
         if array.dtype.names is None: # not a structured array
+            # genfromtxt may, in some situations, not return a structured array
             if array.ndim == 1:
                 # got a single row
                 array = array.reshape((1, len(array)))
-            # TODO: apply dtypes!
-            if dtypes is not None:
-                raise NotImplementedError('not yet applying dtypes to non structured arrays returned from np.genfromtxt')
 
-            # genfromtxt may, in some situations, not return a structured array
-            # if a 2D array, assume that we can use it after pulling off the index
-            index_arrays = []
-            if index_depth > 0:
-                for i in range(index_depth):
-                    index_arrays.append(array[:, i])
-                data = array[:, index_depth:]
-                data.flags.writeable = False
-            else:
-                data = array
-        else:
-            # never used the returned columns_labels, as they will be mutated in undesirable ways
-            data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
-                    array=array,
-                    index_depth=index_depth,
-                    index_column_first=index_column_first,
-                    dtypes=dtypes,
-                    consolidate_blocks=consolidate_blocks,
-                    store_filter=store_filter,
-                    columns = columns
-                    )
+        data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
+                array=array,
+                index_depth=index_depth,
+                index_column_first=index_column_first,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                columns = columns
+                )
 
         kwargs = dict(
                 data=data,

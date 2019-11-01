@@ -3304,6 +3304,51 @@ class TestUnit(TestCase):
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
+
+    def test_frame_from_csv_i(self) -> None:
+        s1 = StringIO('1,2,3\n4,5,6')
+
+        f1 = sf.Frame.from_csv(
+                s1,
+                index_depth=0,
+                columns_depth=0,
+                dtypes=[np.int64, str, np.int64]
+                )
+
+        self.assertEqual(f1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64')]
+                )
+
+
+    def test_frame_from_csv_j(self) -> None:
+        s1 = StringIO('1,2,3\n4,5,6')
+
+        f2 = sf.Frame.from_csv(
+                s1,
+                index_depth=2,
+                columns_depth=0,
+                dtypes=[np.int64, str, np.int64]
+                )
+
+        self.assertEqual(f2.to_pairs(0,),
+                ((0, (((1, '2'), 3), ((4, '5'), 6))),)
+                )
+
+
+
+    def test_structured_array_to_blocks_and_index_a(self) -> None:
+
+        a1 = np.array(np.arange(12).reshape((3, 4)))
+        post, _, _ = Frame._structured_array_to_blocks_and_index(
+                a1,
+                dtypes=[np.int64, str, np.int64, str]
+                )
+
+        self.assertEqual(post.dtypes.tolist(),
+                [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64'), np.dtype('<U21')]
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_tsv_a(self) -> None:
