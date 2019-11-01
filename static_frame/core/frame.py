@@ -77,6 +77,7 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
+from static_frame.core.container_util import rehierarch_and_map
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -2166,13 +2167,23 @@ class Frame(ContainerOperand):
             raise RuntimeError('cannot rehierarch on columns when there is no hierarchy')
 
         if index:
-            index, index_iloc = self._index._rehierarch_and_map(depth_map=index)
+            index, index_iloc = rehierarch_and_map(
+                    labels=self._index.values,
+                    depth_map=index,
+                    index_constructor=self._index.from_labels
+                    )
+            # index, index_iloc = self._index._rehierarch_and_map(depth_map=index)
         else:
             index = self._index
             index_iloc = None
 
         if columns:
-            columns, columns_iloc = self._columns._rehierarch_and_map(depth_map=columns)
+            # columns, columns_iloc = self._columns._rehierarch_and_map(depth_map=columns)
+            columns, columns_iloc = rehierarch_and_map(
+                    labels=self._columns.values,
+                    depth_map=columns,
+                    index_constructor=self._columns.from_labels,
+                    )
             own_columns = True
         else:
             columns = self._columns

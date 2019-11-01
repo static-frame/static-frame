@@ -5025,6 +5025,28 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_set_index_hierarchy_f(self) -> None:
+
+        records = (
+                (1, 'a', 10),
+                (2, 'c', 60),
+                (1, 'c', 30),
+                (2, 'a', 40),
+                (2, 'b', 50),
+                (1, 'b', 20),
+                )
+        f = Frame.from_records(records)
+        fh = f.set_index_hierarchy([0, 1],
+                drop=True,
+                index_constructors=(Index, IndexYearMonth))
+
+        import ipdb; ipdb.set_trace()
+
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_frame_iloc_in_loc_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),

@@ -35,6 +35,7 @@ from static_frame.core.util import array_shift
 
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import rehierarch_and_map
 
 from static_frame.core.array_go import ArrayGO
 
@@ -739,38 +740,38 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__.from_labels(mapper(x) for x in self._labels)
 
-    def _rehierarch_and_map(self,
-            depth_map: tp.Iterable[int],
-            ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
+    # def _rehierarch_and_map(self,
+    #         depth_map: tp.Iterable[int],
+    #         ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
 
-        depth = self.depth
+    #     depth = self.depth
 
-        if depth != len(depth_map):
-            raise RuntimeError('must specify new depths for all depths')
-        if set(range(depth)) != set(depth_map):
-            raise RuntimeError('all depths must be specified')
+    #     if depth != len(depth_map):
+    #         raise RuntimeError('must specify new depths for all depths')
+    #     if set(range(depth)) != set(depth_map):
+    #         raise RuntimeError('all depths must be specified')
 
-        labels = self.values
-        labels_post = labels[NULL_SLICE, list(depth_map)]
-        labels_sort = np.full(labels_post.shape, 0)
+    #     labels = self.values
+    #     labels_post = labels[NULL_SLICE, list(depth_map)]
+    #     labels_sort = np.full(labels_post.shape, 0)
 
-        # get ordering of vlues found in each level
-        order = [defaultdict(int) for _ in range(depth)]
+    #     # get ordering of vlues found in each level
+    #     order = [defaultdict(int) for _ in range(depth)]
 
-        for idx_row, label in enumerate(labels):
-            label = tuple(label)
-            for idx_col in range(depth):
-                if label[idx_col] not in order[idx_col]:
-                    # Map label to an integer representing the observed order.
-                    order[idx_col][label[idx_col]] = len(order[idx_col])
-                # Fill array for sorting based on observed order.
-                labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
+    #     for idx_row, label in enumerate(labels):
+    #         label = tuple(label)
+    #         for idx_col in range(depth):
+    #             if label[idx_col] not in order[idx_col]:
+    #                 # Map label to an integer representing the observed order.
+    #                 order[idx_col][label[idx_col]] = len(order[idx_col])
+    #             # Fill array for sorting based on observed order.
+    #             labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
 
-        # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
-        order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
-        labels_post = labels_post[order_lex]
-        labels_post.flags.writeable = False
-        return self.__class__.from_labels(labels_post), order_lex
+    #     # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
+    #     order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
+    #     labels_post = labels_post[order_lex]
+    #     labels_post.flags.writeable = False
+    #     return self.__class__.from_labels(labels_post), order_lex
 
     def rehierarch(self,
             depth_map: tp.Iterable[int]
@@ -778,7 +779,11 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new `IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
-        index, _ = self._rehierarch_and_map(depth_map=depth_map)
+        index, _ = rehierarch_and_map(
+                labels=self.values,
+                index_constructor=self.__class__.from_labels,
+                depth_map=depth_map,
+                )
         return index
 
 
