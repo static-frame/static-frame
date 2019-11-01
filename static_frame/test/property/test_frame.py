@@ -5,7 +5,7 @@ import operator
 import os
 import sqlite3
 
-import numpy as np  # type: ignore
+import numpy as np
 
 # from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
@@ -228,7 +228,7 @@ class TestUnit(TestCase):
             index_dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_parquet(self, f1: Frame) -> None:
-        import pyarrow # type: ignore
+        import pyarrow
         with temp_file('.parquet') as fp:
             try:
                 f1.to_parquet(fp)

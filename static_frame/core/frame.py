@@ -7,7 +7,7 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 
-import numpy as np # type: ignore
+import numpy as np
 
 from numpy.ma import MaskedArray
 
@@ -115,9 +115,9 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    import pandas # type: ignore #pylint: disable=W0611
-    from xarray import Dataset # type: ignore #pylint: disable=W0611
-    import pyarrow # type: ignore #pylint: disable=W0611
+    import pandas #pylint: disable=W0611
+    from xarray import Dataset #pylint: disable=W0611
+    import pyarrow #pylint: disable=W0611
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
     '''

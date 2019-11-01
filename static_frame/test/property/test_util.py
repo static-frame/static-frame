@@ -3,7 +3,7 @@ import typing as tp
 import datetime
 import unittest
 import fractions
-import numpy as np  # type: ignore
+import numpy as np
 
 from hypothesis import strategies as st
 from hypothesis import given  # type: ignore

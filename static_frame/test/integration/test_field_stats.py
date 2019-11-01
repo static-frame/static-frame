@@ -2,7 +2,7 @@
 import unittest
 import typing as tp
 
-import numpy as np  # type: ignore
+import numpy as np
 import static_frame as sf
 
 from static_frame.test.test_case import TestCase

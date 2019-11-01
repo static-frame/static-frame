@@ -12,8 +12,8 @@ import contextlib
 import tempfile
 from pathlib import Path
 
-import numpy as np  # type: ignore
-import pytest  # type: ignore
+import numpy as np
+import pytest
 
 
 from static_frame import TypeBlocks

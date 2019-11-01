@@ -1,7 +1,7 @@
 import unittest
 import pickle
 
-import numpy as np  # type: ignore
+import numpy as np
 
 
 # assuming located in the same directory

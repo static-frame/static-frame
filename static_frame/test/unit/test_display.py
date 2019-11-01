@@ -6,7 +6,7 @@ import hashlib
 import json
 
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win

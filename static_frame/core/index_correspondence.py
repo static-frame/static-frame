@@ -1,6 +1,6 @@
 import typing as tp
 
-import numpy as np # type: ignore
+import numpy as np
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import intersect1d

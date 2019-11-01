@@ -4,7 +4,7 @@ import typing as tp
 from collections import deque
 from itertools import zip_longest
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import Index

@@ -1,5 +1,5 @@
 import os
-from sphinx.cmd.build import main  # type: ignore
+from sphinx.cmd.build import main
 
 if __name__ == '__main__':
     doc_dir = os.path.abspath(os.path.dirname(__file__))

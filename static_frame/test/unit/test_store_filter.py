@@ -1,6 +1,6 @@
 import unittest
 # from io import StringIO
-import numpy as np # type: ignore
+import numpy as np
 
 
 

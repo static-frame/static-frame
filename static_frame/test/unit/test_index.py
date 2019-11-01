@@ -1,6 +1,6 @@
 
 import unittest
-import numpy as np  # type: ignore
+import numpy as np
 import pickle
 import datetime
 import typing as tp
@@ -531,7 +531,7 @@ class TestUnit(TestCase):
 
 
     def test_index_to_pandas_b(self) -> None:
-        import pandas  # type: ignore
+        import pandas
         idx1 = IndexDate(('2018-01-01', '2018-06-01'), name='foo')
         pdidx = idx1.to_pandas()
         self.assertEqual(pdidx.name, idx1.name)

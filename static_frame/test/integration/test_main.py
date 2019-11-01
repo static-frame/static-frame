@@ -2,15 +2,15 @@ from subprocess import PIPE
 from subprocess import Popen
 from sys import executable
 
-from pytest import mark  # type: ignore
-import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
+from pytest import mark
+import numpy as np
+import pandas as pd
 
 import static_frame as sf
 
 
 try:
-    import IPython  # type: ignore # pylint: disable=W0611
+    import IPython # pylint: disable=W0611
 except ImportError:
     HAS_IPYTHON = False
 else:

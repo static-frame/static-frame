@@ -1,5 +1,5 @@
 import typing as tp
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.core.util import mloc
 from static_frame.core.util import PathSpecifierOrFileLike
@@ -19,7 +19,7 @@ from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
-    import pandas  # type: ignore #pylint: disable=W0611
+    import pandas #pylint: disable=W0611
 
 
 I = tp.TypeVar('I', bound='IndexBase')

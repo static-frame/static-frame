@@ -4,7 +4,7 @@ import unittest
 import datetime
 import typing as tp
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.core.util import isna_array
 from static_frame.core.util import resolve_dtype

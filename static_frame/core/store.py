@@ -9,7 +9,7 @@ from io import StringIO
 from itertools import chain
 from functools import partial
 
-import numpy as np # type: ignore
+import numpy as np
 
 
 from static_frame.core.frame import Frame

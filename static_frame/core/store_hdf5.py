@@ -3,8 +3,6 @@ import typing as tp
 
 # from itertools import chain
 
-# import numpy as np # type: ignore
-
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 
@@ -40,7 +38,7 @@ class StoreHDF5(Store):
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
-        import tables # type: ignore
+        import tables
 
         with tables.open_file(self._fp, mode='w') as file:
             for label, frame in items:

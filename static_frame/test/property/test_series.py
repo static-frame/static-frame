@@ -3,7 +3,7 @@
 import unittest
 import operator
 
-# import numpy as np  # type: ignore
+# import numpy as np
 
 # from hypothesis import strategies as st
 from hypothesis import given  # type: ignore

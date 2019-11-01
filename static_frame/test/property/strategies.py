@@ -12,7 +12,7 @@ from hypothesis import settings as hypo_settings  # type: ignore
 from hypothesis import HealthCheck  # type: ignore
 
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
