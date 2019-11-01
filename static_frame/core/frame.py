@@ -800,7 +800,7 @@ class Frame(ContainerOperand):
             array: np.ndarray,
             *,
             index_depth: int = 0,
-            index_column_start: tp.Optional[IndexSpecifier] = None,
+            index_column_first: tp.Optional[IndexSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
@@ -810,7 +810,7 @@ class Frame(ContainerOperand):
         Utility function for creating TypeBlocks from structure array while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
 
         Args:
-            index_column_start: optionally name the column that will start the block of index columns.
+            index_column_first: optionally name the column that will start the block of index columns.
             columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
         names = array.dtype.names
@@ -819,15 +819,15 @@ class Frame(ContainerOperand):
 
         index_start_pos = -1 # will be ignored
         index_end_pos = -1
-        if index_column_start is not None:
+        if index_column_first is not None:
             if index_depth <= 0:
-                raise ErrorInitFrame('index_column_start specified but index_depth is 0')
-            elif isinstance(index_column_start, INT_TYPES):
-                index_start_pos = index_column_start
+                raise ErrorInitFrame('index_column_first specified but index_depth is 0')
+            elif isinstance(index_column_first, INT_TYPES):
+                index_start_pos = index_column_first
             else:
-                index_start_pos = names.index(index_column_start) # linear performance
+                index_start_pos = names.index(index_column_first) # linear performance
             index_end_pos = index_start_pos + index_depth - 1
-        else: # no index_column_start specified, if index depth > 0, set start to 0
+        else: # no index_column_first specified, if index depth > 0, set start to 0
             if index_depth > 0:
                 index_start_pos = 0
                 # Subtract one for inclusive boun
@@ -906,7 +906,7 @@ class Frame(ContainerOperand):
             array: np.ndarray,
             *,
             index_depth: int = 0,
-            index_column_start: tp.Optional[IndexSpecifier] = None,
+            index_column_first: tp.Optional[IndexSpecifier] = None,
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -919,7 +919,7 @@ class Frame(ContainerOperand):
         Args:
             array: Structured NumPy array.
             index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
-            index_column_start: Optionally provide the name or position offset of the column to use as the index.
+            index_column_first: Optionally provide the name or position offset of the column to use as the index.
             {dtypes}
             {name}
             {consolidate_blocks}
@@ -931,7 +931,7 @@ class Frame(ContainerOperand):
         data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
                 array=array,
                 index_depth=index_depth,
-                index_column_start=index_column_start,
+                index_column_first=index_column_first,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
@@ -1071,7 +1071,7 @@ class Frame(ContainerOperand):
             *,
             delimiter: str,
             index_depth: int = 0,
-            index_column_start: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
             columns_depth: int = 1,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1089,7 +1089,7 @@ class Frame(ContainerOperand):
             fp: A file path or a file-like object.
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
-            index_column_start: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
             columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
@@ -1217,7 +1217,7 @@ class Frame(ContainerOperand):
             data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
                     array=array,
                     index_depth=index_depth,
-                    index_column_start=index_column_start,
+                    index_column_first=index_column_first,
                     dtypes=dtypes,
                     consolidate_blocks=consolidate_blocks,
                     store_filter=store_filter,
@@ -1252,7 +1252,7 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
-            index_column_start: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
             columns_depth: int = 1,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1272,7 +1272,7 @@ class Frame(ContainerOperand):
         return cls.from_delimited(fp,
                 delimiter=',',
                 index_depth=index_depth,
-                index_column_start=index_column_start,
+                index_column_first=index_column_first,
                 columns_depth=columns_depth,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -1289,7 +1289,7 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
             index_depth: int = 0,
-            index_column_start: tp.Optional[tp.Union[int, str]] = None,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
             columns_depth: int = 1,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -1309,7 +1309,7 @@ class Frame(ContainerOperand):
         return cls.from_delimited(fp,
                 delimiter='\t',
                 index_depth=index_depth,
-                index_column_start=index_column_start,
+                index_column_first=index_column_first,
                 columns_depth=columns_depth,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
@@ -3457,7 +3457,7 @@ class Frame(ContainerOperand):
                 )
 
     def unset_index(self,
-            # index_column_start: tp.Optional[tp.Union[int, str]] = 0,
+            # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''

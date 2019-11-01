@@ -30,7 +30,7 @@ Added ``Frame.to_markdown()``.
 
 Added ``Frame.to_latex()``.
 
-The interface of ``Frame.from_delimited`` (as well as ``Frame.from_csv`` and ``Frame.from_tsv``) has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``. IndexHierarchy are now supported when ``index_depth`` is greater than one.
+The interface of ``Frame.from_delimited`` (as well as ``Frame.from_csv`` and ``Frame.from_tsv``) has been updated to conform to the common usage of ``index_depth`` and ``columns_depth``. IndexHierarchy is now supported when ``index_depth`` or ``columns_depth`` is greater than one. The former parameter ``index_column`` is renamed ``index_column_first``.
 
 Added ``IndexHierarchy.from_index_items`` and ``IndexHierarchy.from_labels_delimited``.
 

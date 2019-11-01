@@ -2521,7 +2521,7 @@ class TestUnit(TestCase):
 
         f = sf.Frame.from_structured_array(a,
                 index_depth=1,
-                index_column_start='name',
+                index_column_first='name',
                 name='foo')
 
         self.assertEqual(f.shape, (2, 2))
@@ -2534,7 +2534,7 @@ class TestUnit(TestCase):
                 dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
 
         f = sf.Frame.from_structured_array(a,
-                index_column_start=2,
+                index_column_first=2,
                 index_depth=1,
                 name='foo')
         self.assertEqual(f['name'].to_pairs(),
