@@ -2,7 +2,7 @@
 import unittest
 import pickle
 import datetime
-import numpy as np  # type: ignore
+import numpy as np
 
 from collections import OrderedDict
 
@@ -1132,7 +1132,7 @@ class TestUnit(TestCase):
 
 
     def test_hierarchy_from_pandas_a(self) -> None:
-        import pandas  # type: ignore
+        import pandas
 
         pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
 

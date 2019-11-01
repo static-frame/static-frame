@@ -1,6 +1,6 @@
 import unittest
 # from io import StringIO
-import numpy as np #type: ignore
+import numpy as np
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus

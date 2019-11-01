@@ -1,7 +1,7 @@
 
 import typing as tp
 
-# from static_frame.core.index_base import IndexBase
+from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 
 
 from static_frame.core.index import Index
@@ -62,9 +62,9 @@ class IndexAutoFactory:
     def from_optional_constructor(cls,
             initializer: IndexAutoInitializer,
             *,
-            default_constructor: IndexConstructor,
+            default_constructor: tp.Type['IndexBase'],
             explicit_constructor: tp.Optional[IndexConstructor] = None,
-            ) -> tp.Union[Index, IndexGO]:
+            ) -> 'IndexBase':
 
         labels = range(initializer)
 

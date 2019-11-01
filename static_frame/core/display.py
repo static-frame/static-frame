@@ -13,7 +13,7 @@ from enum import Enum
 from functools import partial
 from collections import namedtuple
 
-import numpy as np  # type: ignore
+import numpy as np
 
 
 from static_frame.core.util import _gen_skip_middle

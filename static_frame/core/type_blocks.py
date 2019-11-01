@@ -5,7 +5,7 @@ import typing as tp
 from itertools import zip_longest
 from itertools import chain
 from functools import partial
-import numpy as np  # type: ignore
+import numpy as np
 
 
 from static_frame.core.util import NULL_SLICE

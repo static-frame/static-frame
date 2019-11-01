@@ -7,7 +7,7 @@ import pickle
 import typing as tp
 from io import StringIO
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -1388,7 +1388,7 @@ class TestUnit(TestCase):
 
 
     def test_series_from_pandas_a(self) -> None:
-        import pandas as pd  # type: ignore
+        import pandas as pd
 
         pds = pd.Series([3,4,5], index=list('abc'))
         sfs = Series.from_pandas(pds)

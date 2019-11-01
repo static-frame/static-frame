@@ -8,7 +8,7 @@ import pickle
 import sqlite3
 import datetime
 
-import numpy as np  # type: ignore
+import numpy as np
 import typing as tp
 
 import static_frame as sf
@@ -322,7 +322,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_pandas_a(self) -> None:
-        import pandas as pd  # type: ignore
+        import pandas as pd
 
         df = pd.DataFrame(dict(a=(1,2), b=(3,4)))
         df.name = 'foo'

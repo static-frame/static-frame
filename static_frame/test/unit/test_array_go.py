@@ -1,6 +1,6 @@
 
 import unittest
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame import mloc
 

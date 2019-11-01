@@ -1,6 +1,6 @@
 import typing as tp
 
-import numpy as np  # type: ignore
+import numpy as np
 
 
 from static_frame.core.util import GetItemKeyType
@@ -8,6 +8,17 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Bloc2DKeyType
 
 from static_frame.core.doc_str import doc_inject
+
+
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.bus import Bus  # pylint: disable = W0611
+    from static_frame.core.frame import Frame  # pylint: disable = W0611
+    from static_frame.core.frame import FrameAsType  # pylint: disable = W0611
+    from static_frame.core.index import Index  # pylint: disable = W0611
+    from static_frame.core.series import Series  # pylint: disable = W0611
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611
+
 #-------------------------------------------------------------------------------
 
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus')
@@ -159,5 +170,3 @@ class InterfaceAsType:
 
     def __call__(self, dtype: np.dtype) -> 'Frame':
         return self._func_getitem(NULL_SLICE)(dtype)
-
-

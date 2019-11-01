@@ -1,7 +1,7 @@
 
 import typing as tp
 
-import numpy as np # type: ignore
+import numpy as np
 
 from static_frame.core.util import DtypesSpecifier
 
@@ -33,9 +33,9 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    from xlsxwriter.worksheet import Worksheet # type: ignore # pylint: disable=W0611
-    from xlsxwriter.workbook import Workbook # type: ignore  # pylint: disable=W0611
-    from xlsxwriter.format import Format # type: ignore # pylint: disable=W0611
+    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611
+    from xlsxwriter.workbook import Workbook  # pylint: disable=W0611
+    from xlsxwriter.format import Format  # pylint: disable=W0611
 
 
 
@@ -87,7 +87,7 @@ class StoreXLSX(Store):
         '''
         assert isinstance(dtype, np.dtype)
 
-        import xlsxwriter # type: ignore
+        import xlsxwriter
 
         writer_attr, replace_active = cls._dtype_to_writer_attr(dtype)
         writer_native = getattr(ws, writer_attr)
@@ -240,7 +240,7 @@ class StoreXLSX(Store):
 
     @staticmethod
     def _load_workbook(fp: str) -> 'Workbook':
-        import openpyxl # type: ignore
+        import openpyxl
         return openpyxl.load_workbook(
                 filename=fp,
                 read_only=True,

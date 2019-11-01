@@ -1,7 +1,7 @@
 
 import typing as tp
 
-import numpy as np # type: ignore
+import numpy as np
 
 
 from static_frame.core.series import Series
@@ -180,7 +180,7 @@ class Bus(ContainerBase):
 
             labels = set(self._iloc_to_labels(key))
 
-            array = np.empty(shape=len(self._series._index), dtype=object) # type: ignore
+            array = np.empty(shape=len(self._series._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
                     frame = self._store.read(label)
@@ -254,11 +254,11 @@ class Bus(ContainerBase):
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)
+        return InterfaceGetItem(self._extract_loc)  # type: ignore
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc)
+        return InterfaceGetItem(self._extract_iloc)  # type: ignore
 
 
     # ---------------------------------------------------------------------------
@@ -415,4 +415,3 @@ class Bus(ContainerBase):
     def to_hdf5(self, fp: PathSpecifier) -> None:
         store = StoreHDF5(fp)
         store.write(self.items())
-

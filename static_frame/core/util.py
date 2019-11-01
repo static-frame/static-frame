@@ -14,7 +14,7 @@ from urllib import request
 import tempfile
 from pathlib import Path
 
-import numpy as np  # type: ignore
+import numpy as np
 
 
 if tp.TYPE_CHECKING:

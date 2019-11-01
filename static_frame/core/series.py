@@ -1,7 +1,7 @@
 import typing as tp
 from functools import partial
 
-import numpy as np # type: ignore
+import numpy as np
 
 from numpy.ma import MaskedArray
 

@@ -1,12 +1,18 @@
 import typing as tp
 
-import numpy as np # type: ignore
+import numpy as np
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import DTYPE_BOOL
+
+
+if tp.TYPE_CHECKING:
+
+    from static_frame.core.index import Index  # pylint: disable = W0611
+
 
 class IndexCorrespondence:
     '''
@@ -137,5 +143,3 @@ class IndexCorrespondence:
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
         return [[x] for x in tp.cast(tp.Iterable[int], self.iloc_src)]
-
-

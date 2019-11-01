@@ -7,7 +7,7 @@ from functools import wraps
 import operator as operator_mod
 from collections import namedtuple
 
-import numpy as np  # type: ignore
+import numpy as np
 
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import AnyCallable

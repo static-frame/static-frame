@@ -4,8 +4,8 @@ import string
 import os
 from urllib import request
 
-import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
+import numpy as np
+import pandas as pd
 import static_frame as sf
 
 
