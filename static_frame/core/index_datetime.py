@@ -33,12 +33,11 @@ from static_frame.core.util import _TD64_YEAR
 from static_frame.core.index import Index
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.index_base import IndexBase
 
 
 
 if tp.TYPE_CHECKING:
-    import pandas  # type: ignore #pylint: disable=W0611
+    import pandas  # type: ignore  # pylint: disable = W0611
 
 
 I = tp.TypeVar('I', bound='_IndexDatetime')

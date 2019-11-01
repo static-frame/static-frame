@@ -12,12 +12,12 @@ from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
 
-    from static_frame.core.bus import Bus
-    from static_frame.core.frame import Frame
-    from static_frame.core.frame import FrameAsType
-    from static_frame.core.index import Index
-    from static_frame.core.series import Series
-    from static_frame.core.type_blocks import TypeBlocks
+    from static_frame.core.bus import Bus  # pylint: disable = W0611
+    from static_frame.core.frame import Frame  # pylint: disable = W0611
+    from static_frame.core.frame import FrameAsType  # pylint: disable = W0611
+    from static_frame.core.index import Index  # pylint: disable = W0611
+    from static_frame.core.series import Series  # pylint: disable = W0611
+    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611
 
 #-------------------------------------------------------------------------------
 

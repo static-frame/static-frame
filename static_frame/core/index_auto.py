@@ -1,7 +1,7 @@
 
 import typing as tp
 
-from static_frame.core.index_base import IndexBase
+from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 
 
 from static_frame.core.index import Index
