@@ -3,7 +3,7 @@
 What is New in Static Frame
 ===============================
 
-0.5.0-dev
+0.5.0
 -----------
 
 Introduced the ``Bus``, a ``Series``-like container of mulitple ``Frame``, supporting lazily reading from and writing to XLSX, SQLite, and HDF5 data stores, as well as zipped pickles and delimited files.
@@ -56,6 +56,7 @@ Improved ``Frame.to_pandas()`` to preserve columnar types.
 
 ``Frame.set_index_hierarchy`` now accepts a ``reorder_for_hierarchy`` argument, reordering the rows to support hierarchability.
 
+Using ``Frame.from_records``, when given records as dictionaries, will use the union of all keys to derive columns; explicitly providing columns is now an error.
 
 
 0.4.3

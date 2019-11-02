@@ -384,9 +384,9 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple or dictionary, and ``columns`` is not provided, column names will be derived from the dictionary keys or NamedTuple fields.
+        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields. If each row is a dictionary, providing ``columns`` is an error; column names will be derived from the union of all keys.
 
-        Note that rows defined as ``Series`` is not supported; use ``Frame.from_concat``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
+        Note that rows cannot be ``Series``; use ``Frame.from_concat``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
 
         Args:
             records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
@@ -428,8 +428,7 @@ class Frame(ContainerOperand):
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
-        else:
-            # could be a sequence, or something like a dict view
+        else: # could be a sequence, or something like a dict view
             rows = records
 
         if not len(rows):
@@ -438,8 +437,7 @@ class Frame(ContainerOperand):
         if hasattr(rows, '__getitem__'):
             rows_to_iter = False
             row_reference_first = rows[0]
-        else:
-            # dict view, or other sized iterable that does not support getitem
+        else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
             row_reference_first = next(iter(rows))
 
@@ -448,34 +446,39 @@ class Frame(ContainerOperand):
 
         row_count = len(rows)
 
-        column_getter = None
+        column_name_getter = None
         if isinstance(row_reference_first, dict):
-            if derive_columns: # just pass the key back
-                column_getter = lambda key: key
-                row_reference = {}
-                for row in rows:
-                    # produce a row that has a value for all observed keys
-                    row_reference.update(row)
-            else:
-                row_reference = row_reference_first
-            col_idx_iter = row_reference.keys()
+            if not derive_columns: # just pass the key back
+                raise ErrorInitFrame('cannot supply columns when records are a dictionary')
+            column_name_getter = lambda key: key
+            row_reference = {}
+            for row in rows: # produce a row that has a value for all observed keys
+                row_reference.update(row)
             col_count = len(row_reference)
-            value_iter_use_get = True # avoiding lambda overhead
+            col_idx_iter = row_reference.keys()
+            # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
+            def get_value_iter(col_key):
+                rows_iter = rows if not rows_to_iter else iter(rows)
+                return (row.get(col_key, fill_value) for row in rows_iter)
         else:
             # all other iterables
-            col_count = len(row_reference_first)
-            col_idx_iter = range(col_count)
-            if hasattr(row_reference_first, '_fields') and derive_columns:
-                column_getter = row_reference_first._fields.__getitem__
+            if derive_columns and hasattr(row_reference_first, '_fields'): # NamedTuple
+                column_name_getter = row_reference_first._fields.__getitem__
             row_reference = row_reference_first
-            value_iter_use_get = False # avoiding lambda overhead
+            col_count = len(row_reference)
+            col_idx_iter = range(col_count)
 
+            def get_value_iter(col_key):
+                rows_iter = rows if not rows_to_iter else iter(rows)
+                # this is possible to support ragged lists, but it noticeably reduces performance
+                # return (row[col_key] if col_key < len(row) else fill_value for row in rows_iter)
+                return (row[col_key] for row in rows_iter)
 
         def blocks():
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(col_idx_iter):
-                if column_getter: # append as side effect of generator!
-                    columns.append(column_getter(col_key))
+                if derive_columns and column_name_getter: # append as side effect of generator!
+                    columns.append(column_name_getter(col_key))
 
                 # for each column, try to get a column_type, or None
                 if dtypes is None:
@@ -489,20 +492,11 @@ class Frame(ContainerOperand):
                     column_type = get_col_dtype(col_idx)
                     column_type_explicit = True
 
-                if value_iter_use_get:
-                    def get_value_iter():
-                        rows_iter = rows if not rows_to_iter else iter(rows)
-                        return (row.get(col_key, fill_value) for row in rows_iter)
-                else:
-                    def get_value_iter():
-                        rows_iter = rows if not rows_to_iter else iter(rows)
-                        return (row[col_key] for row in rows_iter)
-
                 values = None
                 if column_type is not None:
                     try:
                         values = np.fromiter(
-                                get_value_iter(),
+                                get_value_iter(col_key),
                                 count=row_count,
                                 dtype=column_type)
                     except (ValueError, TypeError):
@@ -512,7 +506,7 @@ class Frame(ContainerOperand):
                             column_type = None
                 if values is None:
                     # let array constructor determine type if column_type is None
-                    values = np.array(list(get_value_iter()), dtype=column_type)
+                    values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
 
                 values.flags.writeable = False
                 yield values

@@ -4706,10 +4706,25 @@ class TestUnit(TestCase):
         records = [
             dict(a=1, b=2),
             dict(b=10, c=4),
-            dict(c=20, d=0)
+            dict(c=20, d=-1)
         ]
-        f1 = Frame.from_records(records)
-        import ipdb; ipdb.set_trace()
+        f1 = Frame.from_records(records, fill_value=0)
+        self.assertEqual(f1.to_pairs(0),
+                (('a', ((0, 1), (1, 0), (2, 0))), ('b', ((0, 2), (1, 10), (2, 0))), ('c', ((0, 0), (1, 4), (2, 20))), ('d', ((0, 0), (1, 0), (2, -1))))
+                )
+
+
+    def test_frame_from_records_o(self) -> None:
+
+
+        records = [
+            dict(a=1, b=2),
+            dict(b=10, c=4),
+            dict(c=20, d=-1)
+        ]
+        with self.assertRaises(ErrorInitFrame):
+            # cannot supply columns when records are dictionaries
+            f1 = Frame.from_records(records, columns=('b', 'c', 'd'))
 
     #---------------------------------------------------------------------------
     def test_frame_from_json_a(self) -> None:
