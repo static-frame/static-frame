@@ -54,7 +54,7 @@ Defined ``__bool__`` for all containers, where the result is determined based on
 
 Improved ``Frame.to_pandas()`` to preserve columnar types.
 
-``Frame.set_index_hierarchy`` now accepts an ``reorder_for_hierarchy`` argument, reordering the rows to support hierarchability.
+``Frame.set_index_hierarchy`` now accepts a ``reorder_for_hierarchy`` argument, reordering the rows to support hierarchability.
 
 
 
