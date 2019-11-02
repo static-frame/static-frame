@@ -377,6 +377,7 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
+            fill_value: object = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -424,44 +425,54 @@ class Frame(ContainerOperand):
                 return dtypes.get(columns[col_idx], None)
             return dtypes[col_idx]
 
-        def blocks():
+        if not hasattr(records, '__len__'):
+            # might be a generator; must convert to sequence
+            rows = list(records)
+        else:
+            # could be a sequence, or something like a dict view
+            rows = records
 
-            if not hasattr(records, '__len__'):
-                # might be a generator; must convert to sequence
-                rows = list(records)
+        if not len(rows):
+            raise ErrorInitFrame('no rows available in records.')
+
+        if hasattr(rows, '__getitem__'):
+            rows_to_iter = False
+            row_reference_first = rows[0]
+        else:
+            # dict view, or other sized iterable that does not support getitem
+            rows_to_iter = True
+            row_reference_first = next(iter(rows))
+
+        if isinstance(row_reference_first, Series):
+            raise ErrorInitFrame('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
+
+        row_count = len(rows)
+
+        column_getter = None
+        if isinstance(row_reference_first, dict):
+            if derive_columns: # just pass the key back
+                column_getter = lambda key: key
+                row_reference = {}
+                for row in rows:
+                    # produce a row that has a value for all observed keys
+                    row_reference.update(row)
             else:
-                # could be a sequence, or something like a dict view
-                rows = records
-
-            if not len(rows):
-                raise ErrorInitFrame('no rows available in records.')
-
-            if hasattr(rows, '__getitem__'):
-                rows_to_iter = False
-                row_reference = rows[0]
-            else:
-                # dict view, or other sized iterable that does not support getitem
-                rows_to_iter = True
-                row_reference = next(iter(rows))
-
-            row_count = len(rows)
+                row_reference = row_reference_first
+            col_idx_iter = row_reference.keys()
             col_count = len(row_reference)
+            value_iter_use_get = True # avoiding lambda overhead
+        else:
+            # all other iterables
+            col_count = len(row_reference_first)
+            col_idx_iter = range(col_count)
+            if hasattr(row_reference_first, '_fields') and derive_columns:
+                column_getter = row_reference_first._fields.__getitem__
+            row_reference = row_reference_first
+            value_iter_use_get = False # avoiding lambda overhead
 
-            column_getter = None
-            if isinstance(row_reference, dict):
-                col_idx_iter = row_reference.keys()
-                # col_idx_iter = (k for k, _ in _dict_to_sorted_items(row_reference))
-                if derive_columns: # just pass the key back
-                    column_getter = lambda key: key
-            elif isinstance(row_reference, Series):
-                raise ErrorInitFrame('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
-            else:
-                # all other iterables
-                col_idx_iter = range(col_count)
-                if hasattr(row_reference, '_fields') and derive_columns:
-                    column_getter = row_reference._fields.__getitem__
 
-            # derive types from first rows
+        def blocks():
+            # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(col_idx_iter):
                 if column_getter: # append as side effect of generator!
                     columns.append(column_getter(col_key))
@@ -478,12 +489,20 @@ class Frame(ContainerOperand):
                     column_type = get_col_dtype(col_idx)
                     column_type_explicit = True
 
+                if value_iter_use_get:
+                    def get_value_iter():
+                        rows_iter = rows if not rows_to_iter else iter(rows)
+                        return (row.get(col_key, fill_value) for row in rows_iter)
+                else:
+                    def get_value_iter():
+                        rows_iter = rows if not rows_to_iter else iter(rows)
+                        return (row[col_key] for row in rows_iter)
+
                 values = None
                 if column_type is not None:
-                    rows_iter = rows if not rows_to_iter else iter(rows)
                     try:
                         values = np.fromiter(
-                                (row[col_key] for row in rows_iter),
+                                get_value_iter(),
                                 count=row_count,
                                 dtype=column_type)
                     except (ValueError, TypeError):
@@ -492,10 +511,8 @@ class Frame(ContainerOperand):
                             # reset to None if not explicit and failued in fromiter
                             column_type = None
                 if values is None:
-                    rows_iter = rows if not rows_to_iter else iter(rows)
                     # let array constructor determine type if column_type is None
-                    values = np.array([row[col_key] for row in rows_iter],
-                            dtype=column_type)
+                    values = np.array(list(get_value_iter()), dtype=column_type)
 
                 values.flags.writeable = False
                 yield values

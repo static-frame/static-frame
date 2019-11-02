@@ -4700,6 +4700,18 @@ class TestUnit(TestCase):
                 ((0, ((0, 88), (1, 27), (2, 27), (3, None))),))
 
 
+
+    def test_frame_from_records_n(self) -> None:
+
+        records = [
+            dict(a=1, b=2),
+            dict(b=10, c=4),
+            dict(c=20, d=0)
+        ]
+        f1 = Frame.from_records(records)
+        import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
     def test_frame_from_json_a(self) -> None:
 
         msg = """[
