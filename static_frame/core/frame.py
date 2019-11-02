@@ -2170,19 +2170,19 @@ class Frame(ContainerOperand):
             index, index_iloc = rehierarch_and_map(
                     labels=self._index.values,
                     depth_map=index,
-                    index_constructor=self._index.from_labels
+                    index_constructor=self._index.from_labels,
+                    name=self._index.name
                     )
-            # index, index_iloc = self._index._rehierarch_and_map(depth_map=index)
         else:
             index = self._index
             index_iloc = None
 
         if columns:
-            # columns, columns_iloc = self._columns._rehierarch_and_map(depth_map=columns)
             columns, columns_iloc = rehierarch_and_map(
                     labels=self._columns.values,
                     depth_map=columns,
                     index_constructor=self._columns.from_labels,
+                    name=self._columns.name
                     )
             own_columns = True
         else:
@@ -3409,7 +3409,8 @@ class Frame(ContainerOperand):
             columns: GetItemKeyType,
             *,
             drop: bool = False,
-            index_constructors: tp.Optional[IndexConstructors] = None
+            index_constructors: tp.Optional[IndexConstructors] = None,
+            sort: bool = False,
             ) -> 'Frame':
         '''
         Given an iterable of column labels, return a new ``Frame`` with those columns as an ``IndexHierarchy`` on the index.
@@ -3418,12 +3419,11 @@ class Frame(ContainerOperand):
             columns: Iterable of column labels.
             drop: Boolean to determine if selected columns should be removed from the data.
             index_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting columns Index components in the ``IndexHierarchy``.
+            sort: Sort the rows to produce a hierarchible Index for the selected columns, assuming hierarchability is possible.
 
         Returns:
             :py:class:`Frame`
         '''
-
-        # columns cannot be a tuple
         if isinstance(columns, tuple):
             column_loc = list(columns)
             column_name = columns
@@ -3436,24 +3436,38 @@ class Frame(ContainerOperand):
         if column_name is None:
             column_name = tuple(self._columns.values[column_iloc])
 
+        index_labels = self._blocks._extract_array(column_key=column_iloc)
+
+        if sort:
+            index, order_lex = rehierarch_and_map(
+                    labels=index_labels,
+                    depth_map=range(index_labels.shape[1]), # keep order
+                    index_constructor=IndexHierarchy.from_labels,
+                    index_constructors=index_constructors,
+                    name=column_name,
+                    )
+            # import ipdb; ipdb.set_trace()
+            blocks_src = self._blocks._extract(row_key=order_lex)
+        else:
+            index = IndexHierarchy.from_labels(index_labels,
+                    index_constructors=index_constructors,
+                    name=column_name,
+                    )
+            blocks_src = self._blocks
+
+
         if drop:
             blocks = TypeBlocks.from_blocks(
-                    self._blocks._drop_blocks(column_key=column_iloc))
+                    blocks_src._drop_blocks(column_key=column_iloc))
             columns = self._columns._drop_iloc(column_iloc)
             own_data = True
             own_columns = True
         else:
-            blocks = self._blocks
+            blocks = blocks_src
             columns = self._columns
             own_data = False
             own_columns = False
 
-        index_labels = self._blocks._extract_array(column_key=column_iloc)
-        # index is always immutable
-        index = IndexHierarchy.from_labels(index_labels,
-                name=column_name,
-                index_constructors=index_constructors
-                )
 
         return self.__class__(blocks,
                 columns=columns,

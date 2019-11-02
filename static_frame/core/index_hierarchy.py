@@ -277,7 +277,7 @@ class IndexHierarchy(IndexBase):
                     else:
                         # can only fetch this node (and not create a new node) if this is the sequential predecessor
                         if v != observed_last[d]:
-                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined'.format(
+                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
                                     v,
                                     label,
                                     observed_last[d],
@@ -740,38 +740,6 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__.from_labels(mapper(x) for x in self._labels)
 
-    # def _rehierarch_and_map(self,
-    #         depth_map: tp.Iterable[int],
-    #         ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
-
-    #     depth = self.depth
-
-    #     if depth != len(depth_map):
-    #         raise RuntimeError('must specify new depths for all depths')
-    #     if set(range(depth)) != set(depth_map):
-    #         raise RuntimeError('all depths must be specified')
-
-    #     labels = self.values
-    #     labels_post = labels[NULL_SLICE, list(depth_map)]
-    #     labels_sort = np.full(labels_post.shape, 0)
-
-    #     # get ordering of vlues found in each level
-    #     order = [defaultdict(int) for _ in range(depth)]
-
-    #     for idx_row, label in enumerate(labels):
-    #         label = tuple(label)
-    #         for idx_col in range(depth):
-    #             if label[idx_col] not in order[idx_col]:
-    #                 # Map label to an integer representing the observed order.
-    #                 order[idx_col][label[idx_col]] = len(order[idx_col])
-    #             # Fill array for sorting based on observed order.
-    #             labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
-
-    #     # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
-    #     order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
-    #     labels_post = labels_post[order_lex]
-    #     labels_post.flags.writeable = False
-    #     return self.__class__.from_labels(labels_post), order_lex
 
     def rehierarch(self,
             depth_map: tp.Iterable[int]

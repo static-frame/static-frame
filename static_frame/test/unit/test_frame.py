@@ -5037,10 +5037,12 @@ class TestUnit(TestCase):
         f = Frame.from_records(records)
         fh = f.set_index_hierarchy([0, 1],
                 drop=True,
-                index_constructors=(Index, IndexYearMonth))
+                sort=True,
+                )
 
-        import ipdb; ipdb.set_trace()
-
+        self.assertEqual(fh.to_pairs(0),
+                ((2, (((1, 'a'), 10), ((1, 'c'), 30), ((1, 'b'), 20), ((2, 'a'), 40), ((2, 'c'), 60), ((2, 'b'), 50))),)
+                )
 
 
     #---------------------------------------------------------------------------

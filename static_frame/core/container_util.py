@@ -13,6 +13,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611
 
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import AnyCallable
@@ -357,10 +358,12 @@ def bloc_key_normalize(
     return bloc_key
 
 
-def rehierarch_and_map(
+def rehierarch_and_map(*,
         labels: np.ndarray,
-        index_constructor: IndexConstructor,
         depth_map: tp.Iterable[int],
+        index_constructor: IndexConstructor,
+        index_constructors: tp.Optional[IndexConstructors] = None,
+        name: tp.Hashable = None,
         ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
 
         depth = labels.shape[1] # number of columns
@@ -389,4 +392,8 @@ def rehierarch_and_map(
         order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
         labels_post = labels_post[order_lex]
         labels_post.flags.writeable = False
-        return index_constructor(labels_post), order_lex
+        index = index_constructor(labels_post,
+                index_constructors=index_constructors,
+                name=name,
+                )
+        return index, order_lex
