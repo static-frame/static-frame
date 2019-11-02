@@ -5037,7 +5037,7 @@ class TestUnit(TestCase):
         f = Frame.from_records(records)
         fh = f.set_index_hierarchy([0, 1],
                 drop=True,
-                sort=True,
+                reorder_for_hierarchy=True,
                 )
 
         self.assertEqual(fh.to_pairs(0),

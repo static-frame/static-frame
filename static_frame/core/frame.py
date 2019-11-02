@@ -3410,7 +3410,7 @@ class Frame(ContainerOperand):
             *,
             drop: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
-            sort: bool = False,
+            reorder_for_hierarchy: bool = False,
             ) -> 'Frame':
         '''
         Given an iterable of column labels, return a new ``Frame`` with those columns as an ``IndexHierarchy`` on the index.
@@ -3419,7 +3419,7 @@ class Frame(ContainerOperand):
             columns: Iterable of column labels.
             drop: Boolean to determine if selected columns should be removed from the data.
             index_constructors: Optionally provide a sequence of ``Index`` constructors, of length equal to depth, to be used in converting columns Index components in the ``IndexHierarchy``.
-            sort: Sort the rows to produce a hierarchible Index for the selected columns, assuming hierarchability is possible.
+            reorder_for_hierarchy: reorder the rows to produce a hierarchible Index from the selected columns, assuming hierarchability is possible.
 
         Returns:
             :py:class:`Frame`
@@ -3438,7 +3438,7 @@ class Frame(ContainerOperand):
 
         index_labels = self._blocks._extract_array(column_key=column_iloc)
 
-        if sort:
+        if reorder_for_hierarchy:
             index, order_lex = rehierarch_and_map(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
@@ -3446,7 +3446,6 @@ class Frame(ContainerOperand):
                     index_constructors=index_constructors,
                     name=column_name,
                     )
-            # import ipdb; ipdb.set_trace()
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
             index = IndexHierarchy.from_labels(index_labels,
