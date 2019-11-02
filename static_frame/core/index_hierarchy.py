@@ -1,7 +1,6 @@
 
 import typing as tp
 from collections.abc import KeysView
-from collections import defaultdict
 from itertools import chain
 from ast import literal_eval
 
