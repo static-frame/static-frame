@@ -3334,7 +3334,7 @@ class TestUnit(TestCase):
                 )
 
 
-
+    @skip_win  # type: ignore
     def test_structured_array_to_blocks_and_index_a(self) -> None:
 
         a1 = np.array(np.arange(12).reshape((3, 4)))
