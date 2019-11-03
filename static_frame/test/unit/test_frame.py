@@ -400,7 +400,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_to_pandas_b(self) -> None:
-        f1 = sf.Frame.from_records(
+        f1 = sf.Frame.from_dict_records(
                 [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels(
                 [(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)]))
         df = f1.loc[sf.HLoc[(1,'dd')]].to_pandas()
@@ -4332,11 +4332,11 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_r(self) -> None:
-        f1 = sf.Frame.from_records(
+        f1 = sf.Frame.from_dict_records(
                 [dict(a=1,b=1),dict(a=2,b=3),dict(a=1,b=1),dict(a=2,b=3)],
                 index=sf.IndexHierarchy.from_labels([(1,'dd'),(1,'bb'),(2,'cc'),(2,'dd')]))
 
-        f2 = sf.Frame.from_records(
+        f2 = sf.Frame.from_dict_records(
                 [dict(a=1,b=1),dict(a=2,b=3),dict(a=1,b=1),dict(a=2,b=3)],
                 index=sf.IndexHierarchy.from_labels([(3,'ddd'),(3,'bbb'),(4,'ccc'),(4,'ddd')])) * 100
 
@@ -4367,9 +4367,9 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_concat_t(self) -> None:
-        frame1 = sf.Frame.from_records(
+        frame1 = sf.Frame.from_dict_records(
                 [dict(a=1,b=1), dict(a=2,b=3), dict(a=1,b=1), dict(a=2,b=3)], index=sf.IndexHierarchy.from_labels([(1,'dd',0), (1,'bb',0), (2,'cc',0), (2,'ee',0)]))
-        frame2 = sf.Frame.from_records(
+        frame2 = sf.Frame.from_dict_records(
                 [dict(a=100,b=200), dict(a=20,b=30), dict(a=101,b=101), dict(a=201,b=301)], index=sf.IndexHierarchy.from_labels([(1,'ddd',0), (1,'bbb',0), (2,'ccc',0), (2,'eee',0)]))
 
         # produce invalid index labels into an IndexHierarchy constructor
@@ -4588,7 +4588,7 @@ class TestUnit(TestCase):
     def test_frame_from_records_b(self) -> None:
 
         records = [{'a':x, 'b':x, 'c':x} for x in range(4)]
-        f1 = Frame.from_records(records)
+        f1 = Frame.from_dict_records(records)
         self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
         self.assertEqual(f1.sum().to_pairs(),
                 (('a', 6), ('b', 6), ('c', 6)))
@@ -4664,7 +4664,7 @@ class TestUnit(TestCase):
 
         records = [dict(a=1, b='2', c=3), dict(a=4, b='5', c=6)]
         dtypes = {'b': np.int64}
-        f1 = sf.Frame.from_records(records, dtypes=dtypes)
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes)
 
         self.assertEqual(str(f1.dtypes['b']), 'int64')
 
@@ -4673,7 +4673,7 @@ class TestUnit(TestCase):
         # handle case of dict views
         a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
 
-        post = Frame.from_records(a.values(), index=list(a.keys()))
+        post = Frame.from_dict_records(a.values(), index=list(a.keys()))
 
         self.assertEqual(post.to_pairs(0),
                 (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
@@ -4708,7 +4708,7 @@ class TestUnit(TestCase):
             dict(b=10, c=4),
             dict(c=20, d=-1)
         ]
-        f1 = Frame.from_records(records, fill_value=0)
+        f1 = Frame.from_dict_records(records, fill_value=0)
         self.assertEqual(f1.to_pairs(0),
                 (('a', ((0, 1), (1, 0), (2, 0))), ('b', ((0, 2), (1, 10), (2, 0))), ('c', ((0, 0), (1, 4), (2, 20))), ('d', ((0, 0), (1, 0), (2, -1))))
                 )
@@ -5283,7 +5283,7 @@ class TestUnit(TestCase):
 
     def test_frame_reindex_drop_level_a(self) -> None:
 
-        f1 = Frame.from_records(
+        f1 = Frame.from_dict_records(
                 (dict(a=x, b=x) for x in range(4)),
                 index=sf.IndexHierarchy.from_labels([(1,1),(1,2),(2,3),(2,4)]))
 
@@ -5445,7 +5445,7 @@ class TestUnit(TestCase):
             for i in range(3):
                 yield f'000{i}', {'squared': i**2, 'cubed': i**3}
 
-        f = Frame.from_records_items(gen())
+        f = Frame.from_dict_records_items(gen())
 
         self.assertEqual(
                 f.to_pairs(0),

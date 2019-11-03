@@ -56,7 +56,7 @@ Improved ``Frame.to_pandas()`` to preserve columnar types.
 
 ``Frame.set_index_hierarchy`` now accepts a ``reorder_for_hierarchy`` argument, reordering the rows to support hierarchability.
 
-Using ``Frame.from_records``, when given records as dictionaries, will use the union of all keys to derive columns; explicitly providing columns is now an error.
+Added ``Frame.from_dict_records`` and ``Frame.from_dict_records_items``; when given records, the union of all keys is used to derive columns.
 
 
 0.4.3

@@ -430,8 +430,9 @@ class Frame(ContainerOperand):
             rows = list(records)
         else: # could be a sequence, or something like a dict view
             rows = records
+        row_count = len(rows)
 
-        if not len(rows):
+        if not row_count:
             raise ErrorInitFrame('no rows available in records.')
 
         if hasattr(rows, '__getitem__'):
@@ -443,36 +444,24 @@ class Frame(ContainerOperand):
 
         if isinstance(row_reference_first, Series):
             raise ErrorInitFrame('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
+        if isinstance(row_reference_first, dict):
+            raise ErrorInitFrame('Frame.from_records() does not support dict. Use Frame.from_dict_records() instead.')
 
-        row_count = len(rows)
 
         column_name_getter = None
-        if isinstance(row_reference_first, dict):
-            if not derive_columns: # just pass the key back
-                raise ErrorInitFrame('cannot supply columns when records are a dictionary')
-            column_name_getter = lambda key: key
-            row_reference = {}
-            for row in rows: # produce a row that has a value for all observed keys
-                row_reference.update(row)
-            col_count = len(row_reference)
-            col_idx_iter = row_reference.keys()
-            # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
-            def get_value_iter(col_key):
-                rows_iter = rows if not rows_to_iter else iter(rows)
-                return (row.get(col_key, fill_value) for row in rows_iter)
-        else:
-            # all other iterables
-            if derive_columns and hasattr(row_reference_first, '_fields'): # NamedTuple
-                column_name_getter = row_reference_first._fields.__getitem__
-            row_reference = row_reference_first
-            col_count = len(row_reference)
-            col_idx_iter = range(col_count)
+        # all other iterables
+        if derive_columns and hasattr(row_reference_first, '_fields'): # NamedTuple
+            column_name_getter = row_reference_first._fields.__getitem__
 
-            def get_value_iter(col_key):
-                rows_iter = rows if not rows_to_iter else iter(rows)
-                # this is possible to support ragged lists, but it noticeably reduces performance
-                # return (row[col_key] if col_key < len(row) else fill_value for row in rows_iter)
-                return (row[col_key] for row in rows_iter)
+        row_reference = row_reference_first
+        col_count = len(row_reference)
+        col_idx_iter = range(col_count)
+
+        def get_value_iter(col_key):
+            rows_iter = rows if not rows_to_iter else iter(rows)
+            # this is possible to support ragged lists, but it noticeably reduces performance
+            # return (row[col_key] if col_key < len(row) else fill_value for row in rows_iter)
+            return (row[col_key] for row in rows_iter)
 
         def blocks():
             # iterate over final column order, yielding 1D arrays
@@ -528,6 +517,122 @@ class Frame(ContainerOperand):
                 )
 
 
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_dict_records(cls,
+            records: tp.Iterable[tp.Dict[tp.Hashable, tp.Any]],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            fill_value: object = np.nan,
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            ) -> 'Frame':
+        '''Frame constructor from an iterable of dictionaries; column names will be derived from the union of all keys.
+
+        Args:
+            records: Iterable of row values, where row values are dictionaries.
+            index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        columns = []
+        dtypes_is_map = dtypes_mappable(dtypes)
+
+        def get_col_dtype(col_idx):
+            if dtypes_is_map:
+                return dtypes.get(columns[col_idx], None)
+            return dtypes[col_idx]
+
+        if not hasattr(records, '__len__'):
+            # might be a generator; must convert to sequence
+            rows = list(records)
+        else: # could be a sequence, or something like a dict view
+            rows = records
+        row_count = len(rows)
+
+        if not row_count:
+            raise ErrorInitFrame('no rows available in records.')
+
+        if hasattr(rows, '__getitem__'):
+            rows_to_iter = False
+        else: # dict view, or other sized iterable that does not support getitem
+            rows_to_iter = True
+
+        row_reference = {}
+        for row in rows: # produce a row that has a value for all observed keys
+            row_reference.update(row)
+
+        col_count = len(row_reference)
+
+        # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
+        def get_value_iter(col_key):
+            rows_iter = rows if not rows_to_iter else iter(rows)
+            return (row.get(col_key, fill_value) for row in rows_iter)
+
+
+        def blocks():
+            # iterate over final column order, yielding 1D arrays
+            for col_idx, col_key in enumerate(row_reference.keys()):
+                columns.append(col_key)
+
+                # for each column, try to get a column_type, or None
+                if dtypes is None:
+                    field_ref = row_reference[col_key]
+                    # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
+                    column_type = (type(field_ref)
+                            if not isinstance(field_ref, (str, np.datetime64))
+                            else None)
+                    column_type_explicit = False
+                else: # column_type returned here can be None.
+                    column_type = get_col_dtype(col_idx)
+                    column_type_explicit = True
+
+                values = None
+                if column_type is not None:
+                    try:
+                        values = np.fromiter(
+                                get_value_iter(col_key),
+                                count=row_count,
+                                dtype=column_type)
+                    except (ValueError, TypeError):
+                        # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+                        if not column_type_explicit:
+                            # reset to None if not explicit and failued in fromiter
+                            column_type = None
+                if values is None:
+                    # let array constructor determine type if column_type is None
+                    values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
+
+                values.flags.writeable = False
+                yield values
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()),
+                index=index,
+                columns=columns,
+                name=name,
+                own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_index=own_index,
+                )
+
+
+
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
@@ -564,6 +669,42 @@ class Frame(ContainerOperand):
                 name=name,
                 consolidate_blocks=consolidate_blocks
                 )
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_dict_records_items(cls,
+            items: tp.Iterator[tp.Tuple[tp.Hashable, tp.Iterable[tp.Any]]],
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False) -> 'Frame':
+        '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
+
+        Args:
+            items: Iterable of pairs of index label, row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+
+        '''
+        index = []
+
+        def gen():
+            for label, values in items:
+                index.append(label)
+                yield values
+
+        return cls.from_dict_records(gen(),
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks
+                )
+
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -660,7 +801,7 @@ class Frame(ContainerOperand):
             :py:class:`static_frame.Frame`
         '''
         data = json.loads(json_data)
-        return cls.from_records(data,
+        return cls.from_dict_records(data,
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks

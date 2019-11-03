@@ -30,7 +30,7 @@ class TestUnit(TestCase):
         counts = post.iter_group('group').apply(lambda x: len(x))
         self.assertEqual(
             counts.to_pairs(),
-            (('Attribute', 10), ('Constructor', 22), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 80), ('Method', 54), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 17))
+            (('Attribute', 10), ('Constructor', 24), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 80), ('Method', 54), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 17))
             )
 
 
