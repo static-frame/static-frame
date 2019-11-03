@@ -137,7 +137,7 @@ def main() -> None:
             pairs.append((package.__name__, package.__version__))
         print('|'.join(':'.join(pair) for pair in pairs))
 
-        frame = sf.FrameGO.from_records(records)
+        frame = sf.FrameGO.from_dict_records(records)
         frame = frame.set_index('name', drop=True)
         frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
         frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]

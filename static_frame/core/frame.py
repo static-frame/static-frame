@@ -78,6 +78,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import rehierarch_and_map
+from static_frame.core.container_util import array_from_value_iter
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -377,16 +378,15 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            fill_value: object = np.nan,
             consolidate_blocks: bool = False,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and dictionaries. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields. If each row is a dictionary, providing ``columns`` is an error; column names will be derived from the union of all keys.
+        '''Frame constructor from an iterable of rows, where rows are defined as iterables, including tuples, lists, and arrays. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields.
 
-        Note that rows cannot be ``Series``; use ``Frame.from_concat``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
+        For records defined as ``Series``, use ``Frame.from_concat``; for records defined as dictionary, use ``Frame.from_dict_records``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
 
         Args:
             records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
@@ -399,12 +399,6 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        derive_columns = False
-        if columns is None:
-            derive_columns = True
-            # leave columns list in outer scope for blocks() to populate
-            columns = []
-
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
             if dtypes is not None:
@@ -418,13 +412,6 @@ class Frame(ContainerOperand):
                     own_columns=own_columns,
                     )
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-
-        def get_col_dtype(col_idx):
-            if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            return dtypes[col_idx]
-
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
             rows = list(records)
@@ -437,25 +424,29 @@ class Frame(ContainerOperand):
 
         if hasattr(rows, '__getitem__'):
             rows_to_iter = False
-            row_reference_first = rows[0]
+            row_reference = rows[0]
         else: # dict view, or other sized iterable that does not support getitem
             rows_to_iter = True
-            row_reference_first = next(iter(rows))
+            row_reference = next(iter(rows))
 
-        if isinstance(row_reference_first, Series):
-            raise ErrorInitFrame('Frame.from_records() does not support Series. Use Frame.from_concat() instead.')
-        if isinstance(row_reference_first, dict):
-            raise ErrorInitFrame('Frame.from_records() does not support dict. Use Frame.from_dict_records() instead.')
-
+        if isinstance(row_reference, Series):
+            raise ErrorInitFrame('Frame.from_records() does not support Series records. Use Frame.from_concat() instead.')
+        if isinstance(row_reference, dict):
+            raise ErrorInitFrame('Frame.from_records() does not support dictionary records. Use Frame.from_dict_records() instead.')
 
         column_name_getter = None
-        # all other iterables
-        if derive_columns and hasattr(row_reference_first, '_fields'): # NamedTuple
-            column_name_getter = row_reference_first._fields.__getitem__
+        if columns is None and hasattr(row_reference, '_fields'): # NamedTuple
+            column_name_getter = row_reference._fields.__getitem__
+            columns = []
 
-        row_reference = row_reference_first
+        dtypes_is_map = dtypes_mappable(dtypes)
+
+        def get_col_dtype(col_idx):
+            if dtypes_is_map:
+                return dtypes.get(columns[col_idx], None)
+            return dtypes[col_idx]
+
         col_count = len(row_reference)
-        col_idx_iter = range(col_count)
 
         def get_value_iter(col_key):
             rows_iter = rows if not rows_to_iter else iter(rows)
@@ -465,39 +456,48 @@ class Frame(ContainerOperand):
 
         def blocks():
             # iterate over final column order, yielding 1D arrays
-            for col_idx, col_key in enumerate(col_idx_iter):
-                if derive_columns and column_name_getter: # append as side effect of generator!
-                    columns.append(column_name_getter(col_key))
+            for col_idx in range(col_count):
+                if column_name_getter: # append as side effect of generator!
+                    columns.append(column_name_getter(col_idx))
 
-                # for each column, try to get a column_type, or None
-                if dtypes is None:
-                    field_ref = row_reference[col_key]
-                    # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-                    column_type = (type(field_ref)
-                            if not isinstance(field_ref, (str, np.datetime64))
-                            else None)
-                    column_type_explicit = False
-                else: # column_type returned here can be None.
-                    column_type = get_col_dtype(col_idx)
-                    column_type_explicit = True
+                # # for each column, try to get a column_type, or None
+                # if dtypes is None:
+                #     field_ref = row_reference[col_idx]
+                #     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
+                #     column_type = (type(field_ref)
+                #             if not isinstance(field_ref, (str, np.datetime64))
+                #             else None)
+                #     column_type_explicit = False
+                # else: # column_type returned here can be None.
+                #     column_type = get_col_dtype(col_idx)
+                #     column_type_explicit = True
 
-                values = None
-                if column_type is not None:
-                    try:
-                        values = np.fromiter(
-                                get_value_iter(col_key),
-                                count=row_count,
-                                dtype=column_type)
-                    except (ValueError, TypeError):
-                        # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                        if not column_type_explicit:
-                            # reset to None if not explicit and failued in fromiter
-                            column_type = None
-                if values is None:
-                    # let array constructor determine type if column_type is None
-                    values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
+                # values = None
+                # if column_type is not None:
+                #     try:
+                #         values = np.fromiter(
+                #                 get_value_iter(col_idx),
+                #                 count=row_count,
+                #                 dtype=column_type)
+                #     except (ValueError, TypeError):
+                #         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+                #         if not column_type_explicit:
+                #             # reset to None if not explicit and failued in fromiter
+                #             column_type = None
+                # if values is None:
+                #     # let array constructor determine type if column_type is None
+                #     values = np.array(tuple(get_value_iter(col_idx)), dtype=column_type)
 
-                values.flags.writeable = False
+                # values.flags.writeable = False
+
+                values = array_from_value_iter(
+                        key=col_idx,
+                        idx=col_idx,
+                        get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
+                        dtypes=dtypes,
+                        row_reference=row_reference,
+                        row_count=row_count
+                        )
                 yield values
 
         if consolidate_blocks:
@@ -578,41 +578,48 @@ class Frame(ContainerOperand):
             rows_iter = rows if not rows_to_iter else iter(rows)
             return (row.get(col_key, fill_value) for row in rows_iter)
 
-
         def blocks():
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
 
-                # for each column, try to get a column_type, or None
-                if dtypes is None:
-                    field_ref = row_reference[col_key]
-                    # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-                    column_type = (type(field_ref)
-                            if not isinstance(field_ref, (str, np.datetime64))
-                            else None)
-                    column_type_explicit = False
-                else: # column_type returned here can be None.
-                    column_type = get_col_dtype(col_idx)
-                    column_type_explicit = True
+                # # for each column, try to get a column_type, or None
+                # if dtypes is None:
+                #     field_ref = row_reference[col_key]
+                #     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
+                #     column_type = (type(field_ref)
+                #             if not isinstance(field_ref, (str, np.datetime64))
+                #             else None)
+                #     column_type_explicit = False
+                # else: # column_type returned here can be None.
+                #     column_type = get_col_dtype(col_idx)
+                #     column_type_explicit = True
 
-                values = None
-                if column_type is not None:
-                    try:
-                        values = np.fromiter(
-                                get_value_iter(col_key),
-                                count=row_count,
-                                dtype=column_type)
-                    except (ValueError, TypeError):
-                        # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                        if not column_type_explicit:
-                            # reset to None if not explicit and failued in fromiter
-                            column_type = None
-                if values is None:
-                    # let array constructor determine type if column_type is None
-                    values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
+                # values = None
+                # if column_type is not None:
+                #     try:
+                #         values = np.fromiter(
+                #                 get_value_iter(col_key),
+                #                 count=row_count,
+                #                 dtype=column_type)
+                #     except (ValueError, TypeError):
+                #         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+                #         if not column_type_explicit:
+                #             # reset to None if not explicit and failued in fromiter
+                #             column_type = None
+                # if values is None:
+                #     # let array constructor determine type if column_type is None
+                #     values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
 
-                values.flags.writeable = False
+                # values.flags.writeable = False
+                values = array_from_value_iter(
+                        key=col_key,
+                        idx=col_idx,
+                        get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
+                        dtypes=dtypes,
+                        row_reference=row_reference,
+                        row_count=row_count
+                        )
                 yield values
 
         if consolidate_blocks:

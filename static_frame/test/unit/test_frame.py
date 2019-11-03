@@ -4554,7 +4554,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.tail(3).index.values.tolist(),
                 [997, 998, 999])
 
-
+    #---------------------------------------------------------------------------
     def test_frame_from_records_date_a(self) -> None:
 
         d = np.datetime64
@@ -4587,15 +4587,6 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_b(self) -> None:
 
-        records = [{'a':x, 'b':x, 'c':x} for x in range(4)]
-        f1 = Frame.from_dict_records(records)
-        self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
-        self.assertEqual(f1.sum().to_pairs(),
-                (('a', 6), ('b', 6), ('c', 6)))
-
-
-    def test_frame_from_records_c(self) -> None:
-
         f1 = sf.Frame.from_records([[1, 2], [2, 3]], columns=['a', 'b'])
         self.assertEqual(f1.to_pairs(0),
                 (('a', ((0, 1), (1, 2))), ('b', ((0, 2), (1, 3)))))
@@ -4604,7 +4595,7 @@ class TestUnit(TestCase):
             f2 = sf.Frame.from_records([[1, 2], [2, 3]], columns=['a'])
 
 
-    def test_frame_from_records_d(self) -> None:
+    def test_frame_from_records_c(self) -> None:
 
         s1 = Series([3, 4, 5], index=('x', 'y', 'z'))
         s2 = Series(list('xyz'), index=('x', 'y', 'z'))
@@ -4614,7 +4605,7 @@ class TestUnit(TestCase):
             f1 = sf.Frame.from_records([s1, s2], columns=['a', 'b', 'c'])
 
 
-    def test_frame_from_records_e(self) -> None:
+    def test_frame_from_records_d(self) -> None:
 
         a1 = np.array([[1,2,3], [4,5,6]])
 
@@ -4624,7 +4615,7 @@ class TestUnit(TestCase):
                 (('a', (('x', 1), ('y', 4))), ('b', (('x', 2), ('y', 5))), ('c', (('x', 3), ('y', 6)))))
 
 
-    def test_frame_from_records_f(self) -> None:
+    def test_frame_from_records_e(self) -> None:
 
         records = [[1,'2',3], [4,'5',6]]
         dtypes = (np.int64, str, str)
@@ -4636,7 +4627,7 @@ class TestUnit(TestCase):
                 (('a', 'int64'), ('b', '<U1'), ('c', '<U1'))
                 )
 
-    def test_frame_from_records_g(self) -> None:
+    def test_frame_from_records_f(self) -> None:
 
         records = [[1,'2',3], [4,'5',6]]
         dtypes = {'b': np.int64}
@@ -4648,7 +4639,7 @@ class TestUnit(TestCase):
         self.assertEqual(str(f1.dtypes['b']), 'int64')
 
 
-    def test_frame_from_records_h(self) -> None:
+    def test_frame_from_records_g(self) -> None:
 
         NT = namedtuple('NT', ('a', 'b', 'c'))
 
@@ -4659,28 +4650,7 @@ class TestUnit(TestCase):
         self.assertEqual(str(f1.dtypes['b']), 'int64')
 
 
-    def test_frame_from_records_i(self) -> None:
-
-
-        records = [dict(a=1, b='2', c=3), dict(a=4, b='5', c=6)]
-        dtypes = {'b': np.int64}
-        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes)
-
-        self.assertEqual(str(f1.dtypes['b']), 'int64')
-
-
-    def test_frame_from_records_j(self) -> None:
-        # handle case of dict views
-        a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
-
-        post = Frame.from_dict_records(a.values(), index=list(a.keys()))
-
-        self.assertEqual(post.to_pairs(0),
-                (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
-
-
-
-    def test_frame_from_records_k(self) -> None:
+    def test_frame_from_records_h(self) -> None:
 
         with self.assertRaises(ErrorInitFrame):
             Frame.from_records(())
@@ -4688,7 +4658,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             Frame.from_records(((0, 1, 2) for x in range(3) if x < 0))
 
-    def test_frame_from_records_m(self) -> None:
+    def test_frame_from_records_i(self) -> None:
 
         f1 = sf.Frame.from_records([
             (88,),
@@ -4700,8 +4670,46 @@ class TestUnit(TestCase):
                 ((0, ((0, 88), (1, 27), (2, 27), (3, None))),))
 
 
+    def test_frame_from_records_j(self) -> None:
 
-    def test_frame_from_records_n(self) -> None:
+        records = [
+            dict(a=1, b=2),
+            dict(b=10, c=4),
+            dict(c=20, d=-1)
+        ]
+        with self.assertRaises(ErrorInitFrame):
+            # cannot supply columns when records are dictionaries
+            f1 = Frame.from_records(records, columns=('b', 'c', 'd'))
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_dict_records_a(self) -> None:
+
+        records = [{'a':x, 'b':x, 'c':x} for x in range(4)]
+        f1 = Frame.from_dict_records(records)
+        self.assertEqual(f1.columns.values.tolist(), ['a', 'b', 'c'])
+        self.assertEqual(f1.sum().to_pairs(),
+                (('a', 6), ('b', 6), ('c', 6)))
+
+    def test_frame_from_dict_records_b(self) -> None:
+        # handle case of dict views
+        a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
+
+        post = Frame.from_dict_records(a.values(), index=list(a.keys()))
+
+        self.assertEqual(post.to_pairs(0),
+                (('a', ((1, 1), (2, 4))), ('b', ((1, 2), (2, 3)))))
+
+
+    def test_frame_from_dict_records_c(self) -> None:
+
+        records = [dict(a=1, b='2', c=3), dict(a=4, b='5', c=6)]
+        dtypes = {'b': np.int64}
+        f1 = sf.Frame.from_dict_records(records, dtypes=dtypes)
+
+        self.assertEqual(str(f1.dtypes['b']), 'int64')
+
+    def test_frame_from_dict_records_d(self) -> None:
 
         records = [
             dict(a=1, b=2),
@@ -4713,18 +4721,6 @@ class TestUnit(TestCase):
                 (('a', ((0, 1), (1, 0), (2, 0))), ('b', ((0, 2), (1, 10), (2, 0))), ('c', ((0, 0), (1, 4), (2, 20))), ('d', ((0, 0), (1, 0), (2, -1))))
                 )
 
-
-    def test_frame_from_records_o(self) -> None:
-
-
-        records = [
-            dict(a=1, b=2),
-            dict(b=10, c=4),
-            dict(c=20, d=-1)
-        ]
-        with self.assertRaises(ErrorInitFrame):
-            # cannot supply columns when records are dictionaries
-            f1 = Frame.from_records(records, columns=('b', 'c', 'd'))
 
     #---------------------------------------------------------------------------
     def test_frame_from_json_a(self) -> None:
@@ -5439,7 +5435,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_from_records_items(self) -> None:
+    def test_frame_from_records_items_a(self) -> None:
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Dict[tp.Hashable, tp.Any]]]:
             for i in range(3):
