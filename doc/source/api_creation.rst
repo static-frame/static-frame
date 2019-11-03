@@ -45,8 +45,11 @@ Frame
    :start-after: start_frame_from_records_a
    :end-before: end_frame_from_records_a
 
+.. automethod:: static_frame.Frame.from_dict_records
 
 .. automethod:: static_frame.Frame.from_records_items
+
+.. automethod:: static_frame.Frame.from_dict_records_items
 
 .. automethod:: static_frame.Frame.from_dict
 
