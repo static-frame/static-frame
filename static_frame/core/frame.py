@@ -451,7 +451,6 @@ class Frame(ContainerOperand):
         def get_value_iter(col_key):
             rows_iter = rows if not rows_to_iter else iter(rows)
             # this is possible to support ragged lists, but it noticeably reduces performance
-            # return (row[col_key] if col_key < len(row) else fill_value for row in rows_iter)
             return (row[col_key] for row in rows_iter)
 
         def blocks():
@@ -459,36 +458,6 @@ class Frame(ContainerOperand):
             for col_idx in range(col_count):
                 if column_name_getter: # append as side effect of generator!
                     columns.append(column_name_getter(col_idx))
-
-                # # for each column, try to get a column_type, or None
-                # if dtypes is None:
-                #     field_ref = row_reference[col_idx]
-                #     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-                #     column_type = (type(field_ref)
-                #             if not isinstance(field_ref, (str, np.datetime64))
-                #             else None)
-                #     column_type_explicit = False
-                # else: # column_type returned here can be None.
-                #     column_type = get_col_dtype(col_idx)
-                #     column_type_explicit = True
-
-                # values = None
-                # if column_type is not None:
-                #     try:
-                #         values = np.fromiter(
-                #                 get_value_iter(col_idx),
-                #                 count=row_count,
-                #                 dtype=column_type)
-                #     except (ValueError, TypeError):
-                #         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                #         if not column_type_explicit:
-                #             # reset to None if not explicit and failued in fromiter
-                #             column_type = None
-                # if values is None:
-                #     # let array constructor determine type if column_type is None
-                #     values = np.array(tuple(get_value_iter(col_idx)), dtype=column_type)
-
-                # values.flags.writeable = False
 
                 values = array_from_value_iter(
                         key=col_idx,
@@ -583,35 +552,6 @@ class Frame(ContainerOperand):
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
 
-                # # for each column, try to get a column_type, or None
-                # if dtypes is None:
-                #     field_ref = row_reference[col_key]
-                #     # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-                #     column_type = (type(field_ref)
-                #             if not isinstance(field_ref, (str, np.datetime64))
-                #             else None)
-                #     column_type_explicit = False
-                # else: # column_type returned here can be None.
-                #     column_type = get_col_dtype(col_idx)
-                #     column_type_explicit = True
-
-                # values = None
-                # if column_type is not None:
-                #     try:
-                #         values = np.fromiter(
-                #                 get_value_iter(col_key),
-                #                 count=row_count,
-                #                 dtype=column_type)
-                #     except (ValueError, TypeError):
-                #         # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                #         if not column_type_explicit:
-                #             # reset to None if not explicit and failued in fromiter
-                #             column_type = None
-                # if values is None:
-                #     # let array constructor determine type if column_type is None
-                #     values = np.array(tuple(get_value_iter(col_key)), dtype=column_type)
-
-                # values.flags.writeable = False
                 values = array_from_value_iter(
                         key=col_key,
                         idx=col_idx,
