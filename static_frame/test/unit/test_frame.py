@@ -3257,6 +3257,13 @@ class TestUnit(TestCase):
                 (('count', (('red', 1), ('green', 3), ('blue', 100), ('black', 4))), ('score', (('red', 1.3), ('green', 5.2), ('blue', 3.4), ('black', 9.0)))))
 
 
+    def test_frame_from_csv_d(self) -> None:
+        s1 = StringIO('color,count,score\n')
+        f1 = Frame.from_csv(s1, columns_depth=1)
+        self.assertEqual(f1.to_pairs(0),
+            (('color', ()), ('count', ()), ('score', ()))
+            )
+
     def test_frame_from_csv_e(self) -> None:
         s1 = StringIO('group,count,score,color\nA,1,1.3,red\nA,3,5.2,green\nB,100,3.4,blue\nB,4,9.0,black')
 
@@ -3331,6 +3338,13 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.to_pairs(0,),
                 ((0, (((1, '2'), 3), ((4, '5'), 6))),)
+                )
+
+    def test_frame_from_csv_k(self) -> None:
+        s1 = StringIO('1\t2\t3\t4\n')
+        f1 = Frame.from_csv(s1, index_depth=0, columns_depth=0)
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, 3),)), (3, ((0, 4),)))
                 )
 
 
@@ -5598,7 +5612,7 @@ class TestUnit(TestCase):
                 )
 
         s2 = f2.bloc((f2 < 0))
-        self.assertEquals(s2.to_pairs(),
+        self.assertEqual(s2.to_pairs(),
                 (((('II', 'a'), 'x'), -5), ((('II', 'a'), 'y'), -5), ((('II', 'b'), 'y'), -3000))
                 )
 

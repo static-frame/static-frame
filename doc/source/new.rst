@@ -3,6 +3,12 @@
 What is New in Static Frame
 ===============================
 
+0.5.1
+----------
+
+Implemented handling in ``Frame.from_delimited`` for column-only files.
+
+
 0.5.0
 -----------
 

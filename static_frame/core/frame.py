@@ -1309,16 +1309,22 @@ class Frame(ContainerOperand):
             if array.ndim == 1:
                 # got a single row
                 array = array.reshape((1, len(array)))
+            # NOTE: genfromtxt will return a one column input file as a 2D array with the vertical data as a horizontal row. There does not appear to be a way to distinguish this from a single row file
 
-        data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
-                array=array,
-                index_depth=index_depth,
-                index_column_first=index_column_first,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks,
-                store_filter=store_filter,
-                columns = columns
-                )
+        if array.size > 0: # an empty, or column only table
+            data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
+                    array=array,
+                    index_depth=index_depth,
+                    index_column_first=index_column_first,
+                    dtypes=dtypes,
+                    consolidate_blocks=consolidate_blocks,
+                    store_filter=store_filter,
+                    columns = columns
+                    )
+        else: # only column data in table
+            if index_depth > 0:
+                raise ErrorInitFrame(f'no data from which to extract index_depth {index_depth}')
+            data = FRAME_INITIALIZER_DEFAULT
 
         kwargs = dict(
                 data=data,
