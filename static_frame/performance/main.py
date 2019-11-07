@@ -146,7 +146,12 @@ def main() -> None:
         frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
 
 
-        config = DisplayConfig(cell_max_width=80, type_show=False, display_rows=200)
+        config = DisplayConfig(
+                cell_max_width_leftmost=np.inf,
+                cell_max_width=np.inf,
+                type_show=False,
+                display_rows=200
+                )
 
         def format(v: object) -> str:
             if isinstance(v, float):

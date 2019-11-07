@@ -164,13 +164,37 @@ class SampleData:
             cls._store[k] = v
 
         # additional resources
-        cls._store['label_str'] = list(
-                ''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+        label_str = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 4))
+        cls._store['label_str'] = label_str
 
         cls._store['label_tuple2_int_10000'] = [(int(x / 10), x)
                 for x in range(10000)]
         cls._store['label_tuple3_int_100000'] = [(int(x / 100), int(x / 10), x)
                 for x in range(100000)]
+        cls._store['label_tuple4_int_100000'] = [(int(x / 1000), int(x / 100), int(x / 10), x)
+                for x in range(100000)]
+
+        label_tuple2_str = []
+        label_tuple3_str = []
+        label_tuple4_str = []
+
+        for i, label in enumerate(label_str):
+            if i % 10 == 0:
+                outer10 = label
+            if i % 100 == 0:
+                outer100 = label
+            if i % 1000 == 0:
+                outer1000 = label
+
+            label_tuple2_str.append((outer10, label))
+            label_tuple3_str.append((outer100, outer10, label))
+            label_tuple4_str.append((outer1000, outer100, outer10, label))
+
+        cls._store['label_tuple2_str'] = label_tuple2_str
+        cls._store['label_tuple3_str'] = label_tuple3_str
+        cls._store['label_tuple4_str'] = label_tuple4_str
+
+
 
     @classmethod
     def get(cls, key: str) -> tp.Any:
@@ -240,9 +264,38 @@ class IndexHierarchy3d_from_product(PerfTest):
         assert len(ih) == cls._size0 * cls._size1 * cls._size2
 
 
-class IndexHierarchy2d_from_labels(PerfTest):
+class IndexHierarchy4d_from_product(PerfTest):
 
-    NUMBER = 100
+    NUMBER = 10
+
+    _size0 = 10
+    _size1 = 50
+    _size2 = 100
+    _size3 = 500
+
+    @classmethod
+    def pd(cls) -> None:
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        labels2 = SampleData.get('label_str')[:cls._size2]
+        labels3 = SampleData.get('label_str')[:cls._size3]
+        ih = pd.MultiIndex.from_product((labels0, labels1, labels2, labels3))
+        assert len(ih) == cls._size0 * cls._size1 * cls._size2 * cls._size3
+
+    @classmethod
+    def sf(cls) -> None:
+        labels0 = SampleData.get('label_str')[:cls._size0]
+        labels1 = SampleData.get('label_str')[:cls._size1]
+        labels2 = SampleData.get('label_str')[:cls._size2]
+        labels3 = SampleData.get('label_str')[:cls._size3]
+        ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2, labels3)
+        assert len(ih) == cls._size0 * cls._size1 * cls._size2 * cls._size3
+
+
+
+class IndexHierarchy2d_from_labels_int(PerfTest):
+
+    NUMBER = 50
 
     @classmethod
     def pd(cls) -> None:
@@ -253,9 +306,22 @@ class IndexHierarchy2d_from_labels(PerfTest):
         ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple2_int_10000'))
 
 
-class IndexHierarchy3d_from_labels(PerfTest):
+class IndexHierarchy2d_from_labels_str(PerfTest):
 
-    NUMBER = 10
+    NUMBER = 50
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple2_str'))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple2_str'))
+
+
+class IndexHierarchy3d_from_labels_int(PerfTest):
+
+    NUMBER = 5
 
     @classmethod
     def pd(cls) -> None:
@@ -264,6 +330,46 @@ class IndexHierarchy3d_from_labels(PerfTest):
     @classmethod
     def sf(cls) -> None:
         ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple3_int_100000'))
+
+
+
+class IndexHierarchy3d_from_labels_str(PerfTest):
+
+    NUMBER = 5
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple3_str'))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple3_str'))
+
+
+class IndexHierarchy4d_from_labels_int(PerfTest):
+
+    NUMBER = 5
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple4_int_100000'))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple4_int_100000'))
+
+
+class IndexHierarchy4d_from_labels_str(PerfTest):
+
+    NUMBER = 5
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(SampleData.get('label_tuple4_str'))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple4_str'))
 
 
 #-------------------------------------------------------------------------------
