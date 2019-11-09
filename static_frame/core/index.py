@@ -28,6 +28,7 @@ from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import isin
 
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
@@ -800,12 +801,13 @@ class Index(IndexBase):
         return self.__class__(v)
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
-        '''Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
+        '''
+        Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
         '''
         if self._recache:
             self._update_array_cache()
-        v, assume_unique = iterable_to_array(other)
-        return np.in1d(self._labels, v, assume_unique=assume_unique)
+
+        return isin(self.values, other)
 
     def roll(self, shift: int) -> 'Index':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).

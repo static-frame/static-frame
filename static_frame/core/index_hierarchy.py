@@ -24,6 +24,8 @@ from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import isin
+
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -934,7 +936,8 @@ class IndexHierarchy(IndexBase):
 
 
     def isin(self, other: tp.Iterable[tp.Iterable[tp.Hashable]]) -> np.ndarray:
-        '''Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
+        '''
+        Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
         '''
         if self._recache:
             self._update_array_cache()
@@ -943,24 +946,14 @@ class IndexHierarchy(IndexBase):
         for seq in other:
             if not hasattr(seq, '__iter__'):
                 raise RuntimeError('must provide one or more iterables within an iterable')
-            # must use iterable to array to properly handle heterogenous types, or if already an array
-            v, _ = iterable_to_array(seq)
-            # if seq is a tuple, could check self.keys()
-            if len(v) == self.depth:
-                matches.append(v)
+            if len(seq) == self.depth:
+                # Coerce to hashable type
+                matches.append(tuple(seq))
 
         if not matches:
             return np.full(self._length, False, dtype=bool)
 
-        values = self._labels
-
-        # NOTE: when doing 2d to 1d comparison, np.isin does elementwise comparison, as does ==, but == is shown to be faster in this context
-        array = np.full(self._length, False, dtype=bool)
-        for match in matches:
-            array |= (values == match).all(axis=1)
-
-        array.flags.writeable = False
-        return array
+        return isin(self.flat().values, matches)
 
 
     def roll(self, shift: int) -> 'IndexHierarchy':

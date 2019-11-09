@@ -2,7 +2,7 @@ import typing as tp
 import sqlite3
 import csv
 import json
-from collections import namedtuple
+from collections import namedtuple, abc
 from functools import partial
 from itertools import chain
 from itertools import repeat
@@ -44,6 +44,7 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import isin
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import ufunc_set_iter
@@ -3371,11 +3372,7 @@ class Frame(ContainerOperand):
         '''
         Return a same-sized Boolean Frame that shows if the same-positioned element is in the iterable passed to the function.
         '''
-        # cannot use assume_unique because do not know if values are unique
-        v, _ = iterable_to_array(other)
-        # NOTE: is it faster to do this at the block level and return blocks?
-        array = np.isin(self.values, v)
-        array.flags.writeable = False
+        array = isin(self.values, other)
         return self.__class__(array, columns=self._columns, index=self._index)
 
     @doc_inject(class_name='Frame')
@@ -3383,7 +3380,7 @@ class Frame(ContainerOperand):
             lower=None,
             upper=None,
             axis: tp.Optional[int] = None):
-        '''{}
+        '''
 
         Args:
             lower: value, ``Series``, ``Frame``

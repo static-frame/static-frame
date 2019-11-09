@@ -28,6 +28,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import binary_transition
 from static_frame.core.util import iterable_to_array
+from static_frame.core.util import isin
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import is_callable_or_mapping
 
@@ -1400,16 +1401,11 @@ class Series(ContainerOperand):
                 index_constructor=self._index.from_labels
                 )
 
-
     def isin(self, other) -> 'Series':
         '''
-        Return a same-sized Boolean Series that shows if the same-positoined element is in the iterable passed to the function.
+        Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
         '''
-        # cannot use assume_unique because do not know if values is unique
-        v, _ = iterable_to_array(other)
-        # NOTE: could identify empty iterable and create False array
-        array = np.in1d(self.values, v)
-        array.flags.writeable = False
+        array = isin(self.values, other)
         return self.__class__(array, index=self._index)
 
     @doc_inject(class_name='Series')
