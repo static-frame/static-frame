@@ -8,6 +8,7 @@ import numpy as np
 from hypothesis import given  # type: ignore
 
 from static_frame.test.property.strategies import get_labels
+from static_frame.test.property.strategies import get_array_1d
 
 from static_frame.test.test_case import TestCase
 
@@ -86,6 +87,18 @@ class TestUnit(TestCase):
         length_end = len(index)
         self.assertEqual(length_start + 1, length_end)
 
+    @given(get_labels(), get_array_1d())
+    def test_index_isin(self, values: tp.Sequence[tp.Hashable], arr: tp.Iterable):
+        index = Index(values)
+        result = index.isin(arr)
+
+        if index.size > 0:
+            expected = result[0]
+            actual = index[0] in arr
+        else:
+            expected = 0
+            actual = result.size
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

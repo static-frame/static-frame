@@ -1573,21 +1573,21 @@ def ufunc_set_iter(
 
 def isin(
         array: np.ndarray,
-        other: tp.Iterable
+        other: tp.Union[tp.Iterable, tp.Collection]
         ) -> np.ndarray:
     '''
     Builds a same-size, immutable, Boolean ndarray representing whether or not the original element is in another ndarray
 
     NOTE:
     numpy's has a very poor isin performance, as it converts both arguments to array-like objects.
-    This implementation optimizes that by converting the lookup iterable into a set, providing constant comparison time.
+    This implementation optimizes that by converting the lookup argument into a set, providing constant comparison time.
 
     Args:
         array: The source array
-        other: The iterable containing elements being looked for
+        other: The elements being looked for
     '''
-    if hasattr(other, '__len__') and len(other) == 0:
-        result = np.full(array.shape, False, dtype=DTYPE_BOOL)
+    if isinstance(other, abc.Sized) and len(other) == 0:
+        result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
 
@@ -1599,8 +1599,10 @@ def isin(
     except TypeError:
         # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
 
-        # NOTE: is it faster to do this at the block level and return blocks?
+        # cannot use assume_unique since some elements are unhashable
         other, _ = iterable_to_array(other)
+
+        # NOTE: is it faster to do this at the block level and return blocks?
         result = np.isin(array, other)
 
     result.flags.writeable = False
@@ -1608,18 +1610,18 @@ def isin(
 
 def _isin_1d(
         array: np.ndarray,
-        other: tp.Set[tp.Hashable]
+        other: tp.Set
         ) -> np.ndarray:
     '''
     Iterate over an 1D array to build a 1D Boolean ndarray representing whether or not the original element is in the set
 
     Args:
         array: The source array
-        other: The set of Hashable elements being looked for
+        other: The set of elements being looked for
     '''
     assert array.ndim == 1
 
-    result = np.empty(array.shape, dtype=DTYPE_BOOL)
+    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
 
     for i, element in enumerate(array):
         result[i] = element in other
@@ -1629,18 +1631,18 @@ def _isin_1d(
 
 def _isin_2d(
         array: np.ndarray,
-        other: tp.Set[tp.Hashable]
+        other: tp.Set
         ) -> np.ndarray:
     '''
     Iterate over an 2D array to build a 2D, immutable, Boolean ndarray representing whether or not the original element is in the set
 
     Args:
         array: The source array
-        other: The set of Hashable elements being looked for
+        other: The set of elements being looked for
     '''
     assert array.ndim == 2
 
-    result = np.empty(array.shape, dtype=DTYPE_BOOL)
+    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
 
     for i, row in enumerate(array):
         for j, element in enumerate(row):

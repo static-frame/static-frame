@@ -36,7 +36,6 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.test.test_case import UnHashable
 from static_frame.core.exception import ErrorInitFrame
 
 nan = np.nan
@@ -2393,42 +2392,6 @@ class TestUnit(TestCase):
         post = f1.isin(['a', 73, 30])
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', False), ('x', True), ('y', False), ('z', True))), ('q', (('w', False), ('x', False), ('y', False), ('z', True))), ('r', (('w', True), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
-
-    def test_frame_isin_b(self) -> None:
-        # Tests isin's ability to fallback to numpy's isin when the UnHashable types are present in either the frame itself or the iterable being compared against
-        f1 = Frame.from_dict(dict(colA=(UnHashable(1), UnHashable(2)), colB=(UnHashable(3), UnHashable(4))), index=tuple('ab'))
-        f2 = Frame.from_dict(dict(colA=(UnHashable(1), 2), colB=(UnHashable(3), 4)), index=tuple('ab'))
-        f3 = Frame.from_dict(dict(colA=(1, 2), colB=(3, 4)), index=tuple('ab'))
-
-        match_all_f1 = [UnHashable(1), UnHashable(2), UnHashable(3), UnHashable(4)]
-        match_all_f2 = [UnHashable(1), 2, UnHashable(3), 4]
-        match_all_f3 = [1, 2, 3, 4]
-        expected_match_all = (('colA', (('a', True), ('b', True))),
-                              ('colB', (('a', True), ('b', True))))
-
-        match_some_f1 = [UnHashable(1), UnHashable(200), UnHashable(300), UnHashable(4)]
-        match_some_f2 = [UnHashable(1), 200, UnHashable(300), 4]
-        match_some_f3 = [1, 200, 300, 4]
-        expected_match_some = (('colA', (('a', True), ('b', False))),
-                               ('colB', (('a', False), ('b', True))))
-
-        match_none_f1 = [UnHashable(100), UnHashable(200), UnHashable(300), UnHashable(400)]
-        match_none_f2 = [UnHashable(100), 200, UnHashable(300), 400]
-        match_none_f3 = [100, 200, 300, 400]
-        expected_match_none = (('colA', (('a', False), ('b', False))),
-                               ('colB', (('a', False), ('b', False))))
-
-        self.assertEqual(f1.isin(match_all_f1).to_pairs(0), expected_match_all)
-        self.assertEqual(f2.isin(match_all_f2).to_pairs(0), expected_match_all)
-        self.assertEqual(f3.isin(match_all_f3).to_pairs(0), expected_match_all)
-
-        self.assertEqual(f1.isin(match_some_f1).to_pairs(0), expected_match_some)
-        self.assertEqual(f2.isin(match_some_f2).to_pairs(0), expected_match_some)
-        self.assertEqual(f3.isin(match_some_f3).to_pairs(0), expected_match_some)
-
-        self.assertEqual(f1.isin(match_none_f1).to_pairs(0), expected_match_none)
-        self.assertEqual(f2.isin(match_none_f2).to_pairs(0), expected_match_none)
-        self.assertEqual(f3.isin(match_none_f3).to_pairs(0), expected_match_none)
 
 
     def test_frame_transpose_a(self) -> None:

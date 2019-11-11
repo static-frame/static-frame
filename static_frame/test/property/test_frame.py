@@ -154,6 +154,14 @@ class TestUnit(TestCase):
     #                 import ipdb; ipdb.set_trace()
     #                 raise
 
+    @given(sfst.get_frame(), sfst.get_array_1d())
+    def test_frame_isin(self, f: Frame, arr: tp.Iterable):
+        result = f.isin(arr)
+
+        expected = result.iloc[0, 0]
+        actual = f.iloc[0, 0] in arr
+
+        self.assertEqual(expected, actual)
 
 
     # # TODO: intger tests with pow, mod

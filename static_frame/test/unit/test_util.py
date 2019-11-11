@@ -772,7 +772,7 @@ class TestUnit(TestCase):
                 set(((3, 1),))
                 )
 
-    def test_isin(self) -> None:
+    def test_isin_non_empty(self) -> None:
         # Tests isin's ability to fallback to numpy's isin when the UnHashable types are present in either the frame itself or the iterable being compared against
         '''
         Each test in the matrix is run for both 1D and 2D arrays
@@ -790,8 +790,8 @@ class TestUnit(TestCase):
 
         # All
         match_all_s1 = [UnHashable(1), UnHashable(2), UnHashable(3), UnHashable(4)]
-        match_all_s2 = [UnHashable(1), 2, UnHashable(3), 4]
-        match_all_s3 = [1, 2, 3, 4]
+        match_all_s2 = (UnHashable(1), 2, UnHashable(3), 4)
+        match_all_s3 = np.array([1, 2, 3, 4])
         expected_match_all = np.array([True, True, True, True])
         # 1D
         self.assertTrue(np.array_equal(expected_match_all, isin(a_1, match_all_s1)))
@@ -803,9 +803,9 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected_match_all.reshape(2,2), isin(a_3.reshape(2, 2), match_all_s3)))
 
         # Some
-        match_some_s1 = [UnHashable(1), UnHashable(200), UnHashable(300), UnHashable(4)]
-        match_some_s2 = [UnHashable(1), 200, UnHashable(300), 4]
-        match_some_s3 = [1, 200, 300, 4]
+        match_some_s1 = (UnHashable(1), UnHashable(20), UnHashable(30), UnHashable(4))
+        match_some_s2 = np.array([UnHashable(1), 20, UnHashable(30), 4])
+        match_some_s3 = [1, 20, 30, 4]
         expected_match_some = np.array([True, False, False, True])
         # 1D
         self.assertTrue(np.array_equal(expected_match_some, isin(a_1, match_some_s1)))
@@ -817,9 +817,9 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected_match_some.reshape(2,2), isin(a_3.reshape(2, 2), match_some_s3)))
 
         # None
-        match_none_s1 = [UnHashable(100), UnHashable(200), UnHashable(300), UnHashable(400)]
-        match_none_s2 = [UnHashable(100), 200, UnHashable(300), 400]
-        match_none_s3 = [100, 200, 300, 400]
+        match_none_s1 = np.array([UnHashable(10), UnHashable(20), UnHashable(30), UnHashable(40)])
+        match_none_s2 = [UnHashable(10), 20, UnHashable(30), 40]
+        match_none_s3 = (10, 20, 30, 40)
         expected_match_none = np.array([False, False, False, False])
         # 1D
         self.assertTrue(np.array_equal(expected_match_none, isin(a_1, match_none_s1)))
@@ -830,43 +830,56 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected_match_none.reshape(2,2), isin(a_2.reshape(2, 2), match_none_s2)))
         self.assertTrue(np.array_equal(expected_match_none.reshape(2,2), isin(a_3.reshape(2, 2), match_none_s3)))
 
+    def test_isin_empty(self) -> None:
+        arr = np.array([1, 2, 3, 4])
+        expected = np.array([False, False, False, False])
+
+        # 1D
+        self.assertTrue(np.array_equal(expected, isin(arr, tuple())))
+        self.assertTrue(np.array_equal(expected, isin(arr, [])))
+        self.assertTrue(np.array_equal(expected, isin(arr, np.array([]))))
+        # 2D
+        self.assertTrue(np.array_equal(expected.reshape(2,2), isin(arr.reshape(2,2), tuple())))
+        self.assertTrue(np.array_equal(expected.reshape(2,2), isin(arr.reshape(2,2), [])))
+        self.assertTrue(np.array_equal(expected.reshape(2,2), isin(arr.reshape(2,2), np.array([]))))
+
     def test_isin_1d(self) -> None:
-        arr1d = np.array([1, 2, 3, 4, 5])
-        arr2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        arr_1d = np.array([1, 2, 3, 4, 5])
 
         s1 = {1, 3, 4}
         expected = np.array([True, False, True, True, False])
-        self.assertTrue(np.array_equal(expected, _isin_1d(arr1d, s1)))
+        self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s1)))
 
         s2 = {7, 8, 9}
         expected = np.array([False, False, False, False, False])
-        self.assertTrue(np.array_equal(expected, _isin_1d(arr1d, s2)))
+        self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s2)))
 
         s3 = {1, 2, 3, 4, 5}
         expected = np.array([True, True, True, True, True])
-        self.assertTrue(np.array_equal(expected, _isin_1d(arr1d, s3)))
+        self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s3)))
 
+        arr_2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         with self.assertRaises(AssertionError):
-            _isin_1d(arr2d, [])
+            _isin_1d(arr_2d, s3)
 
     def test_isin_2d(self) -> None:
-        arr1d = np.array([1, 2, 3, 4, 5])
-        arr2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        arr_2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
         s1 = {1, 3, 4, 9}
         expected = np.array([[True, False, True], [True, False, False], [False, False, True]])
-        self.assertTrue(np.array_equal(expected, _isin_2d(arr2d, s1)))
+        self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s1)))
 
         s2 = {10, 11, 12}
         expected = np.array([[False, False, False], [False, False, False], [False, False, False]])
-        self.assertTrue(np.array_equal(expected, _isin_2d(arr2d, s2)))
+        self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s2)))
 
         s3 = {1, 2, 3, 4, 5, 6, 7, 8, 9}
         expected = np.array([[True, True, True], [True, True, True], [True, True, True]])
-        self.assertTrue(np.array_equal(expected, _isin_2d(arr2d, s3)))
+        self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s3)))
 
+        arr_1d = np.array([1, 2, 3, 4, 5])
         with self.assertRaises(AssertionError):
-            _isin_2d(arr1d, [])
+            _isin_2d(arr_1d, s3)
 
 
     @unittest.skip('requires network')

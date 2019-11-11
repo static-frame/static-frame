@@ -1264,9 +1264,11 @@ class TestUnit(TestCase):
             )
 
 
+
     def test_index_hierarchy_isin_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
+
         post = ih1.isin([(2, 30, 2),])
         self.assertEqual(post.dtype, bool)
         self.assertEqual(post.tolist(),
@@ -1283,7 +1285,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1.isin([3,4,5]) # type: ignore # not an iterable of iterables
 
-        post = ih1.isin([[3,4], [2,5,1,5]])
+        post = ih1.isin(([3,4], [2,5,1,5]))
         self.assertEqual(post.sum(), 0)
 
 
