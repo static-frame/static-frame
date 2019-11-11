@@ -57,7 +57,10 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
     return p
 
 
-def yield_classes(module: types.ModuleType, pattern: str) -> tp.Iterator[tp.Type[PerfTest]]:
+def yield_classes(
+        module: types.ModuleType,
+        pattern: str
+        ) -> tp.Iterator[tp.Type[PerfTest]]:
     # this will not find children of children
     for attr_name, attr in vars(module).items():
         if attr_name.startswith('_'):
@@ -66,7 +69,9 @@ def yield_classes(module: types.ModuleType, pattern: str) -> tp.Iterator[tp.Type
             if fnmatch.fnmatch(attr_name.lower(), pattern.lower()):
                 yield attr
 
-def profile(cls: tp.Type[PerfTest], function: str = 'sf') -> None:
+def profile(cls: tp.Type[PerfTest],
+        function: str = 'sf'
+        ) -> None:
     '''
     Profile the `sf` function from the supplied class.
     '''
@@ -84,9 +89,14 @@ def profile(cls: tp.Type[PerfTest], function: str = 'sf') -> None:
     ps.print_stats()
     print(s.getvalue())
 
-def performance(module: types.ModuleType, cls: tp.Type[PerfTest]) -> tp.MutableMapping[str, tp.Union[str, float]]:
+PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float]]
+
+def performance(
+        module: types.ModuleType,
+        cls: tp.Type[PerfTest]
+        ) -> PerformanceRecord:
     #row = []
-    row: tp.MutableMapping[str, tp.Union[str, float]] = collections.OrderedDict()
+    row: PerformanceRecord = collections.OrderedDict()
     row['name'] = cls.__name__
     for f in PerfTest.FUNCTION_NAMES:
         if hasattr(cls, f):
@@ -98,6 +108,29 @@ def performance(module: types.ModuleType, cls: tp.Type[PerfTest]) -> tp.MutableM
             row[f] = np.nan
     return row
 
+
+def performance_tables_from_records(
+        records: tp.Iterable[PerformanceRecord]
+        ) -> tp.Tuple[sf.Frame, sf.Frame]:
+
+    frame = sf.FrameGO.from_dict_records(records)
+    frame = frame.set_index('name', drop=True)
+    frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
+    frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
+
+    frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
+    frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
+
+    def format(v: object) -> str:
+        if isinstance(v, float):
+            if np.isnan(v):
+                return ''
+            return str(round(v, 4))
+        return str(v)
+
+    display = frame.iter_element().apply(format)
+    display = display[[c for c in display.columns if '/' not in c]]
+    return frame, display
 
 def main() -> None:
 
@@ -137,14 +170,7 @@ def main() -> None:
             pairs.append((package.__name__, package.__version__))
         print('|'.join(':'.join(pair) for pair in pairs))
 
-        frame = sf.FrameGO.from_dict_records(records)
-        frame = frame.set_index('name', drop=True)
-        frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
-        frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
-
-        frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
-        frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
-
+        frame, display = performance_tables_from_records(records)
 
         config = DisplayConfig(
                 cell_max_width_leftmost=np.inf,
@@ -152,17 +178,7 @@ def main() -> None:
                 type_show=False,
                 display_rows=200
                 )
-
-        def format(v: object) -> str:
-            if isinstance(v, float):
-                if np.isnan(v):
-                    return ''
-                return str(round(v, 4))
-            return str(v)
-
-        present = frame.iter_element().apply(format)
-        present = present[[c for c in present.columns if '/' not in c]]
-        print(present.display(config))
+        print(display.display(config))
 
         # import ipdb; ipdb.set_trace()
         print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
