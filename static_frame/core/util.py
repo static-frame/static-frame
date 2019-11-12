@@ -1650,7 +1650,6 @@ def isin(
         else:
             fallback_to_np = False
 
-
     if fallback_to_np:
         try:
             # NOTE: is it faster to do this at the block level and return blocks?

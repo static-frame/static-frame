@@ -1188,14 +1188,14 @@ class FrameObj_isin(PerfTest):
     def pd(cls) -> None:
         pd_frame = SampleData.get('pdf_mixed_10k')
         for i in range(cls._lower, cls._upper):
-            lookup_arr = np.array([str(i) for i in range(10 ** i)])
+            lookup_arr = np.array([str(i) for i in range(10 ** i)], dtype=object)
             pd_frame.isin(lookup_arr)
 
     @classmethod
     def sf(cls) -> None:
         sf_frame = SampleData.get('sff_mixed_10k')
         for i in range(cls._lower, cls._upper):
-            lookup_arr = np.array([str(i) for i in range(10 ** i)])
+            lookup_arr = np.array([str(i) for i in range(10 ** i)], dtype=object)
             sf_frame.isin(lookup_arr)
 
     # @classmethod
@@ -1203,7 +1203,7 @@ class FrameObj_isin(PerfTest):
     #     np_frame = SampleData.get('npf_mixed_10k')
     #     for i in range(cls._lower, cls._upper):
     #         lookup_arr = np.array([str(i) for i in range(10 ** i)])
-    #         np_frame.isin(lookup_arr)
+    #         np.isin(np_frame, lookup_arr)
 
 
 class FrameFloat_isin(PerfTest):
