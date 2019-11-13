@@ -4,6 +4,7 @@ import operator
 
 from collections import abc
 from collections import defaultdict
+from collections import namedtuple
 from functools import partial
 from functools import reduce
 from itertools import chain
@@ -1693,6 +1694,19 @@ def write_optional_file(
 
 #-------------------------------------------------------------------------------
 # trivial, non NP util
+
+def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple]:
+    '''
+    Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
+    '''
+    try:
+        return namedtuple('Axis', fields)
+    except ValueError:
+        # take positiona args
+        return lambda *args: tuple(args)
+
+
+
 
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:
     '''

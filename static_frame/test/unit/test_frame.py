@@ -747,6 +747,25 @@ class TestUnit(TestCase):
         self.assertTrue(post.dtype == float)
 
 
+
+    def test_frame_iter_tuple_a(self) -> None:
+        post = tuple(sf.Frame(range(5)).iter_tuple(axis=0))
+        self.assertEqual(post, ((0, 1, 2, 3, 4),))
+
+
+
+
+    def test_frame_iter_tuple_a(self) -> None:
+        post = tuple(sf.Frame(range(3), index=tuple('abc')).iter_tuple(axis=0))
+        self.assertEqual(post, ((0, 1, 2),))
+
+        self.assertEqual(tuple(post[0]._asdict().items()),
+                (('a', 0), ('b', 1), ('c', 2))
+                )
+
+
+    #---------------------------------------------------------------------------
+
     def test_frame_setitem_a(self) -> None:
 
         records = (

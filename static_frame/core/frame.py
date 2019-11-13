@@ -64,6 +64,7 @@ from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
+from static_frame.core.util import get_tuple_constructor
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -3040,9 +3041,11 @@ class Frame(ContainerOperand):
             axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
         '''
         if axis == 1:
-            Tuple = namedtuple('Axis', self._columns.values)
+            Tuple = get_tuple_constructor(self._columns.values)
+            # Tuple = namedtuple('Axis', self._columns.values)
         elif axis == 0:
-            Tuple = namedtuple('Axis', self._index.values)
+            Tuple = get_tuple_constructor(self._index.values)
+            # Tuple = namedtuple('Axis', self._index.values)
         else:
             raise NotImplementedError()
 

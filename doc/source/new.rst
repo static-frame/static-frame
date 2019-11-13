@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Implemented handling in ``Frame.from_delimited`` for column-only files.
 
+``Frame.iter_tuple`` and ``Frame.iter_tuple_items`` will return ``tuple`` instead of ``NamedTuple`` if fields are not valid identifiers.
+
 
 0.5.0
 -----------
