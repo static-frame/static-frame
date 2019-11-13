@@ -23,7 +23,6 @@ from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
-from static_frame.core.util import iterable_to_array
 from static_frame.core.util import isin
 
 
