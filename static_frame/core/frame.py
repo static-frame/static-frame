@@ -3380,7 +3380,7 @@ class Frame(ContainerOperand):
             lower=None,
             upper=None,
             axis: tp.Optional[int] = None):
-        '''
+        '''{}
 
         Args:
             lower: value, ``Series``, ``Frame``
