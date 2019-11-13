@@ -159,7 +159,7 @@ class TestUnit(TestCase):
         result = f.isin(arr)
 
         expected = result.iloc[0, 0]
-        actual = f.iloc[0, 0] in arr
+        actual = np.isin(f.iloc[0, 0], arr)
 
         self.assertEqual(expected, actual)
 

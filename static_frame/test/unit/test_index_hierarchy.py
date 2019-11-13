@@ -1303,6 +1303,22 @@ class TestUnit(TestCase):
         self.assertEqual(post2.sum(), len(ih1))
 
 
+    def test_index_hierarchy_isin_d(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
+
+        # Index is an iterable
+        index_iter1 = (val for val in (2, 30, 2))
+        index_non_iter = (1, 70, 5)
+
+        post = ih1.isin([index_iter1, index_non_iter])
+        self.assertEqual(post.dtype, bool)
+        self.assertEqual(post.tolist(),
+            [False, False, False, True, True, False, False, False])
+
+        extract = ih1.loc[post]
+        self.assertEqual(extract.values.shape, (2, 3))
+
     def test_index_hierarchy_roll_a(self) -> None:
 
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))

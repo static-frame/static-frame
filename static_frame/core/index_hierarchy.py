@@ -946,9 +946,12 @@ class IndexHierarchy(IndexBase):
         for seq in other:
             if not hasattr(seq, '__iter__'):
                 raise RuntimeError('must provide one or more iterables within an iterable')
-            if len(seq) == self.depth:
-                # Coerce to hashable type
-                matches.append(tuple(seq))
+
+            # Coerce to hashable type
+            as_tuple = tuple(seq)
+
+            if len(as_tuple) == self.depth:
+                matches.append(as_tuple)
 
         if not matches:
             return np.full(self._length, False, dtype=bool)
