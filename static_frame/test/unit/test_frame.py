@@ -755,7 +755,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_frame_iter_tuple_a(self) -> None:
+    def test_frame_iter_tuple_b(self) -> None:
         post = tuple(sf.Frame(range(3), index=tuple('abc')).iter_tuple(axis=0))
         self.assertEqual(post, ((0, 1, 2),))
 

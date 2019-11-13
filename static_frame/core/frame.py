@@ -2,7 +2,6 @@ import typing as tp
 import sqlite3
 import csv
 import json
-from collections import namedtuple
 from functools import partial
 from itertools import chain
 from itertools import repeat

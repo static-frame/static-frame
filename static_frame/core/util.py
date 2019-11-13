@@ -1695,7 +1695,7 @@ def write_optional_file(
 #-------------------------------------------------------------------------------
 # trivial, non NP util
 
-def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple]:
+def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple[tp.Any, ...]]:
     '''
     Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
     '''
@@ -1703,7 +1703,7 @@ def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple]:
         return namedtuple('Axis', fields)
     except ValueError:
         # take positiona args
-        return lambda *args: tuple(args)
+        return lambda *args: tuple(args) # type: ignore
 
 
 
