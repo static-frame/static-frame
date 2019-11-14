@@ -4717,8 +4717,9 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_records_k(self) -> None:
-        def gen():
-            for k in ():
+        def gen() -> tp.Iterator[int]:
+            empty: tp.Iterable[int] = ()
+            for k in empty:
                 yield k
 
         f1 = Frame.from_records(gen(), columns=('a', 'b', 'c'))
