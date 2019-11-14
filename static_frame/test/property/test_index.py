@@ -6,10 +6,10 @@ import numpy as np
 
 # from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
-from hypothesis import reproduce_failure  # type: ignore
+# from hypothesis import reproduce_failure  # type: ignore
 
 from static_frame.test.property.strategies import get_labels
-from static_frame.test.property.strategies import get_array_1d
+# from static_frame.test.property.strategies import get_array_1d
 
 from static_frame.test.test_case import TestCase
 
@@ -88,19 +88,11 @@ class TestUnit(TestCase):
         length_end = len(index)
         self.assertEqual(length_start + 1, length_end)
 
-    @given(get_labels(), get_array_1d())
-    def test_index_isin(self, values: tp.Sequence[tp.Hashable], arr: np.ndarray):
-        index = Index(values)
 
-        result = index.isin(arr)
-
-        if index.size > 0:
-            expected = result[0]
-            actual = np.isin(index[0], arr)
-        else:
-            expected = 0
-            actual = result.size
-        self.assertEqual(expected, actual)
+    @given(get_labels(min_size=1)) # type: ignore
+    def test_index_isin(self, labels: tp.Sequence[tp.Hashable], arr: np.ndarray) -> None:
+        index = Index(labels)
+        self.assertTrue(index.isin((labels[0],)).iloc[0])
 
 
 if __name__ == '__main__':

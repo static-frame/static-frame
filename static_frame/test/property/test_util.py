@@ -359,8 +359,8 @@ class TestUnit(TestCase):
             else:
                 self.assertTrue(post.ndim == 2)
 
-    @given(get_array_1d2d(), get_array_1d())
-    def test_isin(self, arr1, arr2):
+    @given(get_array_1d2d(), get_array_1d()) # type: ignore
+    def test_isin(self, arr1: np.ndarray, arr2: np.ndarray) -> None:
         result = util.isin(arr1, arr2)
 
         if len(arr1) > 0:

@@ -1,4 +1,4 @@
-import typing as tp
+# import typing as tp
 import unittest
 import operator
 
@@ -101,17 +101,12 @@ class TestUnit(TestCase):
             b = func(s1.values)
             self.assertEqualWithNaN(a, b)
 
-    @given(sfst.get_series(), sfst.get_array_1d())
-    def test_frame_isin(self, s: Series, arr: tp.Iterable):
-        result = s.isin(arr)
+    @given(sfst.get_series(min_size=1)) # type: ignore
+    def test_isin(self, s1: Series) -> None:
 
-        if s.size > 0:
-            expected = result.iloc[0]
-            actual = s.iloc[0] in arr
-        else:
-            expected = 0
-            actual = result.size
-        self.assertEqual(expected, actual)
+        sample = s1.iloc[0]
+        self.assertTrue(s1.isin((sample,)).iloc[0])
+
 
 
 if __name__ == '__main__':

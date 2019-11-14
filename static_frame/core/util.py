@@ -1574,7 +1574,7 @@ def ufunc_set_iter(
 
 def _isin_1d(
         array: np.ndarray,
-        other: tp.Set
+        other: tp.Set[tp.Any]
         ) -> np.ndarray:
     '''
     Iterate over an 1D array to build a 1D Boolean ndarray representing whether or not the original element is in the set
@@ -1595,7 +1595,7 @@ def _isin_1d(
 
 def _isin_2d(
         array: np.ndarray,
-        other: tp.Set
+        other: tp.Set[tp.Any]
         ) -> np.ndarray:
     '''
     Iterate over an 2D array to build a 2D, immutable, Boolean ndarray representing whether or not the original element is in the set
@@ -1617,21 +1617,22 @@ def _isin_2d(
 
 def isin(
         array: np.ndarray,
-        other: tp.Union[tp.Iterable, tp.Collection]
+        other: tp.Union[tp.Iterable[tp.Any], tp.Collection[tp.Any]]
         ) -> np.ndarray:
     '''
     Builds a same-size, immutable, Boolean ndarray representing whether or not the original element is in another ndarray
 
-    NOTE:
-    numpy's has a very poor isin performance, as it converts both arguments to array-like objects.
+    numpy's has very poor isin performance, as it converts both arguments to array-like objects.
     This implementation optimizes that by converting the lookup argument into a set, providing constant comparison time.
 
     Args:
         array: The source array
         other: The elements being looked for
     '''
+    result: np.ndarray
+
     if isinstance(other, abc.Sized) and len(other) == 0:
-        result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        result = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
 
@@ -1639,7 +1640,7 @@ def isin(
 
     other, assume_unique = iterable_to_array(other)
 
-    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
         try:
             if array.ndim == 1:
                 result = _isin_1d(array, set(other))
@@ -1651,6 +1652,7 @@ def isin(
         else:
             fallback_to_np = False
 
+
     if fallback_to_np:
         try:
             # NOTE: is it faster to do this at the block level and return blocks?
@@ -1660,7 +1662,7 @@ def isin(
                 result = np.isin(array, other)
         except TypeError:
             # Numpy can fail if array's dtypes are incompatible
-            result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
+            result = np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     result.flags.writeable = False
     return result

@@ -17,6 +17,7 @@ from static_frame.core.series import Series
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import UFUNC_AXIS_SKIPNA
+from static_frame.core.util import isna_element
 
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import temp_file
@@ -154,14 +155,12 @@ class TestUnit(TestCase):
     #                 import ipdb; ipdb.set_trace()
     #                 raise
 
-    @given(sfst.get_frame(), sfst.get_array_1d())
-    def test_frame_isin(self, f: Frame, arr: tp.Iterable):
-        result = f.isin(arr)
+    @given(sfst.get_frame()) # type: ignore
+    def test_frame_isin(self, f1: Frame) -> None:
+        value = f1.iloc[0, 0]
+        if not isna_element(value):
+            self.assertTrue(f1.isin((value,)).iloc[0, 0])
 
-        expected = result.iloc[0, 0]
-        actual = np.isin(f.iloc[0, 0], arr)
-
-        self.assertEqual(expected, actual)
 
 
     # # TODO: intger tests with pow, mod

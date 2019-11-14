@@ -248,8 +248,9 @@ class TestCase(unittest.TestCase):
 # Helpful base types for testing
 class UnHashable:
     '''UnHashable means __eq__ without defining __hash__'''
-    def __init__(self, val):
+
+    def __init__(self, val: tp.Any) -> None:
         self.val = val
 
-    def __eq__(self, other):
+    def __eq__(self, other: tp.Any) -> bool:
         return hasattr(other, 'val') and self.val == other.val
