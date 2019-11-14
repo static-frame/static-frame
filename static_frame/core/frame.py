@@ -79,6 +79,7 @@ from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import rehierarch_and_map
 from static_frame.core.container_util import array_from_value_iter
+from static_frame.core.container_util import dtypes_mappable
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -121,11 +122,6 @@ if tp.TYPE_CHECKING:
     from xarray import Dataset #pylint: disable=W0611
     import pyarrow #pylint: disable=W0611
 
-def dtypes_mappable(dtypes: DtypesSpecifier):
-    '''
-    Determine if the dtypes argument can be used by name lookup, rather than index.
-    '''
-    return isinstance(dtypes, (dict, Series))
 
 
 @doc_inject(selector='container_init', class_name='Frame')
@@ -389,7 +385,7 @@ class Frame(ContainerOperand):
         For records defined as ``Series``, use ``Frame.from_concat``; for records defined as dictionary, use ``Frame.from_dict_records``; for creating a ``Frame`` from a single dictionary, where keys are column labels and values are columns, use ``Frame.from_dict``.
 
         Args:
-            records: Iterable of row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.
+            records: Iterable of row values, where row values are arrays, tuples, lists, or namedtuples. For dictionary records, use ``Frame.from_dict_records``.
             index: Optionally provide an iterable of index labels, equal in length to the number of records. If a generator, this value will not be evaluated until after records are loaded.
             columns: Optionally provide an iterable of column labels, equal in length to the number of elements in a row.
             {dtypes}
@@ -397,7 +393,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         # if records is np; we can just pass it to constructor, as is alrady a consolidate type
         if isinstance(records, np.ndarray):
@@ -420,7 +416,13 @@ class Frame(ContainerOperand):
         row_count = len(rows)
 
         if not row_count:
-            raise ErrorInitFrame('no rows available in records.')
+            if columns is not None: # we can create a zero-record Frame
+                return cls(
+                        columns=columns,
+                        columns_constructor=columns_constructor,
+                        own_columns=own_columns,
+                        )
+            raise ErrorInitFrame('no rows available in records, and no columns defined.')
 
         if hasattr(rows, '__getitem__'):
             rows_to_iter = False

@@ -24,6 +24,14 @@ from static_frame.core.util import DtypesSpecifier
 from static_frame.core.index_base import IndexBase
 
 
+def dtypes_mappable(dtypes: DtypesSpecifier):
+    '''
+    Determine if the dtypes argument can be used by name lookup, rather than index.
+    '''
+    from static_frame.core.series import Series
+    return isinstance(dtypes, (dict, Series))
+
+
 def is_static(value: IndexConstructor) -> bool:
     try:
         # if this is a class constructor
@@ -367,37 +375,37 @@ def rehierarch_and_map(*,
         name: tp.Hashable = None,
         ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
 
-        depth = labels.shape[1] # number of columns
+    depth = labels.shape[1] # number of columns
 
-        if depth != len(depth_map):
-            raise RuntimeError('must specify new depths for all depths')
-        if set(range(depth)) != set(depth_map):
-            raise RuntimeError('all depths must be specified')
+    if depth != len(depth_map):
+        raise RuntimeError('must specify new depths for all depths')
+    if set(range(depth)) != set(depth_map):
+        raise RuntimeError('all depths must be specified')
 
-        labels_post = labels[NULL_SLICE, list(depth_map)]
-        labels_sort = np.full(labels_post.shape, 0)
+    labels_post = labels[NULL_SLICE, list(depth_map)]
+    labels_sort = np.full(labels_post.shape, 0)
 
-        # get ordering of vlues found in each level
-        order = [defaultdict(int) for _ in range(depth)]
+    # get ordering of vlues found in each level
+    order = [defaultdict(int) for _ in range(depth)]
 
-        for idx_row, label in enumerate(labels):
-            label = tuple(label)
-            for idx_col in range(depth):
-                if label[idx_col] not in order[idx_col]:
-                    # Map label to an integer representing the observed order.
-                    order[idx_col][label[idx_col]] = len(order[idx_col])
-                # Fill array for sorting based on observed order.
-                labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
+    for idx_row, label in enumerate(labels):
+        label = tuple(label)
+        for idx_col in range(depth):
+            if label[idx_col] not in order[idx_col]:
+                # Map label to an integer representing the observed order.
+                order[idx_col][label[idx_col]] = len(order[idx_col])
+            # Fill array for sorting based on observed order.
+            labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
 
-        # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
-        order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
-        labels_post = labels_post[order_lex]
-        labels_post.flags.writeable = False
-        index = index_constructor(labels_post,
-                index_constructors=index_constructors,
-                name=name,
-                )
-        return index, order_lex
+    # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
+    order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
+    labels_post = labels_post[order_lex]
+    labels_post.flags.writeable = False
+    index = index_constructor(labels_post,
+            index_constructors=index_constructors,
+            name=name,
+            )
+    return index, order_lex
 
 
 def array_from_value_iter(
@@ -410,33 +418,33 @@ def array_from_value_iter(
         row_count: int,
         ):
 
-        # for each column, try to get a column_type, or None
-        if dtypes is None:
-            field_ref = row_reference[key]
-            # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-            column_type = (type(field_ref)
-                    if not isinstance(field_ref, (str, np.datetime64))
-                    else None)
-            column_type_explicit = False
-        else: # column_type returned here can be None.
-            column_type = get_col_dtype(idx)
-            column_type_explicit = True
+    # for each column, try to get a column_type, or None
+    if dtypes is None:
+        field_ref = row_reference[key]
+        # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
+        column_type = (type(field_ref)
+                if not isinstance(field_ref, (str, np.datetime64))
+                else None)
+        column_type_explicit = False
+    else: # column_type returned here can be None.
+        column_type = get_col_dtype(idx)
+        column_type_explicit = True
 
-        values = None
-        if column_type is not None:
-            try:
-                values = np.fromiter(
-                        get_value_iter(key),
-                        count=row_count,
-                        dtype=column_type)
-            except (ValueError, TypeError):
-                # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-                if not column_type_explicit:
-                    # reset to None if not explicit and failued in fromiter
-                    column_type = None
-        if values is None:
-            # let array constructor determine type if column_type is None
-            values = np.array(tuple(get_value_iter(key)), dtype=column_type)
+    values = None
+    if column_type is not None:
+        try:
+            values = np.fromiter(
+                    get_value_iter(key),
+                    count=row_count,
+                    dtype=column_type)
+        except (ValueError, TypeError):
+            # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+            if not column_type_explicit:
+                # reset to None if not explicit and failued in fromiter
+                column_type = None
+    if values is None:
+        # let array constructor determine type if column_type is None
+        values = np.array(tuple(get_value_iter(key)), dtype=column_type)
 
-        values.flags.writeable = False
-        return values
+    values.flags.writeable = False
+    return values

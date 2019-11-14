@@ -4714,6 +4714,19 @@ class TestUnit(TestCase):
             # cannot supply columns when records are dictionaries
             f1 = Frame.from_records(records, columns=('b', 'c', 'd'))
 
+
+
+    def test_frame_from_records_k(self) -> None:
+        def gen():
+            for k in ():
+                yield k
+
+        f1 = Frame.from_records(gen(), columns=('a', 'b', 'c'))
+        self.assertEqual(f1.to_pairs(0),
+                (('a', ()), ('b', ()), ('c', ())))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_dict_records_a(self) -> None:

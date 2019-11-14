@@ -188,6 +188,8 @@ class TypeBlocks(ContainerOperand):
         '''
         Given a shape where one or both axis is 0 (a zero sized array), return a TypeBlocks instance.
         '''
+        #NOTE: might want to take dtypes here, so as we can create a zero row Frame with properly defined dtypes. The challenge is that DtypesSpecifier includes column name maps, and we do not have access to an index-like map in this context.
+
         rows, columns = shape
 
         if not (rows == 0 or columns == 0):
