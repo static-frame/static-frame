@@ -14,6 +14,7 @@ from static_frame.core.container import UFUNC_AXIS_SKIPNA
 from static_frame.test.property import strategies as sfst
 
 from static_frame.test.test_case import TestCase
+from static_frame.core.util import isna_element
 
 from static_frame import Series
 
@@ -104,8 +105,9 @@ class TestUnit(TestCase):
     @given(sfst.get_series(min_size=1)) # type: ignore
     def test_isin(self, s1: Series) -> None:
 
-        sample = s1.iloc[0]
-        self.assertTrue(s1.isin((sample,)).iloc[0])
+        value = s1.iloc[0]
+        if not isna_element(value):
+            self.assertTrue(s1.isin((value,)).iloc[0])
 
 
 
