@@ -10,6 +10,8 @@ Implemented handling in ``Frame.from_delimited`` for column-only files.
 
 ``Frame.iter_tuple`` and ``Frame.iter_tuple_items`` will return ``tuple`` instead of ``NamedTuple`` if fields are not valid identifiers.
 
+``Frame.from_records`` now supports empty records if ``columns`` is provided.
+
 
 0.5.0
 -----------
