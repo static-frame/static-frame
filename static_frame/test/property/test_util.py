@@ -359,6 +359,20 @@ class TestUnit(TestCase):
             else:
                 self.assertTrue(post.ndim == 2)
 
+    @given(get_array_1d2d(), get_array_1d())
+    def test_isin(self, arr1, arr2):
+        result = util.isin(arr1, arr2)
+
+        if len(arr1) > 0:
+            if arr1.ndim == 1:
+                expected = result[0]
+                actual = arr1[0] in arr2
+            else:
+                expected = result[0][0]
+                actual = arr1[0][0] in arr2
+            self.assertEqual(expected, actual)
+        else:
+            self.assertEqual(0, result.size)
 
 
 # slices_from_targets

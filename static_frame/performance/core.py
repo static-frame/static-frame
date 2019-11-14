@@ -149,7 +149,7 @@ class SampleData:
     def create(cls) -> None:
         pds_int_float_10k, sfs_int_float_10k, npa_int_float_10k = get_sample_series_float(10000)
         pds_obj_10k, sfs_obj_10k, npa_obj_10k = get_sample_series_obj(10000)
-        pds_str_float_10k, sfs_str_float_10k, _ = get_sample_series_string_index_float_values(10000)
+        pds_str_float_10k, sfs_str_float_10k, npa_str_float_10k = get_sample_series_string_index_float_values(10000)
         pds_objstr_10k, sfs_objstr_10k, npa_objstr_10k = get_sample_series_objstr(10000)
         pdf_float_10k, sff_float_10k, npf_float_10k = get_sample_frame_float_string_index(10000)
         pdf_mixed_10k, sff_mixed_10k, npf_mixed_10k = get_sample_frame_mixed_string_index()
@@ -735,6 +735,72 @@ class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
         assert len(post) == 1000
 
 
+class SeriesIntObj_isin(PerfTest):
+    '''isin with objects.
+    Numpy's performance as the lookup array grows deteriorates at an exponential rate.
+    '''
+    NUMBER = 50
+    _lower = 2
+    _upper = 6
+
+    @classmethod
+    def sf(cls) -> None:
+        sf_series = SampleData.get('sfs_obj_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([str(i) for i in range(10**i)], dtype=object)
+            sf_series.isin(lookup_arr)
+
+    @classmethod
+    def pd(cls) -> None:
+        pd_series = SampleData.get('pds_obj_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([str(i) for i in range(10**i)], dtype=object)
+            pd_series.isin(lookup_arr)
+
+    # @classmethod
+    # def np(cls) -> None:
+    #     np_series = SampleData.get('npa_obj_10k')
+    #     for i in range(cls._lower, cls._upper):
+    #         lookup_arr = np.array([str(i) for i in range(10**i)], dtype=object)
+    #         np.isin(np_series, lookup_arr)
+
+
+class SeriesStrFloat_isin(PerfTest):
+    '''isin with primitives.
+    Static Frame's performance should be in line with numpy
+
+    As n gets large, static frame begins to outperform pandas
+        100 = 1.7124
+       1000 = 1.4958
+      10000 = 1.1766
+     100000 = 1.0496
+    1000000 = 0.9719
+    '''
+    NUMBER = 50
+    _lower = 2
+    _upper = 6
+
+    @classmethod
+    def sf(cls) -> None:
+        sf_series = SampleData.get('sfs_str_float_10k')
+        for exponent in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10**exponent)])
+            sf_series.isin(lookup_arr)
+
+    @classmethod
+    def pd(cls) -> None:
+        pd_series = SampleData.get('pds_str_float_10k')
+        for exponent in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10**exponent)])
+            pd_series.isin(lookup_arr)
+
+    @classmethod
+    def np(cls) -> None:
+        np_series = SampleData.get('npa_str_float_10k')
+        for exponent in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10**exponent)])
+            np.isin(np_series, lookup_arr)
+
 
 #-------------------------------------------------------------------------------
 # frame tests
@@ -1107,3 +1173,71 @@ class FrameFloat_H2D_add_series_partial(PerfTest):
             s = pd.Series(col * .1, index=index[col: col+6])
             f1[col] = s
         assert f1.sum().sum() == 2970.0
+
+
+class FrameObj_isin(PerfTest):
+    '''isin with objects.
+    Will noticeably underperform pandas due to pandas' use of C at a constant rate
+    Numpy's performance as the lookup array grows deteriorates at an exponential rate.
+    '''
+    NUMBER = 5
+    _lower = 2
+    _upper = 5
+
+    @classmethod
+    def pd(cls) -> None:
+        pd_frame = SampleData.get('pdf_mixed_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([str(i) for i in range(10 ** i)], dtype=object)
+            pd_frame.isin(lookup_arr)
+
+    @classmethod
+    def sf(cls) -> None:
+        sf_frame = SampleData.get('sff_mixed_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([str(i) for i in range(10 ** i)], dtype=object)
+            sf_frame.isin(lookup_arr)
+
+    # @classmethod
+    # def np(cls) -> None:
+    #     np_frame = SampleData.get('npf_mixed_10k')
+    #     for i in range(cls._lower, cls._upper):
+    #         lookup_arr = np.array([str(i) for i in range(10 ** i)])
+    #         np.isin(np_frame, lookup_arr)
+
+
+class FrameFloat_isin(PerfTest):
+    '''isin with floats.
+    As n gets large, pandas outperformance significantly drops:
+
+        100 = 6.2133x
+       1000 = 3.5506x
+      10000 = 2.9428x
+     100000 = 2.4097x
+    1000000 = 1.3527x
+    '''
+    NUMBER = 10
+    _lower = 2
+    _upper = 7
+
+
+    @classmethod
+    def pd(cls) -> None:
+        pd_frame = SampleData.get('pdf_float_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10 ** i)])
+            pd_frame.isin(lookup_arr)
+
+    @classmethod
+    def sf(cls) -> None:
+        sf_frame = SampleData.get('sff_float_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10 ** i)])
+            sf_frame.isin(lookup_arr)
+
+    @classmethod
+    def np(cls) -> None:
+        np_frame = SampleData.get('npf_float_10k')
+        for i in range(cls._lower, cls._upper):
+            lookup_arr = np.array([i / 100 for i in range(10 ** i)])
+            np.isin(np_frame, lookup_arr)

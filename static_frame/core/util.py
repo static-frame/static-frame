@@ -1571,6 +1571,101 @@ def ufunc_set_iter(
 
     return result
 
+
+def _isin_1d(
+        array: np.ndarray,
+        other: tp.Set
+        ) -> np.ndarray:
+    '''
+    Iterate over an 1D array to build a 1D Boolean ndarray representing whether or not the original element is in the set
+
+    Args:
+        array: The source array
+        other: The set of elements being looked for
+    '''
+    assert array.ndim == 1
+
+    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
+
+    for i, element in enumerate(array):
+        result[i] = element in other
+
+    return result
+
+
+def _isin_2d(
+        array: np.ndarray,
+        other: tp.Set
+        ) -> np.ndarray:
+    '''
+    Iterate over an 2D array to build a 2D, immutable, Boolean ndarray representing whether or not the original element is in the set
+
+    Args:
+        array: The source array
+        other: The set of elements being looked for
+    '''
+    assert array.ndim == 2
+
+    result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
+
+    for i, row in enumerate(array):
+        for j, element in enumerate(row):
+            result[i][j] = element in other
+
+    return result
+
+
+def isin(
+        array: np.ndarray,
+        other: tp.Union[tp.Iterable, tp.Collection]
+        ) -> np.ndarray:
+    '''
+    Builds a same-size, immutable, Boolean ndarray representing whether or not the original element is in another ndarray
+
+    NOTE:
+    numpy's has a very poor isin performance, as it converts both arguments to array-like objects.
+    This implementation optimizes that by converting the lookup argument into a set, providing constant comparison time.
+
+    Args:
+        array: The source array
+        other: The elements being looked for
+    '''
+    if isinstance(other, abc.Sized) and len(other) == 0:
+        result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        result.flags.writeable = False
+        return result
+
+    fallback_to_np: bool = True
+
+    other, assume_unique = iterable_to_array(other)
+
+    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+        try:
+            if array.ndim == 1:
+                result = _isin_1d(array, set(other))
+            else:
+                result = _isin_2d(array, set(other))
+        except TypeError:
+            # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
+            pass
+        else:
+            fallback_to_np = False
+
+    if fallback_to_np:
+        try:
+            # NOTE: is it faster to do this at the block level and return blocks?
+            if array.ndim == 1:
+                result = np.in1d(array, other, assume_unique=assume_unique)
+            else:
+                result = np.isin(array, other)
+        except TypeError:
+            # Numpy can fail if array's dtypes are incompatible
+            result: np.ndarray = np.full(array.shape, False, dtype=DTYPE_BOOL)
+
+    result.flags.writeable = False
+    return result
+
+
 #-------------------------------------------------------------------------------
 
 def slices_from_targets(

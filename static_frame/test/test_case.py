@@ -245,3 +245,11 @@ class TestCase(unittest.TestCase):
             self.assertEqual(l1, l2)
 
 
+# Helpful base types for testing
+class UnHashable:
+    '''UnHashable means __eq__ without defining __hash__'''
+    def __init__(self, val):
+        self.val = val
+
+    def __eq__(self, other):
+        return hasattr(other, 'val') and self.val == other.val

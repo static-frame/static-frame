@@ -813,7 +813,7 @@ def get_frame_or_frame_go(
         columns_dtype_group: tp.Optional[DTGroup] = None
         ) -> st.SearchStrategy:
     '''
-    Retrun either a ``Frame`` or a ``FrameGO``,
+    Return either a ``Frame`` or a ``FrameGO``,
     '''
     st_frame = get_frame(
             min_rows=min_rows,
