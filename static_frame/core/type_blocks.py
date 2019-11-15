@@ -505,6 +505,14 @@ class TypeBlocks(ContainerOperand):
                 self._reblock_signature(),
                 other._reblock_signature()))
 
+    # def unblock_dtype_compatible(self, other: 'TypeBlocks') -> bool:
+    #     '''
+    #     If, when reduced to single dytpes per column, the blocks are compatible.
+    #     '''
+    #     compare = resolve_dtype(a, b) in zip(self.dtypes, other.dtypes):
+
+
+
     @classmethod
     def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]) -> np.array:
         '''This will always return a 2D array.

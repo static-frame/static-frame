@@ -90,9 +90,9 @@ class TestUnit(TestCase):
 
 
     @given(get_labels(min_size=1)) # type: ignore
-    def test_index_isin(self, labels: tp.Sequence[tp.Hashable], arr: np.ndarray) -> None:
+    def test_index_isin(self, labels: tp.Sequence[tp.Hashable]) -> None:
         index = Index(labels)
-        self.assertTrue(index.isin((labels[0],)).iloc[0])
+        self.assertTrue(index.isin((labels[0],))[0])
 
 
 if __name__ == '__main__':

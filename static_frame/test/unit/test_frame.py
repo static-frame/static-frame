@@ -4468,6 +4468,25 @@ class TestUnit(TestCase):
         a = sf.Frame.from_dict({0:(1,2), 1:(2,3), 2:(True, True)})
         b = sf.Frame.from_dict({0:(1,2), 1:(np.nan, np.nan), 2:(False, False)})
 
+        # reblock first two columns into integers
+        c = a.astype[[0,1]](int)
+        self.assertEqual(c._blocks.shapes.tolist(),
+                [(2, 2), (2,)])
+
+        # unaligned blocks compared column to column
+        post1 = sf.Frame.from_concat([c, b], index=sf.IndexAutoFactory)
+
+        self.assertEqual(post1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('float64'), np.dtype('bool')]
+                )
+
+        post2 = sf.Frame.from_concat([a, b], index=sf.IndexAutoFactory)
+
+        self.assertEqual(post2.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('float64'), np.dtype('bool')]
+                )
+
+
     #---------------------------------------------------------------------------
 
 

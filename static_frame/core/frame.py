@@ -256,9 +256,10 @@ class Frame(ContainerOperand):
                 for frame in frames:
                     if len(frame.columns) != len(columns) or (frame.columns != columns).any():
                         frame = frame.reindex(columns=columns, fill_value=fill_value)
+
                     aligned_frames.append(frame)
                     # column size is all the same by this point
-                    if previous_frame is not None:
+                    if previous_frame is not None: # after the first
                         if block_compatible:
                             block_compatible &= frame._blocks.block_compatible(
                                     previous_frame._blocks,
@@ -284,11 +285,14 @@ class Frame(ContainerOperand):
                             block_parts.append(b)
                         # returns immutable array
                         yield concat_resolved(block_parts)
-                else:
-                    # must just combine .values; returns immutable array
-                    yield concat_resolved([frame.values for frame in frames])
+                else: # blocks not alignable
+                    # break into single column arrays for maximum type integrity; there might be an alternative reblocking that could be more efficient, but determining that shape might be complex
+                    for i in range(len(columns)):
+                        block_parts = [
+                            f._blocks._extract_array(column_key=i) for f in aligned_frames]
+                        yield concat_resolved(block_parts)
         else:
-            raise NotImplementedError('no support for axis', axis)
+            raise NotImplementedError(f'no support for {axis}')
 
         if from_array_columns:
             if columns.ndim == 2: # we have a hierarchical index
