@@ -295,7 +295,7 @@ class IndexHierarchy4d_from_product(PerfTest):
 
 class IndexHierarchy2d_from_labels_int(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 20
 
     @classmethod
     def pd(cls) -> None:
@@ -308,7 +308,7 @@ class IndexHierarchy2d_from_labels_int(PerfTest):
 
 class IndexHierarchy2d_from_labels_str(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 20
 
     @classmethod
     def pd(cls) -> None:
@@ -721,6 +721,7 @@ class SeriesFloatH3DString_loc_slice_target_slice(PerfTest):
 
 
 class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
+    NUMBER = 50
 
     @staticmethod
     def pd() -> None:
@@ -741,7 +742,7 @@ class SeriesIntObj_isin(PerfTest):
     '''
     NUMBER = 50
     _lower = 2
-    _upper = 6
+    _upper = 5
 
     @classmethod
     def sf(cls) -> None:
@@ -778,7 +779,7 @@ class SeriesStrFloat_isin(PerfTest):
     '''
     NUMBER = 50
     _lower = 2
-    _upper = 6
+    _upper = 5
 
     @classmethod
     def sf(cls) -> None:
@@ -817,6 +818,8 @@ class SeriesStrFloat_isin(PerfTest):
 
 
 class FrameStrFloat_init(PerfTest):
+    NUMBER = 100
+
     @staticmethod
     def pd() -> None:
         data = SampleData.get('npf_float_10k')
@@ -832,7 +835,7 @@ class FrameStrFloat_init(PerfTest):
 
 class FrameFloat_from_records(PerfTest):
 
-    NUMBER = 10
+    NUMBER = 5
 
     @staticmethod
     def pd() -> None:
@@ -933,6 +936,7 @@ class FrameFloat_dropna_any_axis1(PerfTest):
 
 
 class FrameFloat_isna(PerfTest):
+    NUMBER = 100
 
     @staticmethod
     def np() -> None:
@@ -967,7 +971,7 @@ class FrameFloat_apply_axis0(PerfTest):
 
 
 class FrameFloat_apply_axis1(PerfTest):
-    NUMBER = 10
+    NUMBER = 5
 
     @staticmethod
     def pd() -> None:
@@ -989,6 +993,7 @@ class FrameFloat_apply_axis1(PerfTest):
 
 
 class FrameFloat_slice_loc_indices(PerfTest):
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -1004,6 +1009,7 @@ class FrameFloat_slice_loc_indices(PerfTest):
 
 
 class FrameFloat_slice_loc_index(PerfTest):
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -1058,6 +1064,8 @@ class FrameFloat_slice_loc_column(PerfTest):
 
 class FrameMixed_slice_loc_indices(PerfTest):
 
+    NUMBER = 100
+
     @staticmethod
     def pd() -> None:
         for i in range(0, 10000, 1000):
@@ -1072,6 +1080,8 @@ class FrameMixed_slice_loc_indices(PerfTest):
 
 
 class FrameMixed_slice_loc_index(PerfTest):
+
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -1126,7 +1136,7 @@ class FrameFloat_H1D_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
 
-    NUMBER = 30
+    NUMBER = 10
 
     # 325 two character strings
     _index = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
@@ -1151,7 +1161,7 @@ class FrameFloat_H1D_add_series_partial(PerfTest):
 class FrameFloat_H2D_add_series_partial(PerfTest):
     '''Adding series that only partially match the index
     '''
-    NUMBER = 30
+    NUMBER = 10
     _index_leaves = list(''.join(x) for x in it.combinations(string.ascii_lowercase, 2))
 
     @classmethod
@@ -1216,10 +1226,10 @@ class FrameFloat_isin(PerfTest):
      100000 = 2.4097x
     1000000 = 1.3527x
     '''
-    NUMBER = 10
+    NUMBER = 5
+
     _lower = 2
     _upper = 7
-
 
     @classmethod
     def pd(cls) -> None:

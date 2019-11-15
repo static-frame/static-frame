@@ -1263,7 +1263,7 @@ class Frame(ContainerOperand):
                     continue
                 yield row
 
-        # genfromtxt takes a missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
+        # genfromtxt takes missing_values, but this can only be a list, and does not work under some condition (i.e., a cell with no value). thus, this is deferred to from_sructured_array
 
         array = np.genfromtxt(
                 row_source(),
