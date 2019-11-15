@@ -12,6 +12,8 @@ Implemented handling in ``Frame.from_delimited`` for column-only files.
 
 ``Frame.from_records`` now supports empty records if ``columns`` is provided.
 
+``Frame.from_concat`` now implements better type preservation in vertical concatenation of arrays.
+
 
 0.5.0
 -----------
