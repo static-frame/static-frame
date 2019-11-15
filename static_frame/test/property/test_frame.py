@@ -158,7 +158,9 @@ class TestUnit(TestCase):
     @given(sfst.get_frame()) # type: ignore
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]
-        if not isna_element(value):
+        if (not isna_element(value) and
+                not isinstance(value, np.datetime64) and
+                not isinstance(value, np.timedelta64)):
             self.assertTrue(f1.isin((value,)).iloc[0, 0])
 
 
