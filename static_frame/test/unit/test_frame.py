@@ -4463,6 +4463,14 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_from_concat_w(self) -> None:
+
+        a = sf.Frame.from_dict({0:(1,2), 1:(2,3), 2:(True, True)})
+        b = sf.Frame.from_dict({0:(1,2), 1:(np.nan, np.nan), 2:(False, False)})
+
+    #---------------------------------------------------------------------------
+
+
     def test_frame_from_concat_items_a(self) -> None:
         records1 = (
                 (2, 2, False),
