@@ -4462,7 +4462,7 @@ class TestUnit(TestCase):
 
 
 
-
+    @skip_win  # type: ignore
     def test_frame_from_concat_w(self) -> None:
 
         a = sf.Frame.from_dict({0:(1,2), 1:(2,3), 2:(True, True)})
