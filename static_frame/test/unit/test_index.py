@@ -255,6 +255,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.isin((x * 10 for x in (3, 4, 5, 6, 6))).tolist(), [True, True, True])
 
+    def test_index_isin_b(self) -> None:
+        idx = Index(('a', 'b', 'c'))
+        self.assertEqual(
+                idx.isin(('b','c')).tolist(),
+                [False, True, True]
+                )
+
+        self.assertEqual(
+                idx.isin(('b', 'c', 'b', 'c')).tolist(),
+                [False, True, True]
+                )
 
 
     def test_index_contains_a(self) -> None:

@@ -47,5 +47,10 @@
 
 # stations
 
-# Station 46222 Change Station ID
+# 46222 Change Station ID
 # San Pedro, CA (092)
+
+# 46253 (south west corner)
+
+
+# 46256 (north corner)

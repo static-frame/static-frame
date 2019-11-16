@@ -1608,16 +1608,20 @@ def _isin_2d(
 
     result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
 
-    for i, row in enumerate(array):
-        for j, element in enumerate(row):
-            result[i][j] = element in other
+    for i, j in np.ndindex(*array.shape):
+        result[i][j] = array[i][j] in other
+
+    # for i, row in enumerate(array):
+    #     for j, element in enumerate(row):
+    #         result[i][j] = element in other
 
     return result
 
 
 def isin(
         array: np.ndarray,
-        other: tp.Union[tp.Iterable[tp.Any], tp.Collection[tp.Any]]
+        other: tp.Union[tp.Iterable[tp.Any], tp.Collection[tp.Any]],
+        array_is_unique: bool = False,
         ) -> np.ndarray:
     '''
     Builds a same-size, immutable, Boolean ndarray representing whether or not the original element is in another ndarray
@@ -1628,17 +1632,16 @@ def isin(
     Args:
         array: The source array
         other: The elements being looked for
+        array_is_unique: if array is known to be unique
     '''
-    result: np.ndarray
+    result: tp.Optional[np.ndarray] = None
 
     if isinstance(other, abc.Sized) and len(other) == 0:
         result = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
 
-    fallback_to_np: bool = True
-
-    other, assume_unique = iterable_to_array(other)
+    other, other_is_unique = iterable_to_array(other)
 
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
         try:
@@ -1649,17 +1652,15 @@ def isin(
         except TypeError:
             # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
             pass
-        else:
-            fallback_to_np = False
 
-
-    if fallback_to_np:
+    if result is None:
+        assume_unique = array_is_unique and other_is_unique
         try:
-            # NOTE: is it faster to do this at the block level and return blocks?
             if array.ndim == 1:
                 result = np.in1d(array, other, assume_unique=assume_unique)
             else:
-                result = np.isin(array, other)
+                # NOTE: likely faster to do this at the block level
+                result = np.isin(array, other, assume_unique=assume_unique)
         except TypeError:
             # Numpy can fail if array's dtypes are incompatible
             result = np.full(array.shape, False, dtype=DTYPE_BOOL)

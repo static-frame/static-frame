@@ -1406,7 +1406,7 @@ class Series(ContainerOperand):
         Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
         '''
         array = isin(self.values, other)
-        return self.__class__(array, index=self._index)
+        return self.__class__(array, index=self._index, name=self._name)
 
     @doc_inject(class_name='Series')
     def clip(self, lower=None, upper=None):

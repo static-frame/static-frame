@@ -945,11 +945,10 @@ class IndexHierarchy(IndexBase):
         for seq in other:
             if not hasattr(seq, '__iter__'):
                 raise RuntimeError('must provide one or more iterables within an iterable')
-
             # Coerce to hashable type
             as_tuple = tuple(seq)
-
             if len(as_tuple) == self.depth:
+                # can pre-filter if iterable matches to length
                 matches.append(as_tuple)
 
         if not matches:

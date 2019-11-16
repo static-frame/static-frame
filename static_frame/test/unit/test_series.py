@@ -1661,7 +1661,7 @@ class TestUnit(TestCase):
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
-
+    #---------------------------------------------------------------------------
     def test_series_isin_a(self) -> None:
 
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
@@ -1678,6 +1678,31 @@ class TestUnit(TestCase):
             (('a', True), ('b', True), ('c', True), ('d', True), ('e', True), ('f', True))
             )
 
+
+    def test_series_isin_b(self) -> None:
+
+        s1 = Series(['a', 'b', 'c', 'd'])
+        self.assertEqual(s1.isin(('b', 'c')).to_pairs(),
+                ((0, False), (1, True), (2, True), (3, False)))
+
+        self.assertEqual(s1.isin(('b', 'c', None)).to_pairs(),
+                ((0, False), (1, True), (2, True), (3, False)))
+
+        self.assertEqual(s1.isin(s1[[1, 2]].values).to_pairs(),
+                ((0, False), (1, True), (2, True), (3, False)))
+
+        self.assertEqual(s1.isin({'b', 'c'}).to_pairs(),
+                ((0, False), (1, True), (2, True), (3, False)))
+
+
+    def test_series_isin_c(self) -> None:
+
+        s1 = Series(['a', 'b', 'c', 'd', 'a', 'b', 'c', 'd'])
+
+        self.assertEqual(s1.isin(('a', 'd')).to_pairs(),
+                ((0, True), (1, False), (2, False), (3, True), (4, True), (5, False), (6, False), (7, True)))
+
+    #---------------------------------------------------------------------------
 
     def test_series_to_html_a(self) -> None:
 

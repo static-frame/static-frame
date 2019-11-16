@@ -804,10 +804,7 @@ class Index(IndexBase):
         '''
         Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
         '''
-        if self._recache:
-            self._update_array_cache()
-
-        return isin(self.values, other)
+        return isin(self.values, other, array_is_unique=True)
 
     def roll(self, shift: int) -> 'Index':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
