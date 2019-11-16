@@ -23,6 +23,7 @@
 # full data set
 # https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet/
 
+
 # sample data from peak
 
 # 2018 12 17 18 00 999 99.0 99.0  2.54 18.18 13.44 268 9999.0 999.0  16.7 999.0 99.0 99.00
@@ -44,13 +45,97 @@
 # 2018 12 18 02 30 999 99.0 99.0  2.82 18.18 13.61 267 9999.0 999.0  16.8 999.0 99.0 99.00
 
 # -----------------------------------------------
+import typing as tp
+from urllib import request
+
+import static_frame as sf
 
 # stations
 
 # 46222 Change Station ID
 # San Pedro, CA (092)
 
+STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet/'
+#San Pedro, CA (092)
+
+
+
 # 46253 (south west corner)
+#San Pedro South, CA (213)
+STATION_46253 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46253h2018.txt.gz&dir=data/historical/stdmet/'
 
 
 # 46256 (north corner)
+# Long Beach Channel, CA (215)
+STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h2018.txt.gz&dir=data/historical/stdmet/'
+
+
+# def get_data():
+
+#     for url in (STATION_46222,):
+#         with request.urlopen(url) as response:
+#             raw = response.read().decode('utf-8')
+#             import ipdb; ipdb.set_trace()
+#             with open('/tmp/a.txt', 'w') as f:
+#                 f.write(raw)
+
+
+def buoy_record(line: str) -> tp.Sequence[str]:
+
+    timestamp = []
+
+    def gen() -> tp.Iterator[str]:
+
+        cell_pos = -1
+        for cell in line.split(' '):
+            cell = cell.strip()
+            if not cell:
+                continue
+
+            cell_pos += 1
+
+            if cell_pos < 5:
+                timestamp.append(cell)
+            elif cell_pos == 5:
+                yield '{}-{}-{}T{}:{}'.format(*timestamp)
+                yield cell
+            else:
+                yield cell
+
+    return tuple(gen())
+
+
+def buoy_to_records(url: str) -> tp.Iterator[tp.Sequence[str]]:
+
+    with request.urlopen(url) as response:
+        raw = response.read().decode('utf-8')
+
+    for line in raw.split('\n'):
+        if not line.strip():
+            continue
+        yield buoy_record(line)
+
+
+def buoy_to_frame(url: str) -> sf.Frame:
+
+    records = buoy_to_records(url)
+    columns = next(records)
+    units = next(records)
+
+    f = sf.Frame.from_records(records, columns=columns)
+    f = f.set_index('#YY-MM-DDThh:mm',
+            index_constructor=sf.IndexMinute,
+            drop=True
+            )
+    return tp.cast(sf.Frame, f)
+
+def main() -> None:
+
+    f = buoy_to_frame(STATION_46222)
+
+
+    # import ipdb; ipdb.set_trace()
+
+
+if __name__ == '__main__':
+    main()

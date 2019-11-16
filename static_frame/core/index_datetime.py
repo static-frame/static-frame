@@ -21,6 +21,7 @@ from static_frame.core.util import to_timedelta64
 from static_frame.core.util import _DT64_DAY
 from static_frame.core.util import _DT64_MONTH
 from static_frame.core.util import _DT64_YEAR
+from static_frame.core.util import _DT64_M
 from static_frame.core.util import _DT64_S
 from static_frame.core.util import _DT64_MS
 
@@ -379,6 +380,25 @@ class IndexDate(_IndexDatetime):
 
 
 #-------------------------------------------------------------------------------
+@doc_inject(selector='index_date_time_init')
+class IndexMinute(_IndexDatetime):
+    '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = _DT64_M
+
+    __slots__ = (
+            '_map',
+            '_labels',
+            '_positions',
+            '_recache',
+            '_loc_is_iloc',
+            '_name',
+            )
+
+
 @doc_inject(selector='index_date_time_init')
 class IndexSecond(_IndexDatetime):
     '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.

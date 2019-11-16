@@ -3,7 +3,7 @@
 # that they are explicitly being exported here (and not just unused).
 
 
-from static_frame.core.util import GetItemKeyType as GetItemKeyType
+from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound as GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
@@ -40,6 +40,7 @@ from static_frame.core.index_datetime import IndexYearMonth as IndexYearMonth
 from static_frame.core.index_datetime import IndexYear as IndexYear
 from static_frame.core.index_datetime import IndexMillisecond as IndexMillisecond
 from static_frame.core.index_datetime import IndexSecond as IndexSecond
+from static_frame.core.index_datetime import IndexMinute as IndexMinute
 
 
 from static_frame.core.index import ILoc as ILoc

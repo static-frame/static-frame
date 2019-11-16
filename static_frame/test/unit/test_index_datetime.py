@@ -15,6 +15,7 @@ from static_frame import Frame
 from static_frame import IndexYearMonth
 from static_frame import IndexYear
 from static_frame import IndexSecond
+from static_frame import IndexMinute
 from static_frame import IndexMillisecond
 
 # from static_frame import HLoc
@@ -421,6 +422,17 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc['2016-05', 0].values.tolist(),
                 [4, 5, 6, 7, 8])
 
+
+    def test_index_minute_a(self) -> None:
+
+        idx1 = IndexMinute(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
+
+        self.assertEqual(idx1.loc['2019'].values.tolist(),
+                [datetime.datetime(2019, 1, 2, 3, 45)]
+                )
+
+        self.assertEqual(idx1.loc['2018-01'].values.tolist(),
+                [datetime.datetime(2018, 1, 1, 3, 30), datetime.datetime(2018, 1, 1, 3, 45)])
 
 
 if __name__ == '__main__':

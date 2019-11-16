@@ -867,12 +867,14 @@ def slice_to_ascending_slice(
 _DT64_DAY = np.dtype('datetime64[D]')
 _DT64_MONTH = np.dtype('datetime64[M]')
 _DT64_YEAR = np.dtype('datetime64[Y]')
+_DT64_M = np.dtype('datetime64[m]')
 _DT64_S = np.dtype('datetime64[s]')
 _DT64_MS = np.dtype('datetime64[ms]')
 
 _TD64_DAY = np.timedelta64(1, 'D')
 _TD64_MONTH = np.timedelta64(1, 'M')
 _TD64_YEAR = np.timedelta64(1, 'Y')
+_TD64_M = np.timedelta64(1, 'm')
 _TD64_S = np.timedelta64(1, 's')
 _TD64_MS = np.timedelta64(1, 'ms')
 
@@ -1756,6 +1758,9 @@ def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
 
 
 def _read_url(fp: str) -> str:
+    '''
+    Read a URL into memory, return a decoded string.
+    '''
     with request.urlopen(fp) as response:
         return tp.cast(str, response.read().decode('utf-8'))
 

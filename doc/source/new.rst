@@ -6,8 +6,9 @@ What is New in Static Frame
 0.5.2
 ----------
 
-Refinements to `Series.isin()`, `Frame.isin()`, `Index.isin()`, and `IndexHierarchy.isin()` to better identify cases of unique elements.
+Refinements to ``Series.isin()``, ``Frame.isin()``, ``Index.isin()``, and ``IndexHierarchy.isin()`` to better identify cases of unique elements.
 
+Added ``IndexMinute`` datetime index subclass.
 
 0.5.1
 ----------
