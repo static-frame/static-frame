@@ -8,6 +8,7 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
 
+from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.test.property.strategies import DTGroup
 
 from static_frame.test.property.strategies import get_shape_1d2d
@@ -359,20 +360,32 @@ class TestUnit(TestCase):
             else:
                 self.assertTrue(post.ndim == 2)
 
-    @given(get_array_1d2d(), get_array_1d()) # type: ignore
-    def test_isin(self, arr1: np.ndarray, arr2: np.ndarray) -> None:
-        result = util.isin(arr1, arr2)
+    @given(get_array_1d2d(min_rows=1, min_columns=1)) # type: ignore
+    def test_isin(self, array: np.ndarray) -> None:
 
-        if len(arr1) > 0:
-            if arr1.ndim == 1:
-                expected = result[0]
-                actual = arr1[0] in arr2
+        container_factory = (list, set, np.array)
+        result = None
+
+        if array.ndim == 1:
+            sample = array[0]
+            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+                pass
             else:
-                expected = result[0][0]
-                actual = arr1[0][0] in arr2
-            self.assertEqual(expected, actual)
-        else:
-            self.assertEqual(0, result.size)
+                for factory in container_factory:
+                    result = util.isin(array, factory((sample,)))
+                    self.assertTrue(result[0])
+        elif array.ndim == 2:
+            sample = array[0, 0]
+            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+                pass
+            else:
+                for factory in container_factory:
+                    result = util.isin(array, factory((sample,)))
+                    self.assertTrue(result[0, 0])
+
+        if result is not None:
+            self.assertTrue(array.shape == result.shape)
+            self.assertTrue(result.dtype == bool)
 
 
 # slices_from_targets
