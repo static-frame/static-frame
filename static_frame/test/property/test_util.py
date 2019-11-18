@@ -388,7 +388,6 @@ class TestUnit(TestCase):
             self.assertTrue(result.dtype == bool)
 
 
-# slices_from_targets
 
 
 if __name__ == '__main__':
