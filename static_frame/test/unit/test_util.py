@@ -846,15 +846,15 @@ class TestUnit(TestCase):
     def test_isin_1d(self) -> None:
         arr_1d = np.array([1, 2, 3, 4, 5])
 
-        s1 = {1, 3, 4}
+        s1 = frozenset({1, 3, 4})
         expected = np.array([True, False, True, True, False])
         self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s1)))
 
-        s2 = {7, 8, 9}
+        s2 = frozenset({7, 8, 9})
         expected = np.array([False, False, False, False, False])
         self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s2)))
 
-        s3 = {1, 2, 3, 4, 5}
+        s3 = frozenset({1, 2, 3, 4, 5})
         expected = np.array([True, True, True, True, True])
         self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s3)))
 
@@ -865,15 +865,15 @@ class TestUnit(TestCase):
     def test_isin_2d(self) -> None:
         arr_2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 
-        s1 = {1, 3, 4, 9}
+        s1 = frozenset({1, 3, 4, 9})
         expected = np.array([[True, False, True], [True, False, False], [False, False, True]])
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s1)))
 
-        s2 = {10, 11, 12}
+        s2 = frozenset({10, 11, 12})
         expected = np.array([[False, False, False], [False, False, False], [False, False, False]])
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s2)))
 
-        s3 = {1, 2, 3, 4, 5, 6, 7, 8, 9}
+        s3 = frozenset({1, 2, 3, 4, 5, 6, 7, 8, 9})
         expected = np.array([[True, True, True], [True, True, True], [True, True, True]])
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s3)))
 

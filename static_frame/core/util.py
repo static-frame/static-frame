@@ -1576,7 +1576,7 @@ def ufunc_set_iter(
 
 def _isin_1d(
         array: np.ndarray,
-        other: tp.Set[tp.Any]
+        other: tp.FrozenSet[tp.Any]
         ) -> np.ndarray:
     '''
     Iterate over an 1D array to build a 1D Boolean ndarray representing whether or not the original element is in the set
@@ -1597,7 +1597,7 @@ def _isin_1d(
 
 def _isin_2d(
         array: np.ndarray,
-        other: tp.Set[tp.Any]
+        other: tp.FrozenSet[tp.Any]
         ) -> np.ndarray:
     '''
     Iterate over an 2D array to build a 2D, immutable, Boolean ndarray representing whether or not the original element is in the set
@@ -1612,10 +1612,6 @@ def _isin_2d(
 
     for i, j in np.ndindex(*array.shape):
         result[i][j] = array[i][j] in other
-
-    # for i, row in enumerate(array):
-    #     for j, element in enumerate(row):
-    #         result[i][j] = element in other
 
     return result
 
@@ -1648,9 +1644,9 @@ def isin(
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
         try:
             if array.ndim == 1:
-                result = _isin_1d(array, set(other))
+                result = _isin_1d(array, frozenset(other))
             else:
-                result = _isin_2d(array, set(other))
+                result = _isin_2d(array, frozenset(other))
         except TypeError:
             # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
             pass

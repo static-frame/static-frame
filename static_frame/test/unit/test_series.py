@@ -1702,6 +1702,16 @@ class TestUnit(TestCase):
         self.assertEqual(s1.isin(('a', 'd')).to_pairs(),
                 ((0, True), (1, False), (2, False), (3, True), (4, True), (5, False), (6, False), (7, True)))
 
+
+    def test_series_isin_d(self) -> None:
+        s1 = Series((1, 1), index=list('ab'))
+        lookup = {2,3,4,5,6,7,8,9,10,11,12,13}
+        # Checks an edge case where if a numpy `assume_unique` flag is incorrectly passed, it returns the wrong result
+        result = s1.isin(lookup)
+        self.assertEqual(result.to_pairs(),
+                (('a', False), ('b', False)))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_to_html_a(self) -> None:
