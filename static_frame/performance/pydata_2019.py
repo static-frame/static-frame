@@ -47,15 +47,27 @@
 # -----------------------------------------------
 import typing as tp
 from urllib import request
-
+from typing import NamedTuple
 import static_frame as sf
 
 # stations
 
+
+class Buoy(NamedTuple):
+    station_id: int
+    name: str
+    filename: str
+
+BUOYS = (
+    Buoy(46222, 'San Pedro', '46222h2018'),
+    Buoy(46253, 'San Pedro South', '46253h2018'),
+    Buoy(46256, 'Long Beach Channel', '46256h2018'),
+)
+
 # 46222 Change Station ID
 # San Pedro, CA (092)
 
-STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet/'
+STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet'
 #San Pedro, CA (092)
 
 
@@ -69,71 +81,76 @@ STATION_46253 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46253h201
 # Long Beach Channel, CA (215)
 STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h2018.txt.gz&dir=data/historical/stdmet/'
 
-
-# def get_data():
-
-#     for url in (STATION_46222,):
-#         with request.urlopen(url) as response:
-#             raw = response.read().decode('utf-8')
-#             import ipdb; ipdb.set_trace()
-#             with open('/tmp/a.txt', 'w') as f:
-#                 f.write(raw)
+# benefits of class desing:
+# class method v. static methods shows dependencies and proximiity
 
 
-def buoy_record(line: str) -> tp.Sequence[str]:
+class BuoyLoader:
 
-    timestamp = []
+    FIELD_DATETIME = 'datetime'
+    URL_TEMPLATE = 'https://www.ndbc.noaa.gov/view_text_file.php?filename={}.txt.gz&dir=data/historical/stdmet/'
 
-    def gen() -> tp.Iterator[str]:
+    @classmethod
+    def buoy_record(cls, line: str, count: int) -> tp.Sequence[str]:
+        timestamp = []
 
-        cell_pos = -1
-        for cell in line.split(' '):
-            cell = cell.strip()
-            if not cell:
+        def gen() -> tp.Iterator[str]:
+            cell_pos = -1 # increment before usage
+            for cell in line.split(' '):
+                cell = cell.strip()
+                if cell:
+                    cell_pos += 1
+                    if cell_pos < 5:
+                        timestamp.append(cell)
+                    elif cell_pos == 5:
+                        if count == 0:
+                            yield cls.FIELD_DATETIME
+                        else:
+                            yield '{}-{}-{}T{}:{}'.format(*timestamp)
+                        yield cell
+                    else:
+                        yield cell
+
+        return tuple(gen())
+
+    @classmethod
+    def buoy_to_records(cls, buoy: Buoy) -> tp.Iterator[tp.Sequence[str]]:
+
+        url = cls.URL_TEMPLATE.format(buoy.filename)
+
+        with request.urlopen(url) as response:
+            raw = response.read().decode('utf-8')
+
+        line_pos = -1 # increment beforeusage
+        for line in raw.split('\n'):
+            if not line.strip():
                 continue
+            line_pos += 1
+            yield cls.buoy_record(line, line_pos)
 
-            cell_pos += 1
+    @classmethod
+    def buoy_to_frame(cls, buoy: Buoy) -> sf.Frame:
 
-            if cell_pos < 5:
-                timestamp.append(cell)
-            elif cell_pos == 5:
-                yield '{}-{}-{}T{}:{}'.format(*timestamp)
-                yield cell
-            else:
-                yield cell
+        records = cls.buoy_to_records(buoy)
+        columns = next(records)
+        units = next(records)
 
-    return tuple(gen())
-
-
-def buoy_to_records(url: str) -> tp.Iterator[tp.Sequence[str]]:
-
-    with request.urlopen(url) as response:
-        raw = response.read().decode('utf-8')
-
-    for line in raw.split('\n'):
-        if not line.strip():
-            continue
-        yield buoy_record(line)
+        f = sf.Frame.from_records(records, columns=columns)
+        f = f.set_index(cls.FIELD_DATETIME,
+                index_constructor=sf.IndexMinute,
+                drop=True
+                )
+        return tp.cast(sf.Frame, f)
 
 
-def buoy_to_frame(url: str) -> sf.Frame:
 
-    records = buoy_to_records(url)
-    columns = next(records)
-    units = next(records)
 
-    f = sf.Frame.from_records(records, columns=columns)
-    f = f.set_index('#YY-MM-DDThh:mm',
-            index_constructor=sf.IndexMinute,
-            drop=True
-            )
-    return tp.cast(sf.Frame, f)
 
 def main() -> None:
 
-    f = buoy_to_frame(STATION_46222)
+    f = BuoyLoader.buoy_to_frame(BUOYS[0])
 
-
+    print(f)
     # import ipdb; ipdb.set_trace()
 
 
