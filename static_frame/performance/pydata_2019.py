@@ -46,6 +46,7 @@
 
 # -----------------------------------------------
 import typing as tp
+import datetime
 from urllib import request
 from typing import NamedTuple
 import static_frame as sf
@@ -56,30 +57,30 @@ import static_frame as sf
 class Buoy(NamedTuple):
     station_id: int
     name: str
-    filename: str
+    # filename: str
 
 BUOYS = (
-    Buoy(46222, 'San Pedro', '46222h2018'),
-    Buoy(46253, 'San Pedro South', '46253h2018'),
-    Buoy(46256, 'Long Beach Channel', '46256h2018'),
+    Buoy(46222, 'San Pedro'),
+    Buoy(46253, 'San Pedro South'),
+    Buoy(46256, 'Long Beach Channel'),
 )
 
 # 46222 Change Station ID
 # San Pedro, CA (092)
 
-STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet'
+# STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet'
 #San Pedro, CA (092)
 
 
 
 # 46253 (south west corner)
 #San Pedro South, CA (213)
-STATION_46253 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46253h2018.txt.gz&dir=data/historical/stdmet/'
+# STATION_46253 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46253h2018.txt.gz&dir=data/historical/stdmet/'
 
 
 # 46256 (north corner)
 # Long Beach Channel, CA (215)
-STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h2018.txt.gz&dir=data/historical/stdmet/'
+# STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h2018.txt.gz&dir=data/historical/stdmet/'
 
 # benefits of class desing:
 # class method v. static methods shows dependencies and proximiity
@@ -88,13 +89,25 @@ STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h201
 class BuoyLoader:
 
     FIELD_DATETIME = 'datetime'
-    URL_TEMPLATE = 'https://www.ndbc.noaa.gov/view_text_file.php?filename={}.txt.gz&dir=data/historical/stdmet/'
+    FIELD_STATION_ID = 'station_id'
+    FIELD_WAVE_HEIGHT = 'WVHT'
+    FIELD_WAVE_PERIOD = 'DPD'	# Dominant wave period
+
+    URL_TEMPLATE = 'https://www.ndbc.noaa.gov/view_text_file.php?filename={station_id}h{year}.txt.gz&dir=data/historical/stdmet/'
 
     @classmethod
-    def buoy_record(cls, line: str, count: int) -> tp.Sequence[str]:
+    def buoy_record(cls,
+            line: str,
+            count: int,
+            station_id: int
+            ) -> tp.Sequence[str]:
         timestamp = []
 
         def gen() -> tp.Iterator[str]:
+            if count == 0:
+                yield cls.FIELD_STATION_ID
+            else:
+                yield station_id # always put first
             cell_pos = -1 # increment before usage
             for cell in line.split(' '):
                 cell = cell.strip()
@@ -114,44 +127,83 @@ class BuoyLoader:
         return tuple(gen())
 
     @classmethod
-    def buoy_to_records(cls, buoy: Buoy) -> tp.Iterator[tp.Sequence[str]]:
+    def buoy_to_records(cls,
+            buoy: Buoy,
+            year: int,
+            ) -> tp.Iterator[tp.Sequence[str]]:
 
-        url = cls.URL_TEMPLATE.format(buoy.filename)
+        url = cls.URL_TEMPLATE.format(station_id=buoy.station_id, year=year)
 
         with request.urlopen(url) as response:
             raw = response.read().decode('utf-8')
 
-        line_pos = -1 # increment beforeusage
+        line_pos = -1 # increment before usage to allow skipped lines
         for line in raw.split('\n'):
             if not line.strip():
                 continue
             line_pos += 1
-            yield cls.buoy_record(line, line_pos)
+            yield cls.buoy_record(line, line_pos, station_id=buoy.station_id)
 
     @classmethod
-    def buoy_to_frame(cls, buoy: Buoy) -> sf.Frame:
+    def buoy_to_frame(cls, buoy: Buoy, year: int) -> sf.Frame:
 
-        records = cls.buoy_to_records(buoy)
+        records = cls.buoy_to_records(buoy, year=year)
         columns = next(records)
         units = next(records)
 
         f = sf.Frame.from_records(records, columns=columns)
-        f = f.set_index(cls.FIELD_DATETIME,
-                index_constructor=sf.IndexMinute,
-                drop=True
-                )
+        f = f[[cls.FIELD_STATION_ID,
+                cls.FIELD_DATETIME,
+                cls.FIELD_WAVE_HEIGHT,
+                cls.FIELD_WAVE_PERIOD]] # wave height, dominant period
+        f = f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
         return tp.cast(sf.Frame, f)
 
 
+class BuoySingleYear:
+
+    @staticmethod
+    def to_frame(year: int = 2018) -> sf.Frame:
+
+        frames = []
+        for buoy in BUOYS:
+            f = BuoyLoader.buoy_to_frame(buoy, year)
+            frames.append(f)
+
+        f = sf.Frame.from_concat(frames,
+                axis=0,
+                index=sf.IndexAutoFactory,
+                name='buos_single_year'
+                )
+        f = f.set_index_hierarchy(('station_id', 'datetime'),
+                index_constructors=(sf.Index, sf.IndexMinute),
+                drop=True)
+        return f
 
 
 
 def main() -> None:
 
-    f = BuoyLoader.buoy_to_frame(BUOYS[0])
+    # f = BuoyLoader.buoy_to_frame(BUOYS[0], 2018)
 
+    # f = BuoySingleYear.to_frame()
+    # b = sf.Bus.from_frames((f,))
+    # b.to_zip_pickle('/tmp/tmp.zip')
+
+    b = sf.Bus.from_zip_pickle('/tmp/tmp.zip')
+    f = b.iloc[0]
+
+    post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+
+    post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
     print(f)
+    f.loc[sf.HLoc[f['WVHT'].loc_max()]]
+
     # import ipdb; ipdb.set_trace()
+
+    f['WVHT'].loc_max()
+    # post2 = f.loc[sf.HLoc[]]
+
 
 
 if __name__ == '__main__':

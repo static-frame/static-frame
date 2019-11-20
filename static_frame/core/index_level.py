@@ -322,6 +322,7 @@ class IndexLevel:
 
         iloc_count = len(ilocs)
         if iloc_count == 0:
+            # import ipdb; ipdb.set_trace()
             raise KeyError('no matching keys across all levels')
 
         if iloc_count == 1 and not key.has_key_multiple():

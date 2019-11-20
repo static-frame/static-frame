@@ -303,6 +303,7 @@ class Frame(ContainerOperand):
 
         if from_array_index:
             if index.ndim == 2: # we have a hierarchical index
+                # NOTE: could pass index_constructors here
                 index = IndexHierarchy.from_labels(index)
                 own_index = True
 
@@ -3583,7 +3584,8 @@ class Frame(ContainerOperand):
                 index=index,
                 own_data=own_data,
                 own_columns=own_columns,
-                own_index=True
+                own_index=True,
+                name=self._name
                 )
 
     def unset_index(self,

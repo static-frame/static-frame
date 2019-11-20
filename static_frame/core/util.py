@@ -943,6 +943,9 @@ def key_to_datetime_key(
     if isinstance(key, slice):
         return slice(*_slice_to_datetime_slice_args(key, dtype=dtype))
 
+    if isinstance(key, datetime.datetime):
+        return np.datetime64(key)
+
     if isinstance(key, np.datetime64):
         return key
 
@@ -955,7 +958,7 @@ def key_to_datetime_key(
         return key.astype(dtype)
 
     if hasattr(key, '__len__'):
-        # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representationn
+        # use dtype via array constructor to determine type; or just use datetime64 to parse to the passed-in representation
         return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like

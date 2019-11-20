@@ -3,6 +3,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.5.3
+----------
+
+``Frame.set_inex_hiearchy` delegates passes on ``name`` to returned ``Frame``.
+
+
 0.5.2
 ----------
 
