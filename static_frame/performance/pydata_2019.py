@@ -103,7 +103,7 @@ class BuoyLoader:
             ) -> tp.Sequence[str]:
         timestamp = []
 
-        def gen() -> tp.Iterator[str]:
+        def gen() -> tp.Iterator[tp.Union[int, str]]:
             if count == 0:
                 yield cls.FIELD_STATION_ID
             else:
@@ -124,7 +124,7 @@ class BuoyLoader:
                     else:
                         yield cell
 
-        return tuple(gen())
+        return tuple(gen()) # type: ignore
 
     @classmethod
     def buoy_to_records(cls,
@@ -193,7 +193,7 @@ def main() -> None:
     b = sf.Bus.from_zip_pickle('/tmp/tmp.zip')
     f = b.iloc[0]
 
-    post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+    post1 = f.loc[sf.HLoc[:, '2018-12-18T20']] # type: ignore
 
     post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
     print(f)
