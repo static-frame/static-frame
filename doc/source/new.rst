@@ -11,6 +11,8 @@ What is New in Static Frame
 
 ``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.datetime`` objects in ``loc`` expressions.
 
+Exposed ``interface`` attribute on ``ContainerBase`` subclasses.
+
 
 0.5.2
 ----------

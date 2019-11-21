@@ -175,9 +175,11 @@ class InterfaceSummary:
         for name_attr in dir(target.__class__): # get metaclass
             if name_attr == 'interface':
                 # getting interface off of the class will recurse
-                yield name_attr, getattr(target.__class__, name_attr), None
+                yield name_attr, None, None
 
         for name_attr in dir(target):
+            if name_attr == 'interface':
+                continue # skip, provided by class
             if not cls.is_public(name_attr):
                 continue
             yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)

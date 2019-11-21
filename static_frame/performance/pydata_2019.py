@@ -209,6 +209,17 @@ def main() -> None:
 
     # post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
 
+
+    max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
+    f.loc[f.index.isin(max_dpd)]
+
+    max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
+    f.loc[f.index.isin(max_wvht)]
+
+    # import ipdb; ipdb.set_trace()
+
+
+
     f.loc[sf.HLoc[f['WVHT'].loc_max()]]
 
     # import ipdb; ipdb.set_trace()
