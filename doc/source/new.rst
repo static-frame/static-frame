@@ -7,7 +7,7 @@ What is New in Static Frame
 0.5.3
 ----------
 
-``Frame.set_index_hiearchy` passes on ``name`` to returned ``Frame``.
+``Frame.set_index_hiearchy`` passes on ``name`` to returned ``Frame``.
 
 ``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.datetime`` objects in ``loc`` expressions.
 
