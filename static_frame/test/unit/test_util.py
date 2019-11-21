@@ -859,7 +859,7 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected, _isin_1d(arr_1d, s3)))
 
         arr_2d = np.array( [[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(TypeError):
             _isin_1d(arr_2d, s3)
 
     def test_isin_2d(self) -> None:
@@ -878,7 +878,7 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s3)))
 
         arr_1d = np.array([1, 2, 3, 4, 5])
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             _isin_2d(arr_1d, s3)
 
 

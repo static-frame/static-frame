@@ -46,7 +46,7 @@
 
 # -----------------------------------------------
 import typing as tp
-import datetime
+# import datetime
 from urllib import request
 from typing import NamedTuple
 import static_frame as sf
@@ -159,6 +159,18 @@ class BuoyLoader:
         f = f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
         return tp.cast(sf.Frame, f)
 
+    @classmethod
+    def buoy_to_df(cls):
+        pass
+
+    @classmethod
+    def buoy_to_np(cls):
+        pass
+
+    @classmethod
+    def buoy_to_xarray(cls):
+        pass
+
 
 class BuoySingleYear:
 
@@ -195,8 +207,8 @@ def main() -> None:
 
     post1 = f.loc[sf.HLoc[:, '2018-12-18T20']] # type: ignore
 
-    post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
-    print(f)
+    # post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
+
     f.loc[sf.HLoc[f['WVHT'].loc_max()]]
 
     # import ipdb; ipdb.set_trace()

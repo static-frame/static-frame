@@ -1588,8 +1588,6 @@ def _isin_1d(
         array: The source array
         other: The set of elements being looked for
     '''
-    assert array.ndim == 1
-
     result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
 
     for i, element in enumerate(array):
@@ -1609,19 +1607,17 @@ def _isin_2d(
         array: The source array
         other: The set of elements being looked for
     '''
-    assert array.ndim == 2
-
     result: np.ndarray = np.empty(array.shape, dtype=DTYPE_BOOL)
 
-    for i, j in np.ndindex(*array.shape):
-        result[i][j] = array[i][j] in other
+    for (i, j), v in np.ndenumerate(array):
+        result[i, j] = v in other
 
     return result
 
 
 def isin(
         array: np.ndarray,
-        other: tp.Union[tp.Iterable[tp.Any], tp.Collection[tp.Any]],
+        other: tp.Iterable[tp.Any],
         array_is_unique: bool = False,
         ) -> np.ndarray:
     '''

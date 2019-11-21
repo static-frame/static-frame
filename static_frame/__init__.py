@@ -65,4 +65,4 @@ from static_frame.core.frame import FrameAssign as FrameAssign
 from static_frame.core.bus import Bus as Bus
 
 
-__version__ = '0.5.3-dev' # use -dev for new version in development
+__version__ = '0.5.3' # use -dev for new version in development
