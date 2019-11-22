@@ -204,19 +204,14 @@ def main() -> None:
     max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
     max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
 
+    # get the peaks of the two fields
     peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
-
-    import ipdb; ipdb.set_trace()
-    # import ipdb; ipdb.set_trace()
 
     # this isolates the relevant days; might need to change buoys
     big = f.loc[(f.loc[:, 'WVHT'] > 2) & (f.loc[:, 'DPD'] > 18)].display_tall()
 
 
     # f.loc[sf.HLoc[f['WVHT'].loc_max()]]
-
-    # # import ipdb; ipdb.set_trace()
-
     # f['WVHT'].loc_max()
     # post2 = f.loc[sf.HLoc[]]
 

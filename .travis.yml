@@ -60,6 +60,12 @@ matrix:
         - pyenv install $PYENV_VERSION
 
 
+    - name: performance
+      python: 3.7
+      dist: xenial
+      language: python
+      script: python static_frame/performance/main.py --performance '*'
+
     - name: mypy
       python: 3.7
       dist: xenial
