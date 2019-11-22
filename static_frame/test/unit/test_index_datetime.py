@@ -164,10 +164,11 @@ class TestUnit(TestCase):
     def test_index_date_o(self) -> None:
         index = IndexDate.from_year_month_range('2017-12', '2018-01')
         s1 = Series(range(len(index)), index=index)
-        self.assertEqual(s1['2018-01':].shape, (31,))
-        self.assertEqual(s1[datetime.date(2018, 1, 15):].shape, (17,))
-        self.assertEqual(s1['2017':].shape, (62,))
-        self.assertEqual(s1['2019':].shape, (0,))
+        self.assertEqual(s1['2018-01':].shape, (31,)) # type: ignore
+        self.assertEqual(s1[datetime.date(2018, 1, 15):].shape, (17,)) # type: ignore
+        self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
+        self.assertEqual(s1['2017':].shape, (62,)) # type: ignore
+        self.assertEqual(s1['2019':].shape, (0,)) # type: ignore
 
 
     def test_index_date_p(self) -> None:
@@ -176,19 +177,19 @@ class TestUnit(TestCase):
 
         with self.assertRaises(LocInvalid):
             # out of range end date
-            s1['2017-12-28':'2019-01-04']
+            s1['2017-12-28':'2019-01-04'] # type: ignore
 
         with self.assertRaises(LocInvalid):
             # out of range start date
-            s1['2016-01-01':'2018-01-04']
+            s1['2016-01-01':'2018-01-04'] # type: ignore
 
 
     def test_index_date_q(self) -> None:
         index = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'))
         s1 = Series(range(len(index)), index=index)
         # a range beyond the observed values cannot determine a match,
-        self.assertEqual(s1[:'2019'].shape, (0,))
-        self.assertEqual(s1['2016':].shape, (0,))
+        self.assertEqual(s1[:'2019'].shape, (0,)) # type: ignore
+        self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
 
 
     #---------------------------------------------------------------------------
