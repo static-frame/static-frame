@@ -64,7 +64,7 @@ matrix:
       python: 3.7
       dist: xenial
       language: python
-      script: python static_frame/performance/main.py --performance '*'
+      script: python -m static_frame.performance.main --performance '*'
 
     - name: mypy
       python: 3.7
