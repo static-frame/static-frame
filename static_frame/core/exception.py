@@ -31,3 +31,13 @@ class ErrorInitBus(ErrorInit):
 class ErrorInitStore(ErrorInit):
     '''Error in Store initialization.
     '''
+
+
+
+class LocEmpty(RuntimeError):
+    pass
+
+class LocInvalid(RuntimeError):
+    pass
+
+

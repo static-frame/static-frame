@@ -4,6 +4,12 @@ What is New in Static Frame
 ===============================
 
 
+0.5.4
+----------
+
+``Index`` objects based on ``np.datetime64`` now return empty Series when a partial ``loc`` selection does not match any values found in the ``Index``.
+
+
 0.5.3
 ----------
 

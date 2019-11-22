@@ -24,7 +24,7 @@ from static_frame import IndexMillisecond
 
 from static_frame.test.test_case import TestCase
 # from static_frame.core.index import _requires_reindex
-# from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import LocInvalid
 
 
 class TestUnit(TestCase):
@@ -77,6 +77,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(index.loc['2018-02-19'],
                 np.datetime64('2018-02-19'))
+
 
     def test_index_date_e(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
@@ -160,6 +161,37 @@ class TestUnit(TestCase):
             )
 
 
+    def test_index_date_o(self) -> None:
+        index = IndexDate.from_year_month_range('2017-12', '2018-01')
+        s1 = Series(range(len(index)), index=index)
+        self.assertEqual(s1['2018-01':].shape, (31,))
+        self.assertEqual(s1[datetime.date(2018, 1, 15):].shape, (17,))
+        self.assertEqual(s1['2017':].shape, (62,))
+        self.assertEqual(s1['2019':].shape, (0,))
+
+
+    def test_index_date_p(self) -> None:
+        index = IndexDate.from_year_month_range('2017-12', '2018-01')
+        s1 = Series(range(len(index)), index=index)
+
+        with self.assertRaises(LocInvalid):
+            # out of range end date
+            s1['2017-12-28':'2019-01-04']
+
+        with self.assertRaises(LocInvalid):
+            # out of range start date
+            s1['2016-01-01':'2018-01-04']
+
+
+    def test_index_date_q(self) -> None:
+        index = IndexDate(('2017-12-30', '2017-12-31', '2018-01-05'))
+        s1 = Series(range(len(index)), index=index)
+        # a range beyond the observed values cannot determine a match,
+        self.assertEqual(s1[:'2019'].shape, (0,))
+        self.assertEqual(s1['2016':].shape, (0,))
+
+
+    #---------------------------------------------------------------------------
     def test_index_date_from_year_month_range_a(self) -> None:
         index = IndexDate.from_year_month_range('2017-12', '2018-03')
 

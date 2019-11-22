@@ -10,7 +10,7 @@ import numpy as np
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import EMPTY_TUPLE
-
+from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
@@ -62,6 +62,8 @@ from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import LocEmpty
+from static_frame.core.exception import LocInvalid
 
 
 if tp.TYPE_CHECKING:
@@ -89,8 +91,6 @@ class ILoc(metaclass=ILocMeta):
     def __init__(self, key: GetItemKeyType):
         self.key = key
 
-
-
 class LocMap:
 
     @staticmethod
@@ -99,8 +99,8 @@ class LocMap:
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
             offset: tp.Optional[int] = 0
-            ):
-        '''Given a log slice and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice.
+            ) -> tp.Iterator[int]:
+        '''Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
 
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
@@ -112,28 +112,50 @@ class LocMap:
             if attr is None:
                 yield None
             elif isinstance(attr, np.datetime64):
+                # if a datetime, we assume that the labels are ordered;
                 if attr.dtype == labels.dtype:
                     pos = label_to_pos(attr)
+                    if pos is None:
+                        # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
+                        raise LocInvalid('Invalid loc given in a slice', attr, field)
+
                     if field == SLICE_STOP_ATTR:
                         pos += 1 # stop is inclusive
+
                 elif field == SLICE_START_ATTR:
                     # convert to the type of the atrs; this should get the relevant start
                     pos = label_to_pos(attr.astype(labels.dtype))
+                    if pos is None: # we did not find a start position
+                        matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
+                        if len(matches):
+                            pos = matches[0]
+                        else:
+                            raise LocEmpty()
+
                 elif field == SLICE_STOP_ATTR:
                     # convert labels to the slice attr value, compare, then get last
                     # add one, as this is an inclusive stop
-                    pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
+                    # pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
+                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
+                    if len(matches):
+                        pos = matches[-1] + 1
+                    else:
+                        raise LocEmpty()
 
                 if offset_apply:
                     pos += offset
+
                 yield pos
+
             else:
                 pos = label_to_pos(attr)
                 if pos is None:
-                    raise RuntimeError('cannot map loc to iloc', attr, field)
+                    # NOTE: could raise LocEmpty() to silently handle this
+                    raise LocInvalid('Invalid loc given in a slice', attr, field)
 
                 if offset_apply:
                     pos += offset
+
                 if field is SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
                     yield pos + 1
@@ -164,15 +186,16 @@ class LocMap:
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
                 # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
-                return slice(offset,
-                        len(positions) + offset,
+                return slice(offset, len(positions) + offset)
+            try:
+                return slice(*cls.map_slice_args(
+                        label_to_pos.get,
+                        key,
+                        labels,
+                        offset)
                         )
-            return slice(*cls.map_slice_args(
-                    label_to_pos.get,
-                    key,
-                    labels,
-                    offset)
-                    )
+            except LocEmpty:
+                return EMPTY_SLICE
 
         if isinstance(key, np.datetime64):
             # convert this to the target representation, do a Boolean selection
@@ -584,7 +607,7 @@ class Index(IndexBase):
 
         Args:
             offset: A default of None is critical to avoid large overhead in unnecessary application of offsets.
-            key_transform: A function that transforms keys to specialized type; used by Data indices.
+            key_transform: A function that transforms keys to specialized type; used by IndexDate indices.
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''

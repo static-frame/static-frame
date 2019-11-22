@@ -32,17 +32,8 @@
 # 2018 12 17 19 30 999 99.0 99.0  2.55 15.38 13.39 267 9999.0 999.0  16.8 999.0 99.0 99.00
 # 2018 12 17 20 00 999 99.0 99.0  2.48 18.18 13.22 270 9999.0 999.0  16.9 999.0 99.0 99.00
 # 2018 12 17 20 30 999 99.0 99.0  2.54 18.18 13.25 268 9999.0 999.0  17.1 999.0 99.0 99.00
-# 2018 12 17 21 00 999 99.0 99.0  2.55 16.67 13.02 277 9999.0 999.0  16.9 999.0 99.0 99.00
-# 2018 12 17 21 30 999 99.0 99.0  2.43 20.00 12.88 270 9999.0 999.0  17.3 999.0 99.0 99.00
-# 2018 12 17 22 00 999 99.0 99.0  2.64 16.67 13.57 273 9999.0 999.0  17.4 999.0 99.0 99.00
-# 2018 12 17 22 30 999 99.0 99.0  2.43 18.18 13.25 268 9999.0 999.0  17.4 999.0 99.0 99.00
-# 2018 12 17 23 00 999 99.0 99.0  2.52 15.38 12.92 268 9999.0 999.0  17.4 999.0 99.0 99.00
-# 2018 12 17 23 30 999 99.0 99.0  2.59 15.38 13.41 271 9999.0 999.0  17.4 999.0 99.0 99.00
-# 2018 12 18 00 00 999 99.0 99.0  2.81 20.00 13.69 273 9999.0 999.0  17.0 999.0 99.0 99.00
-# 2018 12 18 00 30 999 99.0 99.0  2.84 20.00 14.15 270 9999.0 999.0  17.2 999.0 99.0 99.00
-# 2018 12 18 01 30 999 99.0 99.0  2.52 16.67 13.08 270 9999.0 999.0  16.9 999.0 99.0 99.00
-# 2018 12 18 02 00 999 99.0 99.0  2.68 20.00 13.65 267 9999.0 999.0  16.8 999.0 99.0 99.00
-# 2018 12 18 02 30 999 99.0 99.0  2.82 18.18 13.61 267 9999.0 999.0  16.8 999.0 99.0 99.00
+
+# Fitting Many Dimensions into One: The Promise of Hierarchical Indices for Data Beyond Two Dimensions
 
 # -----------------------------------------------
 import typing as tp
@@ -211,20 +202,22 @@ def main() -> None:
 
 
     max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
-    f.loc[f.index.isin(max_dpd)]
-
     max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
-    f.loc[f.index.isin(max_wvht)]
 
+    peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
+
+    import ipdb; ipdb.set_trace()
     # import ipdb; ipdb.set_trace()
 
+    # this isolates the relevant days; might need to change buoys
+    big = f.loc[(f.loc[:, 'WVHT'] > 2) & (f.loc[:, 'DPD'] > 18)].display_tall()
 
 
-    f.loc[sf.HLoc[f['WVHT'].loc_max()]]
+    # f.loc[sf.HLoc[f['WVHT'].loc_max()]]
 
-    # import ipdb; ipdb.set_trace()
+    # # import ipdb; ipdb.set_trace()
 
-    f['WVHT'].loc_max()
+    # f['WVHT'].loc_max()
     # post2 = f.loc[sf.HLoc[]]
 
 

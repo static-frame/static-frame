@@ -70,8 +70,10 @@ DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
 DTYPES_BOOL = (DTYPE_BOOL,)
 DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
 
-NULL_SLICE = slice(None)
+NULL_SLICE = slice(None) # gathers everything
 UNIT_SLICE = slice(0, 1)
+EMPTY_SLICE = slice(0, 0) # gathers nothing
+
 SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
 SLICE_STEP_ATTR = 'step'
