@@ -1,1 +1,1 @@
-include requirements.txt requirements-extras.txt requirements-test.txt
+include requirements.txt requirements-extras.txt requirements-test.txt LICENSE.txt

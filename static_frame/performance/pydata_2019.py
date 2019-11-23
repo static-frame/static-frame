@@ -238,7 +238,7 @@ class BuoySingleYearFlat:
         s1 = cls.to_frame()
 
         # betting a two observations of both metrics at the same hour
-        post = f[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
+        post = s1[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
         # import ipdb; ipdb.set_trace()
 
 
