@@ -1465,7 +1465,10 @@ class Series(ContainerOperand):
                 exclude_first=exclude_first,
                 exclude_last=exclude_last)
         keep = ~duplicates
-        return self.__class__(self.values[keep], index=self._index[keep])
+        return self.__class__(self.values[keep],
+                index=self._index[keep],
+                name=self._name
+                )
 
     def astype(self, dtype: DtypeSpecifier) -> 'Series':
         '''

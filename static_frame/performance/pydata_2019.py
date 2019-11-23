@@ -53,28 +53,8 @@ class Buoy(NamedTuple):
 BUOYS = (
     Buoy(46222, 'San Pedro'),
     Buoy(46253, 'San Pedro South'),
-    Buoy(46256, 'Long Beach Channel'),
+    Buoy(46221, 'Santa Monica Bay'),
 )
-
-# 46222 Change Station ID
-# San Pedro, CA (092)
-
-# STATION_46222 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet'
-#San Pedro, CA (092)
-
-
-
-# 46253 (south west corner)
-#San Pedro South, CA (213)
-# STATION_46253 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46253h2018.txt.gz&dir=data/historical/stdmet/'
-
-
-# 46256 (north corner)
-# Long Beach Channel, CA (215)
-# STATION_46256 = 'https://www.ndbc.noaa.gov/view_text_file.php?filename=46256h2018.txt.gz&dir=data/historical/stdmet/'
-
-# benefits of class desing:
-# class method v. static methods shows dependencies and proximiity
 
 
 class BuoyLoader:
@@ -137,6 +117,9 @@ class BuoyLoader:
 
     @classmethod
     def buoy_to_frame(cls, buoy: Buoy, year: int) -> sf.Frame:
+        '''
+        Return a simple Frame presentation without an index.
+        '''
 
         records = cls.buoy_to_records(buoy, year=year)
         columns = next(records)
@@ -162,6 +145,14 @@ class BuoyLoader:
     def buoy_to_xarray(cls):
         pass
 
+#-------------------------------------------------------------------------------
+# here we build different representations of the same data using different hierarchies
+
+# things to do:
+# 1. select all observations at a particular date/time
+# 2. get the max values for each buoy
+# 3. filter vlaues within targets to see if we find correspondence on the target date
+
 
 class BuoySingleYear:
 
@@ -183,39 +174,74 @@ class BuoySingleYear:
                 drop=True)
         return f
 
+    @classmethod
+    def process(cls) -> None:
+
+        # f = BuoyLoader.buoy_to_frame(BUOYS[0], 2018)
+        use_cache = False
+        if not use_cache:
+            f = cls.to_frame()
+            b = sf.Bus.from_frames((f,))
+            b.to_zip_pickle('/tmp/tmp.zip')
+        else:
+            b = sf.Bus.from_zip_pickle('/tmp/tmp.zip')
+            f = b.iloc[0]
+
+        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']] # type: ignore
 
 
-def main() -> None:
+        max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
+        max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
 
-    # f = BuoyLoader.buoy_to_frame(BUOYS[0], 2018)
-
-    # f = BuoySingleYear.to_frame()
-    # b = sf.Bus.from_frames((f,))
-    # b.to_zip_pickle('/tmp/tmp.zip')
-
-    b = sf.Bus.from_zip_pickle('/tmp/tmp.zip')
-    f = b.iloc[0]
-
-    post1 = f.loc[sf.HLoc[:, '2018-12-18T20']] # type: ignore
-
-    # post2 = f.loc[sf.HLoc[:, datetime.datetime(2018, 11, 30, 14, 0)]]
+        # get the peaks of the two fields
+        peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
+        # this isolates the relevant days; might need to change buoys
+        big = f.loc[(f.loc[:, 'WVHT'] > 2.1) & (f.loc[:, 'DPD'] > 18)].display_tall()
 
 
-    max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
-    max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
-
-    # get the peaks of the two fields
-    peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
-
-    # this isolates the relevant days; might need to change buoys
-    big = f.loc[(f.loc[:, 'WVHT'] > 2) & (f.loc[:, 'DPD'] > 18)].display_tall()
 
 
-    # f.loc[sf.HLoc[f['WVHT'].loc_max()]]
-    # f['WVHT'].loc_max()
-    # post2 = f.loc[sf.HLoc[]]
+class BuoySingleYearFlat:
+    '''
+    Fit all the data into a Series
+    '''
 
+    FIELD_ATTR = 'attr'
+
+    @staticmethod
+    def to_frame(year: int = 2018) -> sf.Frame:
+
+        labels = []
+        values = []
+
+        for buoy in BUOYS:
+            f = BuoyLoader.buoy_to_frame(buoy, year)
+            for row in f.iter_series(1):
+                for attr in (
+                        BuoyLoader.FIELD_WAVE_HEIGHT,
+                        BuoyLoader.FIELD_WAVE_PERIOD):
+                    label = (row[BuoyLoader.FIELD_STATION_ID],
+                            row[BuoyLoader.FIELD_DATETIME],
+                            attr)
+                    labels.append(label)
+                    values.append(row[attr])
+
+        index = sf.IndexHierarchy.from_labels(labels,
+                index_constructors=(sf.Index, sf.IndexMinute, sf.Index))
+
+        return sf.Series(values, index=index)
+
+
+    @classmethod
+    def process(cls):
+
+        s1 = cls.to_frame()
+
+        # betting a two observations of both metrics at the same hour
+        post = f[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
-    main()
+
+    BuoySingleYearFlat.process()
