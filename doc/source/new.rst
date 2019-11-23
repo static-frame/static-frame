@@ -4,6 +4,12 @@ What is New in Static Frame
 ===============================
 
 
+0.5.5
+----------
+
+``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.date`` objects in ``loc`` expressions.
+
+
 0.5.4
 ----------
 

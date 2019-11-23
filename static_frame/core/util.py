@@ -945,7 +945,7 @@ def key_to_datetime_key(
     if isinstance(key, slice):
         return slice(*_slice_to_datetime_slice_args(key, dtype=dtype))
 
-    if isinstance(key, datetime.datetime):
+    if isinstance(key, (datetime.date, datetime.datetime)):
         return np.datetime64(key)
 
     if isinstance(key, np.datetime64):

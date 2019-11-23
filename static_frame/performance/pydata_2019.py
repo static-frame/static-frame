@@ -37,9 +37,17 @@
 
 # -----------------------------------------------
 import typing as tp
+import os
+import pickle
 # import datetime
 from urllib import request
 from typing import NamedTuple
+import datetime
+
+
+import numpy as np
+
+
 import static_frame as sf
 
 # stations
@@ -55,6 +63,22 @@ BUOYS = (
     Buoy(46253, 'San Pedro South'),
     Buoy(46221, 'Santa Monica Bay'),
 )
+
+
+def cache_buoy(prefix):
+    def decorator(func):
+        def wrapper(cls, buoy, year):
+            fp = f'/tmp/{prefix}-{buoy.station_id}-{year}.p'
+            if os.path.exists(fp):
+                with open(fp, 'rb') as f:
+                    post = pickle.load(f)
+            else:
+                post = func(cls, buoy, year)
+                with open(fp, 'wb') as f:
+                    pickle.dump(post, f)
+            return post
+        return wrapper
+    return decorator
 
 
 class BuoyLoader:
@@ -95,7 +119,7 @@ class BuoyLoader:
                     else:
                         yield cell
 
-        return tuple(gen()) # type: ignore
+        return tuple(gen())
 
     @classmethod
     def buoy_to_records(cls,
@@ -116,7 +140,8 @@ class BuoyLoader:
             yield cls.buoy_record(line, line_pos, station_id=buoy.station_id)
 
     @classmethod
-    def buoy_to_frame(cls, buoy: Buoy, year: int) -> sf.Frame:
+    @cache_buoy('sf')
+    def buoy_to_sf(cls, buoy: Buoy, year: int) -> sf.Frame:
         '''
         Return a simple Frame presentation without an index.
         '''
@@ -125,17 +150,33 @@ class BuoyLoader:
         columns = next(records)
         units = next(records)
 
+        # can pass dtypes here, but doing it below consolidates blocks
         f = sf.Frame.from_records(records, columns=columns)
+
         f = f[[cls.FIELD_STATION_ID,
                 cls.FIELD_DATETIME,
                 cls.FIELD_WAVE_HEIGHT,
                 cls.FIELD_WAVE_PERIOD]] # wave height, dominant period
-        f = f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
-        return tp.cast(sf.Frame, f)
+
+        return f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
 
     @classmethod
-    def buoy_to_df(cls):
-        pass
+    @cache_buoy('df')
+    def buoy_to_pd(cls, buoy: Buoy, year: int):
+        import pandas as pd
+
+        records = cls.buoy_to_records(buoy, year=year)
+        columns = next(records)
+        units = next(records)
+
+        df = pd.DataFrame.from_records(records, columns=columns)
+
+        df = df[[cls.FIELD_STATION_ID,
+                cls.FIELD_DATETIME,
+                cls.FIELD_WAVE_HEIGHT,
+                cls.FIELD_WAVE_PERIOD]]
+
+        return df.astype({cls.FIELD_WAVE_HEIGHT: float, cls.FIELD_WAVE_PERIOD: float})
 
     @classmethod
     def buoy_to_np(cls):
@@ -154,18 +195,17 @@ class BuoyLoader:
 # 3. filter vlaues within targets to see if we find correspondence on the target date
 
 
-class BuoySingleYear:
+class BuoySingleYear2D:
 
     @staticmethod
-    def to_frame(year: int = 2018) -> sf.Frame:
+    def to_sf(year: int = 2018) -> sf.Frame:
 
         frames = []
         for buoy in BUOYS:
-            f = BuoyLoader.buoy_to_frame(buoy, year)
+            f = BuoyLoader.buoy_to_sf(buoy, year)
             frames.append(f)
 
         f = sf.Frame.from_concat(frames,
-                axis=0,
                 index=sf.IndexAutoFactory,
                 name='buos_single_year'
                 )
@@ -174,20 +214,44 @@ class BuoySingleYear:
                 drop=True)
         return f
 
+    @staticmethod
+    def to_pd(year: int = 2018) -> sf.Frame:
+        import pandas as pd
+
+        dfs = []
+        for buoy in BUOYS:
+            f = BuoyLoader.buoy_to_pd(buoy, year)
+            dfs.append(f)
+
+        df = pd.concat(dfs)
+
+        # try setting dtype to datetime, with pd.to_datetime, before index creation
+        df = df.astype({'datetime':np.datetime64})
+        df = df.set_index(['station_id', 'datetime'])
+
+        # this sets to datetime, but does not allow slicing
+        # df.index = df.index.set_levels([df.index.levels[0], pd.to_datetime(df.index.levels[1])])
+        return df
+
+
     @classmethod
-    def process(cls) -> None:
+    def process_sf(cls) -> None:
 
-        # f = BuoyLoader.buoy_to_frame(BUOYS[0], 2018)
-        use_cache = False
-        if not use_cache:
-            f = cls.to_frame()
-            b = sf.Bus.from_frames((f,))
-            b.to_zip_pickle('/tmp/tmp.zip')
-        else:
-            b = sf.Bus.from_zip_pickle('/tmp/tmp.zip')
-            f = b.iloc[0]
+        f = cls.to_sf()
 
-        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']] # type: ignore
+        # dsicrete selection
+        part = f.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
+        # can show iloc
+
+        # show getting labels with iter_label (unique values)
+        # show converting to a Frame
+
+
+        # select based on partial time
+        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+
+        # find max for givne day
+        f.loc[sf.HLoc[:, '2018-12-18']].max()
 
 
         max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
@@ -196,12 +260,33 @@ class BuoySingleYear:
         # get the peaks of the two fields
         peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
         # this isolates the relevant days; might need to change buoys
-        big = f.loc[(f.loc[:, 'WVHT'] > 2.1) & (f.loc[:, 'DPD'] > 18)].display_tall()
+        big = f.loc[(f.loc[:, 'WVHT'] > 2.1) & (f.loc[:, 'DPD'] > 18)]
+
+    @classmethod
+    def process_pd_multi_index(cls):
+        import pandas as pd
 
 
+        df = cls.to_pd()
+        # selecting records for a single time across all buoys
+        # df.loc[(slice(None), ['2018-12-18T20:00', '2018-12-18T20:30']), 'DPD']
+
+        part = df.loc[pd.IndexSlice[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
+        # note that part has the whole original index, and that its display is terrible
+        # show:       remove_unused_levels
+
+        # these do not work
+        # df.loc[pd.IndexSlice[:, datipdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
+        # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+        # etime.date(2018,12,18), 'DPD']]
+
+        big = df.loc[(df.loc[:, 'WVHT'] > 2.1) & (df.loc[:, 'DPD'] > 18)]
+
+        import ipdb; ipdb.set_trace()
 
 
-class BuoySingleYearFlat:
+#-------------------------------------------------------------------------------
+class BuoySingleYear1D:
     '''
     Fit all the data into a Series
     '''
@@ -209,13 +294,13 @@ class BuoySingleYearFlat:
     FIELD_ATTR = 'attr'
 
     @staticmethod
-    def to_frame(year: int = 2018) -> sf.Frame:
+    def to_sf(year: int = 2018) -> sf.Frame:
 
         labels = []
         values = []
 
         for buoy in BUOYS:
-            f = BuoyLoader.buoy_to_frame(buoy, year)
+            f = BuoyLoader.buoy_to_sf(buoy, year)
             for row in f.iter_series(1):
                 for attr in (
                         BuoyLoader.FIELD_WAVE_HEIGHT,
@@ -232,16 +317,145 @@ class BuoySingleYearFlat:
         return sf.Series(values, index=index)
 
 
-    @classmethod
-    def process(cls):
 
-        s1 = cls.to_frame()
+    @staticmethod
+    def to_pd(year: int = 2018) -> sf.Frame:
+        import pandas as pd
+
+        labels = []
+        values = []
+
+        for buoy in BUOYS:
+            df = BuoyLoader.buoy_to_pd(buoy, year)
+            for _, row in df.iterrows():
+                for attr in (
+                        BuoyLoader.FIELD_WAVE_HEIGHT,
+                        BuoyLoader.FIELD_WAVE_PERIOD):
+                    label = (row[BuoyLoader.FIELD_STATION_ID],
+                            row[BuoyLoader.FIELD_DATETIME],
+                            attr)
+                    labels.append(label)
+                    values.append(row[attr])
+
+        # display of this index is terrible
+        index = pd.MultiIndex.from_tuples(labels)
+        return pd.Series(values, index=index)
+
+
+
+    @classmethod
+    def process_sf(cls):
+
+        ssf = cls.to_sf()
 
         # betting a two observations of both metrics at the same hour
-        post = s1[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
+        post = ssf[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
         # import ipdb; ipdb.set_trace()
+
+
+        # get one field from two buoys
+        post = ssf[sf.HLoc[[46222, 46221], :, 'DPD']]
+
+        # get partial date matching:
+        post = ssf[sf.HLoc[46222, '2018-12-18', 'DPD']]
+
+        # can use a datetime object
+        post = ssf[sf.HLoc[46222, datetime.datetime(2018, 12, 18), 'DPD']]
+
+
+    @classmethod
+    def process_pd(cls):
+        import pandas as pd
+
+        spd = cls.to_pd()
+
+        # SHOW: does not do a hierarchical selection
+        # ipdb> spd[46211]
+        # 6.25
+
+        # SHOw: cannot do two at a time
+#         ipdb> spd[pd.IndexSlice[[46222, 46221], :, 'DPD']]
+        # *** TypeError: '[46222, 46221]' is an invalid key
+
+
+        # this works
+        post = spd[pd.IndexSlice[46222, '2018-12-18T20:00', 'DPD']]
+
 
 
 if __name__ == '__main__':
 
-    BuoySingleYearFlat.process()
+    # f = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
+    # df = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
+    # f = BuoySingleYear2D.to_sf()
+    # df = BuoySingleYear2D.to_pd()
+
+    ssf = BuoySingleYear1D.to_sf()
+    ssf[sf.HLoc[46222, datetime.date(2018, 12, 18), 'DPD']]
+    # spd = BuoySingleYear1D.to_pd()
+
+    # df = BuoySingleYear2D.process_pd_multi_index()
+    import ipdb; ipdb.set_trace()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class BuoyMultiYear:
+
+#     @staticmethod
+#     def to_sf(years: tp.Iterable[int] = (2017, 2017, 2018)) -> sf.Frame:
+
+#         frames = []
+#         for buoy in BUOYS:
+#             for year in years:
+#                 f = BuoyLoader.buoy_to_sf(buoy, year).to_frame_go()
+#                 f['year'] = year
+#                 f['month'] = [int(x.split('-')[1]) for x in f['datetime'].values]
+#                 # import ipdb; ipdb.set_trace()
+#                 frames.append(f)
+
+#         f = sf.Frame.from_concat(frames,
+#                 axis=0,
+#                 index=sf.IndexAutoFactory,
+#                 name='buos_multi_year'
+#                 )
+#         # NOTE: this fails unexpectedly
+#         f = f.set_index_hierarchy(('station_id', 'datetime'),
+#                 index_constructors=(sf.Index, sf.IndexMinute),
+#                 drop=True)
+#         return f
+
