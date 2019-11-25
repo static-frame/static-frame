@@ -48,7 +48,7 @@ matrix:
       osx_image: xcode10.2
       before_install:
         - export PATH=/Users/travis/.pyenv/shims:$PATH PYENV_VERSION=3.7.4
-        - travis_wait brew upgrade pyenv && pyenv install $PYENV_VERSION
+        - travis_wait pyenv install $PYENV_VERSION
 
     - name: CPython 3.6.8 on macOS 10.14
       language: shell
