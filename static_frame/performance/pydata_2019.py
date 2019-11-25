@@ -402,6 +402,8 @@ class BuoySingleYear2D:
         targets['date'] = [d.date() for d in targets.index.values_at_depth(1)]
 
         # targets.iter_group('date').apply(lambda x: len(x))
+        peaks_per_day = targets.iter_group('date').apply(lambda x: len(x))
+        print(peaks_per_day)
 
         def gen():
             for date, date_frame in targets.iter_group_items('date'):
