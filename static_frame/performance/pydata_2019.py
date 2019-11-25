@@ -43,6 +43,7 @@ import pickle
 from urllib import request
 from typing import NamedTuple
 import datetime
+import functools
 
 
 import numpy as np
@@ -56,7 +57,6 @@ import static_frame as sf
 class Buoy(NamedTuple):
     station_id: int
     name: str
-    # filename: str
 
 BUOYS = (
     Buoy(46222, 'San Pedro'),
@@ -64,12 +64,11 @@ BUOYS = (
     Buoy(46221, 'Santa Monica Bay'),
 )
 
-
-def cache_buoy(prefix):
+def cache_buoy(prefix, active=True):
     def decorator(func):
         def wrapper(cls, buoy, year):
             fp = f'/tmp/{prefix}-{buoy.station_id}-{year}.p'
-            if os.path.exists(fp):
+            if active and os.path.exists(fp):
                 with open(fp, 'rb') as f:
                     post = pickle.load(f)
             else:
@@ -151,14 +150,19 @@ class BuoyLoader:
         units = next(records)
 
         # can pass dtypes here, but doing it below consolidates blocks
-        f = sf.Frame.from_records(records, columns=columns)
+        dtypes = {
+                cls.FIELD_WAVE_HEIGHT: float,
+                cls.FIELD_WAVE_PERIOD: float,
+                cls.FIELD_DATETIME: np.datetime64}
+        f = sf.Frame.from_records(records, columns=columns, dtypes=dtypes)
 
         f = f[[cls.FIELD_STATION_ID,
                 cls.FIELD_DATETIME,
                 cls.FIELD_WAVE_HEIGHT,
                 cls.FIELD_WAVE_PERIOD]] # wave height, dominant period
 
-        return f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
+        return f
+        # return f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
 
     @classmethod
     @cache_buoy('df')
@@ -176,7 +180,10 @@ class BuoyLoader:
                 cls.FIELD_WAVE_HEIGHT,
                 cls.FIELD_WAVE_PERIOD]]
 
-        return df.astype({cls.FIELD_WAVE_HEIGHT: float, cls.FIELD_WAVE_PERIOD: float})
+        return df.astype({
+                cls.FIELD_WAVE_HEIGHT: float,
+                cls.FIELD_WAVE_PERIOD: float,
+                cls.FIELD_DATETIME: np.datetime64})
 
     @classmethod
     def buoy_to_np(cls):
@@ -215,7 +222,7 @@ class BuoySingleYear2D:
         return f
 
     @staticmethod
-    def to_pd(year: int = 2018) -> sf.Frame:
+    def to_pd(year: int = 2018):
         import pandas as pd
 
         dfs = []
@@ -226,13 +233,68 @@ class BuoySingleYear2D:
         df = pd.concat(dfs)
 
         # try setting dtype to datetime, with pd.to_datetime, before index creation
-        df = df.astype({'datetime':np.datetime64})
         df = df.set_index(['station_id', 'datetime'])
 
         # this sets to datetime, but does not allow slicing
         # df.index = df.index.set_levels([df.index.levels[0], pd.to_datetime(df.index.levels[1])])
         return df
 
+    @staticmethod
+    def to_pd_panel(year: int = 2018):
+        import pandas as pd
+
+        dfs = {}
+        for buoy in BUOYS:
+            df = BuoyLoader.buoy_to_pd(buoy, year)
+            # remove station id, set datetime as indexnns
+            df = df.set_index('datetime')[['DPD', 'WVHT']]
+            dfs[buoy.station_id] = df
+
+        p = pd.Panel(dfs)
+        return p
+
+        # reindexes and adds NaN
+        # ipdb> panel[:, '2018-03-01T18:58']
+        #       46222  46253  46221
+        # DPD   12.50    NaN    NaN
+        # WVHT   0.69    NaN    NaN
+
+
+    @classmethod
+    def to_xarray(cls, year: int = 2018):
+        return cls.to_pd_panel(year=year).to_xarray()
+
+
+    @classmethod
+    def to_np(cls, year: int = 2018):
+        arrays = []
+
+        frames = [BuoyLoader.buoy_to_sf(buoy, year) for buoy in BUOYS]
+
+        # NOTE: take union and inssert NaNs
+        date_intersect = functools.reduce(lambda x, y: x & y, (set(f['datetime'].values) for f in frames))
+
+        frames_aligned = []
+        for f in frames:
+            frames_aligned.append(f.loc[f['datetime'].isin(date_intersect)])
+
+        station_ids = {}
+        for idx, f in enumerate(frames_aligned):
+            datetime = {d: x for x, d in enumerate(f['datetime'].values)} # store the last one
+            station_id = f.loc[sf.ILoc[0], 'station_id']
+            arrays.append(f[['DPD', 'WVHT']].values)
+            station_ids[station_id] = idx
+
+        # dome data found only in one
+        # numpy.datetime64('2018-06-25T14:28'), numpy.datetime64('2018-01-21T13:58')
+        # numpy.datetime64('2018-03-01T18:58'), numpy.datetime64('2018-10-10T20:00')
+        # numpy.datetime64('2018-10-29T01:00
+
+        # In : len(date_intersect)
+        # 16465
+
+        indices = {'station_id': station_ids, 'datetime':  datetime, 'attr': {'DPD':0, 'WVHT':1}}
+        return np.array(arrays), indices
 
     @classmethod
     def process_sf(cls) -> None:
@@ -263,6 +325,52 @@ class BuoySingleYear2D:
         big = f.loc[(f.loc[:, 'WVHT'] > 2.1) & (f.loc[:, 'DPD'] > 18)]
 
     @classmethod
+    def process_pd_panel(cls):
+        panel = cls.to_pd_panel()
+
+#         ipdb> panel
+# <class 'pandas.core.panel.Panel'>
+# Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
+# Items axis: 46222 to 46221
+# Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+# Minor_axis axis: DPD to WVHT
+
+        # can select two buoys be creating a new panel
+        p2 = panel[[46222, 46221]]
+        # ipdb> p2.shape
+        # (2, 17034, 2)
+
+        # all buoy data for 2018-12-18, partial selecdtion working
+        p3 = panel[:, '2018-12-18', 'WVHT']
+
+        # ipdb> panel[:, '2018-12-18', ['WVHT', 'DPD']].mean()
+        #           46222      46253      46221
+        # WVHT   2.339787   1.737917   2.392917
+        # DPD   16.888936  15.658125  16.677917
+
+        # ipdb> panel[:, '2018-12-18', 'DPD'].mean()
+        # 46222    16.888936
+        # 46253    15.658125
+        # 46221    16.677917
+        # dtype: float64
+
+        # import ipdb; ipdb.set_trace()
+
+    @classmethod
+    def process_np(cls):
+        a1, indices = cls.to_np()
+
+        # ipdb> a1.shape
+        # (3, 16465, 2)
+        # ipdb> indices['datetime'][np.datetime64('2018-12-18T20:30')]
+        # 15848
+        # ipdb> a1[:, indices['datetime'][np.datetime64('2018-12-18T20:30')], 1]
+        # array([1.85, 1.97, 2.04])
+
+        # import ipdb; ipdb.set_trace()
+
+
+    @classmethod
     def process_pd_multi_index(cls):
         import pandas as pd
 
@@ -276,13 +384,25 @@ class BuoySingleYear2D:
         # show:       remove_unused_levels
 
         # these do not work
-        # df.loc[pd.IndexSlice[:, datipdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
+        # pdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
         # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-        # etime.date(2018,12,18), 'DPD']]
+
+        # this works in 25.3
+
+        # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30')], 'DPD']
+        # 15.38
+
+        # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30'):], 'DPD']
+        # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+
+        # delivers a single values when matching on the whole day: (SF gives full day?)
+        # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.date(2018,12,7)], 'DPD']
+        # 11.76
+
 
         big = df.loc[(df.loc[:, 'WVHT'] > 2.1) & (df.loc[:, 'DPD'] > 18)]
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------
@@ -385,17 +505,21 @@ class BuoySingleYear1D:
 
 if __name__ == '__main__':
 
-    # f = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
-    # df = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
-    # f = BuoySingleYear2D.to_sf()
-    # df = BuoySingleYear2D.to_pd()
+    # fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
+    # fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
 
-    ssf = BuoySingleYear1D.to_sf()
-    ssf[sf.HLoc[46222, datetime.date(2018, 12, 18), 'DPD']]
+    fsf = BuoySingleYear2D.to_sf()
+    fpd = BuoySingleYear2D.to_pd()
+
+    # BuoySingleYear2D.process_np()
+    # BuoySingleYear2D.process_pd_panel()
+
+
+    # ssf = BuoySingleYear1D.to_sf()
     # spd = BuoySingleYear1D.to_pd()
 
     # df = BuoySingleYear2D.process_pd_multi_index()
-    import ipdb; ipdb.set_trace()
+    # import ipdb; ipdb.set_trace()
 
 
 
@@ -430,8 +554,16 @@ if __name__ == '__main__':
 
 
 
+# example of pandas series that supports partial matching
+# In : s1 = pd.Series(range(60), index=pd.date_range('1999-12', freq='D', periods=60))
+
+# s1 = pd.Series(range(120), pd.MultiIndex.from_product((('a', 'b'), pd.date_range('1999-12', freq='D', periods=60))))
+# # this does not work
+# s1[pd.IndexSlice['a', '2000']]
 
 
+# partial date string matching
+# https://github.com/pandas-dev/pandas/issues/25165
 
 
 # class BuoyMultiYear:
