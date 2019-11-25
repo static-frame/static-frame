@@ -2640,6 +2640,137 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_iter_group_a(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+        post = f.iter_group('s').apply(lambda x: x.shape)
+        self.assertEqual(post.to_pairs(),
+                ((False, (2, 3)), (True, (2, 3)))
+                )
+
+
+
+    def test_frame_iter_group_items_a(self) -> None:
+
+        # testing a hierarchical index and columns, selecting column with a tuple
+
+        records = (
+                ('a', 999999, 0.1),
+                ('a', 201810, 0.1),
+                ('b', 999999, 0.4),
+                ('b', 201810, 0.4))
+        f1 = Frame.from_records(records, columns=list('abc'))
+
+        f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
+        f1 = f1.relabel_add_level(columns='i')
+
+        groups = list(f1.iter_group_items(('i', 'a'), axis=0))
+        self.assertEqual(groups[0][0], 'a')
+        self.assertEqual(groups[0][1].to_pairs(0),
+                ((('i', 'a'), ((('a', 999999), 'a'), (('a', 201810), 'a'))), (('i', 'b'), ((('a', 999999), 999999), (('a', 201810), 201810))), (('i', 'c'), ((('a', 999999), 0.1), (('a', 201810), 0.1)))))
+
+        self.assertEqual(groups[1][0], 'b')
+        self.assertEqual(groups[1][1].to_pairs(0),
+                ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
+
+
+    def test_frame_iter_group_items_b(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+        post = f.iter_group_items('s').apply(
+                lambda k, x: f'{k}: {len(x)}')
+        self.assertEqual(post.to_pairs(),
+                ((False, 'False: 2'), (True, 'True: 2'))
+                )
+
+    def test_frame_iter_group_index_a(self) -> None:
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x', 'y', 'z'))
+
+        post = tuple(f1.iter_group_index(0, axis=0))
+
+        self.assertEqual(len(post), 3)
+        self.assertEqual(
+                f1.iter_group_index(0, axis=0).apply(lambda x: x[['p', 'q']].values.sum()).to_pairs(),
+                (('x', 4), ('y', 64), ('z', 97))
+                )
+
+    def test_frame_iter_group_index_b(self) -> None:
+
+        records = (
+                (2, 2, 'a', 'q', False, False),
+                (30, 34, 'b', 'c', True, False),
+                (2, 95, 'c', 'd', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product((1, 2, 3), ('a', 'b')),
+                index=('x', 'y', 'z'))
+
+        # with axis 1, we are grouping based on columns while maintain the index
+        post_tuple = tuple(f1.iter_group_index(1, axis=1))
+
+        self.assertEqual(len(post_tuple), 2)
+
+        post = f1[HLoc[f1.columns[0]]]
+        self.assertEqual(post.__class__, Series)
+        self.assertEqual(post.to_pairs(),
+            (('x', 2), ('y', 30), ('z', 2))
+            )
+
+        post = f1.loc[:, HLoc[f1.columns[0]]]
+        self.assertEqual(post.__class__, Series)
+        self.assertEqual(post.to_pairs(),
+            (('x', 2), ('y', 30), ('z', 2))
+            )
+
+        self.assertEqual(
+                f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
+                (('a', 34), ('b', 131))
+                )
+
+
+    def test_frame_iter_group_index_c(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+        f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        post = f.iter_group_index_items(0).apply(lambda k, x: f'{k}:{x.size}')
+
+        self.assertEqual(post.to_pairs(),
+                (('A', 'A:6'), ('B', 'B:6'))
+        )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_reversed(self) -> None:
         columns = tuple('pqrst')
@@ -5168,30 +5299,6 @@ class TestUnit(TestCase):
 
 
 
-    def test_frame_iter_group_items_a(self) -> None:
-
-        # testing a hierarchical index and columns, selecting column with a tuple
-
-        records = (
-                ('a', 999999, 0.1),
-                ('a', 201810, 0.1),
-                ('b', 999999, 0.4),
-                ('b', 201810, 0.4))
-        f1 = Frame.from_records(records, columns=list('abc'))
-
-        f1 = f1.set_index_hierarchy(['a', 'b'], drop=False)
-        f1 = f1.relabel_add_level(columns='i')
-
-        groups = list(f1.iter_group_items(('i', 'a'), axis=0))
-        self.assertEqual(groups[0][0], 'a')
-        self.assertEqual(groups[0][1].to_pairs(0),
-                ((('i', 'a'), ((('a', 999999), 'a'), (('a', 201810), 'a'))), (('i', 'b'), ((('a', 999999), 999999), (('a', 201810), 201810))), (('i', 'c'), ((('a', 999999), 0.1), (('a', 201810), 0.1)))))
-
-        self.assertEqual(groups[1][0], 'b')
-        self.assertEqual(groups[1][1].to_pairs(0),
-                ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
-
-
     def test_frame_drop_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -5363,58 +5470,6 @@ class TestUnit(TestCase):
 
 
 
-    def test_frame_iter_group_index_a(self) -> None:
-
-        records = (
-                (2, 2, 'a', False, False),
-                (30, 34, 'b', True, False),
-                (2, 95, 'c', False, False),
-                )
-        f1 = Frame.from_records(records,
-                columns=('p', 'q', 'r', 's', 't'),
-                index=('x', 'y', 'z'))
-
-        post = tuple(f1.iter_group_index(0, axis=0))
-
-        self.assertEqual(len(post), 3)
-        self.assertEqual(
-                f1.iter_group_index(0, axis=0).apply(lambda x: x[['p', 'q']].values.sum()).to_pairs(),
-                (('x', 4), ('y', 64), ('z', 97))
-                )
-
-
-    def test_frame_iter_group_index_b(self) -> None:
-
-        records = (
-                (2, 2, 'a', 'q', False, False),
-                (30, 34, 'b', 'c', True, False),
-                (2, 95, 'c', 'd', False, False),
-                )
-        f1 = Frame.from_records(records,
-                columns=IndexHierarchy.from_product((1, 2, 3), ('a', 'b')),
-                index=('x', 'y', 'z'))
-
-        # with axis 1, we are grouping based on columns while maintain the index
-        post_tuple = tuple(f1.iter_group_index(1, axis=1))
-
-        self.assertEqual(len(post_tuple), 2)
-
-        post = f1[HLoc[f1.columns[0]]]
-        self.assertEqual(post.__class__, Series)
-        self.assertEqual(post.to_pairs(),
-            (('x', 2), ('y', 30), ('z', 2))
-            )
-
-        post = f1.loc[:, HLoc[f1.columns[0]]]
-        self.assertEqual(post.__class__, Series)
-        self.assertEqual(post.to_pairs(),
-            (('x', 2), ('y', 30), ('z', 2))
-            )
-
-        self.assertEqual(
-                f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
-                (('a', 34), ('b', 131))
-                )
 
     def test_frame_clip_a(self) -> None:
 

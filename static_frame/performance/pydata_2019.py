@@ -68,10 +68,15 @@ def cache_buoy(prefix, active=True):
     def decorator(func):
         def wrapper(cls, buoy, year):
             fp = f'/tmp/{prefix}-{buoy.station_id}-{year}.p'
+            load_source = True
             if active and os.path.exists(fp):
                 with open(fp, 'rb') as f:
-                    post = pickle.load(f)
-            else:
+                    try:
+                        post = pickle.load(f)
+                        load_source = False
+                    except ModuleNotFoundError:
+                        pass
+            if load_source:
                 post = func(cls, buoy, year)
                 with open(fp, 'wb') as f:
                     pickle.dump(post, f)
@@ -86,19 +91,23 @@ class BuoyLoader:
     FIELD_STATION_ID = 'station_id'
     FIELD_WAVE_HEIGHT = 'WVHT'
     FIELD_WAVE_PERIOD = 'DPD'	# Dominant wave period
+    FIELD_WAVE_DIRECTION = 'MWD'
+
+    COMPASS = ('N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW')
+
 
     URL_TEMPLATE = 'https://www.ndbc.noaa.gov/view_text_file.php?filename={station_id}h{year}.txt.gz&dir=data/historical/stdmet/'
 
     @classmethod
     def buoy_record(cls,
             line: str,
-            count: int,
+            line_number: int,
             station_id: int
             ) -> tp.Sequence[str]:
         timestamp = []
 
         def gen() -> tp.Iterator[tp.Union[int, str]]:
-            if count == 0:
+            if line_number == 0:
                 yield cls.FIELD_STATION_ID
             else:
                 yield station_id # always put first
@@ -110,7 +119,7 @@ class BuoyLoader:
                     if cell_pos < 5:
                         timestamp.append(cell)
                     elif cell_pos == 5:
-                        if count == 0:
+                        if line_number == 0:
                             yield cls.FIELD_DATETIME
                         else:
                             yield '{}-{}-{}T{}:{}'.format(*timestamp)
@@ -138,6 +147,13 @@ class BuoyLoader:
             line_pos += 1
             yield cls.buoy_record(line, line_pos, station_id=buoy.station_id)
 
+
+    @classmethod
+    def degree_to_compass(cls, degrees: np.array):
+        indices = np.floor(((degrees + 12.25) % 360) / 22.5).astype(int)
+        # import ipdb; ipdb.set_trace()
+        return np.array([cls.COMPASS[i] for i in indices])
+
     @classmethod
     @cache_buoy('sf')
     def buoy_to_sf(cls, buoy: Buoy, year: int) -> sf.Frame:
@@ -156,13 +172,16 @@ class BuoyLoader:
                 cls.FIELD_DATETIME: np.datetime64}
         f = sf.Frame.from_records(records, columns=columns, dtypes=dtypes)
 
+        direction = cls.degree_to_compass(f[cls.FIELD_WAVE_DIRECTION].astype(int).values)
+
         f = f[[cls.FIELD_STATION_ID,
                 cls.FIELD_DATETIME,
                 cls.FIELD_WAVE_HEIGHT,
-                cls.FIELD_WAVE_PERIOD]] # wave height, dominant period
+                cls.FIELD_WAVE_PERIOD]].to_frame_go()
 
-        return f
-        # return f.astype[[cls.FIELD_WAVE_HEIGHT, cls.FIELD_WAVE_PERIOD]](float)
+        f[cls.FIELD_WAVE_DIRECTION] = direction
+
+        return f.to_frame()
 
     @classmethod
     @cache_buoy('df')
@@ -301,16 +320,64 @@ class BuoySingleYear2D:
 
         f = cls.to_sf()
 
-        # dsicrete selection
+        #-----------------------------------------------------------------------
+        # creating IndexHierarchy
+
+
+
+        #-----------------------------------------------------------------------
+        # getting values out
+
+        # iterating parts of the index
+        part = tuple(f.index.iter_label(0))
+
+        # getting all the values at an array
+        part = f.index.values_at_depth(0)
+
+        # convert to a frame
+        part = f.index.to_frame()
+
+        # rehiearch (make dates outer, station id inner); note that changing the hiearchy order forces a reordering
+        part = f.rehierarch((1, 0))
+
+        # to tuples
+        part = f.relabel_flat(index=True)
+
+        # adding a level
+        part = f.relabel_add_level(index='A')
+
+        # dropping a level
+        #         ipdb> f.relabel_drop_level(index=1)
+        # *** static_frame.core.exception.ErrorInitIndex: labels (50350) have non-unique values (17034)
+        # ipdb>
+
+        #-----------------------------------------------------------------------
+        # show different types of selection
+
+        # getting a sample from a partial match
+        part = f.loc[sf.HLoc[:, '2018-12-18T07'], 'DPD']
+
+        # select based on partial time
+        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+
+        # getting a slice
+        part = f.loc[sf.HLoc[:, '2018-12-18T07':'2018-12-18T08'], 'DPD']
+
+        # dsicrete selection (this works on Pandas)
         part = f.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
+
         # can show iloc
+        part = f.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], sf.ILoc[-1]]
+
+
 
         # show getting labels with iter_label (unique values)
         # show converting to a Frame
 
 
-        # select based on partial time
-        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+
+        #-----------------------------------------------------------------------
+        # doing some analysis
 
         # find max for givne day
         f.loc[sf.HLoc[:, '2018-12-18']].max()
@@ -319,10 +386,43 @@ class BuoySingleYear2D:
         max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
         max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
 
-        # get the peaks of the two fields
+        # get the peaks of the two fields, but this does not get us to the date
         peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
-        # this isolates the relevant days; might need to change buoys
-        big = f.loc[(f.loc[:, 'WVHT'] > 2.1) & (f.loc[:, 'DPD'] > 18)]
+
+        # use 2 to get 1.731622836825856
+        wvht_threshold = f.loc[:, 'WVHT'].mean() + (f.loc[:, 'WVHT'].std() * 2)
+
+        # use 1 to get 15.889409302831822
+        dpd_threshold = f.loc[:, 'DPD'].mean() + f.loc[:, 'DPD'].std()
+
+        # this isolates the relevant days; but does not get 46253
+        # 2 and 18 gets all
+        targets = f.loc[(f.loc[:, 'WVHT'] > wvht_threshold) & (f.loc[:, 'DPD'] > dpd_threshold)]
+        targets = targets.to_frame_go()
+        targets['date'] = [d.date() for d in targets.index.values_at_depth(1)]
+
+        # targets.iter_group('date').apply(lambda x: len(x))
+
+        def gen():
+            for date, date_frame in targets.iter_group_items('date'):
+                for station_id, station in date_frame.iter_group_index_items(0):
+                    yield date, station_id, len(station)
+
+        post = sf.Frame.from_records(gen(), columns=('date', 'station_id', 'count'))
+        post = post.set_index_hierarchy(('date', 'station_id'),
+                drop=True,
+                index_constructors=(sf.IndexDate, sf.Index))
+
+        print(post)
+
+# <Frame: buos_single_year>
+# <Index>                                       WVHT      DPD       MWD   <<U10>
+# <IndexHierarchy>
+# 46253                     2018-12-18 13:00:00 2.03      18.18     WSW
+# 46253                     2018-12-18 13:30:00 2.01      18.18     W
+# 46253                     2018-12-18 14:30:00 2.11      18.18     WSW
+# <object>                  <object>            <float64> <float64> <<U3>
+
 
     @classmethod
     def process_pd_panel(cls):
@@ -340,7 +440,7 @@ class BuoySingleYear2D:
         # ipdb> p2.shape
         # (2, 17034, 2)
 
-        # all buoy data for 2018-12-18, partial selecdtion working
+        # all buoy data for 2018-12-18, partial selection working
         p3 = panel[:, '2018-12-18', 'WVHT']
 
         # ipdb> panel[:, '2018-12-18', ['WVHT', 'DPD']].mean()
@@ -510,6 +610,8 @@ if __name__ == '__main__':
 
     fsf = BuoySingleYear2D.to_sf()
     fpd = BuoySingleYear2D.to_pd()
+
+    BuoySingleYear2D.process_sf()
 
     # BuoySingleYear2D.process_np()
     # BuoySingleYear2D.process_pd_panel()

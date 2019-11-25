@@ -1929,7 +1929,8 @@ class Frame(ContainerOperand):
             container=self,
             function_values=self._axis_group_loc,
             function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.VALUES
+            yield_type=IterNodeType.VALUES,
+            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
 
     @property
@@ -1938,7 +1939,8 @@ class Frame(ContainerOperand):
             container=self,
             function_values=self._axis_group_loc,
             function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.ITEMS
+            yield_type=IterNodeType.ITEMS,
+            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
 
     @property
@@ -1947,7 +1949,8 @@ class Frame(ContainerOperand):
             container=self,
             function_values=self._axis_group_index,
             function_items=self._axis_group_index_items,
-            yield_type=IterNodeType.VALUES
+            yield_type=IterNodeType.VALUES,
+            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
 
     @property
@@ -1956,7 +1959,8 @@ class Frame(ContainerOperand):
             container=self,
             function_values=self._axis_group_index,
             function_items=self._axis_group_index_items,
-            yield_type=IterNodeType.ITEMS
+            yield_type=IterNodeType.ITEMS,
+            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
 
     #---------------------------------------------------------------------------
