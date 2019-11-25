@@ -437,7 +437,7 @@ def terminal_ansi(stream: tp.TextIO = sys.stdout) -> bool:
     if 'INSIDE_EMACS' in environ:
         return False
 
-    if stream.closed:
+    if getattr(stream, 'closed', False): # if has closed attr and closed
         return False
 
     if hasattr(stream, 'isatty') and stream.isatty() and platform.system() != 'Windows':
