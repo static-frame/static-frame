@@ -5041,6 +5041,8 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.values.tolist(),
                 ['a', 'b', 'c', 'd', 'e', 'f'])
 
+        # underlying map objects must be different
+        self.assertTrue(id(f1.columns._map) != id(f2.columns._map))
 
 
     def test_frame_to_frame_go_b(self) -> None:

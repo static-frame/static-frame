@@ -11,6 +11,7 @@ What is New in Static Frame
 
 Fixed index formation when using ``apply`` on ``Frame.iter_group`` and ``Frame.iter_group_items`` (and related interfaces) when the ``Frame`` has an ``IndexHierarch``.
 
+Fixed issue in a ``Frame.to_frame_go()`` not creating a fully decoupled ``Index`` for columns in the returned ``Frame``.
 
 0.5.4
 ----------

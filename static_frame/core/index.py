@@ -401,7 +401,7 @@ class Index(IndexBase):
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
             if labels.depth == 1: # not an IndexHierarchy
-                if labels.STATIC: # can take the map
+                if labels.STATIC and self.STATIC: # can take the map
                     self._map = labels._map
                 # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
                 positions = labels._positions
