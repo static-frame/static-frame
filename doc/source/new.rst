@@ -9,7 +9,7 @@ What is New in Static Frame
 
 ``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.date`` objects in ``loc`` expressions.
 
-Fixed index formation when using ``apply`` on ``Frame.iter_group`` and ``Frame.iter_group_items`` (and related interfaces) when the ``Frame`` has an ``IndexHierarch``.
+Fixed index formation when using ``apply`` on ``Frame.iter_group`` and ``Frame.iter_group_items`` (and related interfaces) when the ``Frame`` has an ``IndexHierarchy``.
 
 Fixed issue in a ``Frame.to_frame_go()`` not creating a fully decoupled ``Index`` for columns in the returned ``Frame``.
 
