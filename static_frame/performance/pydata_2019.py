@@ -3,35 +3,12 @@
 
 # https://www.ocregister.com/2018/12/17/big-surf-possible-flooding-and-erosion-as-massive-swell-hits-the-coast-this-week/
 
-# The long-period, west-northwest swell started showing early Monday. At some stand-out Southern California beaches, waves were expected to reach up to 12 feet. Waves are even bigger at Central Coast, up to 20 feet, and largest in Northern California, with waves upwards of 50 feet at some spots.
-
-# 2018-12-17
-
-
-# station 46222
-
 # field definitions
 # https://www.ndbc.noaa.gov/measdes.shtml
-
-# WVHT 	Significant wave height (meters) is calculated as the average of the highest one-third of all of the wave heights during the 20-minute sampling period. See the Wave Measurements section.
-# DPD 	Dominant wave period (seconds) is the period with the maximum wave energy. See the Wave Measurements section.
-# APD 	Average wave period (seconds) of all waves during the 20-minute period. See the Wave Measurements section.
-
-
-# https://www.ndbc.noaa.gov/histsearch.php?station=46222&year=2018&f1=wvht&t1a=lt&v1a=4&t1b=&v1b=&c1=&f2=&t2a=&v2a=&t2b=&v2b=&c2=&f3=&t3a=&v3a=&t3b=&v3b=
 
 # full data set
 # https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet/
 
-
-# sample data from peak
-
-# 2018 12 17 18 00 999 99.0 99.0  2.54 18.18 13.44 268 9999.0 999.0  16.7 999.0 99.0 99.00
-# 2018 12 17 18 30 999 99.0 99.0  2.33 20.00 13.40 267 9999.0 999.0  16.8 999.0 99.0 99.00
-# 2018 12 17 19 00 999 99.0 99.0  2.44 20.00 13.35 273 9999.0 999.0  16.8 999.0 99.0 99.00
-# 2018 12 17 19 30 999 99.0 99.0  2.55 15.38 13.39 267 9999.0 999.0  16.8 999.0 99.0 99.00
-# 2018 12 17 20 00 999 99.0 99.0  2.48 18.18 13.22 270 9999.0 999.0  16.9 999.0 99.0 99.00
-# 2018 12 17 20 30 999 99.0 99.0  2.54 18.18 13.25 268 9999.0 999.0  17.1 999.0 99.0 99.00
 
 # Fitting Many Dimensions into One: The Promise of Hierarchical Indices for Data Beyond Two Dimensions
 
@@ -47,12 +24,15 @@ import functools
 
 
 import numpy as np
-
-
 import static_frame as sf
+import pandas as pd
 
-# stations
+from static_frame.core.util import array2d_to_tuples
 
+from static_frame.performance.perf_test import PerfTest
+
+#-------------------------------------------------------------------------------
+#
 
 class Buoy(NamedTuple):
     station_id: int
@@ -602,6 +582,117 @@ class BuoySingleYear1D:
 
         # this works
         post = spd[pd.IndexSlice[46222, '2018-12-18T20:00', 'DPD']]
+
+
+#-------------------------------------------------------------------------------
+# performance tests
+
+class SampleData:
+
+    _store: tp.Dict[str, tp.Any] = {}
+
+
+    @classmethod
+    def create(cls) -> None:
+        fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
+        fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
+
+
+        cls._store['array_datetime'] = fsf['datetime'].values
+        cls._store['array_station_id'] = tuple(b.station_id for b in BUOYS)
+        cls._store['array_attr'] = ('WVHT', 'DPD', 'MWD')
+
+        cls._store['sf_index_datetime'] = sf.IndexMinute(cls.get('array_datetime'))
+        cls._store['sf_index_station_id'] = sf.Index(cls.get('array_station_id'))
+        cls._store['sf_index_attr'] = sf.Index(cls.get('array_attr'))
+
+        cls._store['pd_index_datetime'] = pd.Index(cls.get('array_datetime'))
+        cls._store['pd_index_station_id'] = pd.Index(cls.get('array_station_id'))
+        cls._store['pd_index_attr'] = pd.Index(cls.get('array_attr'))
+
+        cls._store['sf_index_2D'] = sf.IndexHierarchy.from_product(
+                cls.get('array_datetime'),
+                cls.get('array_station_id')
+                )
+        cls._store['sf_index_3D'] = sf.IndexHierarchy.from_product(
+                cls.get('array_datetime'),
+                cls.get('array_station_id'),
+                cls.get('array_attr')
+                )
+
+        cls._store['tuple_index_2D'] = tuple(array2d_to_tuples(cls.get('sf_index_2D').values))
+        cls._store['tuple_index_3D'] = tuple(array2d_to_tuples(cls.get('sf_index_3D').values))
+
+
+    @classmethod
+    def get(cls, key: str) -> tp.Any:
+        return cls._store[key]
+
+
+class IndexCreation_from_product_2D(PerfTest):
+    NUMBER = 10
+
+    @classmethod
+    def pd(cls) -> None:
+        labels0 = SampleData.get('pd_index_datetime')
+        labels1 = SampleData.get('pd_index_station_id')
+        ih = pd.MultiIndex.from_product((labels0, labels1))
+        assert ih.shape[0] == 50472
+
+    @classmethod
+    def sf(cls) -> None:
+        labels0 = SampleData.get('sf_index_datetime')
+        labels1 = SampleData.get('sf_index_station_id')
+
+        ih = sf.IndexHierarchy.from_product(labels0, labels1)
+        assert ih.shape[0] == 50472
+
+
+class IndexCreation_from_product_3D(PerfTest):
+    NUMBER = 10
+
+    @classmethod
+    def pd(cls) -> None:
+        labels0 = SampleData.get('pd_index_datetime')
+        labels1 = SampleData.get('pd_index_station_id')
+        labels2 = SampleData.get('pd_index_attr')
+        ih = pd.MultiIndex.from_product((labels0, labels1, labels2))
+        assert ih.shape[0] == 151416
+
+    @classmethod
+    def sf(cls) -> None:
+        labels0 = SampleData.get('sf_index_datetime')
+        labels1 = SampleData.get('sf_index_station_id')
+        labels2 = SampleData.get('sf_index_attr')
+        ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
+        assert ih.shape[0] == 151416
+
+class IndexCreation_from_labels_2D(PerfTest):
+    NUMBER = 10
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_2D')))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_2D'))
+
+
+class IndexCreation_from_labels_3D(PerfTest):
+    NUMBER = 10
+
+    @classmethod
+    def pd(cls) -> None:
+        ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_3D')))
+
+    @classmethod
+    def sf(cls) -> None:
+        ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_3D'))
+
+
+
+
 
 
 

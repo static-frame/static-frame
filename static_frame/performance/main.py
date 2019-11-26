@@ -144,6 +144,9 @@ def main() -> None:
         elif module == 'pydata_2018':
             from static_frame.performance import pydata_2018
             module_targets.append(pydata_2018)
+        elif module == 'pydata_2019':
+            from static_frame.performance import pydata_2019
+            module_targets.append(pydata_2019)
         else:
             raise NotImplementedError()
 
