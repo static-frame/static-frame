@@ -187,6 +187,10 @@ class Series(ContainerOperand):
             if index is None:
                 array_index.append(c.index.values)
 
+        # End quickly if empty iterable
+        if len(array_values) == 0:
+            return cls([], index=index, name=name)
+
         # returns immutable arrays
         values = concat_resolved(array_values)
 
@@ -218,10 +222,18 @@ class Series(ContainerOperand):
                 yield label, series._index
 
         # populates array_values as side effect
-        ih = IndexHierarchy.from_index_items(gen())
-        # returns immutable array
-        values = concat_resolved(array_values)
-        return cls(values, index=ih, own_index=True)
+        try:
+            ih = IndexHierarchy.from_index_items(gen())
+            # returns immutable array
+            values = concat_resolved(array_values)
+            own_index = True
+        except StopIteration:
+            # Default to empty when given an empty iterable
+            ih = None
+            values = []
+            own_index= False
+
+        return cls(values, index=ih, own_index=own_index)
 
 
 

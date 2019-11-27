@@ -1,0 +1,178 @@
+diff --git a/static_frame/core/frame.py b/static_frame/core/frame.py
+index 841d486..37f9be7 100644
+--- a/static_frame/core/frame.py
++++ b/static_frame/core/frame.py
+@@ -187,13 +187,23 @@ class Frame(ContainerOperand):
+         # axis_series = (0 if axis is 1 else 1)
+         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
+ 
++        own_columns = False
++        own_index = False
++
++        # End quickly if empty iterable
++        if len(frames) == 0:
++            return cls(
++                    index=index,
++                    columns=columns,
++                    name=name,
++                    own_data=True,
++                    own_columns=own_columns,
++                    own_index=own_index)
++
+         # switch if we have reduced the columns argument to an array
+         from_array_columns = False
+         from_array_index = False
+ 
+-        own_columns = False
+-        own_index = False
+-
+         if axis == 1: # stacks columns (extends rows horizontally)
+             # index can be the same, columns must be redefined if not unique
+             if columns is IndexAutoFactory:
+diff --git a/static_frame/core/series.py b/static_frame/core/series.py
+index b0992b7..bb2b2c0 100644
+--- a/static_frame/core/series.py
++++ b/static_frame/core/series.py
+@@ -187,6 +187,10 @@ class Series(ContainerOperand):
+             if index is None:
+                 array_index.append(c.index.values)
+ 
++        # End quickly if empty iterable
++        if len(array_values) == 0:
++            return cls([], index=index, name=name)
++
+         # returns immutable arrays
+         values = concat_resolved(array_values)
+ 
+@@ -218,10 +222,18 @@ class Series(ContainerOperand):
+                 yield label, series._index
+ 
+         # populates array_values as side effect
+-        ih = IndexHierarchy.from_index_items(gen())
+-        # returns immutable array
+-        values = concat_resolved(array_values)
+-        return cls(values, index=ih, own_index=True)
++        try:
++            ih = IndexHierarchy.from_index_items(gen())
++            # returns immutable array
++            values = concat_resolved(array_values)
++            own_index = True
++        except StopIteration:
++            # Default to empty when given an empty iterable
++            ih = None
++            values = []
++            own_index= False
++
++        return cls(values, index=ih, own_index=own_index)
+ 
+ 
+ 
+diff --git a/static_frame/test/unit/test_frame.py b/static_frame/test/unit/test_frame.py
+index 71f6de1..714e4d7 100644
+--- a/static_frame/test/unit/test_frame.py
++++ b/static_frame/test/unit/test_frame.py
+@@ -4618,6 +4618,30 @@ class TestUnit(TestCase):
+                 )
+ 
+ 
++    def test_frame_from_concat_x(self) -> None:
++        f1 = Frame.from_concat([])
++        f2 = Frame.from_concat([], columns='a')
++        f3 = Frame.from_concat([], index=[])
++        f4 = Frame.from_concat([], name='f4')
++        f5 = Frame.from_concat([], columns='a', index=[], name='f5')
++
++        self.assertEqual((0,0), f1.shape)
++
++        self.assertEqual((0,1), f2.shape)
++        self.assertEqual((1,),  f2.columns.shape)
++
++        self.assertEqual((0,0), f3.shape)
++        self.assertEqual((0,),  f3.index.shape)
++
++        self.assertEqual((0,0), f4.shape)
++        self.assertEqual('f4',  f4.name)
++
++        self.assertEqual((0,1), f5.shape)
++        self.assertEqual((1,),  f5.columns.shape)
++        self.assertEqual((0,),  f5.index.shape)
++        self.assertEqual('f5',  f5.name)
++
++
+     #---------------------------------------------------------------------------
+ 
+ 
+@@ -4668,6 +4692,24 @@ class TestUnit(TestCase):
+                 )
+         self.assertEqual(f2.index.__class__, IndexHierarchy)
+ 
++    def test_frame_from_concat_items_c(self) -> None:
++        f1 = Frame.from_concat_items([])
++        f2 = Frame.from_concat_items([], name='f2')
++        f3 = Frame.from_concat_items([],
++                axis=1,
++                union=False,
++                name='f3',
++                fill_value=True,
++                consolidate_blocks=False)
++
++        self.assertEqual((0,0), f1.shape)
++
++        self.assertEqual((0,0), f2.shape)
++        self.assertEqual('f2',  f2.name)
++
++        self.assertEqual((0,0), f3.shape)
++        self.assertEqual('f3',  f3.name)
++
+ 
+     def test_frame_set_index_a(self) -> None:
+         records = (
+diff --git a/static_frame/test/unit/test_series.py b/static_frame/test/unit/test_series.py
+index 0aabe0a..1e83eb6 100644
+--- a/static_frame/test/unit/test_series.py
++++ b/static_frame/test/unit/test_series.py
+@@ -1889,6 +1889,22 @@ class TestUnit(TestCase):
+                 (('p', 2), ('q', 3), ('r', 0), ('s', 10), ('t', 20), ('u', 8), ('v', 6))
+                 )
+ 
++    def test_series_from_concat_g(self) -> None:
++
++        s1 = Series.from_concat([])
++        s2 = Series.from_concat([], index=[])
++        s3 = Series.from_concat([], name='s3')
++        s4 = Series.from_concat([], index=[], name='s4')
++
++        self.assertEqual((0,), s1.shape)
++        self.assertEqual((0,), s2.shape)
++        self.assertEqual((0,), s2.index.shape)
++        self.assertEqual((0,), s3.shape)
++        self.assertEqual('s3', s3.name)
++        self.assertEqual((0,), s4.shape)
++        self.assertEqual((0,), s4.index.shape)
++        self.assertEqual('s4', s4.name)
++
+ 
+ 
+     def test_series_iter_group_index_a(self) -> None:
+@@ -1959,7 +1975,7 @@ class TestUnit(TestCase):
+             s1.loc_max(skipna=False)
+ 
+ 
+-    def test_series_from_concat_items(self) -> None:
++    def test_series_from_concat_items_a(self) -> None:
+ 
+         s1 = Series((2, 3, 0,), index=list('abc'))
+         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
+@@ -1974,6 +1990,12 @@ class TestUnit(TestCase):
+                 ((('x', 'b'), 3.0), (('y', 'b'), np.nan)))
+ 
+ 
++    def test_series_from_concat_items_b(self) -> None:
++        s1 = Series.from_concat_items([])
++
++        self.assertEqual((0,), s1.shape)
++
++
+     #---------------------------------------------------------------------------
+ 
+     def test_series_axis_window_items_a(self) -> None:

@@ -187,12 +187,22 @@ class Frame(ContainerOperand):
         # axis_series = (0 if axis is 1 else 1)
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
+        own_columns = False
+        own_index = False
+
+        # End quickly if empty iterable
+        if len(frames) == 0:
+            return cls(
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_data=True,
+                    own_columns=own_columns,
+                    own_index=own_index)
+
         # switch if we have reduced the columns argument to an array
         from_array_columns = False
         from_array_index = False
-
-        own_columns = False
-        own_index = False
 
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
