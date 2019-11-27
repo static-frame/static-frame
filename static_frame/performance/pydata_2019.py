@@ -207,7 +207,6 @@ class BuoySingleYear2D:
 
         f = sf.Frame.from_concat(frames,
                 index=sf.IndexAutoFactory,
-                name='buos_single_year'
                 )
         f = f.set_index_hierarchy(('station_id', 'datetime'),
                 index_constructors=(sf.Index, sf.IndexMinute),
@@ -307,7 +306,7 @@ class BuoySingleYear2D:
     @classmethod
     def process_sf(cls) -> None:
 
-        f = cls.to_sf()
+        fsf = cls.to_sf()
 
         #-----------------------------------------------------------------------
         # creating IndexHierarchy
@@ -318,25 +317,25 @@ class BuoySingleYear2D:
         # getting values out
 
         # iterating parts of the index
-        part = tuple(f.index.iter_label(0))
+        part = tuple(fsf.index.iter_label(0))
 
         # getting all the values at an array
-        part = f.index.values_at_depth(0)
+        part = fsf.index.values_at_depth(0)
 
         # convert to a frame
-        part = f.index.to_frame()
+        part = fsf.index.to_frame()
 
         # rehiearch (make dates outer, station id inner); note that changing the hiearchy order forces a reordering
-        part = f.rehierarch((1, 0))
+        part = fsf.rehierarch((1, 0))
 
         # to tuples
-        part = f.relabel_flat(index=True)
+        part = fsf.relabel_flat(index=True)
 
         # adding a level
-        part = f.relabel_add_level(index='A')
+        part = fsf.relabel_add_level(index='A')
 
         # dropping a level
-        #         ipdb> f.relabel_drop_level(index=1)
+        #         ipdb> fsf.relabel_drop_level(index=1)
         # *** static_frame.core.exception.ErrorInitIndex: labels (50350) have non-unique values (17034)
         # ipdb>
 
@@ -344,19 +343,19 @@ class BuoySingleYear2D:
         # show different types of selection
 
         # getting a sample from a partial match
-        part = f.loc[sf.HLoc[:, '2018-12-18T07'], 'DPD']
+        part = fsf.loc[sf.HLoc[:, '2018-12-18T07'], 'DPD']
 
         # select based on partial time
-        post1 = f.loc[sf.HLoc[:, '2018-12-18T20']]
+        post1 = fsf.loc[sf.HLoc[:, '2018-12-18T20']]
 
         # getting a slice
-        part = f.loc[sf.HLoc[:, '2018-12-18T07':'2018-12-18T08'], 'DPD']
+        part = fsf.loc[sf.HLoc[:, '2018-12-18T07':'2018-12-18T08'], 'DPD']
 
         # dsicrete selection (this works on Pandas)
-        part = f.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
+        part = fsf.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
 
         # can show iloc
-        part = f.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], sf.ILoc[-1]]
+        part = fsf.loc[sf.HLoc[:, ['2018-12-18T20:00', '2018-12-18T20:30']], sf.ILoc[-1]]
 
 
 
@@ -369,29 +368,35 @@ class BuoySingleYear2D:
         # doing some analysis
 
         # find max for givne day
-        f.loc[sf.HLoc[:, '2018-12-18']].max()
+        fsf.loc[sf.HLoc[:, '2018-12-18']].max()
 
 
-        max_dpd = [f.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in f.index.iter_label(0)]
-        max_wvht = [f.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in f.index.iter_label(0)]
+        max_dpd = [fsf.loc[sf.HLoc[station_id], 'DPD'].loc_max() for station_id in fsf.index.iter_label(0)]
+        max_wvht = [fsf.loc[sf.HLoc[station_id], 'WVHT'].loc_max() for station_id in fsf.index.iter_label(0)]
 
         # get the peaks of the two fields, but this does not get us to the date
-        peaks = f.loc[f.index.isin(max_dpd + max_wvht)]
+        peaks = fsf.loc[fsf.index.isin(max_dpd + max_wvht)]
 
         # use 2 to get 1.731622836825856
-        wvht_threshold = f.loc[:, 'WVHT'].mean() + (f.loc[:, 'WVHT'].std() * 2)
+        threshold_wvht = fsf.loc[:, 'WVHT'].mean() + (fsf.loc[:, 'WVHT'].std() * 2)
 
         # use 1 to get 15.889409302831822
-        dpd_threshold = f.loc[:, 'DPD'].mean() + f.loc[:, 'DPD'].std()
+        threshold_dpd = fsf.loc[:, 'DPD'].mean() + fsf.loc[:, 'DPD'].std()
 
         # this isolates the relevant days; but does not get 46253
         # 2 and 18 gets all
-        targets = f.loc[(f.loc[:, 'WVHT'] > wvht_threshold) & (f.loc[:, 'DPD'] > dpd_threshold)]
+        targets = fsf.loc[(fsf.loc[:, 'WVHT'] > threshold_wvht) & (fsf.loc[:, 'DPD'] > threshold_dpd)]
+
+
         targets = targets.to_frame_go()
         targets['date'] = [d.date() for d in targets.index.values_at_depth(1)]
 
+
+        targets['station_id'] = targets.index.values_at_depth(0)
+        targets.iter_group(['date', 'station_id']).apply(len)
+
         # targets.iter_group('date').apply(lambda x: len(x))
-        peaks_per_day = targets.iter_group('date').apply(lambda x: len(x))
+        peaks_per_day = targets.iter_group('date').apply(len)
         print(peaks_per_day)
 
         def gen():
@@ -785,8 +790,10 @@ if __name__ == '__main__':
 
     fsf = BuoySingleYear2D.to_sf()
 
-
     BuoySingleYear2D.process_sf()
+    import ipdb; ipdb.set_trace()
+
+
 
     # BuoySingleYear2D.process_np()
     # BuoySingleYear2D.process_pd_panel()

@@ -3098,6 +3098,7 @@ class Frame(ContainerOperand):
     def _axis_group_iloc_items(self, key, *, axis):
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
+
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,

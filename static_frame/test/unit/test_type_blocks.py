@@ -800,13 +800,13 @@ class TestUnit(TestCase):
 
 
         group, selection, subtb = groups[0]
-        self.assertEqual(group.tolist(), [False, False])
+        self.assertEqual(group, (False, False))
         self.assertEqual(subtb.values.tolist(),
                 [[1, 2, 3, 4, False, False, True], [4, 2, 6, 3, False, False, True]]
                 )
 
         group, selection, subtb = groups[1]
-        self.assertEqual(group.tolist(), [True, False])
+        self.assertEqual(group, (True, False))
         self.assertEqual(subtb.values.tolist(),
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
         # TODO: add more tests here

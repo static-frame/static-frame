@@ -2657,6 +2657,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_iter_group_b(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index, name='foo')
+        post = f.iter_group(['p', 'q']).apply(len)
+        self.assertEqual(post.to_pairs(),
+                ((('A', 1), 1), (('A', 2), 1), (('B', 1), 1), (('B', 2), 1))
+                )
+
 
     def test_frame_iter_group_items_a(self) -> None:
 

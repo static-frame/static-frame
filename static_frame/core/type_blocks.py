@@ -39,6 +39,7 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import shape_filter
+from static_frame.core.util import array2d_to_tuples
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.util import immutable_filter
@@ -686,21 +687,24 @@ class TypeBlocks(ContainerOperand):
 
     def group(self,
             axis: int,
-            key: GetItemKeyTypeCompound) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            key: GetItemKeyTypeCompound
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
         '''
         Args:
             key: iloc selector on opposite axis
 
         Returns:
-            Generator of group, selection pairs, where selection is an np.ndaarray
+            Generator of group, selection pairs, where selection is an np.ndaarray. Returned is as an np.ndarray if key is more than one column.
         '''
         # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
         unique_axis = None
+
         if axis == 0:
             # axis 0 means we return row groups; key is a column key
             group_source = self._extract_array(column_key=key)
             if group_source.ndim > 1:
                 unique_axis = 0
+
         elif axis == 1:
             # axis 1 means we return column groups; key is a row key
             group_source = self._extract_array(row_key=key)
@@ -710,6 +714,9 @@ class TypeBlocks(ContainerOperand):
         groups, locations = array_to_groups_and_locations(
                 group_source,
                 unique_axis)
+
+        if unique_axis is not None:
+            groups = array2d_to_tuples(groups)
 
         for idx, g in enumerate(groups):
             selection = locations == idx

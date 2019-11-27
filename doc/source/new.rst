@@ -4,6 +4,14 @@ What is New in Static Frame
 ===============================
 
 
+0.5.6
+----------
+
+``Frame.from_concat``, ``Series.from_concat`` now accept empty iterables.
+
+``Frame.iter_group.apply`` and related routines now handle producing a `Series` from a multi-column group selection.
+
+
 0.5.5
 ----------
 
