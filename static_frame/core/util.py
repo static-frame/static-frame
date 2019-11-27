@@ -385,7 +385,7 @@ def concat_resolved(
     if axis is None:
         raise NotImplementedError('no handling of concatenating flattened arrays')
 
-    # first pass to determine shape and resolvved type
+    # first pass to determine shape and resolved type
     arrays_iter = iter(arrays)
     first = next(arrays_iter)
 

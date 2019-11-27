@@ -1889,6 +1889,24 @@ class TestUnit(TestCase):
                 (('p', 2), ('q', 3), ('r', 0), ('s', 10), ('t', 20), ('u', 8), ('v', 6))
                 )
 
+    def test_series_from_concat_g(self) -> None:
+
+        s1 = Series.from_concat([])
+        self.assertEqual((0,), s1.shape)
+
+        s2 = Series.from_concat([], index=[])
+        self.assertEqual((0,), s2.shape)
+        self.assertEqual((0,), s2.index.shape)
+
+        s3 = Series.from_concat([], name='s3')
+        self.assertEqual((0,), s3.shape)
+        self.assertEqual('s3', s3.name)
+
+        s4 = Series.from_concat([], index=[], name='s4')
+        self.assertEqual((0,), s4.shape)
+        self.assertEqual((0,), s4.index.shape)
+        self.assertEqual('s4', s4.name)
+
 
 
     def test_series_iter_group_index_a(self) -> None:
@@ -1959,7 +1977,7 @@ class TestUnit(TestCase):
             s1.loc_max(skipna=False)
 
 
-    def test_series_from_concat_items(self) -> None:
+    def test_series_from_concat_items_a(self) -> None:
 
         s1 = Series((2, 3, 0,), index=list('abc'))
         s2 = Series((2, np.nan, 0, -1), index=list('abcd'))
@@ -1972,6 +1990,12 @@ class TestUnit(TestCase):
 
         self.assertAlmostEqualItems(s3[HLoc[:, 'b']].to_pairs(),
                 ((('x', 'b'), 3.0), (('y', 'b'), np.nan)))
+
+
+    def test_series_from_concat_items_b(self) -> None:
+        s1 = Series.from_concat_items([])
+
+        self.assertEqual((0,), s1.shape)
 
 
     #---------------------------------------------------------------------------
