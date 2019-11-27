@@ -191,12 +191,11 @@ class Frame(ContainerOperand):
         own_index = False
 
         # End quickly if empty iterable
-        if len(frames) == 0:
+        if not frames:
             return cls(
                     index=index,
                     columns=columns,
                     name=name,
-                    own_data=True,
                     own_columns=own_columns,
                     own_index=own_index)
 

@@ -1892,15 +1892,17 @@ class TestUnit(TestCase):
     def test_series_from_concat_g(self) -> None:
 
         s1 = Series.from_concat([])
-        s2 = Series.from_concat([], index=[])
-        s3 = Series.from_concat([], name='s3')
-        s4 = Series.from_concat([], index=[], name='s4')
-
         self.assertEqual((0,), s1.shape)
+
+        s2 = Series.from_concat([], index=[])
         self.assertEqual((0,), s2.shape)
         self.assertEqual((0,), s2.index.shape)
+
+        s3 = Series.from_concat([], name='s3')
         self.assertEqual((0,), s3.shape)
         self.assertEqual('s3', s3.name)
+
+        s4 = Series.from_concat([], index=[], name='s4')
         self.assertEqual((0,), s4.shape)
         self.assertEqual((0,), s4.index.shape)
         self.assertEqual('s4', s4.name)

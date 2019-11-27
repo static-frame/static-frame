@@ -4620,22 +4620,21 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_x(self) -> None:
         f1 = Frame.from_concat([])
-        f2 = Frame.from_concat([], columns='a')
-        f3 = Frame.from_concat([], index=[])
-        f4 = Frame.from_concat([], name='f4')
-        f5 = Frame.from_concat([], columns='a', index=[], name='f5')
-
         self.assertEqual((0,0), f1.shape)
 
+        f2 = Frame.from_concat([], columns='a')
         self.assertEqual((0,1), f2.shape)
         self.assertEqual((1,),  f2.columns.shape)
 
+        f3 = Frame.from_concat([], index=[])
         self.assertEqual((0,0), f3.shape)
         self.assertEqual((0,),  f3.index.shape)
 
+        f4 = Frame.from_concat([], name='f4')
         self.assertEqual((0,0), f4.shape)
         self.assertEqual('f4',  f4.name)
 
+        f5 = Frame.from_concat([], columns='a', index=[], name='f5')
         self.assertEqual((0,1), f5.shape)
         self.assertEqual((1,),  f5.columns.shape)
         self.assertEqual((0,),  f5.index.shape)
@@ -4694,19 +4693,19 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_items_c(self) -> None:
         f1 = Frame.from_concat_items([])
+        self.assertEqual((0,0), f1.shape)
+
         f2 = Frame.from_concat_items([], name='f2')
+        self.assertEqual((0,0), f2.shape)
+        self.assertEqual('f2',  f2.name)
+
+        # Demonstrate the other arguments are inconsequential
         f3 = Frame.from_concat_items([],
                 axis=1,
                 union=False,
                 name='f3',
                 fill_value=True,
                 consolidate_blocks=False)
-
-        self.assertEqual((0,0), f1.shape)
-
-        self.assertEqual((0,0), f2.shape)
-        self.assertEqual('f2',  f2.name)
-
         self.assertEqual((0,0), f3.shape)
         self.assertEqual('f3',  f3.name)
 
