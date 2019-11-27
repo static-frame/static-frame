@@ -73,9 +73,7 @@ class BuoyLoader:
     FIELD_WAVE_PERIOD = 'DPD'	# Dominant wave period
     FIELD_WAVE_DIRECTION = 'MWD'
 
-    COMPASS = ('N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW')
-
-
+    COMPASS = ('N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW')
     URL_TEMPLATE = 'https://www.ndbc.noaa.gov/view_text_file.php?filename={station_id}h{year}.txt.gz&dir=data/historical/stdmet/'
 
     @classmethod
@@ -87,10 +85,7 @@ class BuoyLoader:
         timestamp = []
 
         def gen() -> tp.Iterator[tp.Union[int, str]]:
-            if line_number == 0:
-                yield cls.FIELD_STATION_ID
-            else:
-                yield station_id # always put first
+            yield cls.FIELD_STATION_ID if not line_number else station_id
             cell_pos = -1 # increment before usage
             for cell in line.split(' '):
                 cell = cell.strip()
@@ -99,10 +94,7 @@ class BuoyLoader:
                     if cell_pos < 5:
                         timestamp.append(cell)
                     elif cell_pos == 5:
-                        if line_number == 0:
-                            yield cls.FIELD_DATETIME
-                        else:
-                            yield '{}-{}-{}T{}:{}'.format(*timestamp)
+                        yield cls.FIELD_DATETIME if not line_number else '{}-{}-{}T{}:{}'.format(*timestamp)
                         yield cell
                     else:
                         yield cell
@@ -131,7 +123,6 @@ class BuoyLoader:
     @classmethod
     def degree_to_compass(cls, degrees: np.array):
         indices = np.floor(((degrees + 12.25) % 360) / 22.5).astype(int)
-        # import ipdb; ipdb.set_trace()
         return np.array([cls.COMPASS[i] for i in indices])
 
     @classmethod
@@ -166,7 +157,6 @@ class BuoyLoader:
     @classmethod
     @cache_buoy('df')
     def buoy_to_pd(cls, buoy: Buoy, year: int):
-        import pandas as pd
 
         records = cls.buoy_to_records(buoy, year=year)
         columns = next(records)
@@ -174,10 +164,14 @@ class BuoyLoader:
 
         df = pd.DataFrame.from_records(records, columns=columns)
 
+        direction = cls.degree_to_compass(df[cls.FIELD_WAVE_DIRECTION].astype(int).values)
+
         df = df[[cls.FIELD_STATION_ID,
                 cls.FIELD_DATETIME,
                 cls.FIELD_WAVE_HEIGHT,
                 cls.FIELD_WAVE_PERIOD]]
+
+        df[cls.FIELD_WAVE_DIRECTION] = direction
 
         return df.astype({
                 cls.FIELD_WAVE_HEIGHT: float,
@@ -222,7 +216,6 @@ class BuoySingleYear2D:
 
     @staticmethod
     def to_pd(year: int = 2018):
-        import pandas as pd
 
         dfs = []
         for buoy in BUOYS:
@@ -231,32 +224,48 @@ class BuoySingleYear2D:
 
         df = pd.concat(dfs)
 
-        # try setting dtype to datetime, with pd.to_datetime, before index creation
-        df = df.set_index(['station_id', 'datetime'])
+        return df.set_index(['station_id', 'datetime'])
 
-        # this sets to datetime, but does not allow slicing
-        # df.index = df.index.set_levels([df.index.levels[0], pd.to_datetime(df.index.levels[1])])
-        return df
-
+        # this sets to datetime, but does not a
     @staticmethod
-    def to_pd_panel(year: int = 2018):
-        import pandas as pd
+    def to_pd_dict(year: int = 2018):
 
         dfs = {}
         for buoy in BUOYS:
             df = BuoyLoader.buoy_to_pd(buoy, year)
-            # remove station id, set datetime as indexnns
-            df = df.set_index('datetime')[['DPD', 'WVHT']]
+            df = df.set_index('datetime')[['DPD', 'WVHT', 'MWD']]
             dfs[buoy.station_id] = df
 
-        p = pd.Panel(dfs)
-        return p
+        return dfs
+
+
+    @staticmethod
+    def to_pd_panel_a(year: int = 2018):
+        dfs = {}
+        for buoy in BUOYS:
+            df = BuoyLoader.buoy_to_pd(buoy, year)
+            df = df.set_index('datetime')[['DPD', 'WVHT', 'MWD']]
+            dfs[buoy.station_id] = df
+
+        return pd.Panel(dfs)
 
         # reindexes and adds NaN
         # ipdb> panel[:, '2018-03-01T18:58']
         #       46222  46253  46221
         # DPD   12.50    NaN    NaN
         # WVHT   0.69    NaN    NaN
+
+    @staticmethod
+    def to_pd_panel_b(year: int = 2018):
+        dfs = {}
+        for buoy in BUOYS:
+            df = BuoyLoader.buoy_to_pd(buoy, year)
+            # remove station id, set datetime as indexnns
+            # df = df.set_index('datetime')[['DPD', 'WVHT']]
+            df = df.set_index('datetime')[['DPD', 'WVHT']]
+            dfs[buoy.station_id] = df
+
+        return pd.Panel(dfs)
 
 
     @classmethod
@@ -454,8 +463,6 @@ class BuoySingleYear2D:
 
     @classmethod
     def process_pd_multi_index(cls):
-        import pandas as pd
-
 
         df = cls.to_pd()
         # selecting records for a single time across all buoys
@@ -699,10 +706,85 @@ class IndexCreation_from_labels_3D(PerfTest):
 if __name__ == '__main__':
 
     # fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
-    # fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
+    fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
+
+    #-----------------------------------------------------------
+    dfs = BuoySingleYear2D.to_pd_dict()
+    # ipdb> {station_id: df.loc['2018-12-17', 'WVHT'].mean() for station_id, df in dfs.items()}
+    # {46222: 1.5556249999999998, 46253: 1.2519148936170212, 46221: 1.6397916666666665}
+
+    # ipdb> pd.DataFrame.from_records(([station_id,] + df[['WVHT', 'DPD']].mean().tolist() for station_id, df in dfs.items()), columns=('station_id', 'WVHT', 'DPD'))
+    #    station_id      WVHT        DPD
+    # 0       46222  0.970099  11.813405
+    # 1       46253  0.927338  12.479156
+    # 2       46221  1.012615  12.883838
+
+
+    pna = BuoySingleYear2D.to_pd_panel_a()
+    # <class 'pandas.core.panel.Panel'>
+    # Dimensions: 3 (items) x 17034 (major_axis) x 3 (minor_axis)
+    # Items axis: 46222 to 46221
+    # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+    # Minor_axis axis: DPD to MWD
+
+    # pna[:, '2018-12-17', ['WVHT', 'DPD']].mean()
+    #           46222      46253      46221
+    # WVHT   1.555625   1.251915   1.639792
+    # DPD   14.927500  14.190851  14.811667
+
+    # ipdb> pna[46222, :, 'DPD'].values
+    # array([11.76, 10.53, 11.11, ..., 15.38, 15.38, 15.38], dtype=object)
+
+    # ipdb> pna[46222].dtypes
+    # DPD     object
+    # WVHT    object
+    # MWD     object
+    # dtype: object
+
+    # ipdb> pna.values.shape
+    # (3, 17034, 3)
+
+    pnb = BuoySingleYear2D.to_pd_panel_b()
+
+    # ipdb> pnb
+    # <class 'pandas.core.panel.Panel'>
+    # Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
+    # Items axis: 46222 to 46221
+    # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+    # Minor_axis axis: DPD to WVHT
+
+    fpd = BuoySingleYear2D.to_pd()
+
+    # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.datetime(2018, 12, 16, 10, 30)], 'WVHT']
+    #1.47
+
+# ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT']
+    # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+
+    # >>> fpd.sort_index(inplace=True)
+
+    # ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT'].head()
+    # station_id  datetime
+    # 46221       2018-12-17 00:00:00    1.43
+    #             2018-12-17 00:30:00    1.32
+    #             2018-12-17 01:00:00    1.38
+    #             2018-12-17 01:30:00    1.42
+    #             2018-12-17 02:00:00    1.36
+    # Name: WVHT, dtype: float64
+
+    # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-17'], ['WVHT', 'DPD']].mean()
+    # WVHT     1.484056
+    # DPD     14.646503
+    # dtype: float64
+    # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-18'], ['WVHT', 'DPD']].mean()
+    # WVHT     2.155594
+    # DPD     16.404965
+    # dtype: float64
+
+
 
     fsf = BuoySingleYear2D.to_sf()
-    fpd = BuoySingleYear2D.to_pd()
+
 
     BuoySingleYear2D.process_sf()
 
