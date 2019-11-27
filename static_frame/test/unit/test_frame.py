@@ -4618,6 +4618,29 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_concat_x(self) -> None:
+        f1 = Frame.from_concat([])
+        self.assertEqual((0,0), f1.shape)
+
+        f2 = Frame.from_concat([], columns='a')
+        self.assertEqual((0,1), f2.shape)
+        self.assertEqual((1,),  f2.columns.shape)
+
+        f3 = Frame.from_concat([], index=[])
+        self.assertEqual((0,0), f3.shape)
+        self.assertEqual((0,),  f3.index.shape)
+
+        f4 = Frame.from_concat([], name='f4')
+        self.assertEqual((0,0), f4.shape)
+        self.assertEqual('f4',  f4.name)
+
+        f5 = Frame.from_concat([], columns='a', index=[], name='f5')
+        self.assertEqual((0,1), f5.shape)
+        self.assertEqual((1,),  f5.columns.shape)
+        self.assertEqual((0,),  f5.index.shape)
+        self.assertEqual('f5',  f5.name)
+
+
     #---------------------------------------------------------------------------
 
 
@@ -4667,6 +4690,24 @@ class TestUnit(TestCase):
                 (('p', ((('A', 'd'), -2), (('B', 'd'), 2), (('B', 'c'), 34), (('C', 'c'), 0))), ('q', ((('A', 'd'), False), (('B', 'd'), False), (('B', 'c'), False), (('C', 'c'), True))))
                 )
         self.assertEqual(f2.index.__class__, IndexHierarchy)
+
+    def test_frame_from_concat_items_c(self) -> None:
+        f1 = Frame.from_concat_items([])
+        self.assertEqual((0,0), f1.shape)
+
+        f2 = Frame.from_concat_items([], name='f2')
+        self.assertEqual((0,0), f2.shape)
+        self.assertEqual('f2',  f2.name)
+
+        # Demonstrate the other arguments are inconsequential
+        f3 = Frame.from_concat_items([],
+                axis=1,
+                union=False,
+                name='f3',
+                fill_value=True,
+                consolidate_blocks=False)
+        self.assertEqual((0,0), f3.shape)
+        self.assertEqual('f3',  f3.name)
 
 
     def test_frame_set_index_a(self) -> None:

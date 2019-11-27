@@ -8,6 +8,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import EMPTY_TUPLE
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
@@ -187,6 +188,10 @@ class Series(ContainerOperand):
             if index is None:
                 array_index.append(c.index.values)
 
+        # End quickly if empty iterable
+        if not array_values:
+            return cls(EMPTY_TUPLE, index=index, name=name)
+
         # returns immutable arrays
         values = concat_resolved(array_values)
 
@@ -217,11 +222,19 @@ class Series(ContainerOperand):
                 array_values.append(series.values)
                 yield label, series._index
 
-        # populates array_values as side effect
-        ih = IndexHierarchy.from_index_items(gen())
-        # returns immutable array
-        values = concat_resolved(array_values)
-        return cls(values, index=ih, own_index=True)
+        try:
+            # populates array_values as side effect
+            ih = IndexHierarchy.from_index_items(gen())
+            # returns immutable array
+            values = concat_resolved(array_values)
+            own_index = True
+        except StopIteration:
+            # Default to empty when given an empty iterable
+            ih = None
+            values = EMPTY_TUPLE
+            own_index= False
+
+        return cls(values, index=ih, own_index=own_index)
 
 
 
