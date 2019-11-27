@@ -809,7 +809,6 @@ class TestUnit(TestCase):
         self.assertEqual(group, (True, False))
         self.assertEqual(subtb.values.tolist(),
                 [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]])
-        # TODO: add more tests here
 
 
     def test_type_blocks_transpose_a(self) -> None:
