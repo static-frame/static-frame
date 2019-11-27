@@ -791,7 +791,6 @@ if __name__ == '__main__':
     fsf = BuoySingleYear2D.to_sf()
 
     BuoySingleYear2D.process_sf()
-    import ipdb; ipdb.set_trace()
 
 
 
@@ -803,7 +802,6 @@ if __name__ == '__main__':
     # spd = BuoySingleYear1D.to_pd()
 
     # df = BuoySingleYear2D.process_pd_multi_index()
-    # import ipdb; ipdb.set_trace()
 
 
 
