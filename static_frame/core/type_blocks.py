@@ -716,6 +716,7 @@ class TypeBlocks(ContainerOperand):
                 unique_axis)
 
         if unique_axis is not None:
+            # make the groups hashable for usage in index construction
             groups = array2d_to_tuples(groups)
 
         for idx, g in enumerate(groups):
