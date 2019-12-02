@@ -267,20 +267,28 @@ class BuoySingleYear2D:
         frames = [BuoyLoader.buoy_to_sf(buoy, year) for buoy in BUOYS]
 
         # NOTE: take union and inssert NaNs
-        date_intersect = functools.reduce(lambda x, y: x & y, (set(f['datetime'].values) for f in frames))
+        date_intersect = functools.reduce(lambda x, y: x | y, (set(f['datetime'].values) for f in frames))
+        date_intersect = sorted(date_intersect)
 
         frames_aligned = []
         for f in frames:
-            frames_aligned.append(f.loc[f['datetime'].isin(date_intersect)])
+            # frames_aligned.append(f.loc[f['datetime'].isin(date_intersect)])
+            f = f.set_index('datetime', drop=True)
+            f = f.reindex(date_intersect)
+            f = f.unset_index()
+            f = f.relabel(columns={'__index0__':'datetime'})
+            frames_aligned.append(f)
+
 
         station_ids = {}
         for idx, f in enumerate(frames_aligned):
             datetime = {d: x for x, d in enumerate(f['datetime'].values)} # store the last one
-            station_id = f.loc[sf.ILoc[0], 'station_id']
+            station_id = int(f.loc[0, 'station_id']) # new index counts from zero
             arrays.append(f[['DPD', 'WVHT']].values)
             station_ids[station_id] = idx
 
         indices = {'station_id': station_ids, 'datetime':  datetime, 'attr': {'DPD':0, 'WVHT':1}}
+        # import ipdb; ipdb.set_trace()
         return np.array(arrays), indices
 
 
@@ -613,10 +621,10 @@ class OuterSingleMiddleSliceInnerSingleMean(_PerfTestPanel):
         # this is a float array
         data, maps = SampleData.get('bsy2D_np')
         # using dictionary lookups;
-        post = data[maps['station_id'][46253],
-                maps['datetime'][np.datetime64('2018-12-17T00:30')]:maps['datetime'][np.datetime64('2018-12-17T23:30')],
-                maps['attr']['WVHT']].mean()
-        np.testing.assert_almost_equal(post, 1.247111111111111)
+        post = np.nanmean(data[maps['station_id'][46253],
+                maps['datetime'][np.datetime64('2018-12-17T00:00')]:maps['datetime'][np.datetime64('2018-12-18T00:00')],
+                maps['attr']['WVHT']])
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
 
 
 
@@ -646,6 +654,7 @@ class OuterSingleMiddleSliceInnerSingleMean(_PerfTestPanel):
     def pd_mi_1D(cls) -> None:
         data = SampleData.get('bsy2D_pd_mi_1D_float')
         # NOTE: could not get partial selection to work
+        # pandas.core.indexing.IndexingError: Too many indexers
         post = data.loc[46253, '2018-12-17T00:00:00':'2018-12-17T23:30:00', 'WVHT'].mean()
         np.testing.assert_almost_equal(post, 1.2519148936170212)
 
@@ -679,8 +688,8 @@ class OuterAllMiddleSliceInnerSelectionMax(_PerfTestPanel):
     def np(cls) -> None:
         # this is a float array
         data, maps = SampleData.get('bsy2D_np')
-        date_slice = slice(maps['datetime'][np.datetime64('2018-12-17T00:30')],
-                maps['datetime'][np.datetime64('2018-12-17T23:30')])
+        date_slice = slice(maps['datetime'][np.datetime64('2018-12-17T00:00')],
+                maps['datetime'][np.datetime64('2018-12-18T00:00')])
         post = np.vstack([data[maps['station_id'][k], date_slice] for k in maps['station_id'].keys()]).max(axis=0)
         assert post.tolist(), [22.22, 2.64]
 
