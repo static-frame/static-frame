@@ -185,12 +185,6 @@ class BuoyLoader:
 
 
 #-------------------------------------------------------------------------------
-# here we build different representations of the same data using different hierarchies
-
-# things to do:
-# 1. select all observations at a particular date/time
-# 2. get the max values for each buoy
-# 3. filter vlaues within targets to see if we find correspondence on the target date
 
 
 class BuoySingleYear2D:
@@ -369,7 +363,6 @@ class BuoySingleYear2D:
         # 2 and 18 gets all
         targets = fsf.loc[(fsf.loc[:, 'WVHT'] > threshold_wvht) & (fsf.loc[:, 'DPD'] > threshold_dpd)]
 
-
         targets = targets.to_frame_go()
         targets['date'] = [d.date() for d in targets.index.values_at_depth(1)]
 
@@ -392,79 +385,6 @@ class BuoySingleYear2D:
                 index_constructors=(sf.IndexDate, sf.Index))
 
         print(post)
-
-
-    # @classmethod
-    # def process_pd_panel(cls):
-    #     panel = cls.to_pd_panel()
-
-    #     #         ipdb> panel
-    #     # <class 'pandas.core.panel.Panel'>
-    #     # Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
-    #     # Items axis: 46222 to 46221
-    #     # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
-    #     # Minor_axis axis: DPD to WVHT
-
-    #     # can select two buoys be creating a new panel
-    #     p2 = panel[[46222, 46221]]
-    #     # ipdb> p2.shape
-    #     # (2, 17034, 2)
-
-    #     # all buoy data for 2018-12-18, partial selection working
-    #     p3 = panel[:, '2018-12-18', 'WVHT']
-
-    #     # ipdb> panel[:, '2018-12-18', ['WVHT', 'DPD']].mean()
-    #     #           46222      46253      46221
-    #     # WVHT   2.339787   1.737917   2.392917
-    #     # DPD   16.888936  15.658125  16.677917
-
-    #     # ipdb> panel[:, '2018-12-18', 'DPD'].mean()
-    #     # 46222    16.888936
-    #     # 46253    15.658125
-    #     # 46221    16.677917
-    #     # dtype: float64
-
-    # @classmethod
-    # def process_np(cls):
-    #     a1, indices = cls.to_np()
-
-    #     # ipdb> a1.shape
-    #     # (3, 16465, 2)
-    #     # ipdb> indices['datetime'][np.datetime64('2018-12-18T20:30')]
-    #     # 15848
-    #     # ipdb> a1[:, indices['datetime'][np.datetime64('2018-12-18T20:30')], 1]
-    #     # array([1.85, 1.97, 2.04])
-
-    # @classmethod
-    # def process_pd_multi_index(cls):
-
-    #     df = cls.to_pd()
-    #     # selecting records for a single time across all buoys
-    #     # df.loc[(slice(None), ['2018-12-18T20:00', '2018-12-18T20:30']), 'DPD']
-
-    #     part = df.loc[pd.IndexSlice[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
-    #     # note that part has the whole original index, and that its display is terrible
-    #     # show:       remove_unused_levels
-
-    #     # these do not work
-    #     # pdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
-    #     # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-
-    #     # this works in 25.3
-
-    #     # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30')], 'DPD']
-    #     # 15.38
-
-    #     # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30'):], 'DPD']
-    #     # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-
-    #     # delivers a single values when matching on the whole day: (SF gives full day?)
-    #     # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.date(2018,12,7)], 'DPD']
-    #     # 11.76
-
-
-    #     big = df.loc[(df.loc[:, 'WVHT'] > 2.1) & (df.loc[:, 'DPD'] > 18)]
-
 
 
 #-------------------------------------------------------------------------------
@@ -547,43 +467,6 @@ class BuoySingleYear1D:
         index = pd.MultiIndex.from_tuples(labels)
         return pd.Series(values, index=index).sort_index()
 
-#     @classmethod
-#     def process_sf(cls):
-
-#         ssf = cls.to_sf()
-
-#         # betting a two observations of both metrics at the same hour
-#         post = ssf[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
-#         # import ipdb; ipdb.set_trace()
-
-
-#         # get one field from two buoys
-#         post = ssf[sf.HLoc[[46222, 46221], :, 'DPD']]
-
-#         # get partial date matching:
-#         post = ssf[sf.HLoc[46222, '2018-12-18', 'DPD']]
-
-#         # can use a datetime object
-#         post = ssf[sf.HLoc[46222, datetime.datetime(2018, 12, 18), 'DPD']]
-
-#     @classmethod
-#     def process_pd(cls):
-#         import pandas as pd
-
-#         spd = cls.to_pd()
-
-#         # SHOW: does not do a hierarchical selection
-#         # ipdb> spd[46211]
-#         # 6.25
-
-#         # SHOw: cannot do two at a time
-# #         ipdb> spd[pd.IndexSlice[[46222, 46221], :, 'DPD']]
-#         # *** TypeError: '[46222, 46221]' is an invalid key
-
-
-#         # this works
-#         post = spd[pd.IndexSlice[46222, '2018-12-18T20:00', 'DPD']]
-
 
 #-------------------------------------------------------------------------------
 # performance tests
@@ -652,73 +535,6 @@ class SampleData:
     def get(cls, key: str) -> tp.Any:
         return cls._store[key]
 
-
-
-
-
-
-#-------------------------------------------------------------------------------
-
-# class IndexCreation_from_product_2D(_PerfTestPanel):
-#     NUMBER = 10
-
-#     @classmethod
-#     def pd(cls) -> None:
-#         labels0 = SampleData.get('pd_index_datetime')
-#         labels1 = SampleData.get('pd_index_station_id')
-#         ih = pd.MultiIndex.from_product((labels0, labels1))
-#         assert ih.shape[0] == 50472
-
-#     @classmethod
-#     def sf(cls) -> None:
-#         labels0 = SampleData.get('sf_index_datetime')
-#         labels1 = SampleData.get('sf_index_station_id')
-
-#         ih = sf.IndexHierarchy.from_product(labels0, labels1)
-#         assert ih.shape[0] == 50472
-
-
-# class IndexCreation_from_product_3D(_PerfTestPanel):
-#     NUMBER = 10
-
-#     @classmethod
-#     def pd(cls) -> None:
-#         labels0 = SampleData.get('pd_index_datetime')
-#         labels1 = SampleData.get('pd_index_station_id')
-#         labels2 = SampleData.get('pd_index_attr')
-#         ih = pd.MultiIndex.from_product((labels0, labels1, labels2))
-#         assert ih.shape[0] == 151416
-
-#     @classmethod
-#     def sf(cls) -> None:
-#         labels0 = SampleData.get('sf_index_datetime')
-#         labels1 = SampleData.get('sf_index_station_id')
-#         labels2 = SampleData.get('sf_index_attr')
-#         ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
-#         assert ih.shape[0] == 151416
-
-# class IndexCreation_from_labels_2D(_PerfTestPanel):
-#     NUMBER = 10
-
-#     @classmethod
-#     def pd(cls) -> None:
-#         ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_2D')))
-
-#     @classmethod
-#     def sf(cls) -> None:
-#         ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_2D'))
-
-
-# class IndexCreation_from_labels_3D(_PerfTestPanel):
-#     NUMBER = 10
-
-#     @classmethod
-#     def pd(cls) -> None:
-#         ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_3D')))
-
-#     @classmethod
-#     def sf(cls) -> None:
-#         ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_3D'))
 
 #-------------------------------------------------------------------------------
 
