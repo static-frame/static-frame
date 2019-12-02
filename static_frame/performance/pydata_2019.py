@@ -19,15 +19,12 @@ import pickle
 # import datetime
 from urllib import request
 from typing import NamedTuple
-import datetime
 import functools
 
 
 import numpy as np
 import static_frame as sf
 import pandas as pd
-
-from static_frame.core.util import array2d_to_tuples
 
 from static_frame.performance.perf_test import PerfTest
 
