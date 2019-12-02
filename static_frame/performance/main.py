@@ -98,7 +98,8 @@ def performance(
     #row = []
     row: PerformanceRecord = collections.OrderedDict()
     row['name'] = cls.__name__
-    for f in PerfTest.FUNCTION_NAMES:
+    row['iterations'] = cls.NUMBER
+    for f in cls.FUNCTION_NAMES:
         if hasattr(cls, f):
             result = timeit.timeit(cls.__name__ + '.' + f + '()',
                     globals=vars(module),
@@ -115,11 +116,13 @@ def performance_tables_from_records(
 
     frame = sf.FrameGO.from_dict_records(records)
     frame = frame.set_index('name', drop=True)
-    frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
-    frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
 
-    frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
-    frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
+    if PerfTest.SF_NAME in frame.columns and PerfTest.PD_NAME in frame.columns:
+        frame['sf/pd'] = frame[PerfTest.SF_NAME] / frame[PerfTest.PD_NAME]
+        frame['pd_outperform'] = frame['sf/pd'].loc[frame['sf/pd'] > 1]
+
+        frame['pd/sf'] = frame[PerfTest.PD_NAME] / frame[PerfTest.SF_NAME]
+        frame['sf_outperform'] = frame['pd/sf'].loc[frame['pd/sf'] > 1]
 
     def format(v: object) -> str:
         if isinstance(v, float):
@@ -161,6 +164,9 @@ def main() -> None:
                     records.append(performance(module, cls))
                 if options.profile:
                     profile(cls)
+
+    itemize = True
+
     if records:
 
         from static_frame import DisplayConfig
@@ -183,9 +189,16 @@ def main() -> None:
                 )
         print(display.display(config))
 
+        if itemize:
+            alt = display.T
+            for c in alt.columns:
+                print(c)
+                print(alt[c].sort_values().display(config))
+
         # import ipdb; ipdb.set_trace()
-        print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
-        print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
+        if 'sf/pd' in frame.columns:
+            print('mean: {}'.format(round(frame['sf/pd'].mean(), 6)))
+            print('wins: {}/{}'.format((frame['sf/pd'] < 1.05).sum(), len(frame)))
 
 
 

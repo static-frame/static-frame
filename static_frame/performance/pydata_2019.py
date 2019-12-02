@@ -31,6 +31,14 @@ from static_frame.core.util import array2d_to_tuples
 
 from static_frame.performance.perf_test import PerfTest
 
+
+class _PerfTestPanel(PerfTest):
+
+    NUMBER = 500
+    FUNCTION_NAMES = ('dict_df', 'panel_float', 'np', 'xarray_da', 'pd_mi_2D', 'sf_ih_2D', 'pd_mi_1D', 'sf_ih_1D')
+
+
+
 #-------------------------------------------------------------------------------
 #
 
@@ -178,13 +186,6 @@ class BuoyLoader:
                 cls.FIELD_WAVE_PERIOD: float,
                 cls.FIELD_DATETIME: np.datetime64})
 
-    @classmethod
-    def buoy_to_np(cls):
-        pass
-
-    @classmethod
-    def buoy_to_xarray(cls):
-        pass
 
 #-------------------------------------------------------------------------------
 # here we build different representations of the same data using different hierarchies
@@ -223,7 +224,7 @@ class BuoySingleYear2D:
 
         df = pd.concat(dfs)
 
-        return df.set_index(['station_id', 'datetime'])
+        return df.set_index(['station_id', 'datetime']).sort_index()
 
         # this sets to datetime, but does not a
     @staticmethod
@@ -239,7 +240,7 @@ class BuoySingleYear2D:
 
 
     @staticmethod
-    def to_pd_panel_a(year: int = 2018):
+    def to_pd_panel_obj(year: int = 2018):
         dfs = {}
         for buoy in BUOYS:
             df = BuoyLoader.buoy_to_pd(buoy, year)
@@ -248,14 +249,9 @@ class BuoySingleYear2D:
 
         return pd.Panel(dfs)
 
-        # reindexes and adds NaN
-        # ipdb> panel[:, '2018-03-01T18:58']
-        #       46222  46253  46221
-        # DPD   12.50    NaN    NaN
-        # WVHT   0.69    NaN    NaN
 
     @staticmethod
-    def to_pd_panel_b(year: int = 2018):
+    def to_pd_panel_float(year: int = 2018):
         dfs = {}
         for buoy in BUOYS:
             df = BuoyLoader.buoy_to_pd(buoy, year)
@@ -268,8 +264,9 @@ class BuoySingleYear2D:
 
 
     @classmethod
-    def to_xarray(cls, year: int = 2018):
-        return cls.to_pd_panel(year=year).to_xarray()
+    def to_xarray_float(cls, year: int = 2018):
+        # this is an object typed DataArray
+        return cls.to_pd_panel_float(year=year).to_xarray()
 
 
     @classmethod
@@ -292,26 +289,16 @@ class BuoySingleYear2D:
             arrays.append(f[['DPD', 'WVHT']].values)
             station_ids[station_id] = idx
 
-        # dome data found only in one
-        # numpy.datetime64('2018-06-25T14:28'), numpy.datetime64('2018-01-21T13:58')
-        # numpy.datetime64('2018-03-01T18:58'), numpy.datetime64('2018-10-10T20:00')
-        # numpy.datetime64('2018-10-29T01:00
-
-        # In : len(date_intersect)
-        # 16465
-
         indices = {'station_id': station_ids, 'datetime':  datetime, 'attr': {'DPD':0, 'WVHT':1}}
         return np.array(arrays), indices
+
+
+    #---------------------------------------------------------------------------
 
     @classmethod
     def process_sf(cls) -> None:
 
         fsf = cls.to_sf()
-
-        #-----------------------------------------------------------------------
-        # creating IndexHierarchy
-
-
 
         #-----------------------------------------------------------------------
         # getting values out
@@ -362,8 +349,6 @@ class BuoySingleYear2D:
         # show getting labels with iter_label (unique values)
         # show converting to a Frame
 
-
-
         #-----------------------------------------------------------------------
         # doing some analysis
 
@@ -411,92 +396,78 @@ class BuoySingleYear2D:
 
         print(post)
 
-# <Frame: buos_single_year>
-# <Index>                                       WVHT      DPD       MWD   <<U10>
-# <IndexHierarchy>
-# 46253                     2018-12-18 13:00:00 2.03      18.18     WSW
-# 46253                     2018-12-18 13:30:00 2.01      18.18     W
-# 46253                     2018-12-18 14:30:00 2.11      18.18     WSW
-# <object>                  <object>            <float64> <float64> <<U3>
+
+    # @classmethod
+    # def process_pd_panel(cls):
+    #     panel = cls.to_pd_panel()
+
+    #     #         ipdb> panel
+    #     # <class 'pandas.core.panel.Panel'>
+    #     # Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
+    #     # Items axis: 46222 to 46221
+    #     # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+    #     # Minor_axis axis: DPD to WVHT
+
+    #     # can select two buoys be creating a new panel
+    #     p2 = panel[[46222, 46221]]
+    #     # ipdb> p2.shape
+    #     # (2, 17034, 2)
+
+    #     # all buoy data for 2018-12-18, partial selection working
+    #     p3 = panel[:, '2018-12-18', 'WVHT']
+
+    #     # ipdb> panel[:, '2018-12-18', ['WVHT', 'DPD']].mean()
+    #     #           46222      46253      46221
+    #     # WVHT   2.339787   1.737917   2.392917
+    #     # DPD   16.888936  15.658125  16.677917
+
+    #     # ipdb> panel[:, '2018-12-18', 'DPD'].mean()
+    #     # 46222    16.888936
+    #     # 46253    15.658125
+    #     # 46221    16.677917
+    #     # dtype: float64
+
+    # @classmethod
+    # def process_np(cls):
+    #     a1, indices = cls.to_np()
+
+    #     # ipdb> a1.shape
+    #     # (3, 16465, 2)
+    #     # ipdb> indices['datetime'][np.datetime64('2018-12-18T20:30')]
+    #     # 15848
+    #     # ipdb> a1[:, indices['datetime'][np.datetime64('2018-12-18T20:30')], 1]
+    #     # array([1.85, 1.97, 2.04])
+
+    # @classmethod
+    # def process_pd_multi_index(cls):
+
+    #     df = cls.to_pd()
+    #     # selecting records for a single time across all buoys
+    #     # df.loc[(slice(None), ['2018-12-18T20:00', '2018-12-18T20:30']), 'DPD']
+
+    #     part = df.loc[pd.IndexSlice[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
+    #     # note that part has the whole original index, and that its display is terrible
+    #     # show:       remove_unused_levels
+
+    #     # these do not work
+    #     # pdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
+    #     # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+
+    #     # this works in 25.3
+
+    #     # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30')], 'DPD']
+    #     # 15.38
+
+    #     # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30'):], 'DPD']
+    #     # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+
+    #     # delivers a single values when matching on the whole day: (SF gives full day?)
+    #     # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.date(2018,12,7)], 'DPD']
+    #     # 11.76
 
 
-    @classmethod
-    def process_pd_panel(cls):
-        panel = cls.to_pd_panel()
+    #     big = df.loc[(df.loc[:, 'WVHT'] > 2.1) & (df.loc[:, 'DPD'] > 18)]
 
-#         ipdb> panel
-# <class 'pandas.core.panel.Panel'>
-# Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
-# Items axis: 46222 to 46221
-# Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
-# Minor_axis axis: DPD to WVHT
-
-        # can select two buoys be creating a new panel
-        p2 = panel[[46222, 46221]]
-        # ipdb> p2.shape
-        # (2, 17034, 2)
-
-        # all buoy data for 2018-12-18, partial selection working
-        p3 = panel[:, '2018-12-18', 'WVHT']
-
-        # ipdb> panel[:, '2018-12-18', ['WVHT', 'DPD']].mean()
-        #           46222      46253      46221
-        # WVHT   2.339787   1.737917   2.392917
-        # DPD   16.888936  15.658125  16.677917
-
-        # ipdb> panel[:, '2018-12-18', 'DPD'].mean()
-        # 46222    16.888936
-        # 46253    15.658125
-        # 46221    16.677917
-        # dtype: float64
-
-        # import ipdb; ipdb.set_trace()
-
-    @classmethod
-    def process_np(cls):
-        a1, indices = cls.to_np()
-
-        # ipdb> a1.shape
-        # (3, 16465, 2)
-        # ipdb> indices['datetime'][np.datetime64('2018-12-18T20:30')]
-        # 15848
-        # ipdb> a1[:, indices['datetime'][np.datetime64('2018-12-18T20:30')], 1]
-        # array([1.85, 1.97, 2.04])
-
-        # import ipdb; ipdb.set_trace()
-
-
-    @classmethod
-    def process_pd_multi_index(cls):
-
-        df = cls.to_pd()
-        # selecting records for a single time across all buoys
-        # df.loc[(slice(None), ['2018-12-18T20:00', '2018-12-18T20:30']), 'DPD']
-
-        part = df.loc[pd.IndexSlice[:, ['2018-12-18T20:00', '2018-12-18T20:30']], 'DPD']
-        # note that part has the whole original index, and that its display is terrible
-        # show:       remove_unused_levels
-
-        # these do not work
-        # pdb> df.loc[pd.IndexSlice[:, '2018-12-18'], 'DPD']
-        # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-
-        # this works in 25.3
-
-        # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30')], 'DPD']
-        # 15.38
-
-        # ipdb> fpd.loc[pd.IndexSlice[46221, np.datetime64('2018-12-09T07:30'):], 'DPD']
-        # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-
-        # delivers a single values when matching on the whole day: (SF gives full day?)
-        # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.date(2018,12,7)], 'DPD']
-        # 11.76
-
-
-        big = df.loc[(df.loc[:, 'WVHT'] > 2.1) & (df.loc[:, 'DPD'] > 18)]
-
-        # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------
@@ -531,10 +502,34 @@ class BuoySingleYear1D:
         return sf.Series(values, index=index)
 
 
+    @staticmethod
+    def to_pd_obj(year: int = 2018) -> sf.Frame:
+
+        labels = []
+        values = []
+
+        for buoy in BUOYS:
+            df = BuoyLoader.buoy_to_pd(buoy, year)
+            for _, row in df.iterrows():
+                for attr in (
+                        BuoyLoader.FIELD_WAVE_HEIGHT,
+                        BuoyLoader.FIELD_WAVE_PERIOD,
+                        BuoyLoader.FIELD_WAVE_DIRECTION,
+                        ):
+                    label = (row[BuoyLoader.FIELD_STATION_ID],
+                            row[BuoyLoader.FIELD_DATETIME],
+                            attr)
+                    labels.append(label)
+                    values.append(row[attr])
+
+        # display of this index is terrible
+        index = pd.MultiIndex.from_tuples(labels)
+        return pd.Series(values, index=index).sort_index()
+
+
 
     @staticmethod
-    def to_pd(year: int = 2018) -> sf.Frame:
-        import pandas as pd
+    def to_pd_float(year: int = 2018) -> sf.Frame:
 
         labels = []
         values = []
@@ -553,47 +548,44 @@ class BuoySingleYear1D:
 
         # display of this index is terrible
         index = pd.MultiIndex.from_tuples(labels)
-        return pd.Series(values, index=index)
+        return pd.Series(values, index=index).sort_index()
+
+#     @classmethod
+#     def process_sf(cls):
+
+#         ssf = cls.to_sf()
+
+#         # betting a two observations of both metrics at the same hour
+#         post = ssf[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
+#         # import ipdb; ipdb.set_trace()
 
 
+#         # get one field from two buoys
+#         post = ssf[sf.HLoc[[46222, 46221], :, 'DPD']]
 
-    @classmethod
-    def process_sf(cls):
+#         # get partial date matching:
+#         post = ssf[sf.HLoc[46222, '2018-12-18', 'DPD']]
 
-        ssf = cls.to_sf()
+#         # can use a datetime object
+#         post = ssf[sf.HLoc[46222, datetime.datetime(2018, 12, 18), 'DPD']]
 
-        # betting a two observations of both metrics at the same hour
-        post = ssf[sf.HLoc[:, '2018-12-18T07', ['DPD', 'WVHT']]]
-        # import ipdb; ipdb.set_trace()
+#     @classmethod
+#     def process_pd(cls):
+#         import pandas as pd
 
+#         spd = cls.to_pd()
 
-        # get one field from two buoys
-        post = ssf[sf.HLoc[[46222, 46221], :, 'DPD']]
+#         # SHOW: does not do a hierarchical selection
+#         # ipdb> spd[46211]
+#         # 6.25
 
-        # get partial date matching:
-        post = ssf[sf.HLoc[46222, '2018-12-18', 'DPD']]
-
-        # can use a datetime object
-        post = ssf[sf.HLoc[46222, datetime.datetime(2018, 12, 18), 'DPD']]
-
-
-    @classmethod
-    def process_pd(cls):
-        import pandas as pd
-
-        spd = cls.to_pd()
-
-        # SHOW: does not do a hierarchical selection
-        # ipdb> spd[46211]
-        # 6.25
-
-        # SHOw: cannot do two at a time
-#         ipdb> spd[pd.IndexSlice[[46222, 46221], :, 'DPD']]
-        # *** TypeError: '[46222, 46221]' is an invalid key
+#         # SHOw: cannot do two at a time
+# #         ipdb> spd[pd.IndexSlice[[46222, 46221], :, 'DPD']]
+#         # *** TypeError: '[46222, 46221]' is an invalid key
 
 
-        # this works
-        post = spd[pd.IndexSlice[46222, '2018-12-18T20:00', 'DPD']]
+#         # this works
+#         post = spd[pd.IndexSlice[46222, '2018-12-18T20:00', 'DPD']]
 
 
 #-------------------------------------------------------------------------------
@@ -606,34 +598,57 @@ class SampleData:
 
     @classmethod
     def create(cls) -> None:
-        fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
-        fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
+        # fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
+        # fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
 
 
-        cls._store['array_datetime'] = fsf['datetime'].values
-        cls._store['array_station_id'] = tuple(b.station_id for b in BUOYS)
-        cls._store['array_attr'] = ('WVHT', 'DPD', 'MWD')
+        # cls._store['array_datetime'] = fsf['datetime'].values
+        # cls._store['array_station_id'] = tuple(b.station_id for b in BUOYS)
+        # cls._store['array_attr'] = ('WVHT', 'DPD', 'MWD')
 
-        cls._store['sf_index_datetime'] = sf.IndexMinute(cls.get('array_datetime'))
-        cls._store['sf_index_station_id'] = sf.Index(cls.get('array_station_id'))
-        cls._store['sf_index_attr'] = sf.Index(cls.get('array_attr'))
+        # cls._store['sf_index_datetime'] = sf.IndexMinute(cls.get('array_datetime'))
+        # cls._store['sf_index_station_id'] = sf.Index(cls.get('array_station_id'))
+        # cls._store['sf_index_attr'] = sf.Index(cls.get('array_attr'))
 
-        cls._store['pd_index_datetime'] = pd.Index(cls.get('array_datetime'))
-        cls._store['pd_index_station_id'] = pd.Index(cls.get('array_station_id'))
-        cls._store['pd_index_attr'] = pd.Index(cls.get('array_attr'))
+        # cls._store['pd_index_datetime'] = pd.Index(cls.get('array_datetime'))
+        # cls._store['pd_index_station_id'] = pd.Index(cls.get('array_station_id'))
+        # cls._store['pd_index_attr'] = pd.Index(cls.get('array_attr'))
 
-        cls._store['sf_index_2D'] = sf.IndexHierarchy.from_product(
-                cls.get('array_datetime'),
-                cls.get('array_station_id')
-                )
-        cls._store['sf_index_3D'] = sf.IndexHierarchy.from_product(
-                cls.get('array_datetime'),
-                cls.get('array_station_id'),
-                cls.get('array_attr')
-                )
+        # cls._store['sf_index_2D'] = sf.IndexHierarchy.from_product(
+        #         cls.get('array_datetime'),
+        #         cls.get('array_station_id')
+        #         )
+        # cls._store['sf_index_3D'] = sf.IndexHierarchy.from_product(
+        #         cls.get('array_datetime'),
+        #         cls.get('array_station_id'),
+        #         cls.get('array_attr')
+        #         )
 
-        cls._store['tuple_index_2D'] = tuple(array2d_to_tuples(cls.get('sf_index_2D').values))
-        cls._store['tuple_index_3D'] = tuple(array2d_to_tuples(cls.get('sf_index_3D').values))
+        # cls._store['tuple_index_2D'] = tuple(array2d_to_tuples(cls.get('sf_index_2D').values))
+        # cls._store['tuple_index_3D'] = tuple(array2d_to_tuples(cls.get('sf_index_3D').values))
+
+
+
+        cls._store['bsy2D_dict_df'] = BuoySingleYear2D.to_pd_dict()
+
+        # cls._store['bsy2D_panel_obj'] = BuoySingleYear2D.to_pd_panel_obj()
+
+        cls._store['bsy2D_panel_float'] = BuoySingleYear2D.to_pd_panel_float()
+
+        cls._store['bsy2D_np'] = BuoySingleYear2D.to_np()
+
+        cls._store['bsy2D_xarray_ds'] = BuoySingleYear2D.to_xarray_float()
+
+        cls._store['bsy2D_pd_mi_2D'] = BuoySingleYear2D.to_pd()
+
+        cls._store['bsy2D_sf_ih_2D'] = BuoySingleYear2D.to_sf()
+
+        cls._store['bsy2D_pd_mi_1D_obj'] = BuoySingleYear1D.to_pd_obj()
+
+        cls._store['bsy2D_pd_mi_1D_float'] = BuoySingleYear1D.to_pd_float()
+
+        cls._store['bsy2D_sf_ih_1D'] = BuoySingleYear1D.to_sf()
+
 
 
     @classmethod
@@ -641,71 +656,264 @@ class SampleData:
         return cls._store[key]
 
 
-class IndexCreation_from_product_2D(PerfTest):
-    NUMBER = 10
+
+
+
+
+#-------------------------------------------------------------------------------
+
+# class IndexCreation_from_product_2D(_PerfTestPanel):
+#     NUMBER = 10
+
+#     @classmethod
+#     def pd(cls) -> None:
+#         labels0 = SampleData.get('pd_index_datetime')
+#         labels1 = SampleData.get('pd_index_station_id')
+#         ih = pd.MultiIndex.from_product((labels0, labels1))
+#         assert ih.shape[0] == 50472
+
+#     @classmethod
+#     def sf(cls) -> None:
+#         labels0 = SampleData.get('sf_index_datetime')
+#         labels1 = SampleData.get('sf_index_station_id')
+
+#         ih = sf.IndexHierarchy.from_product(labels0, labels1)
+#         assert ih.shape[0] == 50472
+
+
+# class IndexCreation_from_product_3D(_PerfTestPanel):
+#     NUMBER = 10
+
+#     @classmethod
+#     def pd(cls) -> None:
+#         labels0 = SampleData.get('pd_index_datetime')
+#         labels1 = SampleData.get('pd_index_station_id')
+#         labels2 = SampleData.get('pd_index_attr')
+#         ih = pd.MultiIndex.from_product((labels0, labels1, labels2))
+#         assert ih.shape[0] == 151416
+
+#     @classmethod
+#     def sf(cls) -> None:
+#         labels0 = SampleData.get('sf_index_datetime')
+#         labels1 = SampleData.get('sf_index_station_id')
+#         labels2 = SampleData.get('sf_index_attr')
+#         ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
+#         assert ih.shape[0] == 151416
+
+# class IndexCreation_from_labels_2D(_PerfTestPanel):
+#     NUMBER = 10
+
+#     @classmethod
+#     def pd(cls) -> None:
+#         ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_2D')))
+
+#     @classmethod
+#     def sf(cls) -> None:
+#         ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_2D'))
+
+
+# class IndexCreation_from_labels_3D(_PerfTestPanel):
+#     NUMBER = 10
+
+#     @classmethod
+#     def pd(cls) -> None:
+#         ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_3D')))
+
+#     @classmethod
+#     def sf(cls) -> None:
+#         ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_3D'))
+
+#-------------------------------------------------------------------------------
+
+class OuterSingleMiddleSingleInnerSingle(_PerfTestPanel):
 
     @classmethod
-    def pd(cls) -> None:
-        labels0 = SampleData.get('pd_index_datetime')
-        labels1 = SampleData.get('pd_index_station_id')
-        ih = pd.MultiIndex.from_product((labels0, labels1))
-        assert ih.shape[0] == 50472
+    def dict_df(cls) -> None:
+        data = SampleData.get('bsy2D_dict_df')
+        post = data[46253].loc['2018-12-17T10:00:00', 'WVHT']
+        assert post == 0.91
 
     @classmethod
-    def sf(cls) -> None:
-        labels0 = SampleData.get('sf_index_datetime')
-        labels1 = SampleData.get('sf_index_station_id')
-
-        ih = sf.IndexHierarchy.from_product(labels0, labels1)
-        assert ih.shape[0] == 50472
-
-
-class IndexCreation_from_product_3D(PerfTest):
-    NUMBER = 10
+    def panel_float(cls) -> None:
+        data = SampleData.get('bsy2D_panel_float')
+        post = data[46253, '2018-12-17T10:00:00', 'WVHT']
+        assert post == 0.91
 
     @classmethod
-    def pd(cls) -> None:
-        labels0 = SampleData.get('pd_index_datetime')
-        labels1 = SampleData.get('pd_index_station_id')
-        labels2 = SampleData.get('pd_index_attr')
-        ih = pd.MultiIndex.from_product((labels0, labels1, labels2))
-        assert ih.shape[0] == 151416
+    def np(cls) -> None:
+        data, maps = SampleData.get('bsy2D_np')
+        # using dictionary lookups;
+        post = data[maps['station_id'][46253], maps['datetime'][np.datetime64('2018-12-17T10:00')], maps['attr']['WVHT']]
+        assert post == 0.91
 
     @classmethod
-    def sf(cls) -> None:
-        labels0 = SampleData.get('sf_index_datetime')
-        labels1 = SampleData.get('sf_index_station_id')
-        labels2 = SampleData.get('sf_index_attr')
-        ih = sf.IndexHierarchy.from_product(labels0, labels1, labels2)
-        assert ih.shape[0] == 151416
-
-class IndexCreation_from_labels_2D(PerfTest):
-    NUMBER = 10
+    def xarray_da(cls) -> None:
+        data = SampleData.get('bsy2D_xarray_ds')
+        post = data.loc[46253, '2018-12-17T10:00:00', 'WVHT']
+        assert float(post) == 0.91
 
     @classmethod
-    def pd(cls) -> None:
-        ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_2D')))
+    def pd_mi_2D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_2D')
+        post = data.loc[pd.IndexSlice[46253, '2018-12-17T10:00:00'], 'WVHT']
+        assert post.values[0] == 0.91
 
     @classmethod
-    def sf(cls) -> None:
-        ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_2D'))
-
-
-class IndexCreation_from_labels_3D(PerfTest):
-    NUMBER = 10
+    def sf_ih_2D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_2D')
+        post = data.loc[sf.HLoc[46253, '2018-12-17T10:00:00'], 'WVHT']
+        assert post.values[0] == 0.91
 
     @classmethod
-    def pd(cls) -> None:
-        ih = pd.MultiIndex.from_tuples(tuple(SampleData.get('tuple_index_3D')))
+    def pd_mi_1D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_1D_float')
+        post = data.loc[46253, '2018-12-17T10:00:00', 'WVHT']
+        assert post == 0.91
 
     @classmethod
-    def sf(cls) -> None:
-        ih = sf.IndexHierarchy.from_labels(SampleData.get('tuple_index_3D'))
+    def sf_ih_1D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_1D')
+        post = data[sf.HLoc[46253, '2018-12-17T10:00:00', 'WVHT']]
+        assert post == 0.91
+
+
+
+
+class OuterSingleMiddleSliceInnerSingleMean(_PerfTestPanel):
+
+    @classmethod
+    def dict_df(cls) -> None:
+        data = SampleData.get('bsy2D_dict_df')
+        post = data[46253].loc['2018-12-17', 'WVHT'].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+
+    @classmethod
+    def panel_float(cls) -> None:
+        data = SampleData.get('bsy2D_panel_float')
+        post = data[46253, '2018-12-17', 'WVHT'].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+
+    @classmethod
+    def np(cls) -> None:
+        # this is a float array
+        data, maps = SampleData.get('bsy2D_np')
+        # using dictionary lookups;
+        post = data[maps['station_id'][46253],
+                maps['datetime'][np.datetime64('2018-12-17T00:30')]:maps['datetime'][np.datetime64('2018-12-17T23:30')],
+                maps['attr']['WVHT']].mean()
+        np.testing.assert_almost_equal(post, 1.247111111111111)
+
+
+
+    @classmethod
+    def xarray_da(cls) -> None:
+        data = SampleData.get('bsy2D_xarray_ds')
+        post = data.loc[46253, '2018-12-17', 'WVHT'].mean()
+        np.testing.assert_almost_equal(float(post), 1.2519148936170212)
+
+
+
+    @classmethod
+    def pd_mi_2D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_2D')
+        post = data.loc[pd.IndexSlice[46253, '2018-12-17'], 'WVHT'].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+    @classmethod
+    def sf_ih_2D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_2D')
+        post = data.loc[sf.HLoc[46253, '2018-12-17'], 'WVHT'].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+
+
+    @classmethod
+    def pd_mi_1D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_1D_float')
+        # NOTE: could not get partial selection to work
+        post = data.loc[46253, '2018-12-17T00:00:00':'2018-12-17T23:30:00', 'WVHT'].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+    @classmethod
+    def sf_ih_1D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_1D')
+        post = data[sf.HLoc[46253, '2018-12-17', 'WVHT']].mean()
+        # post = data.loc[sf.HLoc[46253, '2018-12-17T00:00:00':'2018-12-17T23:30:00', 'WVHT']].mean()
+        np.testing.assert_almost_equal(post, 1.2519148936170212)
+
+
+
+
+class OuterAllMiddleSliceInnerSelectionMax(_PerfTestPanel):
+
+    @classmethod
+    def dict_df(cls) -> None:
+        data = SampleData.get('bsy2D_dict_df')
+        post = pd.concat([data[k].loc['2018-12-17'] for k in data.keys()])[['DPD', 'WVHT']].max()
+        assert tuple(post.items()), (('DPD', 22.22), ('WVHT', 2.64))
+
+
+    @classmethod
+    def panel_float(cls) -> None:
+        data = SampleData.get('bsy2D_panel_float')
+        post = data[:, '2018-12-17'].max().max(axis=1)
+        assert tuple(post.items()), (('DPD', 22.22), ('WVHT', 2.64))
+
+
+    @classmethod
+    def np(cls) -> None:
+        # this is a float array
+        data, maps = SampleData.get('bsy2D_np')
+        date_slice = slice(maps['datetime'][np.datetime64('2018-12-17T00:30')],
+                maps['datetime'][np.datetime64('2018-12-17T23:30')])
+        post = np.vstack([data[maps['station_id'][k], date_slice] for k in maps['station_id'].keys()]).max(axis=0)
+        assert post.tolist(), [22.22, 2.64]
+
+
+    @classmethod
+    def xarray_da(cls) -> None:
+        data = SampleData.get('bsy2D_xarray_ds')
+        post = data.loc[:, '2018-12-17'].max(axis=1).max(axis=0).values
+        assert post.tolist(), [22.22, 2.64]
+
+
+
+    @classmethod
+    def pd_mi_2D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_2D')
+        post = data.loc[pd.IndexSlice[:, '2018-12-17'], ['WVHT', 'DPD']].max()
+        assert tuple(post.items()), (('DPD', 22.22), ('WVHT', 2.64))
+
+    @classmethod
+    def sf_ih_2D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_2D')
+        post = data.loc[sf.HLoc[:, '2018-12-17'], ['WVHT', 'DPD']].max()
+        assert tuple(post.items()), (('DPD', 22.22), ('WVHT', 2.64))
+
+
+
+    @classmethod
+    def pd_mi_1D(cls) -> None:
+        data = SampleData.get('bsy2D_pd_mi_1D_float')
+        post = tuple((attr, data.loc[:, '2018-12-17T00:00:00':'2018-12-17T23:30:00', attr].max()) for attr in ('DPD', 'WVHT'))
+        assert post, (('DPD', 22.22), ('WVHT', 2.64))
+
+    @classmethod
+    def sf_ih_1D(cls) -> None:
+        data = SampleData.get('bsy2D_sf_ih_1D')
+
+        post = tuple((attr, data[sf.HLoc[:, '2018-12-17', attr]].max()) for attr in ('DPD', 'WVHT'))
+        # post = data.loc[sf.HLoc[46253, '2018-12-17T00:00:00':'2018-12-17T23:30:00', 'WVHT']].mean()
+        assert post, (('DPD', 22.22), ('WVHT', 2.64))
 
 
 
 
 
+
+#-------------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
@@ -725,7 +933,7 @@ if __name__ == '__main__':
     # 2       46221  1.012615  12.883838
 
 
-    pna = BuoySingleYear2D.to_pd_panel_a()
+    pna = BuoySingleYear2D.to_pd_panel_obj()
     # <class 'pandas.core.panel.Panel'>
     # Dimensions: 3 (items) x 17034 (major_axis) x 3 (minor_axis)
     # Items axis: 46222 to 46221
@@ -749,7 +957,7 @@ if __name__ == '__main__':
     # ipdb> pna.values.shape
     # (3, 17034, 3)
 
-    pnb = BuoySingleYear2D.to_pd_panel_b()
+    pnb = BuoySingleYear2D.to_pd_panel_float()
 
     # ipdb> pnb
     # <class 'pandas.core.panel.Panel'>
@@ -799,30 +1007,10 @@ if __name__ == '__main__':
 
 
     # ssf = BuoySingleYear1D.to_sf()
-    # spd = BuoySingleYear1D.to_pd()
+    spda = BuoySingleYear1D.to_pd_obj()
+    spdb = BuoySingleYear1D.to_pd_float()
 
     # df = BuoySingleYear2D.process_pd_multi_index()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
