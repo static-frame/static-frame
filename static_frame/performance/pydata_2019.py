@@ -732,6 +732,59 @@ class OuterAllMiddleSliceInnerSelectionMax(_PerfTestPanel):
 
 
 
+#-------------------------------------------------------------------------------
+# import typing as tp
+
+
+class BestDefense:
+
+    @staticmethod
+    def processor(
+            functions: tp.Iterable[tp.Callable[[tp.Mapping[str, pd.Series]], pd.Series]],
+            init: pd.Series
+            ):
+
+        results = {'init': init}
+
+        for func in functions:
+            results[func.__name__] = func(results.copy())
+
+        return results
+
+    @classmethod
+    def processor_run(cls):
+
+        def square(vm: tp.Mapping[str, pd.Series]):
+            return vm['init'] ** 2
+
+        def invert(vm: tp.Mapping[str, pd.Series]):
+            return -vm['square']
+
+        init = pd.Series((5, 2, 6), index=tuple('abc'))
+        print(cls.processor(functions=[square, invert], init=init))
+
+
+    class DataInterface:
+
+        def __init__(self, size: int):
+            self._square = pd.Series(np.arange(size) ** 2)
+            self._invert = -self._square
+
+        @property
+        def square(self) -> pd.Series:
+            return self._square.copy()
+
+        @property
+        def invert(self) -> pd.Series:
+            return self._invert.copy()
+
+    @classmethod
+    def data_interface_run(cls):
+
+        di = cls.DataInterface(6)
+        print(di.square)
+        print(di.invert)
+
 
 
 
@@ -740,99 +793,102 @@ class OuterAllMiddleSliceInnerSelectionMax(_PerfTestPanel):
 
 if __name__ == '__main__':
 
-    # fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
-    fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
-
-    #-----------------------------------------------------------
-    dfs = BuoySingleYear2D.to_pd_dict()
-    # ipdb> {station_id: df.loc['2018-12-17', 'WVHT'].mean() for station_id, df in dfs.items()}
-    # {46222: 1.5556249999999998, 46253: 1.2519148936170212, 46221: 1.6397916666666665}
-
-    # ipdb> pd.DataFrame.from_records(([station_id,] + df[['WVHT', 'DPD']].mean().tolist() for station_id, df in dfs.items()), columns=('station_id', 'WVHT', 'DPD'))
-    #    station_id      WVHT        DPD
-    # 0       46222  0.970099  11.813405
-    # 1       46253  0.927338  12.479156
-    # 2       46221  1.012615  12.883838
+    BestDefense.data_interface_run()
 
 
-    pna = BuoySingleYear2D.to_pd_panel_obj()
-    # <class 'pandas.core.panel.Panel'>
-    # Dimensions: 3 (items) x 17034 (major_axis) x 3 (minor_axis)
-    # Items axis: 46222 to 46221
-    # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
-    # Minor_axis axis: DPD to MWD
+#     # fsf = BuoyLoader.buoy_to_sf(BUOYS[0], 2018)
+#     fpd = BuoyLoader.buoy_to_pd(BUOYS[0], 2018)
 
-    # pna[:, '2018-12-17', ['WVHT', 'DPD']].mean()
-    #           46222      46253      46221
-    # WVHT   1.555625   1.251915   1.639792
-    # DPD   14.927500  14.190851  14.811667
+#     #-----------------------------------------------------------
+#     dfs = BuoySingleYear2D.to_pd_dict()
+#     # ipdb> {station_id: df.loc['2018-12-17', 'WVHT'].mean() for station_id, df in dfs.items()}
+#     # {46222: 1.5556249999999998, 46253: 1.2519148936170212, 46221: 1.6397916666666665}
 
-    # ipdb> pna[46222, :, 'DPD'].values
-    # array([11.76, 10.53, 11.11, ..., 15.38, 15.38, 15.38], dtype=object)
-
-    # ipdb> pna[46222].dtypes
-    # DPD     object
-    # WVHT    object
-    # MWD     object
-    # dtype: object
-
-    # ipdb> pna.values.shape
-    # (3, 17034, 3)
-
-    pnb = BuoySingleYear2D.to_pd_panel_float()
-
-    # ipdb> pnb
-    # <class 'pandas.core.panel.Panel'>
-    # Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
-    # Items axis: 46222 to 46221
-    # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
-    # Minor_axis axis: DPD to WVHT
-
-    fpd = BuoySingleYear2D.to_pd()
-
-    # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.datetime(2018, 12, 16, 10, 30)], 'WVHT']
-    #1.47
-
-# ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT']
-    # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
-
-    # >>> fpd.sort_index(inplace=True)
-
-    # ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT'].head()
-    # station_id  datetime
-    # 46221       2018-12-17 00:00:00    1.43
-    #             2018-12-17 00:30:00    1.32
-    #             2018-12-17 01:00:00    1.38
-    #             2018-12-17 01:30:00    1.42
-    #             2018-12-17 02:00:00    1.36
-    # Name: WVHT, dtype: float64
-
-    # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-17'], ['WVHT', 'DPD']].mean()
-    # WVHT     1.484056
-    # DPD     14.646503
-    # dtype: float64
-    # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-18'], ['WVHT', 'DPD']].mean()
-    # WVHT     2.155594
-    # DPD     16.404965
-    # dtype: float64
+#     # ipdb> pd.DataFrame.from_records(([station_id,] + df[['WVHT', 'DPD']].mean().tolist() for station_id, df in dfs.items()), columns=('station_id', 'WVHT', 'DPD'))
+#     #    station_id      WVHT        DPD
+#     # 0       46222  0.970099  11.813405
+#     # 1       46253  0.927338  12.479156
+#     # 2       46221  1.012615  12.883838
 
 
+#     pna = BuoySingleYear2D.to_pd_panel_obj()
+#     # <class 'pandas.core.panel.Panel'>
+#     # Dimensions: 3 (items) x 17034 (major_axis) x 3 (minor_axis)
+#     # Items axis: 46222 to 46221
+#     # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+#     # Minor_axis axis: DPD to MWD
 
-    fsf = BuoySingleYear2D.to_sf()
+#     # pna[:, '2018-12-17', ['WVHT', 'DPD']].mean()
+#     #           46222      46253      46221
+#     # WVHT   1.555625   1.251915   1.639792
+#     # DPD   14.927500  14.190851  14.811667
 
-    BuoySingleYear2D.process_sf()
+#     # ipdb> pna[46222, :, 'DPD'].values
+#     # array([11.76, 10.53, 11.11, ..., 15.38, 15.38, 15.38], dtype=object)
+
+#     # ipdb> pna[46222].dtypes
+#     # DPD     object
+#     # WVHT    object
+#     # MWD     object
+#     # dtype: object
+
+#     # ipdb> pna.values.shape
+#     # (3, 17034, 3)
+
+#     pnb = BuoySingleYear2D.to_pd_panel_float()
+
+#     # ipdb> pnb
+#     # <class 'pandas.core.panel.Panel'>
+#     # Dimensions: 3 (items) x 17034 (major_axis) x 2 (minor_axis)
+#     # Items axis: 46222 to 46221
+#     # Major_axis axis: 2018-01-01 00:00:00 to 2018-12-31 23:30:00
+#     # Minor_axis axis: DPD to WVHT
+
+#     fpd = BuoySingleYear2D.to_pd()
+
+#     # ipdb> fpd.loc[pd.IndexSlice[46221, datetime.datetime(2018, 12, 16, 10, 30)], 'WVHT']
+#     #1.47
+
+# # ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT']
+#     # *** pandas.errors.UnsortedIndexError: 'MultiIndex slicing requires the index to be lexsorted: slicing on levels [1], lexsort depth 0'
+
+#     # >>> fpd.sort_index(inplace=True)
+
+#     # ipdb> fpd.loc[pd.IndexSlice[46221, '2018-12-17'], 'WVHT'].head()
+#     # station_id  datetime
+#     # 46221       2018-12-17 00:00:00    1.43
+#     #             2018-12-17 00:30:00    1.32
+#     #             2018-12-17 01:00:00    1.38
+#     #             2018-12-17 01:30:00    1.42
+#     #             2018-12-17 02:00:00    1.36
+#     # Name: WVHT, dtype: float64
+
+#     # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-17'], ['WVHT', 'DPD']].mean()
+#     # WVHT     1.484056
+#     # DPD     14.646503
+#     # dtype: float64
+#     # ipdb> fpd.loc[pd.IndexSlice[:, '2018-12-18'], ['WVHT', 'DPD']].mean()
+#     # WVHT     2.155594
+#     # DPD     16.404965
+#     # dtype: float64
 
 
 
-    # BuoySingleYear2D.process_np()
-    # BuoySingleYear2D.process_pd_panel()
+#     fsf = BuoySingleYear2D.to_sf()
+
+#     BuoySingleYear2D.process_sf()
 
 
-    # ssf = BuoySingleYear1D.to_sf()
-    spda = BuoySingleYear1D.to_pd_obj()
-    spdb = BuoySingleYear1D.to_pd_float()
 
-    # df = BuoySingleYear2D.process_pd_multi_index()
+#     # BuoySingleYear2D.process_np()
+#     # BuoySingleYear2D.process_pd_panel()
+
+
+#     # ssf = BuoySingleYear1D.to_sf()
+#     spda = BuoySingleYear1D.to_pd_obj()
+#     spdb = BuoySingleYear1D.to_pd_float()
+
+#     # df = BuoySingleYear2D.process_pd_multi_index()
 
 
 
