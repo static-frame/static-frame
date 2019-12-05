@@ -1,12 +1,14 @@
 import unittest
 # from io import StringIO
 import numpy as np
-
-
+from io import StringIO
 
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import STORE_FILTER_DISABLE
+from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
+
+from static_frame.core.frame import Frame
 # from static_frame.test.test_case import temp_file
 
 class TestUnit(TestCase):
@@ -103,6 +105,16 @@ class TestUnit(TestCase):
         a1 = np.array([1, None, 'nan', '', 'inf'], dtype=object)
         post = sfd.to_type_filter_array(a1)
         self.assertAlmostEqualValues(post.tolist(), [1, None, np.nan, np.nan, np.inf])
+
+
+
+    def test_store_filter_to_delimited_a(self) -> None:
+        f = Frame.from_records(((None, np.inf), (np.nan, -np.inf)))
+        store_filter = StoreFilter(from_nan='*', from_none='!', from_posinf='&', from_neginf='@')
+        post = StringIO()
+        f.to_csv(post, store_filter=store_filter, include_index=False)
+        post.seek(0)
+        self.assertEqual(post.read(), '0,1\n!,&\n*,@')
 
 
 if __name__ == '__main__':
