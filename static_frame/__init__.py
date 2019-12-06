@@ -63,5 +63,6 @@ from static_frame.core.frame import FrameGO as FrameGO
 from static_frame.core.frame import FrameAssign as FrameAssign
 
 from static_frame.core.bus import Bus as Bus
+from static_frame.core.store_filter import StoreFilter as StoreFilter
 
-__version__ = '0.5.6' # use -dev for new version in development
+__version__ = '0.5.7-dev' # use -dev for new version in development

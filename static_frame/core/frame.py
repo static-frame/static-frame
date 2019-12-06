@@ -3430,6 +3430,7 @@ class Frame(ContainerOperand):
                 raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
+        # import ipdb; ipdb.set_trace()
         array = np.clip(self.values, *args)
         array.flags.writeable = False
         return self.__class__(array,
@@ -3602,12 +3603,16 @@ class Frame(ContainerOperand):
                 name=self._name
                 )
 
-    def unset_index(self,
+    def unset_index(self, *,
+            names: tp.Iterable[tp.Hashable] = EMPTY_TUPLE,
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
         Return a new ``Frame`` where the index is added to the front of the data, and an ``IndexAutoFactory`` is used to populate a new index. If the ``Index`` has a ``name``, that name will be used for the column name, otherwise a suitable default will be used. As underlying NumPy arrays are immutable, data is not copied.
+
+        Args:
+            names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
         '''
 
         def blocks():
@@ -3623,7 +3628,10 @@ class Frame(ContainerOperand):
         if self._columns.depth > 1:
             raise ErrorInitFrame('cannot unset index with a columns with depth greater than 1')
 
-        columns = chain(self._index.names, self._columns)
+        if names:
+            columns = chain(names, self._columns.values)
+        else:
+            columns = chain(self._index.names, self._columns.values)
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),

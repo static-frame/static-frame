@@ -5588,10 +5588,27 @@ class TestUnit(TestCase):
         self.assertEqual(f1.clip(upper=f2).to_pairs(0),
                 (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
 
+
+    def test_frame_clip_d(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (2, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        f2 = sf.Frame([[5, 4], [0, 10]], index=list('yz'), columns=list('ab'))
+
         self.assertEqual(f1.clip(lower=3, upper=f2).to_pairs(0),
             (('a', (('x', 3.0), ('y', 5.0), ('z', 3.0))), ('b', (('x', 3.0), ('y', 4.0), ('z', 10.0))))
             )
 
+
+    #---------------------------------------------------------------------------
     def test_frame_loc_e(self) -> None:
         fp = self.get_test_input('jph_photos.txt')
         # using a raw string to avoid unicode decoding issues on windows
@@ -5851,6 +5868,25 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_unset_index_d(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        f2 = f1.unset_index(names=('index',))
+
+        self.assertEqual(f2.to_pairs(0),
+                (('index', ((0, 'x'), (1, 'y'), (2, 'z'))), ('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2), (1, 3), (2, -95))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_pivot_a(self) -> None:
 
         index = IndexHierarchy.from_product(

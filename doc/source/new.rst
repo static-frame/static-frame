@@ -4,6 +4,13 @@ What is New in Static Frame
 ===============================
 
 
+0.5.7
+----------
+
+``StoreFilter`` added to the public namespace.
+
+
+
 0.5.6
 ----------
 
