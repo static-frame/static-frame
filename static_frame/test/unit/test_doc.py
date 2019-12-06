@@ -286,14 +286,6 @@ Neptune  14
 [None, 14, None]
 >>> 'Pluto' in s
 False
->>> s.values.flags
-  C_CONTIGUOUS : True
-  F_CONTIGUOUS : True
-  OWNDATA : True
-  WRITEABLE : False
-  ALIGNED : True
-  WRITEBACKIFCOPY : False
-  UPDATEIFCOPY : False
 
 #end_series_dict_like_a
 
@@ -327,15 +319,6 @@ nan
 True
 >>> f.values.tolist()
 [[12756, 15], [142984, -110], [120536, -140]]
-
->>> f.values.flags
-  C_CONTIGUOUS : True
-  F_CONTIGUOUS : False
-  OWNDATA : True
-  WRITEABLE : False
-  ALIGNED : True
-  WRITEBACKIFCOPY : False
-  UPDATEIFCOPY : False
 
 #end_frame_dict_like_a
 
