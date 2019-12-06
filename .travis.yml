@@ -90,17 +90,11 @@ matrix:
 
 
 
-    # - name: tox
-    #   python: 3.7
-    #   dist: xenial
-    #   language: python
-    #   script: tox
-
-# Change anything below to suit your CI needs.
-# Python and pip exectuables are just named "python" and "pip" on all platforms!
+# common
 
 install: pip install -r requirements-test.txt
 
 script: pytest --cov=static_frame
 
 after_success: codecov
+
