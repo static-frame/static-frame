@@ -5582,7 +5582,7 @@ class TestUnit(TestCase):
                 (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
 
 
-    # @unittest.skip('precedence of min/max changed in numpy 1.17.4')
+    @unittest.skip('precedence of min/max changed in numpy 1.17.4')
     def test_frame_clip_d(self) -> None:
 
         records = (
