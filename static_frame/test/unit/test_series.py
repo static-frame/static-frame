@@ -1492,6 +1492,7 @@ class TestUnit(TestCase):
         self.assertEqual(s2.min(), 'a')
         self.assertEqual(s2.max(), 'c')
 
+    #---------------------------------------------------------------------------
 
     def test_series_clip_a(self) -> None:
 
@@ -1536,6 +1537,10 @@ class TestUnit(TestCase):
         self.assertEqual(s1.clip(upper=s3).to_pairs(),
                 (('a', 0), ('b', 1), ('c', 0), ('d', 3), ('e', 4), ('f', 5))
                 )
+
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_series_pickle_a(self) -> None:

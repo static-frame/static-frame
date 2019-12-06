@@ -5589,6 +5589,7 @@ class TestUnit(TestCase):
                 (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
 
 
+    @unittest.skip('precedence of min/max changed in numpy 1.17.4')
     def test_frame_clip_d(self) -> None:
 
         records = (
@@ -5606,6 +5607,40 @@ class TestUnit(TestCase):
         self.assertEqual(f1.clip(lower=3, upper=f2).to_pairs(0),
             (('a', (('x', 3.0), ('y', 5.0), ('z', 3.0))), ('b', (('x', 3.0), ('y', 4.0), ('z', 10.0))))
             )
+
+
+    def test_frame_clip_e(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (22, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        f2 = f1.clip(20, 31)
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 20), ('y', 30), ('z', 22))), ('b', (('x', 20), ('y', 31), ('z', 31)))))
+
+
+    def test_frame_clip_f(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (22, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+        f2 = f1.clip()
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 2), ('y', 30), ('z', 22))), ('b', (('x', 2), ('y', 34), ('z', 95))))
+                )
 
 
     #---------------------------------------------------------------------------

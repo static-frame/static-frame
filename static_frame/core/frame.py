@@ -3410,8 +3410,18 @@ class Frame(ContainerOperand):
             upper: value, ``Series``, ``Frame``
             axis: required if ``lower`` or ``upper`` are given as a ``Series``.
         '''
+        if lower is None and upper is None:
+            return self.__class__(self._blocks.copy(),
+                    index=self._index,
+                    columns=self._columns,
+                    own_data=True,
+                    name=self._name
+                    )
+
         args = [lower, upper]
         for idx, arg in enumerate(args):
+            if arg is None:
+                continue
             bound = -np.inf if idx == 0 else np.inf
             if isinstance(arg, Series):
                 if axis is None:
@@ -3430,12 +3440,14 @@ class Frame(ContainerOperand):
                 raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
-        # import ipdb; ipdb.set_trace()
         array = np.clip(self.values, *args)
         array.flags.writeable = False
+
         return self.__class__(array,
                 columns=self._columns,
-                index=self._index)
+                index=self._index,
+                name=self._name
+                )
 
 
     def transpose(self) -> 'Frame':
@@ -3445,7 +3457,7 @@ class Frame(ContainerOperand):
                 index=self._columns,
                 columns=self._index,
                 own_data=True,
-                name=self.name)
+                name=self._name)
 
     @property
     def T(self) -> 'Frame':
