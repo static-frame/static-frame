@@ -78,6 +78,18 @@ matrix:
       language: python
       script: pylint static_frame
 
+
+    - name: forward compatibility NumPy 1.17.4
+      language: python
+      os: linux
+      dist: xenial
+      python: 3.7.4
+      install:
+        - pip install -r requirements-test.txt
+        - pip numpy==1.17.4
+
+
+
     # - name: tox
     #   python: 3.7
     #   dist: xenial

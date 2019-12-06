@@ -5019,13 +5019,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.name, msg)
 
-    @unittest.skip('requires network')
-    def test_frame_from_json_b(self) -> None:
-        url = 'https://jsonplaceholder.typicode.com/todos'
-        f1 = Frame.from_json_url(url)
-        self.assertEqual(f1.columns.values.tolist(),
-                ['completed', 'id', 'title', 'userId'])
-
 
 
     def test_frame_reindex_flat_a(self) -> None:
@@ -5589,7 +5582,7 @@ class TestUnit(TestCase):
                 (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
 
 
-    @unittest.skip('precedence of min/max changed in numpy 1.17.4')
+    # @unittest.skip('precedence of min/max changed in numpy 1.17.4')
     def test_frame_clip_d(self) -> None:
 
         records = (
