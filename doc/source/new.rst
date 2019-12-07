@@ -11,6 +11,8 @@ What is New in Static Frame
 
 ``names`` argument added to ``Frame.unset_index``.
 
+Improved handling of ``ILoc`` usage within ``loc`` calls.
+
 
 0.5.6
 ----------
