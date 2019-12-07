@@ -9,6 +9,7 @@ What is New in Static Frame
 
 ``StoreFilter`` added to the public namespace.
 
+``names`` argument added to ``Frame.unset_index``.
 
 
 0.5.6

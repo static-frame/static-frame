@@ -604,7 +604,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(f1), 2)
 
-
+    #---------------------------------------------------------------------------
 
     def test_frame_iloc_a(self) -> None:
 
@@ -648,6 +648,8 @@ class TestUnit(TestCase):
                 [12, 13, 14, 15, 3, 3],
                 [16, 17, 18, 19, 4, 4]])
 
+
+    #---------------------------------------------------------------------------
 
     def test_frame_iter_a(self) -> None:
 
@@ -5911,6 +5913,23 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('index', ((0, 'x'), (1, 'y'), (2, 'z'))), ('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2), (1, 3), (2, -95))))
                 )
+
+
+    def test_frame_unset_index_e(self) -> None:
+        # using ILoc after unset led to an error because of no handling when loc is iloc
+        f1 = sf.Frame.from_records(['a', 'b'], index=tuple(('c', 'd')))
+        self.assertEqual(f1.loc['d', 0], 'b')
+        self.assertEqual(f1.loc[sf.ILoc[0], 0], 'a')
+
+        f2 = f1.unset_index()
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('__index0__', ((0, 'c'), (1, 'd'))), (0, ((0, 'a'), (1, 'b'))))
+        )
+
+        self.assertEqual(f2.loc[0, 0], 'a')
+        self.assertEqual(f2.loc[sf.ILoc[0], 0], 'a')
+
 
 
 

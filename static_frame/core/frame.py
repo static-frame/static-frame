@@ -2756,8 +2756,10 @@ class Frame(ContainerOperand):
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
         iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)
-        return self._extract(row_key=iloc_row_key,
-                column_key=iloc_column_key)
+        return self._extract(
+                row_key=iloc_row_key,
+                column_key=iloc_column_key
+                )
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:

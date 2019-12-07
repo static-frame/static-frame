@@ -180,8 +180,7 @@ class LocMap:
         '''
         offset_apply = not offset is None
 
-        if isinstance(key, ILoc):
-            return key.key
+        # ILoc is handled prior to this call, in the Index.loc_to_iloc method
 
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
@@ -616,11 +615,12 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if isinstance(key, Index):
+        if isinstance(key, ILoc):
+            return key.key
+        elif isinstance(key, Index):
             # if an Index, we simply use the values of the index
             key = key.values
-
-        if isinstance(key, Series):
+        elif isinstance(key, Series):
             if key.dtype == bool:
                 if _requires_reindex(key.index, self):
                     key = key.reindex(self, fill_value=False).values
