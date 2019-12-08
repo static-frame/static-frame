@@ -28,7 +28,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import binary_transition
-from static_frame.core.util import iterable_to_array
 from static_frame.core.util import isin
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import is_callable_or_mapping

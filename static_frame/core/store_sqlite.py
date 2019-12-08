@@ -121,7 +121,7 @@ class StoreSQLite(Store):
         sqlite3.register_adapter(np.int32, int)
         sqlite3.register_adapter(np.int16, int)
         # common python types
-        sqlite3.register_adapter(Fraction, lambda x: str(x))
+        sqlite3.register_adapter(Fraction, str)
         sqlite3.register_adapter(complex, lambda x: f'{x.real}:{x.imag}')
 
 

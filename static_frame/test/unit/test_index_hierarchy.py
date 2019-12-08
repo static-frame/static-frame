@@ -335,8 +335,6 @@ class TestUnit(TestCase):
             ('b', '2019-02-01'),
         )
 
-        from static_frame.core.exception import ErrorInitIndex
-
         with self.assertRaises(ErrorInitIndex):
             ih = IndexHierarchy.from_labels(labels, index_constructors=(Index,))
 

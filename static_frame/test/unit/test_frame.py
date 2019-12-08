@@ -502,7 +502,6 @@ class TestUnit(TestCase):
 
         with temp_file('.parquet') as fp:
             f1.to_parquet(fp)
-            pass
 
 
 
@@ -5245,33 +5244,6 @@ class TestUnit(TestCase):
                 fh.loc[HLoc[:, 3]].to_pairs(0),
                 ((0, (((1, 3), 1), ((2, 3), 2), ((3, 3), 3))), (1, (((1, 3), 3), ((2, 3), 3), ((3, 3), 3))), (2, (((1, 3), 'c'), ((2, 3), 'f'), ((3, 3), 'i'))))
                 )
-
-
-
-
-    @unittest.skip('requires network')
-    def test_frame_set_index_hierarchy_c(self) -> None:
-
-        f = sf.FrameGO.from_json_url('https://jsonplaceholder.typicode.com/photos')
-        tracks = f.iter_group('albumId', axis=0).apply(lambda g: len(g))
-        # f['tracks'] = f['albumId'].iter_element().apply(tracks)
-
-        from itertools import chain
-
-        items = chain.from_iterable(zip(g.index, range(len(g))) for g in f.iter_group('albumId'))
-
-        f['track'] = Series.from_items(items)
-
-
-        fh = f.set_index_hierarchy(['albumId', 'track'], drop=True)
-
-        fh.loc[HLoc[:, [2, 5]], ['title', 'url']]
-
-        # import ipdb; ipdb.set_trace()
-        # this gives the wrong result:
-        fh.loc[HLoc[:, [2, 5]], 'title']
-
-        fh.loc[sf.ILoc[-1], ['id', 'title', 'url']]
 
 
     def test_frame_set_index_hierarchy_d(self) -> None:

@@ -49,7 +49,6 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     '''
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
-    pass
 
 
 class Bus(ContainerBase):

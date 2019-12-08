@@ -25,7 +25,6 @@ from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
-from static_frame import Frame
 
 
 

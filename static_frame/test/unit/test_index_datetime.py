@@ -177,11 +177,11 @@ class TestUnit(TestCase):
 
         with self.assertRaises(LocInvalid):
             # out of range end date
-            s1['2017-12-28':'2019-01-04'] # type: ignore
+            s1['2017-12-28':'2019-01-04'] # type: ignore #pylint: disable=W0104
 
         with self.assertRaises(LocInvalid):
             # out of range start date
-            s1['2016-01-01':'2018-01-04'] # type: ignore
+            s1['2016-01-01':'2018-01-04'] # type: ignore #pylint: disable=W0104
 
 
     def test_index_date_q(self) -> None:

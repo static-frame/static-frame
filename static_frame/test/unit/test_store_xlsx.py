@@ -95,6 +95,11 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f2)
 
 
+    def test_store_xlsx_read_a(self) -> None:
+        f1 = Frame([1, 2, 3], index=('a', 'b', 'c'))
+        # import ipdb; ipdb.set_trace()
+
+
 
 if __name__ == '__main__':
     unittest.main()

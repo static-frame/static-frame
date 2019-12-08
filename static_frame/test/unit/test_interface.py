@@ -27,7 +27,7 @@ class TestUnit(TestCase):
     def test_interface_summary_b(self) -> None:
 
         post = FrameGO.interface
-        counts = post.iter_group('group').apply(lambda x: len(x))
+        counts = post.iter_group('group').apply(len)
         self.assertEqual(
             counts.to_pairs(),
             (('Attribute', 10), ('Constructor', 24), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 80), ('Method', 54), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 17))
@@ -38,8 +38,8 @@ class TestUnit(TestCase):
         s = Series(['a', 'b', 'c'])
         post = s.interface
 
-        counts = post.iter_group('group').apply(lambda x: len(x))
-        counts_cls = s.__class__.interface.iter_group('group').apply(lambda x: len(x))
+        counts = post.iter_group('group').apply(len)
+        counts_cls = s.__class__.interface.iter_group('group').apply(len)
 
         self.assertTrue((counts == counts_cls).all())
 

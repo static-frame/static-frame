@@ -5,7 +5,6 @@ from io import StringIO
 import string
 import pickle
 import typing as tp
-from io import StringIO
 
 import numpy as np
 
@@ -993,7 +992,7 @@ class TestUnit(TestCase):
     def test_series_loc_extract_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):
-            s1.loc[['c', 'd', 'e']]
+            s1.loc[['c', 'd', 'e']] #pylint: disable=W0104
 
     def test_series_loc_extract_b(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
@@ -1024,10 +1023,10 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
         # leaf loc selection must be terminal; using a slice or list is an exception
         with self.assertRaises(RuntimeError):
-            s.loc['a', :]
+            s.loc['a', :] #pylint: disable=W0104
 
         with self.assertRaises(RuntimeError):
-            s.loc[['a', 'b'], 'b']
+            s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
 
 
     def test_series_loc_extract_e(self) -> None:
@@ -2202,7 +2201,7 @@ class TestUnit(TestCase):
     def test_series_iter_window_arrray_b(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
-        s2 = s1.iter_window_array().apply(lambda x: np.mean(x))
+        s2 = s1.iter_window_array().apply(np.mean)
         self.assertEqual(s2.to_pairs(),
                 (('b', 1.5), ('c', 2.5), ('d', 3.5), ('e', 4.5), ('f', 5.5), ('g', 6.5), ('h', 7.5), ('i', 8.5), ('j', 9.5), ('k', 10.5), ('l', 11.5), ('m', 12.5), ('n', 13.5), ('o', 14.5), ('p', 15.5), ('q', 16.5), ('r', 17.5), ('s', 18.5), ('t', 19.5))
         )

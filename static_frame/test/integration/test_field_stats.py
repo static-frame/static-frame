@@ -8,7 +8,7 @@ import static_frame as sf
 from static_frame.test.test_case import TestCase
 
 CHARACTERS_REFERENCE = dict((
-        ('count', lambda x: len(x)),
+        ('count', len),
         ('count<0', lambda x: len(x.loc[x < 0])),
         ('count>0', lambda x: len(x.loc[x > 0])),
         ('count_unique', lambda x: len(x.unique())),
