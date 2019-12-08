@@ -110,6 +110,43 @@ class TestUnit(TestCase):
                 (('x', ((0, 1), (1, 2), (2, 3))),)
                 )
 
+
+    def test_store_xlsx_read_b(self) -> None:
+        index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
+        columns = IndexHierarchy.from_labels(((100, -5, 20),))
+
+        f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
+
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),), include_index=False)
+            f2 = st.read(index_depth=0, columns_depth=f1.columns.depth)
+
+        self.assertTrue((f1.values == f2.values).all())
+        self.assertEqual(f2.to_pairs(0),
+                (((100, -5, 20), ((0, 1), (1, 2), (2, 3), (3, 4))),)
+                )
+
+
+    def test_store_xlsx_read_c(self) -> None:
+        index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
+        columns = IndexHierarchy.from_labels(((100, -5, 20),))
+
+        f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
+
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),), include_index=True, include_columns=False)
+            f2 = st.read(index_depth=f1.index.depth, columns_depth=0)
+
+        self.assertTrue((f1.values == f2.values).all())
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((('left', 'up'), 1), (('left', 'down'), 2), (('right', 'up'), 3), (('right', 'down'), 4))),)
+                )
+
+
         # TODO: same test with hierarchical columns, index
 
 

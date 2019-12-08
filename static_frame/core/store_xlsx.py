@@ -137,20 +137,18 @@ class StoreXLSX(Store):
         columns_iter = cls.get_column_iterator(frame=frame,
                 include_index=include_index)
 
+        columns_depth = frame._columns.depth
+        columns_depth_effective = 0 if not include_columns else columns_depth
         if include_columns:
-            columns_depth = frame._columns.depth
             columns_values = frame._columns.values
             if store_filter:
                 columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
 
-
-
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
 
-        # can write by column
+        # write by column
         for col, values in enumerate(columns_iter):
-
             if include_columns:
                 # The col integers will include index depth, so if including index, must wait until after index depth to write column field names; if include_index is False, can begin reading from columns_values
                 if col >= index_depth_effective:
@@ -167,13 +165,12 @@ class StoreXLSX(Store):
                                     columns_values[col - index_depth_effective, i],
                                     format_columns
                                     )
-
             if store_filter:
                 # thi might change the dtype
                 values = store_filter.from_type_filter_array(values)
             writer = cls._get_writer(values.dtype, ws)
-            # start enumeration of row after the columns
-            for row, v in enumerate(values, columns_depth):
+            # start enumeration of row after the effective column depth
+            for row, v in enumerate(values, columns_depth_effective):
                 writer(row,
                         col,
                         v,
@@ -191,7 +188,7 @@ class StoreXLSX(Store):
 
         if include_index and merge_hierarchical_labels and index_depth > 1:
             for depth in range(index_depth - 1): # never most deep
-                row = columns_depth
+                row = columns_depth_effective
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
                     # TODO: use store_filter
