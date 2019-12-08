@@ -96,9 +96,21 @@ class TestUnit(TestCase):
 
 
     def test_store_xlsx_read_a(self) -> None:
-        f1 = Frame([1, 2, 3], index=('a', 'b', 'c'))
-        # import ipdb; ipdb.set_trace()
+        f1 = Frame([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),), include_index=False)
+
+            f2 = st.read(index_depth=0, columns_depth=f1.columns.depth)
+
+        self.assertTrue((f1.values == f2.values).all())
+        self.assertEqual(f2.to_pairs(0),
+                (('x', ((0, 1), (1, 2), (2, 3))),)
+                )
+
+        # TODO: same test with hierarchical columns, index
 
 
 if __name__ == '__main__':

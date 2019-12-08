@@ -132,6 +132,8 @@ class StoreXLSX(Store):
             ) -> None:
 
         index_depth = frame._index.depth
+        index_depth_effective = 0 if not include_index else index_depth
+
         columns_iter = cls.get_column_iterator(frame=frame,
                 include_index=include_index)
 
@@ -142,25 +144,27 @@ class StoreXLSX(Store):
                 columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
 
+
+
         # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
 
         # can write by column
         for col, values in enumerate(columns_iter):
 
             if include_columns:
-                # col integers will include index depth
-                if col >= index_depth:
+                # The col integers will include index depth, so if including index, must wait until after index depth to write column field names; if include_index is False, can begin reading from columns_values
+                if col >= index_depth_effective:
                     if columns_depth == 1:
                         writer_columns(0,
                                 col,
-                                columns_values[col - index_depth],
+                                columns_values[col - index_depth_effective],
                                 format_columns)
                     elif columns_depth > 1:
                         for i in range(columns_depth):
                             # here, row selection is column count, column selection is depth
                             writer_columns(i,
                                     col,
-                                    columns_values[col - index_depth, i],
+                                    columns_values[col - index_depth_effective, i],
                                     format_columns
                                     )
 
@@ -173,20 +177,20 @@ class StoreXLSX(Store):
                 writer(row,
                         col,
                         v,
-                        format_index if col < index_depth else None)
+                        format_index if col < index_depth_effective else None)
 
         # post process to merge cells; need to get width of at depth
-        if merge_hierarchical_labels and columns_depth > 1:
-            for depth in range(columns_depth-1): # never most deep
+        if include_columns and merge_hierarchical_labels and columns_depth > 1:
+            for depth in range(columns_depth - 1): # never most deep
                 row = depth
-                col = index_depth # start after index
+                col = index_depth_effective # start after index
                 for label, width in frame._columns.label_widths_at_depth(depth):
                     # TODO: use store_filter
                     ws.merge_range(row, col, row, col + width - 1, label, format_columns)
                     col += width
 
-        if merge_hierarchical_labels and index_depth > 1:
-            for depth in range(index_depth-1): # never most deep
+        if include_index and merge_hierarchical_labels and index_depth > 1:
+            for depth in range(index_depth - 1): # never most deep
                 row = columns_depth
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
@@ -312,30 +316,37 @@ class StoreXLSX(Store):
 
         wb.close()
 
+
         index: tp.Optional[IndexBase] = None
+        own_index = False
         if index_depth == 1:
             index = Index(index_values)
+            own_index = True
         elif index_depth > 1:
             index = IndexHierarchy.from_labels(
                     index_values,
                     continuation_token=None
                     )
+            own_index = True
 
         columns: tp.Optional[IndexBase] = None
+        own_columns = False
         if columns_depth == 1:
             columns = Index(columns_values)
+            own_columns = True
         elif columns_depth > 1:
             columns = IndexHierarchy.from_labels(
                     zip(*columns_values),
                     continuation_token=None
                     )
+            own_columns = True
 
         return tp.cast(Frame, Frame.from_records(data,
                 index=index,
                 columns=columns,
                 dtypes=dtypes,
-                own_index=True,
-                own_columns=True,
+                own_index=own_index,
+                own_columns=own_columns,
                 name=name
                 ))
 
