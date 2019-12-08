@@ -147,8 +147,6 @@ class TestUnit(TestCase):
                 )
 
 
-        # TODO: same test with hierarchical columns, index
-
 
 if __name__ == '__main__':
     unittest.main()
