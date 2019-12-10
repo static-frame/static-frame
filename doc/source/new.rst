@@ -13,6 +13,8 @@ What is New in Static Frame
 
 Improved handling of ``ILoc`` usage within ``loc`` calls.
 
+Improved input and output from/to XLSX.
+
 
 0.5.6
 ----------
