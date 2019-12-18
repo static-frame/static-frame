@@ -3346,6 +3346,11 @@ class Frame(ContainerOperand):
             if key in self._index:
                 iloc_key = self._index.loc_to_iloc(key)
                 sort_array = self._blocks._extract_array(row_key=iloc_key)
+
+                # Convert to
+                if sort_array.ndim == 2 and sort_array.shape[0] == 1:
+                    sort_array = sort_array[0]
+
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last

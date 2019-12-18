@@ -2995,6 +2995,38 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0), match)
 
 
+    def test_frame_sort_values_e(self) -> None:
+        # Ensure index sorting works on internally homogenous frames
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+        assert len(f1._blocks._blocks) == 1, 'f1 must be internally homogenous.'
+
+        f1_sorted = f1.sort_values('x', axis=0)
+
+        expected1 = (('x', (('a', 3), ('c', 3), ('b', 7))),
+                     ('y', (('a', 8), ('c', 4), ('b', 1))),
+                     ('z', (('a', 2), ('c', 6), ('b', 9))))
+        self.assertTrue(np.array_equal(expected1, f1_sorted.to_pairs(axis=1)))
+
+
+        # Ensure index sorting works on internally heterogeneous frames
+        records = ((4, 2, 3), (2, 3.1, False), (6, False, 3.4))
+        f2 = sf.Frame.from_records(records,
+                columns=tuple('abc'),
+                index=tuple('xyz'),
+                dtypes=(object, object, object))
+
+        assert len(f2._blocks._blocks) > 1, 'f2 must be internally heterogeneous.'
+        f2_sorted = f2.sort_values('x', axis=0)
+
+        expected2 = (('x', (('b', 2), ('c', 3), ('a', 4))),
+                     ('y', (('b', 3.1), ('c', False), ('a', 2))),
+                     ('z', (('b', False), ('c', 3.4), ('a', 6))))
+        self.assertTrue(np.array_equal(expected2, f2_sorted.to_pairs(axis=1)))
+
+
     def test_frame_relabel_a(self) -> None:
         # reindex both axis
         records = (
