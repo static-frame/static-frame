@@ -3493,7 +3493,7 @@ class Frame(ContainerOperand):
                     raise RuntimeError('cannot use a Series argument without specifying an axis')
                 target = self._index if axis == 0 else self._columns
                 values = arg.reindex(target).fillna(bound).values
-                if axis == 0: # duplicate the same column over the widt
+                if axis == 0: # duplicate the same column over the width
                     args[idx] = np.vstack([values] * self.shape[1]).T
                 else:
                     args[idx] = np.vstack([values] * self.shape[0])
