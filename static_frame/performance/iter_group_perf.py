@@ -18,6 +18,10 @@ HMS = '%H:%M:%S'
 GROUPBY_COL = 'groupby'
 
 
+frame_func_t = tp.Callable[[Frame], tp.Any]
+
+
+
 class _PerfTest(PerfTest):
     NUMBER = 3
 
@@ -34,39 +38,44 @@ class BuildTestFrames:
     _NUMBER = 3
     _REPEAT = 10
 
-    def __init__(self, dims=(5, 20, 100, 1000), nan_chance=0.33, none_chance=0.33):
+    def __init__(self,
+            dims: tp.Tuple[int, ...] = (5, 20, 100, 1000),
+            nan_chance: float = 0.33,
+            none_chance: float = 0.33):
         self.dims = dims
         self.nan_chance = nan_chance
         self.none_chance = none_chance
 
     class Test_Object:
-        def __init__(self, x):
+        def __init__(self, x: int):
             self.x = x
-        def __str__(self):
+
+        def __str__(self) -> str:
             return f'Test_Object({self.x})'
-        def __repr__(self):
+
+        def __repr__(self) -> str:
             return str(self)
 
-    def _make_float(self, val):
+    def _make_float(self, val: int) -> float:
         if np.random.random() <= self.nan_chance:
-            return np.nan
+            return np.nan # type: ignore
         else:
             return val * 0.1
 
-    def _make_bool(self, val):
+    def _make_bool(self, val: int) -> bool:
         return val % 2 == 0
 
-    def _make_str(self, val):
+    def _make_str(self, val: int) -> str:
         return ''.join(chr((val + i) % 26 + 65) for i in range(3))
 
-    def _make_object(self, val):
+    def _make_object(self, val: int) -> tp.Optional['Test_Object']:
         if np.random.random() <= self.none_chance:
             return None
         else:
             return self.Test_Object(val)
 
-    def _make_mixed(self, val):
-        r = np.random.randint(len(BuildTestFrames._DTYPES))
+    def _make_mixed(self, val: int): # type: ignore
+        r: int = np.random.randint(len(BuildTestFrames._DTYPES))
         if r == 0:
             return val
         if r == 1:
@@ -78,7 +87,7 @@ class BuildTestFrames:
         if r == 4:
             return self._make_object(val)
 
-    def _build_col(self, rows, dtype):
+    def _build_col(self, rows: int, dtype: str) -> np.ndarray:
         if dtype == 'int':
             return np.arange(rows)
 
@@ -99,16 +108,18 @@ class BuildTestFrames:
             return np.array([self._make_mixed(val) for val in range(rows)])
 
     @staticmethod
-    def _build_groups(num_of_groups, num_of_rows):
+    def _build_groups(num_of_groups: int, num_of_rows: int) -> np.ndarray:
         assert num_of_groups > 0
-        i = 0
-        build = []
+        i: int = 0
+        build: tp.List[int] = []
         while i < num_of_rows:
             build.append(i % num_of_groups)
             i += 1
         return np.array(build)
 
-    def _next_frame_dims(self, mixed_data_options):
+    def _next_frame_dims(self,
+            mixed_data_options: tp.Iterable[bool]
+            ) -> tp.Generator[tp.Tuple[int, int, int, bool], None, None]:
         for rows in self.dims:
             for cols in self.dims:
                 for groups in self.dims:
@@ -117,15 +128,15 @@ class BuildTestFrames:
                             yield rows, cols - 1, groups, mixed_data
 
     @staticmethod
-    def _shuffle(frame):
+    def _shuffle(frame: Frame) -> Frame:
         random.seed(0)
-        return frame.loc[random.sample(frame.index.values.tolist(), len(frame))]
+        return frame.loc[random.sample(frame.index.values.tolist(), len(frame))] # type: ignore
 
-    def build_frame(self, rows, cols, groups, mixed_data):
-        group_col = self._build_groups(groups, rows)
+    def build_frame(self, rows: int, cols: int, groups: int, mixed_data: bool) -> Frame:
+        group_col: np.ndarray = self._build_groups(groups, rows)
 
         if mixed_data:
-            built_cols = []
+            built_cols: tp.List[tp.Tuple[str, np.ndarray]] = []
             for col in range(cols):
                 dtype = BuildTestFrames._DTYPES[col % len(BuildTestFrames._DTYPES)]
                 built_cols.append((str(col), self._build_col(rows, dtype)))
@@ -141,35 +152,40 @@ class BuildTestFrames:
 
         return BuildTestFrames._shuffle(f)
 
-    def next_frame(self, mixed_data_options = (True, False)):
+    def next_frame(self,
+            mixed_data_options: tp.Iterable[bool] = (True, False)
+            ) -> tp.Generator[Frame, None, None]:
         for rows, cols, groups, mixed_data in self._next_frame_dims(mixed_data_options):
             yield self.build_frame(rows, cols, groups, mixed_data)
 
     @staticmethod
-    def get_perf(frame, func, repeat=_REPEAT, number=_NUMBER):
+    def get_perf(
+            frame: Frame,
+            func: frame_func_t,
+            repeat: int = _REPEAT,
+            number: int = _NUMBER
+            ) -> float:
         timer = timeit.Timer(partial(func, frame))
-        return round(np.mean(timer.repeat(repeat=repeat, number=number)), 4)
+        return round(np.mean(timer.repeat(repeat=repeat, number=number)), 4) # type: ignore
 
     @staticmethod
-    def test_frames(frames, funcs, repeat=_REPEAT, number=_NUMBER):
-        rows = []
-        cols = []
-        groups = []
-
-        groupby_results = []
-        iter_group_items_results = []
-
-        results = []
+    def test_frames(
+            frames: tp.List[Frame],
+            funcs: tp.List[frame_func_t],
+            repeat: int = _REPEAT,
+            number: int = _NUMBER
+            ) -> tp.List[tp.Dict[str, float]]:
+        results: tp.List[tp.Dict[str, float]] = []
 
         for frame in frames:
             # Frame metadata shared across tests
-            rows.append(frame.shape[0])
-            cols.append(frame.shape[1])
-            groups.append(len(frame[GROUPBY_COL].unique()))
+            rows, cols = frame.shape
+            groups: int = len(frame[GROUPBY_COL].unique())
 
-            result = {}
+            result: tp.Dict[str, float] = {}
             for func in funcs:
-                result[func.__name__] = BuildTestFrames.get_perf(frame, func, repeat, number)
+                key: str = func.__name__ + f': {rows}, {groups}, {cols}'
+                result[key] = BuildTestFrames.get_perf(frame, func, repeat, number)
             results.append(result)
 
         return results
@@ -231,7 +247,7 @@ class SampleData:
 #-------------------------------------------------------------------------------
 
 
-class FrameInt_iter_group_items_setup(_PerfTest):
+class FrameInt_setup(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         pd_frame = SampleData.get('pdf_20mil_int')
@@ -245,7 +261,7 @@ class FrameInt_iter_group_items_setup(_PerfTest):
             break
 
 
-class FrameObj_iter_group_items_setup(_PerfTest):
+class FrameObj_setup(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         pd_frame = SampleData.get('pdf_20mil_obj')
@@ -259,7 +275,7 @@ class FrameObj_iter_group_items_setup(_PerfTest):
             break
 
 
-class FrameInt_iter_group_items_iterate(_PerfTest):
+class FrameInt_iterate(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         iterator = SampleData.get('pdf_20mil_int_iterable_primed')
@@ -272,7 +288,7 @@ class FrameInt_iter_group_items_iterate(_PerfTest):
         for _ in iterator:
             pass
 
-class FrameObj_iter_group_items_iterate(_PerfTest):
+class FrameObj_iterate(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         iterator = SampleData.get('pdf_20mil_obj_iterable_primed')

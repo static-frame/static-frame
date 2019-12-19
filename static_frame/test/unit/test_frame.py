@@ -2743,7 +2743,7 @@ class TestUnit(TestCase):
 
         # Index
         groups = list(frame.iter_group_items('w', axis=1))
-        expected_pairs = [
+        expected_pairs = [ # type: ignore
                 (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),),
                 (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))),
                  ('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2)))),
@@ -2784,7 +2784,7 @@ class TestUnit(TestCase):
 
         # Index
         groups = list(frame.iter_group_items(['x', 'y'], axis=1))
-        expected_pairs = [
+        expected_pairs = [ # type: ignore
                 (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),),
                 (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),),
                 (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),
@@ -3088,7 +3088,7 @@ class TestUnit(TestCase):
         expected1 = (('x', (('a', 3), ('c', 3), ('b', 7))),
                      ('y', (('a', 8), ('c', 4), ('b', 1))),
                      ('z', (('a', 2), ('c', 6), ('b', 9))))
-        self.assertTrue(np.array_equal(expected1, f1_sorted.to_pairs(axis=1)))
+        self.assertEqual(expected1, f1_sorted.to_pairs(axis=1))
 
 
         # Ensure index sorting works on internally heterogeneous frames
@@ -3104,7 +3104,7 @@ class TestUnit(TestCase):
         expected2 = (('x', (('b', 2), ('c', 3), ('a', 4))),
                      ('y', (('b', 3.1), ('c', False), ('a', 2))),
                      ('z', (('b', False), ('c', 3.4), ('a', 6))))
-        self.assertTrue(np.array_equal(expected2, f2_sorted.to_pairs(axis=1)))
+        self.assertEqual(expected2, f2_sorted.to_pairs(axis=1))
 
 
     def test_frame_relabel_a(self) -> None:
