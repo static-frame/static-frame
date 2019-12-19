@@ -247,7 +247,7 @@ class SampleData:
 #-------------------------------------------------------------------------------
 
 
-class FrameInt_setup(_PerfTest):
+class FrameInt_iter_group_items_setup(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         pd_frame = SampleData.get('pdf_20mil_int')
@@ -261,7 +261,7 @@ class FrameInt_setup(_PerfTest):
             break
 
 
-class FrameObj_setup(_PerfTest):
+class FrameObj_iter_group_items_setup(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         pd_frame = SampleData.get('pdf_20mil_obj')
@@ -275,7 +275,7 @@ class FrameObj_setup(_PerfTest):
             break
 
 
-class FrameInt_iterate(_PerfTest):
+class FrameInt_iter_group_items_iterate(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         iterator = SampleData.get('pdf_20mil_int_iterable_primed')
@@ -288,7 +288,7 @@ class FrameInt_iterate(_PerfTest):
         for _ in iterator:
             pass
 
-class FrameObj_iterate(_PerfTest):
+class FrameObj_iter_group_items_iterate(_PerfTest):
     @classmethod
     def pd(cls) -> None:
         iterator = SampleData.get('pdf_20mil_obj_iterable_primed')
