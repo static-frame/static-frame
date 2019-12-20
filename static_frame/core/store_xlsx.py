@@ -270,7 +270,6 @@ class StoreXLSX(Store):
             ws = wb[label]
             name = ws.title
 
-
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
             # says that some clients might not repare correct dimensions; not sure what conditions are best to show this
@@ -281,10 +280,6 @@ class StoreXLSX(Store):
 
         index_values: tp.List[tp.Any] = []
         columns_values: tp.List[tp.Any] = []
-
-        # print()
-        # for row in ws.iter_rows():
-        #     print(tuple(str(c.value).ljust(10) for c in row))
 
         data = []
 

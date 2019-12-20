@@ -340,6 +340,24 @@ class TestUnit(TestCase):
             self.assertEqualFrames(frame, b2[frame.name])
 
 
+    @unittest.skip('TODO: implement Bus configuration objects')
+    def test_bus_to_xlsx_b(self) -> None:
+        # check single column case
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),)
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),)
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+
+            b2 = Bus.from_xlsx(fp)
+            tuple(b2.items()) # force loading all
+
 
     def test_bus_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(

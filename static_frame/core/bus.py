@@ -96,7 +96,10 @@ class Bus(ContainerBase):
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
-    def from_xlsx(cls, fp: PathSpecifier) -> 'Bus':
+    def from_xlsx(cls,
+            fp: PathSpecifier
+            ) -> 'Bus':
+        # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
