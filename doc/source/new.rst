@@ -11,6 +11,8 @@ Fixed issue in ``Frame.sort_values()`` when ``axis=0`` and underlying block stru
 
 Improved performance of ``Frame.iter_group`` and related methods.
 
+Fixed issue raised when calling built-in ``help()`` on SF containers.
+
 
 0.5.7
 ----------
