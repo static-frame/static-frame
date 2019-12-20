@@ -13,6 +13,8 @@ Improved performance of ``Frame.iter_group`` and related methods.
 
 Fixed issue raised when calling built-in ``help()`` on SF containers.
 
+Improved passing of index ``names`` in ``IndexHierarchy.to_pandas``.
+
 
 0.5.7
 ----------
