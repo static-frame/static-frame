@@ -2715,6 +2715,86 @@ class TestUnit(TestCase):
                 ((False, 'False: 2'), (True, 'True: 2'))
                 )
 
+
+    def test_frame_iter_group_items_c(self) -> None:
+        # Test optimized sorting approach. Data must have a non-object dtype and key must be single
+        data = np.array([[0, 1, 1, 3],
+                         [3, 3, 2, 3],
+                         [5, 5, 1, 3],
+                         [7, 2, 2, 4]])
+
+        frame = sf.Frame(data, columns=tuple('abcd'), index=tuple('wxyz'))
+
+        # Column
+        groups = list(frame.iter_group_items('c', axis=0))
+        expected_pairs = [
+                (('a', (('w', 0), ('y', 5))),
+                 ('b', (('w', 1), ('y', 5))),
+                 ('c', (('w', 1), ('y', 1))),
+                 ('d', (('w', 3), ('y', 3)))),
+                (('a', (('x', 3), ('z', 7))),
+                 ('b', (('x', 3), ('z', 2))),
+                 ('c', (('x', 2), ('z', 2))),
+                 ('d', (('x', 3), ('z', 4))))]
+
+        self.assertEqual([1, 2], [group[0] for group in groups])
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
+
+
+        # Index
+        groups = list(frame.iter_group_items('w', axis=1))
+        expected_pairs = [ # type: ignore
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),),
+                (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))),
+                 ('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2)))),
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),)]
+
+        self.assertEqual([0, 1, 3], [group[0] for group in groups])
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
+
+
+    def test_frame_iter_group_items_d(self) -> None:
+        # Test iterating with multiple key selection
+        data = np.array([[0, 1, 1, 3],
+                         [3, 3, 2, 3],
+                         [5, 5, 1, 3],
+                         [7, 2, 2, 4]])
+
+        frame = sf.Frame(data, columns=tuple('abcd'), index=tuple('wxyz'))
+
+        # Column
+        groups = list(frame.iter_group_items(['c', 'd'], axis=0))
+        expected_pairs = [
+                (('a', (('w', 0), ('y', 5))),
+                 ('b', (('w', 1), ('y', 5))),
+                 ('c', (('w', 1), ('y', 1))),
+                 ('d', (('w', 3), ('y', 3)))),
+                (('a', (('x', 3),)),
+                 ('b', (('x', 3),)),
+                 ('c', (('x', 2),)),
+                 ('d', (('x', 3),))),
+                (('a', (('z', 7),)),
+                 ('b', (('z', 2),)),
+                 ('c', (('z', 2),)),
+                 ('d', (('z', 4),)))]
+
+        self.assertEqual([(1, 3), (2, 3), (2, 4)], [group[0] for group in groups])
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
+
+
+        # Index
+        groups = list(frame.iter_group_items(['x', 'y'], axis=1))
+        expected_pairs = [ # type: ignore
+                (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),),
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),),
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),
+                 ('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2)))),
+        ]
+
+        self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
+
+
     def test_frame_iter_group_index_a(self) -> None:
 
         records = (
@@ -2993,6 +3073,38 @@ class TestUnit(TestCase):
         f2 = f2.set_index('a') # type: ignore
         f2 = f2.sort_values('b', ascending=False) # type: ignore
         self.assertEqual(f2.to_pairs(0), match)
+
+
+    def test_frame_sort_values_e(self) -> None:
+        # Ensure index sorting works on internally homogenous frames
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+        assert len(f1._blocks._blocks) == 1, 'f1 must be internally homogenous.'
+
+        f1_sorted = f1.sort_values('x', axis=0)
+
+        expected1 = (('x', (('a', 3), ('c', 3), ('b', 7))),
+                     ('y', (('a', 8), ('c', 4), ('b', 1))),
+                     ('z', (('a', 2), ('c', 6), ('b', 9))))
+        self.assertEqual(expected1, f1_sorted.to_pairs(axis=1))
+
+
+        # Ensure index sorting works on internally heterogeneous frames
+        records = ((4, 2, 3), (2, 3.1, False), (6, False, 3.4))
+        f2 = sf.Frame.from_records(records,
+                columns=tuple('abc'),
+                index=tuple('xyz'),
+                dtypes=(object, object, object))
+
+        assert len(f2._blocks._blocks) > 1, 'f2 must be internally heterogeneous.'
+        f2_sorted = f2.sort_values('x', axis=0)
+
+        expected2 = (('x', (('b', 2), ('c', 3), ('a', 4))),
+                     ('y', (('b', 3.1), ('c', False), ('a', 2))),
+                     ('z', (('b', False), ('c', 3.4), ('a', 6))))
+        self.assertEqual(expected2, f2_sorted.to_pairs(axis=1))
 
 
     def test_frame_relabel_a(self) -> None:

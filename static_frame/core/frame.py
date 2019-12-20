@@ -14,9 +14,11 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -2534,7 +2536,7 @@ class Frame(ContainerOperand):
         '''
         Provide HTML representation for Jupyter Notebooks.
         '''
-        # modify the active display to be fore HTML
+        # modify the active display to be for HTML
         config = DisplayActive.get(
                 display_format=DisplayFormats.HTML_TABLE,
                 type_show=False
@@ -3119,18 +3121,79 @@ class Frame(ContainerOperand):
             else:
                 raise NotImplementedError()
 
+    def _axis_group_sort_items(self,
+            key,
+            iloc_key,
+            axis
+            ) -> tp.Generator[tp.Tuple[tp.Hashable, 'Frame'], None, None]:
+        # Create a sorted copy since we do not want to change the underlying data
+        frame_sorted: Frame = self.sort_values(key, axis=not axis)
+
+        def build_frame(key, index):
+            if axis == 0:
+                data: TypeBlocks = frame_sorted._blocks._extract(row_key=key)
+                return Frame(data, columns=self.columns, index=index, own_data=True)
+            else:
+                data = frame_sorted._blocks._extract(column_key=key)
+                return Frame(data, columns=index, index=self.index, own_data=True)
+
+        if axis == 0:
+            max_iloc: int = len(self._index)
+            index: Index = frame_sorted.index
+            def get_group(i: int) -> tp.Hashable:
+                return frame_sorted.iloc[i, iloc_key]
+        else:
+            max_iloc = len(self._columns)
+            index = frame_sorted.columns
+            def get_group(i: int) -> tp.Hashable:
+                return frame_sorted.iloc[iloc_key, i]
+
+        group: tp.Hashable = get_group(0)
+        start: int = 0
+        i: int = 0
+
+        while i < max_iloc:
+            next_group: tp.Hashable = get_group(i)
+
+            if group != next_group:
+                slc: slice = slice(start, i)
+                sliced_index: Index = index[slc]
+                yield group, build_frame(slc, sliced_index)
+
+                start = i
+                group = next_group
+            i += 1
+
+        yield group, build_frame(slice(start, None), index[start:])
+
+
     def _axis_group_loc_items(self, key, *, axis=0):
         if axis == 0: # row iterator, selecting columns for group by
-            key = self._columns.loc_to_iloc(key)
+            iloc_key = self._columns.loc_to_iloc(key)
         elif axis == 1: # column iterator, selecting rows for group by
-            key = self._index.loc_to_iloc(key)
+            iloc_key = self._index.loc_to_iloc(key)
         else:
             raise NotImplementedError()
-        yield from self._axis_group_iloc_items(key=key, axis=axis)
+
+        # Optimized sorting approach is only supported in a limited number of cases
+        if (self.columns.depth == 1 and
+                self.index.depth == 1 and
+                not isinstance(key, KEY_ITERABLE_TYPES)):
+
+            if axis == 0:
+                has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
+            else:
+                has_object = self._blocks._row_dtype == DTYPE_OBJECT
+
+            if not has_object:
+                yield from self._axis_group_sort_items(key=key, iloc_key=iloc_key, axis=axis)
+                return
+
+        yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
+
 
     def _axis_group_loc(self, key, *, axis=0):
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
-
 
 
     def _axis_group_index_items(self,

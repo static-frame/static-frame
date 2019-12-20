@@ -133,7 +133,7 @@ INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
 
-# types of keys that return muultiple items, even if the selection reduces to 1
+# types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
 
 # for type hinting
@@ -276,6 +276,16 @@ def column_1d_filter(array: np.ndarray) -> np.ndarray:
         # could assert that array.shape[1] == 1, but this will raise if does not fit
         return np.reshape(array, array.shape[0])
     return array
+
+def row_1d_filter(array: np.ndarray) -> np.ndarray:
+    '''
+    Ensure that a row that might be 2D or 1D is returned as a 1D array.
+    '''
+    if array.ndim == 2:
+        # could assert that array.shape[0] == 1, but this will raise if does not fit
+        return np.reshape(array, array.shape[1])
+    return array
+
 
 def _gen_skip_middle(
         forward_iter: CallableToIterType,

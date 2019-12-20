@@ -150,6 +150,9 @@ def main() -> None:
         elif module == 'pydata_2019':
             from static_frame.performance import pydata_2019
             module_targets.append(pydata_2019)
+        elif module == 'iter_group_perf':
+            from static_frame.performance import iter_group_perf
+            module_targets.append(iter_group_perf)
         else:
             raise NotImplementedError()
 

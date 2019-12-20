@@ -25,6 +25,7 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import UFunc
 
+from static_frame.core.util import row_1d_filter
 from static_frame.core.util import column_2d_filter
 
 from static_frame.core.util import mloc
@@ -325,15 +326,18 @@ class TypeBlocks(ContainerOperand):
             row_multiple: bool
             ) -> np.ndarray:
         '''
-        Given blocks and a combined shape, return a consolidated 2D single array.
+        Given blocks and a combined shape, return a consolidated 2D or 1D array.
 
         Args:
             shape: used in construting returned array; not ussed as a constraint.
             row_multiple: if False, a single row reduces to a 1D
         '''
-        # assume column_mutltiple is True, as this routine is called after handling extraction of single columns
+        # assume column_multiple is True, as this routine is called after handling extraction of single columns
         if len(blocks) == 1:
-            return column_2d_filter(blocks[0])
+            if not row_multiple:
+                return row_1d_filter(blocks[0])
+            else:
+                return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
         # NOTE: row_dtype may be None if a unfillable array; defaults to NP default
@@ -708,7 +712,7 @@ class TypeBlocks(ContainerOperand):
         elif axis == 1:
             # axis 1 means we return column groups; key is a row key
             group_source = self._extract_array(row_key=key)
-            if group_source.ndim > 1:
+            if group_source.ndim > 1 and group_source.shape[0] > 1:
                 unique_axis = 1
 
         groups, locations = array_to_groups_and_locations(
@@ -717,7 +721,10 @@ class TypeBlocks(ContainerOperand):
 
         if unique_axis is not None:
             # make the groups hashable for usage in index construction
-            groups = array2d_to_tuples(groups)
+            if axis == 0:
+                groups = array2d_to_tuples(groups)
+            elif axis == 1:
+                groups = array2d_to_tuples(groups.T)
 
         for idx, g in enumerate(groups):
             selection = locations == idx
