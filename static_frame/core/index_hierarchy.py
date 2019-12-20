@@ -991,9 +991,11 @@ class IndexHierarchy(IndexBase):
     def to_pandas(self) -> 'DataFrame':
         '''Return a Pandas MultiIndex.
         '''
-        # NOTE: cannot set name attribute via from_tuples
         import pandas
-        return pandas.MultiIndex.from_tuples(list(map(tuple, self.__iter__())))
+        mi = pandas.MultiIndex.from_tuples(array2d_to_tuples(self.__iter__()))
+        mi.name = self._name
+        mi.names = self.names
+        return mi
 
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.

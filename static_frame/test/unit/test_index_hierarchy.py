@@ -1122,7 +1122,7 @@ class TestUnit(TestCase):
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
 
         pdidx = idx1.to_pandas()
-        # NOTE: pandas .values on a hierarchical index returns an array of tuples
+        self.assertEqual(pdidx.name, 'q')
         self.assertEqual(
                 idx1.values.tolist(),
                 [list(x) for x in pdidx.values.tolist()])

@@ -440,6 +440,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_to_pandas_e(self) -> None:
+        f = Frame.from_records(
+            [['a', 1, 10], ['a', 2, 200], ['b', 1, -3], ['b', 2, 7]],
+            columns=('x', 'y', 'z'))
+        df = f.set_index_hierarchy(['x', 'y']).to_pandas()
+        self.assertEqual(list(df.index.names), ['x', 'y'])
+
 
     #---------------------------------------------------------------------------
 
