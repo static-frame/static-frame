@@ -579,7 +579,7 @@ class Index(IndexBase):
         # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
         if self._recache:
             self._update_array_cache()
-        return self.__class__(labels=self)
+        return self.__class__(labels=self, name=self._name)
 
     def relabel(self, mapper: CallableOrMapping) -> 'Index':
         '''
@@ -588,9 +588,15 @@ class Index(IndexBase):
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
             getitem = getattr(mapper, '__getitem__')
-            return self.__class__(getitem(x) if x in mapper else x for x in self._labels)
+            return self.__class__(
+                    (getitem(x) if x in mapper else x for x in self._labels),
+                    name=self._name
+                    )
 
-        return self.__class__(mapper(x) for x in self._labels)
+        return self.__class__(
+                (mapper(x) for x in self._labels),
+                name=self._name
+                )
 
     #---------------------------------------------------------------------------
     # extraction and selection
@@ -670,7 +676,7 @@ class Index(IndexBase):
         else: # select a single label value
             return self._labels[key]
 
-        return self.__class__(labels=labels)
+        return self.__class__(labels=labels, name=self._name)
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Index':
         return self._extract_iloc(self.loc_to_iloc(key))
@@ -698,7 +704,7 @@ class Index(IndexBase):
             labels = np.delete(self._labels, key)
             labels.flags.writeable = False
 
-        return self.__class__(labels)
+        return self.__class__(labels, name=self._name)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the loc key.
@@ -820,7 +826,7 @@ class Index(IndexBase):
             v = v[::-1]
 
         v.flags.writeable = False
-        return self.__class__(v)
+        return self.__class__(v, name=self._name)
 
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         '''
@@ -839,7 +845,7 @@ class Index(IndexBase):
                     axis=0,
                     wrap=True)
             values.flags.writeable = False
-        return self.__class__(values)
+        return self.__class__(values, name=self._name)
 
     #---------------------------------------------------------------------------
     # export

@@ -1089,6 +1089,8 @@ class TestUnit(TestCase):
         self.assertEqual(len(f2.index), 0)
 
 
+    #---------------------------------------------------------------------------
+
     def test_frame_loc_a(self) -> None:
 
         records = (
@@ -1195,6 +1197,20 @@ class TestUnit(TestCase):
         self.assertEqual(s2.name, 'x')
 
 
+    def test_frame_loc_e(self) -> None:
+        fp = self.get_test_input('jph_photos.txt')
+        # using a raw string to avoid unicode decoding issues on windows
+        f = sf.Frame.from_tsv(fp, dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')
+        post = f.loc[f['albumId'] >= 98]
+        self.assertEqual(post.shape, (150, 5))
+
+
+    def test_frame_loc_f(self) -> None:
+        f = Frame(range(3), index=sf.Index(tuple('abc'), name='index'))
+        self.assertEqual(f.loc['b':].index.name, 'index') # type: ignore
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_items_a(self) -> None:
 
@@ -5730,13 +5746,6 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_frame_loc_e(self) -> None:
-        fp = self.get_test_input('jph_photos.txt')
-        # using a raw string to avoid unicode decoding issues on windows
-        f = sf.Frame.from_tsv(fp, dtypes=dict(albumId=np.int64, id=np.int64), encoding='utf-8')
-        post = f.loc[f['albumId'] >= 98]
-        self.assertEqual(post.shape, (150, 5))
-
 
     def test_frame_from_dict_a(self) -> None:
 

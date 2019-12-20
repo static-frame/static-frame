@@ -15,6 +15,8 @@ Fixed issue raised when calling built-in ``help()`` on SF containers.
 
 Improved passing of index ``names`` in ``IndexHierarchy.to_pandas``.
 
+Improved propagation of ``name`` in methods of ``Index`` and ``IndexHierarchy``.
+
 
 0.5.7
 ----------

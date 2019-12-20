@@ -722,7 +722,7 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''
-        return self.__class__(levels=self._levels)
+        return self.__class__(levels=self._levels, name=self._name)
 
 
     def relabel(self, mapper: CallableOrMapping) -> 'IndexHierarchy':
@@ -736,9 +736,15 @@ class IndexHierarchy(IndexBase):
             # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable, and self._labels is an np.ndarray, need to convert lookups to tuples
             getitem = getattr(mapper, '__getitem__')
             labels = (tuple(x) for x in self._labels)
-            return self.__class__.from_labels(getitem(x) if x in mapper else x for x in labels)
+            return self.__class__.from_labels(
+                    (getitem(x) if x in mapper else x for x in labels),
+                    name=self._name
+                    )
 
-        return self.__class__.from_labels(mapper(x) for x in self._labels)
+        return self.__class__.from_labels(
+                (mapper(x) for x in self._labels),
+                name=self._name
+                )
 
 
     def rehierarch(self,
@@ -807,7 +813,7 @@ class IndexHierarchy(IndexBase):
                 return tuple(values)
             labels = (values,)
 
-        return self.__class__.from_labels(labels=labels)
+        return self.__class__.from_labels(labels=labels, name=self._name)
 
     def _extract_loc(self,
             key: GetItemKeyType
@@ -972,7 +978,7 @@ class IndexHierarchy(IndexBase):
                     axis=0,
                     wrap=True)
             values.flags.writeable = False
-        return self.__class__.from_labels(values)
+        return self.__class__.from_labels(values, name=self._name)
 
 
 
@@ -1015,7 +1021,7 @@ class IndexHierarchy(IndexBase):
                 offset=0,
                 own_index=True
                 )
-        return self.__class__(levels)
+        return self.__class__(levels, name=self._name)
 
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
@@ -1038,7 +1044,7 @@ class IndexHierarchy(IndexBase):
             if levels.targets is None:
                 # fall back to 1D index
                 return levels.index
-            return self.__class__(levels)
+            return self.__class__(levels, name=self._name)
 
         elif count > 0:
             level = self._levels.to_index_level()
@@ -1057,7 +1063,7 @@ class IndexHierarchy(IndexBase):
                     if not targets:
                         return index
                     level = level.__class__(index=index, targets=targets)
-            return self.__class__(level)
+            return self.__class__(level, name=self._name)
         else:
             raise NotImplementedError('no handling for a 0 count drop level.')
 
@@ -1111,7 +1117,10 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''
-        return self.__class__(levels=self._levels.to_index_level())
+        return self.__class__(
+                levels=self._levels.to_index_level(),
+                name=self._name
+                )
 
 
 # update class attr on Index after class initialziation
