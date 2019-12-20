@@ -15,8 +15,10 @@ from static_frame.core.util import _DT64_S
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerMeta
+from static_frame.core.container import ContainerOperand
 
 from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_datetime import IndexYear
@@ -163,6 +165,8 @@ class InterfaceSummary:
                 instance = target.from_labels(((0,0),))
             elif target in (IndexYearMonth, IndexYear, IndexDate):
                 instance = target(np.array((0,), dtype=_DT64_S))
+            elif target in (ContainerOperand, ContainerBase, IndexBase):
+                instance = target()
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance

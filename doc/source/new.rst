@@ -4,6 +4,14 @@ What is New in Static Frame
 ===============================
 
 
+0.5.8
+----------
+
+Fixed issue in ``Frame.sort_values()`` when ``axis=0`` and underlying block structure is homogenous.
+
+Improved performance of ``Frame.iter_group`` and related methods.
+
+
 0.5.7
 ----------
 

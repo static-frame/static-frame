@@ -1,6 +1,6 @@
 
 import unittest
-# import numpy as np
+import pydoc
 
 
 from static_frame.core.interface import InterfaceSummary
@@ -43,6 +43,12 @@ class TestUnit(TestCase):
 
         self.assertTrue((counts == counts_cls).all())
 
+
+    def test_interface_help_a(self) -> None:
+
+        for target in self.get_containers():
+            post = pydoc.render_doc(target, renderer=pydoc.plaintext)
+            print(post)
 
 if __name__ == '__main__':
     unittest.main()
