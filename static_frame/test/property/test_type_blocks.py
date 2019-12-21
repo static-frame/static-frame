@@ -169,7 +169,7 @@ class TestUnit(TestCase):
     @given(sfst.get_type_blocks())  # type: ignore
     def test_display(self, tb: TypeBlocks) -> None:
         post = tb.display()
-        import ipdb; ipdb.set_trace()
+        self.assertTrue(len(post) > 0)
 
     @unittest.skip('pending')
     def test_cols_to_slice(self) -> None:
