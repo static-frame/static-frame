@@ -135,17 +135,24 @@ class TestUnit(TestCase):
     def test_concatenate_blocks(self) -> None:
         pass
 
-    @unittest.skip('pending')
-    def test_consolidate_blocks(self) -> None:
-        pass
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_consolidate_blocks(self, tb: TypeBlocks) -> None:
 
-    @unittest.skip('pending')
-    def test_reblock(self) -> None:
-        pass
+        tb_post = TypeBlocks.from_blocks(tb.consolidate_blocks(tb._blocks))
+        self.assertEqual(tb_post.shape, tb.shape)
+        self.assertTrue((tb_post.dtypes == tb.dtypes).all())
 
-    @unittest.skip('pending')
-    def test_consolidate(self) -> None:
-        pass
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_reblock(self, tb: TypeBlocks) -> None:
+        tb_post = TypeBlocks.from_blocks(tb._reblock())
+        self.assertEqual(tb_post.shape, tb.shape)
+        self.assertTrue((tb_post.dtypes == tb.dtypes).all())
+
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_consolidate(self, tb: TypeBlocks) -> None:
+        tb_post = tb.consolidate()
+        self.assertEqual(tb_post.shape, tb.shape)
+        self.assertTrue((tb_post.dtypes == tb.dtypes).all())
 
     @unittest.skip('pending')
     def test_resize_blocks(self) -> None:
