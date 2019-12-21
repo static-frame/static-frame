@@ -166,9 +166,10 @@ class TestUnit(TestCase):
     def test_ufunc_axis_skipna(self) -> None:
         pass
 
-    @unittest.skip('pending')
-    def test_display(self) -> None:
-        pass
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_display(self, tb: TypeBlocks) -> None:
+        post = tb.display()
+        import ipdb; ipdb.set_trace()
 
     @unittest.skip('pending')
     def test_cols_to_slice(self) -> None:
