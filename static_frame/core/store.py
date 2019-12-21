@@ -18,6 +18,68 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
 # from static_frame.core.util import array2d_to_tuples
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.util import DtypesSpecifier
+
+
+
+
+#-------------------------------------------------------------------------------
+class StoreConstructorConfig:
+    '''
+    Storage container of Bus configuration of constrcutors.
+    '''
+    __slots__ = (
+            'index_depth',
+            'columns_depth',
+            'dtypes',
+            )
+
+    def __init__(self, *,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            ):
+
+        self.index_depth = index_depth
+        self.columns_depth = columns_depth
+        self.dtypes = dtypes
+
+
+class StoreExporterConfig:
+    '''
+    Storage container of Bus configuration of exporters.
+    '''
+    __slots__ = (
+            'include_index',
+            'include_columns',
+            'merge_hierarchical_labels',
+            )
+
+
+    def __init__(self, *,
+            include_index: bool = True,
+            include_columns: bool = True,
+            merge_hierarchical_labels: bool = True,
+            ):
+        self.include_index = include_index
+        self.include_columns = include_columns
+        self.merge_hierarchical_labels = merge_hierarchical_labels
+
+
+StoreConstructorConfigOrConfigs = tp.Union[
+        StoreConstructorConfig,
+        tp.Mapping[str, StoreConstructorConfig]
+        ]
+StoreExporterConfigOrConfigs = tp.Union[
+        StoreExporterConfig,
+        tp.Mapping[str, StoreExporterConfig]
+        ]
+
+class StoreConfigs:
+    DEFAULT_CONSTRUCTOR = StoreConstructorConfig()
+    DEFAULT_EXPORTER = StoreExporterConfig()
+
+#-------------------------------------------------------------------------------
 
 
 

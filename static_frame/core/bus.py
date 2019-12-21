@@ -16,6 +16,10 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_hdf5 import StoreHDF5
 
+from static_frame.core.store import StoreConstructorConfigOrConfigs
+from static_frame.core.store import StoreExporterConfigOrConfigs
+from static_frame.core.store import StoreConfigs
+
 
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.util import GetItemKeyType
@@ -25,6 +29,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
+# from static_frame.core.util import DtypesSpecifier
 
 from static_frame.core.selector_node import InterfaceGetItem
 
@@ -41,6 +46,13 @@ from static_frame.core.container import ContainerBase
 
 from static_frame.core.selector_node import TContainer
 
+
+
+
+
+
+
+#-------------------------------------------------------------------------------
 class FrameDefferedMeta(type):
     def __repr__(cls) -> str:
         return f'<{cls.__name__}>'
@@ -51,6 +63,7 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     '''
 
 
+#-------------------------------------------------------------------------------
 class Bus(ContainerBase):
 
     __slots__ = (
@@ -81,35 +94,51 @@ class Bus(ContainerBase):
     # constructors by data format
 
     @classmethod
-    def from_zip_tsv(cls, fp: PathSpecifier) -> 'Bus':
+    def from_zip_tsv(cls,
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
+            ) -> 'Bus':
         store = StoreZipTSV(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
-    def from_zip_csv(cls, fp: PathSpecifier) -> 'Bus':
+    def from_zip_csv(cls,
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
+            ) -> 'Bus':
         store = StoreZipCSV(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
-    def from_zip_pickle(cls, fp: PathSpecifier) -> 'Bus':
+    def from_zip_pickle(cls,
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
+            ) -> 'Bus':
         store = StoreZipPickle(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
     def from_xlsx(cls,
-            fp: PathSpecifier
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
             ) -> 'Bus':
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
-    def from_sqlite(cls, fp: PathSpecifier) -> 'Bus':
+    def from_sqlite(cls,
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
+            ) -> 'Bus':
         store = StoreSQLite(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
     @classmethod
-    def from_hdf5(cls, fp: PathSpecifier) -> 'Bus':
+    def from_hdf5(cls,
+            fp: PathSpecifier,
+            config: StoreConstructorConfigOrConfigs = StoreConfigs.DEFAULT_CONSTRUCTOR
+            ) -> 'Bus':
         store = StoreHDF5(fp)
         return cls(cls._deferred_series(store.labels()), store=store)
 
@@ -394,26 +423,44 @@ class Bus(ContainerBase):
 
     #---------------------------------------------------------------------------
     # exporters
-    def to_zip_tsv(self, fp: PathSpecifier) -> None:
+    def to_zip_tsv(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreZipTSV(fp)
         store.write(self.items())
 
-    def to_zip_csv(self, fp: PathSpecifier) -> None:
+    def to_zip_csv(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreZipCSV(fp)
         store.write(self.items())
 
-    def to_zip_pickle(self, fp: PathSpecifier) -> None:
+    def to_zip_pickle(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreZipPickle(fp)
         store.write(self.items())
 
-    def to_xlsx(self, fp: PathSpecifier) -> None:
+    def to_xlsx(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreXLSX(fp)
         store.write(self.items())
 
-    def to_sqlite(self, fp: PathSpecifier) -> None:
+    def to_sqlite(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreSQLite(fp)
         store.write(self.items())
 
-    def to_hdf5(self, fp: PathSpecifier) -> None:
+    def to_hdf5(self,
+            fp: PathSpecifier,
+            config: StoreExporterConfigOrConfigs = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
         store = StoreHDF5(fp)
         store.write(self.items())
