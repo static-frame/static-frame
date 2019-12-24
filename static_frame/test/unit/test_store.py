@@ -10,9 +10,9 @@ from static_frame.core.store import StoreConfigExporter
 from static_frame.core.store import StoreConfigConstructorMap
 from static_frame.core.store import StoreConfigExporterMap
 
-from static_frame.core.store import StoreZipTSV
-from static_frame.core.store import StoreZipCSV
-from static_frame.core.store import StoreZipPickle
+from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipPickle
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file

@@ -9,9 +9,9 @@ from static_frame.core.frame import Frame
 # from static_frame.core.frame import Index
 
 from static_frame.core.store import Store
-from static_frame.core.store import StoreZipCSV
-from static_frame.core.store import StoreZipTSV
-from static_frame.core.store import StoreZipPickle
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_hdf5 import StoreHDF5

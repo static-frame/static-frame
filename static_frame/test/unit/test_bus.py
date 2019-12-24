@@ -8,7 +8,7 @@ from static_frame.core.bus import Bus
 
 from static_frame.core.series import Series
 
-from static_frame.core.store import StoreZipTSV
+from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
