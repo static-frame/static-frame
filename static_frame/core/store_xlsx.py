@@ -23,9 +23,9 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.frame import Frame
 
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfigExporterInitializer
-from static_frame.core.store import StoreConfigConstructor
-from static_frame.core.store import StoreConfigs
+# from static_frame.core.store import StoreConfigExporterInitializer
+# from static_frame.core.store import StoreConfigConstructor
+# from static_frame.core.store import StoreConfigs
 
 
 from static_frame.core.store_filter import StoreFilter
@@ -210,7 +210,7 @@ class StoreXLSX(Store):
             format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
             format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
         Args:

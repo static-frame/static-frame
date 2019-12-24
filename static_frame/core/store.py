@@ -8,7 +8,6 @@ from io import StringIO
 
 from itertools import chain
 from functools import partial
-from collections import defaultdict
 import numpy as np
 
 
@@ -27,7 +26,15 @@ from static_frame.core.util import DtypesSpecifier
 
 #-------------------------------------------------------------------------------
 class StoreConfig:
-    pass
+    index_depth: int
+    columns_depth: int
+    dtypes: DtypesSpecifier
+    include_index: bool
+    include_columns: bool
+    format_index: tp.Optional[tp.Dict[str, tp.Any]]
+    format_columns: tp.Optional[tp.Dict[str, tp.Any]]
+    merge_hierarchical_labels: bool
+
 
 class StoreConfigConstructor(StoreConfig):
     '''
@@ -74,8 +81,8 @@ class StoreConfigExporter(StoreConfig):
         Args:
             include_index: Boolean to determine if the ``index`` is included in output.
             include_columns: Boolean to determine if the ``columns`` is included in output.
-            format_index: dictionary of XlsxWriter format specfications.
-            format_columns: dictionary of XlsxWriter format specfications.
+            format_index: dictionary of writer format specfications.
+            format_columns: dictionary of writer format specfications.
         '''
         self.include_index = include_index
         self.include_columns = include_columns
@@ -101,24 +108,27 @@ class StoreConfigMap:
     _DEFAULT: StoreConfig
 
     @classmethod
-    def from_config(cls, config: StoreConfig):
+    def from_config(cls, config: StoreConfig) -> 'StoreConfigMap':
         return cls(default=config)
 
     @classmethod
     def from_initializer(cls, initializer: tp.Union[
                 StoreConfig,
-                tp.Mapping[str, StoreConfig],
+                tp.Optional[tp.Mapping[str, StoreConfig]],
                 'StoreConfigMap']
-            ):
+            ) -> 'StoreConfigMap':
         if isinstance(initializer, StoreConfig):
             return cls.from_config(initializer)
         if isinstance(initializer, cls):
             # return same instance
             return initializer
+        if initializer is None:
+            return cls()
+        assert isinstance(initializer, dict)
         return cls(initializer)
 
     def __init__(self,
-            config_map: tp.Optional[tp.Dict[str, StoreConfig]] = None,
+            config_map: tp.Optional[tp.Mapping[str, StoreConfig]] = None,
             default: tp.Optional[StoreConfig] = None,
             ):
 
@@ -129,7 +139,7 @@ class StoreConfigMap:
             for label, config in config_map.items():
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
-                        f'unspported class {conifg}, must be {self._DEFAULT.__class__}')
+                        f'unspported class {config}, must be {self._DEFAULT.__class__}')
                 self._map[label] = config
 
         if default is None:
@@ -138,7 +148,7 @@ class StoreConfigMap:
             raise ErrorInitStoreConfig(
                 f'unspported class {default}, must be {self._DEFAULT.__class__}')
         else:
-          self._default = default
+            self._default = default
 
     def __getitem__(self, key: str) -> StoreConfig:
         return self._map.get(key, self._default)
@@ -152,12 +162,12 @@ class StoreConfigExporterMap(StoreConfigMap):
 
 StoreConfigConstructorInitializer = tp.Union[
         StoreConfigConstructor,
-        tp.Mapping[str, StoreConfigConstructor],
+        tp.Optional[tp.Dict[str, StoreConfigConstructor]],
         StoreConfigConstructorMap
         ]
 StoreConfigExporterInitializer = tp.Union[
         StoreConfigExporter,
-        tp.Mapping[str, StoreConfigExporter],
+        tp.Optional[tp.Dict[str, StoreConfigExporter]],
         StoreConfigExporterMap
         ]
 
@@ -197,7 +207,7 @@ class Store:
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            # config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
             ) -> None:
         '''Write all ``Frames`` in the Store.
         '''

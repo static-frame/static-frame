@@ -33,7 +33,7 @@ class ErrorInitStore(ErrorInit):
     '''
 
 class ErrorInitStoreConfig(ErrorInit):
-    '''Error in Store Config initialization.
+    '''Error in StoreConfig initialization.
     '''
 
 
