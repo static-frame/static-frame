@@ -23,6 +23,11 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.frame import Frame
 
 from static_frame.core.store import Store
+from static_frame.core.store import StoreConfigExporterInitializer
+from static_frame.core.store import StoreConfigConstructor
+from static_frame.core.store import StoreConfigs
+
+
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
@@ -199,20 +204,18 @@ class StoreXLSX(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
+            # config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
             include_index: bool = True,
             include_columns: bool = True,
             format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
             format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
         Args:
-            include_index: Boolean to determine if the ``index`` is included in output.
-            include_columns: Boolean to determine if the ``columns`` is included in output.
-            format_index: dictionary of XlsxWriter format specfications.
-            format_columns: dictionary of XlsxWriter format specfications.
             store_filter: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
+
         '''
         # format_data: tp.Optional[tp.Dict[tp.Hashable, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.

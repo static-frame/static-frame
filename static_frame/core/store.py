@@ -8,12 +8,14 @@ from io import StringIO
 
 from itertools import chain
 from functools import partial
-
+from collections import defaultdict
 import numpy as np
 
 
 from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
+from static_frame.core.exception import ErrorInitStoreConfig
+
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
 # from static_frame.core.util import array2d_to_tuples
@@ -24,7 +26,10 @@ from static_frame.core.util import DtypesSpecifier
 
 
 #-------------------------------------------------------------------------------
-class StoreConstructorConfig:
+class StoreConfig:
+    pass
+
+class StoreConfigConstructor(StoreConfig):
     '''
     Storage container of Bus configuration of constrcutors.
     '''
@@ -45,39 +50,120 @@ class StoreConstructorConfig:
         self.dtypes = dtypes
 
 
-class StoreExporterConfig:
+class StoreConfigExporter(StoreConfig):
     '''
     Storage container of Bus configuration of exporters.
     '''
     __slots__ = (
             'include_index',
             'include_columns',
+            'format_index',
+            'format_columns',
             'merge_hierarchical_labels',
             )
-
 
     def __init__(self, *,
             include_index: bool = True,
             include_columns: bool = True,
+            # not used by all exporters
+            format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
+            format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
             ):
+        '''
+        Args:
+            include_index: Boolean to determine if the ``index`` is included in output.
+            include_columns: Boolean to determine if the ``columns`` is included in output.
+            format_index: dictionary of XlsxWriter format specfications.
+            format_columns: dictionary of XlsxWriter format specfications.
+        '''
         self.include_index = include_index
         self.include_columns = include_columns
+
+        self.format_index = format_index
+        self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
-
-StoreConstructorConfigOrConfigs = tp.Union[
-        StoreConstructorConfig,
-        tp.Mapping[str, StoreConstructorConfig]
-        ]
-StoreExporterConfigOrConfigs = tp.Union[
-        StoreExporterConfig,
-        tp.Mapping[str, StoreExporterConfig]
-        ]
-
 class StoreConfigs:
-    DEFAULT_CONSTRUCTOR = StoreConstructorConfig()
-    DEFAULT_EXPORTER = StoreExporterConfig()
+    DEFAULT_CONSTRUCTOR = StoreConfigConstructor()
+    DEFAULT_EXPORTER = StoreConfigExporter()
+
+
+class StoreConfigMap:
+    '''
+    Container of one or more StoreConfig, with the optional specification of a default StoreConfig. Assumed immutable over the life of the instance.
+    '''
+    __slots__ = (
+            '_map',
+            '_default'
+            )
+
+    _DEFAULT: StoreConfig
+
+    @classmethod
+    def from_config(cls, config: StoreConfig):
+        return cls(default=config)
+
+    @classmethod
+    def from_initializer(cls, initializer: tp.Union[
+                StoreConfig,
+                tp.Mapping[str, StoreConfig],
+                'StoreConfigMap']
+            ):
+        if isinstance(initializer, StoreConfig):
+            return cls.from_config(initializer)
+        if isinstance(initializer, cls):
+            # return same instance
+            return initializer
+        return cls(initializer)
+
+    def __init__(self,
+            config_map: tp.Optional[tp.Dict[str, StoreConfig]] = None,
+            default: tp.Optional[StoreConfig] = None,
+            ):
+
+        # initialize new dict and transfer to support checking Config classes
+        self._map: tp.Dict[str, StoreConfig] = {}
+
+        if config_map:
+            for label, config in config_map.items():
+                if not isinstance(config, self._DEFAULT.__class__):
+                    raise ErrorInitStoreConfig(
+                        f'unspported class {conifg}, must be {self._DEFAULT.__class__}')
+                self._map[label] = config
+
+        if default is None:
+            self._default = self._DEFAULT
+        elif not isinstance(default, self._DEFAULT.__class__):
+            raise ErrorInitStoreConfig(
+                f'unspported class {default}, must be {self._DEFAULT.__class__}')
+        else:
+          self._default = default
+
+    def __getitem__(self, key: str) -> StoreConfig:
+        return self._map.get(key, self._default)
+
+
+class StoreConfigConstructorMap(StoreConfigMap):
+    _DEFAULT = StoreConfigs.DEFAULT_CONSTRUCTOR
+
+class StoreConfigExporterMap(StoreConfigMap):
+    _DEFAULT = StoreConfigs.DEFAULT_EXPORTER
+
+StoreConfigConstructorInitializer = tp.Union[
+        StoreConfigConstructor,
+        tp.Mapping[str, StoreConfigConstructor],
+        StoreConfigConstructorMap
+        ]
+StoreConfigExporterInitializer = tp.Union[
+        StoreConfigExporter,
+        tp.Mapping[str, StoreConfigExporter],
+        StoreConfigExporterMap
+        ]
+
+
+
+
 
 #-------------------------------------------------------------------------------
 
@@ -101,12 +187,20 @@ class Store:
 
         self._fp: str = fp
 
-    def read(self, label: str) -> Frame:
+    def read(self,
+            label: str,
+            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
+            ) -> Frame:
+        '''Read a single Frame, given by `label`, from the Store.
+        '''
         raise NotImplementedError()
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]]
+            items: tp.Iterable[tp.Tuple[str, Frame]],
+            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
             ) -> None:
+        '''Write all ``Frames`` in the Store.
+        '''
         raise NotImplementedError()
 
     def labels(self) -> tp.Iterator[str]:
@@ -233,7 +327,10 @@ class _StoreZip(Store):
 
 class _StoreZipDelimited(_StoreZip):
 
-    def read(self, label: str) -> Frame:
+    def read(self,
+            label: str,
+            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
+            ) -> Frame:
         # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
@@ -245,7 +342,8 @@ class _StoreZipDelimited(_StoreZip):
             return self.__class__._CONSTRUCTOR(src, index_depth=1)
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]]
+            items: tp.Iterable[tp.Tuple[str, Frame]],
+            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
             ) -> None:
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -283,12 +381,16 @@ class StoreZipPickle(_StoreZip):
 
     _EXT_CONTAINED = '.pickle'
 
-    def read(self, label: str) -> Frame:
+    def read(self,
+            label: str,
+            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
+            ) -> Frame:
         with zipfile.ZipFile(self._fp) as zf:
             return tp.cast(Frame, pickle.loads(zf.read(label + self._EXT_CONTAINED)))
 
     def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]]
+            items: tp.Iterable[tp.Tuple[str, Frame]],
+            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
             ) -> None:
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:

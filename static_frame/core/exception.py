@@ -32,6 +32,9 @@ class ErrorInitStore(ErrorInit):
     '''Error in Store initialization.
     '''
 
+class ErrorInitStoreConfig(ErrorInit):
+    '''Error in Store Config initialization.
+    '''
 
 
 class LocEmpty(RuntimeError):
