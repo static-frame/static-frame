@@ -461,7 +461,6 @@ class TestUnit(TestCase):
         self.assertFalse(tb2.block_compatible(tb1))
 
 
-    #@unittest.skip('to fix')
     def test_type_blocks_block_compatible_b(self) -> None:
 
         a1 = np.array([1, 2, 3])
@@ -477,7 +476,7 @@ class TestUnit(TestCase):
         tb2a = tb2[[2,3,7]]
         self.assertTrue(tb1.block_compatible(tb2a))
 
-
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_consolidate_a(self) -> None:
 
@@ -523,6 +522,15 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.mloc[0], tb2.mloc[0])
 
 
+    def test_type_blocks_consolidate_c(self) -> None:
+        blocks = [np.empty(shape=(0, 1), dtype=np.dtype('>f4')), np.empty(shape=(0, 2), dtype=np.dtype('>f4'))]
+
+        tb1 = TypeBlocks.from_blocks(blocks)
+        tb2 = tb1.consolidate()
+        self.assertTrue((tb1.dtypes == tb2.dtypes).all())
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_type_blocks_binary_operator_a(self) -> None:

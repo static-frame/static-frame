@@ -519,12 +519,18 @@ class TypeBlocks(ContainerOperand):
 
 
     @classmethod
-    def _concatenate_blocks(cls, group: tp.Iterable[np.ndarray]) -> np.array:
+    def _concatenate_blocks(cls,
+            group: tp.Iterable[np.ndarray],
+            dtype: DtypeSpecifier = None,
+            ) -> np.array:
         '''This will always return a 2D array.
         '''
         # NOTE: if len(group) is 1, can return
-        return np.concatenate([column_2d_filter(x) for x in group], axis=1)
-
+        post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
+        # NOTE: if give non-native byteorder dtypes, will convert them to native
+        if dtype is not None and post.dtype != dtype:
+            return post.astype(dtype)
+        return post
 
     @classmethod
     def consolidate_blocks(cls,
@@ -549,7 +555,7 @@ class TypeBlocks(ContainerOperand):
                     yield group[0]
                 else: # combine groups
                     # could pre allocating and assing as necessary for large groups
-                    yield cls._concatenate_blocks(group)
+                    yield cls._concatenate_blocks(group, group_dtype)
                 group_dtype = block.dtype
                 group = [block]
             else: # new block has same group dtype
@@ -560,7 +566,7 @@ class TypeBlocks(ContainerOperand):
             if len(group) == 1:
                 yield group[0]
             else:
-                yield cls._concatenate_blocks(group)
+                yield cls._concatenate_blocks(group, group_dtype)
 
 
     def _reblock(self) -> tp.Iterator[np.ndarray]:
