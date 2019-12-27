@@ -529,6 +529,7 @@ class TypeBlocks(ContainerOperand):
         post = np.concatenate([column_2d_filter(x) for x in group], axis=1)
         # NOTE: if give non-native byteorder dtypes, will convert them to native
         if dtype is not None and post.dtype != dtype:
+            # could use `out` arguement of np.concatenate to avoid copy, but would have to calculate resultant size first
             return post.astype(dtype)
         return post
 
