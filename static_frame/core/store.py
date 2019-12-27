@@ -196,25 +196,7 @@ class Store:
 
         self._fp: str = fp
 
-    def read(self,
-            label: str,
-            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
-            ) -> Frame:
-        '''Read a single Frame, given by `label`, from the Store.
-        '''
-        raise NotImplementedError()
-
-    def write(self,
-            items: tp.Iterable[tp.Tuple[str, Frame]],
-            # config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
-            ) -> None:
-        '''Write all ``Frames`` in the Store.
-        '''
-        raise NotImplementedError()
-
-    def labels(self) -> tp.Iterator[str]:
-        raise NotImplementedError()
-
+    #---------------------------------------------------------------------------
     @staticmethod
     def get_field_names_and_dtypes(
             frame: Frame,
@@ -313,3 +295,22 @@ class Store:
         # avoid creating a Series per column by going to blocks
         return frame._blocks.axis_values(0)
 
+    #---------------------------------------------------------------------------
+    def read(self,
+            label: str,
+            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
+            ) -> Frame:
+        '''Read a single Frame, given by `label`, from the Store.
+        '''
+        raise NotImplementedError()
+
+    def write(self,
+            items: tp.Iterable[tp.Tuple[str, Frame]],
+            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            ) -> None:
+        '''Write all ``Frames`` in the Store.
+        '''
+        raise NotImplementedError()
+
+    def labels(self) -> tp.Iterator[str]:
+        raise NotImplementedError()
