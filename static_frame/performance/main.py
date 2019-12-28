@@ -168,7 +168,7 @@ def main() -> None:
                 if options.profile:
                     profile(cls)
 
-    itemize = True
+    itemize = False # make CLI option maybe
 
     if records:
 

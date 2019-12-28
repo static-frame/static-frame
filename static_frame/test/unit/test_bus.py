@@ -1,6 +1,7 @@
 import unittest
 # from io import StringIO
 import numpy as np
+import typing as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -9,6 +10,10 @@ from static_frame.core.bus import Bus
 from static_frame.core.series import Series
 
 from static_frame.core.store_zip import StoreZipTSV
+
+from static_frame.core.store import StoreConfigExporterMap
+from static_frame.core.store import StoreConfigConstructor
+from static_frame.core.store import StoreConfigConstructorMap
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -19,6 +24,20 @@ from static_frame.core.exception import ErrorInitBus
 
 
 class TestUnit(TestCase):
+
+    def test_bus_slotted_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        b1 = Bus.from_frames((f1,))
+
+        with self.assertRaises(AttributeError):
+            b1.g = 30 # type: ignore
+        with self.assertRaises(AttributeError):
+            b1.__dict__
 
     def test_bus_init_a(self) -> None:
 
@@ -31,7 +50,10 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='bar')
 
-        b1 = Bus.from_frames((f1, f2))
+        config_constructor = StoreConfigConstructorMap.from_config(
+                StoreConfigConstructor(index_depth=1))
+
+        b1 = Bus.from_frames((f1, f2), config_constructor=config_constructor)
 
         self.assertEqual(b1.keys().values.tolist(),
                 ['foo', 'bar'])
@@ -47,7 +69,8 @@ class TestUnit(TestCase):
             zs = StoreZipTSV(fp)
             zs.write(b1.items())
 
-            f3 = zs.read('foo')
+            # how to show that this derived getitem has derived type?
+            f3 = zs.read('foo', config=config_constructor['foo'])
             self.assertEqual(
                 f3.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))

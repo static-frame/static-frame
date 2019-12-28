@@ -16,8 +16,11 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_hdf5 import StoreHDF5
 
-from static_frame.core.store import StoreConfigConstructorInitializer
-from static_frame.core.store import StoreConfigExporterInitializer
+from static_frame.core.store import StoreConfigConstructor
+from static_frame.core.store import StoreConfigConstructorMap
+from static_frame.core.store import StoreConfigExporterMap
+from static_frame.core.store import StoreConfigConstructorMapInitializer
+from static_frame.core.store import StoreConfigExporterMapInitializer
 from static_frame.core.store import StoreConfigs
 
 
@@ -47,11 +50,6 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.selector_node import TContainer
 
 
-
-
-
-
-
 #-------------------------------------------------------------------------------
 class FrameDefferedMeta(type):
     def __repr__(cls) -> str:
@@ -62,28 +60,41 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
 
-
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase):
 
     __slots__ = (
+        '_loaded',
+        '_loaded_all',
         '_series',
-        '_store'
+        '_store',
+        '_config_constructor',
+        '_config_exporter',
         )
 
     _series: Series
     _store: tp.Optional[Store]
+    _config_constructor: StoreConfigConstructorMap
+    _config_exporter: StoreConfigExporterMap
 
 
     @staticmethod
     def _deferred_series(labels: tp.Iterable[str]) -> Series:
+        '''
+        Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
+        '''
         # make an object dtype
         return Series(FrameDeferred, index=labels, dtype=object)
 
     @classmethod
-    def from_frames(cls, frames: tp.Iterable[Frame]) -> 'Bus':
+    def from_frames(cls,
+            frames: tp.Iterable[Frame],
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
+            ) -> 'Bus':
         '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
         '''
+        # could take a StoreConfigExporterMap
         series = Series.from_items(
                     ((f.name, f) for f in frames),
                     dtype=object
@@ -96,59 +107,97 @@ class Bus(ContainerBase):
     @classmethod
     def from_zip_tsv(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
+        # take and store a StoreConfigConstructorMap
         store = StoreZipTSV(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
     @classmethod
     def from_zip_csv(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
         store = StoreZipCSV(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
     @classmethod
     def from_zip_pickle(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
         store = StoreZipPickle(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
     @classmethod
     def from_xlsx(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
     @classmethod
     def from_sqlite(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
         store = StoreSQLite(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
     @classmethod
     def from_hdf5(cls,
             fp: PathSpecifier,
-            config: StoreConfigConstructorInitializer = StoreConfigs.DEFAULT_CONSTRUCTOR
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> 'Bus':
         store = StoreHDF5(fp)
-        return cls(cls._deferred_series(store.labels()), store=store)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config_constructor=config_constructor,
+                config_exporter=config_exporter
+                )
 
 
     #---------------------------------------------------------------------------
     def __init__(self,
             series: Series,
             *,
-            store: tp.Optional[Store] = None
+            store: tp.Optional[Store] = None,
+            config_constructor: StoreConfigConstructorMapInitializer = None,
+            config_exporter: StoreConfigExporterMapInitializer = None,
             ):
+        '''
+        Args:
+            config_constructor: StoreConfig for handling ``Frame`` construction from Store.
+            config_exporter: StoreConfig for handling ``Frame`` exorting from Store.
+        '''
 
         if series.dtype != DTYPE_OBJECT:
             raise ErrorInitBus(
@@ -171,6 +220,11 @@ class Bus(ContainerBase):
         self._loaded_all = self._loaded.all()
         self._series = series
         self._store = store
+
+        # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
+        self._config_constructor = StoreConfigConstructorMap.from_initializer(config_constructor)
+        self._config_exporter = StoreConfigExporterMap.from_initializer(config_exporter)
+
 
     #---------------------------------------------------------------------------
     # delegation
@@ -214,7 +268,14 @@ class Bus(ContainerBase):
             array = np.empty(shape=len(self._series._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
-                    frame = self._store.read(label)
+                    config = tp.cast(StoreConfigConstructor,
+                            self._config_constructor[label])
+                    # TEMP until all read methods are updated
+                    from static_frame.core.store_zip import _StoreZipDelimited
+                    if isinstance(self._store, _StoreZipDelimited):
+                        frame = self._store.read(label, config)
+                    else:
+                        frame = self._store.read(label)
                     self._loaded[idx] = True # update loaded status
                 array[idx] = frame
             array.flags.writeable = False
@@ -243,7 +304,11 @@ class Bus(ContainerBase):
                 values,
                 index=self._series._index.iloc[key], # type: ignore
                 name=self._name)
-        return self.__class__(series=series, store=self._store)
+        return self.__class__(series=series,
+                store=self._store,
+                config_constructor=self._config_constructor,
+                config_exporter=self._config_exporter
+                )
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
@@ -266,7 +331,11 @@ class Bus(ContainerBase):
                 index=self._series._index.iloc[iloc_key], #type: ignore
                 own_index=True,
                 name=self._name)
-        return self.__class__(series=series, store=self._store)
+        return self.__class__(series=series,
+                store=self._store,
+                config_constructor=self._config_constructor,
+                config_exporter=self._config_exporter
+                )
 
 
     @doc_inject(selector='selector')
@@ -423,44 +492,53 @@ class Bus(ContainerBase):
 
     #---------------------------------------------------------------------------
     # exporters
+
+    # can take an optional StoreConfigExporterMapInitializer for writing to format; however, if not given either (a) use _config_exporter_map given (or derived) at init
+
     def to_zip_tsv(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreZipTSV(fp)
-        store.write(self.items())
+        config = config_exporter if not None else self._config_exporter
+        store.write(self.items(), config=config)
 
     def to_zip_csv(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreZipCSV(fp)
-        store.write(self.items())
+        config = config_exporter if not None else self._config_exporter
+        store.write(self.items(), config=config)
 
     def to_zip_pickle(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreZipPickle(fp)
-        store.write(self.items())
+        # config_exporter must be None for pickels, will raise otherwise
+        store.write(self.items(), config=config_exporter)
 
     def to_xlsx(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreXLSX(fp)
+        config = config_exporter if not None else self._config_exporter
         store.write(self.items())
 
     def to_sqlite(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreSQLite(fp)
+        config = config_exporter if not None else self._config_exporter
         store.write(self.items())
 
     def to_hdf5(self,
             fp: PathSpecifier,
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config_exporter: StoreConfigExporterMapInitializer = None
             ) -> None:
         store = StoreHDF5(fp)
+        config = config_exporter if not None else self._config_exporter
         store.write(self.items())

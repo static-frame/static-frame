@@ -43,6 +43,15 @@ nan = np.nan
 
 class TestUnit(TestCase):
 
+    def test_frame_slotted_a(self) -> None:
+
+        f1 = Frame(1, index=(1,2), columns=(3,4,5))
+
+        with self.assertRaises(AttributeError):
+            f1.g = 30 # type: ignore
+        with self.assertRaises(AttributeError):
+            f1.__dict__
+
 
     def test_frame_init_a(self) -> None:
 

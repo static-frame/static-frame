@@ -23,7 +23,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.frame import Frame
 
 from static_frame.core.store import Store
-# from static_frame.core.store import StoreConfigExporterInitializer
+# from static_frame.core.store import StoreConfigExporterMapInitializer
 # from static_frame.core.store import StoreConfigConstructor
 # from static_frame.core.store import StoreConfigs
 
@@ -204,7 +204,7 @@ class StoreXLSX(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            # config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            # config: StoreConfigExporterMapInitializer = StoreConfigs.DEFAULT_EXPORTER
             include_index: bool = True,
             include_columns: bool = True,
             format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,

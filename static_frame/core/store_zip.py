@@ -6,7 +6,7 @@ from io import StringIO
 from static_frame.core.util import AnyCallable
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigConstructor
-from static_frame.core.store import StoreConfigExporterInitializer
+from static_frame.core.store import StoreConfigExporterMapInitializer
 from static_frame.core.store import StoreConfigs
 from static_frame.core.store import StoreConfigExporterMap
 
@@ -33,8 +33,12 @@ class _StoreZipDelimited(_StoreZip):
 
     def read(self,
             label: str,
-            config: StoreConfigConstructor = StoreConfigs.DEFAULT_CONSTRUCTOR,
+            config: tp.Optional[StoreConfigConstructor] = None,
             ) -> Frame:
+
+        if config is None:
+            raise ErrorInitStore('a StoreConfig is required on delimited Stores')
+
         # NOTE: labels need to be strings
         with zipfile.ZipFile(self._fp) as zf:
             src = StringIO()
@@ -50,20 +54,24 @@ class _StoreZipDelimited(_StoreZip):
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config: StoreConfigExporterMapInitializer = StoreConfigs.DEFAULT_EXPORTER
             ) -> None:
 
-        config_map = StoreConfigExporterMap.from_initializer(config)
+        # will create default from None, will pass let a map pass through
+        config_map = tp.cast(
+                StoreConfigExporterMap,
+                StoreConfigExporterMap.from_initializer(config),
+                )
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
-                config = config_map[label]
+                config_value: StoreConfigExorter = config_map[label]
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
                 self.__class__._EXPORTER(frame,
                         dst,
-                        include_index=config.include_index,
-                        include_columns=config.include_columns
+                        include_index=config_value.include_index,
+                        include_columns=config_value.include_columns
                         )
                 dst.seek(0)
                 # this will write it without a container
@@ -95,7 +103,7 @@ class StoreZipPickle(_StoreZip):
 
     def read(self,
             label: str,
-            config: StoreConfigConstructor = None,
+            config: tp.Optional[StoreConfigConstructor] = None,
             ) -> Frame:
         # config does not do anything for pickles
         if config is not None:
@@ -106,7 +114,7 @@ class StoreZipPickle(_StoreZip):
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterInitializer = None
+            config: StoreConfigExporterMapInitializer = None
             ) -> None:
 
         if config is not None:

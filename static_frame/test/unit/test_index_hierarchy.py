@@ -29,6 +29,17 @@ from static_frame.core.exception import ErrorInitIndex
 
 class TestUnit(TestCase):
 
+    def test_hierarchy_slotted_a(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+
+        with self.assertRaises(AttributeError):
+            ih1.g = 30 # type: ignore
+        with self.assertRaises(AttributeError):
+            ih1.__dict__
 
     def test_hierarchy_init_a(self) -> None:
 

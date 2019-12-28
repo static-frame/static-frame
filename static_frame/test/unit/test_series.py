@@ -52,6 +52,14 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # test series
 
+    def test_series_slotted_a(self) -> None:
+        s1 = Series(10, index=('a', 'b', 'c', 'd'))
+
+        with self.assertRaises(AttributeError):
+            s1.g = 30 # type: ignore
+        with self.assertRaises(AttributeError):
+            s1.__dict__
+
     def test_series_init_a(self) -> None:
         s1 = Series(np.nan, index=('a', 'b', 'c', 'd'))
 

@@ -24,6 +24,15 @@ from static_frame.core.exception import ErrorInitIndex
 
 class TestUnit(TestCase):
 
+    def test_index_slotted_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
+
+        with self.assertRaises(AttributeError):
+            idx1.g = 30 # type: ignore
+        with self.assertRaises(AttributeError):
+            idx1.__dict__
+
+
     def test_index_init_a(self) -> None:
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
         idx2 = Index(idx1)

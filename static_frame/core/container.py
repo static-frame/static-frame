@@ -442,6 +442,7 @@ class ContainerBase(metaclass=ContainerMeta):
     '''
     Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperaand; only Bus inherits from ContainerBase.
     '''
+    __slots__ = EMPTY_TUPLE
     #---------------------------------------------------------------------------
     # common display functions
 
@@ -489,6 +490,8 @@ class ContainerBase(metaclass=ContainerMeta):
 
 class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     '''Base class of all containers that support opperators.'''
+
+    __slots__ = EMPTY_TUPLE
 
     interface: 'Frame'
 
