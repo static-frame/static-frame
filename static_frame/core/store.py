@@ -86,6 +86,14 @@ class StoreConfig:
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
 
+SCMMapType = tp.Mapping[tp.Optional[str], StoreConfig]
+SCMMapInitializer = tp.Optional[SCMMapType]
+
+StoreConfigMapInitializer = tp.Union[
+        StoreConfig,
+        SCMMapInitializer,
+        'StoreConfigMap'
+        ]
 
 
 class StoreConfigMap:
@@ -114,10 +122,7 @@ class StoreConfigMap:
     @classmethod
     def from_initializer(
             cls,
-            initializer: tp.Union[
-                    StoreConfig,
-                    tp.Optional[tp.Mapping[str, StoreConfig]],
-                    'StoreConfigMap']
+            initializer: StoreConfigMapInitializer
             ) -> 'StoreConfigMap':
         if isinstance(initializer, StoreConfig):
             return cls.from_config(initializer)
@@ -130,12 +135,12 @@ class StoreConfigMap:
         return cls(initializer)
 
     def __init__(self,
-            config_map: tp.Optional[tp.Mapping[str, StoreConfig]] = None,
+            config_map: SCMMapInitializer = None,
             default: tp.Optional[StoreConfig] = None,
             ):
 
         # initialize new dict and transfer to support checking Config classes
-        self._map: tp.Dict[str, StoreConfig] = {}
+        self._map: SCMMapType = {}
 
         if config_map:
             for label, config in config_map.items():
@@ -152,15 +157,9 @@ class StoreConfigMap:
         else:
             self._default = default
 
-    def __getitem__(self, key: str) -> StoreConfig:
+    def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
         return self._map.get(key, self._default)
 
-
-StoreConfigMapInitializer = tp.Union[
-        StoreConfig,
-        tp.Optional[tp.Dict[str, StoreConfig]],
-        StoreConfigMap
-        ]
 
 
 
@@ -288,6 +287,7 @@ class Store:
     #---------------------------------------------------------------------------
     def read(self,
             label: str,
+            *,
             config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store.
@@ -296,6 +296,7 @@ class Store:
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
+            *,
             config: StoreConfigMapInitializer = None
             ) -> None:
         '''Write all ``Frames`` in the Store.
