@@ -6,6 +6,9 @@ What is New in Static Frame
 0.5.9
 ----------
 
+Fixed issue in __slots__ usage of derived Containers.
+
+Implemented StoreConfig classes.
 
 
 
