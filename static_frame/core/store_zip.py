@@ -61,13 +61,13 @@ class _StoreZipDelimited(_StoreZip):
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
-                config_value: StoreConfigExorter = config_map[label]
+                c = config_map[label]
                 dst = StringIO()
                 # call from class to explicitly pass self as frame
                 self.__class__._EXPORTER(frame,
                         dst,
-                        include_index=config_value.include_index,
-                        include_columns=config_value.include_columns
+                        include_index=c.include_index,
+                        include_columns=c.include_columns
                         )
                 dst.seek(0)
                 # this will write it without a container

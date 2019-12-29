@@ -349,12 +349,19 @@ class TestUnit(TestCase):
                 index=('p', 'q'),
                 name='f3')
 
-        b1 = Bus.from_frames((f1, f2, f3))
+        config = StoreConfigMap.from_config(
+                StoreConfig(
+                        index_depth=1,
+                        columns_depth=1,
+                        include_columns=True,
+                        include_index=True
+                        ))
+        b1 = Bus.from_frames((f1, f2, f3), config=config)
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
 
-            b2 = Bus.from_xlsx(fp)
+            b2 = Bus.from_xlsx(fp, config=config)
             tuple(b2.items()) # force loading all
 
         for frame in (f1, f2, f3):

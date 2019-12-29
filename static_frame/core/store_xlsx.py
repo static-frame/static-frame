@@ -23,8 +23,9 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.frame import Frame
 
 from static_frame.core.store import Store
-# from static_frame.core.store import StoreConfigMapInitializer
-# from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
 
 
 from static_frame.core.store_filter import StoreFilter
@@ -118,9 +119,7 @@ class StoreXLSX(Store):
 
             # use the type specific writer_native
             return writer_native(row, col, value, cell_format)
-
         return writer
-
 
     @classmethod
     def _frame_to_worksheet(cls,
@@ -199,16 +198,15 @@ class StoreXLSX(Store):
                     ws.merge_range(row, col, row + width - 1, col, label, format_columns)
                     row += width
 
-
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            # config: StoreConfigMapInitializer = None
-            include_index: bool = True,
-            include_columns: bool = True,
-            format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            merge_hierarchical_labels: bool = True,
+            config: StoreConfigMapInitializer = None,
+            # include_index: bool = True,
+            # include_columns: bool = True,
+            # format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
+            # format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
+            # merge_hierarchical_labels: bool = True,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
@@ -219,27 +217,30 @@ class StoreXLSX(Store):
         # format_data: tp.Optional[tp.Dict[tp.Hashable, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
 
+        # will create default from None, will pass let a map pass through
+        config_map = StoreConfigMap.from_initializer(config)
+
         import xlsxwriter
 
         wb = xlsxwriter.Workbook(self._fp)
 
-        format_columns = self._get_format_or_default(wb, format_columns)
-        format_index = self._get_format_or_default(wb, format_index)
 
         for label, frame in items:
+            c = config_map[label]
+            format_columns = self._get_format_or_default(wb, c.format_columns)
+            format_index = self._get_format_or_default(wb, c.format_index)
+
             ws = wb.add_worksheet(label)
             self._frame_to_worksheet(frame,
                     ws,
-                    format_columns=format_columns,
-                    format_index=format_index,
-                    include_index=include_index,
-                    include_columns=include_columns,
-                    merge_hierarchical_labels=merge_hierarchical_labels,
+                    format_columns=c.format_columns,
+                    format_index=c.format_index,
+                    include_index=c.include_index,
+                    include_columns=c.include_columns,
+                    merge_hierarchical_labels=c.merge_hierarchical_labels,
                     store_filter=store_filter
                     )
-
         wb.close()
-
 
     @staticmethod
     def _load_workbook(fp: str) -> 'Workbook':
@@ -254,15 +255,20 @@ class StoreXLSX(Store):
     def read(self,
             label: tp.Optional[str] = None,
             *,
-            index_depth: int=1,
-            columns_depth: int=1,
-            dtypes: DtypesSpecifier = None,
+            config: tp.Optional[StoreConfig] = None,
+            # index_depth: int=1,
+            # columns_depth: int=1,
+            # dtypes: DtypesSpecifier = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
-        Args:
-            {dtypes}
         '''
+        if config is None:
+            config = StoreConfig() # get default
+            # raise ErrorInitStore('a StoreConfig is required on XLSX')
+        index_depth = config.index_depth
+        columns_depth = config.columns_depth
+
         wb = self._load_workbook(self._fp)
 
         if label is None:
@@ -338,7 +344,7 @@ class StoreXLSX(Store):
         return tp.cast(Frame, Frame.from_records(data,
                 index=index,
                 columns=columns,
-                dtypes=dtypes,
+                dtypes=config.dtypes,
                 own_index=own_index,
                 own_columns=own_columns,
                 name=name

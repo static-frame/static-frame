@@ -16,6 +16,8 @@ from static_frame.test.test_case import temp_file
 # from static_frame.core.exception import ErrorInitStore
 
 from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
 
 
 class TestUnit(TestCase):
@@ -51,11 +53,13 @@ class TestUnit(TestCase):
                 name='f4')
 
         frames = (f1, f2, f3, f4)
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=True, include_columns=True))
 
         with temp_file('.xlsx') as fp:
 
             st1 = StoreXLSX(fp)
-            st1.write((f.name, f) for f in frames)
+            st1.write(((f.name, f) for f in frames), config=config_map)
 
             # import ipdb; ipdb.set_trace()
             sheet_names = tuple(st1.labels()) # this will read from file, not in memory
@@ -63,10 +67,11 @@ class TestUnit(TestCase):
 
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
-                f_loaded = st1.read(name,
+                c = StoreConfig(
                         index_depth=f_src.index.depth,
                         columns_depth=f_src.columns.depth
                         )
+                f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded)
 
 
@@ -80,12 +85,19 @@ class TestUnit(TestCase):
                 columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
                 )
 
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=True, include_columns=True))
+
         with temp_file('.xlsx') as fp:
 
             st = StoreXLSX(fp)
-            st.write(((None, f1),))
+            st.write(((None, f1),), config=config_map)
 
-            f2 = st.read(index_depth=f1.index.depth, columns_depth=f1.columns.depth)
+            c = StoreConfig(
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth
+                    )
+            f2 = st.read(config=c)
 
             # just a sample column for now
             self.assertEqual(
@@ -98,12 +110,19 @@ class TestUnit(TestCase):
     def test_store_xlsx_read_a(self) -> None:
         f1 = Frame([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=False, include_columns=True))
+
         with temp_file('.xlsx') as fp:
 
             st = StoreXLSX(fp)
-            st.write(((None, f1),), include_index=False)
+            st.write(((None, f1),), config=config_map)
 
-            f2 = st.read(index_depth=0, columns_depth=f1.columns.depth)
+            c = StoreConfig(
+                    index_depth=0,
+                    columns_depth=f1.columns.depth
+                    )
+            f2 = st.read(config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
@@ -117,11 +136,19 @@ class TestUnit(TestCase):
 
         f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
 
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=False, include_columns=True))
+
         with temp_file('.xlsx') as fp:
 
             st = StoreXLSX(fp)
-            st.write(((None, f1),), include_index=False)
-            f2 = st.read(index_depth=0, columns_depth=f1.columns.depth)
+            st.write(((None, f1),), config=config_map)
+
+            c = StoreConfig(
+                    index_depth=0,
+                    columns_depth=f1.columns.depth
+                    )
+            f2 = st.read(config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
@@ -135,11 +162,19 @@ class TestUnit(TestCase):
 
         f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
 
+        config_map = StoreConfigMap.from_config(
+                StoreConfig(include_index=True, include_columns=False))
+
         with temp_file('.xlsx') as fp:
 
             st = StoreXLSX(fp)
-            st.write(((None, f1),), include_index=True, include_columns=False)
-            f2 = st.read(index_depth=f1.index.depth, columns_depth=0)
+            st.write(((None, f1),), config=config_map[None])
+
+            c = StoreConfig(
+                    index_depth=f1.index.depth,
+                    columns_depth=0
+                    )
+            f2 = st.read(config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
