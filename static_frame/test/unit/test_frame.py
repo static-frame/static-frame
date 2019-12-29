@@ -31,7 +31,7 @@ from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
 
 from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_xlsx import StoreConfig
+from static_frame.core.store import StoreConfig
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win

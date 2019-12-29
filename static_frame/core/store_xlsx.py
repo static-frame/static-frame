@@ -224,7 +224,6 @@ class StoreXLSX(Store):
 
         wb = xlsxwriter.Workbook(self._fp)
 
-
         for label, frame in items:
             c = config_map[label]
             format_columns = self._get_format_or_default(wb, c.format_columns)

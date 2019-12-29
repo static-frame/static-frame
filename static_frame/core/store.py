@@ -85,8 +85,8 @@ class StoreConfig:
         self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
-
-SCMMapType = tp.Mapping[tp.Optional[str], StoreConfig]
+# NOTE: key should be tp.Optional[str], but cannot get mypy to accept
+SCMMapType = tp.Mapping[tp.Any, StoreConfig]
 SCMMapInitializer = tp.Optional[SCMMapType]
 
 StoreConfigMapInitializer = tp.Union[
@@ -106,7 +106,6 @@ class StoreConfigMap:
             )
 
     _DEFAULT: StoreConfig = StoreConfig()
-
 
     @classmethod
     def from_frames(cls, frames: tp.Iterable[Frame]) -> 'StoreConfigMap':
