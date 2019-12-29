@@ -31,7 +31,7 @@ from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
 
 from static_frame.core.store_xlsx import StoreXLSX
-
+from static_frame.core.store_xlsx import StoreConfig
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -4042,10 +4042,12 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
+        config = StoreConfig(index_depth=1)
+
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
             st = StoreXLSX(fp)
-            f2 = st.read()
+            f2 = st.read(config=config)
             self.assertEqualFrames(f1, f2)
 
 

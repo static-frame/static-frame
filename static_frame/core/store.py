@@ -53,7 +53,7 @@ class StoreConfig:
 
     def __init__(self, *,
             # constructors
-            index_depth: int = 0,
+            index_depth: int = 0, # this default does not permit round trip
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
             # exporters

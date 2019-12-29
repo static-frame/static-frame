@@ -116,6 +116,8 @@ from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
+# NOTE: static_frame.core.store imports frame.py
+
 from static_frame.core.exception import ErrorInitFrame
 
 from static_frame.core.doc_str import doc_inject
@@ -1458,14 +1460,16 @@ class Frame(ContainerOperand):
         Args:
             label: Optionally provide the sheet name from with to read. If not provided, the first sheet will be used.
         '''
+        from static_frame.core.store import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(fp)
-        return st.read(label,
-            index_depth=index_depth,
-            columns_depth=columns_depth,
-            dtypes=dtypes
-            )
+        config = StoreConfig(
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                dtypes=dtypes
+                )
+        return st.read(label, config=config)
 
     @classmethod
     def from_sqlite(cls,
@@ -4346,12 +4350,16 @@ class Frame(ContainerOperand):
         Write the Frame as single-sheet XLSX file.
         '''
         from static_frame.core.store_xlsx import StoreXLSX
-        st = StoreXLSX(fp)
-        st.write(((label, self),),
+        from static_frame.core.store import StoreConfig
+
+        config = StoreConfig(
                 include_index=include_index,
                 include_columns=include_columns,
                 merge_hierarchical_labels=merge_hierarchical_labels
                 )
+        st = StoreXLSX(fp)
+        st.write(((label, self),), config=config)
+
 
     def to_sqlite(self,
             fp: PathSpecifier, # not sure I can take a file like yet
