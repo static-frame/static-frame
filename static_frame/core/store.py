@@ -34,34 +34,16 @@ class StoreConfig:
     format_columns: tp.Optional[tp.Dict[str, tp.Any]]
     merge_hierarchical_labels: bool
 
+    @classmethod
+    def from_frame(cls, frame: Frame) -> 'StoreConfig':
+        '''Derive a config from a Frame.
+        '''
+        raise NotImplementedError()
 
-class StoreConfigConstructor(StoreConfig):
-    '''
-    Storage container of Bus configuration of constrcutors.
-    '''
     __slots__ = (
             'index_depth',
             'columns_depth',
             'dtypes',
-            )
-
-    def __init__(self, *,
-            index_depth: int = 0,
-            columns_depth: int = 1,
-            dtypes: DtypesSpecifier = None,
-            ):
-
-        self.index_depth = index_depth
-        self.columns_depth = columns_depth
-        self.dtypes = dtypes
-
-
-
-class StoreConfigExporter(StoreConfig):
-    '''
-    Storage container of Bus configuration of exporters.
-    '''
-    __slots__ = (
             'include_index',
             'include_columns',
             'format_index',
@@ -70,6 +52,11 @@ class StoreConfigExporter(StoreConfig):
             )
 
     def __init__(self, *,
+            # constructors
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            # exporters
             include_index: bool = True,
             include_columns: bool = True,
             # not used by all exporters
@@ -84,6 +71,13 @@ class StoreConfigExporter(StoreConfig):
             format_index: dictionary of writer format specfications.
             format_columns: dictionary of writer format specfications.
         '''
+
+        # constructor
+        self.index_depth = index_depth
+        self.columns_depth = columns_depth
+        self.dtypes = dtypes
+
+        # exporter
         self.include_index = include_index
         self.include_columns = include_columns
 
@@ -93,11 +87,6 @@ class StoreConfigExporter(StoreConfig):
 
 
 
-class StoreConfigs:
-    DEFAULT_CONSTRUCTOR = StoreConfigConstructor()
-    DEFAULT_EXPORTER = StoreConfigExporter()
-
-SCM = tp.TypeVar('SCM', bound='StoreConfigMap')
 
 class StoreConfigMap:
     '''
@@ -108,21 +97,28 @@ class StoreConfigMap:
             '_default'
             )
 
-    _DEFAULT: StoreConfig
+    _DEFAULT: StoreConfig = StoreConfig()
 
 
     @classmethod
-    def from_config(cls: tp.Type[SCM], config: StoreConfig) -> SCM:
+    def from_frames(cls, frames: tp.Iterable[Frame]) -> 'StoreConfigMap':
+        '''
+        Derive a config map from an iterable of Frames
+        '''
+        raise NotImplementedError()
+
+    @classmethod
+    def from_config(cls, config: StoreConfig) -> 'StoreConfigMap':
         return cls(default=config)
 
     @classmethod
     def from_initializer(
-            cls: tp.Type[SCM],
+            cls,
             initializer: tp.Union[
                     StoreConfig,
                     tp.Optional[tp.Mapping[str, StoreConfig]],
                     'StoreConfigMap']
-            ) -> SCM:
+            ) -> 'StoreConfigMap':
         if isinstance(initializer, StoreConfig):
             return cls.from_config(initializer)
         if isinstance(initializer, cls):
@@ -150,9 +146,9 @@ class StoreConfigMap:
 
         if default is None:
             self._default = self._DEFAULT
-        elif not isinstance(default, self._DEFAULT.__class__):
+        elif not isinstance(default, StoreConfig):
             raise ErrorInitStoreConfig(
-                f'unspported class {default}, must be {self._DEFAULT.__class__}')
+                f'unspported class {default}, must be {StoreConfig}')
         else:
             self._default = default
 
@@ -160,22 +156,12 @@ class StoreConfigMap:
         return self._map.get(key, self._default)
 
 
-class StoreConfigConstructorMap(StoreConfigMap):
-    _DEFAULT = StoreConfigs.DEFAULT_CONSTRUCTOR
-
-class StoreConfigExporterMap(StoreConfigMap):
-    _DEFAULT = StoreConfigs.DEFAULT_EXPORTER
-
-StoreConfigConstructorMapInitializer = tp.Union[
-        StoreConfigConstructor,
-        tp.Optional[tp.Dict[str, StoreConfigConstructor]],
-        StoreConfigConstructorMap
+StoreConfigMapInitializer = tp.Union[
+        StoreConfig,
+        tp.Optional[tp.Dict[str, StoreConfig]],
+        StoreConfigMap
         ]
-StoreConfigExporterMapInitializer = tp.Union[
-        StoreConfigExporter,
-        tp.Optional[tp.Dict[str, StoreConfigExporter]],
-        StoreConfigExporterMap
-        ]
+
 
 
 
@@ -302,7 +288,7 @@ class Store:
     #---------------------------------------------------------------------------
     def read(self,
             label: str,
-            config: tp.Optional[StoreConfigConstructor] = None,
+            config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store.
         '''
@@ -310,7 +296,7 @@ class Store:
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterMapInitializer = None
+            config: StoreConfigMapInitializer = None
             ) -> None:
         '''Write all ``Frames`` in the Store.
         '''

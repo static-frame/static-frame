@@ -5,17 +5,16 @@ from io import StringIO
 
 from static_frame.core.util import AnyCallable
 from static_frame.core.store import Store
-from static_frame.core.store import StoreConfigConstructor
-from static_frame.core.store import StoreConfigExporterMapInitializer
-from static_frame.core.store import StoreConfigs
-from static_frame.core.store import StoreConfigExporterMap
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store import StoreConfigMap
 
 from static_frame.core.frame import  Frame
 from static_frame.core.exception import ErrorInitStore
 
 class _StoreZip(Store):
 
-    _EXT: tp.FrozenSet[str] =  frozenset(('.zip',))
+    _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
     _EXT_CONTAINED: str = ''
 
     _EXPORTER: AnyCallable
@@ -33,7 +32,7 @@ class _StoreZipDelimited(_StoreZip):
 
     def read(self,
             label: str,
-            config: tp.Optional[StoreConfigConstructor] = None,
+            config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
 
         if config is None:
@@ -54,14 +53,11 @@ class _StoreZipDelimited(_StoreZip):
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterMapInitializer = StoreConfigs.DEFAULT_EXPORTER
+            config: StoreConfigMapInitializer = None
             ) -> None:
 
         # will create default from None, will pass let a map pass through
-        config_map = tp.cast(
-                StoreConfigExporterMap,
-                StoreConfigExporterMap.from_initializer(config),
-                )
+        config_map = StoreConfigMap.from_initializer(config)
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
@@ -103,7 +99,7 @@ class StoreZipPickle(_StoreZip):
 
     def read(self,
             label: str,
-            config: tp.Optional[StoreConfigConstructor] = None,
+            config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
         # config does not do anything for pickles
         if config is not None:
@@ -114,7 +110,7 @@ class StoreZipPickle(_StoreZip):
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
-            config: StoreConfigExporterMapInitializer = None
+            config: StoreConfigMapInitializer = None
             ) -> None:
 
         if config is not None:

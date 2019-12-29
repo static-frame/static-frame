@@ -11,9 +11,9 @@ from static_frame.core.series import Series
 
 from static_frame.core.store_zip import StoreZipTSV
 
-from static_frame.core.store import StoreConfigExporterMap
-from static_frame.core.store import StoreConfigConstructor
-from static_frame.core.store import StoreConfigConstructorMap
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -50,10 +50,8 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='bar')
 
-        config_constructor = StoreConfigConstructorMap.from_config(
-                StoreConfigConstructor(index_depth=1))
-
-        b1 = Bus.from_frames((f1, f2), config_constructor=config_constructor)
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        b1 = Bus.from_frames((f1, f2), config=config)
 
         self.assertEqual(b1.keys().values.tolist(),
                 ['foo', 'bar'])
@@ -70,7 +68,7 @@ class TestUnit(TestCase):
             zs.write(b1.items())
 
             # how to show that this derived getitem has derived type?
-            f3 = zs.read('foo', config=config_constructor['foo'])
+            f3 = zs.read('foo', config=config['foo'])
             self.assertEqual(
                 f3.to_pairs(0),
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))

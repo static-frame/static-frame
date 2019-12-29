@@ -5,10 +5,10 @@ from static_frame.core.frame import Frame
 # from static_frame.core.bus import Bus
 # from static_frame.core.series import Series
 
-from static_frame.core.store import StoreConfigConstructor
-from static_frame.core.store import StoreConfigExporter
-from static_frame.core.store import StoreConfigConstructorMap
-from static_frame.core.store import StoreConfigExporterMap
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfigMap
 
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
@@ -54,7 +54,7 @@ class TestUnit(TestCase):
             labels = tuple(st.labels(strip_ext=False))
             self.assertEqual(labels, ('foo.txt', 'bar.txt', 'baz.txt'))
 
-            config = StoreConfigConstructor(index_depth=1)
+            config = StoreConfig(index_depth=1)
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 frame_stored = st.read(label, config=config)
@@ -86,7 +86,7 @@ class TestUnit(TestCase):
             labels = tuple(st.labels(strip_ext=False))
             self.assertEqual(labels, ('foo.csv', 'bar.csv', 'baz.csv'))
 
-            config = StoreConfigConstructor(index_depth=1)
+            config = StoreConfig(index_depth=1)
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 frame_stored = st.read(label, config=config)
@@ -132,20 +132,19 @@ class TestUnit(TestCase):
                 index=('x', 'y'),
                 name='foo')
 
-        config_exporter = StoreConfigExporterMap.from_config(
-                StoreConfigExporter(include_index=True))
-        config_constructor = StoreConfigConstructor(index_depth=1)
+        config = StoreConfig(index_depth=1, include_index=True)
+        config_map = StoreConfigMap.from_config(config)
 
         with temp_file('.zip') as fp:
 
             st = StoreZipPickle(fp)
             with self.assertRaises(ErrorInitStore):
-                st.write(((f1.name, f1),), config=config_exporter)
+                st.write(((f1.name, f1),), config=config_map)
 
             st.write(((f1.name, f1),))
 
             with self.assertRaises(ErrorInitStore):
-                frame_stored = st.read(f1.name, config=config_constructor)
+                frame_stored = st.read(f1.name, config=config)
 
             frame_stored = st.read(f1.name)
             self.assertEqual(frame_stored.shape, f1.shape)
