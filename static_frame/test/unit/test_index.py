@@ -28,9 +28,9 @@ class TestUnit(TestCase):
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
 
         with self.assertRaises(AttributeError):
-            idx1.g = 30 # type: ignore
+            idx1.g = 30 # type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
-            idx1.__dict__
+            idx1.__dict__ #pylint: disable=W0104
 
 
     def test_index_init_a(self) -> None:

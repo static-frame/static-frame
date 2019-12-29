@@ -56,9 +56,9 @@ class TestUnit(TestCase):
         s1 = Series(10, index=('a', 'b', 'c', 'd'))
 
         with self.assertRaises(AttributeError):
-            s1.g = 30 # type: ignore
+            s1.g = 30 # type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
-            s1.__dict__
+            s1.__dict__ #pylint: disable=W0104
 
     def test_series_init_a(self) -> None:
         s1 = Series(np.nan, index=('a', 'b', 'c', 'd'))

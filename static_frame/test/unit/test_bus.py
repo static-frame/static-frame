@@ -1,7 +1,6 @@
 import unittest
 # from io import StringIO
 import numpy as np
-import typing as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -13,7 +12,6 @@ from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -35,9 +33,9 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1,))
 
         with self.assertRaises(AttributeError):
-            b1.g = 30 # type: ignore
+            b1.g = 30 # type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
-            b1.__dict__
+            b1.__dict__ #pylint: disable=W0104
 
     def test_bus_init_a(self) -> None:
 

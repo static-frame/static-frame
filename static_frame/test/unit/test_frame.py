@@ -48,9 +48,9 @@ class TestUnit(TestCase):
         f1 = Frame(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
-            f1.g = 30 # type: ignore
+            f1.g = 30 # type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
-            f1.__dict__
+            f1.__dict__ #pylint: disable=W0104
 
 
     def test_frame_init_a(self) -> None:

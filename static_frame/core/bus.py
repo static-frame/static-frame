@@ -16,7 +16,7 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_hdf5 import StoreHDF5
 
-from static_frame.core.store import StoreConfig
+# from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 
@@ -250,7 +250,6 @@ class Bus(ContainerBase):
 
                     # TEMP until all read methods are updated to use config
                     from static_frame.core.store_zip import _StoreZipDelimited
-                    from static_frame.core.store_xlsx import StoreXLSX
 
                     if isinstance(self._store, (_StoreZipDelimited, StoreXLSX)):
                         frame = self._store.read(label, config=config)

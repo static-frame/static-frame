@@ -37,9 +37,9 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
         with self.assertRaises(AttributeError):
-            ih1.g = 30 # type: ignore
+            ih1.g = 30 # type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
-            ih1.__dict__
+            ih1.__dict__ #pylint: disable=W0104
 
     def test_hierarchy_init_a(self) -> None:
 

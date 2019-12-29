@@ -1,25 +1,14 @@
 import unittest
 # from io import StringIO
 
-from static_frame.core.frame import Frame
-# from static_frame.core.bus import Bus
-# from static_frame.core.series import Series
 
 from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMap
 
-# from static_frame.core.store_zip import StoreZipTSV
-# from static_frame.core.store_zip import StoreZipCSV
-# from static_frame.core.store_zip import StoreZipPickle
 
 from static_frame.test.test_case import TestCase
 # from static_frame.test.test_case import temp_file
 
-# from static_frame.test.test_case import skip_win
-from static_frame.core.exception import ErrorInitStore
-from static_frame.core.exception import ErrorInitStoreConfig
 
 
 class TestUnit(TestCase):
