@@ -65,5 +65,6 @@ from static_frame.core.frame import FrameAssign as FrameAssign
 from static_frame.core.bus import Bus as Bus
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
+from static_frame.core.store import StoreConfig as StoreConfig
 
 __version__ = '0.5.9-dev' # use -dev for new version in development
