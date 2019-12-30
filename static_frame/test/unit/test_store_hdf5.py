@@ -14,6 +14,7 @@ from static_frame.test.test_case import temp_file
 
 
 from static_frame.core.store_hdf5 import StoreHDF5
+from static_frame.core.store import StoreConfigMap
 
 
 class TestUnit(TestCase):
@@ -49,21 +50,21 @@ class TestUnit(TestCase):
                 name='f4')
 
         frames = (f1, f2, f3, f4)
+        config = StoreConfigMap.from_frames(frames)
 
         with temp_file('.hdf5') as fp:
 
             st1 = StoreHDF5(fp)
-            st1.write((f.name, f) for f in frames)
+            st1.write(((f.name, f) for f in frames), config=config)
 
-            sheet_names = tuple(st1.labels()) # this will read from file, not in memory
-            self.assertEqual(tuple(f.name for f in frames), sheet_names)
+            labels = tuple(st1.labels()) # this will read from file, not in memory
+            self.assertEqual(tuple(f.name for f in frames), labels)
 
-            for i, name in enumerate(sheet_names):
+            for i, name in enumerate(labels):
                 f_src = frames[i]
-                f_loaded = st1.read(name,
-                        index_depth=f_src.index.depth,
-                        columns_depth=f_src.columns.depth
-                        )
+                c = config[f_src.name]
+                f_loaded = st1.read(name, config=c)
+                self.assertEqualFrames(f_src, f_loaded)
 
 if __name__ == '__main__':
     unittest.main()

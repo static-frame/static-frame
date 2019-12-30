@@ -247,15 +247,7 @@ class Bus(ContainerBase):
             array = np.empty(shape=len(self._series._index), dtype=object)
             for idx, (label, frame) in enumerate(self._series.items()):
                 if frame is FrameDeferred and label in labels:
-                    config = self._config[label]
-
-                    # TEMP until all read methods are updated to use config
-                    from static_frame.core.store_zip import _StoreZipDelimited
-
-                    if isinstance(self._store, (_StoreZipDelimited, StoreXLSX, StoreSQLite)):
-                        frame = self._store.read(label, config=config)
-                    else:
-                        frame = self._store.read(label)
+                    frame = self._store.read(label, config=self._config[label])
                     self._loaded[idx] = True # update loaded status
                 array[idx] = frame
             array.flags.writeable = False

@@ -102,8 +102,8 @@ class StoreZipPickle(_StoreZip):
             config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
         # config does not do anything for pickles
-        if config is not None:
-            raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+        # if config is not None:
+        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
 
         with zipfile.ZipFile(self._fp) as zf:
             return tp.cast(Frame, pickle.loads(zf.read(label + self._EXT_CONTAINED)))
@@ -113,8 +113,8 @@ class StoreZipPickle(_StoreZip):
             config: StoreConfigMapInitializer = None
             ) -> None:
 
-        if config is not None:
-            raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
+        # if config is not None:
+        #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:

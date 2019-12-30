@@ -1,28 +1,18 @@
 
 import typing as tp
 
-# from itertools import chain
 
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
-
-# from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
 
 # from static_frame.core.store_filter import StoreFilter
 # from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
 from static_frame.core.doc_str import doc_inject
-
-# from static_frame.core.util import DtypesSpecifier
-# from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
-# from static_frame.core.util import DTYPE_NAN_KIND
-# from static_frame.core.util import DTYPE_DATETIME_KIND
-# from static_frame.core.util import DTYPE_BOOL
-# from static_frame.core.util import BOOL_TYPES
-# from static_frame.core.util import NUMERIC_TYPES
-
-
 
 
 class StoreHDF5(Store):
@@ -33,20 +23,25 @@ class StoreHDF5(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            include_index: bool = True,
-            include_columns: bool = True,
+            config: StoreConfigMapInitializer = None
+            # include_index: bool = True,
+            # include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
+
+        config_map = StoreConfigMap.from_initializer(config)
 
         import tables
 
         with tables.open_file(self._fp, mode='w') as file:
             for label, frame in items:
+                c = config_map[label]
+
                 # should all tables be under a common group?
                 field_names, dtypes = self.get_field_names_and_dtypes(
                         frame=frame,
-                        include_index=include_index,
-                        include_columns=include_columns
+                        include_index=c.include_index,
+                        include_columns=c.include_columns
                         )
 
                 # Must set pos to have stable position
@@ -63,7 +58,7 @@ class StoreHDF5(Store):
                         )
 
                 values = self._get_row_iterator(frame=frame,
-                        include_index=include_index)
+                        include_index=c.include_index)
                 table.append(tuple(values()))
                 table.flush()
 
@@ -72,14 +67,20 @@ class StoreHDF5(Store):
     def read(self,
             label: tp.Optional[str] = None,
             *,
-            index_depth: int=1,
-            columns_depth: int=1,
+            config: tp.Optional[StoreConfig] = None
+            # index_depth: int=1,
+            # columns_depth: int=1,
             ) -> Frame:
         '''
         Args:
             {dtypes}
         '''
         import tables
+
+        if config is None:
+            config = StoreConfig() # get default
+        if config.dtypes:
+            raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
 
         with tables.open_file(self._fp, mode='r') as file:
             table = file.get_node(f'/{label}')
@@ -96,8 +97,8 @@ class StoreHDF5(Store):
                     Frame.from_structured_array(
                             array,
                             name=label,
-                            index_depth=index_depth,
-                            columns_depth=columns_depth,
+                            index_depth=config.index_depth,
+                            columns_depth=config.columns_depth,
                             dtypes=dtypes,
                     ))
             return f

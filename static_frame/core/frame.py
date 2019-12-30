@@ -1505,13 +1505,15 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an HDF5 file.
         '''
+        from static_frame.core.store import StoreConfig
         from static_frame.core.store_hdf5 import StoreHDF5
 
         st = StoreHDF5(fp)
-        return st.read(label, # should this be called label?
-            index_depth=index_depth,
-            columns_depth=index_depth,
-            )
+        config = StoreConfig(
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                )
+        return st.read(label, config=config)
 
 
     @classmethod
@@ -4395,6 +4397,12 @@ class Frame(ContainerOperand):
         Write the Frame as single-table SQLite file.
         '''
         from static_frame.core.store_hdf5 import StoreHDF5
+        from static_frame.core.store import StoreConfig
+
+        config = StoreConfig(
+                include_index=include_index,
+                include_columns=include_columns,
+                )
 
         if not label:
             if not self.name:
@@ -4402,10 +4410,7 @@ class Frame(ContainerOperand):
             label = self.name
 
         st = StoreHDF5(fp)
-        st.write(((label, self),),
-                include_index=include_index,
-                include_columns=include_columns,
-                )
+        st.write(((label, self),), config=config)
 
 
     @doc_inject(class_name='Frame')

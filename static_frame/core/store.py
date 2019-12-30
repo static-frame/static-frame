@@ -153,7 +153,7 @@ class StoreConfigMap:
         # initialize new dict and transfer to support checking Config classes
         self._map: SCMMapType = {}
 
-        if own_config_map:
+        if own_config_map and config_map is not None:
             self._map = config_map
         elif config_map:
             for label, config in config_map.items():
