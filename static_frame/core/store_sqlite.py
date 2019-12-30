@@ -12,6 +12,10 @@ from static_frame.core.store import Store
 # from static_frame.core.store_filter import StoreFilter
 # from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfig
+
 from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.util import DtypesSpecifier
@@ -110,10 +114,13 @@ class StoreSQLite(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            include_index: bool = True,
-            include_columns: bool = True,
+            config: StoreConfigMapInitializer = None
+            # include_index: bool = True,
+            # include_columns: bool = True,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
+
+        config_map = StoreConfigMap.from_initializer(config)
 
         # NOTE: register adapters for NP types:
         # numpy types go in as blobs if they are not individualy converted tp python types
@@ -129,11 +136,13 @@ class StoreSQLite(Store):
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
+                c = config_map[label]
+
                 self._frame_to_table(frame=frame,
                         label=label,
                         cursor=cursor,
-                        include_columns=include_columns,
-                        include_index=include_index,
+                        include_columns=c.include_columns,
+                        include_index=c.include_index,
                         # store_filter=store_filter
                         )
 
@@ -146,15 +155,18 @@ class StoreSQLite(Store):
     def read(self,
             label: tp.Optional[str] = None,
             *,
-            index_depth: int=1,
-            columns_depth: int=1,
-            dtypes: DtypesSpecifier = None,
+            config: tp.Optional[StoreConfig] = None
+            # index_depth: int=1,
+            # columns_depth: int=1,
+            # dtypes: DtypesSpecifier = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
         Args:
             {dtypes}
         '''
+        if config is None:
+            config = StoreConfig() # get default
 
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
@@ -178,9 +190,9 @@ class StoreSQLite(Store):
             query = f'SELECT * from {label}'
             return tp.cast(Frame, Frame.from_sql(query=query,
                     connection=conn,
-                    index_depth=index_depth,
-                    columns_depth=columns_depth,
-                    dtypes=dtypes,
+                    index_depth=config.index_depth,
+                    columns_depth=config.columns_depth,
+                    dtypes=config.dtypes,
                     name=label,
                     ))
 

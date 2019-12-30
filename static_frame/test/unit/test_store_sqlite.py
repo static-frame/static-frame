@@ -18,6 +18,8 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 from static_frame.core.index_hierarchy import IndexHierarchy
 # from static_frame.core.hloc import HLoc
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfig
 
 from static_frame.core.store_sqlite import StoreSQLite
 
@@ -64,12 +66,10 @@ class TestUnit(TestCase):
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
             for i, name in enumerate(sheet_names):
-                f1 = frames[i]
-                f_loaded = st1.read(name,
-                        index_depth=f1.index.depth,
-                        columns_depth=f1.columns.depth
-                        )
-                self.assertEqualFrames(f1, f_loaded)
+                f_src = frames[i]
+                config = StoreConfig.from_frame(f_src)
+                f_loaded = st1.read(name, config=config)
+                self.assertEqualFrames(f_src, f_loaded)
 
 
 
@@ -89,10 +89,9 @@ class TestUnit(TestCase):
             st1 = StoreSQLite(fp)
             st1.write((f.name, f) for f in frames)
 
-            f_loaded = st1.read(f1.name,
-                    index_depth=f1.index.depth,
-                    columns_depth=f1.columns.depth
-                    )
+            config = StoreConfig.from_frame(f1)
+
+            f_loaded = st1.read(f1.name, config=config)
 
             # for now, Fractions come back as strings
             self.assertEqual(
@@ -117,10 +116,9 @@ class TestUnit(TestCase):
             st1 = StoreSQLite(fp)
             st1.write((f.name, f) for f in frames)
 
-            f_loaded = st1.read(f1.name,
-                    index_depth=f1.index.depth,
-                    columns_depth=f1.columns.depth
-                    )
+            config = StoreConfig.from_frame(f1)
+
+            f_loaded = st1.read(f1.name, config=config)
 
             self.assertAlmostEqualItems(f_loaded['x'].to_pairs(),
                     ((('I', 'a'), 1.2001953125), (('I', 'b'), 4.5), (('II', 'a'), 3.19921875), (('II', 'b'), 6.5))

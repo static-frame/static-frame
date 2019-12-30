@@ -1483,14 +1483,16 @@ class Frame(ContainerOperand):
         '''
         Load Frame from the contents of a table in an SQLite database file.
         '''
+        from static_frame.core.store import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(fp)
-        return st.read(label, # should this be called label?
-            index_depth=index_depth,
-            columns_depth=columns_depth,
-            dtypes=dtypes
-            )
+        config = StoreConfig(
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                dtypes=dtypes
+                )
+        return st.read(label, config=config)
 
     @classmethod
     def from_hdf5(cls,
@@ -4362,7 +4364,7 @@ class Frame(ContainerOperand):
 
 
     def to_sqlite(self,
-            fp: PathSpecifier, # not sure I can take a file like yet
+            fp: PathSpecifier, # not sure file-like StringIO works
             *,
             label: tp.Optional[str] = None,
             include_index: bool = True,
@@ -4372,14 +4374,18 @@ class Frame(ContainerOperand):
         Write the Frame as single-table SQLite file.
         '''
         from static_frame.core.store_sqlite import StoreSQLite
-        st = StoreSQLite(fp)
-        st.write(((label, self),),
+        from static_frame.core.store import StoreConfig
+
+        config = StoreConfig(
                 include_index=include_index,
                 include_columns=include_columns,
                 )
 
+        st = StoreSQLite(fp)
+        st.write(((label, self),), config=config)
+
     def to_hdf5(self,
-            fp: PathSpecifier, # not sure I can take a file like yet
+            fp: PathSpecifier, # not sure file-like StringIO works
             *,
             label: tp.Optional[str] = None,
             include_index: bool = True,

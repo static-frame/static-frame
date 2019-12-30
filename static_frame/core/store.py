@@ -38,7 +38,18 @@ class StoreConfig:
     def from_frame(cls, frame: Frame) -> 'StoreConfig':
         '''Derive a config from a Frame.
         '''
-        raise NotImplementedError()
+        include_index = frame.index.depth > 1 or not frame.index._loc_is_iloc
+        index_depth = 0 if not include_index else frame.index.depth
+
+        include_columns = frame.columns.depth > 1 or not frame.columns._loc_is_iloc
+        columns_depth = 0 if not include_columns else frame.columns.depth
+
+        return cls(
+                index_depth=index_depth,
+                columns_depth=columns_depth,
+                include_index=include_index,
+                include_columns=include_columns
+                )
 
     __slots__ = (
             'index_depth',
@@ -112,8 +123,8 @@ class StoreConfigMap:
         '''
         Derive a config map from an iterable of Frames
         '''
-        raise NotImplementedError()
-
+        config_map = {f.name: StoreConfig.from_frame(f) for f in frames}
+        return cls(config_map, own_config_map=True)
     @classmethod
     def from_config(cls, config: StoreConfig) -> 'StoreConfigMap':
         return cls(default=config)
@@ -136,12 +147,15 @@ class StoreConfigMap:
     def __init__(self,
             config_map: SCMMapInitializer = None,
             default: tp.Optional[StoreConfig] = None,
+            own_config_map: bool = False
             ):
 
         # initialize new dict and transfer to support checking Config classes
         self._map: SCMMapType = {}
 
-        if config_map:
+        if own_config_map:
+            self._map = config_map
+        elif config_map:
             for label, config in config_map.items():
                 if not isinstance(config, self._DEFAULT.__class__):
                     raise ErrorInitStoreConfig(
@@ -158,10 +172,6 @@ class StoreConfigMap:
 
     def __getitem__(self, key: tp.Optional[str]) -> StoreConfig:
         return self._map.get(key, self._default)
-
-
-
-
 
 
 

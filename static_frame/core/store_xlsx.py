@@ -264,7 +264,7 @@ class StoreXLSX(Store):
         '''
         if config is None:
             config = StoreConfig() # get default
-            # raise ErrorInitStore('a StoreConfig is required on XLSX')
+
         index_depth = config.index_depth
         columns_depth = config.columns_depth
 

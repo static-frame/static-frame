@@ -399,14 +399,16 @@ class TestUnit(TestCase):
                 index=('p', 'q'),
                 name='f3')
 
-        b1 = Bus.from_frames((f1, f2, f3))
+        frames = (f1, f2, f3)
+        config = StoreConfigMap.from_frames(frames)
+        b1 = Bus.from_frames(frames, config=config)
 
         with temp_file('.sqlite') as fp:
             b1.to_sqlite(fp)
-            b2 = Bus.from_sqlite(fp)
+            b2 = Bus.from_sqlite(fp, config=config)
             tuple(b2.items()) # force loading all
 
-        for frame in (f1, f2, f3):
+        for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
 
 

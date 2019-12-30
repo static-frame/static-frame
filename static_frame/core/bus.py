@@ -83,6 +83,7 @@ class Bus(ContainerBase):
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[Frame],
+            *,
             config: StoreConfigMapInitializer = None,
             ) -> 'Bus':
         '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
@@ -251,7 +252,7 @@ class Bus(ContainerBase):
                     # TEMP until all read methods are updated to use config
                     from static_frame.core.store_zip import _StoreZipDelimited
 
-                    if isinstance(self._store, (_StoreZipDelimited, StoreXLSX)):
+                    if isinstance(self._store, (_StoreZipDelimited, StoreXLSX, StoreSQLite)):
                         frame = self._store.read(label, config=config)
                     else:
                         frame = self._store.read(label)
