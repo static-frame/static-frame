@@ -1429,6 +1429,14 @@ class TestUnit(TestCase):
                 [np.dtype('float64'), np.dtype('<U1'), np.dtype('float64')])
 
 
+    def test_index_hierarchy_astype_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), (100, 200))
+        ih2 = ih1.astype(float)
+        self.assertEqual(ih2.dtypes.values.tolist(),
+                [np.dtype('float64'), np.dtype('float64')])
+
+
 
 
 if __name__ == '__main__':

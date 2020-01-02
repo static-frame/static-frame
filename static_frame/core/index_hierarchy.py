@@ -1168,6 +1168,10 @@ class IndexHierarchyAsType:
 
     def __call__(self, dtype) -> 'IndexHierarchy':
 
+        if self.key == NULL_SLICE:
+            labels = self.container.values.astype(dtype)
+            return self.container.__class__.from_labels(labels)
+
         def gen():
             for row in self.container.values:
                 row = row.copy() # remove immutable reference
