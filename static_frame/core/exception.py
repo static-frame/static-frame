@@ -36,6 +36,7 @@ class ErrorInitStoreConfig(ErrorInit):
     '''Error in StoreConfig initialization.
     '''
 
+#-------------------------------------------------------------------------------
 
 class LocEmpty(RuntimeError):
     pass
@@ -43,4 +44,10 @@ class LocEmpty(RuntimeError):
 class LocInvalid(RuntimeError):
     pass
 
+#-------------------------------------------------------------------------------
 
+class StoreFileMutation(RuntimeError):
+    '''
+    A Stores file was mutated in an unexpected way.
+    '''
+    pass

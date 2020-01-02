@@ -13,6 +13,7 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
+from static_frame.core.exception import StoreFileMutation
 
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import path_filter
@@ -182,6 +183,7 @@ class Store:
 
     __slots__ = (
             '_fp',
+            '_last_modified'
             )
 
     def __init__(self, fp: PathSpecifier):
@@ -193,6 +195,27 @@ class Store:
                     f'file path {fp} does not match one of the required extensions: {self._EXT}')
 
         self._fp: str = fp
+
+        self._last_modified = np.nan
+        self._mtime_update()
+
+
+    def _mtime_update(self) -> None:
+        if os.path.exists(self._fp):
+            self._last_modified = os.path.getmtime(self._fp)
+        else:
+            self._last_modified = np.nan
+
+    def _mtime_coherent(self) -> None:
+        '''Raise if a file exists at self._fp and its mtime is not as expected
+        '''
+        if os.path.exists(self._fp):
+            if os.path.getmtime(self._fp) != self._last_modified:
+                raise StoreFileMutation(f'file {self._fp} was unexpectedly changed')
+        elif not np.isnan(self._last_modified):
+            # file existed previously and we got a modification time, but now it does not exist
+            raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+
 
     #---------------------------------------------------------------------------
     @staticmethod
@@ -301,6 +324,7 @@ class Store:
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store.
         '''
+        # call self._mtime_coherent()
         raise NotImplementedError()
 
     def write(self,
@@ -311,6 +335,8 @@ class Store:
         '''Write all ``Frames`` in the Store.
         '''
         raise NotImplementedError()
+        # call self._mtime_update() after writing
 
     def labels(self) -> tp.Iterator[str]:
+        # call self._mtime_coherent()
         raise NotImplementedError()
