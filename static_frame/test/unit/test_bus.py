@@ -389,6 +389,37 @@ class TestUnit(TestCase):
         for frame in (f1, f2):
             self.assertEqualFrames(frame, b2[frame.name])
 
+
+
+    def test_bus_to_xlsx_c(self) -> None:
+        '''
+        Test manipulating a file behind the Bus.
+        '''
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        f2 = Frame.from_dict(
+                dict(x=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1,),)
+
+        with temp_file('.xlsx') as fp:
+
+            b1.to_xlsx(fp)
+
+            b2 = Bus.from_xlsx(fp)
+
+            f2.to_xlsx(fp)
+
+            tuple(b2.items()) # force loading all
+
+        import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
     def test_bus_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -441,7 +472,6 @@ class TestUnit(TestCase):
 
         for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
-
 
 
 if __name__ == '__main__':
