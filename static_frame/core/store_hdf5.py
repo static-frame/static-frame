@@ -14,12 +14,15 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import DTYPE_STR_KIND
 
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
+
 
 class StoreHDF5(Store):
 
     _EXT: tp.FrozenSet[str] =  frozenset(('.h5', '.hdf5'))
 
-
+    @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
@@ -64,6 +67,7 @@ class StoreHDF5(Store):
 
 
     @doc_inject(selector='constructor_frame')
+    @store_coherent_non_write
     def read(self,
             label: tp.Optional[str] = None,
             *,
@@ -103,6 +107,7 @@ class StoreHDF5(Store):
                     ))
             return f
 
+    @store_coherent_non_write
     def labels(self) -> tp.Iterator[str]:
         '''
         Iterator of labels.

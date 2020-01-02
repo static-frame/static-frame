@@ -7,6 +7,7 @@ import os
 
 from itertools import chain
 from functools import partial
+from functools import wraps
 import numpy as np
 
 
@@ -340,3 +341,28 @@ class Store:
     def labels(self) -> tp.Iterator[str]:
         # call self._mtime_coherent()
         raise NotImplementedError()
+
+
+
+def store_coherent_non_write(f):
+
+    @wraps(f)
+    def wrapper(self: Store, *args, **kwargs):
+        '''Decprator for derived Store class implementation of reaad(), labels().
+        '''
+        self._mtime_coherent()
+        return f(self, *args, **kwargs)
+
+    return wrapper
+
+
+def store_coherent_write(f):
+    '''Decorator for dervied Store classes implementation of write()
+    '''
+    @wraps(f)
+    def wrapper(self: Store, *args, **kwargs):
+        post = f(self, *args, **kwargs)
+        self._mtime_update()
+        return post
+
+    return wrapper

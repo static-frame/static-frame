@@ -19,6 +19,7 @@ from static_frame.test.test_case import skip_win
 
 # from static_frame.test.test_case import skip_win
 from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import StoreFileMutation
 
 
 class TestUnit(TestCase):
@@ -415,9 +416,30 @@ class TestUnit(TestCase):
 
             f2.to_xlsx(fp)
 
-            tuple(b2.items()) # force loading all
+            with self.assertRaises(StoreFileMutation):
+                tuple(b2.items())
 
-        import ipdb; ipdb.set_trace()
+
+    def test_bus_to_xlsx_d(self) -> None:
+        '''
+        Test manipulating a file behind the Bus.
+        '''
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        b1 = Bus.from_frames((f1,),)
+
+        with temp_file('.xlsx') as fp:
+
+            b1.to_xlsx(fp)
+
+            b2 = Bus.from_xlsx(fp)
+
+        with self.assertRaises(StoreFileMutation):
+            tuple(b2.items())
+
 
     #---------------------------------------------------------------------------
     def test_bus_to_sqlite_a(self) -> None:

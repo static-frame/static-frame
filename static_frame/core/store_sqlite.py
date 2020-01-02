@@ -24,6 +24,8 @@ from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.core.util import DTYPE_BOOL
 
 
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
 
 
 class StoreSQLite(Store):
@@ -106,7 +108,7 @@ class StoreSQLite(Store):
         values = cls._get_row_iterator(frame=frame, include_index=include_index)
         cursor.executemany(insert, values())
 
-
+    @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
@@ -148,6 +150,7 @@ class StoreSQLite(Store):
 
 
     @doc_inject(selector='constructor_frame')
+    @store_coherent_non_write
     def read(self,
             label: tp.Optional[str] = None,
             *,
@@ -176,7 +179,6 @@ class StoreSQLite(Store):
         #     # import ipdb; ipdb.set_trace()
         #     return x.decode()
             # return x
-
         # sqlite3.register_converter('NONE', bytes_to_types)
 
         with sqlite3.connect(self._fp,
@@ -192,7 +194,7 @@ class StoreSQLite(Store):
                     name=label,
                     ))
 
-
+    @store_coherent_non_write
     def labels(self) -> tp.Iterator[str]:
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()

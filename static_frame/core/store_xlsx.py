@@ -27,6 +27,9 @@ from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
+
 
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -198,6 +201,7 @@ class StoreXLSX(Store):
                     ws.merge_range(row, col, row + width - 1, col, label, format_columns)
                     row += width
 
+    @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
@@ -251,13 +255,11 @@ class StoreXLSX(Store):
                 )
 
     @doc_inject(selector='constructor_frame')
+    @store_coherent_non_write
     def read(self,
             label: tp.Optional[str] = None,
             *,
             config: tp.Optional[StoreConfig] = None,
-            # index_depth: int=1,
-            # columns_depth: int=1,
-            # dtypes: DtypesSpecifier = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
@@ -349,6 +351,7 @@ class StoreXLSX(Store):
                 name=name
                 ))
 
+    @store_coherent_non_write
     def labels(self) -> tp.Iterator[str]:
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)

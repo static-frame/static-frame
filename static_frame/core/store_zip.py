@@ -9,6 +9,9 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store import StoreConfigMap
 
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
+
 from static_frame.core.frame import  Frame
 from static_frame.core.exception import ErrorInitStore
 
@@ -20,6 +23,7 @@ class _StoreZip(Store):
     _EXPORTER: AnyCallable
     _CONSTRUCTOR: tp.Callable[..., Frame]
 
+    @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         with zipfile.ZipFile(self._fp) as zf:
             for name in zf.namelist():
@@ -30,6 +34,7 @@ class _StoreZip(Store):
 
 class _StoreZipDelimited(_StoreZip):
 
+    @store_coherent_non_write
     def read(self,
             label: str,
             config: tp.Optional[StoreConfig] = None,
@@ -51,6 +56,7 @@ class _StoreZipDelimited(_StoreZip):
                     dtypes=config.dtypes
                     )
 
+    @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
             config: StoreConfigMapInitializer = None
@@ -97,6 +103,7 @@ class StoreZipPickle(_StoreZip):
 
     _EXT_CONTAINED = '.pickle'
 
+    @store_coherent_non_write
     def read(self,
             label: str,
             config: tp.Optional[StoreConfig] = None,
@@ -108,6 +115,7 @@ class StoreZipPickle(_StoreZip):
         with zipfile.ZipFile(self._fp) as zf:
             return tp.cast(Frame, pickle.loads(zf.read(label + self._EXT_CONTAINED)))
 
+    @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
             config: StoreConfigMapInitializer = None
