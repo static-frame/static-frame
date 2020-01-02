@@ -687,6 +687,15 @@ class TestUnit(TestCase):
         idx2 = IndexGO(())
         self.assertFalse(bool(idx2))
 
+    def test_index_astype_a(self) -> None:
+
+        idx1 = Index((3, 10, 50))
+        self.assertEqual(idx1.astype(float).values.dtype, np.dtype(float))
+
+        # import ipdb; ipdb.set_trace()
+        # self.assertTrue(bool(idx1))
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,6 +10,8 @@ Fixed issue in __slots__ usage of derived Containers.
 
 Implemented StoreConfig classes.
 
+Implemented tracking of Store file modification times, and implemented raising exceptions for any unexpected file modifications.
+
 
 
 0.5.8

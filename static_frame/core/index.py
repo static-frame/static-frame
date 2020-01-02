@@ -502,6 +502,16 @@ class Index(IndexBase):
             func_loc=self._drop_loc,
             )
 
+
+    def astype(self, dtype: DtypeSpecifier) -> 'Index':
+        '''
+        Return an Index with type determined by `dtype` argument. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
+        '''
+        return self.__class__(
+                self.values.astype(dtype),
+                name=self._name
+                )
+
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self) -> None:

@@ -1484,7 +1484,7 @@ class Series(ContainerOperand):
 
     def astype(self, dtype: DtypeSpecifier) -> 'Series':
         '''
-        Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for Frame, this is an interface exposing both a callable and a getitem interface.
+        Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for ``Frame``, this is an interface exposing both a callable and a getitem interface.
         '''
         return self.__class__(
                 self.values.astype(dtype),
