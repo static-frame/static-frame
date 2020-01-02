@@ -1419,6 +1419,17 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_hierarchy_astype_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        ih2 = ih1.astype[[0, 2]](float)
+
+        self.assertEqual(ih2.dtypes.values.tolist(),
+                [np.dtype('float64'), np.dtype('<U1'), np.dtype('float64')])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

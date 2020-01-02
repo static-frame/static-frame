@@ -27,6 +27,9 @@ from static_frame.core.util import isin
 
 
 from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceAsType
+
+
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
@@ -580,6 +583,18 @@ class IndexHierarchy(IndexBase):
                 apply_type=IterNodeApplyType.INDEX_LABELS
                 )
 
+    # NOTE: Index implements drop property
+
+    @property
+    def astype(self) -> InterfaceAsType:
+        '''
+        Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
+        '''
+        return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+
+
+
+
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self):
@@ -826,6 +841,18 @@ class IndexHierarchy(IndexBase):
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
+
+
+    #---------------------------------------------------------------------------
+
+    def _extract_getitem_astype(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
+        # key is an iloc key
+        if isinstance(key, tuple):
+            raise KeyError('__getitem__ does not support multiple indexers')
+        # iloc_key = self.loc_to_iloc(key)
+        return IndexHierarchyAsType(self, key=key)
+
+
 
     #---------------------------------------------------------------------------
     # operators
@@ -1125,3 +1152,30 @@ class IndexHierarchyGO(IndexHierarchy):
 
 # update class attr on Index after class initialziation
 IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
+
+
+
+class IndexHierarchyAsType:
+
+    __slots__ = ('container', 'key',)
+
+    def __init__(self,
+            container: IndexHierarchy,
+            key: GetItemKeyType
+            ) -> None:
+        self.container = container
+        self.key = key
+
+    def __call__(self, dtype) -> 'IndexHierarchy':
+
+        def gen():
+            for row in self.container.values:
+                row = row.copy() # remove immutable reference
+                # convert each column once per row; this is not optimal
+                row[self.key] = row[self.key].astype(dtype)
+                yield row
+
+        return self.container.__class__.from_labels(gen())
+
+
+
