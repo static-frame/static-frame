@@ -106,6 +106,7 @@ class StoreZipPickle(_StoreZip):
     @store_coherent_non_write
     def read(self,
             label: str,
+            *,
             config: tp.Optional[StoreConfig] = None,
             ) -> Frame:
         # config does not do anything for pickles
@@ -118,6 +119,7 @@ class StoreZipPickle(_StoreZip):
     @store_coherent_write
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
+            *,
             config: StoreConfigMapInitializer = None
             ) -> None:
 

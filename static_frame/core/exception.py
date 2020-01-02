@@ -50,4 +50,3 @@ class StoreFileMutation(RuntimeError):
     '''
     A Stores file was mutated in an unexpected way.
     '''
-    pass

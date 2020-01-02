@@ -352,7 +352,7 @@ class StoreXLSX(Store):
                 ))
 
     @store_coherent_non_write
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()

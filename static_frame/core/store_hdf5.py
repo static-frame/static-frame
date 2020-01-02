@@ -108,7 +108,7 @@ class StoreHDF5(Store):
             return f
 
     @store_coherent_non_write
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         '''
         Iterator of labels.
         '''

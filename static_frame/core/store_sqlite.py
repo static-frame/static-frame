@@ -195,7 +195,7 @@ class StoreSQLite(Store):
                     ))
 
     @store_coherent_non_write
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")

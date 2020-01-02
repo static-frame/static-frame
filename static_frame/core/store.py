@@ -10,6 +10,8 @@ from functools import partial
 from functools import wraps
 import numpy as np
 
+from static_frame.core.util import AnyCallable
+
 
 from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
@@ -338,30 +340,30 @@ class Store:
         raise NotImplementedError()
         # call self._mtime_update() after writing
 
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         # call self._mtime_coherent()
         raise NotImplementedError()
 
 
 
-def store_coherent_non_write(f):
+def store_coherent_non_write(f: AnyCallable) -> AnyCallable:
 
     @wraps(f)
-    def wrapper(self: Store, *args, **kwargs):
+    def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> Frame:
         '''Decprator for derived Store class implementation of reaad(), labels().
         '''
         self._mtime_coherent()
-        return f(self, *args, **kwargs)
+        return f(self, *args, **kwargs) # type: ignore
 
     return wrapper
 
 
-def store_coherent_write(f):
+def store_coherent_write(f: AnyCallable) -> AnyCallable:
     '''Decorator for dervied Store classes implementation of write()
     '''
     @wraps(f)
-    def wrapper(self: Store, *args, **kwargs):
-        post = f(self, *args, **kwargs)
+    def wrapper(self: Store, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+        post = f(self,  *args, **kwargs)
         self._mtime_update()
         return post
 

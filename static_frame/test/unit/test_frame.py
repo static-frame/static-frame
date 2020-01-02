@@ -4047,7 +4047,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
             st = StoreXLSX(fp)
-            f2 = st.read(config=config)
+            f2 = st.read(label=None, config=config)
             self.assertEqualFrames(f1, f2)
 
 

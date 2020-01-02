@@ -97,7 +97,7 @@ class TestUnit(TestCase):
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth
                     )
-            f2 = st.read(config=c)
+            f2 = st.read(None, config=c)
 
             # just a sample column for now
             self.assertEqual(
@@ -122,7 +122,7 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=f1.columns.depth
                     )
-            f2 = st.read(config=c)
+            f2 = st.read(None, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
@@ -148,7 +148,7 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=f1.columns.depth
                     )
-            f2 = st.read(config=c)
+            f2 = st.read(None, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
@@ -174,7 +174,7 @@ class TestUnit(TestCase):
                     index_depth=f1.index.depth,
                     columns_depth=0
                     )
-            f2 = st.read(config=c)
+            f2 = st.read(None, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(0),
