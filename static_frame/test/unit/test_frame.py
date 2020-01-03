@@ -4095,14 +4095,61 @@ class TestUnit(TestCase):
     @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
         # https://github.com/InvestmentSystems/static-frame/issues/146
-        import time
         fp = '/tmp/bad_sheet.xlsx'
-        t = time.time()
         f2 = Frame.from_xlsx(fp)
         self.assertEqual(f2.shape, (5, 6))
-        print(time.time() - t)
 
+    def test_frame_from_xlsx_d(self) -> None:
+        # isolate case of all None data that has a valid index
 
+        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth)
+            self.assertEqualFrames(f1, f2)
+
+    def test_frame_from_xlsx_e(self) -> None:
+        # isolate case of all None data that has a valid IndexHierarchy
+
+        f1 = Frame(None,
+                index=IndexHierarchy.from_product((0, 1), ('a', 'b')),
+                columns=('x', 'y', 'z')
+                )
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp,
+                    index_depth=f1.index.depth,
+                    columns_depth=f1.columns.depth)
+            self.assertEqualFrames(f1, f2)
+
+    def test_frame_from_xlsx_f(self) -> None:
+        # isolate case of all None data and only columns
+        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False)
+            f2 = Frame.from_xlsx(fp,
+                    index_depth=0,
+                    columns_depth=f1.columns.depth)
+            # with out the index, we only have columns, and drop all-empty rows
+            self.assertEqual(f2.shape, (0, 3))
+
+    def test_frame_from_xlsx_g(self) -> None:
+        # isolate case of all None data, no index, no columns
+        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False, include_columns=False)
+            with self.assertRaises(ErrorInitFrame):
+                f2 = Frame.from_xlsx(fp,
+                        index_depth=0,
+                        columns_depth=0)
+
+    #---------------------------------------------------------------------------
     def test_frame_from_sqlite_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),

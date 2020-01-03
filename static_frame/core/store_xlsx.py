@@ -323,11 +323,18 @@ class StoreXLSX(Store):
         empty_token = (None if store_filter is None
                 else store_filter.to_type_filter_element(None))
 
-        for row_count in range(len(data) - 1, 0, -1):
-            # break on the first row that is not all empty_token
-            if any(c != empty_token for c in data[row_count]): # try to break early in any
+        for row_count in range(len(data) - 1, -2, -1):
+            if row_count < 0:
                 break
-        empty_row_idx = row_count + 1
+            if any(c != empty_token for c in data[row_count]): # try to break early with any
+                break
+            if index_depth == 1 and index_values[row_count] != empty_token:
+                break
+            if index_depth > 1 and any(c != empty_token for c in index_values[row_count]):
+                break
+
+        # row_count is set to the first row that has data or index
+        empty_row_idx = row_count + 1 # index of all-empty row
         if empty_row_idx != len(data):
             # trim data and index_values, if index_depth > 0
             data = data[:empty_row_idx]
