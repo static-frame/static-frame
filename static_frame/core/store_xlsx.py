@@ -333,7 +333,7 @@ class StoreXLSX(Store):
             if index_depth > 1 and any(c != empty_token for c in index_values[row_count]):
                 break
 
-        # row_count is set to the first row that has data or index
+        # row_count is set to the first row that has data or index; can be -1
         empty_row_idx = row_count + 1 # index of all-empty row
         if empty_row_idx != len(data):
             # trim data and index_values, if index_depth > 0
