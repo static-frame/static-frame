@@ -290,9 +290,9 @@ class StoreXLSX(Store):
         index_values: tp.List[tp.Any] = []
         columns_values: tp.List[tp.Any] = []
 
-        data = []
+        data = [] # pre-size with None?
 
-        for row_count, row in enumerate(ws.iter_rows()): # cannot use values_only on 2.5.4
+        for row_count, row in enumerate(ws.iter_rows(max_row=max_row)):
             if store_filter is None:
                 row = tuple(c.value for c in row)
             else: # only need to filter string values, but probably too expensive to pre-check
@@ -317,7 +317,24 @@ class StoreXLSX(Store):
 
         wb.close()
 
+        # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer; alos, evaluating all rows on forward iteration is expensive. Instead, after collecting all the data in a list and closing the wb, reverse iterate and find rows that are all empty.
+        # NOTE: need to handle case where there are valid index values
 
+        empty_token = (None if store_filter is None
+                else store_filter.to_type_filter_element(None))
+
+        for row_count in range(len(data) - 1, 0, -1):
+            # break on the first row that is not all empty_token
+            if any(c != empty_token for c in data[row_count]): # try to break early in any
+                break
+        empty_row_idx = row_count + 1
+        if empty_row_idx != len(data):
+            # trim data and index_values, if index_depth > 0
+            data = data[:empty_row_idx]
+            if index_depth > 0:
+                index_values = index_values[:empty_row_idx]
+
+        # continue with Index and Frame creation
         index: tp.Optional[IndexBase] = None
         own_index = False
         if index_depth == 1:

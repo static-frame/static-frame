@@ -4092,6 +4092,15 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
 
+    @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
+    def test_frame_from_xlsx_c(self) -> None:
+        # https://github.com/InvestmentSystems/static-frame/issues/146
+        import time
+        fp = '/tmp/bad_sheet.xlsx'
+        t = time.time()
+        f2 = Frame.from_xlsx(fp)
+        self.assertEqual(f2.shape, (5, 6))
+        print(time.time() - t)
 
 
     def test_frame_from_sqlite_a(self) -> None:
