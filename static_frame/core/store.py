@@ -327,7 +327,6 @@ class Store:
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store.
         '''
-        # call self._mtime_coherent()
         raise NotImplementedError()
 
     def write(self,
@@ -338,10 +337,8 @@ class Store:
         '''Write all ``Frames`` in the Store.
         '''
         raise NotImplementedError()
-        # call self._mtime_update() after writing
 
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
-        # call self._mtime_coherent()
         raise NotImplementedError()
 
 

@@ -917,7 +917,7 @@ class Frame(ContainerOperand):
 
 
     @staticmethod
-    def _structured_array_to_blocks_and_index(
+    def _structured_array_to_d_ia_cl(
             array: np.ndarray,
             *,
             index_depth: int = 0,
@@ -928,13 +928,15 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexBase] = None
             ) -> tp.Tuple[TypeBlocks, tp.Sequence[np.ndarray], tp.Sequence[tp.Hashable]]:
         '''
+        Expanded function name: _structure_array_to_data_index_arrays_columns_labels
+
         Utility function for creating TypeBlocks from structure array (or a 2D array that np.genfromtxt might have returned) while extracting index and columns labels. Does not form Index objects for columns or index, allowing down-stream processes to do so.
 
         Args:
             index_column_first: optionally name the column that will start the block of index columns.
             columns: optionally provide a columns Index to resolve dtypes specified by name.
         '''
-        names = array.dtype.names
+        names = array.dtype.names # using names instead of fields, as this is NP convention
         is_structured_array = True
         if names is None:
             is_structured_array = False
@@ -1025,7 +1027,7 @@ class Frame(ContainerOperand):
                 yield array_final
 
         if consolidate_blocks:
-            data = TypeBlocks.consolidate_blocks(blocks())
+            data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
         else:
             data = TypeBlocks.from_blocks(blocks())
 
@@ -1033,42 +1035,17 @@ class Frame(ContainerOperand):
 
 
     @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_structured_array(cls,
-            array: np.ndarray,
-            *,
-            index_depth: int = 0,
-            index_column_first: tp.Optional[IndexSpecifier] = None,
-            columns_depth: int = 1,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+    def _from_data_index_arrays_column_labels(cls,
+            data: TypeBlocks,
+            index_depth: int,
+            index_arrays: tp.Sequence[np.ndarray],
+            columns_depth: int,
+            columns_labels: tp.Sequence[tp.Hashable],
+            name: tp.Hashable,
             ) -> 'Frame':
         '''
-        Convert a NumPy structed array into a Frame.
-
-        Args:
-            array: Structured NumPy array.
-            index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
-            index_column_first: Optionally provide the name or position offset of the column to use as the index.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :py:class:`static_frame.Frame`
+        Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
         '''
-        # from a structured array, we assume we want to get the columns labels
-        data, index_arrays, columns_labels = cls._structured_array_to_blocks_and_index(
-                array=array,
-                index_depth=index_depth,
-                index_column_first=index_column_first,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks,
-                store_filter=store_filter,
-                )
-
         columns_constructor = None
         if columns_depth == 0:
             columns = None
@@ -1103,6 +1080,53 @@ class Frame(ContainerOperand):
                 index_constructor=IndexHierarchy.from_labels,
                 **kwargs
                 )
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_structured_array(cls,
+            array: np.ndarray,
+            *,
+            index_depth: int = 0,
+            index_column_first: tp.Optional[IndexSpecifier] = None,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        '''
+        Convert a NumPy structed array into a Frame.
+
+        Args:
+            array: Structured NumPy array.
+            index_depth: Depth if index levels, where (for example) 0 is no index, 1 is a single column index, and 2 is a two-columns IndexHierarchy.
+            index_column_first: Optionally provide the name or position offset of the column to use as the index.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        # from a structured array, we assume we want to get the columns labels
+        data, index_arrays, columns_labels = cls._structured_array_to_d_ia_cl(
+                array=array,
+                index_depth=index_depth,
+                index_column_first=index_column_first,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
+        return cls._from_data_index_arrays_column_labels(
+                data=data,
+                index_depth=index_depth,
+                index_arrays=index_arrays,
+                columns_depth=columns_depth,
+                columns_labels=columns_labels,
+                name=name
+                )
+
 
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be
@@ -1333,7 +1357,7 @@ class Frame(ContainerOperand):
             # NOTE: genfromtxt will return a one column input file as a 2D array with the vertical data as a horizontal row. There does not appear to be a way to distinguish this from a single row file
 
         if array.size > 0: # an empty, or column only table
-            data, index_arrays, _ = cls._structured_array_to_blocks_and_index(
+            data, index_arrays, _ = cls._structured_array_to_d_ia_cl(
                     array=array,
                     index_depth=index_depth,
                     index_column_first=index_column_first,

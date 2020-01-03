@@ -1,8 +1,11 @@
 
 import typing as tp
 
+import numpy as np
 
 from static_frame.core.frame import Frame
+from static_frame.core.type_blocks import TypeBlocks
+
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.store import StoreConfig
@@ -66,14 +69,56 @@ class StoreHDF5(Store):
                 table.flush()
 
 
+    # @doc_inject(selector='constructor_frame')
+    # @store_coherent_non_write
+    # def read(self,
+    #         label: tp.Optional[str] = None,
+    #         *,
+    #         config: tp.Optional[StoreConfig] = None
+    #         # index_depth: int=1,
+    #         # columns_depth: int=1,
+    #         ) -> Frame:
+    #     '''
+    #     Args:
+    #         {dtypes}
+    #     '''
+    #     import tables
+
+    #     if config is None:
+    #         config = StoreConfig() # get default
+    #     if config.dtypes:
+    #         raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
+
+    #     with tables.open_file(self._fp, mode='r') as file:
+    #         table = file.get_node(f'/{label}')
+
+    #         array = table.read()
+    #         array.flags.writeable = False
+
+    #         # Discover all string dtypes and replace the dtype with a generic `str` function; first element in values array is the dtype object.
+    #         dtypes =  {k: str
+    #                 for i, (k, v) in enumerate(array.dtype.fields.items())
+    #                 if v[0].kind in DTYPE_STR_KIND
+    #                 }
+    #         # this works, but does not let us pull off columns yet
+    #         f = tp.cast(Frame,
+    #                 Frame.from_structured_array(
+    #                         array,
+    #                         name=label,
+    #                         index_depth=config.index_depth,
+    #                         columns_depth=config.columns_depth,
+    #                         dtypes=dtypes,
+    #                 ))
+    #         return f
+
+
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,
             label: tp.Optional[str] = None,
             *,
-            config: tp.Optional[StoreConfig] = None
-            # index_depth: int=1,
-            # columns_depth: int=1,
+            config: tp.Optional[StoreConfig] = None,
+            consolidate_blocks: bool = False # move into config
             ) -> Frame:
         '''
         Args:
@@ -86,26 +131,44 @@ class StoreHDF5(Store):
         if config.dtypes:
             raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
 
+        index_depth = config.index_depth
+        columns_depth = config.columns_depth
+
+        index_arrays = []
+        columns_labels = []
+
         with tables.open_file(self._fp, mode='r') as file:
             table = file.get_node(f'/{label}')
-            array = table.read()
-            array.flags.writeable = False
+            colnames = table.cols._v_colnames
 
-            # Discover all string dtypes and replace the dtype with a generic `str` function; first element in values array is the dtype object.
-            dtypes =  {k: str
-                    for i, (k, v) in enumerate(array.dtype.fields.items())
-                    if v[0].kind in DTYPE_STR_KIND
-                    }
-            # this works, but does not let us pull off columns yet
-            f = tp.cast(Frame,
-                    Frame.from_structured_array(
-                            array,
-                            name=label,
-                            index_depth=config.index_depth,
-                            columns_depth=config.columns_depth,
-                            dtypes=dtypes,
-                    ))
-            return f
+            def blocks() -> tp.Iterator[np.ndarray]:
+                for col_idx, colname in enumerate(colnames):
+                    array = table.col(colname)
+                    if array.dtype.kind in DTYPE_STR_KIND:
+                        array = array.astype(str)
+                    array.flags.writeable = False
+
+                    if col_idx < index_depth:
+                        index_arrays.append(array)
+                        continue
+                    # only store column labels for those yielded
+                    columns_labels.append(colname)
+                    yield array
+
+            if consolidate_blocks:
+                data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+            else:
+                data = TypeBlocks.from_blocks(blocks())
+
+        return Frame._from_data_index_arrays_column_labels(
+                data=data,
+                index_depth=index_depth,
+                index_arrays=index_arrays,
+                columns_depth=columns_depth,
+                columns_labels=columns_labels,
+                name=tp.cast(tp.Hashable, label) # not sure why this is necessary
+                )
+
 
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:

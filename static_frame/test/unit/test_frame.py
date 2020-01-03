@@ -3662,7 +3662,7 @@ class TestUnit(TestCase):
     def test_structured_array_to_blocks_and_index_a(self) -> None:
 
         a1 = np.array(np.arange(12).reshape((3, 4)))
-        post, _, _ = Frame._structured_array_to_blocks_and_index(
+        post, _, _ = Frame._structured_array_to_d_ia_cl(
                 a1,
                 dtypes=[np.int64, str, np.int64, str]
                 )
