@@ -12,8 +12,9 @@ Implemented ``StoreConfig`` and ``StoreConfigMap`` classes, and updated all ``St
 
 Implemented tracking of Store file modification times, and implemented raising exceptions for any unexpected file modifications.
 
-Improved handling of reading XLSX files with trailing all-empty rows due to style formatting across empty data.
+Improved handling of reading XLSX files with trailing all-empty rows resulting from style formatting across empty data.
 
+Improved HDF5 reading so as to reduce memory overhead.
 
 
 0.5.8
