@@ -143,7 +143,10 @@ class StoreHDF5(Store):
 
             def blocks() -> tp.Iterator[np.ndarray]:
                 for col_idx, colname in enumerate(colnames):
+
+                    # can also do: table.read(field=colname)
                     array = table.col(colname)
+
                     if array.dtype.kind in DTYPE_STR_KIND:
                         array = array.astype(str)
                     array.flags.writeable = False
