@@ -61,10 +61,11 @@ Presentations
 
 The following presentations and interviews describe StaticFrame in greater depth.
 
-- PyData LA 2018: https://pyvideo.org/pydata-la-2018/staticframe-an-immutable-alternative-to-pandas.html
-- PyCon US 2019, lightning talk (starting at 53:00): https://pyvideo.org/pycon-us-2019/friday-lightning-talksbreak-pycon-2019.html
+- PyData LA 2019: "The Best Defense is not a Defensive Copy" (lightning talk starting at 18:25): https://youtu.be/_WXMs8o9Gdw
+- PyData LA 2019: "Fitting Many Dimensions into One The Promise of Hierarchical Indices for Data Beyond Two Dimensions": https://youtu.be/xX8tXSNDpmE
+- PyCon US 2019: "A Less Kind, Less Gentle DataFrame" (lightning talk starting at 53:00): https://pyvideo.org/pycon-us-2019/friday-lightning-talksbreak-pycon-2019.html
 - Talk Python to Me, interview: https://talkpython.fm/episodes/show/204/staticframe-like-pandas-but-safer
-
+- PyData LA 2018: "StaticFrame: An Immutable Alternative to Pandas": https://pyvideo.org/pydata-la-2018/staticframe-an-immutable-alternative-to-pandas.html
 
 
 Contributors
@@ -73,6 +74,7 @@ Contributors
 These members of the Investment Systems team have contributed greatly to the design of StaticFrame:
 
 - Brandt Bucher
+- Charles Burkland
 - Guru Devanla
 - John Hawk
 - Adam Kay
@@ -82,7 +84,7 @@ These members of the Investment Systems team have contributed greatly to the des
 - Yu Tomita
 - Quang Vu
 
-Thanks also for additional contributions from GitHub users.
+Thanks also for additional contributions from GitHub users:
 
 https://github.com/InvestmentSystems/static-frame/graphs/contributors
 

@@ -771,10 +771,10 @@ class SeriesStrFloat_isin(PerfTest):
     Static Frame's performance should be in line with numpy
 
     As n gets large, static frame begins to outperform pandas
-        100 = 1.7124
-       1000 = 1.4958
-      10000 = 1.1766
-     100000 = 1.0496
+    100 = 1.7124
+    1000 = 1.4958
+    10000 = 1.1766
+    100000 = 1.0496
     1000000 = 0.9719
     '''
     NUMBER = 50
@@ -1217,15 +1217,15 @@ class FrameObj_isin(PerfTest):
 
 
 class FrameFloat_isin(PerfTest):
-    '''isin with floats.
-    As n gets large, pandas outperformance significantly drops:
+    '''isin with floats. As n gets large, pandas outperformance significantly drops:
 
-        100 = 6.2133x
-       1000 = 3.5506x
-      10000 = 2.9428x
-     100000 = 2.4097x
+    100 = 6.2133x
+    1000 = 3.5506x
+    10000 = 2.9428x
+    100000 = 2.4097x
     1000000 = 1.3527x
     '''
+
     NUMBER = 5
 
     _lower = 2
