@@ -1292,10 +1292,15 @@ class TypeBlocks(ContainerOperand):
             value_dtype = np.array(value).dtype
 
         # this selects the columns; but need to return all blocks
-        # NOTE: this requires column_key to be ordered to work
-        block_slices = iter(self._key_to_block_slices(column_key))
+        # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
+        block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=True),)
         target_block_idx = target_slice = None
         targets_remain = True
+
+        # if targetting all rows, we can slice the block and and retain types betters
+        row_key_is_null_slice = row_key is None or (
+                isinstance(row_key, slice) and row_key == NULL_SLICE)
+        # ASSIGNED_MOCK = object()
 
         for block_idx, b in enumerate(self._blocks):
 
@@ -1311,13 +1316,26 @@ class TypeBlocks(ContainerOperand):
                 if block_idx != target_block_idx:
                     break # need to advance blocks, keep targets
 
-                # from here, we have a target we need to apply
+                # from here, we have a target we need to apply in the current block
+                # create the array that we will return to replace the block if we have not already
                 if assigned is None:
-                    assigned_dtype = resolve_dtype(value_dtype, b.dtype)
+                    if row_key_is_null_slice:
+                        # if isinstance(target_slice, int):
+                        #     assigned = ASSIGNED_MOCK
+                        # if row_key is null slice, we s hold not need to get a different type
+                        if b.ndim == 1:
+                            # full replacement of a 1D block; can also create assigned with empty
+                            assigned_dtype = value_dtype
+                        else:
+                            assigned_dtype = resolve_dtype(value_dtype, b.dtype)
+                    else:
+                        assigned_dtype = resolve_dtype(value_dtype, b.dtype)
+
                     if b.dtype == assigned_dtype:
                         assigned = b.copy()
                     else:
                         assigned = b.astype(assigned_dtype)
+                    # import ipdb; ipdb.set_trace()
 
                 # match sliceable, when target_slice is a slice (can be an integer)
                 if (isinstance(target_slice, slice) and
@@ -1328,7 +1346,7 @@ class TypeBlocks(ContainerOperand):
                         # if block is 1D, then we can only take 1 column if we have a 2d value
                         value_piece_column_key: tp.Union[slice, int] = 0
                     else:
-                        width = len(range(*target_slice.indices(assigned.shape[1])))
+                        width = len(range(*target_slice.indices(b.shape[1])))
                         # if block id 2D, can take up to width from value
                         value_piece_column_key = slice(0, width)
 
@@ -1345,11 +1363,15 @@ class TypeBlocks(ContainerOperand):
                     value_piece = value
 
                 if b.ndim == 1: # given 1D array, our row key is all we need
-                    # TODO: handle row_key of None
-                    assigned[row_key] = value_piece
+                    if row_key_is_null_slice:
+                        # value piece may or may not be an np array; use assignment here to normalize shape, i.e., from a single value
+                        assigned[NULL_SLICE] = value_piece
+                    else:
+                        assigned[row_key] = value_piece
                 else:
-                    if row_key is None:
-                        assigned[:, target_slice] = value_piece
+                    if row_key_is_null_slice:
+                        assigned[NULL_SLICE, target_slice] = value_piece
+                        # import ipdb; ipdb.set_trace()
                     else:
                         assigned[row_key, target_slice] = value_piece
 

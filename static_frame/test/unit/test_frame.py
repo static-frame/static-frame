@@ -1291,6 +1291,14 @@ class TestUnit(TestCase):
                 ((0, 'c'), (1, 'd'), (2, 'b')))
 
 
+    def test_frame_assign_getitem_c(self) -> None:
+        f1 = sf.Frame(False, index=range(2), columns=tuple('ab'))
+
+        f2 = f1.assign['a']([1.1, 2.1])
+
+        import ipdb; ipdb.set_trace()
+
+
     def test_frame_assign_iloc_a(self) -> None:
 
         records = (
