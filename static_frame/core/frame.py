@@ -4671,17 +4671,14 @@ class FrameAssign:
         Called with ``file_value`` to execute assignment configured fromthe init key.
         '''
         if self.iloc_key is not None:
-            # NOTE: the iloc key's order does not matter in assignment
+            # NOTE: the iloc key's order is not relevant in assignment
             if isinstance(value, (Series, Frame)):
                 if isinstance(value, Series):
-                    # NOTE: if self.iloc_key is a tuple, this should fail
                     iloc_key = self.iloc_key
-
                 elif isinstance(value, Frame):
                     # block assignment requires that column keys are ascending
                     iloc_key = (self.iloc_key[0],
                             key_to_ascending_key(self.iloc_key[1], self.container.shape[1]))
-
                 # conform the passed in value to the targets given by self.iloc_key
                 assigned_container = self.container._reindex_other_like_iloc(value,
                         iloc_key,
