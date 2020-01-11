@@ -1280,13 +1280,19 @@ class TypeBlocks(ContainerOperand):
             value: object = None
             ) -> tp.Iterator[np.ndarray]:
         '''Assign value into all blocks, returning blocks of the same size and shape.
+
+        Args:
+            column_key: must be sorted in ascending order.
         '''
+        # NOTE: this method (or a similar one) needs to type type blocks as value, so as to preserve types in assignment from other TypeBlocks
+
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
         else:
             value_dtype = np.array(value).dtype
 
         # this selects the columns; but need to return all blocks
+        # NOTE: this requires column_key to be ordered to work
         block_slices = iter(self._key_to_block_slices(column_key))
         target_block_idx = target_slice = None
         targets_remain = True

@@ -83,6 +83,7 @@ from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import rehierarch_and_map
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
+from static_frame.core.container_util import key_to_ascending_key
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -4670,35 +4671,34 @@ class FrameAssign:
         Called with ``file_value`` to execute assignment configured fromthe init key.
         '''
         if self.iloc_key is not None:
+            # NOTE: the iloc key's order does not matter in assignment
             if isinstance(value, (Series, Frame)):
-                value = self.container._reindex_other_like_iloc(value,
-                        self.iloc_key,
-                        fill_value=fill_value).values
-            blocks = self.container._blocks.extract_iloc_assign(self.iloc_key, value)
+                if isinstance(value, Series):
+                    # NOTE: if self.iloc_key is a tuple, this should fail
+                    iloc_key = self.iloc_key
+
+                elif isinstance(value, Frame):
+                    # block assignment requires that column keys are ascending
+                    iloc_key = (self.iloc_key[0],
+                            key_to_ascending_key(self.iloc_key[1], self.container.shape[1]))
+
+                # conform the passed in value to the targets given by self.iloc_key
+                assigned_container = self.container._reindex_other_like_iloc(value,
+                        iloc_key,
+                        fill_value=fill_value)
+                # NOTE: taking .values here forces a single-type array from Frame
+                assigned = assigned_container.values
+            else: # could be array or single element
+                iloc_key = self.iloc_key
+                assigned = value
+
+            blocks = self.container._blocks.extract_iloc_assign(iloc_key, assigned)
 
         else: # use bloc
             bloc_key = bloc_key_normalize(
                     key=self.bloc_key,
                     container=self.container
                     )
-
-            # if isinstance(self.bloc_key, Frame):
-            #     bloc_frame = self.bloc_key.reindex(
-            #             index=self.container._index,
-            #             columns=self.container._columns,
-            #             fill_value=False
-            #             )
-            #     bloc_key = bloc_frame.values # shape must match post reindex
-            # elif isinstance(self.bloc_key, np.ndarray):
-            #     bloc_key = self.bloc_key
-            #     if bloc_key.shape != self.container.shape:
-            #         raise RuntimeError(f'bloc {bloc_key.shape} must match shape {self.container.shape}')
-            # else:
-            #     raise RuntimeError(f'invalid bloc_key, must be Frame or array, not {self.bloc_key}')
-
-
-            # if not bloc_key.dtype == bool:
-            #     raise RuntimeError('cannot use non-Bolean dtype as bloc key')
 
             if isinstance(value, Frame):
                 invalid = object()

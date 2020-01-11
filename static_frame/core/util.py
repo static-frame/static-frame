@@ -858,7 +858,12 @@ def slice_to_ascending_slice(
         ) -> slice:
     '''
     Given a slice, return a slice that, with ascending integers, covers the same values.
+
+    Args:
+        size: the length of the container on this axis
     '''
+    # NOTE: a slice can have start > stop, and None as step: should that case be handled here?
+
     if key.step is None or key.step > 0:
         return key
 
@@ -872,6 +877,10 @@ def slice_to_ascending_slice(
     # if 6, 1, -2: 6, 4, 2; then
     start = next(reversed(range(*key.indices(size))))
     return slice(start, stop, -key.step)
+
+
+
+
 
 #-------------------------------------------------------------------------------
 # dates

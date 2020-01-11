@@ -3,6 +3,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.5.10
+----------
+
+Fixed issue in ``Frame.assign`` when assignment target is a ``Frame``.
+
+
 0.5.9
 ----------
 

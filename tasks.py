@@ -1,6 +1,7 @@
+import sys
+import os
 
 import invoke
-import sys
 
 #-------------------------------------------------------------------------------
 
@@ -24,15 +25,20 @@ def doc(context):
 #-------------------------------------------------------------------------------
 
 @invoke.task
-def test(context, unit=False):
+def test(context, unit=False, filename=None):
     '''Run tests
     '''
     if unit:
-        path = 'static_frame/test/unit'
+        fp = 'static_frame/test/unit'
     else:
-        path = 'static_frame/test'
+        fp = 'static_frame/test'
 
-    context.run(f'pytest -s --color no --disable-pytest-warnings --tb=native {path}')
+    if filename:
+        fp = os.path.join(fp, filename)
+
+    cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
+    print(cmd)
+    context.run(cmd)
 
 
 @invoke.task
@@ -60,7 +66,7 @@ def build(context):
     '''
     context.run(f'{sys.executable} setup.py sdist bdist_wheel')
 
-@invoke.task(pre=(clean, build))
+@invoke.task(pre=(build,))
 def release(context):
     context.run('twine upload dist/*')
 

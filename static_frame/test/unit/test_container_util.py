@@ -6,6 +6,7 @@ import numpy as np
 from static_frame.core.container_util import is_static
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import key_to_ascending_key
 
 from static_frame import Series
 from static_frame import Frame
@@ -248,6 +249,24 @@ class TestUnit(TestCase):
                 elif isinstance(post, np.ndarray):
                     self.assertTrue(post.tolist(), (pair[0].values @ pair[1].values).tolist())
 
+
+
+    def test_key_to_ascending_key_a(self) -> None:
+        self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
+        self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]) # type: ignore
+
+        self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 4, 1))
+        self.assertEqual(key_to_ascending_key(100, 3), 100)
+
+        self.assertEqual(key_to_ascending_key([], 3), [])
+
+        self.assertEqual(key_to_ascending_key( # type: ignore
+                Series(('a', 'b', 'c'), index=(9, 5, 1)), 3).values.tolist(),
+                ['c', 'b', 'a'])
+
+        f1 = Frame.from_dict(dict(b=(1, 2), a=(5, 6)), index=tuple('yz'))
+        f2 = key_to_ascending_key(f1, f1.shape[1])
+        self.assertEqual(f2.columns.values.tolist(), ['a', 'b']) # type: ignore
 
 if __name__ == '__main__':
     unittest.main()

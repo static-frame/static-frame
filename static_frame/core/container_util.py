@@ -20,6 +20,9 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import DEFAULT_SORT_KIND
 
 from static_frame.core.index_base import IndexBase
 
@@ -365,6 +368,43 @@ def bloc_key_normalize(
         raise RuntimeError('cannot use non-Bolean dtype as bloc key')
 
     return bloc_key
+
+
+def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
+    '''
+    Normalize all types of keys into an ascending formation.
+
+    Args:
+        size: the length of the container on this axis
+    '''
+    from static_frame.core.frame import Frame
+    from static_frame.core.series import Series
+
+    if isinstance(key, slice):
+        return slice_to_ascending_slice(key, size=size)
+
+    if isinstance(key, str) or not hasattr(key, '__len__'):
+        return key
+
+    if isinstance(key, np.ndarray):
+        # array first as not truthy
+        return np.sort(key, kind=DEFAULT_SORT_KIND)
+
+    if not key:
+        return key
+
+    if isinstance(key, list):
+        return sorted(key)
+
+    if isinstance(key, Series):
+        return key.sort_index()
+
+    if isinstance(key, Frame):
+        # for usage in assignment we need columns to be sorted
+        return key.sort_columns()
+
+    raise RuntimeError(f'unhandled key {key}')
+
 
 
 def rehierarch_and_map(*,

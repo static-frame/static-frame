@@ -1257,6 +1257,31 @@ class TestUnit(TestCase):
         self.assertEqual(f1.ndim, 2)
         self.assertEqual(f1.shape, (2, 5))
 
+    #---------------------------------------------------------------------------
+    def test_frame_assign_getitem_a(self) -> None:
+
+        f1 = FrameGO(index=(0,1,2))
+        for idx, col in enumerate(string.ascii_uppercase + string.ascii_lowercase):
+            f1[col] = idx
+
+        fields = ['m','V','P','c','Y','r','q','R','j','X','a','E','K','p','u','G','D','w','d','e','H','i','h','N','O','k','l','F','g','o','M','T','n','L','Q','W','t','v','s','Z','J','I','b']
+
+        # check that normal selection works
+        f1_sub = f1[fields]
+        self.assertEqual(f1_sub.columns.values.tolist(), fields)
+
+        f2 = f1.assign[fields](f1[fields] * 0.5)
+
+        self.assertTrue((f2.columns == f1.columns).all())
+        self.assertTrue((f2.index == f1.index).all())
+
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('int64'), np.dtype('float64'), np.dtype('int64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('int64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
+                )
+        # as expected, values is coercing all to floats
+        self.assertEqual(f2.values.tolist(),
+                [[0.0, 1.0, 2.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 18.0, 9.5, 20.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 31.0, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 49.0, 50.0, 51.0], [0.0, 1.0, 2.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 18.0, 9.5, 20.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 31.0, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 49.0, 50.0, 51.0], [0.0, 1.0, 2.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 18.0, 9.5, 20.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 31.0, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 49.0, 50.0, 51.0]]
+                )
 
 
     def test_frame_assign_iloc_a(self) -> None:
