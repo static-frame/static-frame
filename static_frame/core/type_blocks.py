@@ -1294,15 +1294,19 @@ class TypeBlocks(ContainerOperand):
 
         # this selects the columns; but need to return all blocks
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
-        target_block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=True),)
-        target_block_idx = target_slice = None
+        target_block_slices = iter(self._key_to_block_slices(
+                column_key,
+                retain_key_order=True),
+                )
+        target_slice: tp.Optional[tp.Union[int, slice]] = None
+        target_block_idx = None
         targets_remain = True
 
         # if targetting all rows, we can slice the block and and retain types betters
         row_key_is_null_slice = row_key is None or (
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
 
-        assigned_components = []
+        assigned_components: tp.List[np.ndarray] = []
 
         for block_idx, b in enumerate(self._blocks):
 
@@ -1328,7 +1332,7 @@ class TypeBlocks(ContainerOperand):
                 #---------------------------------------------------------------
                 # from here, we have at least one target we need to apply in the current block. On the first pass, create the array (if not using components) that we will return to replace the block. If using array components, but update on each pass
                 if assigned_components_active:
-                    start = target_slice if not target_slice_is_slice else target_slice.start
+                    start: int = target_slice if not target_slice_is_slice else target_slice.start
                     if start > assigned_components_last:
                         # backfill, from block, from the last assigned position
                         b_slice = slice(assigned_components_last, start)
