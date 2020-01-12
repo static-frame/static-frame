@@ -199,9 +199,32 @@ class TestUnit(TestCase):
     def test_shift_blocks(self) -> None:
         pass
 
-    @unittest.skip('pending')
-    def test_assign_blocks_from_keys(self) -> None:
-        pass
+    @given(sfst.get_type_blocks())  # type: ignore
+    def test_assign_blocks_from_keys(self, tb1: TypeBlocks) -> None:
+
+        # assigning a single value from a list of column keys
+        for i in range(tb1.shape[1]):
+            tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                    column_key=[i], value=300))
+            self.assertTrue(tb1.shape == tb2.shape)
+            # no more than one type should be changed
+            self.assertTrue((tb1.dtypes != tb2.dtypes).sum() <= 1)
+
+        # assigning a single value from a list of row keys
+        for i in range(tb1.shape[0]):
+            tb3 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                    row_key=[i], value=300))
+            self.assertTrue(tb1.shape == tb3.shape)
+            self.assertTrue(tb3.iloc[i, 0] == 300)
+
+        # column slices to the end
+        for i in range(tb1.shape[1]):
+            tb4 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                    column_key=slice(i, None), value=300))
+            self.assertTrue(tb1.shape == tb4.shape)
+            # we have as many or more blocks
+            self.assertTrue(len(tb4.shapes) >= len(tb1.shapes))
+
 
     @unittest.skip('pending')
     def test_assign_blocks_from_boolean_blocks(self) -> None:

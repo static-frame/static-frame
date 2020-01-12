@@ -19,6 +19,7 @@ from static_frame import mloc
 from static_frame.core.util import immutable_filter
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
 
 nan = np.nan
@@ -735,6 +736,7 @@ class TestUnit(TestCase):
                 [ True, False, False,  True, False, False,  True, False]])
 
 
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_assign_blocks_a(self) -> None:
 
@@ -743,7 +745,8 @@ class TestUnit(TestCase):
         a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(column_key=[2,3,5], value=300))
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                column_key=[2,3,5], value=300))
 
         self.assertTypeBlocksArrayEqual(tb2,
             [[1, 2, 300, 300, False, 300, 'a', 'b'],
@@ -756,7 +759,53 @@ class TestUnit(TestCase):
             [(3, 2), (3, 1), (3, 1), (3, 1), (3, 1), (3, 2)]
             )
 
+    def test_type_blocks_assign_blocks_b(self) -> None:
 
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                column_key=slice(-3, None), value=300))
+
+        self.assertTypeBlocksArrayEqual(tb2,
+            [[1, 2, 3, False, False, 300, 300, 300],
+            [4, 5, 6, True, False, 300, 300, 300],
+            [0, 0, 1, True, False, 300, 300, 300]], match_dtype=object)
+
+        # blocks not mutated will be the same
+        self.assertEqual(tb1.mloc[0], tb2.mloc[0])
+        self.assertEqual(tb2.shapes.tolist(),
+            [(3, 3), (3, 2), (3, 1), (3, 2)]
+            )
+
+    @skip_win  # type: ignore
+    def test_type_blocks_assign_blocks_c(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                column_key=[0, 2, 3, 5, 7], value=300))
+
+        self.assertTypeBlocksArrayEqual(tb2,
+            [[300, 2, 300, 300, False, 300, 'a', 300],
+            [300, 5, 300, 300, False, 300, 'c', 300],
+            [300, 0, 300, 300, False, 300, 'oe', 300]], match_dtype=object)
+
+
+        self.assertEqual(tb2.shapes.tolist(),
+            [(3, 1), (3, 1), (3, 1), (3, 1), (3, 1), (3, 1), (3, 1), (3, 1)]
+            )
+
+        self.assertEqual(tb2.dtypes.tolist(),
+            [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('bool'), np.dtype('int64'), np.dtype('<U2'), np.dtype('int64')]
+            )
+
+    #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 
         a1 = np.array([
