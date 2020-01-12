@@ -1301,7 +1301,6 @@ class TypeBlocks(ContainerOperand):
         target_is_slice: bool
         start: int
 
-        # if targetting all rows, we can slice the block and and retain types betters
         row_key_is_null_slice = row_key is None or (
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
 
@@ -1316,7 +1315,7 @@ class TypeBlocks(ContainerOperand):
                     try:
                         target_block_idx, target_key = next(target_block_slices)
                     except StopIteration:
-                        targets_remain = False
+                        targets_remain = False # stop entering while loop
                         break
                     target_is_slice = isinstance(target_key, slice)
 
@@ -1324,7 +1323,7 @@ class TypeBlocks(ContainerOperand):
                     break # need to advance blocks, keep targets
 
                 #---------------------------------------------------------------
-                # from here, we have at least one target we need to apply in the current block. On the first pass, create the array (if not using components) that we will return to replace the block. If using array components, but update on each pass
+                # from here, we have at least one target we need to apply in the current block.
 
                 start = target_key if not target_is_slice else target_key.start # type: ignore
 
@@ -1338,7 +1337,7 @@ class TypeBlocks(ContainerOperand):
                     # can assume this slice has no strides
                     t_width = target_key.stop - target_key.start # type: ignore
                     t_shape = (b.shape[0], t_width)
-                else: # its an integer, get a 1d array
+                else: # b.ndim == 1 or target is an integer: get a 1d array
                     t_width = 1
                     t_shape = b.shape[0]
 
@@ -1357,11 +1356,11 @@ class TypeBlocks(ContainerOperand):
                     else:
                         assigned_target = assigned_target_pre.astype(assigned_dtype)
 
-                assigned_components.append(assigned_target)
+                # add assigned_target to assigned_components below, after mutating
                 assigned_components_last = start + t_width
 
                 #---------------------------------------------------------------
-                # match sliceable, when target_key is a slice (can be an integer)
+                # match sliceable, when target_key is a slice (can be an element)
                 if (target_is_slice and
                         not isinstance(value, str)
                         and hasattr(value, '__len__')):
@@ -1390,11 +1389,12 @@ class TypeBlocks(ContainerOperand):
                 # write `value` into assigned (or assigned components
                 row_target = NULL_SLICE if row_key_is_null_slice else row_key
 
-                if assigned_components[-1].ndim == 1:
-                    assigned_components[-1][row_target] = value_piece
+                if assigned_target.ndim == 1:
+                    assigned_target[row_target] = value_piece
                 else: # we are editing the entire assigned target sub block
-                    assigned_components[-1][row_target, NULL_SLICE] = value_piece
+                    assigned_target[row_target, NULL_SLICE] = value_piece
 
+                assigned_components.append(assigned_target)
                 # reset after completing assignment to get new target
                 target_block_idx = target_key = None
 
