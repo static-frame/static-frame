@@ -751,7 +751,11 @@ class TestUnit(TestCase):
             [0, 0, 300, 300, False, 300, 'oe', 'od']], match_dtype=object)
 
         # blocks not mutated will be the same
-        self.assertEqual(tb1.mloc[2], tb2.mloc[2])
+        self.assertEqual(tb1.mloc[2], tb2.mloc[5])
+        self.assertEqual(tb2.shapes.tolist(),
+            [(3, 2), (3, 1), (3, 1), (3, 1), (3, 1), (3, 2)]
+            )
+
 
     def test_type_blocks_group_a(self) -> None:
 

@@ -1293,10 +1293,45 @@ class TestUnit(TestCase):
 
     def test_frame_assign_getitem_c(self) -> None:
         f1 = sf.Frame(False, index=range(2), columns=tuple('ab'))
-
         f2 = f1.assign['a']([1.1, 2.1])
+        self.assertEqual(f2._blocks.shapes.tolist(), [(2,), (2,1)])
+        self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('bool')])
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, 1.1), (1, 2.1))), ('b', ((0, False), (1, False))))
+                )
 
-        import ipdb; ipdb.set_trace()
+    def test_frame_assign_getitem_d(self) -> None:
+        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f2 = f1.assign['b']([1.1, 2.1])
+        self.assertEqual(f2._blocks.shapes.tolist(), [(2, 1), (2,), (2, 2)])
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('bool'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool')]
+                )
+        self.assertEqual( f2.to_pairs(0),
+                (('a', ((0, False), (1, False))), ('b', ((0, 1.1), (1, 2.1))), ('c', ((0, False), (1, False))), ('d', ((0, False), (1, False))))
+                )
+
+    def test_frame_assign_getitem_e(self) -> None:
+        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f2 = f1.assign['c']([1.1, 2.1])
+        self.assertEqual(f2._blocks.shapes.tolist(), [(2, 2), (2,), (2, 1)])
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('bool')]
+                )
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, False), (1, False))), ('b', ((0, False), (1, False))), ('c', ((0, 1.1), (1, 2.1))), ('d', ((0, False), (1, False))))
+                )
+
+    def test_frame_assign_getitem_f(self) -> None:
+        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f2 = f1.assign['d']([1.1, 2.1])
+        self.assertEqual(f2._blocks.shapes.tolist(), [(2, 3), (2,),])
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64')]
+                )
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, False), (1, False))), ('b', ((0, False), (1, False))), ('c', ((0, False), (1, False))), ('d', ((0, 1.1), (1, 2.1))))
+                )
 
 
     def test_frame_assign_iloc_a(self) -> None:

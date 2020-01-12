@@ -1293,52 +1293,78 @@ class TypeBlocks(ContainerOperand):
 
         # this selects the columns; but need to return all blocks
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
-        block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=True),)
+        target_block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=True),)
         target_block_idx = target_slice = None
         targets_remain = True
 
         # if targetting all rows, we can slice the block and and retain types betters
         row_key_is_null_slice = row_key is None or (
                 isinstance(row_key, slice) and row_key == NULL_SLICE)
-        # ASSIGNED_MOCK = object()
+        ASSIGNED_COMPONENTS_ACTIVE = object()
 
         for block_idx, b in enumerate(self._blocks):
 
             assigned = None
+            assigned_components = [] # TODO: do not create for each block
+            assigned_components_last = 0 # esclusive max
+
             while targets_remain:
                 if target_block_idx is None: # can be zero
                     try:
-                        target_block_idx, target_slice = next(block_slices)
+                        target_block_idx, target_slice = next(target_block_slices)
                     except StopIteration:
                         targets_remain = False
                         break
+                    target_slice_is_slice = isinstance(target_slice, slice)
+
+                    # print(f'block_idx={block_idx} target_block_idx={target_block_idx} target_slice={target_slice}')
 
                 if block_idx != target_block_idx:
                     break # need to advance blocks, keep targets
 
+                #---------------------------------------------------------------
                 # from here, we have a target we need to apply in the current block
                 # create the array that we will return to replace the block if we have not already
-                if assigned is None:
+                if assigned is None or assigned is ASSIGNED_COMPONENTS_ACTIVE:
                     if row_key_is_null_slice:
-                        # if isinstance(target_slice, int):
-                        #     assigned = ASSIGNED_MOCK
-                        # if row_key is null slice, we s hold not need to get a different type
+                        assigned_dtype = value_dtype
+
                         if b.ndim == 1:
-                            # full replacement of a 1D block; can also create assigned with empty
-                            assigned_dtype = value_dtype
+                            # create empty and let it be filled below
+                            assigned = np.empty(b.shape, dtype=value_dtype)
                         else:
-                            assigned_dtype = resolve_dtype(value_dtype, b.dtype)
+                            assigned = ASSIGNED_COMPONENTS_ACTIVE
+
+                            # back fill direct from block from the last assigned position
+                            start = target_slice if not target_slice_is_slice else target_slice.start
+                            if start > assigned_components_last:
+                                # always 2d at this point
+                                b_slice = slice(assigned_components_last, start)
+                                assigned_components.append(b[NULL_SLICE, b_slice])
+
+                            # add empty components for the assignment region
+                            # import ipdb; ipdb.set_trace()
+                            if target_slice_is_slice:
+                                # can assume this slice has no strides
+                                width = target_slice.stop - target_slice.start
+                                assigned_components.append(
+                                        np.empty((b.shape[0], width), dtype=value_dtype))
+                                assigned_components_last = start + width
+
+                            else: # its an integer, get a 1d array
+                                assigned_components.append(
+                                        np.empty(b.shape[0], dtype=value_dtype))
+                                assigned_components_last = start + 1
                     else:
                         assigned_dtype = resolve_dtype(value_dtype, b.dtype)
+                        if b.dtype == assigned_dtype:
+                            assigned = b.copy()
+                        else:
+                            assigned = b.astype(assigned_dtype)
 
-                    if b.dtype == assigned_dtype:
-                        assigned = b.copy()
-                    else:
-                        assigned = b.astype(assigned_dtype)
-                    # import ipdb; ipdb.set_trace()
-
+                #---------------------------------------------------------------
                 # match sliceable, when target_slice is a slice (can be an integer)
-                if (isinstance(target_slice, slice) and
+                if (target_slice_is_slice and
                         not isinstance(value, str)
                         and hasattr(value, '__len__')):
                     if b.ndim == 1:
@@ -1362,7 +1388,16 @@ class TypeBlocks(ContainerOperand):
                 else: # not sliceable; this can be a single column
                     value_piece = value
 
-                if b.ndim == 1: # given 1D array, our row key is all we need
+                #---------------------------------------------------------------
+                # write `value` into assigned (or assigned components
+                if assigned is ASSIGNED_COMPONENTS_ACTIVE:
+                    # import ipdb; ipdb.set_trace()
+                    # the most-recent assigned component is the one to modify
+                    if assigned_components[-1].ndim == 1:
+                        assigned_components[-1][NULL_SLICE] = value_piece
+                    else:
+                        assigned_components[-1][NULL_SLICE, NULL_SLICE] = value_piece
+                elif b.ndim == 1: # given 1D array, our row key is all we need
                     if row_key_is_null_slice:
                         # value piece may or may not be an np array; use assignment here to normalize shape, i.e., from a single value
                         assigned[NULL_SLICE] = value_piece
@@ -1371,14 +1406,26 @@ class TypeBlocks(ContainerOperand):
                 else:
                     if row_key_is_null_slice:
                         assigned[NULL_SLICE, target_slice] = value_piece
-                        # import ipdb; ipdb.set_trace()
                     else:
                         assigned[row_key, target_slice] = value_piece
 
                 target_block_idx = target_slice = None
 
+            #-------------------------------------------------------------------
+            # all assignments for this block have been made
+
             if assigned is None:
                 yield b # no change
+            elif assigned is ASSIGNED_COMPONENTS_ACTIVE:
+                # import ipdb; ipdb.set_trace()
+                for sub in assigned_components:
+                    sub.flags.writeable = False
+                    yield sub
+                # get any remaining part of the block
+                if assigned_components_last < b.shape[1]:
+                    sub = b[NULL_SLICE, assigned_components_last:]
+                    sub.flags.writeable = False
+                    yield sub
             else:
                 # disable writing so clients can keep the array
                 assigned.flags.writeable = False
