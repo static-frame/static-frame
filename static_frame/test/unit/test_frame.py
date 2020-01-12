@@ -1335,7 +1335,7 @@ class TestUnit(TestCase):
 
     def test_frame_assign_getitem_g(self) -> None:
         f1 = sf.Frame(False, index=range(2), columns=tuple('abcde'))
-        f2 = f1.assign['b':'d']('x')
+        f2 = f1.assign['b':'d']('x') # type: ignore
         self.assertEqual(f2._blocks.shapes.tolist(), [(2, 1), (2, 3), (2, 1)])
         self.assertEqual(f2.dtypes.values.tolist(),
                 [np.dtype('bool'), np.dtype('<U1'), np.dtype('<U1'), np.dtype('<U1'), np.dtype('bool')]
@@ -1484,7 +1484,7 @@ class TestUnit(TestCase):
 
     def test_frame_assign_loc_f(self) -> None:
         f1 = sf.Frame(False, index=range(2), columns=tuple('abcde'))
-        f2 = f1.assign.loc[1, 'b':'d']('x')
+        f2 = f1.assign.loc[1, 'b':'d']('x') # type: ignore
         self.assertEqual(f2.dtypes.values.tolist(),
                 [np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool')])
         self.assertEqual(f2.to_pairs(0),
