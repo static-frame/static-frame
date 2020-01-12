@@ -1325,15 +1325,17 @@ class TypeBlocks(ContainerOperand):
                 #---------------------------------------------------------------
                 # from here, we have at least one target we need to apply in the current block.
 
+                block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
                 start = target_key if not target_is_slice else target_key.start # type: ignore
 
                 if start > assigned_components_last:
-                    # backfill, from block, from the last assigned position; this will only happen if b.ndim > 1
-                    b_slice = slice(assigned_components_last, start)
-                    assigned_components.append(b[NULL_SLICE, b_slice])
+                    # backfill, from block, from the last assigned position
+                    b_component = b[NULL_SLICE, slice(assigned_components_last, start)]
+                    b_component.flags.writeable = False
+                    assigned_components.append(b_component)
 
                 # add empty components for the assignment region
-                if target_is_slice and b.ndim > 1:
+                if target_is_slice and not block_is_column:
                     # can assume this slice has no strides
                     t_width = target_key.stop - target_key.start # type: ignore
                     t_shape = (b.shape[0], t_width)
@@ -1346,7 +1348,7 @@ class TypeBlocks(ContainerOperand):
                     assigned_target = np.empty(t_shape, dtype=value_dtype)
                 else: # will need to mix types
                     assigned_dtype = resolve_dtype(value_dtype, b.dtype)
-                    if b.ndim == 1:
+                    if block_is_column:
                         assigned_target_pre = b
                     else:
                         assigned_target_pre = b[NULL_SLICE, target_key]
@@ -1364,7 +1366,7 @@ class TypeBlocks(ContainerOperand):
                 if (target_is_slice and
                         not isinstance(value, str)
                         and hasattr(value, '__len__')):
-                    if b.ndim == 1:
+                    if block_is_column:
                         v_width = 1
                         # if block is 1D, then we can only take 1 column if we have a 2d value
                         value_piece_column_key: tp.Union[slice, int] = 0
@@ -1390,10 +1392,12 @@ class TypeBlocks(ContainerOperand):
                 row_target = NULL_SLICE if row_key_is_null_slice else row_key
 
                 if assigned_target.ndim == 1:
+                    # cannot branch on  block_is_column, as may be 2D array
                     assigned_target[row_target] = value_piece
                 else: # we are editing the entire assigned target sub block
                     assigned_target[row_target, NULL_SLICE] = value_piece
 
+                assigned_target.flags.writeable = False
                 assigned_components.append(assigned_target)
                 # reset after completing assignment to get new target
                 target_block_idx = target_key = None
@@ -1402,14 +1406,17 @@ class TypeBlocks(ContainerOperand):
             # all assignments for this block have been made
 
             if assigned_components:
-                for sub in assigned_components:
-                    sub.flags.writeable = False
-                    yield sub
-                # get any remaining part of the block; will only have remainders if b.ndim > 1
-                if b.ndim > 1 and assigned_components_last < b.shape[1]:
-                    sub = b[NULL_SLICE, assigned_components_last:]
-                    sub.flags.writeable = False
-                    yield sub
+                if block_is_column:
+                    # only have one sub-component and no remaining parts, do not need to get from list
+                    yield assigned_target
+                else:
+                    for sub in assigned_components:
+                        yield sub
+                    # get any remaining part of the block; will only have remainders if b.ndim > 1
+                    if b.ndim > 1 and assigned_components_last < b.shape[1]:
+                        sub = b[NULL_SLICE, assigned_components_last:]
+                        sub.flags.writeable = False
+                        yield sub
             else:
                 yield b # no change
 
