@@ -805,6 +805,30 @@ class TestUnit(TestCase):
             [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('bool'), np.dtype('int64'), np.dtype('<U2'), np.dtype('int64')]
             )
 
+
+    def test_type_blocks_assign_blocks_d(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        value = np.array([1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1])
+        tb2 = TypeBlocks.from_blocks(tb1._assign_blocks_from_keys(
+                row_key=[1], value=value))
+
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O')])
+
+        self.assertTypeBlocksArrayEqual(tb2,
+            [[1.0, 2.0, 3.0, False, False, True, 'a', 'b'],
+            [1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1],
+            [0.0, 0.0, 1.0, True, False, True, 'oe', 'od']], match_dtype=object)
+
+
+
+
+
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 
