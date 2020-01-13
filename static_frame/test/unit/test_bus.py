@@ -12,6 +12,7 @@ from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
+from static_frame.core.display import DisplayConfig
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -85,6 +86,9 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitBus):
             Bus(Series([3, 4], dtype=object))
 
+        with self.assertRaises(ErrorInitBus):
+            Bus(Series([3, 4], index=('a', 'b'), dtype=object))
+
 
     def test_bus_init_c(self) -> None:
 
@@ -113,6 +117,20 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f1_loaded)
             self.assertEqualFrames(f2, f2_loaded)
 
+    def test_bus_interface_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+
+        b1 = Bus.from_frames((f1, f2))
+        post = b1.interface
+        self.assertTrue(isinstance(post, Frame))
+        self.assertTrue(len(post) > 38)
 
     def test_bus_shapes_a(self) -> None:
         f1 = Frame.from_dict(
@@ -313,7 +331,49 @@ class TestUnit(TestCase):
             self.assertTrue(b2._loaded_all)
 
 
+    def test_bus_reversed_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
 
+        b1 = Bus.from_frames((f1, f2, f3))
+        self.assertEqual(list(reversed(b1)), ['f3', 'f2', 'f1'])
+
+
+    def test_bus_display_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        self.assertEqual(
+                b1.display(config=DisplayConfig(type_color=False)).to_rows(),
+                ['<Bus>',
+                '<Index>',
+                'f1      Frame',
+                'f2      Frame',
+                'f3      Frame',
+                '<<U2>   <object>'])
+
+    #---------------------------------------------------------------------------
     def test_bus_iloc_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -335,10 +395,48 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp)
 
             self.assertEqual(
-                    b2.iloc[[0,2]].status['loaded'].to_pairs(), # type: ignore
+                    b2.iloc[[0, 2]].status['loaded'].to_pairs(), # type: ignore
                     (('f1', True), ('f3', True))
                     )
 
+    def test_bus_iloc_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+
+        b1 = Bus.from_frames((f1,))
+        f2 = b1.iloc[0]
+        self.assertTrue(f1 is f2)
+
+    def test_bus_loc_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+
+        b1 = Bus.from_frames((f1,))
+        f2 = b1.loc['f1']
+        self.assertTrue(f1 is f2)
+
+    def test_bus_loc_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = b1.loc['f2':] #type: ignore
+        self.assertEqual(len(b2), 2)
+        self.assertEqual(b2.index.values.tolist(), ['f2', 'f3']) #type: ignore
 
 
     def test_bus_getitem_a(self) -> None:
