@@ -1308,7 +1308,7 @@ class TypeBlocks(ContainerOperand):
 
         for block_idx, b in enumerate(self._blocks):
             assigned_components.clear()
-            assigned_components_last: int = 0 # esclusive max
+            assigned_stop: int = 0 # exclusive maximum
 
             while targets_remain:
                 if target_block_idx is None: # can be zero
@@ -1328,9 +1328,9 @@ class TypeBlocks(ContainerOperand):
                 block_is_column = b.ndim == 1 or (b.ndim > 1 and b.shape[1] == 1)
                 start = target_key if not target_is_slice else target_key.start # type: ignore
 
-                if start > assigned_components_last:
+                if start > assigned_stop:
                     # backfill, from block, from the last assigned position
-                    b_component = b[NULL_SLICE, slice(assigned_components_last, start)]
+                    b_component = b[NULL_SLICE, slice(assigned_stop, start)]
                     b_component.flags.writeable = False
                     assigned_components.append(b_component)
 
@@ -1359,7 +1359,7 @@ class TypeBlocks(ContainerOperand):
                         assigned_target = assigned_target_pre.astype(assigned_dtype)
 
                 # add assigned_target to assigned_components below, after mutating
-                assigned_components_last = start + t_width
+                assigned_stop = start + t_width
 
                 #---------------------------------------------------------------
                 # match sliceable, when target_key is a slice (can be an element)
@@ -1410,11 +1410,10 @@ class TypeBlocks(ContainerOperand):
                     # only have one sub-component and no remaining parts, do not need to get from list
                     yield assigned_target
                 else:
-                    for sub in assigned_components:
-                        yield sub
+                    yield from assigned_components
                     # get any remaining part of the block; will only have remainders if b.ndim > 1
-                    if b.ndim > 1 and assigned_components_last < b.shape[1]:
-                        sub = b[NULL_SLICE, assigned_components_last:]
+                    if assigned_stop < b.shape[1]:
+                        sub = b[NULL_SLICE, assigned_stop:]
                         sub.flags.writeable = False
                         yield sub
             else:
