@@ -4,7 +4,7 @@ import numpy as np
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
-# from static_frame.core.bus import FrameDeferred
+from static_frame.core.bus import FrameDeferred
 
 from static_frame.core.series import Series
 
@@ -23,6 +23,10 @@ from static_frame.core.exception import StoreFileMutation
 
 
 class TestUnit(TestCase):
+
+    def test_frame_deferred_a(self) -> None:
+
+        self.assertEqual(str(FrameDeferred), f'<FrameDeferred>')
 
     def test_bus_slotted_a(self) -> None:
 
@@ -80,6 +84,34 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitBus):
             Bus(Series([3, 4], dtype=object))
+
+
+    def test_bus_init_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        self.assertEqual(b1.keys().values.tolist(),
+                ['foo', 'bar'])
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_csv(fp)
+            b2 = Bus.from_zip_csv(fp, config=config)
+
+            f1_loaded = b2['foo']
+            f2_loaded = b2['bar']
+
+            self.assertEqualFrames(f1, f1_loaded)
+            self.assertEqualFrames(f2, f2_loaded)
 
 
     def test_bus_shapes_a(self) -> None:

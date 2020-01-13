@@ -53,7 +53,8 @@ class _StoreZipDelimited(_StoreZip):
             return self.__class__._CONSTRUCTOR(src,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
-                    dtypes=config.dtypes
+                    dtypes=config.dtypes,
+                    name=label
                     )
 
     @store_coherent_write

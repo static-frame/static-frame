@@ -66,7 +66,7 @@ def build(context):
     '''
     context.run(f'{sys.executable} setup.py sdist bdist_wheel')
 
-@invoke.task(pre=(build,), post=(clean,)
+@invoke.task(pre=(build,), post=(clean,))
 def release(context):
     context.run('twine upload dist/*')
 
