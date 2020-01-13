@@ -80,10 +80,9 @@ class StoreXLSX(Store):
             ) -> 'Format':
         if format_specifier:
             return workbook.add_format(format_specifier)
-        else:
-            f = workbook.add_format()
-            f.set_bold()
-            return f
+        f = workbook.add_format()
+        f.set_bold()
+        return f
 
     @classmethod
     def _get_writer(cls,
@@ -236,8 +235,8 @@ class StoreXLSX(Store):
             ws = wb.add_worksheet(label)
             self._frame_to_worksheet(frame,
                     ws,
-                    format_columns=c.format_columns,
-                    format_index=c.format_index,
+                    format_columns=format_columns,
+                    format_index=format_index,
                     include_index=c.include_index,
                     include_columns=c.include_columns,
                     merge_hierarchical_labels=c.merge_hierarchical_labels,
