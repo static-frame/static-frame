@@ -827,6 +827,221 @@ class TestUnit(TestCase):
 
 
 
+    def test_type_blocks_assign_blocks_e(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        value = np.array([1.1, 2.1, 3.1, 4.1])
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(1, 5), value=value))
+
+        self.assertEqual(tb1.shape, tb2.shape)
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb2.iloc[1].values[0].tolist(),
+                [True, 1.1, 2.1, 3.1, 4.1, False, True, True, True])
+
+
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(2, 6), value=value))
+
+        self.assertEqual(tb1.shape, tb3.shape)
+        self.assertEqual(tb3.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb3.iloc[1].values[0].tolist(),
+                [True, True, 1.1, 2.1, 3.1, 4.1, True, True, True])
+
+
+        tb4 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(3, 7), value=value))
+
+        self.assertEqual(tb1.shape, tb4.shape)
+        self.assertEqual(tb4.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb4.iloc[1].values[0].tolist(),
+                [True, True, True, 1.1, 2.1, 3.1, 4.1, True, True])
+
+
+        tb5 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(4, 8), value=value))
+
+        self.assertEqual(tb1.shape, tb5.shape)
+        self.assertEqual(tb5.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool')])
+
+        self.assertEqual(tb5.iloc[1].values[0].tolist(),
+                [True, True, True, False, 1.1, 2.1, 3.1, 4.1, True])
+
+
+        tb6 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=[1], column_key=slice(5, 9), value=value))
+
+        self.assertEqual(tb1.shape, tb6.shape)
+        self.assertEqual(tb6.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('O'),])
+
+        self.assertEqual(tb6.iloc[1].values[0].tolist(),
+                [True, True, True, False, False, 1.1, 2.1, 3.1, 4.1])
+
+
+
+    def test_type_blocks_assign_blocks_f(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        value = np.array([1.1, 2.1, 3.1, 4.1])
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(1, 5), value=value))
+
+        self.assertEqual(tb1.shape, tb2.shape)
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb2.iloc[1].values[0].tolist(),
+                [True, 1.1, 2.1, 3.1, 4.1, False, True, True, True])
+
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(2, 6), value=value))
+
+        self.assertEqual(tb1.shape, tb3.shape)
+        self.assertEqual(tb3.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb3.iloc[1].values[0].tolist(),
+                [True, True, 1.1, 2.1, 3.1, 4.1, True, True, True])
+
+
+        tb4 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(3, 7), value=value))
+
+        self.assertEqual(tb1.shape, tb4.shape)
+        self.assertEqual(tb4.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb4.iloc[1].values[0].tolist(),
+                [True, True, True, 1.1, 2.1, 3.1, 4.1, True, True])
+
+
+        tb5 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(4, 8), value=value))
+
+        self.assertEqual(tb1.shape, tb5.shape)
+        self.assertEqual(tb5.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool')])
+
+        self.assertEqual(tb5.iloc[1].values[0].tolist(),
+                [True, True, True, False, 1.1, 2.1, 3.1, 4.1, True])
+
+
+        tb6 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(5, 9), value=value))
+
+        self.assertEqual(tb1.shape, tb6.shape)
+        self.assertEqual(tb6.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'), np.dtype('float64'),])
+
+        self.assertEqual(tb6.iloc[1].values[0].tolist(),
+                [True, True, True, False, False, 1.1, 2.1, 3.1, 4.1])
+
+
+
+    def test_type_blocks_assign_blocks_g(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        value = np.array([[1.1, 2.1], [3.1, 4.1]])
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(3, 5), value=value))
+
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(tb2.shapes.tolist(),
+                [(3, 3), (3, 2), (3, 1), (3, 3)])
+
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(4, 6), value=value))
+
+        self.assertEqual(tb3.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb3.shapes.tolist(),
+                [(3, 3), (3, 1), (3, 2), (3, 3)])
+
+
+        tb4 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(row_key=slice(1, 3), column_key=slice(5, 7), value=value))
+
+        self.assertEqual(tb4.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb4.shapes.tolist(),
+                [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
+
+
+
+
+    def test_type_blocks_assign_blocks_h(self) -> None:
+
+        a1 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+        a2 = np.array([[False, False, False], [False, False, False], [False, False, False]])
+        a3 = np.array([[True, True, True], [True, True, True], [True, True, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        value = np.array([[1.1, 2.1], [3.1, 4.1], [5.1, 6.1]])
+
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(3, 5), value=value))
+
+        self.assertEqual(tb2.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(tb2.shapes.tolist(),
+                [(3, 3), (3, 2), (3, 1), (3, 3)])
+
+
+        tb3 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(4, 6), value=value))
+
+        self.assertEqual(tb3.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb3.shapes.tolist(),
+                [(3, 3), (3, 1), (3, 2), (3, 3)])
+
+
+        tb4 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=slice(5, 7), value=value))
+
+        self.assertEqual(tb4.dtypes.tolist(),
+                [np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('bool'), np.dtype('float64'), np.dtype('float64'), np.dtype('bool'), np.dtype('bool')])
+
+        self.assertEqual(tb4.shapes.tolist(),
+                [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
 
 
     #--------------------------------------------------------------------------

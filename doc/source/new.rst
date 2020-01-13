@@ -7,7 +7,7 @@ What is New in Static Frame
 0.5.10
 ----------
 
-Fixed issue in ``Frame.assign`` when assignment target is a ``Frame``.
+Improvements to ``Frame.assign`` to handle unordered column selectors and preserve columnar types not affected by assignment.
 
 
 0.5.9
