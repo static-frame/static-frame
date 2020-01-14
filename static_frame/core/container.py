@@ -526,40 +526,42 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     __rfloordiv__: tp.Callable[[T, object], T]
 
 
+    # methods are overwritten by metaclass, but defined here for typing
+
     def all(self, axis: int = 0, skipna: bool = True) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def any(self, axis: int = 0, skipna: bool = True) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def sum(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def min(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def max(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def mean(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def median(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def std(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def var(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def prod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def cumsum(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
 

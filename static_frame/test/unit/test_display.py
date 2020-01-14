@@ -597,6 +597,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_display_tall(self) -> None:
+        f = Frame(None, index=range(40), columns=range(20))
+        self.assertEqual(len(f.display_tall().to_rows()), 44) # type: ignore
+        self.assertEqual(len(f.display_wide().to_rows()), 37) # type: ignore
+
+
+    #---------------------------------------------------------------------------
 
     @unittest.skip('too colorful')
     def test_display_type_color_a(self) -> None:
