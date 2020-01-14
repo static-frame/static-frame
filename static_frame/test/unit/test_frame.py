@@ -1630,6 +1630,21 @@ class TestUnit(TestCase):
                 f1.masked_array.loc[:, 'r':].sum(), 83)  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
 
+    def test_frame_masked_array_getitem_a(self) -> None:
+
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        self.assertEqual(f1.masked_array['r':].tolist(), #type: ignore
+                [[1, 2, None, None, None], [30, 50, None, None, None]])
+
+
+
     def test_reindex_other_like_iloc_a(self) -> None:
 
         records = (
@@ -2650,7 +2665,20 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(f1._blocks._blocks), 1)
 
+    def test_frame_from_items_f(self) -> None:
 
+        def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
+            for i in range(4):
+                yield i, (2 * i, 3 * i)
+
+        f1 = Frame.from_items(
+                gen(),
+                name='foo',
+                dtypes = (str, str, str, str)
+                )
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, '0'), (1, '0'))), (1, ((0, '2'), (1, '3'))), (2, ((0, '4'), (1, '6'))), (3, ((0, '6'), (1, '9'))))
+                )
 
     def test_frame_from_structured_array_a(self) -> None:
         a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
@@ -3744,7 +3772,7 @@ class TestUnit(TestCase):
 
 
     @skip_win  # type: ignore
-    def test_structured_array_to_blocks_and_index_a(self) -> None:
+    def test_structured_array_to_d_ia_cl_a(self) -> None:
 
         a1 = np.array(np.arange(12).reshape((3, 4)))
         post, _, _ = Frame._structured_array_to_d_ia_cl(
@@ -3756,8 +3784,35 @@ class TestUnit(TestCase):
                 [np.dtype('int64'), np.dtype('<U21'), np.dtype('int64'), np.dtype('<U21')]
                 )
 
+    def test_structured_arrayto_d_ia_cl_b(self) -> None:
+
+        a1 = np.array(np.arange(12).reshape((3, 4)))
+        post, _, _ = Frame._structured_array_to_d_ia_cl(
+                a1,
+                dtypes=[np.int64, str, str, str],
+                consolidate_blocks=True,
+                )
+        self.assertEqual(post.shapes.tolist(), [(3,), (3, 3)])
+
+
 
     #---------------------------------------------------------------------------
+
+
+    def test_frame_from_delimited_a(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index|A|B', 'a|True|20.2', 'b|False|85.3')))
+                file.close()
+
+            with self.assertRaises(ErrorInitFrame):
+                f = Frame.from_delimited(fp, index_depth=1, delimiter='|', skip_header=-1)
+
+            f = Frame.from_delimited(fp, index_depth=1, delimiter='|')
+            self.assertEqual(f.to_pairs(0),
+                    (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3)))))
 
     def test_frame_from_tsv_a(self) -> None:
 
@@ -5632,6 +5687,19 @@ class TestUnit(TestCase):
                 (('p', (('w', 2),)),))
 
 
+    def test_frame_drop_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x'))
+        self.assertEqual(f1.drop.iloc[1].to_pairs(0),
+                (('p', (('w', 2),)), ('q', (('w', 2),)), ('r', (('w', 'a'),)), ('s', (('w', False),)), ('t', (('w', False),))))
+
+
+
     def test_frame_roll_a(self) -> None:
 
         records = (
@@ -5934,6 +6002,18 @@ class TestUnit(TestCase):
                 (('squared', (('0000', 0), ('0001', 1), ('0002', 4))), ('cubed', (('0000', 0), ('0001', 1), ('0002', 8))))
         )
 
+
+    def test_frame_from_records_items_b(self) -> None:
+
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Tuple[str, str]]]:
+            for i in range(3):
+                yield f'000{i}', ('a' * i, 'b' * i)
+
+        f = Frame.from_records_items(gen())
+        self.assertEqual(
+                f.to_pairs(0),
+                ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
+                )
 
 
     def test_frame_loc_min_a(self) -> None:

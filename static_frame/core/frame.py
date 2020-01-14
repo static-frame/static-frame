@@ -1263,7 +1263,7 @@ class Frame(ContainerOperand):
 
 
         if skip_header < 0:
-            raise RuntimeError('skip_header must be greater than or equal to 0')
+            raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
         fp = path_filter(fp)
         delimiter_native = '\t'
