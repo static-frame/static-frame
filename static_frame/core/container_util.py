@@ -8,9 +8,9 @@ import numpy as np
 import typing as tp
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.series import Series #pylint: disable=W0611
-    from static_frame.core.frame import Frame #pylint: disable=W0611
-    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611
+    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
 
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors

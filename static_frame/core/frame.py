@@ -124,9 +124,9 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611
-    from xarray import Dataset #pylint: disable=W0611
-    import pyarrow #pylint: disable=W0611
+    import pandas #pylint: disable=W0611 #pragma: no cover
+    from xarray import Dataset #pylint: disable=W0611 #pragma: no cover
+    import pyarrow #pylint: disable=W0611 #pragma: no cover
 
 
 

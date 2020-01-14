@@ -67,7 +67,7 @@ from static_frame.core.exception import LocInvalid
 
 
 if tp.TYPE_CHECKING:
-    import pandas #pylint: disable=W0611
+    import pandas #pylint: disable=W0611 #pragma: no cover
 
 
 I = tp.TypeVar('I', bound=IndexBase)

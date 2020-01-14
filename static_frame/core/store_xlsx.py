@@ -41,9 +41,9 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611
-    from xlsxwriter.workbook import Workbook  # pylint: disable=W0611
-    from xlsxwriter.format import Format  # pylint: disable=W0611
+    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
 
 
 

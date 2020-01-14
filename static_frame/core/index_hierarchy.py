@@ -61,8 +61,8 @@ from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
 
-    from pandas import DataFrame #pylint: disable=W0611
-    from static_frame.core.frame import Frame #pylint: disable=W0611
+    from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
