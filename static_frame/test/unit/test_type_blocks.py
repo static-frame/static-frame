@@ -21,11 +21,20 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
+from static_frame.core.exception import ErrorInitTypeBlocks
+
 
 nan = np.nan
 
 
 class TestUnit(TestCase):
+
+    def test_type_blocks_init_a(self) -> None:
+        with self.assertRaises(ErrorInitTypeBlocks):
+            tb1 = TypeBlocks.from_blocks((3, 4))
+        with self.assertRaises(ErrorInitTypeBlocks):
+            tb1 = TypeBlocks.from_blocks((np.arange(8).reshape((2, 2, 2)),))
+
 
     def test_type_blocks_a(self) -> None:
 

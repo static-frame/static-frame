@@ -248,7 +248,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1 = Frame(a1)
 
-
+    #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
 
         f1 = sf.Frame('q',
