@@ -4015,6 +4015,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    @skip_win # type: ignore
     def test_frame_to_delimited_a(self) -> None:
 
         records = (
