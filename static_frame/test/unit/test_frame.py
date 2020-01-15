@@ -32,6 +32,7 @@ from static_frame import IndexAutoFactory
 
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
+from static_frame.core.frame import FrameAssign
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -852,9 +853,7 @@ class TestUnit(TestCase):
                 (('a', ((0, 'foo'), (1, 'foo'), (2, 'foo'))),)
                 )
 
-
-
-
+    #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:
         records = (
@@ -949,6 +948,19 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(), ['p', 'q', 'r', 's'])
         self.assertEqual(f1['s'].values.tolist(), [-3, 0])
 
+
+    def test_frame_extend_e(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        with self.assertRaises(NotImplementedError):
+            f1.extend('a')
+
+    #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:
         # full Frame, empty extensions with no index
@@ -1505,6 +1517,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('r', (('x', None), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False)))))
 
 
+    #---------------------------------------------------------------------------
 
     def test_frame_assign_bloc_a(self) -> None:
 
@@ -1594,6 +1607,36 @@ class TestUnit(TestCase):
         self.assertEqual(f1.assign.bloc(sel)(f2).to_pairs(0),
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', -100))), ('r', (('x', 20), ('y', -100))), ('s', (('x', 40), ('y', 5))))
             )
+
+
+    def test_frame_assign_bloc_e(self) -> None:
+
+        records = (
+                (1, 20),
+                (30, 5))
+        f1 = Frame.from_records(records,
+                columns=('p', 'q',),
+                index=('x','y'))
+
+        with self.assertRaises(RuntimeError):
+            # invalid bloc_key
+            f1.assign.bloc([[True, False], [False, True]])(3)
+
+        with self.assertRaises(RuntimeError):
+            f1.assign.bloc(np.array([[True, False, False], [False, True, True]]))(3)
+
+        with self.assertRaises(RuntimeError):
+            f1.assign.bloc(np.array([[True, False], [False, True]]))(np.array([[100, 200, 10], [200, 300, 30]]))
+
+
+        a1 = np.array([[True, False], [False, True]])
+        a2 = np.array([[100, 200], [200, 300]])
+        self.assertEqual(
+                f1.assign.bloc(a1)(a2).to_pairs(0),
+                (('p', (('x', 100), ('y', 30))), ('q', (('x', 20), ('y', 300))))
+                )
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_mask_loc_a(self) -> None:
@@ -5415,6 +5458,7 @@ class TestUnit(TestCase):
         sff = Frame.from_pandas(pdf)
         self.assertTrue((pdf.dtypes.values == sff.dtypes.values).all())
 
+    #---------------------------------------------------------------------------
 
     def test_frame_to_frame_go_a(self) -> None:
         records = (
@@ -5480,7 +5524,13 @@ class TestUnit(TestCase):
         )
 
 
+    def frame_to_frame_go_d(self) -> None:
 
+        f1 = FrameGO(columns=('a', 'b'))
+        with self.assertRaises(ErrorInitFrame):
+            f2 = f1.to_frame_go()
+
+    #---------------------------------------------------------------------------
 
     def test_frame_astype_a(self) -> None:
         records = (
@@ -6611,6 +6661,17 @@ class TestUnit(TestCase):
         self.assertFalse(bool(f1))
         self.assertFalse(bool(f1.T))
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_frame_assign_a(self):
+
+        f1 = Frame(columns=('a', 'b'))
+        with self.assertRaises(RuntimeError):
+            # can only set one at at ime
+            fa0 = FrameAssign(f1, iloc_key=(0, 0), bloc_key=f1)
+
+        fa1 = FrameAssign(f1, iloc_key=(0, 0), bloc_key=None)
+        fa2 = FrameAssign(f1, iloc_key=None, bloc_key=f1)
 
 
 if __name__ == '__main__':

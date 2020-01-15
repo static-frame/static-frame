@@ -4593,6 +4593,9 @@ class FrameGO(Frame):
 
         This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended from another Frame into this Frame.
         '''
+        if not isinstance(container, (Series, Frame)):
+            raise NotImplementedError(
+                    f'no support for extending with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
             return
@@ -4609,12 +4612,9 @@ class FrameGO(Frame):
         elif isinstance(container, Series):
             self._columns.append(container.name)
             self._blocks.append(container.values)
-        else:
-            raise NotImplementedError(
-                    'no support for extending with %s' % type(container))
 
-        if len(self._columns) != self._blocks._shape[1]:
-            raise RuntimeError('malformed Frame was used in extension')
+        # this should never happen, and is hard to test!
+        assert len(self._columns) == self._blocks._shape[1] #pragma: no cover
 
 
     #---------------------------------------------------------------------------
@@ -4636,7 +4636,7 @@ class FrameGO(Frame):
         '''
         Return a FrameGO version of this Frame.
         '''
-        raise NotImplementedError('Already a FrameGO')
+        raise ErrorInitFrame('This Frame is already a FrameGO')
 
 
 #-------------------------------------------------------------------------------
