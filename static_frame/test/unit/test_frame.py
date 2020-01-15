@@ -863,7 +863,7 @@ class TestUnit(TestCase):
             f['a'] = 'bar4'
 
 
-    def test_frame_setitem_f(self) -> None:
+    def test_frame_setitem_g(self) -> None:
 
         # 3d array raises exception
         f = sf.FrameGO(index=range(3))
