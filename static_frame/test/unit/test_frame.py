@@ -862,6 +862,23 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f['a'] = 'bar4'
 
+
+    def test_frame_setitem_f(self) -> None:
+
+        # 3d array raises exception
+        f = sf.FrameGO(index=range(3))
+        f['a'] = 'foo'
+
+        # with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError):
+            f['b'] = np.array([[1, 2], [2, 5]])
+
+        with self.assertRaises(RuntimeError):
+            f['b'] = np.array([1, 2])
+
+        with self.assertRaises(RuntimeError):
+            f['b'] = [1, 2]
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:
@@ -3965,6 +3982,27 @@ class TestUnit(TestCase):
                     ((':with:colon:', ((0, 1),)),)
                     )
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_delimited_a(self) -> None:
+
+        records = (
+                (2, None),
+                (3, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's'),
+                index=('w', 'x'))
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_delimited(fp, delimiter='|', store_filter=None)
+            f = open(fp)
+            lines = f.readlines()
+            self.assertEqual(lines,
+                    ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan']
+                    )
+
+
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (
@@ -4399,6 +4437,28 @@ class TestUnit(TestCase):
         with temp_file('.h5') as fp:
             f1.to_hdf5(fp)
             f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
+            self.assertEqualFrames(f1, f2)
+
+    def test_frame_from_hdf5_b(self) -> None:
+        records = (
+                (2, False),
+                (30, False),
+                (2, False),
+                (30, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        with temp_file('.h5') as fp:
+            # no .name, and no label provided
+            with self.assertRaises(RuntimeError):
+                f1.to_hdf5(fp)
+
+            f1.to_hdf5(fp, label='foo')
+            f2 = Frame.from_hdf5(fp, label='foo', index_depth=f1.index.depth)
+            f1 = f1.rename('foo') # will come back with label as name
             self.assertEqualFrames(f1, f2)
 
     #---------------------------------------------------------------------------

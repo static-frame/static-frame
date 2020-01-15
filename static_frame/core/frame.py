@@ -4268,7 +4268,7 @@ class Frame(ContainerOperand):
         if store_filter:
             filter_func = store_filter.from_type_filter_element
 
-        try:
+        try: # manage finally closing of file
             if include_columns:
                 if columns.depth == 1:
                     columns_rows = (columns,)
@@ -4471,8 +4471,8 @@ class Frame(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
-            import webbrowser
-            webbrowser.open_new_tab(fp)
+            import webbrowser #pragma: no cover
+            webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
 
     def to_rst(self,
@@ -4555,7 +4555,7 @@ class FrameGO(Frame):
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1 or len(value) != row_count:
                 # block may have zero shape if created without columns
-                raise RuntimeError('incorrectly sized, unindexed value')
+                raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
             self._blocks.append(value)
         else:
             if not hasattr(value, '__iter__') or isinstance(value, str):
