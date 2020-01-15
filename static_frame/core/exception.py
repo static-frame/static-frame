@@ -44,6 +44,9 @@ class LocEmpty(RuntimeError):
 class LocInvalid(RuntimeError):
     pass
 
+class AxisInvalid(RuntimeError):
+    pass
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):

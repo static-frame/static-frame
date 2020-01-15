@@ -38,6 +38,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
 
@@ -319,6 +320,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.values.tolist(), [[3], [2], [1]])
 
 
+    #---------------------------------------------------------------------------
     def test_frame_from_pairs_a(self) -> None:
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))
@@ -330,6 +332,7 @@ class TestUnit(TestCase):
         self.assertEqual(list((k, list(v.items())) for k, v in frame.items()),
             [('b', [(0, 6), (1, 3), (2, 2)]), ('a', [(0, 3), (1, 4), (2, 5)])])
 
+    #---------------------------------------------------------------------------
 
     def test_frame_from_pandas_a(self) -> None:
         import pandas as pd
@@ -457,6 +460,15 @@ class TestUnit(TestCase):
         df = f.set_index_hierarchy(['x', 'y']).to_pandas()
         self.assertEqual(list(df.index.names), ['x', 'y'])
 
+
+    def test_frame_to_pandas_f(self) -> None:
+        # check name transfer
+        f = Frame.from_records(
+            [['a', 1, 10], ['a', 2, 200],],
+            columns=('x', 'y', 'z'),
+            name='foo')
+        df = f.to_pandas()
+        self.assertEqual(df.name, f.name)
 
     #---------------------------------------------------------------------------
 
@@ -3981,6 +3993,25 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(0),
                     ((':with:colon:', ((0, 1),)),)
                     )
+
+
+    def test_frame_to_pairs_a(self) -> None:
+
+        records = (
+                (2, 'a'),
+                (3, 'b'),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's'),
+                index=('w', 'x'))
+
+        with self.assertRaises(AxisInvalid):
+            x = f1.to_pairs(3)
+
+        post = f1.to_pairs(1)
+        self.assertEqual(post,
+                (('w', (('r', 2), ('s', 'a'))), ('x', (('r', 3), ('s', 'b')))))
+
 
 
     #---------------------------------------------------------------------------

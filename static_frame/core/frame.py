@@ -117,9 +117,9 @@ from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
-# NOTE: static_frame.core.store imports frame.py
 
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import AxisInvalid
 
 from static_frame.core.doc_str import doc_inject
 
@@ -4098,7 +4098,7 @@ class Frame(ContainerOperand):
             major = columns_values
             minor = index_values
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         return tuple(
                 zip(major, (tuple(zip(minor, v))
