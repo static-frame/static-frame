@@ -1349,7 +1349,10 @@ class TypeBlocks(ContainerOperand):
                 else: # will need to mix types
                     assigned_dtype = resolve_dtype(value_dtype, b.dtype)
                     if block_is_column:
-                        assigned_target_pre = b
+                        if b.ndim == 1:
+                            assigned_target_pre = b
+                        else: # reshape into 1d array
+                            assigned_target_pre = b.reshape(b.shape[0])
                     else:
                         assigned_target_pre = b[NULL_SLICE, target_key]
 
@@ -1391,11 +1394,14 @@ class TypeBlocks(ContainerOperand):
                 # write `value` into assigned (or assigned components
                 row_target = NULL_SLICE if row_key_is_null_slice else row_key
 
-                if assigned_target.ndim == 1:
-                    # cannot branch on  block_is_column, as may be 2D array
-                    assigned_target[row_target] = value_piece
-                else: # we are editing the entire assigned target sub block
-                    assigned_target[row_target, NULL_SLICE] = value_piece
+                try:
+                    if assigned_target.ndim == 1:
+                        # cannot branch on block_is_column, as may be 2D array
+                        assigned_target[row_target] = value_piece
+                    else: # we are editing the entire assigned target sub block
+                        assigned_target[row_target, NULL_SLICE] = value_piece
+                except:
+                    import ipdb; ipdb.set_trace()
 
                 assigned_target.flags.writeable = False
                 assigned_components.append(assigned_target)

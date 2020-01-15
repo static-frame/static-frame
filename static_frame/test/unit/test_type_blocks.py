@@ -1053,6 +1053,23 @@ class TestUnit(TestCase):
                 [(3, 3), (3, 2), (3, 1), (3, 1), (3, 2)])
 
 
+
+    def test_type_blocks_assign_blocks_i(self) -> None:
+
+        a1 = np.array([[1.2], [2.1], [3.1]])
+        a2 = np.array([False, True, True])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        value = (20.1, 40.1)
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_keys(column_key=0, row_key=np.array([True, True, False]), value=value))
+
+        self.assertTypeBlocksArrayEqual(tb2,
+            [[20.1, False], [40.1, True], [3.1, True]], match_dtype=object)
+
+
+
+
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:
 

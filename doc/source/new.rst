@@ -3,6 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.5.11
+----------
+
+Fixed issue in ``Frame.assign`` when assigning iterables into columns.
+
 
 0.5.10
 ----------
