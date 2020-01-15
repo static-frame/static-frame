@@ -1394,14 +1394,10 @@ class TypeBlocks(ContainerOperand):
                 # write `value` into assigned (or assigned components
                 row_target = NULL_SLICE if row_key_is_null_slice else row_key
 
-                try:
-                    if assigned_target.ndim == 1:
-                        # cannot branch on block_is_column, as may be 2D array
-                        assigned_target[row_target] = value_piece
-                    else: # we are editing the entire assigned target sub block
-                        assigned_target[row_target, NULL_SLICE] = value_piece
-                except:
-                    import ipdb; ipdb.set_trace()
+                if assigned_target.ndim == 1:
+                    assigned_target[row_target] = value_piece
+                else: # we are editing the entire assigned target sub block
+                    assigned_target[row_target, NULL_SLICE] = value_piece
 
                 assigned_target.flags.writeable = False
                 assigned_components.append(assigned_target)
