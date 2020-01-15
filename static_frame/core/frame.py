@@ -4541,7 +4541,7 @@ class FrameGO(Frame):
         '''For adding a single column, one column at a time.
         '''
         if key in self._columns:
-            raise RuntimeError('key already defined in columns; use .assign to get new Frame')
+            raise RuntimeError(f'The provided key ({key}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
 
         row_count = len(self._index)
 
@@ -4618,7 +4618,7 @@ class FrameGO(Frame):
 
 
     #---------------------------------------------------------------------------
-    def to_frame(self):
+    def to_frame(self) -> Frame:
         '''
         Return Frame version of this Frame.
         '''
@@ -4632,7 +4632,7 @@ class FrameGO(Frame):
                 own_columns=False # need to make static only
                 )
 
-    def to_frame_go(self):
+    def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO version of this Frame.
         '''

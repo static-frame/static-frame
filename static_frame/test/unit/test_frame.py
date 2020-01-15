@@ -853,6 +853,15 @@ class TestUnit(TestCase):
                 (('a', ((0, 'foo'), (1, 'foo'), (2, 'foo'))),)
                 )
 
+    def test_frame_setitem_f(self) -> None:
+
+        # 3d array raises exception
+        f = sf.FrameGO(index=range(3))
+        f['a'] = 'foo'
+
+        with self.assertRaises(RuntimeError):
+            f['a'] = 'bar4'
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:
@@ -5528,7 +5537,7 @@ class TestUnit(TestCase):
 
         f1 = FrameGO(columns=('a', 'b'))
         with self.assertRaises(ErrorInitFrame):
-            f2 = f1.to_frame_go()
+            f2 = f1.to_frame_go() #pylint: disable=E1111
 
     #---------------------------------------------------------------------------
 
@@ -5542,7 +5551,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b', 'c', 'd', 'e'),
                 index=('x', 'y', 'z'))
 
-        f2 = f1.astype['d':](int)  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        f2 = f1.astype['d':](int)  #type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 1), ('y', 30), ('z', 54))), ('b', (('x', 2), ('y', 34), ('z', 95))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', 0), ('y', 1), ('z', 0))), ('e', (('x', 1), ('y', 0), ('z', 0))))
                 )
@@ -6663,7 +6672,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_frame_frame_assign_a(self):
+    def test_frame_frame_assign_a(self) -> None:
 
         f1 = Frame(columns=('a', 'b'))
         with self.assertRaises(RuntimeError):
