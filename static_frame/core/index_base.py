@@ -411,7 +411,7 @@ class IndexBase(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if fp and show:
-            import webbrowser
-            webbrowser.open_new_tab(fp)
+            import webbrowser #pragma: no cover
+            webbrowser.open_new_tab(fp) #pragma: no cover
 
         return fp
