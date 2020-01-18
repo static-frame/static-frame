@@ -856,7 +856,7 @@ def iterable_to_array_2d(
         values: tp.Iterable[tp.Iterable[tp.Any]],
         ) -> np.ndarray:
     '''
-    Convert an arbitrary Python iterable of iterables to a 2D NumPy array without any undesirable type coercion.
+    Convert an arbitrary Python iterable of iterables to a 2D NumPy array without any undesirable type coercion. Useful IndexHierarchy construction.
 
     Returns:
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.

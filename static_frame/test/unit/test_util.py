@@ -1629,18 +1629,18 @@ class TestUnit(TestCase):
 
     def test_iterable_to_array_2d_a(self) -> None:
 
-        values1 = [[3, 'a', 1, None], [4, 'b', 2, False]]
+        values1: tp.Iterable[tp.Iterable[tp.Any]] = [[3, 'a', 1, None], [4, 'b', 2, False]]
         post1 = iterable_to_array_2d(values1)
         self.assertEqual(post1.shape, (2, 4))
         self.assertEqual(post1.dtype, object)
 
         # this would return all string
-        values2 = [['a', 'b', 'c'], [1, 2, 3]]
+        values2: tp.Iterable[tp.Iterable[tp.Any]] = [['a', 'b', 'c'], [1, 2, 3]]
         post2 = iterable_to_array_2d(values2)
         self.assertEqual(post2.shape, (2, 3))
         self.assertEqual(post2.dtype, object)
 
-        values3 = [[1, 3, 10], [1.1, 2.1, 3.4]]
+        values3: tp.Iterable[tp.Iterable[tp.Any]] = [[1, 3, 10], [1.1, 2.1, 3.4]]
         post3 = iterable_to_array_2d(values3)
         self.assertEqual(post3.shape, (2, 3))
         self.assertEqual(post3.dtype, np.float64)
