@@ -22,10 +22,6 @@ class _StoreZip(Store):
     _EXT: tp.FrozenSet[str] = frozenset(('.zip',))
     _EXT_CONTAINED: str = ''
 
-    _EXPORTER: AnyCallable
-    # store attribute of passed-in container_type to use for construction
-    _CONSTRUCTOR_ATTR: str
-
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
         with zipfile.ZipFile(self._fp) as zf:
@@ -36,6 +32,9 @@ class _StoreZip(Store):
                     yield name
 
 class _StoreZipDelimited(_StoreZip):
+    # store attribute of passed-in container_type to use for construction
+    _EXPORTER: AnyCallable
+    _CONSTRUCTOR_ATTR: str
 
     @store_coherent_non_write
     def read(self,
@@ -59,7 +58,8 @@ class _StoreZipDelimited(_StoreZip):
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
                     dtypes=config.dtypes,
-                    name=label
+                    name=label,
+                    consolidate_blocks=config.consolidate_blocks
                     )
 
     @store_coherent_write
@@ -102,6 +102,8 @@ class StoreZipCSV(_StoreZipDelimited):
     _EXPORTER = Frame.to_csv
     _CONSTRUCTOR_ATTR = Frame.from_csv.__name__
 
+
+#-------------------------------------------------------------------------------
 
 class StoreZipPickle(_StoreZip):
     '''A zip of pickles, permitting incremental loading of Frames.

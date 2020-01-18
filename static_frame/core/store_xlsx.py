@@ -378,7 +378,8 @@ class StoreXLSX(Store):
                         dtypes=config.dtypes,
                         own_index=own_index,
                         own_columns=own_columns,
-                        name=name
+                        name=name,
+                        consolidate_blocks=config.consolidate_blocks
                         ))
 
     @store_coherent_non_write

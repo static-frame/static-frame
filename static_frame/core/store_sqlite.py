@@ -190,6 +190,7 @@ class StoreSQLite(Store):
                     columns_depth=config.columns_depth,
                     dtypes=config.dtypes,
                     name=label,
+                    consolidate_blocks=config.consolidate_blocks
                     ))
 
     @store_coherent_non_write

@@ -118,7 +118,6 @@ class StoreHDF5(Store):
             label: tp.Optional[str] = None,
             *,
             config: tp.Optional[StoreConfig] = None,
-            consolidate_blocks: bool = False, # move into config
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
         '''
@@ -159,7 +158,7 @@ class StoreHDF5(Store):
                     columns_labels.append(colname)
                     yield array
 
-            if consolidate_blocks:
+            if config.consolidate_blocks:
                 data = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
             else:
                 data = TypeBlocks.from_blocks(blocks())
