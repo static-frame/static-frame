@@ -1470,7 +1470,8 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             index_depth: int = 0,
             columns_depth: int = 1,
-            dtypes: DtypesSpecifier = None
+            dtypes: DtypesSpecifier = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a sheet in an XLSX workbook.
@@ -1485,7 +1486,8 @@ class Frame(ContainerOperand):
         config = StoreConfig(
                 index_depth=index_depth,
                 columns_depth=columns_depth,
-                dtypes=dtypes
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
                 )
         return st.read(label, config=config, container_type=cls)
 
@@ -1496,7 +1498,8 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             index_depth: int = 0,
             columns_depth: int = 1,
-            dtypes: DtypesSpecifier = None
+            dtypes: DtypesSpecifier = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an SQLite database file.
@@ -1508,7 +1511,8 @@ class Frame(ContainerOperand):
         config = StoreConfig(
                 index_depth=index_depth,
                 columns_depth=columns_depth,
-                dtypes=dtypes
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
                 )
         return st.read(label, config=config, container_type=cls)
 
@@ -1519,6 +1523,7 @@ class Frame(ContainerOperand):
             label: str,
             index_depth: int = 0,
             columns_depth: int = 1,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an HDF5 file.
@@ -1530,6 +1535,7 @@ class Frame(ContainerOperand):
         config = StoreConfig(
                 index_depth=index_depth,
                 columns_depth=columns_depth,
+                consolidate_blocks=consolidate_blocks,
                 )
         return st.read(label, config=config, container_type=cls)
 
@@ -1539,7 +1545,9 @@ class Frame(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.DataFrame',
             *,
-            own_data: bool = False) -> 'Frame':
+            consolidate_blocks: bool = False,
+            own_data: bool = False
+            ) -> 'Frame':
         '''Given a Pandas DataFrame, return a Frame.
 
         Args:
@@ -1576,7 +1584,10 @@ class Frame(ContainerOperand):
                 array.flags.writeable = False
             yield array
 
-        blocks = TypeBlocks.from_blocks(blocks())
+        if consolidate_blocks:
+            blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
+        else:
+            blocks = TypeBlocks.from_blocks(blocks())
 
         # avoid getting a Series if a column
         if 'name' not in value.columns and hasattr(value, 'name'):

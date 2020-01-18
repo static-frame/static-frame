@@ -14,6 +14,8 @@ Fixed issue in using ``FrameGO.relabel`` with a non grow-only ``IndexBase``.
 
 ``FrameGO.from_xlsx``, ``FrameGO.from_hdf5``, ``FrameGO.from_sqlite`` now return the ``FrameGO`` instances. Updated all ``Store.read`` methods to accept a ``containter_type`` arguement.
 
+Added ``consolidate_blocks`` parameter to ``StoreConfig``.
+
 
 
 0.5.11
