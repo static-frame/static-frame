@@ -2787,7 +2787,7 @@ class TestUnit(TestCase):
                 ((464, 'Venus'), (-200, 'Neptune')))
 
 
-
+    #---------------------------------------------------------------------------
     def test_frame_iter_element_a(self) -> None:
         # reindex both axis
         records = (
@@ -2866,6 +2866,18 @@ class TestUnit(TestCase):
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
 
+
+    def test_frame_iter_element_d(self) -> None:
+        f1 = sf.Frame(['I', 'II', 'III'], columns=('A',))
+        f2 = sf.Frame([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
+
+        post = f1['A'].iter_element().apply(f2['B'])
+
+        # if we do not match the mapping, we keep the value.
+        self.assertEqual(post.to_pairs(),
+                ((0, 67), (1, 28), (2, 'III')))
+
+    #---------------------------------------------------------------------------
 
     def test_frame_iter_group_a(self) -> None:
         columns = tuple('pqrst')

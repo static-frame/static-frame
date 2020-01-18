@@ -111,7 +111,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         # depend on yield type, we determine what the passed in function expects to take
         yt_is_values = self._yield_type is IterNodeType.VALUES
 
-        # condition = None
         if not callable(func):
             # if the key is not in the map, we return the value unaltered
             condition = getattr(func, '__contains__')
