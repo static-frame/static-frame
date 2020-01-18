@@ -46,7 +46,6 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
 
 
-Container = tp.TypeVar('Container', bound=Frame)
 
 
 class StoreXLSX(Store):
@@ -262,8 +261,8 @@ class StoreXLSX(Store):
             *,
             config: tp.Optional[StoreConfig] = None,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            container_type: tp.Type[Container] = Frame,
-            ) -> Container:
+            container_type: tp.Type[Frame] = Frame,
+            ) -> Frame:
         '''
         Args:
             label: Name of sheet to read from XLSX.
@@ -372,8 +371,8 @@ class StoreXLSX(Store):
                     )
             own_columns = True
 
-        return tp.cast(Container,
-                container_type.from_records(data,
+        # NOTE: this might be a Frame or a FrameGO
+        return tp.cast(Frame, container_type.from_records(data,
                         index=index,
                         columns=columns,
                         dtypes=config.dtypes,
