@@ -27,7 +27,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
 # from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import isin
 
 from static_frame.core.util import immutable_filter
@@ -323,7 +323,7 @@ class Index(IndexBase):
 
         if hasattr(labels, '__len__'): # not a generator, not an array
             # resolving the detype is expensive, pass if possible
-            labels, _ = iterable_to_array(labels, dtype=dtype)
+            labels, _ = iterable_to_array_1d(labels, dtype=dtype)
 
         else: # labels may be an expired generator, must use the mapping
 
@@ -380,11 +380,14 @@ class Index(IndexBase):
 
     @classmethod
     def from_labels(cls,
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'Index':
+            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            *,
+            name: tp.Hashable = None
+            ) -> 'Index':
         '''
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
         '''
-        return cls(labels=labels)
+        return cls(labels=labels, name=name)
 
     #---------------------------------------------------------------------------
     def __init__(self,

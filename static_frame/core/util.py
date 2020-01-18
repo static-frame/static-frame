@@ -781,7 +781,7 @@ def resolve_type_iter(
 
 
 
-def iterable_to_array(
+def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
         dtype: DtypeSpecifier=None
         ) -> tp.Tuple[np.ndarray, bool]:
@@ -849,6 +849,45 @@ def iterable_to_array(
 
     v.flags.writeable = False
     return v, is_unique
+
+
+
+def iterable_to_array_2d(
+        values: tp.Iterable[tp.Iterable[tp.Any]],
+        ) -> np.ndarray:
+    '''
+    Convert an arbitrary Python iterable of iterables to a 2D NumPy array without any undesirable type coercion.
+
+    Returns:
+        pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
+    '''
+    if isinstance(values, np.ndarray):
+        # could check for ndim==2
+        return values
+
+    # consume values into a tuple
+    values = tuple(values)
+
+    sample_size = 10
+    sample = [] # create explicit sample list to avoid full iteration and  copying
+    count = 0
+
+    for sub in values:
+        for element in sub:
+            sample.append(element)
+            count += 1
+            if count >= sample_size:
+                break
+
+    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence
+    dtype, _, _ = resolve_type_iter(sample, sample_size=sample_size)
+
+    array = np.array(values, dtype=dtype)
+    if array.ndim != 2:
+        raise RuntimeError('failed to convert iterable to 2d array')
+
+    array.flags.writeable = False
+    return array
 
 #-------------------------------------------------------------------------------
 
@@ -1395,7 +1434,7 @@ def _ufunc_set_1d(
             result = frozenset(array) | frozenset(other)
         else:
             result = frozenset(array) & frozenset(other)
-        v, _ = iterable_to_array(result, dtype)
+        v, _ = iterable_to_array_1d(result, dtype)
         return v
 
     return func(array, other)
@@ -1659,7 +1698,7 @@ def isin(
         result.flags.writeable = False
         return result
 
-    other, other_is_unique = iterable_to_array(other)
+    other, other_is_unique = iterable_to_array_1d(other)
 
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
         try:

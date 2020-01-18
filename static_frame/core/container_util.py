@@ -414,6 +414,9 @@ def rehierarch_and_map(*,
         index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Hashable = None,
         ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
+    '''
+    Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
+    '''
 
     depth = labels.shape[1] # number of columns
 

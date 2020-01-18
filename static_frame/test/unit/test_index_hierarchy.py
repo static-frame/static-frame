@@ -276,7 +276,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih.to_frame().to_pairs(0),
                 ((0, ((0, 'I'), (1, 'I'), (2, 'I'), (3, 'I'), (4, 'I'), (5, 'I'), (6, 'I'), (7, 'II'), (8, 'II'), (9, 'II'), (10, 'II'))), (1, ((0, 'A'), (1, 'A'), (2, 'B'), (3, 'B'), (4, 'B'), (5, 'C'), (6, 'C'), (7, 'A'), (8, 'A'), (9, 'A'), (10, 'B'))), (2, ((0, 1), (1, 2), (2, 1), (3, 2), (4, 3), (5, 2), (6, 3), (7, 1), (8, 2), (9, 3), (10, 1))))
                 )
-
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_from_labels_a(self) -> None:
 
@@ -388,6 +388,27 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_hierarchy_from_labels_g(self) -> None:
+
+        labels1 = (('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'B', 2),
+                ('I', 'A', 2),
+                ('I', 'B', 2),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'A', 1),
+                )
+
+        with self.assertRaises(ErrorInitIndex):
+            ih1 = IndexHierarchy.from_labels(labels1)
+
+        ih2 = IndexHierarchy.from_labels(labels1, reorder_for_hierarchy=True)
+        self.assertEqual(ih2.shape, (8, 3))
+        self.assertEqual(ih2.iloc[-1], ('II', 'B', 2))
+
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_from_index_items_a(self) -> None:
 

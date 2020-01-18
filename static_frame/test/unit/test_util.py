@@ -31,7 +31,9 @@ from static_frame.core.util import _ufunc_set_2d
 # from static_frame import Index
 
 # from static_frame.core.util import _dict_to_sorted_items
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_2d
+
 # from static_frame.core.util import collection_and_dtype_to_array
 
 
@@ -1470,7 +1472,7 @@ class TestUnit(TestCase):
         # we stop evaluation after finding object
         self.assertEqual(has_tuple, True)
 
-        post = iterable_to_array(a())
+        post = iterable_to_array_1d(a())
         self.assertEqual(post[0].tolist(),
                 [10, None, 0, 1, 2, (3, 4)]
                 )
@@ -1483,7 +1485,7 @@ class TestUnit(TestCase):
         self.assertEqual(id(a0), id(values))
         self.assertEqual(resolved, None)
 
-        post = iterable_to_array(a0)
+        post = iterable_to_array_1d(a0)
         self.assertEqual(post[0].tolist(),
                 [3, 4, 5, 6])
 
@@ -1496,45 +1498,46 @@ class TestUnit(TestCase):
         self.assertEqual(resolved, object)
 
 
+    #---------------------------------------------------------------------------
 
     def test_iterable_to_array_a(self) -> None:
-        a1, is_unique = iterable_to_array({3,4,5})
+        a1, is_unique = iterable_to_array_1d({3,4,5})
         self.assertTrue(is_unique)
         self.assertEqual(set(a1.tolist()), {3,4,5})
 
-        a2, is_unique = iterable_to_array({None: 3, 'f': 4, 39: 0})
+        a2, is_unique = iterable_to_array_1d({None: 3, 'f': 4, 39: 0})
         self.assertTrue(is_unique)
         self.assertEqual(set(a2.tolist()), {None, 'f', 39})
 
-        a3, is_unique = iterable_to_array((x*10 for x in range(1,4)))
+        a3, is_unique = iterable_to_array_1d((x*10 for x in range(1,4)))
         self.assertFalse(is_unique)
         self.assertEqual(a3.tolist(), [10, 20, 30])
 
-        a1, is_unique = iterable_to_array({3,4,5}, dtype=np.dtype(int))
+        a1, is_unique = iterable_to_array_1d({3,4,5}, dtype=np.dtype(int))
         self.assertEqual(set(a1.tolist()), {3,4,5})
 
-        a1, is_unique = iterable_to_array((3,4,5), dtype=np.dtype(object))
+        a1, is_unique = iterable_to_array_1d((3,4,5), dtype=np.dtype(object))
         self.assertTrue(a1.dtype == object)
         self.assertEqual(a1.tolist(), [3,4,5])
 
         x = [(0, 0), (0, 1), (0, 2), (0, 3)]
-        a1, is_unique = iterable_to_array(x, np.dtype(object))
+        a1, is_unique = iterable_to_array_1d(x, np.dtype(object))
         self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
         # must get an array of tuples back
 
         x = [(0, 0), (0, 1), (0, 2), (0, 3)]
-        a1, is_unique = iterable_to_array(iter(x))
+        a1, is_unique = iterable_to_array_1d(iter(x))
         self.assertEqual(a1.tolist(), [(0, 0), (0, 1), (0, 2), (0, 3)])
 
         a4 = np.array([np.nan, 0j], dtype=object)
-        post, _ = iterable_to_array(a4)
+        post, _ = iterable_to_array_1d(a4)
         self.assertAlmostEqualValues(a4, post)
 
 
-        self.assertEqual(iterable_to_array((1, 1.1))[0].dtype,
+        self.assertEqual(iterable_to_array_1d((1, 1.1))[0].dtype,
                 np.dtype('float64'))
 
-        self.assertEqual(iterable_to_array((1.1, 0, -29))[0].dtype,
+        self.assertEqual(iterable_to_array_1d((1.1, 0, -29))[0].dtype,
                 np.dtype('float64'))
 
 
@@ -1552,10 +1555,10 @@ class TestUnit(TestCase):
                 (1, 2, 'e', 1.1)
                 ):
 
-            a1, _ = iterable_to_array(iterable)
+            a1, _ = iterable_to_array_1d(iterable)
             self.assertEqual(set(a1), set(iterable))
 
-            a2, _ = iterable_to_array(iter(iterable))
+            a2, _ = iterable_to_array_1d(iter(iterable))
             self.assertEqual(set(a2), set(iterable))
 
 
@@ -1572,31 +1575,31 @@ class TestUnit(TestCase):
                 (('a', 3, None), object),
                 ((1, 2, 'e', 1.1), object),
                 ):
-            a1, _ = iterable_to_array(iterable, dtype=dtype)
+            a1, _ = iterable_to_array_1d(iterable, dtype=dtype)
             self.assertEqual(set(a1), set(iterable))
 
-            a2, _ = iterable_to_array(iter(iterable), dtype=dtype)
+            a2, _ = iterable_to_array_1d(iter(iterable), dtype=dtype)
             self.assertEqual(set(a2), set(iterable))
 
 
     def test_iterable_to_array_d(self) -> None:
 
         self.assertEqual(
-                iterable_to_array((True, False, True))[0].dtype,
+                iterable_to_array_1d((True, False, True))[0].dtype,
                 np.dtype('bool')
         )
 
         self.assertEqual(
-                iterable_to_array((0, 1, 0), dtype=bool)[0].dtype,
+                iterable_to_array_1d((0, 1, 0), dtype=bool)[0].dtype,
                 np.dtype('bool')
         )
 
         self.assertEqual(
-                iterable_to_array((1, 2, 'w'))[0].dtype,
+                iterable_to_array_1d((1, 2, 'w'))[0].dtype,
                 np.dtype('O')
         )
 
-        self.assertEqual(iterable_to_array(((2,3), (3,2)))[0].tolist(),
+        self.assertEqual(iterable_to_array_1d(((2,3), (3,2)))[0].tolist(),
                 [(2, 3), (3, 2)]
         )
 
@@ -1604,7 +1607,7 @@ class TestUnit(TestCase):
     def test_iterable_to_array_e(self) -> None:
 
         # this result is surprising but is a result of NumPy's array constructor
-        post = iterable_to_array('cat')
+        post = iterable_to_array_1d('cat')
         self.assertEqual(post[0].tolist(), ['cat'])
         self.assertEqual(post[1], True)
 
@@ -1612,17 +1615,38 @@ class TestUnit(TestCase):
     def test_iterable_to_array_f(self) -> None:
 
 
-        post1, _ = iterable_to_array([[3,],[4,]])
+        post1, _ = iterable_to_array_1d([[3,],[4,]])
         self.assertEqual(post1.dtype, object)
         self.assertEqual(post1.ndim, 1)
         self.assertEqual(post1.tolist(), [[3], [4]])
 
-        post2, _ = iterable_to_array([[3,],[4,]], dtype=object)
+        post2, _ = iterable_to_array_1d([[3,],[4,]], dtype=object)
         self.assertEqual(post2.dtype, object)
         self.assertEqual(post2.ndim, 1)
         self.assertEqual(post2.tolist(), [[3], [4]])
 
+    #---------------------------------------------------------------------------
 
+    def test_iterable_to_array_2d_a(self) -> None:
+
+        values1 = [[3, 'a', 1, None], [4, 'b', 2, False]]
+        post1 = iterable_to_array_2d(values1)
+        self.assertEqual(post1.shape, (2, 4))
+        self.assertEqual(post1.dtype, object)
+
+        # this would return all string
+        values2 = [['a', 'b', 'c'], [1, 2, 3]]
+        post2 = iterable_to_array_2d(values2)
+        self.assertEqual(post2.shape, (2, 3))
+        self.assertEqual(post2.dtype, object)
+
+        values3 = [[1, 3, 10], [1.1, 2.1, 3.4]]
+        post3 = iterable_to_array_2d(values3)
+        self.assertEqual(post3.shape, (2, 3))
+        self.assertEqual(post3.dtype, np.float64)
+
+
+    #---------------------------------------------------------------------------
     def test_argmin_1d_a(self) -> None:
 
 

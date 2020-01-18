@@ -24,6 +24,7 @@ from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import isin
+from static_frame.core.util import iterable_to_array_2d
 
 
 from static_frame.core.selector_node import InterfaceGetItem
@@ -228,6 +229,7 @@ class IndexHierarchy(IndexBase):
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
             name: tp.Hashable = None,
+            reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
@@ -236,11 +238,27 @@ class IndexHierarchy(IndexBase):
 
         Args:
             labels: an iterator or generator of tuples.
+            reorder_for_hierarchy: reorder the labels to produce a hierarchible Index, assuming hierarchability is possible.
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
             :obj:`static_frame.IndexHierarchy`
         '''
+        if reorder_for_hierarchy:
+            if continuation_token != CONTINUATION_TOKEN_INACTIVE:
+                raise RuntimeError('continuation_token not supported when reorder_for_hiearchy')
+            # we need a single numpy array to use rehierarch_and_map
+            index_labels = iterable_to_array_2d(labels)
+            # this will reorder and create the index using this smae method, passed as cls.from_labels
+            index, _ = rehierarch_and_map(
+                    labels=index_labels,
+                    depth_map=range(index_labels.shape[1]), # keep order
+                    index_constructor=cls.from_labels,
+                    index_constructors=index_constructors,
+                    name=name,
+                    )
+            return index
+
         labels_iter = iter(labels)
         try:
             first = next(labels_iter)

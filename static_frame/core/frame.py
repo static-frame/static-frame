@@ -44,7 +44,7 @@ from static_frame.core.util import column_1d_filter
 
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import isin
 # from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array_to_duplicated
@@ -4557,7 +4557,7 @@ class FrameGO(Frame):
             if not hasattr(value, '__iter__') or isinstance(value, str):
                 value = np.full(row_count, value)
             else:
-                value, _ = iterable_to_array(value)
+                value, _ = iterable_to_array_1d(value)
 
             if value.ndim != 1 or len(value) != row_count:
                 raise RuntimeError('incorrectly sized, unindexed value')

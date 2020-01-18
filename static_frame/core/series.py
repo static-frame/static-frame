@@ -13,7 +13,7 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array
+from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import full_for_fill
@@ -289,9 +289,9 @@ class Series(ContainerOperand):
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif hasattr(values, '__iter__') and not isinstance(values, str):
-                # while iterable_to_array will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
+                # while iterable_to_array_1d will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
-                self.values, _ = iterable_to_array(values, dtype=dtype)
+                self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape): #pylint: disable=E0102
