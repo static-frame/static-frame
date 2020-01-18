@@ -154,10 +154,8 @@ class StoreSQLite(Store):
     def read(self,
             label: tp.Optional[str] = None,
             *,
-            config: tp.Optional[StoreConfig] = None
-            # index_depth: int=1,
-            # columns_depth: int=1,
-            # dtypes: DtypesSpecifier = None,
+            config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''

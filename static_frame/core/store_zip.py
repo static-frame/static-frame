@@ -38,6 +38,7 @@ class _StoreZipDelimited(_StoreZip):
     def read(self,
             label: str,
             config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
 
         if config is None:
@@ -109,6 +110,7 @@ class StoreZipPickle(_StoreZip):
             label: str,
             *,
             config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
         # config does not do anything for pickles
         # if config is not None:

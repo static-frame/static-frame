@@ -324,6 +324,7 @@ class Store:
             label: str,
             *,
             config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store.
         '''
