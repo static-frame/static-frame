@@ -390,14 +390,14 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_labels_g(self) -> None:
 
-        labels1 = (('I', 'A', 1),
+        labels1 = (('II', 'A', 1),
                 ('I', 'B', 1),
                 ('II', 'B', 2),
                 ('I', 'A', 2),
                 ('I', 'B', 2),
                 ('II', 'A', 2),
                 ('II', 'B', 1),
-                ('II', 'A', 1),
+                ('I', 'A', 1),
                 )
 
         with self.assertRaises(ErrorInitIndex):
@@ -405,7 +405,7 @@ class TestUnit(TestCase):
 
         ih2 = IndexHierarchy.from_labels(labels1, reorder_for_hierarchy=True)
         self.assertEqual(ih2.shape, (8, 3))
-        self.assertEqual(ih2.iloc[-1], ('II', 'B', 2))
+        self.assertEqual(ih2.iloc[-1], ('I', 'B', 2))
 
 
     #---------------------------------------------------------------------------

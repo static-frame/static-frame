@@ -10,6 +10,8 @@ All ``Index`` subclasses now use ``PositionsAllocator`` to share immutable posit
 
 Fixed issue in using ``FrameGO.relabel`` with a non grow-only ``IndexBase``.
 
+``IndexHiearchy.from_labels`` now accepts a ``reorder_for_hierarchy`` Boolean option to reorder labels for hierarchical formation.
+
 
 0.5.11
 ----------
