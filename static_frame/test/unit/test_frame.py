@@ -4356,6 +4356,10 @@ class TestUnit(TestCase):
             f2 = Frame.from_xlsx(fp, index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
 
+            f3 = FrameGO.from_xlsx(fp, index_depth=f1.index.depth)
+            self.assertEqual(f3.__class__, FrameGO)
+            self.assertEqual(f3.shape, (4, 5))
+
 
     def test_frame_from_xlsx_b(self) -> None:
 

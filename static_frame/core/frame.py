@@ -157,6 +157,8 @@ class Frame(ContainerOperand):
     _name: tp.Hashable
 
     _COLUMNS_CONSTRUCTOR = Index
+    _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchy
+
     _NDIM: int = 2
 
     @classmethod
@@ -310,9 +312,7 @@ class Frame(ContainerOperand):
 
         if from_array_columns:
             if columns.ndim == 2: # we have a hierarchical index
-                cls_ih = (IndexHierarchy
-                        if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
-                columns = cls_ih.from_labels(columns)
+                columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns)
                 own_columns = True
 
         if from_array_index:
@@ -370,9 +370,7 @@ class Frame(ContainerOperand):
             ih = IndexHierarchy.from_index_items(gen())
             kwargs = dict(index=ih)
         else:
-            cls_ih = (IndexHierarchy
-                    if cls._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO)
-            ih = cls_ih.from_index_items(gen())
+            ih = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_index_items(gen())
             kwargs = dict(columns=ih)
 
         return cls.from_concat(frames,
@@ -706,9 +704,7 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns_depth > 1:
             # use IH: get via static attr of columns const
-            constructor = (IndexHierarchy.from_labels_delimited
-                    if cls._COLUMNS_CONSTRUCTOR.STATIC
-                    else IndexHierarchyGO.from_labels_delimited)
+            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
             labels = (b[0] for b in row_gen.description[index_depth:])
             columns = constructor(labels, delimiter=' ')
             own_columns = True
@@ -1055,9 +1051,8 @@ class Frame(ContainerOperand):
         elif columns_depth > 1:
             # assume deliminted IH extracted from SA labels
             columns = columns_labels
-            columns_constructor = partial(IndexHierarchy.from_labels_delimited
-                    if cls._COLUMNS_CONSTRUCTOR.STATIC
-                    else IndexHierarchyGO.from_labels_delimited,
+            columns_constructor = partial(
+                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ')
 
         kwargs = dict(
@@ -1342,9 +1337,7 @@ class Frame(ContainerOperand):
                 columns = columns_constructor(columns_arrays[0])
                 own_columns = True
             else:
-                columns_constructor = (IndexHierarchy.from_labels
-                        if cls._COLUMNS_CONSTRUCTOR.STATIC
-                        else IndexHierarchyGO.from_labels)
+                columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
                 columns = columns_constructor(
                         zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
                         )
@@ -1494,7 +1487,7 @@ class Frame(ContainerOperand):
                 columns_depth=columns_depth,
                 dtypes=dtypes
                 )
-        return st.read(label, config=config)
+        return st.read(label, config=config, container_type=cls)
 
     @classmethod
     def from_sqlite(cls,
@@ -1647,9 +1640,7 @@ class Frame(ContainerOperand):
             columns = None
         elif columns_depth > 1:
             columns_constructor = partial(
-                    IndexHierarchy.from_labels_delimited
-                    if cls._COLUMNS_CONSTRUCTOR.STATIC
-                    else IndexHierarchyGO.from_labels_delimited,
+                    cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ')
 
         kwargs = dict(
@@ -1669,7 +1660,6 @@ class Frame(ContainerOperand):
                 index_constructor=IndexHierarchy.from_labels,
                 **kwargs
                 )
-
 
     @classmethod
     def from_parquet(cls,
@@ -1693,9 +1683,7 @@ class Frame(ContainerOperand):
                 name=name
                 )
 
-
     #---------------------------------------------------------------------------
-
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
@@ -4003,11 +3991,13 @@ class Frame(ContainerOperand):
             columns_name = columns_name + ('func',)
 
         if len(columns_product) > 1:
-            cls = IndexHierarchy if self._COLUMNS_CONSTRUCTOR.STATIC else IndexHierarchyGO
-            columns = cls.from_product(*columns_product, name=columns_name)
+            columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_product(
+                    *columns_product,
+                    name=columns_name)
         else:
-            cls = Index if self._COLUMNS_CONSTRUCTOR.STATIC else IndexGO
-            columns = cls(columns_product[0], name=columns_name[0])
+            columns = self._COLUMNS_CONSTRUCTOR(
+                    columns_product[0],
+                    name=columns_name[0])
 
         def items():
             func_single = func_map[0][1] if len(func_map) == 1 else None
@@ -4527,6 +4517,7 @@ class FrameGO(Frame):
             )
 
     _COLUMNS_CONSTRUCTOR = IndexGO
+    _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
 
 
     def __setitem__(self,

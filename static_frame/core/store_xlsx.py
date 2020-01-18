@@ -37,6 +37,7 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
 
 from static_frame.core.doc_str import doc_inject
 
@@ -45,6 +46,8 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
 
+
+Container = tp.TypeVar('Container', bound=Frame)
 
 
 class StoreXLSX(Store):
@@ -259,9 +262,14 @@ class StoreXLSX(Store):
             label: tp.Optional[str] = None,
             *,
             config: tp.Optional[StoreConfig] = None,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
-            ) -> Frame:
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            container_type: tp.Type[Container] = Frame,
+            ) -> Container:
         '''
+        Args:
+            label: Name of sheet to read from XLSX.
+            container_type: Type of container to be returned, either Frame or a Frame subclass
+
         '''
         if config is None:
             config = StoreConfig() # get default
@@ -356,23 +364,24 @@ class StoreXLSX(Store):
         columns: tp.Optional[IndexBase] = None
         own_columns = False
         if columns_depth == 1:
-            columns = Index(columns_values)
+            columns = container_type._COLUMNS_CONSTRUCTOR(columns_values)
             own_columns = True
         elif columns_depth > 1:
-            columns = IndexHierarchy.from_labels(
+            columns = container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(
                     zip(*columns_values),
                     continuation_token=None
                     )
             own_columns = True
 
-        return tp.cast(Frame, Frame.from_records(data,
-                index=index,
-                columns=columns,
-                dtypes=config.dtypes,
-                own_index=own_index,
-                own_columns=own_columns,
-                name=name
-                ))
+        return tp.cast(Container,
+                container_type.from_records(data,
+                        index=index,
+                        columns=columns,
+                        dtypes=config.dtypes,
+                        own_index=own_index,
+                        own_columns=own_columns,
+                        name=name
+                        ))
 
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
