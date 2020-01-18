@@ -2215,8 +2215,6 @@ class Frame(ContainerOperand):
             own_index = True
         elif index is None:
             index = self._index
-        # else: # assume index IndexInitializer
-        #     index = index
 
         own_columns = False
         if columns is IndexAutoFactory:
@@ -2226,8 +2224,6 @@ class Frame(ContainerOperand):
             own_columns = True
         elif columns is None:
             columns = self._columns
-        # else: # assume IndexInitializer
-        #     columns = columns
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays

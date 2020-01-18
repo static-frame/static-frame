@@ -3333,6 +3333,7 @@ class TestUnit(TestCase):
         self.assertEqual(expected2, f2_sorted.to_pairs(axis=1))
 
 
+    #---------------------------------------------------------------------------
     def test_frame_relabel_a(self) -> None:
         # reindex both axis
         records = (
@@ -3428,6 +3429,19 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_relabel_e(self) -> None:
+        f1 = FrameGO.from_dict(
+                {('A', 1): (10, 20), ('A', 2): (40, 50), ('B', 1): (30, 50)}
+                )
+        # we have to convert the IH to an IHGO
+        f2 = f1.relabel(columns=IndexHierarchy.from_labels(f1.columns))
+        self.assertEqual(f2.columns.__class__, IndexHierarchyGO)
+        self.assertEqual(f2.to_pairs(0),
+                ((('A', 1), ((0, 10), (1, 20))), (('A', 2), ((0, 40), (1, 50))), (('B', 1), ((0, 30), (1, 50))))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_frame_rehierarch_a(self) -> None:
         records = (
                 (1, 2, 'a', False),

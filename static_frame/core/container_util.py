@@ -73,7 +73,7 @@ def index_from_optional_constructor(
                 # v: ~S, dc: ~S, both are mutable
                 return value.copy()
             # v: S, dc: ~S, return a mutable version of something that is not mutable
-            return default_constructor(value)
+            return value._MUTABLE_CONSTRUCTOR(value)
 
     # cannot always deterine satic status from constructors; fallback on using default constructor
     return default_constructor(value)
