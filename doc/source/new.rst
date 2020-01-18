@@ -6,7 +6,9 @@ What is New in Static Frame
 0.5.12
 ----------
 
-All `Index` subclasses now use `PositionsAllocator` to share immutable positions arrays, increasing `Index` performance.
+All ``Index`` subclasses now use ``PositionsAllocator`` to share immutable positions arrays, increasing ``Index`` performance.
+
+Fixed issue in using ``FrameGO.relabel`` with a non grow-only ``IndexBase``.
 
 
 0.5.11
