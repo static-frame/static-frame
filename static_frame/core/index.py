@@ -253,6 +253,25 @@ def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
 
 #-------------------------------------------------------------------------------
 
+class PositionsAllocator:
+
+    _size: int = 1000
+    _array: np.ndarray = np.arange(_size)
+    _array.flags.writeable: bool = False
+
+    @classmethod
+    def get(cls, size: int) -> np.ndarray:
+        if size <= cls._size:
+            # slices of immutable arrays are immutable
+            return cls._array[:size]
+
+        cls._size = size * 2
+        cls._array = np.arange(cls._size)
+        cls._array.flags.writeable = False
+        return cls._array[:size]
+
+#-------------------------------------------------------------------------------
+
 @doc_inject(selector='index_init')
 class Index(IndexBase):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`. Base class of all 1D indices.
@@ -328,13 +347,12 @@ class Index(IndexBase):
     @staticmethod
     def _extract_positions(
             mapping,
-            positions):
+            positions: tp.Iterable[int]):
         # positions is either None or an ndarray
         if isinstance(positions, np.ndarray): # if an np array can handle directly
             return immutable_filter(positions)
-        positions = np.arange(len(mapping))
-        positions.flags.writeable = False
-        return positions
+
+        return PositionsAllocator.get(len(mapping))
 
     @staticmethod
     def _get_map(
@@ -941,8 +959,9 @@ class IndexGO(Index):
 
         self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
         self._labels.flags.writeable = False
-        self._positions = np.arange(self._positions_mutable_count)
-        self._positions.flags.writeable = False
+
+        self._positions = PositionsAllocator.get(self._positions_mutable_count)
+
         self._recache = False
 
     #---------------------------------------------------------------------------

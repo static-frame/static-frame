@@ -3,6 +3,12 @@
 What is New in Static Frame
 ===============================
 
+0.5.12
+----------
+
+All `Index` subclasses now use `PositionsAllocator` to share immutable positions arrays, increasing `Index` performance.
+
+
 0.5.11
 ----------
 
