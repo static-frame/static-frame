@@ -37,7 +37,6 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyGO
 
 from static_frame.core.doc_str import doc_inject
 
