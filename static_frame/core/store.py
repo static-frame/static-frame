@@ -326,7 +326,7 @@ class Store:
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
             ) -> Frame:
-        '''Read a single Frame, given by `label`, from the Store.
+        '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`.
         '''
         raise NotImplementedError()
 

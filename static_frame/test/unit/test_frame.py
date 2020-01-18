@@ -4458,6 +4458,10 @@ class TestUnit(TestCase):
             f2 = Frame.from_sqlite(fp, index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
 
+            f3 = FrameGO.from_sqlite(fp, index_depth=f1.index.depth)
+            self.assertEqual(f3.__class__, FrameGO)
+            self.assertEqual(f3.shape, (4, 5))
+
 
     def test_frame_from_sqlite_b(self) -> None:
 
@@ -4500,6 +4504,11 @@ class TestUnit(TestCase):
             f1.to_hdf5(fp)
             f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
+
+            f3 = FrameGO.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
+            self.assertEqual(f3.__class__, FrameGO)
+            self.assertEqual(f3.shape, (4, 5))
+
 
     def test_frame_from_hdf5_b(self) -> None:
         records = (

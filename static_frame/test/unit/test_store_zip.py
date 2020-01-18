@@ -2,6 +2,7 @@ import unittest
 # from io import StringIO
 
 from static_frame.core.frame import Frame
+from static_frame.core.frame import FrameGO
 # from static_frame.core.bus import Bus
 # from static_frame.core.series import Series
 
@@ -60,6 +61,9 @@ class TestUnit(TestCase):
                 self.assertTrue((frame_stored == frame).all().all())
                 self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
 
+                frame_stored_2 = st.read(label, config=config, container_type=FrameGO)
+                self.assertEqual(frame_stored_2.__class__, FrameGO)
+                self.assertEqual(frame_stored_2.shape, frame.shape)
 
     def test_store_zip_csv_a(self) -> None:
 
@@ -123,6 +127,11 @@ class TestUnit(TestCase):
                 self.assertTrue((frame_stored == frame).all().all())
                 self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
 
+                frame_stored_2 = st.read(label, container_type=FrameGO)
+                self.assertEqual(frame_stored_2.__class__, FrameGO)
+                self.assertEqual(frame_stored_2.shape, frame.shape)
+
+
     def test_store_zip_pickle_b(self) -> None:
 
         f1 = Frame.from_dict(
@@ -136,17 +145,29 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
 
             st = StoreZipPickle(fp)
-            # with self.assertRaises(ErrorInitStore):
-            #     st.write(((f1.name, f1),), config=config_map)
-
             st.write(((f1.name, f1),))
-
-            # not sure if this behavior is necessary
-            # with self.assertRaises(ErrorInitStore):
-            #     frame_stored = st.read(f1.name, config=config)
 
             frame_stored = st.read(f1.name)
             self.assertEqual(frame_stored.shape, f1.shape)
+
+    def test_store_zip_pickle_c(self) -> None:
+
+        f1 = FrameGO.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        config = StoreConfig(index_depth=1, include_index=True)
+        config_map = StoreConfigMap.from_config(config)
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipPickle(fp)
+
+            # raise if trying to store a FrameGO
+            with self.assertRaises(NotImplementedError):
+                st.write(((f1.name, f1),))
+
 
 
 if __name__ == '__main__':

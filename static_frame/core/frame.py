@@ -1510,7 +1510,7 @@ class Frame(ContainerOperand):
                 columns_depth=columns_depth,
                 dtypes=dtypes
                 )
-        return st.read(label, config=config)
+        return st.read(label, config=config, container_type=cls)
 
     @classmethod
     def from_hdf5(cls,
@@ -1531,7 +1531,7 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 columns_depth=columns_depth,
                 )
-        return st.read(label, config=config)
+        return st.read(label, config=config, container_type=cls)
 
 
     @classmethod

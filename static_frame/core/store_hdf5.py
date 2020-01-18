@@ -164,7 +164,7 @@ class StoreHDF5(Store):
             else:
                 data = TypeBlocks.from_blocks(blocks())
 
-        return Frame._from_data_index_arrays_column_labels(
+        return container_type._from_data_index_arrays_column_labels(
                 data=data,
                 index_depth=index_depth,
                 index_arrays=index_arrays,

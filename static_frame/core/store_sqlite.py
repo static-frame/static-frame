@@ -184,7 +184,7 @@ class StoreSQLite(Store):
                 ) as conn:
             # cursor = conn.cursor()
             query = f'SELECT * from {label}'
-            return tp.cast(Frame, Frame.from_sql(query=query,
+            return tp.cast(Frame, container_type.from_sql(query=query,
                     connection=conn,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,

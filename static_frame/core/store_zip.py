@@ -12,7 +12,9 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 
-from static_frame.core.frame import  Frame
+from static_frame.core.frame import Frame
+from static_frame.core.frame import FrameGO
+
 from static_frame.core.exception import ErrorInitStore
 
 class _StoreZip(Store):
@@ -21,7 +23,8 @@ class _StoreZip(Store):
     _EXT_CONTAINED: str = ''
 
     _EXPORTER: AnyCallable
-    _CONSTRUCTOR: tp.Callable[..., Frame]
+    # store attribute of passed-in container_type to use for construction
+    _CONSTRUCTOR_ATTR: str
 
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
@@ -51,7 +54,8 @@ class _StoreZipDelimited(_StoreZip):
             src.write(zf.read(label + self._EXT_CONTAINED).decode())
             src.seek(0)
             # call from class to explicitly pass self as frame
-            return self.__class__._CONSTRUCTOR(src,
+            constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
+            return constructor(src,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
                     dtypes=config.dtypes,
@@ -88,7 +92,7 @@ class StoreZipTSV(_StoreZipDelimited):
     '''
     _EXT_CONTAINED = '.txt'
     _EXPORTER = Frame.to_tsv
-    _CONSTRUCTOR = Frame.from_tsv
+    _CONSTRUCTOR_ATTR = Frame.from_tsv.__name__
 
 class StoreZipCSV(_StoreZipDelimited):
     '''
@@ -96,7 +100,7 @@ class StoreZipCSV(_StoreZipDelimited):
     '''
     _EXT_CONTAINED = '.csv'
     _EXPORTER = Frame.to_csv
-    _CONSTRUCTOR = Frame.from_csv
+    _CONSTRUCTOR_ATTR = Frame.from_csv.__name__
 
 
 class StoreZipPickle(_StoreZip):
@@ -117,7 +121,13 @@ class StoreZipPickle(_StoreZip):
         #     raise ErrorInitStore('cannot use a StoreConfig on pickled Stores')
 
         with zipfile.ZipFile(self._fp) as zf:
-            return tp.cast(Frame, pickle.loads(zf.read(label + self._EXT_CONTAINED)))
+            frame = pickle.loads(zf.read(label + self._EXT_CONTAINED))
+
+            # assume the stored frame is not a FrameGO
+            if issubclass(container_type, FrameGO):
+                frame = frame.to_frame_go()
+
+            return tp.cast(Frame, frame)
 
     @store_coherent_write
     def write(self,
@@ -131,6 +141,8 @@ class StoreZipPickle(_StoreZip):
 
         with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
             for label, frame in items:
+                if isinstance(frame, FrameGO):
+                    raise NotImplementedError('convert FrameGO to Frame before pickling.')
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
 
 

@@ -12,6 +12,9 @@ Fixed issue in using ``FrameGO.relabel`` with a non grow-only ``IndexBase``.
 
 ``IndexHiearchy.from_labels`` now accepts a ``reorder_for_hierarchy`` Boolean option to reorder labels for hierarchical formation.
 
+``FrameGO.from_xlsx``, ``FrameGO.from_hdf5``, ``FrameGO.from_sqlite`` now return the ``FrameGO`` instances. Updated all ``Store.read`` methods to accept a ``containter_type`` arguement.
+
+
 
 0.5.11
 ----------
