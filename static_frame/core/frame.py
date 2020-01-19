@@ -161,6 +161,33 @@ class Frame(ContainerOperand):
 
     _NDIM: int = 2
 
+    #---------------------------------------------------------------------------
+    # constructors
+
+    @classmethod
+    def from_series(cls,
+            series: Series,
+            *,
+            name: tp.Hashable = None,
+            columns_constructor: IndexConstructor = None,
+            ):
+        '''
+        Frame constructor from a Series:
+
+        Args:
+            series: A Series instance, to be realized as single column, with the column label taken from the `name` attribute.
+        '''
+
+        return cls(TypeBlocks.from_blocks(series.values),
+                index=series.index,
+                columns=(series.name,),
+                name=name,
+                own_data=True,
+                columns_constructor=columns_constructor,
+                own_index=True,
+                )
+
+    #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_concat(cls,
@@ -334,7 +361,6 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 own_index=own_index)
 
-
     @classmethod
     def from_concat_items(cls,
             items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
@@ -381,7 +407,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 **kwargs
                 )
-
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -505,8 +530,6 @@ class Frame(ContainerOperand):
                 own_columns=own_columns,
                 )
 
-
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records(cls,
@@ -597,9 +620,6 @@ class Frame(ContainerOperand):
                 own_index=own_index,
                 )
 
-
-
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
@@ -637,7 +657,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
@@ -671,133 +690,6 @@ class Frame(ContainerOperand):
                 name=name,
                 consolidate_blocks=consolidate_blocks
                 )
-
-
-    @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_sql(cls,
-            query: str,
-            *,
-            connection: sqlite3.Connection,
-            index_depth: int = 0,
-            columns_depth: int = 1,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False,
-            ) -> 'Frame':
-        '''
-        Frame constructor from an SQL query and a database connection object.
-
-        Args:
-            query: A query string.
-            connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-        '''
-        row_gen = connection.execute(query)
-
-        own_columns = False
-        columns = None
-        if columns_depth == 1:
-            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
-            own_columns = True
-        elif columns_depth > 1:
-            # use IH: get via static attr of columns const
-            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
-            labels = (b[0] for b in row_gen.description[index_depth:])
-            columns = constructor(labels, delimiter=' ')
-            own_columns = True
-
-        index_constructor = None
-
-        if index_depth > 0:
-            index = [] # lazily populate
-            if index_depth == 1:
-                index_constructor = Index
-
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
-                        index.append(row[0])
-                        yield row[1:]
-
-            else: # > 1
-                index_constructor = IndexHierarchy.from_labels
-
-                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                    for row in row_gen:
-                        index.append(row[:index_depth])
-                        yield row[index_depth:]
-        else:
-            index = None
-            row_gen_final = lambda: row_gen
-
-        # let default type induction do its work
-        return cls.from_records(
-                row_gen_final(),
-                columns=columns,
-                index=index,
-                dtypes=dtypes,
-                name=name,
-                own_columns=own_columns,
-                index_constructor=index_constructor,
-                consolidate_blocks=consolidate_blocks,
-                )
-
-
-    @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_json(cls,
-            json_data: str,
-            *,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False
-            ) -> 'Frame':
-        '''Frame constructor from an in-memory JSON document.
-
-        Args:
-            json_data: a string of JSON, encoding a table as an array of JSON objects.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :py:class:`static_frame.Frame`
-        '''
-        data = json.loads(json_data)
-        return cls.from_dict_records(data,
-                name=name,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks
-                )
-
-    @classmethod
-    @doc_inject(selector='constructor_frame')
-    def from_json_url(cls,
-            url: str,
-            *,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = False
-            ) -> 'Frame':
-        '''Frame constructor from a JSON documenst provided via a URL.
-
-        Args:
-            url: URL to the JSON resource.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
-
-        Returns:
-            :py:class:`static_frame.Frame`
-        '''
-        return cls.from_json(_read_url(url),
-                name=name,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks
-                )
-
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -883,7 +775,6 @@ class Frame(ContainerOperand):
                 own_data=True,
                 own_index=own_index)
 
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_dict(cls,
@@ -910,8 +801,6 @@ class Frame(ContainerOperand):
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks)
-
-
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
@@ -1030,7 +919,6 @@ class Frame(ContainerOperand):
 
         return data, index_arrays, columns_labels
 
-
     @classmethod
     def _from_data_index_arrays_column_labels(cls,
             data: TypeBlocks,
@@ -1077,7 +965,6 @@ class Frame(ContainerOperand):
                 **kwargs
                 )
 
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_structured_array(cls,
@@ -1122,7 +1009,6 @@ class Frame(ContainerOperand):
                 columns_labels=columns_labels,
                 name=name
                 )
-
 
     #---------------------------------------------------------------------------
     # iloc/loc pairs constructors: these are not public, not sure if they should be
@@ -1215,6 +1101,130 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # file, data format loaders
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_sql(cls,
+            query: str,
+            *,
+            connection: sqlite3.Connection,
+            index_depth: int = 0,
+            columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            ) -> 'Frame':
+        '''
+        Frame constructor from an SQL query and a database connection object.
+
+        Args:
+            query: A query string.
+            connection: A DBAPI2 (PEP 249) Connection object, such as those returned from SQLite (via the sqlite3 module) or PyODBC.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+        '''
+        row_gen = connection.execute(query)
+
+        own_columns = False
+        columns = None
+        if columns_depth == 1:
+            columns = cls._COLUMNS_CONSTRUCTOR(b[0] for b in row_gen.description[index_depth:])
+            own_columns = True
+        elif columns_depth > 1:
+            # use IH: get via static attr of columns const
+            constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited
+            labels = (b[0] for b in row_gen.description[index_depth:])
+            columns = constructor(labels, delimiter=' ')
+            own_columns = True
+
+        index_constructor = None
+
+        if index_depth > 0:
+            index = [] # lazily populate
+            if index_depth == 1:
+                index_constructor = Index
+
+                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in row_gen:
+                        index.append(row[0])
+                        yield row[1:]
+
+            else: # > 1
+                index_constructor = IndexHierarchy.from_labels
+
+                def row_gen_final() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                    for row in row_gen:
+                        index.append(row[:index_depth])
+                        yield row[index_depth:]
+        else:
+            index = None
+            row_gen_final = lambda: row_gen
+
+        # let default type induction do its work
+        return cls.from_records(
+                row_gen_final(),
+                columns=columns,
+                index=index,
+                dtypes=dtypes,
+                name=name,
+                own_columns=own_columns,
+                index_constructor=index_constructor,
+                consolidate_blocks=consolidate_blocks,
+                )
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_json(cls,
+            json_data: str,
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory JSON document.
+
+        Args:
+            json_data: a string of JSON, encoding a table as an array of JSON objects.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        data = json.loads(json_data)
+        return cls.from_dict_records(data,
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_json_url(cls,
+            url: str,
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''Frame constructor from a JSON documenst provided via a URL.
+
+        Args:
+            url: URL to the JSON resource.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :py:class:`static_frame.Frame`
+        '''
+        return cls.from_json(_read_url(url),
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -1387,7 +1397,6 @@ class Frame(ContainerOperand):
                 **kwargs
                 )
 
-
     @classmethod
     def from_csv(cls,
             fp: PathSpecifierOrFileLikeOrIterator,
@@ -1461,7 +1470,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
                 )
-
 
     @classmethod
     def from_xlsx(cls,
@@ -1539,7 +1547,6 @@ class Frame(ContainerOperand):
                 )
         return st.read(label, config=config, container_type=cls)
 
-
     @classmethod
     @doc_inject()
     def from_pandas(cls,
@@ -1604,7 +1611,6 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True
                 )
-
 
     @classmethod
     def from_arrow(cls,

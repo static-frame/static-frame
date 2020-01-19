@@ -323,6 +323,21 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    def test_frame_from_series_a(self) -> None:
+        s1 = Series((False, True, False), index=tuple('abc'))
+        f1 = Frame.from_series(s1, name='foo')
+
+        self.assertEqual(f1.to_pairs(0),
+                ((None, (('a', False), ('b', True), ('c', False))),))
+
+    def test_frame_from_series_b(self) -> None:
+        s1 = Series((False, True, False), index=tuple('abc'), name='2018-05')
+        f1 = Frame.from_series(s1, name='foo', columns_constructor=IndexYearMonth)
+        self.assertEqual(f1.columns.__class__, IndexYearMonth)
+        self.assertEqual(f1.to_pairs(0),
+                ((np.datetime64('2018-05'), (('a', False), ('b', True), ('c', False))),))
+
+    #---------------------------------------------------------------------------
     def test_frame_from_pairs_a(self) -> None:
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))
