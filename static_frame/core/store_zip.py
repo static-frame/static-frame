@@ -54,13 +54,13 @@ class _StoreZipDelimited(_StoreZip):
             src.seek(0)
             # call from class to explicitly pass self as frame
             constructor = getattr(container_type, self._CONSTRUCTOR_ATTR)
-            return constructor(src,
+            return tp.cast(Frame, constructor(src,
                     index_depth=config.index_depth,
                     columns_depth=config.columns_depth,
                     dtypes=config.dtypes,
                     name=label,
                     consolidate_blocks=config.consolidate_blocks
-                    )
+                    ))
 
     @store_coherent_write
     def write(self,
