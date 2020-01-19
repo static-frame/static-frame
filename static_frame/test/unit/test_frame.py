@@ -338,6 +338,40 @@ class TestUnit(TestCase):
                 ((np.datetime64('2018-05'), (('a', False), ('b', True), ('c', False))),))
 
     #---------------------------------------------------------------------------
+    def test_frame_from_element_a(self) -> None:
+
+        f1 = Frame.from_element(0, index=('a', 'b'), columns=('x', 'y', 'z'))
+        self.assertEqual(f1.shape, (2, 3))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', (('a', 0), ('b', 0))), ('y', (('a', 0), ('b', 0))), ('z', (('a', 0), ('b', 0)))))
+
+    def test_frame_from_element_b(self) -> None:
+
+        f1 = Frame.from_element('2019',
+                index=('a', 'b'),
+                columns=('x', 'y', 'z'),
+                dtype='datetime64[Y]'
+                )
+        self.assertEqual(f1.shape, (2, 3))
+        self.assertEqual(f1.to_pairs(0),
+                (('x', (('a', np.datetime64('2019')), ('b', np.datetime64('2019')))), ('y', (('a', np.datetime64('2019')), ('b', np.datetime64('2019')))), ('z', (('a', np.datetime64('2019')), ('b', np.datetime64('2019')))))
+        )
+
+    def test_frame_from_element_c(self) -> None:
+        # not an error to create 0-sized frames
+        f1 = Frame.from_element('2019',
+                index=('a', 'b'),
+                columns=(),
+                )
+        self.assertEqual(f1.shape, (2, 0))
+
+        f2 = Frame.from_element('2019',
+                index=(),
+                columns=('x', 'y', 'z'),
+                )
+        self.assertEqual(f2.shape, (0, 3))
+
+    #---------------------------------------------------------------------------
     def test_frame_from_pairs_a(self) -> None:
 
         frame = Frame.from_items(sorted(dict(a=[3,4,5], b=[6,3,2]).items()))

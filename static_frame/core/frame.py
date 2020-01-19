@@ -28,6 +28,8 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import DtypeSpecifier
+
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import path_filter
 from static_frame.core.util import Bloc2DKeyType
@@ -177,15 +179,61 @@ class Frame(ContainerOperand):
         Args:
             series: A Series instance, to be realized as single column, with the column label taken from the `name` attribute.
         '''
-
         return cls(TypeBlocks.from_blocks(series.values),
                 index=series.index,
                 columns=(series.name,),
                 name=name,
-                own_data=True,
                 columns_constructor=columns_constructor,
+                own_data=True,
                 own_index=True,
                 )
+
+    @classmethod
+    def from_element(cls,
+            element: tp.Any,
+            *,
+            index: IndexInitializer,
+            columns: IndexInitializer,
+            dtype: DtypeSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False
+            ):
+        '''
+        Create a Frame from an element, i.e., a single value stored in a single cell. Both ``index`` and ``columns`` are required, and cannot be specified with ``IndexAutoFactory``.
+        '''
+        if own_columns:
+            columns_final = columns
+        else:
+            columns_final = index_from_optional_constructor(columns,
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
+        if own_index:
+            index_final = index
+        else:
+            index_final = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+
+        array = np.full(
+                (len(index_final), len(columns_final)),
+                fill_value=element,
+                dtype=dtype)
+        array.flags.writeable = False
+
+        return cls(TypeBlocks.from_blocks(array),
+                index=index_final,
+                columns=columns_final,
+                name=name,
+                own_data=True,
+                own_index=True,
+                own_columns=True,
+                )
+
 
     #---------------------------------------------------------------------------
     @classmethod
