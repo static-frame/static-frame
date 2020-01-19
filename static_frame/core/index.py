@@ -271,6 +271,14 @@ class PositionsAllocator:
         return cls._array[:size]
 
 #-------------------------------------------------------------------------------
+_INDEX_SLOTS = (
+        '_map',
+        '_labels',
+        '_positions',
+        '_recache',
+        '_loc_is_iloc',
+        '_name'
+        )
 
 @doc_inject(selector='index_init')
 class Index(IndexBase):
@@ -279,25 +287,25 @@ class Index(IndexBase):
     {args}
     '''
 
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
+    __slots__ = _INDEX_SLOTS
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be set after IndexGO defined
 
-
     _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = intersect1d
 
-    _DTYPE = None # for specialized indices requiring a typed labels
+    _DTYPE: tp.Optional[np.dtype] = None # for specialized indices requiring a typed labels
+
     # for compatability with IndexHierarchy, where this is implemented as a property method
-    depth = 1
+    depth: int = 1
+
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    _labels: np.ndarray
+    _positions: np.ndarray
+    _recache: bool
+    _loc_is_iloc: bool
+    _name: tp.Hashable
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
@@ -305,7 +313,8 @@ class Index(IndexBase):
     def _extract_labels(
             mapping,
             labels,
-            dtype=None) -> np.ndarray:
+            dtype: tp.Optional[np.dtype] = None
+            ) -> np.ndarray:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
 
         If the labels passed at instantiation are an ndarray, they are used after immutable filtering. Otherwise, the mapping keys are used to create an ndarray.
@@ -810,9 +819,7 @@ class Index(IndexBase):
                 ufunc_skipna=ufunc_skipna
                 )
 
-
     # _ufunc_shape_skipna defined in IndexBase
-
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -822,7 +829,6 @@ class Index(IndexBase):
         Iterator of index labels.
         '''
         return self._map.keys()
-
 
     def __contains__(self, value) -> bool:
         '''Return True if value in the labels.
@@ -903,28 +909,25 @@ class Index(IndexBase):
                 name=self._name)
 
 #-------------------------------------------------------------------------------
-@doc_inject(selector='index_init')
-class IndexGO(Index):
-    '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`.
+_INDEX_GO_SLOTS = (
+        '_map',
+        '_labels',
+        '_positions',
+        '_recache',
+        '_loc_is_iloc',
+        '_name',
+        '_labels_mutable',
+        '_labels_mutable_dtype',
+        '_positions_mutable_count',
+        )
 
-    {args}
-    '''
+
+class _IndexGOMixin:
 
     STATIC = False
+    __slots__ = () # define in derived class
 
-    _IMMUTABLE_CONSTRUCTOR = Index
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name',
-            '_labels_mutable',
-            '_labels_mutable_dtype',
-            '_positions_mutable_count',
-            )
+    _loc_is_iloc: bool
 
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
@@ -933,19 +936,22 @@ class IndexGO(Index):
     def _extract_labels(self,
             mapping,
             labels,
-            dtype) -> tp.Iterable[tp.Any]:
+            dtype: tp.Optional[np.dtype] = None
+            ) -> np.ndarray:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
         self._labels_mutable = labels.tolist()
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
-        else:
-            # avoid setting to float default when labels is empty
+        else: # avoid setting to float default when labels is empty
             self._labels_mutable_dtype = None
         return labels
 
-    def _extract_positions(self, mapping, positions) -> tp.Iterable[tp.Any]:
+    def _extract_positions(self,
+            mapping,
+            positions
+            ) -> tp.Iterable[tp.Any]:
         '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
         positions = Index._extract_positions(mapping, positions)
@@ -962,9 +968,7 @@ class IndexGO(Index):
 
         self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
         self._labels.flags.writeable = False
-
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
-
         self._recache = False
 
     #---------------------------------------------------------------------------
@@ -1003,10 +1007,18 @@ class IndexGO(Index):
             values: can be a generator.
         '''
         for value in values:
-            if value in self._map:
-                raise KeyError('duplicate key append attempted', value)
-            # might bet better performance by calling extend() on _positions and _labels
             self.append(value)
+
+
+@doc_inject(selector='index_init')
+class IndexGO(_IndexGOMixin, Index):
+    '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`.
+
+    {args}
+    '''
+    _IMMUTABLE_CONSTRUCTOR = Index
+
+    __slots__ = _INDEX_GO_SLOTS
 
 
 # update class attr on Index after class initialziation

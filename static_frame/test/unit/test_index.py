@@ -284,7 +284,7 @@ class TestUnit(TestCase):
         self.assertTrue('d' not in index)
 
 
-    def test_index_grow_only_a(self) -> None:
+    def test_index_go_a(self) -> None:
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
@@ -307,6 +307,15 @@ class TestUnit(TestCase):
         self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i'])
         self.assertEqual(index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'h'])
 
+
+    def test_index_go_b(self) -> None:
+
+        index = IndexGO(('a', 'b', 'c'))
+        index.append('d')
+        self.assertEqual(len(index.__slots__), 9)
+        self.assertFalse(index.STATIC)
+        self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
+        self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
 
 
     def test_index_sort_a(self) -> None:

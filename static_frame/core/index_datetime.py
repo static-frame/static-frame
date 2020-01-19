@@ -31,19 +31,21 @@ from static_frame.core.util import _TD64_YEAR
 # from static_frame.core.util import _TD64_S
 # from static_frame.core.util import _TD64_MS
 
+# from static_frame.core.util import KEY_ITERABLE_TYPES
+# from static_frame.core.util import resolve_dtype
+# from static_frame.core.index import PositionsAllocator
+from static_frame.core.index import _IndexGOMixin
+from static_frame.core.index import _INDEX_SLOTS
+from static_frame.core.index import _INDEX_GO_SLOTS
+
 from static_frame.core.index import Index
-
 from static_frame.core.doc_str import doc_inject
-
 
 
 if tp.TYPE_CHECKING:
     import pandas  #pylint: disable = W0611 #pragma: no cover
 
-
 I = tp.TypeVar('I', bound='_IndexDatetime')
-
-
 
 #-------------------------------------------------------------------------------
 # Specialized index for dates
@@ -54,16 +56,8 @@ class _IndexDatetime(Index):
     '''
 
     STATIC = True
-    _DTYPE = None # define in base class
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
+    _DTYPE = None # define in derived class
+    __slots__ = _INDEX_SLOTS
 
     def __init__(self,
             labels: IndexInitializer,
@@ -112,7 +106,6 @@ class _IndexDatetime(Index):
         array.flags.writeable = False
         return array
 
-
     def loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
@@ -135,6 +128,24 @@ class _IndexDatetime(Index):
         return pandas.DatetimeIndex(self.values,
                 name=self._name)
 
+#-------------------------------------------------------------------------------
+class _IndexDatetimeGOMixin(_IndexGOMixin):
+
+    _DTYPE: tp.Optional[np.dtype]
+    _map: tp.Dict[tp.Hashable, tp.Any]
+    __slots__ = () # define in derived class
+
+    def append(self, value: tp.Hashable) -> None:
+        '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; do not need to check for _loc_is_iloc.
+        '''
+        value = to_datetime64(value, self._DTYPE)
+        if value in self._map:
+            raise KeyError(f'duplicate key append attempted: {value}')
+        # the new value is the count
+        self._map[value] = self._positions_mutable_count
+        self._labels_mutable.append(value)
+        self._positions_mutable_count += 1 #pylint: disable=E0237
+        self._recache = True #pylint: disable=E0237
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
@@ -145,15 +156,7 @@ class IndexYear(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_YEAR
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name',
-            )
+    __slots__ = _INDEX_SLOTS
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -220,6 +223,14 @@ class IndexYear(_IndexDatetime):
         raise NotImplementedError('Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.')
 
 
+class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexYear
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
+
+#-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
 class IndexYearMonth(_IndexDatetime):
     '''A mapping of year months (via NumPy datetime64[M]) to positions, immutable and of fixed size.
@@ -228,15 +239,7 @@ class IndexYearMonth(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_MONTH
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
+    __slots__ = _INDEX_SLOTS
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -305,6 +308,15 @@ class IndexYearMonth(_IndexDatetime):
         raise NotImplementedError('Pandas does not support a year month type, and it is ambiguous if a date proxy should be the first of the month or the last of the month.')
 
 
+class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexYearMonth
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
+
+#-------------------------------------------------------------------------------
+
 @doc_inject(selector='index_date_time_init')
 class IndexDate(_IndexDatetime):
     '''A mapping of dates (via NumPy datetime64[D]) to positions, immutable and of fixed size.
@@ -313,15 +325,7 @@ class IndexDate(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_DAY
-
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name'
-            )
+    __slots__ = _INDEX_SLOTS
 
     @classmethod
     def from_date_range(cls: tp.Type[I],
@@ -379,6 +383,13 @@ class IndexDate(_IndexDatetime):
         return cls(labels, name=name)
 
 
+class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexDate
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
+
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
 class IndexMinute(_IndexDatetime):
@@ -388,16 +399,16 @@ class IndexMinute(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_M
+    __slots__ = _INDEX_SLOTS
 
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name',
-            )
+class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
 
+    _IMMUTABLE_CONSTRUCTOR = IndexMinute
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
+
+#-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
 class IndexSecond(_IndexDatetime):
@@ -407,15 +418,16 @@ class IndexSecond(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_S
+    __slots__ = _INDEX_SLOTS
 
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name',
-            )
+class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexSecond
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
+
+#-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
 class IndexMillisecond(_IndexDatetime):
@@ -425,12 +437,11 @@ class IndexMillisecond(_IndexDatetime):
     '''
     STATIC = True
     _DTYPE = _DT64_MS
+    __slots__ = _INDEX_SLOTS
 
-    __slots__ = (
-            '_map',
-            '_labels',
-            '_positions',
-            '_recache',
-            '_loc_is_iloc',
-            '_name',
-            )
+class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexMillisecond
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO

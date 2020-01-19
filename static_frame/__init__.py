@@ -41,6 +41,12 @@ from static_frame.core.index_datetime import IndexMillisecond as IndexMillisecon
 from static_frame.core.index_datetime import IndexSecond as IndexSecond
 from static_frame.core.index_datetime import IndexMinute as IndexMinute
 
+from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
+from static_frame.core.index_datetime import IndexYearMonthGO as IndexYearMonthGO
+from static_frame.core.index_datetime import IndexYearGO as IndexYearGO
+from static_frame.core.index_datetime import IndexMillisecondGO as IndexMillisecondGO
+from static_frame.core.index_datetime import IndexSecondGO as IndexSecondGO
+from static_frame.core.index_datetime import IndexMinuteGO as IndexMinuteGO
 
 from static_frame.core.index import ILoc as ILoc
 

@@ -971,7 +971,7 @@ def to_datetime64(
         if dtype:
             # dtype can be either generic, or a matching specific dtype
             if dtype != np.datetime64 and dtype != dt.dtype:
-                raise RuntimeError('not supported dtype', dt, dtype)
+                raise RuntimeError(f'value ({dt}) is not a supported dtype ({dtype})')
     return dt
 
 def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:

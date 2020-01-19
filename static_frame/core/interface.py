@@ -19,9 +19,11 @@ from static_frame.core.container import ContainerOperand
 
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.index_base import IndexBase
+
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYearMonth
 from static_frame.core.index_datetime import IndexYear
+
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import Display
 
@@ -163,7 +165,7 @@ class InterfaceSummary:
                 instance = target.from_frames((f,))
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
-            elif target in (IndexYearMonth, IndexYear, IndexDate):
+            elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
                 instance = target(np.array((0,), dtype=_DT64_S))
             elif target in (ContainerOperand, ContainerBase, IndexBase):
                 instance = target()

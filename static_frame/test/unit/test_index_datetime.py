@@ -9,18 +9,31 @@ import datetime
 # from static_frame import Index
 # from static_frame import IndexGO
 from static_frame import IndexDate
+from static_frame import IndexDateGO
+
 # from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
+
 from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
+
 from static_frame import IndexYear
+from static_frame import IndexYearGO
+
 from static_frame import IndexSecond
+from static_frame import IndexSecondGO
+
 from static_frame import IndexMinute
+from static_frame import IndexMinuteGO
+
 from static_frame import IndexMillisecond
+from static_frame import IndexMillisecondGO
 
 # from static_frame import HLoc
 # from static_frame import ILoc
-
+from static_frame.core.index import _INDEX_SLOTS
+from static_frame.core.index import _INDEX_GO_SLOTS
 
 from static_frame.test.test_case import TestCase
 # from static_frame.core.index import _requires_reindex
@@ -29,7 +42,23 @@ from static_frame.core.exception import LocInvalid
 
 class TestUnit(TestCase):
 
+    def test_index_datetime_go_config(self) -> None:
 
+        for base, base_go in (
+                (IndexYear, IndexYearGO),
+                (IndexYearMonth, IndexYearMonthGO),
+                (IndexDate, IndexDateGO),
+                (IndexMinute, IndexMinuteGO),
+                (IndexSecond, IndexSecondGO),
+                (IndexMillisecond, IndexMillisecondGO),
+
+                ):
+            self.assertEqual(base._MUTABLE_CONSTRUCTOR, base_go)
+            self.assertEqual(base_go._IMMUTABLE_CONSTRUCTOR, base)
+            self.assertEqual(base.STATIC, True)
+            self.assertEqual(base_go.STATIC, False)
+            self.assertEqual(len(base.__slots__), len(_INDEX_SLOTS))
+            self.assertEqual(len(base_go.__slots__), len(_INDEX_GO_SLOTS))
 
     def test_index_date_a(self) -> None:
 
@@ -320,6 +349,28 @@ class TestUnit(TestCase):
         index = IndexYear.from_year_range('2010', '2018')
         self.assertEqual(len(index), 9)
 
+
+    def test_index_year_from_year_range_b(self) -> None:
+
+        index = IndexYearGO.from_year_range('2010', '2018')
+        self.assertEqual(len(index), 9)
+        index.append('2019')
+        self.assertEqual(len(index), 10)
+        index.append('2020')
+        self.assertTrue('2020' in index)
+        self.assertTrue(len(index.__slots__), 9)
+
+        with self.assertRaises(RuntimeError):
+            index.append(np.datetime64('2009-03-01'))
+
+        index.append(np.datetime64('2009'))
+
+        # will strip off year from a datetime object
+        index.append(datetime.date(2021, 3, 15))
+
+        self.assertEqual(index.values.tolist(),
+                [datetime.date(2010, 1, 1), datetime.date(2011, 1, 1), datetime.date(2012, 1, 1), datetime.date(2013, 1, 1), datetime.date(2014, 1, 1), datetime.date(2015, 1, 1), datetime.date(2016, 1, 1), datetime.date(2017, 1, 1), datetime.date(2018, 1, 1), datetime.date(2019, 1, 1), datetime.date(2020, 1, 1), datetime.date(2009, 1, 1), datetime.date(2021, 1, 1)]
+                )
 
     def test_index_date_loc_to_iloc_a(self) -> None:
 

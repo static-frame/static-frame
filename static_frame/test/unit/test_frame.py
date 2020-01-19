@@ -19,6 +19,8 @@ from static_frame import Index
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
+from static_frame import IndexYearGO
+
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -2626,7 +2628,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', False), ('x', True), ('y', False), ('z', True))), ('q', (('w', False), ('x', False), ('y', False), ('z', True))), ('r', (('w', True), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
 
-
+    #---------------------------------------------------------------------------
     def test_frame_transpose_a(self) -> None:
         # reindex both axis
         records = (
@@ -2648,6 +2650,29 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.name, f1.name)
 
+
+    def test_frame_transpose_b(self) -> None:
+        # reindex both axis
+        records = (
+                (False, False),
+                (True, False),
+                )
+
+        f1 = FrameGO.from_records(records,
+                columns=IndexYearGO(('2019', '2020')),
+                index=('x', 'y'),
+                name='foo'
+                )
+
+        f1['2021'] = True
+        self.assertTrue(f1.to_pairs(0),
+                ((np.datetime64('2019'), (('x', False), ('y', True))), (np.datetime64('2020'), (('x', False), ('y', False))), (np.datetime64('2021'), (('x', True), ('y', True))))
+                )
+        self.assertTrue(f1.T.to_pairs(0),
+                (('x', ((np.datetime64('2019'), False), (np.datetime64('2020'), False), (np.datetime64('2021'), True))), ('y', ((np.datetime64('2019'), True), (np.datetime64('2020'), False), (np.datetime64('2021'), True))))
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_frame_from_element_iloc_items_a(self) -> None:
         items = (((0,1), 'g'), ((1,0), 'q'))
@@ -6779,7 +6804,6 @@ class TestUnit(TestCase):
         )
 
 
-
     def test_frame_bool_a(self) -> None:
         records = (
                 (2, 2),
@@ -6812,6 +6836,9 @@ class TestUnit(TestCase):
 
         fa1 = FrameAssign(f1, iloc_key=(0, 0), bloc_key=None)
         fa2 = FrameAssign(f1, iloc_key=None, bloc_key=f1)
+
+
+    #---------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
