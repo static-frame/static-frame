@@ -18,6 +18,8 @@ Added ``consolidate_blocks`` parameter to ``StoreConfig``.
 
 Added ``consolidate_blocks`` parameter to ``Frame.from_xlsx``, ``Frame.from_hdf5``, ``Frame.from_sqlite``, ``Frame.from_pandas``.
 
+Implemented ``IndexYearGO``, ``IndexYearMonthGO``, ``IndexDateGO``, ``IndexMinuteGO``, ``IndexSecondGO``, ``IndexMillisecondGO`` grow-only, derived classes of `np.datetime64` indices.
+
 
 0.5.11
 ----------
