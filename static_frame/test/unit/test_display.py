@@ -599,8 +599,8 @@ class TestUnit(TestCase):
 
     def test_display_tall(self) -> None:
         f = Frame.from_element(None, index=range(40), columns=range(20))
-        self.assertEqual(len(f.display_tall().to_rows()), 44) # type: ignore
-        self.assertEqual(len(f.display_wide().to_rows()), 37) # type: ignore
+        self.assertEqual(len(f.display_tall().to_rows()), 44)
+        self.assertEqual(len(f.display_wide().to_rows()), 37)
 
 
     #---------------------------------------------------------------------------

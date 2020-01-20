@@ -52,7 +52,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_element(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
-            f1.g = 30 # type: ignore #pylint: disable=E0237
+            f1.g = 30 #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             f1.__dict__ #pylint: disable=W0104
 

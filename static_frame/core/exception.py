@@ -56,6 +56,6 @@ class StoreFileMutation(RuntimeError):
 
 #-------------------------------------------------------------------------------
 
-def deprecated(message: str = ''):
+def deprecated(message: str = '') -> None:
     warnings.warn(message)
     # raise DeprecationWarning()
