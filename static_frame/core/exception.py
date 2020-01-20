@@ -1,4 +1,4 @@
-
+import warnings
 
 class ErrorInit(RuntimeError):
     '''Error in Container initialization.
@@ -53,3 +53,9 @@ class StoreFileMutation(RuntimeError):
     '''
     A Stores file was mutated in an unexpected way.
     '''
+
+#-------------------------------------------------------------------------------
+
+def deprecated(message: str = ''):
+    warnings.warn(message)
+    # raise DeprecationWarning()

@@ -49,7 +49,7 @@ class TestUnit(TestCase):
 
     def test_frame_slotted_a(self) -> None:
 
-        f1 = Frame(1, index=(1,2), columns=(3,4,5))
+        f1 = Frame.from_element(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
             f1.g = 30 # type: ignore #pylint: disable=E0237
@@ -73,7 +73,7 @@ class TestUnit(TestCase):
         # test unusual instantiation cases
 
         # create a frame with a single value
-        f1 = Frame(1, index=(1,2), columns=(3,4,5))
+        f1 = Frame.from_element(1, index=(1,2), columns=(3,4,5))
         self.assertEqual(f1.to_pairs(0),
                 ((3, ((1, 1), (2, 1))), (4, ((1, 1), (2, 1))), (5, ((1, 1), (2, 1))))
                 )
@@ -86,7 +86,7 @@ class TestUnit(TestCase):
                 )
 
         # with columns and index defined, we fill the value even if None
-        f3 = Frame(None, index=(1,2), columns=(3,4,5))
+        f3 = Frame.from_element(None, index=(1,2), columns=(3,4,5))
         self.assertEqual(f3.to_pairs(0),
                 ((3, ((1, None), (2, None))), (4, ((1, None), (2, None))), (5, ((1, None), (2, None)))))
 
@@ -160,7 +160,7 @@ class TestUnit(TestCase):
             (('x', (('a', 3), ('b', 4), ('c', 5))), ('y', (('a', 12), ('b', 10), ('c', 11)))))
 
     def test_frame_init_j(self) -> None:
-        f1 = sf.Frame('q', index=tuple('ab'), columns=tuple('xy'))
+        f1 = sf.Frame.from_element('q', index=tuple('ab'), columns=tuple('xy'))
         self.assertEqual(f1.to_pairs(0),
             (('x', (('a', 'q'), ('b', 'q'))), ('y', (('a', 'q'), ('b', 'q'))))
             )
@@ -176,10 +176,9 @@ class TestUnit(TestCase):
             f1 = Frame(index=(3,4,5), columns=list('abv'))
 
     def test_frame_init_n(self) -> None:
-        # cannot supply a single value to unfillabe sized Frame
 
-        with self.assertRaises(RuntimeError):
-            f1 = Frame(None, index=(3,4,5), columns=())
+        f1 = Frame.from_element(None, index=(3,4,5), columns=())
+        self.assertEqual(f1.shape, (3, 0))
 
     def test_frame_init_o(self) -> None:
         f1 = Frame()
@@ -190,11 +189,11 @@ class TestUnit(TestCase):
 
         # raise when a data values ir provided but an axis is size zero
 
-        with self.assertRaises(RuntimeError):
-            f1 = sf.Frame('x', index=(1,2,3), columns=iter(()))
+        f1 = sf.Frame.from_element('x', index=(1,2,3), columns=iter(()))
+        self.assertEqual(f1.shape, (3, 0))
 
-        with self.assertRaises(RuntimeError):
-            f1 = sf.Frame(None, index=(1,2,3), columns=iter(()))
+        f2 = sf.Frame.from_element(None, index=(1,2,3), columns=iter(()))
+        self.assertEqual(f2.shape, (3, 0))
 
 
     def test_frame_init_q(self) -> None:
@@ -212,9 +211,8 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((0, ()), (1, ()), (2, ())))
 
-        with self.assertRaises(RuntimeError):
-            # cannot create an unfillable array with a data value
-            f1 = sf.Frame('x', index=(), columns=iter(range(3)))
+        # can create an un fillable Frame when using from_element
+        f1 = sf.Frame.from_element('x', index=(), columns=iter(range(3)))
 
     def test_frame_init_s(self) -> None:
         # check that we got autoincrement indices if no col/index provided
@@ -255,7 +253,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
 
-        f1 = sf.Frame('q',
+        f1 = sf.Frame.from_element('q',
                 index=[('a', 'b'), (1, 2)],
                 columns=tuple('xy'),
                 index_constructor=IndexHierarchy.from_labels
@@ -266,7 +264,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(RuntimeError):
-            f1 = sf.Frame('q',
+            f1 = sf.Frame.from_element('q',
                     index=[('a', 'b'), (1, 2)],
                     columns=tuple('xy'),
                     index_constructor=IndexHierarchyGO.from_labels
@@ -276,7 +274,7 @@ class TestUnit(TestCase):
     def test_frame_init_columns_constructor_a(self) -> None:
 
         # using from_priduct is awkard, as it does not take a single iterable of products, but multiple args; we can get around this with a simple lambda
-        f1 = sf.Frame('q',
+        f1 = sf.Frame.from_element('q',
                 index=tuple('xy'),
                 columns=[('a', 'b'), (1, 2)],
                 columns_constructor=lambda args: IndexHierarchy.from_product(*args)
@@ -287,7 +285,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(RuntimeError):
-            f1 = sf.Frame('q',
+            f1 = sf.Frame.from_element('q',
                 index=tuple('xy'),
                 columns=[('a', 'b'), (1, 2)],
                 columns_constructor=lambda args: IndexHierarchyGO.from_product(*args)
@@ -296,13 +294,13 @@ class TestUnit(TestCase):
 
     def test_frame_init_iter(self) -> None:
 
-        f1 = Frame(None, index=iter(range(3)), columns=("A",))
+        f1 = Frame.from_element(None, index=iter(range(3)), columns=("A",))
         self.assertEqual(
             f1.to_pairs(0),
             (('A', ((0, None), (1, None), (2, None))),)
         )
 
-        f2 = Frame(None, index=("A",), columns=iter(range(3)))
+        f2 = Frame.from_element(None, index=("A",), columns=iter(range(3)))
         self.assertEqual(
             f2.to_pairs(0),
             ((0, (('A', None),)), (1, (('A', None),)), (2, (('A', None),)))
@@ -1183,7 +1181,7 @@ class TestUnit(TestCase):
     def test_frame_extract_b(self) -> None:
         # examining cases where shape goes to zero in one dimension
 
-        f1 = Frame(None, index=tuple('ab'), columns=('c',))
+        f1 = Frame.from_element(None, index=tuple('ab'), columns=('c',))
         f2 = f1[[]]
         self.assertEqual(len(f2.columns), 0)
         self.assertEqual(len(f2.index), 2)
@@ -1192,7 +1190,7 @@ class TestUnit(TestCase):
 
     def test_frame_extract_c(self) -> None:
         # examining cases where shape goes to zero in one dimension
-        f1 = Frame(None, columns=tuple('ab'), index=('c',))
+        f1 = Frame.from_element(None, columns=tuple('ab'), index=('c',))
         f2 = f1.loc[[]]
         self.assertEqual(f2.shape, (0, 2))
         self.assertEqual(len(f2.columns), 2)
@@ -1393,7 +1391,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_assign_getitem_c(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('ab'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('ab'))
         f2 = f1.assign['a']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2,), (2,1)])
         self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('bool')])
@@ -1402,7 +1400,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_assign_getitem_d(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('abcd'))
         f2 = f1.assign['b']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2, 1), (2,), (2, 2)])
         self.assertEqual(f2.dtypes.values.tolist(),
@@ -1413,7 +1411,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_assign_getitem_e(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('abcd'))
         f2 = f1.assign['c']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2, 2), (2,), (2, 1)])
         self.assertEqual(f2.dtypes.values.tolist(),
@@ -1424,7 +1422,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_assign_getitem_f(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('abcd'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('abcd'))
         f2 = f1.assign['d']([1.1, 2.1])
         self.assertEqual(f2._blocks.shapes.tolist(), [(2, 3), (2,),])
         self.assertEqual(f2.dtypes.values.tolist(),
@@ -1435,7 +1433,7 @@ class TestUnit(TestCase):
                 )
 
     def test_frame_assign_getitem_g(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('abcde'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('abcde'))
         f2 = f1.assign['b':'d']('x') # type: ignore
         self.assertEqual(f2._blocks.shapes.tolist(), [(2, 1), (2, 3), (2, 1)])
         self.assertEqual(f2.dtypes.values.tolist(),
@@ -1584,7 +1582,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_assign_loc_f(self) -> None:
-        f1 = sf.Frame(False, index=range(2), columns=tuple('abcde'))
+        f1 = sf.Frame.from_element(False, index=range(2), columns=tuple('abcde'))
         f2 = f1.assign.loc[1, 'b':'d']('x') # type: ignore
         self.assertEqual(f2.dtypes.values.tolist(),
                 [np.dtype('bool'), np.dtype('O'), np.dtype('O'), np.dtype('O'), np.dtype('bool')])
@@ -1689,7 +1687,7 @@ class TestUnit(TestCase):
         sel = f1 < 100 # get all true
 
         # get a value that will require reindexing
-        f2 = Frame(-100,
+        f2 = Frame.from_element(-100,
                 columns=('q', 'r',),
                 index=('y',))
 
@@ -2573,7 +2571,7 @@ class TestUnit(TestCase):
 
     def test_frame_binary_operator_e(self) -> None:
         # keep column order when columns are the same
-        f = sf.Frame(1, columns=['dog', 3, 'bat'], index=[1, 2])
+        f = sf.Frame.from_element(1, columns=['dog', 3, 'bat'], index=[1, 2])
         post = f / f.sum()
         self.assertEqual(post.columns.values.tolist(), f.columns.values.tolist())
 
@@ -4468,7 +4466,7 @@ class TestUnit(TestCase):
     def test_frame_from_xlsx_d(self) -> None:
         # isolate case of all None data that has a valid index
 
-        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+        f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
@@ -4480,7 +4478,7 @@ class TestUnit(TestCase):
     def test_frame_from_xlsx_e(self) -> None:
         # isolate case of all None data that has a valid IndexHierarchy
 
-        f1 = Frame(None,
+        f1 = Frame.from_element(None,
                 index=IndexHierarchy.from_product((0, 1), ('a', 'b')),
                 columns=('x', 'y', 'z')
                 )
@@ -4494,7 +4492,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_xlsx_f(self) -> None:
         # isolate case of all None data and only columns
-        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+        f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, include_index=False)
@@ -4506,7 +4504,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_xlsx_g(self) -> None:
         # isolate case of all None data, no index, no columns
-        f1 = Frame(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+        f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, include_index=False, include_columns=False)

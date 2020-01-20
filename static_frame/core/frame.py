@@ -122,6 +122,7 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import deprecated
 
 from static_frame.core.doc_str import doc_inject
 
@@ -1790,29 +1791,35 @@ class Frame(ContainerOperand):
             # from_blocks will apply immutable filter
             self._blocks = TypeBlocks.from_blocks(data)
 
+        elif data is FRAME_INITIALIZER_DEFAULT:
+            # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
+            def blocks_constructor(shape): #pylint: disable=E0102
+                if shape[0] > 0 and shape[1] > 0:
+                    # if fillable and we still have default initializer, this is a problem
+                    raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')
+                self._blocks = TypeBlocks.from_zero_size_shape(shape)
+
         elif isinstance(data, dict):
             raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
 
-        elif data is FRAME_INITIALIZER_DEFAULT and (columns_empty or index_empty):
-            # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
-
-            def blocks_constructor(shape): #pylint: disable=E0102
-                self._blocks = TypeBlocks.from_zero_size_shape(shape)
+        elif isinstance(data, Series):
+            raise ErrorInitFrame('use Frame.from_series to create a Frame from a Series.')
 
         elif not hasattr(data, '__len__') or isinstance(data, str):
             # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
-            def blocks_constructor(shape): #pylint: disable=E0102
-                if shape[0] > 0 and shape[1] > 0 and data is FRAME_INITIALIZER_DEFAULT:
-                    # if fillable and we still have default initializer, this is a problem
-                    raise RuntimeError('must supply a non-default value for Frame construction from a single element or array constructor input')
+            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element. ')
 
+            def blocks_constructor(shape): #pylint: disable=E0102
                 a = np.full(shape, data)
                 a.flags.writeable = False
                 self._blocks = TypeBlocks.from_blocks(a)
 
         else:
             # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame. The array cas be 1D (to produce one column) or 2D; greater dimensionality will raise exception.
+
+            deprecated('The Frame initializer no longer supports creation from untyped iterables; use Frame.from_records to create a Frame from an iterable of iterables; use Frame.from_elements to create a Frame from an iterable.')
+
             a = np.array(data)
             a.flags.writeable = False
             self._blocks = TypeBlocks.from_blocks(a)
