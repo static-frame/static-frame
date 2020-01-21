@@ -108,7 +108,7 @@ class TestUnit(TestCase):
 
 
     def test_store_xlsx_read_a(self) -> None:
-        f1 = Frame([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
+        f1 = Frame.from_elements([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
         config_map = StoreConfigMap.from_config(
                 StoreConfig(include_index=False, include_columns=True))
@@ -134,7 +134,7 @@ class TestUnit(TestCase):
         index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
         columns = IndexHierarchy.from_labels(((100, -5, 20),))
 
-        f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
+        f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
         config_map = StoreConfigMap.from_config(
                 StoreConfig(include_index=False, include_columns=True))
@@ -160,7 +160,7 @@ class TestUnit(TestCase):
         index = IndexHierarchy.from_product(('left', 'right'), ('up', 'down'))
         columns = IndexHierarchy.from_labels(((100, -5, 20),))
 
-        f1 = Frame([1, 2, 3, 4], index=index, columns=columns)
+        f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
         config_map = StoreConfigMap.from_config(
                 StoreConfig(include_index=True, include_columns=False))

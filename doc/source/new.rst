@@ -20,7 +20,7 @@ Added ``consolidate_blocks`` parameter to ``Frame.from_xlsx``, ``Frame.from_hdf5
 
 Implemented ``IndexYearGO``, ``IndexYearMonthGO``, ``IndexDateGO``, ``IndexMinuteGO``, ``IndexSecondGO``, ``IndexMillisecondGO`` grow-only, derived classes of `np.datetime64` indices.
 
-Added ``Frame`` constructors: ``Frame.from_series``.
+Added ``Frame`` constructors: ``Frame.from_series``, ``Frame.from_element``, ``Frame.from_elements``.
 
 
 0.5.11

@@ -161,7 +161,7 @@ class InterfaceSummary:
             if target is TypeBlocks:
                 instance = target.from_blocks(np.array((0,)))
             elif target is Bus:
-                f = Frame((0,), name='frame')
+                f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,))
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
@@ -169,6 +169,8 @@ class InterfaceSummary:
                 instance = target(np.array((0,), dtype=_DT64_S))
             elif target in (ContainerOperand, ContainerBase, IndexBase):
                 instance = target()
+            elif issubclass(target, Frame):
+                instance = target.from_elements((0,))
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance

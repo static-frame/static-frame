@@ -91,7 +91,7 @@ class TestUnit(TestCase):
                 ((3, ((1, None), (2, None))), (4, ((1, None), (2, None))), (5, ((1, None), (2, None)))))
 
         # auto populated index/columns based on shape
-        f4 = Frame([[1,2], [3,4], [5,6]])
+        f4 = Frame.from_records([[1,2], [3,4], [5,6]])
         self.assertEqual(f4.to_pairs(0),
                 ((0, ((0, 1), (1, 3), (2, 5))), (1, ((0, 2), (1, 4), (2, 6))))
                 )
@@ -167,7 +167,7 @@ class TestUnit(TestCase):
 
     def test_frame_init_k(self) -> None:
         # check that we got autoincrement indices if no col/index provided
-        f1 = Frame([[0, 1], [2, 3]])
+        f1 = Frame.from_records([[0, 1], [2, 3]])
         self.assertEqual(f1.to_pairs(0), ((0, ((0, 0), (1, 2))), (1, ((0, 1), (1, 3)))))
 
     def test_frame_init_m(self) -> None:
@@ -216,7 +216,7 @@ class TestUnit(TestCase):
 
     def test_frame_init_s(self) -> None:
         # check that we got autoincrement indices if no col/index provided
-        f1 = Frame([[0, 1], [2, 3]],
+        f1 = Frame.from_records([[0, 1], [2, 3]],
                 index=IndexAutoFactory,
                 columns=IndexAutoFactory)
 
@@ -224,7 +224,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 0), (1, 2))), (1, ((0, 1), (1, 3))))
                 )
 
-        f2 = Frame([[0, 1], [2, 3]],
+        f2 = Frame.from_records([[0, 1], [2, 3]],
                 index=IndexAutoFactory,
                 columns=list('ab')
                 )
@@ -242,13 +242,20 @@ class TestUnit(TestCase):
             f1 = Frame(a1)
 
 
-    def test_frame_init_u(self) -> None:
-
+    def test_frame_init_u1(self) -> None:
         # 3d array raises exception
-        a1 = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
-
+        a1 = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
         with self.assertRaises(RuntimeError):
             f1 = Frame(a1)
+
+
+    def test_frame_init_u2(self) -> None:
+
+        # NOTE: presently the inner lists get flattend when used in from records
+        a1 = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+        f1 = Frame.from_records(a1)
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 1), (1, 5))), (1, ((0, 2), (1, 6))), (2, ((0, 3), (1, 7))), (3, ((0, 4), (1, 8)))))
 
 
     def test_frame_init_v(self) -> None:
@@ -317,7 +324,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_values_a(self) -> None:
-        f = sf.Frame([[3]])
+        f = sf.Frame.from_records([[3]])
         self.assertEqual(f.values.tolist(), [[3]])
 
 
@@ -516,7 +523,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_to_pandas_c(self) -> None:
-        f = sf.FrameGO(['a' for x in range(5)], columns=['a'])
+        f = sf.FrameGO.from_elements(['a' for x in range(5)], columns=['a'])
         f['b'] = [1.0 for i in range(5)]
         df = f.to_pandas()
         self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
@@ -869,14 +876,14 @@ class TestUnit(TestCase):
 
 
     def test_frame_iter_tuple_a(self) -> None:
-        post = tuple(sf.Frame(range(5)).iter_tuple(axis=0))
+        post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=0))
         self.assertEqual(post, ((0, 1, 2, 3, 4),))
 
 
 
 
     def test_frame_iter_tuple_b(self) -> None:
-        post = tuple(sf.Frame(range(3), index=tuple('abc')).iter_tuple(axis=0))
+        post = tuple(sf.Frame.from_elements(range(3), index=tuple('abc')).iter_tuple(axis=0))
         self.assertEqual(post, ((0, 1, 2),))
 
         self.assertEqual(tuple(post[0]._asdict().items()),
@@ -1355,7 +1362,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_loc_f(self) -> None:
-        f = Frame(range(3), index=sf.Index(tuple('abc'), name='index'))
+        f = Frame.from_elements(range(3), index=sf.Index(tuple('abc'), name='index'))
         self.assertEqual(f.loc['b':].index.name, 'index') # type: ignore
 
 
@@ -2686,7 +2693,7 @@ class TestUnit(TestCase):
 
     def test_frame_binary_operator_i(self) -> None:
 
-        a = sf.Frame((1, 2, 3))
+        a = sf.Frame.from_elements((1, 2, 3))
         post = a == a.to_frame_go()
 
         self.assertEqual(post.__class__, FrameGO)
@@ -2981,8 +2988,8 @@ class TestUnit(TestCase):
 
 
     def test_frame_iter_element_d(self) -> None:
-        f1 = sf.Frame(['I', 'II', 'III'], columns=('A',))
-        f2 = sf.Frame([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
+        f1 = sf.Frame.from_elements(['I', 'II', 'III'], columns=('A',))
+        f2 = sf.Frame.from_elements([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
 
         post = f1['A'].iter_element().apply(f2['B'])
 
@@ -3627,7 +3634,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.get('a', -1), -1)
 
     def test_frame_isna_a(self) -> None:
-        f1 = FrameGO([
+        f1 = FrameGO.from_records([
                 [np.nan, 2, np.nan, 0],
                 [3, 4, np.nan, 1],
                 [np.nan, np.nan, np.nan, 5]],
@@ -3640,7 +3647,7 @@ class TestUnit(TestCase):
                 (('A', ((0, False), (1, True), (2, False))), ('B', ((0, True), (1, True), (2, False))), ('C', ((0, False), (1, False), (2, False))), ('D', ((0, True), (1, True), (2, True)))))
 
     def test_frame_dropna_a(self) -> None:
-        f1 = FrameGO([
+        f1 = FrameGO.from_records([
                 [np.nan, 2, np.nan, 0],
                 [3, 4, np.nan, 1],
                 [np.nan, np.nan, np.nan, np.nan]],
@@ -3663,7 +3670,7 @@ class TestUnit(TestCase):
         self.assertEqual(f3.shape, (3, 0))
 
     def test_frame_dropna_b(self) -> None:
-        f1 = FrameGO([
+        f1 = FrameGO.from_records([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
                 [0, 1, 2, 3]],
@@ -3675,7 +3682,7 @@ class TestUnit(TestCase):
                 (('B', ((0, 2.0), (1, 4.0), (2, 1.0))), ('D', ((0, 0.0), (1, 1.0), (2, 3.0)))))
 
     def test_frame_dropna_c(self) -> None:
-        f1 = Frame([
+        f1 = Frame.from_records([
                 [np.nan, np.nan],
                 [np.nan, np.nan],],
                 columns=list('AB'))
@@ -3683,11 +3690,11 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 2))
 
 
-
+    @skip_win #type: ignore
     def test_frame_fillna_a(self) -> None:
         dtype = np.dtype
 
-        f1 = FrameGO([
+        f1 = FrameGO.from_records([
                 [np.nan, 2, 3, 0],
                 [3, 4, np.nan, 1],
                 [0, 1, 2, 3]],
@@ -3699,7 +3706,7 @@ class TestUnit(TestCase):
 
         post = f2.dtypes
         self.assertEqual(post.to_pairs(),
-                (('A', dtype('float64')), ('B', dtype('float64')), ('C', dtype('float64')), ('D', dtype('float64'))))
+                (('A', dtype('float64')), ('B', dtype('int64')), ('C', dtype('float64')), ('D', dtype('int64'))))
 
         f3 = f1.fillna(None)
         self.assertEqual(f3.to_pairs(0),
@@ -3707,7 +3714,7 @@ class TestUnit(TestCase):
 
         post = f3.dtypes
         self.assertEqual(post.to_pairs(),
-                (('A', dtype('O')), ('B', dtype('O')), ('C', dtype('O')), ('D', dtype('O'))))
+                (('A', dtype('O')), ('B', dtype('int64')), ('C', dtype('O')), ('D', dtype('int64'))))
 
 
 
@@ -4101,7 +4108,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_tsv_d(self) -> None:
 
-        f1 = sf.Frame([1], columns=['a'])
+        f1 = sf.Frame.from_elements([1], columns=['a'])
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
@@ -4112,7 +4119,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_tsv_e(self) -> None:
 
-        f1 = sf.Frame([1], columns=['with space'])
+        f1 = sf.Frame.from_elements([1], columns=['with space'])
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
@@ -4124,7 +4131,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_tsv_f(self) -> None:
 
-        f1 = sf.Frame([1], columns=[':with:colon:'])
+        f1 = sf.Frame.from_elements([1], columns=[':with:colon:'])
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
@@ -4207,7 +4214,7 @@ class TestUnit(TestCase):
 
     def test_frame_to_csv_b(self) -> None:
 
-        f = sf.Frame([1, 2, 3],
+        f = sf.Frame.from_elements([1, 2, 3],
                 columns=['a'],
                 index=sf.Index(range(3), name='Important Name'))
         file = StringIO()
@@ -4659,11 +4666,6 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
-        f2 = FrameGO([
-                [np.nan, 2, 3, 0],
-                [3, 4, np.nan, 1],
-                [0, 1, 2, 3]],
-                columns=list('ABCD'))
 
         self.assertEqual(f1.all(axis=0).to_pairs(),
                 (('p', True), ('q', True), ('r', True), ('s', False), ('t', False)))
@@ -4860,7 +4862,7 @@ class TestUnit(TestCase):
                 )
 
 
-    @skip_win  # type: ignore
+    @skip_win  #type: ignore
     def test_frame_from_concat_d(self) -> None:
         records = (
                 (2, 2, False),
@@ -5870,7 +5872,7 @@ class TestUnit(TestCase):
                 (3, 3, 'i'),
                 )
 
-        f = Frame(labels)
+        f = Frame.from_records(labels)
         # import ipdb; ipdb.set_trace()
         f = f.astype[[0, 1]](int)
 
@@ -6127,7 +6129,7 @@ class TestUnit(TestCase):
     @skip_win  # type: ignore
     def test_frame_display_a(self) -> None:
 
-        f1 = Frame(((1,2),(True,False)), name='foo',
+        f1 = Frame.from_records(((1,2),(True,False)), name='foo',
                 index=Index(('x', 'y'), name='bar'),
                 columns=Index(('a', 'b'), name='rig')
                 )
@@ -6208,7 +6210,9 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-        f2 = sf.Frame([[5, 4], [0, 10]], index=list('yz'), columns=list('ab'))
+        f2 = sf.Frame.from_records([[5, 4], [0, 10]],
+                index=list('yz'),
+                columns=list('ab'))
 
         self.assertEqual(f1.clip(upper=f2).to_pairs(0),
                 (('a', (('x', 2.0), ('y', 5.0), ('z', 0.0))), ('b', (('x', 2.0), ('y', 4.0), ('z', 10.0)))))
@@ -6479,7 +6483,10 @@ class TestUnit(TestCase):
 
     def test_frame_bloc_b(self) -> None:
 
-        f = sf.Frame([[True, False], [False, True]], index=('a', 'b'), columns=['d', 'c'])
+        f = sf.Frame.from_records(
+                [[True, False], [False, True]],
+                index=('a', 'b'),
+                columns=['d', 'c'])
         self.assertEqual(
                 f.assign.bloc(f)('T').assign.bloc(~f)('').to_pairs(0),
                 (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))

@@ -98,13 +98,13 @@ Neptune  -200
 
 
 #start_frame_a
->>> sf.Frame(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'))
+>>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'))
 <Frame>
 <Index> temperature distance  <<U11>
 <Index>
-Mars    -65.0       227.9
-Neptune -200.0      4495.1
-<<U7>   <float64>   <float64>
+Mars    -65         227.9
+Neptune -200        4495.1
+<<U7>   <int64>     <float64>
 
 >>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>

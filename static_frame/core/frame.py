@@ -1844,12 +1844,6 @@ class Frame(ContainerOperand):
         columns_empty = index_constructor_empty(columns)
         index_empty = index_constructor_empty(index)
 
-        # columns_empty = columns is None or columns is IndexAutoFactory or (
-        #         hasattr(columns, '__len__') and len(columns) == 0)
-
-        # index_empty = index is None or index is IndexAutoFactory or (
-        #         hasattr(index, '__len__') and len(index) == 0)
-
         #-----------------------------------------------------------------------
         # blocks assignment
 
