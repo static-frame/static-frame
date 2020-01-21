@@ -10,6 +10,7 @@ Both :class:`Series` and :class:`Frame` have ``from_items`` constructors that co
 Series
 ---------
 
+.. automethod:: static_frame.Series.from_element
 
 .. automethod:: static_frame.Series.from_items
 
@@ -29,6 +30,11 @@ Series
 
 Frame
 ---------
+.. automethod:: static_frame.Frame.from_element
+
+.. automethod:: static_frame.Frame.from_elements
+
+.. automethod:: static_frame.Frame.from_series
 
 .. automethod:: static_frame.Frame.from_items
 
