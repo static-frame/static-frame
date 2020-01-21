@@ -15,7 +15,7 @@ def clean(context):
     context.run('rm -rf *.egg-info')
 
 
-@invoke.task(pre=(clean,))
+@invoke.task()
 def doc(context):
     '''Build docs
     '''

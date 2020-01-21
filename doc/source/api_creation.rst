@@ -111,7 +111,7 @@ Frame
 Index
 -----------------
 
-While indices are often specified with their data at container creation, in some cases explicitly creating indices in advance of the data is practical.
+While indices are often specified with their data at container creation team, in some cases explicitly creating indices in advance of the data is practical.
 
 
 
