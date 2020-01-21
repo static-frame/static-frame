@@ -98,7 +98,7 @@ Neptune  -200
 
 
 #start_frame_a
->>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'))
+>>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
 <Frame>
 <Index> temperature distance  <<U11>
 <Index>
