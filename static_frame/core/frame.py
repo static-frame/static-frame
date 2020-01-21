@@ -1876,10 +1876,14 @@ class Frame(ContainerOperand):
         elif isinstance(data, Series):
             raise ErrorInitFrame('use Frame.from_series to create a Frame from a Series.')
 
+        # post deprication, use this
+        # else:
+        #     raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
+
         elif not hasattr(data, '__len__') or isinstance(data, str):
             # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
-            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element. ')
+            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element.')
 
             def blocks_constructor(shape): #pylint: disable=E0102
                 a = np.full(shape, data)

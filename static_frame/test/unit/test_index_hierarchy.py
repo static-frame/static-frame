@@ -683,11 +683,11 @@ class TestUnit(TestCase):
 
     def test_hierarchy_series_a(self) -> None:
         f1 = IndexHierarchy.from_tree
-        s1 = Series(23, index=f1(dict(a=(1,2,3))))
+        s1 = Series.from_element(23, index=f1(dict(a=(1,2,3))))
         self.assertEqual(s1.values.tolist(), [23, 23, 23])
 
         f2 = IndexHierarchy.from_product
-        s2 = Series(3, index=f2(Index(('a', 'b')), Index((1,2))))
+        s2 = Series.from_element(3, index=f2(Index(('a', 'b')), Index((1,2))))
         self.assertEqual(s2.to_pairs(),
                 ((('a', 1), 3), (('a', 2), 3), (('b', 1), 3), (('b', 2), 3)))
 

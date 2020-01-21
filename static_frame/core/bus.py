@@ -78,7 +78,9 @@ class Bus(ContainerBase):
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
         # make an object dtype
-        return Series(FrameDeferred, index=labels, dtype=object)
+        return tp.cast(Series,
+                Series.from_element(FrameDeferred, index=labels, dtype=object)
+                )
 
     @classmethod
     def from_frames(cls,

@@ -2274,7 +2274,7 @@ class TestUnit(TestCase):
 
         f1 = FrameGO(index=index)
         for col in range(100):
-            s = Series(col * .1, index=index[col: col+20])
+            s = Series.from_element(col * .1, index=index[col: col+20])
             f1[col] = s
         assert f1.sum().sum() == 9900.0
 

@@ -261,7 +261,7 @@ class TestUnit(TestCase):
         columns = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         f = FrameGO(index=range(4))
         for i, col in enumerate(columns):
-            f[col] = Series(i, index=range(4))
+            f[col] = Series.from_element(i, index=range(4))
 
         self.assertEqual(
                 f.display(config_columns_8).to_rows(),

@@ -72,11 +72,13 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_and_map
+# from static_frame.core.container_util import index_constructor_empty
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import deprecated
 
 from static_frame.core.doc_str import doc_inject
 
@@ -111,6 +113,38 @@ class Series(ContainerOperand):
     _index: IndexBase
 
     _NDIM: int = 1
+
+    #---------------------------------------------------------------------------
+    @classmethod
+    def from_element(cls,
+            element: tp.Any,
+            *,
+            index: IndexInitializer,
+            dtype: DtypeSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            ):
+
+        if own_index:
+            index_final = index
+        else:
+            index_final = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        array = np.full(
+                len(index_final),
+                fill_value=element,
+                dtype=dtype)
+        array.flags.writeable = False
+
+        return cls(array,
+                index=index_final,
+                name=name,
+                own_index=True,
+                )
+
 
     @classmethod
     def from_items(cls,
@@ -265,6 +299,8 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
+
+    #---------------------------------------------------------------------------
     def __init__(self,
             values: SeriesInitializer,
             *,
@@ -280,6 +316,8 @@ class Series(ContainerOperand):
         if own_index and index is None:
             raise ErrorInitSeries('cannot own_index if no index is provided.')
 
+        # index_empty = index_constructor_empty(index)
+
         #-----------------------------------------------------------------------
         # values assignment
 
@@ -293,6 +331,7 @@ class Series(ContainerOperand):
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
+                deprecated('The Series initializer no longer supports creation from an element; use Series.from_element to create a Series from an element.')
                 # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
                 def values_constructor(shape): #pylint: disable=E0102
                     self.values = np.full(shape, values, dtype=dtype)
@@ -870,10 +909,6 @@ class Series(ContainerOperand):
                     sided_leading=False),
                 index=self._index,
                 name=self._name)
-
-
-
-
 
     #---------------------------------------------------------------------------
     # operators

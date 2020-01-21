@@ -53,25 +53,25 @@ class TestUnit(TestCase):
     # test series
 
     def test_series_slotted_a(self) -> None:
-        s1 = Series(10, index=('a', 'b', 'c', 'd'))
+        s1 = Series.from_element(10, index=('a', 'b', 'c', 'd'))
 
         with self.assertRaises(AttributeError):
-            s1.g = 30 # type: ignore #pylint: disable=E0237
+            s1.g = 30 #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             s1.__dict__ #pylint: disable=W0104
 
     def test_series_init_a(self) -> None:
-        s1 = Series(np.nan, index=('a', 'b', 'c', 'd'))
+        s1 = Series.from_element(np.nan, index=('a', 'b', 'c', 'd'))
 
         self.assertTrue(s1.dtype == float)
         self.assertTrue(len(s1) == 4)
 
-        s2 = Series(False, index=('a', 'b', 'c', 'd'))
+        s2 = Series.from_element(False, index=('a', 'b', 'c', 'd'))
 
         self.assertTrue(s2.dtype == bool)
         self.assertTrue(len(s2) == 4)
 
-        s3 = Series(None, index=('a', 'b', 'c', 'd'))
+        s3 = Series.from_element(None, index=('a', 'b', 'c', 'd'))
 
         self.assertTrue(s3.dtype == object)
         self.assertTrue(len(s3) == 4)
@@ -95,7 +95,7 @@ class TestUnit(TestCase):
 
     def test_series_init_d(self) -> None:
         # single element, when the element is a string
-        s1 = Series('abc', index=range(4))
+        s1 = Series.from_element('abc', index=range(4))
         self.assertEqual(s1.to_pairs(),
                 ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
 
@@ -105,7 +105,7 @@ class TestUnit(TestCase):
                 ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
 
         # single element, generator index
-        s3 = Series(None, index=(x * 10 for x in (1,2,3)))
+        s3 = Series.from_element(None, index=(x * 10 for x in (1,2,3)))
         self.assertEqual(s3.to_pairs(),
                 ((10, None), (20, None), (30, None))
                 )
@@ -146,7 +146,7 @@ class TestUnit(TestCase):
                 ((0, 3), (1, 4), (2, 'a')))
 
     def test_series_init_k(self) -> None:
-        s1 = Series('cat', index=(1, 2, 3))
+        s1 = Series.from_element('cat', index=(1, 2, 3))
         self.assertEqual(s1.to_pairs(),
                 ((1, 'cat'), (2, 'cat'), (3, 'cat'))
                 )
@@ -162,12 +162,12 @@ class TestUnit(TestCase):
     def test_series_init_m(self) -> None:
 
         # if index is None or IndexAutoFactory, we supply an index of 0
-        s1 = sf.Series('a')
+        s1 = sf.Series.from_element('a', index=(0,))
         self.assertEqual(s1.to_pairs(),
                 ((0, 'a'),))
 
         # an element with an explicitl empty index results in an empty series
-        s2 = sf.Series('a', index=())
+        s2 = sf.Series.from_element('a', index=())
         self.assertEqual(s2.to_pairs(), ())
 
     def test_series_init_n(self) -> None:
@@ -181,7 +181,7 @@ class TestUnit(TestCase):
             )
 
     def test_series_init_o(self) -> None:
-        s1 = sf.Series('T', index=())
+        s1 = sf.Series.from_element('T', index=())
         self.assertEqual(s1.to_pairs(), ())
 
 
@@ -547,7 +547,7 @@ class TestUnit(TestCase):
                 (('a', False), ('b', True), ('c', False), ('d', True)))
 
     def test_series_dropna_b(self) -> None:
-        s1 = sf.Series(np.nan, index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
+        s1 = sf.Series.from_element(np.nan, index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
         s2 = s1.dropna()
         self.assertEqual(len(s2), 0)
         self.assertEqual(s1.__class__, s2.__class__)
@@ -778,7 +778,15 @@ class TestUnit(TestCase):
                 (('a', 1), ('b', 1), ('c', None), ('d', 5), ('e', 5), ('f', 5), ('g', 5), ('h', 5)))
 
 
+    #---------------------------------------------------------------------------
+    def test_series_from_element_a(self) -> None:
+        s1 = Series.from_element('a', index=range(3))
+        self.assertEqual(s1.to_pairs(),
+                ((0, 'a'), (1, 'a'), (2, 'a'))
+                )
 
+
+    #---------------------------------------------------------------------------
     def test_series_from_items_a(self) -> None:
 
         def gen() -> tp.Iterator[tp.Tuple[int, int]]:
