@@ -21,8 +21,19 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.index import PositionsAllocator
+from static_frame.core.util import mloc
+
 
 class TestUnit(TestCase):
+
+    def test_positions_allocator_a(self) -> None:
+
+        a1 = PositionsAllocator.get(3)
+        a2 = PositionsAllocator.get(4)
+        a3 = PositionsAllocator.get(5)
+        self.assertTrue(mloc(a1) == mloc(a2))
+        self.assertTrue(mloc(a3) == mloc(a2))
 
     def test_index_slotted_a(self) -> None:
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')

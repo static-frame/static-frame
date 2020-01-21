@@ -56,6 +56,9 @@ class StoreFileMutation(RuntimeError):
 
 #-------------------------------------------------------------------------------
 
+
+
 def deprecated(message: str = '') -> None:
-    warnings.warn(message)
+    # using UserWarning to get out of pytest with  -p no:warnings
+    warnings.warn(message, UserWarning, stacklevel=2)
     # raise DeprecationWarning()

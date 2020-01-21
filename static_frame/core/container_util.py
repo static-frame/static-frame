@@ -11,6 +11,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
 
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -25,7 +26,6 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 
 from static_frame.core.index_base import IndexBase
-
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
     '''
@@ -78,6 +78,14 @@ def index_from_optional_constructor(
     # cannot always deterine satic status from constructors; fallback on using default constructor
     return default_constructor(value)
 
+def index_constructor_empty(index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']):
+    '''
+    Determine if an index is empty (if possible) or an IndexAutoFactory.
+    '''
+    from static_frame.core.index_auto import IndexAutoFactory
+
+    return index is None or index is IndexAutoFactory or (
+            hasattr(index, '__len__') and len(index) == 0)
 
 def matmul(
         lhs: tp.Union['Series', 'Frame', tp.Iterable],

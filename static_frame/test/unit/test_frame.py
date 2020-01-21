@@ -250,6 +250,16 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1 = Frame(a1)
 
+
+    def test_frame_init_v(self) -> None:
+
+        # 3d array raises exception
+        s1 = Series(['a', 'b', 'c'])
+
+        with self.assertRaises(ErrorInitFrame):
+            f1 = Frame(s1)
+
+
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
 
@@ -320,7 +330,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.values.tolist(), [[3], [2], [1]])
 
 
-    #---------------------------------------------------------------------------
+
     def test_frame_from_series_a(self) -> None:
         s1 = Series((False, True, False), index=tuple('abc'))
         f1 = Frame.from_series(s1, name='foo')
@@ -368,6 +378,37 @@ class TestUnit(TestCase):
                 columns=('x', 'y', 'z'),
                 )
         self.assertEqual(f2.shape, (0, 3))
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_elements_a(self) -> None:
+        f1 = Frame.from_elements(['a', 3, 'b'])
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 'a'), (1, 3), (2, 'b'))),)
+                )
+
+        f2 = Frame.from_elements(['a', 3, 'b'], index=tuple('xyz'))
+        self.assertEqual(f2.to_pairs(0),
+                ((0, (('x', 'a'), ('y', 3), ('z', 'b'))),))
+
+        f3 = Frame.from_elements(['a', 3, 'b'], index=tuple('xyz'), columns=('p',))
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('x', 'a'), ('y', 3), ('z', 'b'))),))
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_from_elements_b(self) -> None:
+
+        f1 = Frame.from_elements([5, False, 'X'])
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 5), (1, False), (2, 'X'))),)
+                )
+
+        f2 = Frame.from_elements([5, False, 'X'], columns=('a', 'b'))
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, 5), (1, False), (2, 'X'))), ('b', ((0, 5), (1, False), (2, 'X'))))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_pairs_a(self) -> None:

@@ -86,6 +86,7 @@ from static_frame.core.container_util import rehierarch_and_map
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import key_to_ascending_key
+from static_frame.core.container_util import index_constructor_empty
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -234,6 +235,79 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True,
                 )
+
+
+    @classmethod
+    def from_elements(cls,
+            elements: tp.Iterable[tp.Any],
+            *,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            dtype: DtypeSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False
+            ):
+        '''
+        Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
+        '''
+
+        # will be immutable
+        array, _ = iterable_to_array_1d(elements, dtype=dtype)
+
+        columns_empty = index_constructor_empty(columns)
+        index_empty = index_constructor_empty(index)
+
+        #-----------------------------------------------------------------------
+        if own_columns:
+            columns_final = columns
+            col_count = len(columns_final)
+        elif columns_empty:
+            col_count = 1
+            columns_final = IndexAutoFactory.from_optional_constructor(
+                    col_count, # default to one colmns
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
+        else:
+            columns_final = index_from_optional_constructor(columns,
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR,
+                    explicit_constructor=columns_constructor
+                    )
+            col_count = len(columns_final)
+
+        #-----------------------------------------------------------------------
+        row_count = len(array)
+        if own_index:
+            index_final = index
+        elif index_empty:
+            index_final = IndexAutoFactory.from_optional_constructor(
+                    row_count,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+        else:
+            index_final = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+
+        #-----------------------------------------------------------------------
+        if col_count > 1:
+            array = np.tile(array.reshape((row_count, 1)), (1, col_count))
+            array.flags.writeable = False
+
+        return cls(TypeBlocks.from_blocks(array),
+                index=index_final,
+                columns=columns_final,
+                name=name,
+                own_data=True,
+                own_index=True,
+                own_columns=True,
+                )
+
 
 
     #---------------------------------------------------------------------------
@@ -1767,11 +1841,14 @@ class Frame(ContainerOperand):
         self._name = name if name is None else name_filter(name)
 
         # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
-        columns_empty = columns is None or columns is IndexAutoFactory or (
-                hasattr(columns, '__len__') and len(columns) == 0)
+        columns_empty = index_constructor_empty(columns)
+        index_empty = index_constructor_empty(index)
 
-        index_empty = index is None or index is IndexAutoFactory or (
-                hasattr(index, '__len__') and len(index) == 0)
+        # columns_empty = columns is None or columns is IndexAutoFactory or (
+        #         hasattr(columns, '__len__') and len(columns) == 0)
+
+        # index_empty = index is None or index is IndexAutoFactory or (
+        #         hasattr(index, '__len__') and len(index) == 0)
 
         #-----------------------------------------------------------------------
         # blocks assignment
