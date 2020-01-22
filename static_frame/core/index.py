@@ -255,7 +255,7 @@ def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
 
 class PositionsAllocator:
 
-    _size: int = 1000
+    _size: int = 0
     _array: np.ndarray = np.arange(_size)
     _array.flags.writeable: bool = False
 
