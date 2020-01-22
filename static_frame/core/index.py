@@ -257,17 +257,15 @@ class PositionsAllocator:
 
     _size: int = 0
     _array: np.ndarray = np.arange(_size)
-    _array.flags.writeable: bool = False
+    _array.flags.writeable = False
 
     @classmethod
     def get(cls, size: int) -> np.ndarray:
-        if size <= cls._size:
-            # slices of immutable arrays are immutable
-            return cls._array[:size]
-
-        cls._size = size * 2
-        cls._array = np.arange(cls._size)
-        cls._array.flags.writeable = False
+        if size > cls._size:
+            cls._size = size * 2
+            cls._array = np.arange(cls._size)
+            cls._array.flags.writeable = False
+        # slices of immutable arrays are immutable
         return cls._array[:size]
 
 #-------------------------------------------------------------------------------
