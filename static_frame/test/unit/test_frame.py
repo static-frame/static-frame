@@ -988,6 +988,21 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f['b'] = [1, 2]
 
+    def test_frame_setitem_h(self) -> None:
+
+        # 3d array raises exception
+        f = sf.FrameGO.from_element('a', index=range(3), columns=sf.IndexHierarchy.from_labels((('a', 1),)))
+
+        # this was resulting in a mal-formed blocks
+        with self.assertRaises(TypeError):
+            f[sf.HLoc['a', 2]] = 3
+
+        self.assertEqual(f.shape, (3, 1))
+        self.assertEqual(f.columns.shape, (1, 2))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:
@@ -6280,6 +6295,19 @@ class TestUnit(TestCase):
             # mismatched length
             sf.Frame.from_dict(dict(a=(1,2,3,4,5), b=tuple('abcdef')))
 
+
+
+    def test_frame_from_dict_b(self) -> None:
+
+        f = Frame.from_dict({('a', 1): (1, 2), ('a', 2): (3, 4)}, columns_constructor=IndexHierarchy.from_labels)
+
+        self.assertEqual(f.columns.__class__, IndexHierarchy)
+        self.assertEqual(f.to_pairs(0),
+                ((('a', 1), ((0, 1), (1, 2))), (('a', 2), ((0, 3), (1, 4))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_from_sql_a(self) -> None:
 

@@ -24,6 +24,7 @@ Added ``Frame`` constructors: ``Frame.from_series``, ``Frame.from_element``, ``F
 
 Added ``Series`` constructors: ``Series.from_element``. Deprecated creating ``Series`` from an element with the default intializer.
 
+Added `index_constructor`, `columns_constructor` arguement to `Frame.from_items`, `Frame.from_dict`.
 
 
 0.5.11

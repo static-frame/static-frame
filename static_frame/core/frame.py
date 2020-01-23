@@ -814,6 +814,8 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
+
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_items(cls,
@@ -823,9 +825,11 @@ class Frame(ContainerOperand):
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
             ):
-        '''Frame constructor from an iterator or generator of pairs, where the first value is the column name and the second value is an iterable of a single column's values.
+        '''Frame constructor from an iterator or generator of pairs, where the first value is the column label and the second value is an iterable of a column's values.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
@@ -843,7 +847,10 @@ class Frame(ContainerOperand):
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
         own_index = False
         if _index_initializer_needs_init(index):
-            index = Index(index)
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
             own_index = True
 
         dtypes_is_map = dtypes_mappable(dtypes)
@@ -896,7 +903,9 @@ class Frame(ContainerOperand):
                 columns=columns,
                 name=name,
                 own_data=True,
-                own_index=own_index)
+                own_index=own_index,
+                columns_constructor=columns_constructor
+                )
 
     @classmethod
     @doc_inject(selector='constructor_frame')
@@ -907,6 +916,8 @@ class Frame(ContainerOperand):
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
@@ -923,7 +934,10 @@ class Frame(ContainerOperand):
                 fill_value=fill_value,
                 name=name,
                 dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks)
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                consolidate_blocks=consolidate_blocks,
+                )
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
@@ -4677,6 +4691,9 @@ class FrameGO(Frame):
         if key in self._columns:
             raise RuntimeError(f'The provided key ({key}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
 
+        # this might fail if key is a sequence, or otherwise not compatible
+        self._columns.append(key)
+
         row_count = len(self._index)
 
         if isinstance(value, Series):
@@ -4702,9 +4719,6 @@ class FrameGO(Frame):
 
             value.flags.writeable = False
             self._blocks.append(value)
-
-        # this might fail if key is a sequence
-        self._columns.append(key)
 
 
     def extend_items(self,
