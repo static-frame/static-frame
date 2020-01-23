@@ -2832,6 +2832,7 @@ class TestUnit(TestCase):
                 (('x', (('a', None), ('b', 'g'))), ('y', (('a', 'q'), ('b', None)))))
         self.assertEqual(f1.name, 'foo')
 
+    #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
 
         f1 = Frame.from_items(
@@ -2896,6 +2897,29 @@ class TestUnit(TestCase):
                 ((0, ((0, '0'), (1, '0'))), (1, ((0, '2'), (1, '3'))), (2, ((0, '4'), (1, '6'))), (3, ((0, '6'), (1, '9'))))
                 )
 
+
+    def test_frame_from_items_g(self) -> None:
+        def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
+            for i in range(4):
+                yield ('a', i), (2 * i, 3 * i)
+
+        f1 = Frame.from_items(
+                gen(),
+                name='foo',
+                index=(('a', 1), ('a', 2)),
+                index_constructor=IndexHierarchy.from_labels,
+                columns_constructor=IndexHierarchy.from_labels,
+                )
+        self.assertEqual(f1.index.__class__, IndexHierarchy)
+        self.assertEqual(f1.columns.__class__, IndexHierarchy)
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('a', 0), ((('a', 1), 0), (('a', 2), 0))), (('a', 1), ((('a', 1), 2), (('a', 2), 3))), (('a', 2), ((('a', 1), 4), (('a', 2), 6))), (('a', 3), ((('a', 1), 6), (('a', 2), 9))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_structured_array_a(self) -> None:
         a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)],
                 dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
