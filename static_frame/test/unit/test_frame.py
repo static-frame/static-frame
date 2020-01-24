@@ -2899,7 +2899,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_items_g(self) -> None:
-        def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
+        def gen() -> tp.Iterator[tp.Tuple[tp.Tuple[str, int], tp.Tuple[int, int]]]:
             for i in range(4):
                 yield ('a', i), (2 * i, 3 * i)
 
