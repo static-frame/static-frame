@@ -4179,6 +4179,7 @@ class TestUnit(TestCase):
                     ((':with:colon:', ((0, 1),)),)
                     )
 
+    #---------------------------------------------------------------------------
 
     def test_frame_to_pairs_a(self) -> None:
 

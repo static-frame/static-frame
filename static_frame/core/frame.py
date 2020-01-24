@@ -1451,6 +1451,7 @@ class Frame(ContainerOperand):
                 delimiter=delimiter_native,
                 skip_header=0, # done in row_source
                 skip_footer=skip_footer,
+                comments=None,
                 # strange NP convention for this parameter: False is not supported, must use None to not parase headers
                 names= None,
                 dtype=None,
@@ -1471,6 +1472,7 @@ class Frame(ContainerOperand):
                 columns_array = np.genfromtxt(
                         (row,),
                         delimiter=delimiter_native,
+                        comments=None,
                         names=None,
                         dtype=None,
                         encoding=encoding,
