@@ -520,8 +520,8 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     __or__: tp.Callable[[T, object], T]
     __lt__: tp.Callable[[T, object], T]
     __le__: tp.Callable[[T, object], T]
-    __eq__: tp.Callable[[T, object], T]  # type: ignore
-    __ne__: tp.Callable[[T, object], T]  # type: ignore
+    __eq__: tp.Callable[[T, object], T]  #type: ignore
+    __ne__: tp.Callable[[T, object], T]  #type: ignore
     __gt__: tp.Callable[[T, object], T]
     __ge__: tp.Callable[[T, object], T]
     __radd__: tp.Callable[[T, object], T]

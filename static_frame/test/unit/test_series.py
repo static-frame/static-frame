@@ -912,8 +912,8 @@ class TestUnit(TestCase):
         self.assertTrue(np.isnan(s2.median(skipna=False)))
 
         with self.assertRaises(TypeError):
-            # should raise with bad keyword argument
-            s2.median(skip_na=False)
+            # should raise with bad keyword argumenty
+            s2.median(skip_na=False) #type: ignore
 
     #---------------------------------------------------------------------------
 
