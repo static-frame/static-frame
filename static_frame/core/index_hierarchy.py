@@ -79,8 +79,6 @@ class IndexHierarchy(IndexBase):
             '_levels',
             '_labels',
             '_depth',
-            '_keys',
-            '_length',
             '_recache',
             '_name'
             )
@@ -88,14 +86,13 @@ class IndexHierarchy(IndexBase):
     _lables: np.ndarray
     _depth: int
     _keys: KeysView
-    _length: int
     _recache: bool
     _name: tp.Hashable
 
     # Temporary type overrides, until indices are generic.
     __getitem__: tp.Callable[['IndexHierarchy', tp.Hashable], tp.Tuple[tp.Hashable, ...]]
-    __iter__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
-    __reversed__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
+    # __iter__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
+    # __reversed__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
@@ -527,8 +524,6 @@ class IndexHierarchy(IndexBase):
 
             self._labels = levels.values
             self._depth = levels.depth
-            self._keys = levels.keys() # immutable keys view can be shared
-            self._length = self._labels.__len__()
             self._recache = False
 
             if name is None and levels.name is not None:
@@ -540,8 +535,6 @@ class IndexHierarchy(IndexBase):
             # vlaues derived from levels are deferred
             self._labels = None
             self._depth = None
-            self._keys = None
-            self._length = None
             self._recache = True
 
         else:
@@ -611,28 +604,21 @@ class IndexHierarchy(IndexBase):
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
 
-
-
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self):
         # extract all features from self._levels
         self._depth = next(self._levels.depths())
-        # store both NP array of labels, as well as KeysView of hashable tuples
         self._labels = self._levels.get_labels()
-        # note: this does not retain order in 3.5
-        self._keys = KeysView._from_iterable(array2d_to_tuples(self._labels))
-        # if we get labels, faster to get that length
-        self._length = len(self._labels) #self._levels.__len__()
         self._recache = False
 
     #---------------------------------------------------------------------------
 
     def __len__(self) -> int:
         if self._recache:
-            # faster to just get from levels
+            # faster to just get from levels instead of recaching
             return self._levels.__len__()
-        return self._length
+        return len(self._labels)
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None
@@ -937,13 +923,24 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> KeysView:
-        '''
-        Iterator of index labels.
+    # NOTE: we intentionally exclude keys() and items() from Index classes, as they return inconsistent result when thought of as a dictionary
+
+    def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
+        '''Iterate over labels.
         '''
         if self._recache:
             self._update_array_cache()
-        return self._keys
+
+        return tp.cast(tp.Iterator[tp.Hashable], array2d_to_tuples(self._labels.__iter__()))
+
+    def __reversed__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
+        '''
+        Returns a reverse iterator on the index labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return array2d_to_tuples(reversed(self._labels))
+
 
     def __contains__(self, value) -> bool:
         '''Determine if a leaf loc is contained in this Index.
@@ -951,7 +948,6 @@ class IndexHierarchy(IndexBase):
         # levels only, no need to recache as this is what has been mutated
         return self._levels.__contains__(value)
 
-    # NOTE: have not implemented items
 
     def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
         '''
@@ -1005,7 +1001,7 @@ class IndexHierarchy(IndexBase):
                 matches.append(as_tuple)
 
         if not matches:
-            return np.full(self._length, False, dtype=bool)
+            return np.full(self.__len__(), False, dtype=bool)
 
         return isin(self.flat().values, matches)
 
@@ -1037,7 +1033,8 @@ class IndexHierarchy(IndexBase):
         Return the index as a Frame.
         '''
         from static_frame import Frame
-        return Frame.from_records(self.__iter__(),
+        # NOTE: this should be done by column to preserve types per depth
+        return Frame.from_records(self.values,
                 columns=range(self._depth),
                 index=None)
 

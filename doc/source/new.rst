@@ -28,6 +28,8 @@ Added `index_constructor`, `columns_constructor` arguement to `Frame.from_items`
 
 NP-style methods on ``Series`` and ``Frame`` no longer accept arbitrary keywork arguments.
 
+Removed ``keys()`` and ``items()`` methods from ``Index`` and ``IndexHierarch``; default iterators from ``IndexHierarchy`` now iterate tuples instead of arrays.
+
 
 0.5.11
 ----------

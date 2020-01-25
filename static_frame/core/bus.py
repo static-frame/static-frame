@@ -326,16 +326,16 @@ class Bus(ContainerBase):
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)  # type: ignore
+        return InterfaceGetItem(self._extract_loc)  #type: ignore
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc)  # type: ignore
+        return InterfaceGetItem(self._extract_iloc)  #type: ignore
 
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        return reversed(self._series._index)
+        return reversed(self._series._index) #type: ignore
 
     def __len__(self) -> int:
         return self._series.__len__()
@@ -399,7 +399,7 @@ class Bus(ContainerBase):
             return Series(None, index=self._series._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
-            for label, f in zip(self._series._index, self._series.values):
+            for label, f in zip(self._series._index, self._series.values): #type: ignore
                 if f is FrameDeferred:
                     yield label, None
                 else:

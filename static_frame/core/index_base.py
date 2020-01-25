@@ -316,24 +316,6 @@ class IndexBase(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface
-
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
-        '''Iterate over labels.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return tp.cast(tp.Iterator[tp.Hashable], self._labels.__iter__())
-
-    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
-        '''
-        Returns a reverse iterator on the index labels.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return reversed(self._labels)
-
-    #---------------------------------------------------------------------------
     # metaclass-applied functions
 
     def _ufunc_shape_skipna(self, *,

@@ -602,7 +602,7 @@ class TestUnit(TestCase):
         labels = (('a', 1), ('a', 2), ('b', 1), ('b', 2))
         hier_idx = IndexHierarchy.from_labels(labels)
         self.assertTrue(
-            all(tuple(hidx_1) == hidx_2
+            all(hidx_1 == hidx_2
                 for hidx_1, hidx_2 in zip(reversed(hier_idx), reversed(labels)))
         )
 
@@ -623,13 +623,13 @@ class TestUnit(TestCase):
         ih = IndexHierarchyGO.from_tree(tree)
 
         # NOTE: for now, __iter__ return arrays, so we have convert to a tuple
-        self.assertEqual([tuple(k) in ih.keys() for k in ih], #pylint: disable=E1133
+        self.assertEqual([tuple(k) in ih for k in ih], #pylint: disable=E1133
                 [True, True, True, True, True, True, True, True]
                 )
 
         ih.append(('III', 'A', 1))
 
-        self.assertEqual(ih.keys(),
+        self.assertEqual(set(ih),
                 {('I', 'B', 1), ('I', 'A', 2), ('II', 'B', 2), ('II', 'A', 2), ('I', 'A', 1), ('III', 'A', 1), ('II', 'B', 1), ('II', 'A', 1), ('I', 'B', 2)}
                 )
 
@@ -1313,7 +1313,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70), (2, 5))
 
         with self.assertRaises(RuntimeError):
-            ih1.isin([3,4,5]) # type: ignore # not an iterable of iterables
+            ih1.isin([3,4,5]) #type: ignore # not an iterable of iterables
 
         post = ih1.isin(([3,4], [2,5,1,5]))
         self.assertEqual(post.sum(), 0)
@@ -1329,7 +1329,7 @@ class TestUnit(TestCase):
         self.assertEqual(post1.tolist(),
                 [False, True, False, False, False, False, True, False])
 
-        post2 = ih1.isin(ih1.keys())
+        post2 = ih1.isin(ih1)
         self.assertEqual(post2.sum(), len(ih1))
 
 

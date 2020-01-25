@@ -575,7 +575,7 @@ class Index(IndexBase):
 
     @property
     def values(self) -> np.ndarray:
-        '''A 1D array of labels.
+        '''A 1D array of labels. Note that these are they labels, i.e., the keys of the mapping, not the values, i.e. where those keys point to.
         '''
         if self._recache:
             self._update_array_cache()
@@ -822,21 +822,39 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> KeysView:
+    # NOTE: we intentionally exclude keys() and items() from Index classes, as they return inconsistent result when thought of as a dictionary
+
+
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+        '''Iterate over labels.
         '''
-        Iterator of index labels.
+        if self._recache:
+            self._update_array_cache()
+        return tp.cast(tp.Iterator[tp.Hashable], self._labels.__iter__())
+
+    def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
-        return self._map.keys()
+        Returns a reverse iterator on the index labels.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return reversed(self._labels)
+
+    # def keys(self) -> KeysView:
+    #     '''
+    #     Iterator of index labels.
+    #     '''
+    #     return self._map.keys()
 
     def __contains__(self, value) -> bool:
         '''Return True if value in the labels.
         '''
         return self._map.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-        '''Iterator of pairs of index label and value.
-        '''
-        return self._map.items()
+    # def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+    #     '''Iterator of pairs of index label and value.
+    #     '''
+    #     return self._map.items()
 
     def get(self, key, default=None):
         '''
