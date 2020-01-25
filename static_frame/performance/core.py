@@ -321,7 +321,7 @@ class IndexHierarchy2d_from_labels_str(PerfTest):
 
 class IndexHierarchy3d_from_labels_int(PerfTest):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @classmethod
     def pd(cls) -> None:
@@ -335,7 +335,7 @@ class IndexHierarchy3d_from_labels_int(PerfTest):
 
 class IndexHierarchy3d_from_labels_str(PerfTest):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @classmethod
     def pd(cls) -> None:
@@ -348,7 +348,7 @@ class IndexHierarchy3d_from_labels_str(PerfTest):
 
 class IndexHierarchy4d_from_labels_int(PerfTest):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @classmethod
     def pd(cls) -> None:
@@ -361,7 +361,7 @@ class IndexHierarchy4d_from_labels_int(PerfTest):
 
 class IndexHierarchy4d_from_labels_str(PerfTest):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @classmethod
     def pd(cls) -> None:
@@ -468,7 +468,7 @@ class SeriesIntFloat_drop_duplicated(PerfTest):
 
 class SeriesIntFloat_apply(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -530,7 +530,7 @@ class SeriesStrFloat_fillna_forward(PerfTest):
 
 class SeriesStrFloat_apply(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -597,7 +597,7 @@ class SeriesIntObj_drop_duplicated(PerfTest):
 
 class SeriesIntObj_apply(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -653,7 +653,7 @@ class SeriesIntObjStr_fillna_forward(PerfTest):
 
 class SeriesIntObjStr_apply(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:
@@ -835,7 +835,7 @@ class FrameStrFloat_init(PerfTest):
 
 class FrameFloat_from_records(PerfTest):
 
-    NUMBER = 5
+    NUMBER = 10
 
     @staticmethod
     def pd() -> None:
@@ -953,7 +953,7 @@ class FrameFloat_isna(PerfTest):
 
 class FrameFloat_apply_axis0(PerfTest):
 
-    NUMBER = 50
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:

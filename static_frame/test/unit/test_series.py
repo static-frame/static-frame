@@ -1124,6 +1124,7 @@ class TestUnit(TestCase):
                 ((10, [100, 100, 100]), (20, [400, 400])))
 
 
+    #---------------------------------------------------------------------------
 
     def test_series_iter_element_a(self) -> None:
 
@@ -1156,6 +1157,51 @@ class TestUnit(TestCase):
                 ((('a', 'x'), '10'), (('a', 'y'), '3'), (('a', 'z'), '15'), (('b', 'x'), '21'), (('b', 'y'), '28'), (('b', 'z'), '50')))
 
 
+    #---------------------------------------------------------------------------
+
+    def test_series_iter_element_map_any_a(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        post = s1.iter_element().map_any({3: 100, 21: 101})
+
+        self.assertEqual(post.to_pairs(),
+                (('a', 10), ('b', 100), ('c', 15), ('d', 101), ('e', 28))
+                )
+
+
+
+    def test_series_iter_element_map_all_a(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        with self.assertRaises(KeyError):
+            post = s1.iter_element().map_all({3: 100, 21: 101})
+
+        post = s1.iter_element().map_all({v: k for k, v in s1.items()})
+
+        self.assertEqual(post.to_pairs(),
+                (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'), ('e', 'e'))
+                )
+
+
+    def test_series_iter_element_map_fill_a(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        post = s1.iter_element().map_fill({21: 100, 28: 101}, fill_value=-1)
+        self.assertEqual(post.to_pairs(),
+                (('a', -1), ('b', -1), ('c', -1), ('d', 100), ('e', 101))
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_series_sort_index_a(self) -> None:
 
         s1 = Series((10, 3, 28, 21, 15),

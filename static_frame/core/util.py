@@ -160,6 +160,7 @@ Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 UFunc = tp.Callable[..., np.ndarray]
 AnyCallable = tp.Callable[..., tp.Any]
 
+Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
 def is_callable_or_mapping(value: CallableOrMapping) -> bool:

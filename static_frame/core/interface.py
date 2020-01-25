@@ -115,7 +115,13 @@ class InterfaceSummary:
         'interface',
         }
 
-    ATTR_ITER_NODE = ('apply', 'apply_iter', 'apply_iter_items', 'apply_pool')
+    ATTR_ITER_NODE = (
+        'apply',
+        'apply_iter',
+        'apply_iter_items',
+        'apply_pool',
+        # TODO: add 6 mapping methods
+        )
 
     GETITEM = '__getitem__'
 

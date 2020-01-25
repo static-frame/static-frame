@@ -9,8 +9,13 @@ from functools import partial
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
+import numpy as np
+
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import Mapping
+
+from static_frame.core.exception import deprecated
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -99,9 +104,86 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     # public interface
 
+    def map_any_iter_items(self,
+            mapping: Mapping
+            ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+
+        get = getattr(mapping, 'get')
+        func = lambda k: get(k, k)
+        if self._yield_type is IterNodeType.VALUES:
+            yield from ((k, func(v)) for k, v in self._func_items())
+        else:
+            yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+    def map_any(self,
+            mapping: Mapping,
+            *,
+            dtype: DtypeSpecifier = None
+            ) -> FrameOrSeries:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        '''
+        return self._apply_constructor(
+                self.map_any_iter_items(mapping),
+                dtype=dtype)
+
+
+    #---------------------------------------------------------------------------
+    def map_fill_iter_items(self,
+            mapping: Mapping,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+
+        get = getattr(mapping, 'get')
+        func = lambda k: get(k, fill_value)
+        if self._yield_type is IterNodeType.VALUES:
+            yield from ((k, func(v)) for k, v in self._func_items())
+        else:
+            yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+    def map_fill(self,
+            mapping: Mapping,
+            *,
+            fill_value: tp.Any = np.nan,
+            dtype: DtypeSpecifier = None
+            ) -> FrameOrSeries:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        '''
+        return self._apply_constructor(
+                self.map_fill_iter_items(mapping, fill_value),
+                dtype=dtype)
+
+    #---------------------------------------------------------------------------
+    def map_all_iter_items(self,
+            mapping: Mapping
+            ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+
+        # condition = getattr(func, '__contains__')
+        func = getattr(mapping, '__getitem__')
+
+        if self._yield_type is IterNodeType.VALUES:
+            yield from ((k, func(v)) for k, v in self._func_items())
+        else:
+            yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+    def map_all(self,
+            mapping: Mapping,
+            *,
+            dtype: DtypeSpecifier = None
+            ) -> FrameOrSeries:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        '''
+        return self._apply_constructor(
+                self.map_all_iter_items(mapping),
+                dtype=dtype)
+
+
+    #---------------------------------------------------------------------------
 
     def apply_iter_items(self,
-            func: CallableOrMapping) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
+            func: CallableOrMapping) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         Generator that applies function to each element iterated and yields the pair of element and the result.
 
@@ -109,30 +191,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             func: A function or a mapping object that defines ``__getitem__`` and ``__contains__``. If a mpping is given and a value is not found in the mapping, the value is returned unchanged (this deviates from Pandas ``Series.map``, which inserts NaNs)
         '''
         # depend on yield type, we determine what the passed in function expects to take
-        yt_is_values = self._yield_type is IterNodeType.VALUES
-
-        if not callable(func):
-            # if the key is not in the map, we return the value unaltered
-            condition = getattr(func, '__contains__')
-            func = getattr(func, '__getitem__')
+        if self._yield_type is IterNodeType.VALUES:
+            yield from ((k, func(v)) for k, v in self._func_items())
         else:
-            condition = None
-
-        assert callable(func)
-
-        # apply always calls the items function
-        for k, v in self._func_items():
-            # with IndexHierarchy, k might be an unhashable np array
-            if condition and not condition(v):
-                if yt_is_values:
-                    yield k, v
-                else: # items, give both keys and values to function
-                    yield k, (k, v)
-            else:
-                if yt_is_values:
-                    yield k, func(v)
-                else: # items, give both keys and values to function
-                    yield k, func(k, v)
+            yield from ((k, func(k, v)) for k, v in self._func_items())
 
 
     def apply_iter(self,
@@ -159,8 +221,14 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             func: A function, or a mapping object that defines ``__getitem__``. If a mapping is given, all values must be found in the mapping.
             dtype: Type used to create the returned array.
         '''
+
+        if not callable(func):
+            deprecated('Using apply() methods with non-callables is on longer supported; use map_fill(), map_any, or map_all()')
+            # if the key is not in the map, we return the value unaltered
+            return self.map_any(func, dtype=dtype)
+
         return self._apply_constructor(
-                self.apply_iter_items(func=func),
+                self.apply_iter_items(func),
                 dtype=dtype)
 
 
