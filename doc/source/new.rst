@@ -26,6 +26,8 @@ Added ``Series`` constructors: ``Series.from_element``. Deprecated creating ``Se
 
 Added `index_constructor`, `columns_constructor` arguement to `Frame.from_items`, `Frame.from_dict`.
 
+NP-style methods on ``Series`` and ``Frame`` no longer accept arbitrary keywork arguments.
+
 
 0.5.11
 ----------

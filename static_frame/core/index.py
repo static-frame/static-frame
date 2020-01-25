@@ -833,7 +833,7 @@ class Index(IndexBase):
         '''
         return self._map.__contains__(value)
 
-    def items(self) -> tp.Generator[tp.Tuple[tp.Any, tp.Any], None, None]:
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
         return self._map.items()

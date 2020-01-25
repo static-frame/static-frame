@@ -3088,11 +3088,12 @@ class Frame(ContainerOperand):
         '''
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Generator[tp.Tuple[tp.Any, Series], None, None]:
-        '''Iterator of pairs of column label and corresponding column :py:class:`Series`.
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, Series]]:
+        '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
-        return zip(self._columns.values,
-                (Series(v, index=self._index) for v in self._blocks.axis_values(0)))
+        for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
+            # array is assumed to be immutable
+            yield label, Series(array, index=self._index, name=label)
 
     def get(self, key, default=None):
         '''

@@ -951,6 +951,8 @@ class IndexHierarchy(IndexBase):
         # levels only, no need to recache as this is what has been mutated
         return self._levels.__contains__(value)
 
+    # NOTE: have not implemented items
+
     def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
         '''
         Return the value found at the index key, else the default if the key is not found.

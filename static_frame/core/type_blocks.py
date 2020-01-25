@@ -380,7 +380,7 @@ class TypeBlocks(ContainerOperand):
                 row_multiple=True)
 
     def axis_values(self, axis: int = 0, reverse: bool = False) -> tp.Iterator[np.ndarray]:
-        '''Generator of arrays produced along an axis.
+        '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
 
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
@@ -398,7 +398,7 @@ class TypeBlocks(ContainerOperand):
                     b = self._blocks[0]
                     if b.ndim == 1:
                         # single element slice to force array creation (not an element)
-                        yield b[i:i+1]
+                        yield b[i: i+1]
                     else:
                         # if a 2d array, we can yield rows through simple indexing
                         yield b[i]
@@ -416,7 +416,9 @@ class TypeBlocks(ContainerOperand):
                             parts.append(b[key])
                         else:
                             parts.append(b[key].astype(self._row_dtype))
-                    yield np.concatenate(parts)
+                    part = np.concatenate(parts)
+                    part.flags.writeable = False
+                    yield part
 
         elif axis == 0: # iterate over columns
             if not reverse:
@@ -429,7 +431,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, column]
+                    yield b[:, column] # excpeted to be immutable
         else:
             raise NotImplementedError()
 

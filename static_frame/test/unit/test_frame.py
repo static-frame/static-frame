@@ -1399,6 +1399,21 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_items_b(self) -> None:
+
+        records = (
+                (1, True),
+                (30,False))
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q'),
+                index=('x','y'))
+
+        for label, series in f1.items():
+            self.assertEqual(series.name, label)
+
+
+    #---------------------------------------------------------------------------
 
 
     @skip_win  # type: ignore
