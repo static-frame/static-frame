@@ -362,8 +362,10 @@ class ContainerOperandMeta(ContainerMeta):
         def func(self: tp.Any,
                 axis: int = 0,
                 skipna: bool = True,
-                **_: object
+                out: tp.Optional[np.ndarray] = None,
                 ) -> tp.Any:
+            # some NP contexts might call this function with out given as a kwarg; add it here for compatibility, but ensrue it is not being used
+            assert out is None
             return self._ufunc_axis_skipna(
                     axis=axis,
                     skipna=skipna,
@@ -391,7 +393,10 @@ class ContainerOperandMeta(ContainerMeta):
         size_one_unity = nt.size_one_unity
 
         # these become the common defaults for all of these functions
-        def func(self: tp.Any, axis: int = 0, skipna: bool = True, **_: object) -> tp.Any:
+        def func(self: tp.Any,
+                axis: int = 0,
+                skipna: bool = True,
+                ) -> tp.Any:
             return self._ufunc_shape_skipna(
                     axis=axis,
                     skipna=skipna,

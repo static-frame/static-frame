@@ -192,7 +192,7 @@ class TestUnit(TestCase):
             s1 = Series(a1)
 
 
-
+    #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
         # create a series from a single value
@@ -249,7 +249,7 @@ class TestUnit(TestCase):
         self.assertEqual(idxa.union(idxb).values.tolist(),
             ['a', 'b', 'c', 'd'])
 
-
+    #---------------------------------------------------------------------------
 
 
     def test_series_binary_operator_a(self) -> None:
@@ -382,6 +382,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, 12)
 
 
+    #---------------------------------------------------------------------------
 
 
     def test_series_reindex_a(self) -> None:
@@ -842,6 +843,7 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
 
     def test_series_contains_a(self) -> None:
 
@@ -852,6 +854,8 @@ class TestUnit(TestCase):
 
         self.assertFalse('d' in s1)
         self.assertFalse('' in s1)
+
+    #---------------------------------------------------------------------------
 
 
     def test_series_sum_a(self) -> None:
@@ -882,6 +886,12 @@ class TestUnit(TestCase):
                 (('a', 10), ('b', 30), ('c', 60))
                 )
 
+        s2 = Series.from_items(zip('abc', (10, np.nan, 30))).cumsum(skipna=False).fillna(None)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 10.0), ('b', None), ('c', None))
+                )
+
+
     def test_series_cumprod_a(self) -> None:
 
         s1 = Series.from_items(zip('abc', (10, 20, 30)))
@@ -889,6 +899,23 @@ class TestUnit(TestCase):
                 s1.cumprod().to_pairs(),
                 (('a', 10), ('b', 200), ('c', 6000))
                 )
+
+
+    def test_series_median_a(self) -> None:
+
+        s1 = Series.from_items(zip('abcde', (10, 20, 0, 15, 30)))
+        self.assertEqual(s1.median(), 15)
+        self.assertEqual(s1.median(skipna=False), 15)
+
+        s2 = Series.from_items(zip('abcde', (10, 20, np.nan, 15, 30)))
+        self.assertEqual(s2.median(), 17.5)
+        self.assertTrue(np.isnan(s2.median(skipna=False)))
+
+        with self.assertRaises(TypeError):
+            # should raise with bad keyword argument
+            s2.median(skip_na=False)
+
+    #---------------------------------------------------------------------------
 
     def test_series_mask_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
