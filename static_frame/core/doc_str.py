@@ -21,7 +21,7 @@ LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of l
 
 ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
 
-DTYPE_SPECIFIER = '''An value suitable for creating a NumPy dtype.'''
+DTYPE_SPECIFIER = '''A value suitable for speicfying a NumPy dtype.'''
 
 class DOC_TEMPLATE:
 
@@ -170,7 +170,7 @@ class DOC_TEMPLATE:
         Args:
             mapping: A mapping type, such as a dictionary or Series.
             ''',
-            dtype = DTYPE_SPECIFIER
+            dtype = f'dtype: {DTYPE_SPECIFIER}'
             )
 
     map_fill = dict(
@@ -180,7 +180,7 @@ class DOC_TEMPLATE:
             mapping: A mapping type, such as a dictionary or Series.
             fill_value: Value to be returned if the values is not a key in the mapping.
             ''',
-            dtype = DTYPE_SPECIFIER
+            dtype = f'dtype: {DTYPE_SPECIFIER}'
             )
 
     map_all = dict(
@@ -189,7 +189,7 @@ class DOC_TEMPLATE:
         Args:
             mapping: A mapping type, such as a dictionary or Series.
             ''',
-            dtype = DTYPE_SPECIFIER
+            dtype = f'dtype: {DTYPE_SPECIFIER}'
             )
 
     apply = dict(
@@ -198,7 +198,7 @@ class DOC_TEMPLATE:
         Args:
             func: A function that takes a value.
             ''',
-            dtype = DTYPE_SPECIFIER
+            dtype = f'dtype: {DTYPE_SPECIFIER}'
             )
 
 
