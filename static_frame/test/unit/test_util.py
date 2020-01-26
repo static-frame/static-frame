@@ -22,6 +22,8 @@ from static_frame.core.util import isin
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import column_1d_filter
+from static_frame.core.util import row_1d_filter
 
 from static_frame.core.container import _ufunc_logical_skipna
 
@@ -1000,6 +1002,20 @@ class TestUnit(TestCase):
                 [11.23, 234.723]
                 )
 
+
+    def test_ufunc_skipna_1d_b(self) -> None:
+
+        a1 = np.array((None, None), dtype=object)
+
+        post = ufunc_axis_skipna(array=a1,
+                skipna=True,
+                axis=0,
+                ufunc=np.sum,
+                ufunc_skipna=np.nansum
+                )
+        self.assertTrue(np.isnan(post))
+
+
     def test_ufunc_unique_a(self) -> None:
 
         a1 = np.array([1, 1, 1, 2, 2])
@@ -1088,6 +1104,9 @@ class TestUnit(TestCase):
         self.assertEqual(dtype_to_na(np.dtype(bool)), False)
         self.assertEqual(dtype_to_na(np.dtype(object)), None)
         self.assertEqual(dtype_to_na(np.dtype(str)), '')
+
+        with self.assertRaises(NotImplementedError):
+            _ = dtype_to_na(np.dtype('V'))
 
 
     def test_key_to_datetime_key_a(self) -> None:
@@ -1302,6 +1321,12 @@ class TestUnit(TestCase):
         post = roll_1d(np.array([]), -4)
         self.assertEqual(len(post), 0)
 
+
+    def test_roll_1d_c(self) -> None:
+        post = roll_1d(np.array([3, 4, 5]), -2)
+        self.assertEqual(post.tolist(), [5, 3, 4])
+
+
     def test_roll_2d_a(self) -> None:
 
         a1 = np.arange(12).reshape((3,4))
@@ -1324,6 +1349,16 @@ class TestUnit(TestCase):
         post = roll_2d(np.array([[]]), -4, axis=1)
         self.assertEqual(post.shape, (1, 0))
 
+
+    def test_roll_2d_c(self) -> None:
+
+        a1 = np.arange(12).reshape((3,4))
+
+        self.assertEqual(roll_2d(a1, -2, axis=0).tolist(),
+                [[8, 9, 10, 11], [0, 1, 2, 3], [4, 5, 6, 7]])
+
+        self.assertEqual(roll_2d(a1, -2, axis=1).tolist(),
+                [[2, 3, 0, 1], [6, 7, 4, 5], [10, 11, 8, 9]])
 
 
     def test_to_datetime64_a(self) -> None:
@@ -1498,6 +1533,13 @@ class TestUnit(TestCase):
         self.assertEqual(resolved, object)
 
 
+
+    def test_resolve_type_iter_k(self) -> None:
+        resolved, has_tuple, values = resolve_type_iter((x for x in ()))
+        self.assertEqual(resolved, None)
+        self.assertEqual(values, ())
+        self.assertEqual(has_tuple, False)
+
     #---------------------------------------------------------------------------
 
     def test_iterable_to_array_a(self) -> None:
@@ -1625,6 +1667,24 @@ class TestUnit(TestCase):
         self.assertEqual(post2.ndim, 1)
         self.assertEqual(post2.tolist(), [[3], [4]])
 
+
+
+    def test_iterable_to_array_g(self) -> None:
+
+        # this result is surprising but is a result of NumPy's array constructor
+        with self.assertRaises(RuntimeError):
+            _ = iterable_to_array_1d(np.array([None, None]), dtype=np.dtype(float))
+
+
+
+    def test_iterable_to_array_h(self) -> None:
+
+        sample = [10000000000000000000000]
+        post = iterable_to_array_1d(sample, dtype=np.dtype(int))
+        self.assertEqual(post[0].dtype, object)
+        self.assertEqual(post[0].tolist(), sample)
+
+
     #---------------------------------------------------------------------------
 
     def test_iterable_to_array_2d_a(self) -> None:
@@ -1645,6 +1705,14 @@ class TestUnit(TestCase):
         self.assertEqual(post3.shape, (2, 3))
         self.assertEqual(post3.dtype, np.float64)
 
+    def test_iterable_to_array_2d_b(self) -> None:
+        post = iterable_to_array_2d(np.arange(4).reshape((2, 2)))
+        self.assertEqual(post.tolist(), [[0, 1], [2, 3]])
+
+    def test_iterable_to_array_2d_c(self) -> None:
+        with self.assertRaises(RuntimeError):
+            # looks like a 2d array enough to get past type sampling
+            post = iterable_to_array_2d(['asd', 'wer'])
 
     #---------------------------------------------------------------------------
     def test_argmin_1d_a(self) -> None:
@@ -1723,6 +1791,21 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(argmax_2d(a1, axis=0, skipna=False).tolist(),
                 [0, np.nan, 1]
                 )
+
+
+    def test_column_1d_filter_a(self):
+        a1 = np.arange(4)
+        a2 = np.arange(4).reshape(4, 1)
+        self.assertEqual(column_1d_filter(a1).shape, (4,))
+        self.assertEqual(column_1d_filter(a2).shape, (4,))
+
+
+    def test_row_1d_filter_a(self):
+        a1 = np.arange(4)
+        a2 = np.arange(4).reshape(1, 4)
+        self.assertEqual(row_1d_filter(a1).shape, (4,))
+        self.assertEqual(row_1d_filter(a2).shape, (4,))
+
 
 
 if __name__ == '__main__':
