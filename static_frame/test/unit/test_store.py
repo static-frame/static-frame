@@ -1,10 +1,11 @@
 import unittest
 # from io import StringIO
+import numpy as np
 
-
+from static_frame.core.store import Store
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
-
+from static_frame.core.frame import Frame
 
 from static_frame.test.test_case import TestCase
 # from static_frame.test.test_case import temp_file
@@ -61,11 +62,35 @@ class TestUnit(TestCase):
 
     def test_store_config_map_d(self) -> None:
         with self.assertRaises(ErrorInitStoreConfig):
-            _ = StoreConfigMap({'a': object()}) # type: ignore
+            _ = StoreConfigMap({'a': object()}) #type: ignore
 
         with self.assertRaises(ErrorInitStoreConfig):
-            _ = StoreConfigMap(default=object()) # type: ignore
+            _ = StoreConfigMap(default=object()) #type: ignore
 
+
+    def test_store_get_field_names_and_dtypes_a(self) -> None:
+
+        f1 = Frame.from_records((('a', True, None),), index=(('a',)), columns=(('x', 'y', 'z')))
+
+        field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                include_index=False,
+                include_columns=False,
+                )
+        self.assertEqual(field_names, range(0, 3))
+        self.assertEqual(dtypes.tolist(), #type: ignore
+                [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
+
+    def test_store_get_field_names_and_dtypes_b(self) -> None:
+
+        f1 = Frame.from_records((('a', True, None),), index=(('a',)), columns=(('x', 'y', 'z')))
+
+        field_names, dtypes = Store.get_field_names_and_dtypes(frame=f1,
+                include_index=False,
+                include_columns=True)
+
+        self.assertEqual(field_names.tolist(), ['x', 'y', 'z']) #type: ignore
+        self.assertEqual(dtypes.tolist(), #type: ignore
+                [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
 
 if __name__ == '__main__':
     unittest.main()

@@ -225,7 +225,7 @@ class Store:
 
     #---------------------------------------------------------------------------
     @staticmethod
-    def get_field_names_and_dtypes(
+    def get_field_names_and_dtypes(*,
             frame: Frame,
             include_index: bool,
             include_columns: bool,
