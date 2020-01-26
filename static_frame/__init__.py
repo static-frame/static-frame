@@ -74,3 +74,4 @@ from static_frame.core.store import StoreConfigMap as StoreConfigMap
 from static_frame.core.store import StoreConfig as StoreConfig
 
 __version__ = '0.5.12' # use -dev for new version in development
+
