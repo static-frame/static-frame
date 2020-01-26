@@ -30,6 +30,8 @@ NP-style methods on ``Series`` and ``Frame`` no longer accept arbitrary keywork 
 
 Removed ``keys()`` and ``items()`` methods from ``Index`` and ``IndexHierarch``; default iterators from ``IndexHierarchy`` now iterate tuples instead of arrays.
 
+Added to ``IterNodeDelegate`` the following methods for applying mapping types to iterators: ``map_all``, ``map_any``, and ``map_fill``. Generator versions are also made available: ``map_all_iter``, ``map_all_iter_items``, ``map_any_iter``, ``map_any_iter_items``, ``map_fill_iter``, ``map_fill_iter_items``.
+
 
 0.5.11
 ----------
