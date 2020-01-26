@@ -120,7 +120,15 @@ class InterfaceSummary:
         'apply_iter',
         'apply_iter_items',
         'apply_pool',
-        # TODO: add 6 mapping methods
+        'map_all',
+        'map_all_iter',
+        'map_all_iter_items',
+        'map_any',
+        'map_any_iter',
+        'map_any_iter_items',
+        'map_fill',
+        'map_fill_iter',
+        'map_fill_iter_items',
         )
 
     GETITEM = '__getitem__'

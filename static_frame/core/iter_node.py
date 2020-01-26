@@ -11,7 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from static_frame.core.util import CallableOrMapping
+# from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
 
@@ -67,7 +68,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
 
     def _apply_iter_items_parallel(self,
-            func: CallableOrMapping,
+            func: AnyCallable,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
@@ -107,13 +108,24 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_any_iter_items(self,
             mapping: Mapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
-
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        '''
         get = getattr(mapping, 'get')
-        func = lambda k: get(k, k)
+        func: AnyCallable = lambda k: get(k, k)
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+    def map_any_iter(self,
+            mapping: Mapping,
+            ) -> tp.Iterator[tp.Any]:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+
+        '''
+        yield from (v for _, v in self.map_any_iter_items(mapping))
 
     def map_any(self,
             mapping: Mapping,
@@ -131,15 +143,29 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     def map_fill_iter_items(self,
             mapping: Mapping,
+            *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
-
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, the `fill_value` is returned.
+        '''
         get = getattr(mapping, 'get')
-        func = lambda k: get(k, fill_value)
+        func: AnyCallable = lambda k: get(k, fill_value)
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+    def map_fill_iter(self,
+            mapping: Mapping,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> tp.Iterator[tp.Any]:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+
+        '''
+        yield from (v for _, v in self.map_fill_iter_items(mapping, fill_value=fill_value))
 
     def map_fill(self,
             mapping: Mapping,
@@ -148,24 +174,35 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        Apply a mapping to values; if a value is not a key in the mapping, the `fill_value` is returned.
         '''
         return self._apply_constructor(
-                self.map_fill_iter_items(mapping, fill_value),
+                self.map_fill_iter_items(mapping, fill_value=fill_value),
                 dtype=dtype)
 
     #---------------------------------------------------------------------------
     def map_all_iter_items(self,
             mapping: Mapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
-
-        # condition = getattr(func, '__contains__')
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        '''
         func = getattr(mapping, '__getitem__')
-
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
+
+
+    def map_all_iter(self,
+            mapping: Mapping
+            ) -> tp.Iterator[tp.Any]:
+        '''
+        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+
+        '''
+        yield from (v for _, v in self.map_all_iter_items(mapping=mapping))
+
 
     def map_all(self,
             mapping: Mapping,
@@ -183,7 +220,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
 
     def apply_iter_items(self,
-            func: CallableOrMapping) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+            func: AnyCallable) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         Generator that applies function to each element iterated and yields the pair of element and the result.
 
@@ -198,8 +235,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 
     def apply_iter(self,
-            func: CallableOrMapping
-            ) -> tp.Generator[tp.Any, None, None]:
+            func: AnyCallable
+            ) -> tp.Iterator[tp.Any]:
         '''
         Generator that applies the passed function to each element iterated and yields the result.
 
@@ -210,7 +247,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 
     def apply(self,
-            func: CallableOrMapping,
+            func: AnyCallable,
             *,
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
@@ -233,7 +270,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 
     def apply_pool(self,
-            func: CallableOrMapping,
+            func: AnyCallable,
             *,
             dtype: DtypeSpecifier = None,
             max_workers: tp.Optional[int] = None,

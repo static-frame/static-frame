@@ -1172,6 +1172,34 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_iter_element_map_any_b(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series((100, 101), index=(3, 21))
+
+        post = s1.iter_element().map_any(s2)
+
+        self.assertEqual(post.to_pairs(),
+                (('a', 10), ('b', 100), ('c', 15), ('d', 101), ('e', 28))
+                )
+
+
+    def test_series_iter_element_map_any_c(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series((100, 101), index=(3, 21))
+
+        self.assertEqual(tuple(s2.iter_element().map_any_iter(s2)),
+            (100, 101))
+        self.assertEqual(tuple(s2.iter_element().map_any_iter_items(s2)),
+            ((3, 100), (21, 101)))
+
 
     def test_series_iter_element_map_all_a(self) -> None:
 
@@ -1188,6 +1216,37 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'), ('e', 'e'))
                 )
 
+    def test_series_iter_element_map_all_b(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series((100, 101), index=(3, 21))
+
+        with self.assertRaises(KeyError):
+            post = s1.iter_element().map_all(s2)
+
+        s3 = Series.from_items((v, i) for i, v in enumerate(s1.values))
+
+        self.assertEqual(s3.to_pairs(),
+                ((10, 0), (3, 1), (15, 2), (21, 3), (28, 4))
+                )
+
+    def test_series_iter_element_map_all_c(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series.from_items((v, i) for i, v in enumerate(s1.values))
+
+        self.assertEqual(tuple(s1.iter_element().map_all_iter(s2)),
+                (0, 1, 2, 3, 4))
+
+        self.assertEqual(tuple(s1.iter_element().map_all_iter_items(s2)),
+                (('a', 0), ('b', 1), ('c', 2), ('d', 3), ('e', 4))
+                )
 
     def test_series_iter_element_map_fill_a(self) -> None:
 
@@ -1199,6 +1258,36 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('a', -1), ('b', -1), ('c', -1), ('d', 100), ('e', 101))
                 )
+
+    def test_series_iter_element_map_fill_b(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series((100, 101), index=(21, 28))
+
+        post = s1.iter_element().map_fill(s2, fill_value=-1)
+        self.assertEqual(post.to_pairs(),
+                (('a', -1), ('b', -1), ('c', -1), ('d', 100), ('e', 101))
+                )
+
+
+    def test_series_iter_element_map_fill_c(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        s2 = Series((100, 101), index=(21, 28))
+
+        self.assertEqual(tuple(s1.iter_element().map_fill_iter(s2, fill_value=0)),
+                (0, 0, 0, 100, 101))
+
+        self.assertEqual(tuple(s1.iter_element().map_fill_iter_items(s2, fill_value=0)),
+                (('a', 0), ('b', 0), ('c', 0), ('d', 100), ('e', 101))
+                )
+
 
 
     #---------------------------------------------------------------------------

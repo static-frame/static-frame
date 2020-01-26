@@ -6,9 +6,7 @@ import pydoc
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.series import Series
 from static_frame.core.frame import FrameGO
-# from static_frame.core.index import Index
-# from static_frame.core.index_hierarchy import IndexHierarchy
-# from static_frame.core.display import DisplayConfigs
+
 
 
 from static_frame.test.test_case import TestCase
@@ -30,7 +28,7 @@ class TestUnit(TestCase):
         counts = post.iter_group('group').apply(len)
         self.assertEqual(
             counts.to_pairs(),
-            (('Attribute', 10), ('Constructor', 27), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 80), ('Method', 54), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 17))
+            (('Attribute', 10), ('Constructor', 27), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 224), ('Method', 54), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 17))
             )
 
 
