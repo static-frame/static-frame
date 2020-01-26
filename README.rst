@@ -12,14 +12,17 @@
 .. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg?style=flat-square
   :target: https://anaconda.org/conda-forge/static-frame
 
+
+.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg?style=flat-square
+  :target: https://codecov.io/gh/InvestmentSystems/static-frame
+
+
 .. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg?style=flat-square
   :target: https://travis-ci.org/InvestmentSystems/static-frame/branches
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg?style=flat-square
   :target: https://static-frame.readthedocs.io/en/latest
 
-.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg?style=flat-square
-  :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
 .. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg?style=flat-square
   :target: https://hypothesis.readthedocs.io
