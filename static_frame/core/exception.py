@@ -53,10 +53,7 @@ class StoreFileMutation(RuntimeError):
     '''
     A Stores file was mutated in an unexpected way.
     '''
-
 #-------------------------------------------------------------------------------
-
-
 
 def deprecated(message: str = '') -> None:
     # using UserWarning to get out of pytest with  -p no:warnings

@@ -3005,7 +3005,7 @@ class TestUnit(TestCase):
                 index=('w', 'x', 'y', 'z'))
 
         # support working with mappings
-        post = f1.iter_element().apply({2: 200, False: 200})
+        post = f1.iter_element().map_any({2: 200, False: 200})
 
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', 200), ('x', 30), ('y', 200), ('z', 30))), ('q', (('w', 200), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', 200), ('x', True), ('y', 200), ('z', True))), ('t', (('w', 200), ('x', 200), ('y', 200), ('z', True))))
@@ -3045,7 +3045,7 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_elements(['I', 'II', 'III'], columns=('A',))
         f2 = sf.Frame.from_elements([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
 
-        post = f1['A'].iter_element().apply(f2['B'])
+        post = f1['A'].iter_element().map_any(f2['B'])
 
         # if we do not match the mapping, we keep the value.
         self.assertEqual(post.to_pairs(),
