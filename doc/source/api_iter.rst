@@ -315,5 +315,22 @@ Function Application to Iterators
 .. automethod:: static_frame.IterNodeDelegate.apply_iter_items
 
 
+.. automethod:: static_frame.IterNodeDelegate.map_any
+
+.. automethod:: static_frame.IterNodeDelegate.map_any_iter
+
+.. automethod:: static_frame.IterNodeDelegate.map_any_iter_items
 
 
+.. automethod:: static_frame.IterNodeDelegate.map_fill
+
+.. automethod:: static_frame.IterNodeDelegate.map_fill_iter
+
+.. automethod:: static_frame.IterNodeDelegate.map_fill_iter_items
+
+
+.. automethod:: static_frame.IterNodeDelegate.map_all
+
+.. automethod:: static_frame.IterNodeDelegate.map_all_iter
+
+.. automethod:: static_frame.IterNodeDelegate.map_all_iter_items
