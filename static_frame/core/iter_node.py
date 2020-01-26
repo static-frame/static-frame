@@ -16,6 +16,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
 
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import deprecated
 
 if tp.TYPE_CHECKING:
@@ -105,11 +106,14 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     #---------------------------------------------------------------------------
     # public interface
 
+    @doc_inject(selector='map_any')
     def map_any_iter_items(self,
             mapping: Mapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        {doc} A generator of resulting key, value pairs.
+
+        {args}
         '''
         get = getattr(mapping, 'get')
         func: AnyCallable = lambda k: get(k, k)
@@ -118,22 +122,28 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
 
+    @doc_inject(selector='map_any')
     def map_any_iter(self,
             mapping: Mapping,
             ) -> tp.Iterator[tp.Any]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        {doc} A generator of resulting values.
 
+        {args}
         '''
         yield from (v for _, v in self.map_any_iter_items(mapping))
 
+    @doc_inject(selector='map_any')
     def map_any(self,
             mapping: Mapping,
             *,
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, the value is returned.
+        {doc} Returns a new container.
+
+        {args}
+            {dtype}
         '''
         return self._apply_constructor(
                 self.map_any_iter_items(mapping),
@@ -141,13 +151,16 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='map_fill')
     def map_fill_iter_items(self,
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, the `fill_value` is returned.
+        {doc} A generator of resulting key, value pairs.
+
+        {args}
         '''
         get = getattr(mapping, 'get')
         func: AnyCallable = lambda k: get(k, fill_value)
@@ -156,17 +169,20 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
 
+    @doc_inject(selector='map_fill')
     def map_fill_iter(self,
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Any]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        {doc} A generator of resulting values.
 
+        {args}
         '''
         yield from (v for _, v in self.map_fill_iter_items(mapping, fill_value=fill_value))
 
+    @doc_inject(selector='map_fill')
     def map_fill(self,
             mapping: Mapping,
             *,
@@ -174,18 +190,24 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, the `fill_value` is returned.
+        {doc} Returns a new container.
+
+        {args}
+            {dtype}
         '''
         return self._apply_constructor(
                 self.map_fill_iter_items(mapping, fill_value=fill_value),
                 dtype=dtype)
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='map_all')
     def map_all_iter_items(self,
             mapping: Mapping
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        {doc} A generator of resulting key, value pairs.
+
+        {args}
         '''
         func = getattr(mapping, '__getitem__')
         if self._yield_type is IterNodeType.VALUES:
@@ -193,24 +215,28 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         else:
             yield from ((k, func(k,  v)) for k, v in self._func_items())
 
-
+    @doc_inject(selector='map_all')
     def map_all_iter(self,
             mapping: Mapping
             ) -> tp.Iterator[tp.Any]:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        {doc} A generator of resulting values.
 
+        {args}
         '''
         yield from (v for _, v in self.map_all_iter_items(mapping=mapping))
 
-
+    @doc_inject(selector='map_all')
     def map_all(self,
             mapping: Mapping,
             *,
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
         '''
-        Apply a mapping to values; if a value is not a key in the mapping, an exception is raised.
+        {doc} Returns a new container.
+
+        {args}
+            {dtype}
         '''
         return self._apply_constructor(
                 self.map_all_iter_items(mapping),
@@ -218,14 +244,13 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 
     #---------------------------------------------------------------------------
-
+    @doc_inject(selector='apply')
     def apply_iter_items(self,
             func: AnyCallable) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
-        Generator that applies function to each element iterated and yields the pair of element and the result.
+        {doc} A generator of resulting key, value pairs.
 
-        Args:
-            func: A function or a mapping object that defines ``__getitem__`` and ``__contains__``. If a mpping is given and a value is not found in the mapping, the value is returned unchanged (this deviates from Pandas ``Series.map``, which inserts NaNs)
+        {args}
         '''
         # depend on yield type, we determine what the passed in function expects to take
         if self._yield_type is IterNodeType.VALUES:
@@ -233,32 +258,29 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         else:
             yield from ((k, func(k, v)) for k, v in self._func_items())
 
-
+    @doc_inject(selector='apply')
     def apply_iter(self,
             func: AnyCallable
             ) -> tp.Iterator[tp.Any]:
         '''
-        Generator that applies the passed function to each element iterated and yields the result.
+        {doc} A generator of resulting values.
 
-        Args:
-            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
+        {args}
         '''
         yield from (v for _, v in self.apply_iter_items(func=func))
 
-
+    @doc_inject(selector='apply')
     def apply(self,
             func: AnyCallable,
             *,
             dtype: DtypeSpecifier = None
             ) -> FrameOrSeries:
         '''
-        Apply passed function to each object iterated, where the object depends on the creation of this instance.
+        {doc} Returns a new container.
 
-        Args:
-            func: A function, or a mapping object that defines ``__getitem__``. If a mapping is given, all values must be found in the mapping.
-            dtype: Type used to create the returned array.
+        {args}
+            {dtype}
         '''
-
         if not callable(func):
             deprecated('Using apply() methods with non-callables is on longer supported; use map_fill(), map_any, or map_all()')
             # if the key is not in the map, we return the value unaltered
@@ -281,7 +303,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
 
         Args:
-            func: A function, or a mapping object that defines __getitem__. If a mapping is given, all values must be found in the mapping.
+            func: A function.
             dtype: Type used to create the returned array.
             max_workers: Passed to the pool_executor, where None defaults to the max number of machine processes.
             chunksize: Passed to the pool executor.
@@ -303,6 +325,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             yield from self._func_values()
         else:
             yield from self._func_items()
+
+
+
+#-------------------------------------------------------------------------------
 
 class IterNode(tp.Generic[FrameOrSeries]):
     '''Interface to a type of iteration on :py:class:`static_frame.Series` and :py:class:`static_frame.Frame`.

@@ -21,6 +21,7 @@ LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of l
 
 ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
 
+DTYPE_SPECIFIER = '''An value suitable for creating a NumPy dtype.'''
 
 class DOC_TEMPLATE:
 
@@ -61,6 +62,7 @@ class DOC_TEMPLATE:
     Args:
         depth_level: a depth level, starting from zero.
     '''
+
 
 
     #---------------------------------------------------------------------------
@@ -106,12 +108,12 @@ class DOC_TEMPLATE:
 
 
     index_init = dict(
-            args = '''
+            args = f'''
         Args:
-            labels: {}
+            labels: {INDEX_INITIALIZER}
             name: A hashable object to name the Index.
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            dtype: Optional dtype to be used for labels.'''.format(INDEX_INITIALIZER)
+            dtype: {DTYPE_SPECIFIER}'''
             )
 
     index_date_time_init = dict(
@@ -162,6 +164,42 @@ class DOC_TEMPLATE:
     )
 
 
+    map_any = dict(
+            doc = 'Apply a mapping; for values not in the mapping, the value is returned.',
+            args = '''
+        Args:
+            mapping: A mapping type, such as a dictionary or Series.
+            ''',
+            dtype = DTYPE_SPECIFIER
+            )
+
+    map_fill = dict(
+            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
+            args = '''
+        Args:
+            mapping: A mapping type, such as a dictionary or Series.
+            fill_value: Value to be returned if the values is not a key in the mapping.
+            ''',
+            dtype = DTYPE_SPECIFIER
+            )
+
+    map_all = dict(
+            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
+            args = '''
+        Args:
+            mapping: A mapping type, such as a dictionary or Series.
+            ''',
+            dtype = DTYPE_SPECIFIER
+            )
+
+    apply = dict(
+            doc = 'Apply a function to each value.',
+            args = '''
+        Args:
+            func: A function that takes a value.
+            ''',
+            dtype = DTYPE_SPECIFIER
+            )
 
 
 def doc_inject(*,
