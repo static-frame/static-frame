@@ -8,6 +8,7 @@ from static_frame.core.store import StoreConfigMap
 
 from static_frame.test.test_case import TestCase
 # from static_frame.test.test_case import temp_file
+from static_frame.core.exception import ErrorInitStoreConfig
 
 
 
@@ -57,6 +58,13 @@ class TestUnit(TestCase):
         self.assertEqual(sc4m['a'].index_depth, 2)
         self.assertEqual(sc4m['b'].index_depth, 3)
 
+
+    def test_store_config_map_d(self) -> None:
+        with self.assertRaises(ErrorInitStoreConfig):
+            _ = StoreConfigMap({'a': object()}) # type: ignore
+
+        with self.assertRaises(ErrorInitStoreConfig):
+            _ = StoreConfigMap(default=object()) # type: ignore
 
 
 if __name__ == '__main__':
