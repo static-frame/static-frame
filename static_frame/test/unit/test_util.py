@@ -54,6 +54,8 @@ from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 
 from static_frame.core.util import to_datetime64
+from static_frame.core.util import _DT64_YEAR
+from static_frame.core.util import _DT64_DAY
 
 from static_frame.core.util import resolve_type_iter
 
@@ -1376,6 +1378,16 @@ class TestUnit(TestCase):
             dt = to_datetime64(np.datetime64('2019'), dtype=np.dtype('datetime64[D]'))
 
 
+    def test_to_datetime64_b(self) -> None:
+
+        dt = to_datetime64(2019, _DT64_YEAR)
+        self.assertEqual(dt, np.datetime64('2019'))
+
+        with self.assertRaises(RuntimeError):
+            _ = to_datetime64(2019, _DT64_DAY)
+
+
+
     def test_resolve_type_iter_a(self) -> None:
 
         v1 = ('a', 'b', 'c')
@@ -1535,7 +1547,7 @@ class TestUnit(TestCase):
 
 
     def test_resolve_type_iter_k(self) -> None:
-        resolved, has_tuple, values = resolve_type_iter((x for x in ()))
+        resolved, has_tuple, values = resolve_type_iter((x for x in ())) #type: ignore
         self.assertEqual(resolved, None)
         self.assertEqual(values, ())
         self.assertEqual(has_tuple, False)
@@ -1793,14 +1805,14 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_column_1d_filter_a(self):
+    def test_column_1d_filter_a(self) -> None:
         a1 = np.arange(4)
         a2 = np.arange(4).reshape(4, 1)
         self.assertEqual(column_1d_filter(a1).shape, (4,))
         self.assertEqual(column_1d_filter(a2).shape, (4,))
 
 
-    def test_row_1d_filter_a(self):
+    def test_row_1d_filter_a(self) -> None:
         a1 = np.arange(4)
         a2 = np.arange(4).reshape(1, 4)
         self.assertEqual(row_1d_filter(a1).shape, (4,))

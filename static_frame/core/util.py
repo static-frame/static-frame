@@ -1621,7 +1621,7 @@ def ufunc_set_iter(
         ufunc = union1d if union else intersect1d
         ndim = 1
     else: # ndim == 2
-        ufunc = union2d if union else intersect2d # type: ignore
+        ufunc = union2d if union else intersect2d #type: ignore
         ndim = 2
 
     for array in arrays:
@@ -1817,8 +1817,8 @@ def _read_url(fp: str) -> str:
     '''
     Read a URL into memory, return a decoded string.
     '''
-    with request.urlopen(fp) as response:
-        return tp.cast(str, response.read().decode('utf-8'))
+    with request.urlopen(fp) as response: #pragma: no cover
+        return tp.cast(str, response.read().decode('utf-8')) #pragma: no cover
 
 
 def write_optional_file(
