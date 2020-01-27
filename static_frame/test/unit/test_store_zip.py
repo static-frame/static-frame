@@ -97,6 +97,23 @@ class TestUnit(TestCase):
                 self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
 
 
+    def test_store_zip_csv_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipCSV(fp)
+            st.write((f.name, f) for f in (f1,))
+
+            with self.assertRaises(ErrorInitStore):
+                # config is required
+                _ = st.read(f1.name)
+
+
 
     def test_store_zip_pickle_a(self) -> None:
 
