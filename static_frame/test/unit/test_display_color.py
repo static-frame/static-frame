@@ -18,6 +18,14 @@ from static_frame.core.display_color import HexColor
 
 class TestUnit(TestCase):
 
+    def test_hex_str_to_int_a(self) -> None:
+        post = HexColor._hex_str_to_int('aqua')
+        self.assertEqual(post, 65535)
+
+    def test_format_html_a(self) -> None:
+        post = HexColor.format_html('aqua', 'test')
+        self.assertEqual(post, '<span style="color: #ffff">test</span>')
+
     def test_hex_color_format_a(self) -> None:
 
         msg = HexColor.format_terminal('#4b006e', 'test')

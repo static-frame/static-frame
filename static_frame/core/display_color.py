@@ -253,7 +253,7 @@ class HexColor:
             hex_str = hex_str[1:]
         elif hex_str.startswith('0x'):
             hex_str = hex_str[2:]
-        else: # will reaise key error
+        else: # will raise key error
             return _COLOR_NAME_X11[hex_str]
         return int(hex_str, 16)
 
