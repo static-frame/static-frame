@@ -1899,21 +1899,21 @@ class Frame(ContainerOperand):
         elif not hasattr(data, '__len__') or isinstance(data, str):
             # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
-            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element.')
+            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element.') #pragma: no cover
 
-            def blocks_constructor(shape): #pylint: disable=E0102
-                a = np.full(shape, data)
-                a.flags.writeable = False
-                self._blocks = TypeBlocks.from_blocks(a)
+            def blocks_constructor(shape): #pylint: disable=E0102 #pragma: no cover
+                a = np.full(shape, data) #pragma: no cover
+                a.flags.writeable = False #pragma: no cover
+                self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
 
         else:
             # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame. The array cas be 1D (to produce one column) or 2D; greater dimensionality will raise exception.
 
-            deprecated('The Frame initializer no longer supports creation from untyped iterables; use Frame.from_records to create a Frame from an iterable of iterables; use Frame.from_elements to create a Frame from an iterable.')
+            deprecated('The Frame initializer no longer supports creation from untyped iterables; use Frame.from_records to create a Frame from an iterable of iterables; use Frame.from_elements to create a Frame from an iterable.') #pragma: no cover
 
-            a = np.array(data)
-            a.flags.writeable = False
-            self._blocks = TypeBlocks.from_blocks(a)
+            a = np.array(data) #pragma: no cover
+            a.flags.writeable = False #pragma: no cover
+            self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
 
         # counts can be zero (not None) if _block was created but is empty
         row_count, col_count = (self._blocks._shape

@@ -282,9 +282,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {dtype}
         '''
         if not callable(func):
-            deprecated('Using apply() methods with non-callables is on longer supported; use map_fill(), map_any(), or map_all()')
-            # if the key is not in the map, we return the value unaltered
-            return self.map_any(func, dtype=dtype)
+            deprecated('Using apply() methods with non-callables is on longer supported; use map_fill(), map_any(), or map_all()') #pragma: no cover
+            return self.map_any(func, dtype=dtype) #pragma: no cover
 
         return self._apply_constructor(
                 self.apply_iter_items(func),
