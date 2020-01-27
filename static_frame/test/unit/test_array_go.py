@@ -12,6 +12,11 @@ from static_frame.test.test_case import TestCase
 class TestUnit(TestCase):
 
 
+
+    def test_array_init_a(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            _ = ArrayGO(np.array((3, 4, 5)))
+
     def test_array_append_a(self) -> None:
 
         ag1 = ArrayGO(('a', 'b', 'c', 'd'))
