@@ -387,6 +387,19 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 3))
 
 
+    def test_frame_from_element_d(self) -> None:
+        idx1 = Index(('a', 'b'))
+        idx2 = Index((3, 4))
+        f1 = Frame.from_element('x',
+                index=idx1,
+                columns=idx2,
+                own_index=True,
+                own_columns=True
+                )
+        self.assertTrue(id(idx1) == id(f1.index))
+        self.assertTrue(id(idx2) == id(f1.columns))
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_elements_a(self) -> None:
         f1 = Frame.from_elements(['a', 3, 'b'])
@@ -403,7 +416,6 @@ class TestUnit(TestCase):
                 (('p', (('x', 'a'), ('y', 3), ('z', 'b'))),))
 
 
-    #---------------------------------------------------------------------------
     def test_frame_from_elements_b(self) -> None:
 
         f1 = Frame.from_elements([5, False, 'X'])
@@ -415,6 +427,23 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', ((0, 5), (1, False), (2, 'X'))), ('b', ((0, 5), (1, False), (2, 'X'))))
                 )
+
+
+    def test_frame_from_elements_c(self) -> None:
+        idx1 = Index(('a', 'b'))
+        idx2 = Index((3, 4))
+        f1 = Frame.from_elements((10, 20),
+                index=idx1,
+                columns=idx2,
+                own_index=True,
+                own_columns=True
+                )
+
+        self.assertEqual(f1.to_pairs(0),
+                ((3, (('a', 10), ('b', 20))), (4, (('a', 10), ('b', 20))))
+                )
+        self.assertTrue(id(idx1) == id(f1.index))
+        self.assertTrue(id(idx2) == id(f1.columns))
 
 
     #---------------------------------------------------------------------------
@@ -4818,6 +4847,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.drop_duplicated(axis=1, exclude_first=True).to_pairs(1),
                 (('a', (('p', 50), ('r', 32), ('s', 17))), ('b', (('p', 2), ('r', 1), ('s', 3)))))
 
+    #---------------------------------------------------------------------------
     def test_frame_from_concat_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -5362,6 +5392,32 @@ class TestUnit(TestCase):
         self.assertEqual((0,),  f5.index.shape)
         self.assertEqual('f5',  f5.name)
 
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_concat_error_init_a(self) -> None:
+        f1 = Frame.from_element(10,
+                columns=('p', 'q',),
+                index=('x', 'z'))
+        f2 = Frame.from_element('x',
+                columns=('p', 'q',),
+                index=('x', 'z'))
+
+        with self.assertRaises(ErrorInitFrame):
+            _ = Frame.from_concat((f1, f2), axis=0)
+
+        with self.assertRaises(ErrorInitFrame):
+            _ = Frame.from_concat((f1, f2), axis=1)
+
+        f3 = Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory)
+        self.assertEqual(f3.to_pairs(0),
+                (('p', ((0, 10), (1, 10), (2, 'x'), (3, 'x'))), ('q', ((0, 10), (1, 10), (2, 'x'), (3, 'x'))))
+                )
+
+        f4 = Frame.from_concat((f1, f2), axis=1, columns=IndexAutoFactory)
+        self.assertEqual(f4.to_pairs(0),
+                ((0, (('x', 10), ('z', 10))), (1, (('x', 10), ('z', 10))), (2, (('x', 'x'), ('z', 'x'))), (3, (('x', 'x'), ('z', 'x'))))
+                )
 
     #---------------------------------------------------------------------------
 
