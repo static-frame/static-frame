@@ -2962,6 +2962,54 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_from_items_h(self) -> None:
+
+        def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
+            for i in range(2):
+                yield i, np.array(tuple(str(1000 + j + i) for j in range(3)))
+
+        f1 = Frame.from_items(gen(), dtypes=(
+                np.dtype('datetime64[Y]'), np.dtype('datetime64[Y]'))
+                )
+
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, np.datetime64('1000')), (1, np.datetime64('1001')), (2, np.datetime64('1002')))), (1, ((0, np.datetime64('1001')), (1, np.datetime64('1002')), (2, np.datetime64('1003')))))
+                )
+
+
+    def test_frame_from_items_i(self) -> None:
+
+        def gen() -> tp.Iterator[tp.Tuple[int, Series]]:
+            for i in range(2):
+                yield i, Series(
+                        tuple(str(1000 + j + i) for j in range(3)),
+                        index=('a', 'b', 'c')
+                        )
+        with self.assertRaises(ErrorInitFrame):
+            # must provide an index
+            _ = Frame.from_items(gen(), dtypes=(
+                    np.dtype('datetime64[Y]'), np.dtype('datetime64[Y]'))
+                    )
+
+        f1 = Frame.from_items(gen(), dtypes=(
+                np.dtype('datetime64[Y]'), np.dtype('datetime64[Y]')),
+                index=('a', 'c'))
+
+        self.assertEqual( f1.to_pairs(0),
+                ((0, (('a', np.datetime64('1000')), ('c', np.datetime64('1002')))), (1, (('a', np.datetime64('1001')), ('c', np.datetime64('1003')))))
+                )
+
+
+    def test_frame_from_items_j(self) -> None:
+
+        def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
+            for i in range(2):
+                yield i, Frame.from_element('x', index=('a',), columns=('a',))
+
+        with self.assertRaises(ErrorInitFrame):
+            # must provide an index
+            _ = Frame.from_items(gen())
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_structured_array_a(self) -> None:
@@ -4080,6 +4128,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, 3),)), (3, ((0, 4),)))
                 )
 
+    #---------------------------------------------------------------------------
 
     @skip_win  # type: ignore
     def test_structured_array_to_d_ia_cl_a(self) -> None:
@@ -4105,9 +4154,38 @@ class TestUnit(TestCase):
         self.assertEqual(post.shapes.tolist(), [(3,), (3, 3)])
 
 
+    def test_structured_arrayto_d_ia_cl_c(self) -> None:
+
+        a1 = np.array(np.arange(12).reshape((3, 4)))
+
+        with self.assertRaises(ErrorInitFrame):
+            # cannot specify index_column_first if index_depth is 0
+            post, _, _ = Frame._structured_array_to_d_ia_cl(
+                    a1,
+                    index_depth=0,
+                    index_column_first=1,
+                    dtypes=[np.int64, str, str, str],
+                    consolidate_blocks=True,
+                    )
 
     #---------------------------------------------------------------------------
+    def test_from_data_index_arrays_column_labels_a(self) -> None:
 
+        tb = TypeBlocks.from_blocks(np.array([3,4,5]))
+
+        f1 = Frame._from_data_index_arrays_column_labels(
+                data=tb,
+                index_depth=0,
+                index_arrays=(),
+                columns_depth=0,
+                columns_labels=(),
+                name='foo',
+                )
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 3), (1, 4), (2, 5))),))
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_from_delimited_a(self) -> None:
 

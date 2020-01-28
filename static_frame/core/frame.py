@@ -721,7 +721,8 @@ class Frame(ContainerOperand):
                 values = array_from_value_iter(
                         key=col_key,
                         idx=col_idx,
-                        get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
+                        get_value_iter=get_value_iter,
+                        get_col_dtype=get_col_dtype,
                         dtypes=dtypes,
                         row_reference=row_reference,
                         row_count=row_count
@@ -878,11 +879,11 @@ class Frame(ContainerOperand):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
-                    if column_type is not None:
-                        v = v.astype(column_type)
-
                     if _requires_reindex(v.index, index):
-                        yield v.reindex(index, fill_value=fill_value).values
+                        v = v.reindex(index, fill_value=fill_value)
+                    # return values array post reindexing
+                    if column_type is not None:
+                        yield v.values.astype(column_type)
                     else:
                         yield v.values
 
@@ -1357,7 +1358,7 @@ class Frame(ContainerOperand):
         Returns:
             :py:class:`static_frame.Frame`
         '''
-        return cls.from_json(_read_url(url),
+        return cls.from_json(_read_url(url), #pragma: no cover
                 name=name,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks

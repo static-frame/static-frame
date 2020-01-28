@@ -189,7 +189,7 @@ DepthLevelSpecifier = tp.Union[int, tp.Iterable[int]]
 
 CallableToIterType = tp.Callable[[], tp.Iterable[tp.Any]]
 
-IndexSpecifier = tp.Union[int, str]
+IndexSpecifier = tp.Union[int, tp.Hashable] # specify a postiion in an index
 IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],

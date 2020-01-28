@@ -468,7 +468,11 @@ def array_from_value_iter(
         row_reference: tp.Union[tp.Sequence, tp.Dict],
         row_count: int,
         ):
-
+    '''
+    Args:
+        key: hashable for looking up field in `row_reference`.
+        idx: integer position to extract from dtypes
+    '''
     # for each column, try to get a column_type, or None
     if dtypes is None:
         field_ref = row_reference[key]
