@@ -5419,6 +5419,22 @@ class TestUnit(TestCase):
                 ((0, (('x', 10), ('z', 10))), (1, (('x', 10), ('z', 10))), (2, (('x', 'x'), ('z', 'x'))), (3, (('x', 'x'), ('z', 'x'))))
                 )
 
+
+
+    def test_frame_from_concat_consolidate_blocks_a(self) -> None:
+        f1 = Frame.from_element(False,
+                columns=('p', 'q'),
+                index=('x', 'z'))
+
+        f2 = Frame.from_element(True,
+                columns=('r', 's',),
+                index=('x', 'z'))
+
+        self.assertEqual(
+                Frame.from_concat((f1, f2), axis=1, consolidate_blocks=True)._blocks.shapes.tolist(),
+                [(2, 4)]
+                )
+
     #---------------------------------------------------------------------------
 
 
