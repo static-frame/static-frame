@@ -5602,6 +5602,8 @@ class TestUnit(TestCase):
                 [(dtype('<M8[D]'), 2), (dtype('<U1'), 1), (dtype('bool'), 2)])
 
 
+    #---------------------------------------------------------------------------
+
     def test_frame_from_records_a(self) -> None:
 
         NT = namedtuple('Sample', ('a', 'b', 'c'))
@@ -5708,7 +5710,6 @@ class TestUnit(TestCase):
             f1 = Frame.from_records(records, columns=('b', 'c', 'd'))
 
 
-
     def test_frame_from_records_k(self) -> None:
         def gen() -> tp.Iterator[int]:
             empty: tp.Iterable[int] = ()
@@ -5718,6 +5719,25 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(gen(), columns=('a', 'b', 'c'))
         self.assertEqual(f1.to_pairs(0),
                 (('a', ()), ('b', ()), ('c', ())))
+
+
+    def test_frame_from_records_m(self) -> None:
+
+        records = np.arange(4).reshape((2, 2))
+        dtypes = (bool, bool)
+        with self.assertRaises(ErrorInitFrame):
+            f1 = sf.Frame.from_records(records, dtypes=dtypes)
+
+
+
+    def test_frame_from_records_n(self) -> None:
+
+        mapping = {10: (3, 4), 50: (5, 6)}
+        f1 = sf.Frame.from_records(mapping.values())
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 3), (1, 5))), (1, ((0, 4), (1, 6))))
+                )
+
 
 
 
@@ -5760,6 +5780,40 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('a', ((0, 1), (1, 0), (2, 0))), ('b', ((0, 2), (1, 10), (2, 0))), ('c', ((0, 0), (1, 4), (2, 20))), ('d', ((0, 0), (1, 0), (2, -1))))
                 )
+
+    def test_frame_from_dict_records_e(self) -> None:
+        # handle case of dict views
+        a = {1: {'a': 1, 'b': 2,}, 2: {'a': 4, 'b': 3,}}
+
+        post = Frame.from_dict_records(a.values(), index=list(a.keys()), dtypes=(int, str))
+        self.assertEqual(post.to_pairs(0),
+                (('a', ((1, 1), (2, 4))), ('b', ((1, '2'), (2, '3'))))
+                )
+
+    def test_frame_from_dict_records_f(self) -> None:
+        # handle case of dict views
+        data = ()
+        with self.assertRaises(ErrorInitFrame):
+            _ = Frame.from_dict_records(data)
+
+    def test_frame_from_dict_records_g(self) -> None:
+
+        records = [
+                dict(a=True, b=False),
+                dict(a=True, b=False),
+                ]
+        f1 = Frame.from_dict_records(records, consolidate_blocks=True)
+        self.assertEqual(f1._blocks.shapes.tolist(), [(2, 2)])
+
+
+    # def test_frame_from_dict_records_h(self) -> None:
+
+    #     records = [
+    #             dict(a=True, b=False),
+    #             dict(b=True, c=False),
+    #             ]
+    #     f1 = Frame.from_dict_records(records, fill_value='x')
+    #     # NOTE: this result is not expected!
 
 
     #---------------------------------------------------------------------------
