@@ -578,34 +578,27 @@ def roll_2d(array: np.ndarray,
         if size <= 1:
             return array.copy()
 
+        # result will be positive
         shift = shift % size
         if shift == 0:
             return array.copy()
 
-        if shift > 0:
-            post[0:shift, :] = array[-shift:, :]
-            post[shift:, :] = array[0:-shift, :]
-            return post
-        # shift is negative, negate to flip
-        post[0:size+shift, :] = array[-shift:, :]
-        post[size+shift:None, :] = array[:-shift, :]
+        post[0:shift, :] = array[-shift:, :]
+        post[shift:, :] = array[0:-shift, :]
+        return post
 
     elif axis == 1: # roll columns
         size = array.shape[1]
         if size <= 1:
             return array.copy()
 
+        # result will be positive
         shift = shift % size
         if shift == 0:
             return array.copy()
 
-        if shift > 0:
-            post[:, 0:shift] = array[:, -shift:]
-            post[:, shift:] = array[:, 0:-shift]
-            return post
-        # shift is negative, negate to flip
-        post[:, 0:size+shift] = array[:, -shift:]
-        post[:, size+shift:None] = array[:, :-shift]
+        post[:, 0:shift] = array[:, -shift:]
+        post[:, shift:] = array[:, 0:-shift]
         return post
 
     raise NotImplementedError()
@@ -1718,6 +1711,7 @@ def isin(
                 result = np.isin(array, other, assume_unique=assume_unique)
         except TypeError:
             # Numpy can fail if array's dtypes are incompatible
+            # NOTE: need more information on cases that result in this
             result = np.full(array.shape, False, dtype=DTYPE_BOOL)
 
     result.flags.writeable = False

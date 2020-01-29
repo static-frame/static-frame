@@ -64,6 +64,9 @@ from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import argmax_2d
 
+from static_frame.core.util import _array_to_duplicated_sortable
+from static_frame.core.util import _ufunc_set_1d
+
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -778,6 +781,8 @@ class TestUnit(TestCase):
                 set(((3, 1),))
                 )
 
+
+    #---------------------------------------------------------------------------
     def test_isin_non_empty(self) -> None:
         # Tests isin's ability to fallback to numpy's isin when the UnHashable types are present in either the frame itself or the iterable being compared against
         '''
@@ -887,6 +892,9 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             _isin_2d(arr_1d, s3)
 
+
+
+    #---------------------------------------------------------------------------
 
     @unittest.skip('requires network')
     def test_read_url(self) -> None:
@@ -1109,6 +1117,7 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = dtype_to_na(np.dtype('V'))
 
+    #---------------------------------------------------------------------------
 
     def test_key_to_datetime_key_a(self) -> None:
 
@@ -1151,7 +1160,13 @@ class TestUnit(TestCase):
         post = key_to_datetime_key(None)
         self.assertEqual(post, None)
 
+    def test_key_to_datetime_key_b(self) -> None:
 
+        d = datetime.datetime(2018, 2, 1, 5, 40)
+        self.assertEqual(key_to_datetime_key(d), np.datetime64(d))
+        self.assertEqual(key_to_datetime_key(d.date()), np.datetime64(d.date()))
+
+    #---------------------------------------------------------------------------
 
     def test_set_ufunc2d_a(self) -> None:
         # fails due wrong function
@@ -1222,6 +1237,27 @@ class TestUnit(TestCase):
         self.assertEqual(len(post2), 0)
 
 
+
+    def test_ufunc_set_2d_g(self) -> None:
+        post1 = _ufunc_set_2d(np.union1d,
+                np.arange(4).reshape((2, 2)),
+                np.arange(4).reshape((2, 2)),
+                assume_unique=True)
+
+        self.assertEqual(post1.tolist(),
+                [[0, 1], [2, 3]])
+
+
+    def test_ufunc_set_2d_h(self) -> None:
+        with self.assertRaises(RuntimeError):
+            post1 = _ufunc_set_2d(np.union1d,
+                    np.arange(4).reshape((2, 2)),
+                    np.arange(4),
+                    assume_unique=True)
+
+
+
+    #---------------------------------------------------------------------------
 
 
 
@@ -1304,6 +1340,11 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_binary_transition_d(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            binary_transition(np.arange(12).reshape((2, 2, 3)), 0)
+
+
     #---------------------------------------------------------------------------
 
     def test_roll_1d_a(self) -> None:
@@ -1361,6 +1402,35 @@ class TestUnit(TestCase):
 
         self.assertEqual(roll_2d(a1, -2, axis=1).tolist(),
                 [[2, 3, 0, 1], [6, 7, 4, 5], [10, 11, 8, 9]])
+
+    def test_roll_2d_d(self) -> None:
+
+        a1 = np.arange(6).reshape((2, 3))
+
+        self.assertEqual(roll_2d(a1, 1, axis=1).tolist(),
+                [[2, 0, 1], [5, 3, 4]])
+        self.assertEqual(roll_2d(a1, -1, axis=1).tolist(),
+                [[1, 2, 0], [4, 5, 3]])
+
+
+    def test_roll_2d_e(self) -> None:
+
+        a1 = np.arange(6).reshape((3, 2))
+
+        self.assertEqual(roll_2d(a1, 1, axis=0).tolist(),
+                [[4, 5], [0, 1], [2, 3]]
+                )
+        self.assertEqual(roll_2d(a1, -1, axis=0).tolist(),
+                [[2, 3], [4, 5], [0, 1]]
+                )
+
+
+    def test_roll_2d_f(self) -> None:
+
+        with self.assertRaises(NotImplementedError):
+            roll_2d(np.arange(4).reshape((2, 2)), 1, axis=2)
+
+    #---------------------------------------------------------------------------
 
 
     def test_to_datetime64_a(self) -> None:
@@ -1818,6 +1888,45 @@ class TestUnit(TestCase):
         self.assertEqual(row_1d_filter(a1).shape, (4,))
         self.assertEqual(row_1d_filter(a2).shape, (4,))
 
+
+    def test_array_to_duplicated_sortable_a(self) -> None:
+
+        post1 = _array_to_duplicated_sortable(np.array([2, 3, 3, 3, 4]),
+                exclude_first=True,
+                exclude_last=True)
+        self.assertEqual(post1.tolist(),
+                [False, False, True, False, False])
+
+        post2 = _array_to_duplicated_sortable(np.array([2, 3, 3, 3, 4]),
+                exclude_first=False,
+                exclude_last=True)
+        self.assertEqual(post2.tolist(),
+                [False, True, True, False, False])
+
+        post3 = _array_to_duplicated_sortable(np.array([2, 3, 3, 3, 4]),
+                exclude_first=True,
+                exclude_last=False)
+        self.assertEqual(post3.tolist(),
+                [False, False, True, True, False])
+
+        post4 = _array_to_duplicated_sortable(np.array([2, 3, 3, 3, 4]),
+                exclude_first=False,
+                exclude_last=False)
+        self.assertEqual(post4.tolist(),
+                [False, True, True, True, False])
+
+
+    def test_ufunc_set_1d_a(self) -> None:
+        with self.assertRaises(NotImplementedError):
+            _ufunc_set_1d(np.any, np.arange(3), np.arange(3))
+
+
+    def test_ufunc_set_1d_b(self) -> None:
+        post1 = _ufunc_set_1d(np.union1d, np.arange(3), np.array(()), assume_unique=True)
+        self.assertEqual(post1.tolist(), [0, 1, 2])
+
+        post2 = _ufunc_set_1d(np.union1d, np.arange(3), np.arange(3), assume_unique=True)
+        self.assertEqual(post1.tolist(), [0, 1, 2])
 
 
 if __name__ == '__main__':
