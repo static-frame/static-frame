@@ -5587,7 +5587,7 @@ class TestUnit(TestCase):
         s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
 
         with self.assertRaises(AxisInvalid):
-            f1 = Frame.from_concat_items(dict(A=s1, B=s2).items(), axis=2)
+            f1 = Frame.from_concat_items(dict(A=s1, B=s2).items(), axis=2) # type: ignore
 
     #---------------------------------------------------------------------------
 
