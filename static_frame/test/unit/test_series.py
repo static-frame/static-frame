@@ -638,11 +638,13 @@ class TestUnit(TestCase):
 
     def test_series_fillna_sided_a(self) -> None:
 
-        a1 = np.array((3, np.nan))
-        _ = Series._fillna_sided(
-                array=a1,
-                value=a1,
-                sided_leading=True)
+        a1 = np.array((np.nan, 3, np.nan))
+
+        with self.assertRaises(RuntimeError):
+            _ = Series._fillna_sided(
+                    array=a1,
+                    value=a1,
+                    sided_leading=True)
 
 
 
