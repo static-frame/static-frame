@@ -384,8 +384,9 @@ class Series(ContainerOperand):
         if self.values.ndim != self._NDIM:
             raise ErrorInitSeries('dimensionality of final values not supported')
 
-        if len(self.values) != shape:
-            raise ErrorInitSeries('values and index do not match length')
+        # this appears to be unreachable
+        # if len(self.values) != shape:
+        #     raise ErrorInitSeries('values and index do not match length')
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:

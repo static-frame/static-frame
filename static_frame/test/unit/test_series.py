@@ -192,6 +192,22 @@ class TestUnit(TestCase):
             s1 = Series(a1)
 
 
+    def test_series_init_q(self) -> None:
+        with self.assertRaises(RuntimeError):
+            s1 = Series(dict(a=3, b=4))
+
+
+    def test_series_init_r(self) -> None:
+        with self.assertRaises(RuntimeError):
+            s1 = Series(np.array((3, 4, 5)), dtype=object)
+
+
+    def test_series_init_s(self) -> None:
+        s1 = Series(np.array('a'))
+        self.assertEqual(s1.to_pairs(), ((0, 'a'),))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
@@ -559,7 +575,7 @@ class TestUnit(TestCase):
         s2 = s1.dropna()
         self.assertEqual(s2.to_pairs(), ((('A', 1), 1.0), (('B', 1), 2.0)))
 
-
+    #---------------------------------------------------------------------------
 
     def test_series_fillna_a(self) -> None:
 
@@ -599,6 +615,38 @@ class TestUnit(TestCase):
         s2 = s1.fillna(0)
         self.assertTrue(len(s2) == 0)
 
+
+    def test_series_fillna_c(self) -> None:
+
+        s1 = Series((np.nan, 3, np.nan))
+        with self.assertRaises(RuntimeError):
+            _ = s1.fillna(np.arange(3))
+
+
+    #---------------------------------------------------------------------------
+
+    def test_series_fillna_directional_a(self) -> None:
+
+        a1 = np.array((3, 4))
+        a2 = Series._fillna_directional(
+                array=a1,
+                directional_forward=True,
+                limit=2)
+
+        self.assertEqual(id(a1), id(a2))
+
+
+    def test_series_fillna_sided_a(self) -> None:
+
+        a1 = np.array((3, np.nan))
+        _ = Series._fillna_sided(
+                array=a1,
+                value=a1,
+                sided_leading=True)
+
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_fillna_leading_a(self) -> None:
 
@@ -784,6 +832,13 @@ class TestUnit(TestCase):
         s1 = Series.from_element('a', index=range(3))
         self.assertEqual(s1.to_pairs(),
                 ((0, 'a'), (1, 'a'), (2, 'a'))
+                )
+
+
+    def test_series_from_element_b(self) -> None:
+        s1 = Series.from_element('a', index=Index((3, 4, 5)), own_index=True)
+        self.assertEqual(s1.to_pairs(),
+                ((3, 'a'), (4, 'a'), (5, 'a'))
                 )
 
 
@@ -1372,6 +1427,7 @@ class TestUnit(TestCase):
         s = Series(range(4), index=idx)
         self.assertTrue(tuple(reversed(s)) == tuple(reversed(idx)))
 
+    #---------------------------------------------------------------------------
 
     def test_series_relabel_a(self) -> None:
 
@@ -1419,6 +1475,16 @@ class TestUnit(TestCase):
                 ((0, 0), (1, 1), (2, 2), (3, 3))
                 )
 
+
+    def test_series_relabel_f(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        # reuse the same instance
+        s2 = s1.relabel(None)
+        self.assertEqual(id(s1.index), id(s2.index))
+
+
+    #---------------------------------------------------------------------------
+
     def test_series_rehierarch_a(self) -> None:
 
         colors = ('red', 'green')
@@ -1444,6 +1510,12 @@ class TestUnit(TestCase):
         self.assertEqual(s1.rehierarch((1,2,0)).to_pairs(),
                 (((100, 'iv', 'B'), 0), ((100, 'iv', 'A'), 4), ((100, 'ii', 'B'), 1), ((100, 'ii', 'A'), 5), ((2, 'iv', 'B'), 2), ((2, 'iv', 'A'), 6), ((2, 'ii', 'B'), 3), ((2, 'ii', 'A'), 7))
                 )
+
+
+    def test_series_rehierarch_c(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(RuntimeError):
+            s1.rehierarch(())
 
 
     #---------------------------------------------------------------------------
