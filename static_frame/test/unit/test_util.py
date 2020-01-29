@@ -914,12 +914,11 @@ class TestUnit(TestCase):
         a1 = np.arange(6)
 
 
-        # import ipdb; ipdb.set_trace()
-
         self.assertEqual(array_shift(array=a1, shift=2, axis=0, wrap=True).tolist(),
                 [4, 5, 0, 1, 2, 3])
         self.assertEqual(array_shift(array=a1, shift=-2, axis=0, wrap=True).tolist(),
                 [2, 3, 4, 5, 0, 1])
+
         self.assertEqual(array_shift(array=a1, shift=5, axis=0, wrap=True).tolist(),
                 [1, 2, 3, 4, 5, 0])
 
@@ -1305,8 +1304,7 @@ class TestUnit(TestCase):
                 )
 
 
-
-
+    #---------------------------------------------------------------------------
 
     def test_roll_1d_a(self) -> None:
 
@@ -1325,9 +1323,11 @@ class TestUnit(TestCase):
 
 
     def test_roll_1d_c(self) -> None:
-        post = roll_1d(np.array([3, 4, 5]), -2)
-        self.assertEqual(post.tolist(), [5, 3, 4])
+        a1 = np.array([3, 4, 5, 6])
+        self.assertEqual(roll_1d(a1, 1).tolist(), [6, 3, 4, 5])
+        self.assertEqual(roll_1d(a1, -1).tolist(), [4, 5, 6, 3])
 
+    #---------------------------------------------------------------------------
 
     def test_roll_2d_a(self) -> None:
 

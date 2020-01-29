@@ -552,18 +552,15 @@ def roll_1d(array: np.ndarray,
     if size <= 1:
         return array.copy()
 
+    # result will be positive
     shift = shift % size
     if shift == 0:
         return array.copy()
 
     post = np.empty(size, dtype=array.dtype)
-    if shift > 0:
-        post[0:shift] = array[-shift:]
-        post[shift:] = array[0:-shift]
-        return post
-    # shift is negative, negate to flip
-    post[0:size+shift] = array[-shift:]
-    post[size+shift:None] = array[:-shift]
+
+    post[0:shift] = array[-shift:]
+    post[shift:] = array[0:-shift]
     return post
 
 
