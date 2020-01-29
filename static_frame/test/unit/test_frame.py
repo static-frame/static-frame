@@ -5515,7 +5515,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-
     def test_frame_from_concat_items_a(self) -> None:
         records1 = (
                 (2, 2, False),
@@ -5581,6 +5580,16 @@ class TestUnit(TestCase):
         self.assertEqual((0,0), f3.shape)
         self.assertEqual('f3',  f3.name)
 
+
+    def test_frame_from_concat_items_d(self) -> None:
+
+        s1 = Series((0, True), index=('p', 'q'), name='c', dtype=object)
+        s2 = Series((-2, False), index=('p', 'q'), name='d', dtype=object)
+
+        with self.assertRaises(AxisInvalid):
+            f1 = Frame.from_concat_items(dict(A=s1, B=s2).items(), axis=2)
+
+    #---------------------------------------------------------------------------
 
     def test_frame_set_index_a(self) -> None:
         records = (

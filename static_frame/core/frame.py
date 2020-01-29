@@ -511,16 +511,20 @@ class Frame(ContainerOperand):
                 frames.append(frame)
                 if axis == 0:
                     yield label, frame._index
-                else:
+                elif axis == 1:
                     yield label, frame._columns
+                # we have already evaluated AxisInvalid
+
 
         # populates array_values as side effect
         if axis == 0:
             ih = IndexHierarchy.from_index_items(gen())
             kwargs = dict(index=ih)
-        else:
+        elif axis == 1:
             ih = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_index_items(gen())
             kwargs = dict(columns=ih)
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         return cls.from_concat(frames,
                 axis=axis,
