@@ -7,24 +7,20 @@ from collections import OrderedDict
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
-# from static_frame import Series
-# from static_frame import Frame
-# from static_frame import FrameGO
-# from static_frame import IndexYearMonth
-# from static_frame import IndexYear
-# from static_frame import DisplayConfig
+from static_frame import ILoc
+from static_frame import HLoc
 
 from static_frame import IndexHierarchy
 # from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexLevelGO
 # from static_frame import HLoc
-from static_frame.core.array_go import ArrayGO
 
+from static_frame.core.exception import ErrorInitIndexLevel
+from static_frame.core.array_go import ArrayGO
 from static_frame.test.test_case import TestCase
 
 class TestUnit(TestCase):
-
 
     def test_index_level_a(self) -> None:
         groups = IndexGO(('A', 'B'))
@@ -50,12 +46,21 @@ class TestUnit(TestCase):
 
         assert level0.targets is not None
 
-        # import ipdb; ipdb.set_trace()
         self.assertEqual([lvl.offset for lvl in level0.targets], [0, 2, 4, 7])
 
-        # import ipdb; ipdb.set_trace()
+
+    def test_index_level_b(self) -> None:
+        with self.assertRaises(ErrorInitIndexLevel):
+            _ = IndexLevel(('A', 'B'))
 
 
+    def test_index_level_dtypes_all_a(self) -> None:
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        post = tuple(level0.dtypes_all())
+        self.assertEqual(post[0], np.dtype('<U1'))
+        self.assertEqual(len(post), 1)
+
+    #---------------------------------------------------------------------------
 
     def test_index_level_dtypes_a(self) -> None:
         groups = IndexGO(('A', 'B'))
@@ -63,7 +68,6 @@ class TestUnit(TestCase):
         targets = ArrayGO(
                 (IndexLevelGO(index=observations),
                 IndexLevelGO(observations, offset=2)))
-
         level0 = IndexLevelGO(index=groups, targets=targets)
         self.assertEqual([d.kind for d in level0.dtypes()], ['U', 'U'])
 
@@ -80,6 +84,15 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_level_dtypes_c(self) -> None:
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        post = tuple(level0.dtypes())
+        self.assertEqual(post[0], np.dtype('<U1'))
+        self.assertEqual(len(post), 1)
+
+
+    #---------------------------------------------------------------------------
+
     def test_index_level_index_types_a(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
@@ -88,6 +101,32 @@ class TestUnit(TestCase):
         self.assertEqual(
                 [it.__name__ for it in hidx._levels.index_types()],
                 ['Index', 'IndexDate', 'Index'])
+
+
+    def test_index_level_index_types_b(self) -> None:
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        post = tuple(level0.index_types())
+        self.assertEqual(post[0], Index)
+        self.assertEqual(len(post), 1)
+
+
+    #---------------------------------------------------------------------------
+    def test_index_level_contains_a(self) -> None:
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        self.assertFalse(('c',) in level0)
+        self.assertTrue(('a',) in level0)
+
+
+
+    #---------------------------------------------------------------------------
+
+    def test_index_level_extend_a(self) -> None:
+        level0 = IndexLevelGO(index=IndexGO(('a', 'b')), targets=None)
+        with self.assertRaises(RuntimeError):
+            level0.extend(level0)
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_index_level_get_labels_a(self) -> None:
@@ -110,6 +149,7 @@ class TestUnit(TestCase):
         level1 = IndexLevelGO(index=groups, targets=targets)
         self.assertEqual(level1.get_labels().dtype.kind, 'i')
 
+    #---------------------------------------------------------------------------
 
     def test_index_level_leaf_loc_to_iloc_a(self) -> None:
 
@@ -138,6 +178,59 @@ class TestUnit(TestCase):
         self.assertEqual(lvl0.leaf_loc_to_iloc(('B', '2018-01-04', 'y'),), 15)
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
 
+
+    def test_index_level_leaf_loc_to_iloc_b(self) -> None:
+
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        self.assertEqual(level0.leaf_loc_to_iloc(('b',)), 1)
+        self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1)
+
+
+    def test_index_level_leaf_loc_to_iloc_c(self) -> None:
+
+        groups = Index(('A', 'B', 'C'))
+        dates = IndexDate.from_date_range('2018-01-01', '2018-01-04')
+        observations = Index(('x', 'y'))
+
+        lvl2a = IndexLevel(index=observations)
+        lvl2b = IndexLevel(index=observations, offset=2)
+        lvl2c = IndexLevel(index=observations, offset=4)
+        lvl2d = IndexLevel(index=observations, offset=6)
+
+        lvl2_targets = ArrayGO((lvl2a, lvl2b, lvl2c, lvl2d))
+
+        lvl1a = IndexLevel(index=dates,
+                targets=lvl2_targets, offset=0)
+        lvl1b = IndexLevel(index=dates,
+                targets=lvl2_targets, offset=len(lvl1a))
+        lvl1c = IndexLevel(index=dates,
+                targets=lvl2_targets, offset=len(lvl1a) * 2)
+
+        lvl0 = IndexLevel(index=groups,
+                targets=ArrayGO((lvl1a, lvl1b, lvl1c)))
+
+        with self.assertRaises(ValueError):
+            lvl0.leaf_loc_to_iloc(('A'))
+
+        self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
+
+
+    #---------------------------------------------------------------------------
+
+    def test_index_level_loc_to_iloc_a(self):
+
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        with self.assertRaises(KeyError):
+            level0.loc_to_iloc('a')
+
+
+    def test_index_level_loc_to_iloc_b(self):
+        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+        with self.assertRaises(KeyError):
+            level0.loc_to_iloc(HLoc['c',])
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_level_append_a(self) -> None:
 
