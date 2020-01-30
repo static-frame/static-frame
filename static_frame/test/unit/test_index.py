@@ -44,6 +44,7 @@ class TestUnit(TestCase):
             idx1.__dict__ #pylint: disable=W0104
 
 
+    #---------------------------------------------------------------------------
     def test_index_init_a(self) -> None:
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
         idx2 = Index(idx1)
@@ -82,6 +83,20 @@ class TestUnit(TestCase):
         # cannot extract the value once converted to float
         self.assertEqual(idx.loc[idx.values[1]], 36028797018963969)
 
+    def test_index_init_f(self) -> None:
+
+        labels = np.arange(3)
+        mapping = {x:x for x in range(3)}
+
+        with self.assertRaises(RuntimeError):
+            _ = Index._extract_labels(
+                    mapping=mapping,
+                    labels=labels,
+                    dtype=float
+                    )
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_loc_to_iloc_a(self) -> None:
 
