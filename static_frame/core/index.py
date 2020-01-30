@@ -203,7 +203,6 @@ class LocMap:
             # if not different type, keep it the same so as to do a direct, single element selection
 
         # handles only lists and arrays; break out comparisons to avoid multiple
-        # if isinstance(key, KEY_ITERABLE_TYPES):
         is_array = isinstance(key, np.ndarray)
         is_list = isinstance(key, list)
 

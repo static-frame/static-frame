@@ -790,20 +790,25 @@ class IndexHierarchy(IndexBase):
         '''
         from static_frame.core.series import Series
 
+        # NOTE: this implementation is different from Index.loc_to_iloc: here, we explicitly translate Series, Index, and IndexHierarchy before passing on to IndexLevels
+
         if isinstance(key, Index):
             # if an Index, we simply use the values of the index
             key = key.values
 
         if isinstance(key, IndexHierarchy):
-            return [self._levels.leaf_loc_to_iloc(tuple(k)) for k in key.values]
+            # default iteration of IH is as tuple
+            return [self._levels.leaf_loc_to_iloc(k) for k in key]
 
         if isinstance(key, Series):
             if key.dtype == bool:
+                # if a Boolean series, sort and reindex
                 if _requires_reindex(key.index, self):
                     key = key.reindex(self, fill_value=False).values
                 else: # the index is equal
                     key = key.values
             else:
+                # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
                 key = key.values
 
         # if an HLoc, will pass on to loc_to_iloc
@@ -826,11 +831,12 @@ class IndexHierarchy(IndexBase):
             # we assume Booleans have been normalized to integers here
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
-        else: # select a single label value: NOTE: covnert to tuple
+        else: # select a single label value: NOTE: convert array to tuple
             values = self._labels[key]
             if values.ndim == 1:
                 return tuple(values)
-            labels = (values,)
+            raise NotImplementedError(
+                    'unhandled key type extracted a 2D array from labels') #pragma: no cover
 
         return self.__class__.from_labels(labels=labels, name=self._name)
 
@@ -878,7 +884,11 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        if issubclass(other.__class__, Index):
+        if isinstance(other, Index):
+            # if this is a 1D index, must rotate labels before using an operator
+            other = other.values.reshape((len(other), 1)) # operate on labels to labels
+        elif isinstance(other, IndexHierarchy):
+            # already 2D
             other = other.values # operate on labels to labels
 
         if operator.__name__ == 'matmul':
