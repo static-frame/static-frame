@@ -431,17 +431,17 @@ def terminal_ansi(stream: tp.TextIO = sys.stdout) -> bool:
     '''
     environ = os.environ
     if 'ANSICON' in environ or 'PYCHARM_HOSTED' in environ:
-        return True
+        return True #pragma: no cover
     if 'TERM' in environ and environ['TERM'] == 'ANSI':
-        return True
+        return True #pragma: no cover
     if 'INSIDE_EMACS' in environ:
-        return False
+        return False #pragma: no cover
 
     if getattr(stream, 'closed', False): # if has closed attr and closed
-        return False
+        return False #pragma: no cover
 
     if hasattr(stream, 'isatty') and stream.isatty() and platform.system() != 'Windows':
-        return True
+        return True #pragma: no cover
 
     return False
 

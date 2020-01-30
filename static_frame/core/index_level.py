@@ -479,7 +479,7 @@ class IndexLevelGO(IndexLevel):
                 node = node.targets[-1]
 
         if depth_not_found == -1:
-            raise RuntimeError('unable to set depth_not_found')
+            raise RuntimeError('unable to set depth_not_found') #pragma: no cover
 
         level_previous = None
 

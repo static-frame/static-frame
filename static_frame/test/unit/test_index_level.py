@@ -285,6 +285,28 @@ class TestUnit(TestCase):
                 lvl0.get_labels().tolist(),
                 [['I', 'A', 'x'], ['I', 'A', 'y'], ['I', 'B', 'x'], ['I', 'B', 'y'], ['II', 'A', 'x'], ['II', 'A', 'y'], ['II', 'B', 'x'], ['II', 'B', 'y'], ['II', 'B', 'z'], ['II', 'C', 'a'], ['III', 'A', 'a']])
 
+    def test_index_level_append_b(self) -> None:
+
+        groups = IndexGO(('A', 'B'))
+        observations = IndexGO(('x', 'y'))
+        lvl2a = IndexLevelGO(index=observations)
+        lvl2b = IndexLevelGO(index=observations, offset=2)
+        lvl2_targets = ArrayGO((lvl2a, lvl2b))
+        lvl1a = IndexLevelGO(index=groups,
+                targets=lvl2_targets,
+                offset=0)
+
+        with self.assertRaises(RuntimeError):
+            lvl1a.append((1, 2, 3))
+
+        lvl1a.append((1, 2))
+        self.assertEqual(lvl1a.get_labels().tolist(),
+                [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y'], [1, 2]])
+
+
+
+    #---------------------------------------------------------------------------
+
 
 
     def test_index_level_iter_a(self) -> None:
