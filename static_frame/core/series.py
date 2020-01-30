@@ -967,7 +967,7 @@ class Series(ContainerOperand):
                 # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
                 result = np.full(len(values), result)
             else:
-                raise RuntimeError('unexpected branch from non-array result of operator application to array')
+                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
 
         result.flags.writeable = False
         return self.__class__(result, index=index)

@@ -398,6 +398,14 @@ class TestUnit(TestCase):
         self.assertEqual(post, 12)
 
 
+
+    def test_series_binary_operator_j(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(NotImplementedError):
+            _ = s1 + np.arange(4).reshape((2, 2))
+
+
+
     #---------------------------------------------------------------------------
 
 
