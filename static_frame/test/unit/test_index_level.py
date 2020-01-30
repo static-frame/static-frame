@@ -51,7 +51,7 @@ class TestUnit(TestCase):
 
     def test_index_level_b(self) -> None:
         with self.assertRaises(ErrorInitIndexLevel):
-            _ = IndexLevel(('A', 'B'))
+            _ = IndexLevel(('A', 'B')) #type: ignore
 
 
     def test_index_level_dtypes_all_a(self) -> None:
@@ -183,7 +183,7 @@ class TestUnit(TestCase):
 
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         self.assertEqual(level0.leaf_loc_to_iloc(('b',)), 1)
-        self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1)
+        self.assertEqual(level0.leaf_loc_to_iloc(ILoc[1]), 1) #type: ignore
 
 
     def test_index_level_leaf_loc_to_iloc_c(self) -> None:
@@ -217,14 +217,14 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_index_level_loc_to_iloc_a(self):
+    def test_index_level_loc_to_iloc_a(self) -> None:
 
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         with self.assertRaises(KeyError):
             level0.loc_to_iloc('a')
 
 
-    def test_index_level_loc_to_iloc_b(self):
+    def test_index_level_loc_to_iloc_b(self) -> None:
         level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
         with self.assertRaises(KeyError):
             level0.loc_to_iloc(HLoc['c',])
