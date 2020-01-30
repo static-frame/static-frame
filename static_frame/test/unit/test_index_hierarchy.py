@@ -150,22 +150,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy((3,))  # type: ignore
 
-    #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_labels_a(self) -> None:
-
-        labels = (
-                ('I', 'A', 1),
-                ('II', 'B', 1),
-                ('II', 'A', 1),
-                ('II', 'A', 2),
-                ('II', 'A', 3),
-                ('I', 'B', 1),
-                )
-        with self.assertRaises(RuntimeError):
-            ih1 = IndexHierarchy.from_labels(labels,
-                    reorder_for_hierarchy=True,
-                    continuation_token='')
 
     #---------------------------------------------------------------------------
 
@@ -381,7 +366,7 @@ class TestUnit(TestCase):
 
         # selection with Boolean and non-Bolean Series
         a1 = ih1.loc_to_iloc(Series((True, True), index=(labels[1], labels[4])))
-        self.assertEqual(a1.tolist(), [False, True, False, False,  True, False])
+        self.assertEqual(a1.tolist(), [False, True, False, False, True, False]) #type: ignore
 
         a2 = ih1.loc_to_iloc(Series((labels[5], labels[2], labels[4])))
         self.assertEqual(a2, [5, 2, 4])
@@ -402,11 +387,10 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
 
         ih2 = ih1._extract_iloc(None) # will get a copy
-        self.assertTrue((ih1.values == ih2.values).all())
+        self.assertTrue((ih1.values == ih2.values).all()) #type: ignore
 
         ih3 = ih1._extract_iloc(slice(None)) # will get a copy
-        self.assertTrue((ih1.values == ih3.values).all())
-
+        self.assertTrue((ih1.values == ih3.values).all()) #type: ignore
         # reduces to a tuple
         ih4 = ih1._extract_iloc(3)
         self.assertEqual(ih4, ('II', 'A', 2))
@@ -605,6 +589,22 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_labels(labels1, reorder_for_hierarchy=True)
         self.assertEqual(ih2.shape, (8, 3))
         self.assertEqual(ih2.iloc[-1], ('I', 'B', 2))
+
+
+    def test_hierarchy_from_labels_h(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('II', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'A', 3),
+                ('I', 'B', 1),
+                )
+        with self.assertRaises(RuntimeError):
+            ih1 = IndexHierarchy.from_labels(labels,
+                    reorder_for_hierarchy=True,
+                    continuation_token='')
 
     #---------------------------------------------------------------------------
 
