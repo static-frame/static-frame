@@ -13,6 +13,7 @@ from static_frame import IndexHierarchy
 from static_frame import Series
 # from static_frame import Frame
 from static_frame import IndexYear
+from static_frame import Frame
 
 # from static_frame import HLoc
 from static_frame import ILoc
@@ -96,6 +97,13 @@ class TestUnit(TestCase):
                     labels=labels,
                     dtype=float
                     )
+
+    def test_index_init_g(self) -> None:
+        index = Index(Frame(np.arange(6).reshape((2, 3))))
+        self.assertEqual(
+                index.values.tolist(),
+                [(0, 1, 2), (3, 4, 5)]
+                )
 
 
     #---------------------------------------------------------------------------

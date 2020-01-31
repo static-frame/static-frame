@@ -414,8 +414,8 @@ class Index(IndexBase):
             dtype_extract = self._DTYPE # set in some specialized Index classes
         else: # passed dtype is not None
             if self._DTYPE is not None and dtype != self._DTYPE:
-                raise ErrorInitIndex('invalid dtype argument for this Index',
-                        dtype, self._DTYPE)
+                # NOTE: should never get to this branch, as derived Index classes that set _DTYPE remove dtype from __init__
+                raise ErrorInitIndex('invalid dtype argument for this Index', dtype, self._DTYPE) #pragma: no cover
             # self._DTYPE is None, passed dtype is not None, use dtype
             dtype_extract = dtype
 

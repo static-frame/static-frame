@@ -42,6 +42,7 @@ from static_frame.core.exception import LocInvalid
 
 class TestUnit(TestCase):
 
+
     def test_index_datetime_go_config(self) -> None:
 
         for base, base_go in (
@@ -59,6 +60,9 @@ class TestUnit(TestCase):
             self.assertEqual(base_go.STATIC, False)
             self.assertEqual(len(base.__slots__), len(_INDEX_SLOTS))
             self.assertEqual(len(base_go.__slots__), len(_INDEX_GO_SLOTS))
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_date_a(self) -> None:
 
