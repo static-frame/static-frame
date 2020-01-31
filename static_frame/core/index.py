@@ -821,7 +821,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    # NOTE: we intentionally exclude keys() and items() from Index classes, as they return inconsistent result when thought of as a dictionary
+    # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
 
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
@@ -855,11 +855,11 @@ class Index(IndexBase):
     #     '''
     #     return self._map.items()
 
-    def get(self, key, default=None):
-        '''
-        Return the value found at the index key, else the default if the key is not found.
-        '''
-        return self._map.get(key, default)
+    # def get(self, key, default=None):
+    #     '''
+    #     Return the value found at the index key, else the default if the key is not found.
+    #     '''
+    #     return self._map.get(key, default)
 
     #---------------------------------------------------------------------------
     # utility functions
@@ -902,12 +902,12 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # export
 
-    def to_series(self):
+    def to_series(self) -> 'Series':
         '''Return a Series with values from this Index's labels.
         '''
         # not sure if index should be self here
         from static_frame import Series
-        return Series(self.values, index=None)
+        return Series(self.values, index=None, name=self._name)
 
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarhcy with an added root level.

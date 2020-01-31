@@ -1520,12 +1520,12 @@ class TestUnit(TestCase):
                 self.assertEqual(index_new.loc[tuple(v)], index.loc[tuple(v)])
 
 
-    def test_index_hierarchy_get_a(self) -> None:
+    # def test_index_hierarchy_get_a(self) -> None:
 
-        ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
-        self.assertEqual(ih1.get((20, 3)), 2)
-        self.assertEqual(ih1.get((20, 7)), 3)
-        self.assertEqual(ih1.get((20, 200)), None)
+    #     ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
+    #     self.assertEqual(ih1.get((20, 3)), 2)
+    #     self.assertEqual(ih1.get((20, 7)), 3)
+    #     self.assertEqual(ih1.get((20, 200)), None)
 
 
     def test_index_hierarchy_sort_a(self) -> None:

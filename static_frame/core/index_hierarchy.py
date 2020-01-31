@@ -933,7 +933,8 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    # NOTE: we intentionally exclude keys() and items() from Index classes, as they return inconsistent result when thought of as a dictionary
+    # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
+
 
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''Iterate over labels.
@@ -959,14 +960,14 @@ class IndexHierarchy(IndexBase):
         return self._levels.__contains__(value)
 
 
-    def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
-        '''
-        Return the value found at the index key, else the default if the key is not found.
-        '''
-        try:
-            return self._levels.leaf_loc_to_iloc(key)
-        except KeyError:
-            return default
+    # def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
+    #     '''
+    #     Return the value found at the index key, else the default if the key is not found.
+    #     '''
+    #     try:
+    #         return self._levels.leaf_loc_to_iloc(key)
+    #     except KeyError:
+    #         return default
 
     #---------------------------------------------------------------------------
     # utility functions

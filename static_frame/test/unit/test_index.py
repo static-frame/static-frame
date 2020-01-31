@@ -20,6 +20,8 @@ from static_frame import ILoc
 
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _requires_reindex
+from static_frame.core.index import _index_initializer_needs_init
+
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.index import PositionsAllocator
 from static_frame.core.util import mloc
@@ -39,7 +41,7 @@ class TestUnit(TestCase):
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
 
         with self.assertRaises(AttributeError):
-            idx1.g = 30 # type: ignore #pylint: disable=E0237
+            idx1.g = 30 #type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             idx1.__dict__ #pylint: disable=W0104
 
@@ -302,6 +304,7 @@ class TestUnit(TestCase):
                 [False, True, True]
                 )
 
+    #---------------------------------------------------------------------------
 
     def test_index_contains_a(self) -> None:
 
@@ -309,6 +312,7 @@ class TestUnit(TestCase):
         self.assertTrue('a' in index)
         self.assertTrue('d' not in index)
 
+    #---------------------------------------------------------------------------
 
     def test_index_go_a(self) -> None:
 
@@ -342,6 +346,15 @@ class TestUnit(TestCase):
         self.assertFalse(index.STATIC)
         self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
         self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
+
+    def test_index_go_c(self) -> None:
+
+        index = IndexGO(('a', (2, 5), 'c'))
+        with self.assertRaises(KeyError):
+            index.append((2, 5))
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_index_sort_a(self) -> None:
@@ -576,6 +589,18 @@ class TestUnit(TestCase):
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd', 'x'])
 
+    #---------------------------------------------------------------------------
+    def test_index_to_series_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
+        s1 = idx1.to_series()
+        self.assertFalse(s1.values.flags.writeable)
+        self.assertEqual(s1.to_pairs(),
+                ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_to_pandas_a(self) -> None:
 
@@ -592,6 +617,8 @@ class TestUnit(TestCase):
         self.assertEqual(pdidx.name, idx1.name)
         self.assertTrue((pdidx.values == idx1.values).all())
         self.assertTrue(pdidx[1].__class__ == pandas.Timestamp)
+
+    #---------------------------------------------------------------------------
 
 
     def test_index_from_pandas_a(self) -> None:
@@ -727,8 +754,20 @@ class TestUnit(TestCase):
         idx1 = Index((3, 10, 50))
         self.assertEqual(idx1.astype(float).values.dtype, np.dtype(float))
 
+    #---------------------------------------------------------------------------
+
+    def test_index_initializer_needs_init(self) -> None:
+        self.assertEqual(_index_initializer_needs_init(None), False)
+        self.assertEqual(_index_initializer_needs_init(Index((1, 2))), False)
+
+        self.assertEqual(_index_initializer_needs_init(np.arange(0)), False)
+        self.assertEqual(_index_initializer_needs_init(np.arange(3)), True)
+
+        self.assertEqual(_index_initializer_needs_init(()), False)
+        self.assertEqual(_index_initializer_needs_init((3, 5)), True)
 
 
 
 if __name__ == '__main__':
     unittest.main()
+
