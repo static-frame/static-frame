@@ -64,9 +64,9 @@ class TestUnit(TestCase):
         with temp_file('.json') as fp:
 
             dc1 = DisplayConfig()
-            dc1.write(fp)
+            dc1.write(fp) #type: ignore
 
-            dc2 = DisplayConfig.from_file(fp)
+            dc2 = DisplayConfig.from_file(fp) #type: ignore
             self.assertTrue(dc1.to_dict() == dc2.to_dict())
 
     def test_display_config_e(self) -> None:
@@ -83,8 +83,8 @@ class TestUnit(TestCase):
         fp1 = DisplayActive._default_fp()
 
         with temp_file('.json') as fp2:
-            DisplayActive.write(fp2)
-            DisplayActive.read(fp2)
+            DisplayActive.write(fp2) #type: ignore
+            DisplayActive.read(fp2) #type: ignore
 
 
     #---------------------------------------------------------------------------
