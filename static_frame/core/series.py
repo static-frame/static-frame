@@ -64,7 +64,7 @@ from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.index import Index
 
-from static_frame.core.index_hierarchy import HLoc
+# from static_frame.core.index_hierarchy import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
 
@@ -851,7 +851,7 @@ class Series(ContainerOperand):
         '''
         sel = isna_array(array)
 
-        if not len(sel):
+        if not np.any(sel):
             return array
 
         sided_index = 0 if sided_leading else -1
@@ -1154,12 +1154,12 @@ class Series(ContainerOperand):
         values = self.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            if isinstance(key, HLoc) and key.has_key_multiple():
-                # must return a Series, even though we do not have an array
-                values = np.array(values)
-                values.flags.writeable = False
-            else:
-                return values
+            # NOTE: this branch is not encountered and may not be necessary
+            # if isinstance(key, HLoc) and key.has_key_multiple():
+            #     # must return a Series, even though we do not have an array
+            #     values = np.array(values)
+            #     values.flags.writeable = False
+            return values
 
         return self.__class__(values,
                 index=self._index.iloc[iloc_key],
@@ -1778,8 +1778,8 @@ class Series(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
-            import webbrowser
-            webbrowser.open_new_tab(fp)
+            import webbrowser #pragma: no cover
+            webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
 
 

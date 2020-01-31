@@ -4092,7 +4092,7 @@ class TestUnit(TestCase):
                 ('score', np.dtype('float16')),
                 ('color', np.dtype('<U5'))))
 
-    @skip_win  # type: ignore
+    @skip_win  #type: ignore
     def test_frame_from_csv_i(self) -> None:
         s1 = StringIO('1,2,3\n4,5,6')
 

@@ -677,6 +677,14 @@ class TestUnit(TestCase):
         self.assertEqual(s4.fillna_leading('b').to_pairs(),
                 (('a', 'b'), ('b', 'b'), ('c', 'b'), ('d', 'b')))
 
+
+    def test_series_fillna_leading_b(self) -> None:
+
+        s1 = Series((3.2, 6.4), index=('a', 'b',))
+        s2 = s1.fillna_leading(0)
+        self.assertTrue(s1.to_pairs() == s2.to_pairs())
+
+
     def test_series_fillna_trailing_a(self) -> None:
 
         s1 = Series((234.3, 3.2, np.nan, np.nan), index=('a', 'b', 'c', 'd'))
@@ -1144,6 +1152,18 @@ class TestUnit(TestCase):
         self.assertEqual(s1.loc[sf.HLoc['B', 1]], 2)
         self.assertEqual(s1.iloc[2], 2)
 
+
+    def test_series_loc_extract_f(self) -> None:
+        s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
+
+        post1 = s1[HLoc['A', [2]]]
+        self.assertEqual(post1.to_pairs(), ((('A', 2), 1),))
+
+        post2 = s1[HLoc['A', 2]]
+        self.assertEqual(post2, 1)
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:
 
@@ -1798,10 +1818,14 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_clip_c(self) -> None:
+        s1 = Series(range(6), index=list('abcdef'))
+
+        with self.assertRaises(RuntimeError):
+            _ = s1.clip(lower=(2, 5))
+
 
     #---------------------------------------------------------------------------
-
-
     def test_series_pickle_a(self) -> None:
         s1 = Series(range(6), index=list('abcdef'))
         s2 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
@@ -1816,6 +1840,8 @@ class TestUnit(TestCase):
                 self.assertFalse(series_new.values.flags.writeable)
                 self.assertEqual(series_new.loc[v], series.loc[v])
 
+
+    #---------------------------------------------------------------------------
 
     def test_series_drop_loc_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
@@ -1833,6 +1859,13 @@ class TestUnit(TestCase):
                 (('c', 0), ('d', -1)))
 
 
+    def test_series_drop_loc_b(self) -> None:
+        s1 = Series((2, 3, 0, -1), index=list('abcd'))
+        s2 = s1._drop_iloc((s1 < 1).values)
+        self.assertEqual(s2.to_pairs(), (('a', 2), ('b', 3)))
+
+
+
     def test_series_drop_iloc_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
 
@@ -1846,6 +1879,8 @@ class TestUnit(TestCase):
                 (('b', 3), ('c', 0), ('e', 8), ('f', 6)))
 
 
+
+    #---------------------------------------------------------------------------
 
     def test_series_head_a(self) -> None:
         s1 = Series(range(100), index=reversed(range(100)))
@@ -1890,9 +1925,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.roll(-2, include_index=True).to_pairs(),
             (('c', 0), ('d', -1), ('e', 8), ('f', 6), ('a', 2), ('b', 3))
             )
-
-        # import ipdb; ipdb.set_trace()
-
 
 
     def test_series_shift_a(self) -> None:
