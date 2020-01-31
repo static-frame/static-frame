@@ -21,8 +21,12 @@ from static_frame import Display
 from static_frame import DisplayConfig
 from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
+from static_frame import DisplayActive
 
+from static_frame.core.display import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
+
+from static_frame.test.test_case import temp_file
 
 
 nan = np.nan
@@ -55,6 +59,35 @@ class TestUnit(TestCase):
         msg = config_right.to_json()
 
 
+    def test_display_config_d(self) -> None:
+
+        with temp_file('.json') as fp:
+
+            dc1 = DisplayConfig()
+            dc1.write(fp)
+
+            dc2 = DisplayConfig.from_file(fp)
+            self.assertTrue(dc1.to_dict() == dc2.to_dict())
+
+    def test_display_config_e(self) -> None:
+
+        dc1 = DisplayConfig()
+        self.assertTrue(str(dc1).startswith('<DisplayConfig'))
+
+
+    #---------------------------------------------------------------------------
+
+    @skip_win  # type: ignore
+    def test_display_active_a(self) -> None:
+
+        fp1 = DisplayActive._default_fp()
+
+        with temp_file('.json') as fp2:
+            DisplayActive.write(fp2)
+            DisplayActive.read(fp2)
+
+
+    #---------------------------------------------------------------------------
 
     def test_display_cell_align_left_a(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
@@ -601,6 +634,15 @@ class TestUnit(TestCase):
         f = Frame.from_element(None, index=range(40), columns=range(20))
         self.assertEqual(len(f.display_tall().to_rows()), 44)
         self.assertEqual(len(f.display_wide().to_rows()), 37)
+
+
+    #---------------------------------------------------------------------------
+    def test_display_format_latex_a(self) -> None:
+
+        post = DisplayFormatLaTeX.markup_outermost('x', identifier='foo')
+        self.assertEqual(post,
+            '''\\begin{table}[ht]\n\\centering\nx\n\\label{table:foo}\n\\end{table}'''
+            )
 
 
     #---------------------------------------------------------------------------
