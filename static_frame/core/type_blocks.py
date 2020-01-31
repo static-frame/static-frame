@@ -280,7 +280,7 @@ class TypeBlocks(ContainerOperand):
         return a
 
 
-    @property # type: ignore
+    @property #type: ignore
     @doc_inject()
     def mloc(self) -> np.ndarray:
         '''{doc_array}

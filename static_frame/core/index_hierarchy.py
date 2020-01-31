@@ -1103,20 +1103,19 @@ class IndexHierarchy(IndexBase):
         elif count > 0:
             level = self._levels.to_index_level()
             for _ in range(count):
-                if level.targets is None:
-                    # we should already have a copy
-                    return level.index
-                else:
-                    targets = []
-                    labels = []
-                    for target in level.targets:
-                        labels.extend(target.index)
-                        if target.targets is not None:
-                            targets.extend(target.targets)
-                    index = level.index.__class__(labels)
-                    if not targets:
-                        return index
-                    level = level.__class__(index=index, targets=targets)
+                # NOTE: do not need this check as we look ahead, below
+                # if level.targets is None:
+                #     return level.index
+                targets = []
+                labels = []
+                for target in level.targets:
+                    labels.extend(target.index)
+                    if target.targets is not None:
+                        targets.extend(target.targets)
+                index = level.index.__class__(labels)
+                if not targets:
+                    return index
+                level = level.__class__(index=index, targets=targets)
             return self.__class__(level, name=self._name)
         else:
             raise NotImplementedError('no handling for a 0 count drop level.')

@@ -1189,6 +1189,26 @@ class TestUnit(TestCase):
                 [0, 1, 2, 3])
 
 
+    def test_hierarchy_add_level_b(self) -> None:
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih1.append(('III', 'A'))
+        ih2 = ih1.add_level('x')
+
+        self.assertEqual(ih1.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
+
+        self.assertEqual(ih2.values.tolist(),
+                [['x', 'I', 'A'], ['x', 'I', 'B'], ['x', 'II', 'A'], ['x', 'II', 'B'], ['x', 'III', 'A']])
+
+    #
 
     def test_hierarchy_drop_level_a(self) -> None:
 
@@ -1251,6 +1271,32 @@ class TestUnit(TestCase):
         self.assertEqual(ih.drop_level(1).values.tolist(),
                 [1, 2, 3, 4])
 
+
+    def test_hierarchy_drop_level_e(self) -> None:
+
+        ih = IndexHierarchy.from_product(('a',), (1,), ('x', 'y'))
+        self.assertEqual(ih.drop_level(2).values.tolist(),
+                ['x', 'y'])
+
+        self.assertEqual(ih.drop_level(1).values.tolist(),
+                [[1, 'x'], [1, 'y']])
+
+
+    def test_hierarchy_drop_level_f(self) -> None:
+
+        ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
+        self.assertEqual(ih.drop_level(1).values.tolist(),
+                [[1, 'x']])
+
+    def test_hierarchy_drop_level_g(self) -> None:
+
+        ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
+        with self.assertRaises(NotImplementedError):
+            _ = ih.drop_level(0)
+
+
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_boolean_loc(self) -> None:
         records = (
@@ -1427,8 +1473,21 @@ class TestUnit(TestCase):
             [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
             )
 
+    #---------------------------------------------------------------------------
 
-    def test_hierarchy_cumprod_a(self) -> None:
+    def test_hierarchy_ufunc_axis_skipna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((10, 20), (3.1, np.nan))
+
+        self.assertAlmostEqualValues(
+                ih1.sum(axis=1, skipna=False).tolist(),
+                [13.1, np.nan, 23.1, np.nan])
+        self.assertAlmostEqualValues(
+                ih1.sum(axis=0, skipna=False).tolist(),
+                [60.0, np.nan]
+                )
+
+    def test_hierarchy_ufunc_axis_skipna_b(self) -> None:
 
         ih1 = IndexHierarchy.from_product((10, 20), (3, 7))
 
@@ -1440,6 +1499,9 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.cumprod().tolist(),
                 [[10, 3], [100, 21], [2000, 63], [40000, 441]]
                 )
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_hierarchy_pickle_a(self) -> None:
 
