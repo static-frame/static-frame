@@ -1172,6 +1172,65 @@ class TestUnit(TestCase):
         a1 = ih1 == ih2
         self.assertEqual(a1.tolist(), [[True, True, True], [True, True, True]])
 
+
+    def test_hierarchy_binary_operators_f(self) -> None:
+
+        a1 = np.arange(25).reshape(5,5)
+        a2 = np.arange(start=24, stop=-1, step=-1).reshape(5,5)
+
+        f1_idx_labels = [
+                ['i_I', 1, 'i'],
+                ['i_I', 2, 'i'],
+                ['i_I', 3, 'i'],
+                ['i_II', 1, 'i'],
+                ['i_II', 3, 'i']]
+
+        f2_idx_labels = [
+                ['i_II', 2, 'i'],
+                ['i_II', 1, 'i'],
+                ['i_I', 3, 'i'],
+                ['i_I', 1, 'i'],
+                ['i_I', 4, 'i']]
+
+        f1 = Frame(a1, index=IndexHierarchy.from_labels(f1_idx_labels))
+        f2 = Frame(a2, index=IndexHierarchy.from_labels(f2_idx_labels))
+        int_index = f1.index.intersection(f2.index)
+
+        post = f1.reindex(int_index).index == f2.reindex(int_index).index
+        self.assertEqual(post.tolist(),
+                [[True, True, True], [True, True, True], [True, True, True]])
+
+
+
+    def test_hierarchy_binary_operators_g(self) -> None:
+
+        a1 = np.arange(25).reshape(5,5)
+        a2 = np.arange(start=24, stop=-1, step=-1).reshape(5,5)
+        f1_idx_labels = [
+                ['i_I', 'i'],
+                ['i_I', 2],
+                ['i_I', 'iii'],
+                ['i_II', 'i'],
+                ['i_III', 'ii']]
+
+        f2_idx_labels = [
+                ['i_IV', 'i'],
+                ['i_II', 'ii'],
+                ['i_I', 2],
+                ['i_I', 'ii'],
+                ['i_I', 'iii']]
+
+        f1 = Frame(a1, index=IndexHierarchy.from_labels(f1_idx_labels)) #type: ignore
+        f2 = Frame(a2, index=IndexHierarchy.from_labels(f2_idx_labels)) #type: ignore
+        int_index = f1.index.intersection(f2.index)
+
+        post = f1.reindex(int_index).index == f2.reindex(int_index).index
+        self.assertEqual(post.tolist(),
+                [[True, True], [True, True]]
+                )
+
+
+
     #---------------------------------------------------------------------------
     def test_hierarchy_flat_a(self) -> None:
 
