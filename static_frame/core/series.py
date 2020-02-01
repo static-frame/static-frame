@@ -316,8 +316,6 @@ class Series(ContainerOperand):
         if own_index and index is None:
             raise ErrorInitSeries('cannot own_index if no index is provided.')
 
-        # index_empty = index_constructor_empty(index)
-
         #-----------------------------------------------------------------------
         # values assignment
 

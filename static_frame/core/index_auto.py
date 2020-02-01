@@ -8,6 +8,7 @@ from static_frame.core.index import Index
 # from static_frame.core.index_hierarchy import IndexHierarchy
 
 from static_frame.core.index import IndexGO
+from static_frame.core.index import PositionsAllocator
 
 from static_frame.core.util import IndexConstructor
 
@@ -66,7 +67,8 @@ class IndexAutoFactory:
             explicit_constructor: tp.Optional[IndexConstructor] = None,
             ) -> 'IndexBase':
 
-        labels = range(initializer)
+        # get an immutable array, shared from positions allocator
+        labels = PositionsAllocator.get(initializer)
 
         if explicit_constructor:
             return explicit_constructor(labels)

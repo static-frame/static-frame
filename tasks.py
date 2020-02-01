@@ -22,6 +22,15 @@ def doc(context):
     context.run(f'{sys.executable} doc/doc_build.py')
 
 
+@invoke.task
+def performance(context):
+    '''Run mypy static analysis
+    '''
+    # NOTE: we do not get to see incremental output when running this
+    cmd = 'python static_frame/performance/main.py --performance "*"'
+    context.run(cmd)
+
+
 #-------------------------------------------------------------------------------
 
 @invoke.task
