@@ -1154,6 +1154,24 @@ class TestUnit(TestCase):
         a2 = ih1.values.tolist() @ ih2 # force rmatmul
         self.assertEqual(a1.tolist(), a2.tolist())
 
+
+    def test_hierarchy_binary_operators_e(self) -> None:
+
+        labels = (
+                (1, 1, 1),
+                (2, 2, 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                (1, 1, 1),
+                (2, 2, 2),
+                )
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        a1 = ih1 == ih2
+        self.assertEqual(a1.tolist(), [[True, True, True], [True, True, True]])
+
     #---------------------------------------------------------------------------
     def test_hierarchy_flat_a(self) -> None:
 
