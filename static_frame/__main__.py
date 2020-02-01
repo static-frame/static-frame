@@ -13,34 +13,28 @@ import numpy as np
 
 import static_frame as sf
 
-
 imports = {'np': np, 'sf': sf}
 
-
-try:  # Import pandas, if it's installed:
+try: # Import pandas, if it's installed:
     import pandas as pd
-except ImportError:
-    pass
+except ImportError: #pragma: no cover
+    pass #pragma: no cover
 else:
     imports['pd'] = pd
 
 
 commands = sorted(
-        f'import {package.__name__} as {name}  # {package.__version__}'
+        f'import {package.__name__} as {name} # {package.__version__}'
         for name, package in imports.items()
-)
+        )
 
-
-try:  # This lets us play nicely with IPython:
-
+try: # This lets us play nicely with IPython:
     from builtins import __IPYTHON__  #type: ignore
-
     from IPython import embed
     from IPython import get_ipython
 
 except ImportError:
     is_ipython = False
-
 else:
     is_ipython = __IPYTHON__
 
@@ -51,19 +45,15 @@ if __name__ == '__main__':
 
         ipython = get_ipython()
 
-        print()  # Spacer.
-
+        print() # Spacer.
         for command in commands:
             ipython.auto_rewrite_input(command)
-
-        print()  # Spacer.
+        print() # Spacer.
 
         embed(user_ns=imports, colors='neutral')
 
     else:
-
         banner = f'Python {version} on {platform}\n' + '\n'.join(
                 f'>>> {command}' for command in commands
-        )
-
+                )
         interact(banner=banner, local=imports, exitmsg='')
