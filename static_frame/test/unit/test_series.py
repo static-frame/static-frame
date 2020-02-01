@@ -1939,21 +1939,21 @@ class TestUnit(TestCase):
                 )
 
         # import ipdb; ipdb.set_trace()
-        self.assertEqual(s1.shift(4, None).to_pairs(),
+        self.assertEqual(s1.shift(4, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', 2), ('f', 3))
                 )
 
-        self.assertEqual(s1.shift(-4, None).to_pairs(),
+        self.assertEqual(s1.shift(-4, fill_value=None).to_pairs(),
                 (('a', 8), ('b', 6), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
         self.assertEqual(
-                s1.shift(6, None).to_pairs(),
+                s1.shift(6, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
         self.assertEqual(
-                s1.shift(-6, None).to_pairs(),
+                s1.shift(-6, fill_value=None).to_pairs(),
                 (('a', None), ('b', None), ('c', None), ('d', None), ('e', None), ('f', None))
                 )
 
