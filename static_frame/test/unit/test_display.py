@@ -183,7 +183,7 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win  # type: ignore
+    @skip_win #type: ignore
     def test_display_cell_fill_width_a(self) -> None:
 
         config_width_12 = sf.DisplayConfig.from_default(cell_max_width=12, cell_max_width_leftmost=12, type_color=False)

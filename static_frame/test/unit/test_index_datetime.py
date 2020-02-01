@@ -6,7 +6,7 @@ import datetime
 # import typing as tp
 # from io import StringIO
 
-# from static_frame import Index
+from static_frame import Index
 # from static_frame import IndexGO
 from static_frame import IndexDate
 from static_frame import IndexDateGO
@@ -521,6 +521,26 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx1.loc['2018-01'].values.tolist(),
                 [datetime.datetime(2018, 1, 1, 3, 30), datetime.datetime(2018, 1, 1, 3, 45)])
+
+
+    #---------------------------------------------------------------------------
+
+    def test_index_datetime_binary_operator_a(self) -> None:
+        index = IndexDateGO.from_date_range('2018-03-12', '2018-03-15')
+        index.append('2018-03-16')
+
+        self.assertEqual((index + 2).tolist(),
+                [datetime.date(2018, 3, 14), datetime.date(2018, 3, 15), datetime.date(2018, 3, 16), datetime.date(2018, 3, 17), datetime.date(2018, 3, 18)])
+
+        with self.assertRaises(NotImplementedError):
+            _ = index @ []
+
+
+    def test_index_datetime_binary_operator_b(self) -> None:
+        index = IndexDateGO.from_date_range('2018-03-12', '2018-03-14')
+        a1 = index + Index((1, 2, 3))
+        self.assertEqual(a1.tolist(),
+                [datetime.date(2018, 3, 13), datetime.date(2018, 3, 15), datetime.date(2018, 3, 17)])
 
 
 if __name__ == '__main__':

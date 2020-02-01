@@ -6920,7 +6920,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc[0, 0], 'a')
         self.assertEqual(f2.loc[sf.ILoc[0], 0], 'a')
 
-    @skip_win
+    @skip_win #type: ignore
     def test_frame_unset_index_f(self) -> None:
         records = (
                 (2, 2),
