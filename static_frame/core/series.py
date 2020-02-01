@@ -1457,7 +1457,10 @@ class Series(ContainerOperand):
         return self.__class__(array, index=self._index, name=self._name)
 
     @doc_inject(class_name='Series')
-    def clip(self, lower=None, upper=None):
+    def clip(self, *,
+            lower=None,
+            upper=None
+            ):
         '''{}
 
         Args:
@@ -1490,7 +1493,7 @@ class Series(ContainerOperand):
         return self.transpose()
 
 
-    def duplicated(self,
+    def duplicated(self, *,
             exclude_first=False,
             exclude_last=False) -> np.ndarray:
         '''
@@ -1502,7 +1505,7 @@ class Series(ContainerOperand):
         duplicates.flags.writeable = False
         return self.__class__(duplicates, index=self._index)
 
-    def drop_duplicated(self,
+    def drop_duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False
             ) -> 'Series':
@@ -1531,6 +1534,7 @@ class Series(ContainerOperand):
 
     def roll(self,
             shift: int,
+            *,
             include_index: bool = False) -> 'Series':
         '''Return a Series with values rotated forward and wrapped around the index (with a postive shift) or backward and wrapped around the index (with a negative shift).
 
@@ -1563,6 +1567,7 @@ class Series(ContainerOperand):
 
     def shift(self,
             shift: int,
+            *,
             fill_value=np.nan) -> 'Series':
         '''Return a Series with values shifted forward on the index (with a postive shift) or backward on the index (with a negative shift).
 

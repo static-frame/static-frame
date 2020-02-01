@@ -3,6 +3,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.5.13
+----------
+
+Made ``Frame.clip``, ``Frame.duplicated``, ``Frame.drop_duplicated`` key-word argument only. Made ``Series.clip``, ``Series.duplicated``, ``Series.drop_duplicated`` key-word argument only.
+
+
 0.5.12
 ----------
 
