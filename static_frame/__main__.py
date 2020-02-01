@@ -12,6 +12,7 @@ from sys import version
 import numpy as np
 
 import static_frame as sf
+from static_frame.core.display_color import HexColor
 
 imports = {'np': np, 'sf': sf}
 
@@ -21,7 +22,6 @@ except ImportError: #pragma: no cover
     pass #pragma: no cover
 else:
     imports['pd'] = pd
-
 
 commands = sorted(
         f'import {package.__name__} as {name} # {package.__version__}'
@@ -42,7 +42,6 @@ else:
 if __name__ == '__main__':
 
     if is_ipython:
-
         ipython = get_ipython()
 
         print() # Spacer.
@@ -56,4 +55,4 @@ if __name__ == '__main__':
         banner = f'Python {version} on {platform}\n' + '\n'.join(
                 f'>>> {command}' for command in commands
                 )
-        interact(banner=banner, local=imports, exitmsg='')
+        interact(banner=HexColor.format_terminal(0x505050, banner), local=imports, exitmsg='')
