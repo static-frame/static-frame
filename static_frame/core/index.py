@@ -255,14 +255,14 @@ def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
 class PositionsAllocator:
 
     _size: int = 0
-    _array: np.ndarray = np.arange(_size)
+    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
     _array.flags.writeable = False
 
     @classmethod
     def get(cls, size: int) -> np.ndarray:
         if size > cls._size:
             cls._size = size * 2
-            cls._array = np.arange(cls._size)
+            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
             cls._array.flags.writeable = False
         # slices of immutable arrays are immutable
         return cls._array[:size]
