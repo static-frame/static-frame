@@ -773,7 +773,7 @@ class TestUnit(TestCase):
     def test_index_intersection_d(self) -> None:
         idx1 = Index((10, 20))
         with self.assertRaises(NotImplementedError):
-            idx2 = idx1.intersection('b')
+            idx2 = idx1.intersection('b') #type: ignore
 
     #---------------------------------------------------------------------------
 

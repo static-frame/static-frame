@@ -20,6 +20,7 @@ from static_frame.core.container import ContainerOperand
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
 
 
 I = tp.TypeVar('I', bound='IndexBase')
@@ -267,7 +268,7 @@ class IndexBase(ContainerOperand):
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: 'IndexBase'
+            other: tp.Union['IndexBase', 'Series']
             ) -> I:
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
@@ -298,7 +299,7 @@ class IndexBase(ContainerOperand):
         return cls.from_labels(labels)
 
 
-    def intersection(self: I, other: 'IndexBase') -> I:
+    def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
         '''
         Perform intersection with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
