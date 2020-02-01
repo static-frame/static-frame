@@ -1410,6 +1410,12 @@ class TestUnit(TestCase):
         self.assertEqual(f.loc['b':].index.name, 'index') # type: ignore
 
 
+    def test_frame_loc_g(self) -> None:
+        f = Frame.from_dict(dict(a=[None], b=[1]))
+        self.assertEqual(f.shape, (1, 2))
+        post = f.loc[f['a'] == True]
+        self.assertEqual(post.shape, (0, 2))
+
     #---------------------------------------------------------------------------
 
     def test_frame_items_a(self) -> None:

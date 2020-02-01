@@ -1526,17 +1526,17 @@ class TypeBlocks(ContainerOperand):
                 single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
-            # an iterable of index integers is expected here
-            single_row = True
         elif isinstance(row_key, slice):
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._shape[0]))) == 1:
                 single_row = True
         elif isinstance(row_key, np.ndarray) and row_key.dtype == bool:
-            # TODO: need fastest way to find if there is more than one boolean
+            # must check this case before general iterables, below
             if row_key.sum() == 1:
                 single_row = True
+        elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
+            # an iterable of index integers is expected here
+            single_row = True
 
         # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
         for block_idx, slc in self._key_to_block_slices(column_key): # slow from line profiler
@@ -1616,7 +1616,8 @@ class TypeBlocks(ContainerOperand):
 
     def _extract(self,
             row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None) -> tp.Union['TypeBlocks', np.ndarray]: # but sometimes an element
+            column_key: GetItemKeyType = None
+            ) -> tp.Union['TypeBlocks', np.ndarray]: # but sometimes an element
         '''
         Return a TypeBlocks after performing row and column selection using iloc selection.
 
