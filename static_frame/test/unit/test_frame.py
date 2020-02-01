@@ -1030,6 +1030,18 @@ class TestUnit(TestCase):
         self.assertEqual(f.columns.shape, (1, 2))
 
 
+    def test_frame_setitem_i(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 50, 'b', True))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r', 's'),
+                index=('x','y'))
+
+        with self.assertRaises(RuntimeError):
+            f1['t'] = [1, 2, 4]
 
 
     #---------------------------------------------------------------------------
@@ -4359,6 +4371,30 @@ class TestUnit(TestCase):
                     ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan']
                     )
 
+    @skip_win # type: ignore
+    def test_frame_to_delimited_b(self) -> None:
+
+        records = (
+                (2, None),
+                (3, np.nan),
+                (0, False),
+                (3, 'x')
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's'),
+                index=IndexHierarchy.from_product((1, 2), ('a', 'b')))
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_delimited(fp, delimiter='|', store_filter=None)
+            f = open(fp)
+            lines = f.readlines()
+            self.assertEqual(lines, [
+                    '__index0__|__index1__|r|s\n',
+                    '1|a|2|None\n',
+                    '1|b|3|nan\n',
+                    '2|a|0|False\n',
+                    '2|b|3|x'
+                    ])
 
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
@@ -4923,13 +4959,27 @@ class TestUnit(TestCase):
                 (('a', False), ('b', False)))
 
 
-    def test_frame_duplicated_b(self) -> None:
+    #---------------------------------------------------------------------------
+
+    def test_frame_drop_duplicated_a(self) -> None:
 
         a1 = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         f1 = Frame(a1, index=('a', 'b'), columns=('p', 'q', 'r', 's','t'))
 
         self.assertEqual(f1.drop_duplicated(axis=1, exclude_first=True).to_pairs(1),
                 (('a', (('p', 50), ('r', 32), ('s', 17))), ('b', (('p', 2), ('r', 1), ('s', 3)))))
+
+
+    def test_frame_drop_duplicated_b(self) -> None:
+
+        a1 = np.arange(6).reshape((2, 3))
+        f1 = Frame(a1, index=('a', 'b'), columns=('p', 'q', 'r'))
+        f2 = f1.drop_duplicated(axis=0)
+        self.assertEqualFrames(f1, f2)
+
+        with self.assertRaises(NotImplementedError):
+            _ = f1.drop_duplicated(axis=-1)
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_concat_a(self) -> None:
@@ -6064,7 +6114,7 @@ class TestUnit(TestCase):
         )
 
 
-    def frame_to_frame_go_d(self) -> None:
+    def test_frame_to_frame_go_d(self) -> None:
 
         f1 = FrameGO(columns=('a', 'b'))
         with self.assertRaises(ErrorInitFrame):
@@ -6479,7 +6529,7 @@ class TestUnit(TestCase):
 
         s2 = Series((3, 33, 80), index=('x', 'y', 'z'))
 
-        self.assertEqual(f1.clip(s2, axis=0).to_pairs(0),
+        self.assertEqual(f1.clip(lower=s2, axis=0).to_pairs(0),
             (('a', (('x', 3), ('y', 33), ('z', 80))), ('b', (('x', 3), ('y', 34), ('z', 95)))))
 
 
@@ -6534,7 +6584,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b'),
                 index=('x', 'y', 'z')
                 )
-        f2 = f1.clip(20, 31)
+        f2 = f1.clip(lower=20, upper=31)
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 20), ('y', 30), ('z', 22))), ('b', (('x', 20), ('y', 31), ('z', 31)))))
 
@@ -6870,7 +6920,17 @@ class TestUnit(TestCase):
         self.assertEqual(f2.loc[0, 0], 'a')
         self.assertEqual(f2.loc[sf.ILoc[0], 0], 'a')
 
-
+    def test_frame_unset_index_f(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                )
+        f2 = f1.unset_index(names=('index',), consolidate_blocks=True)
+        self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3)])
 
 
     #---------------------------------------------------------------------------
@@ -7114,6 +7174,31 @@ class TestUnit(TestCase):
         self.assertEqual(post1.to_pairs(0),
                 ((None, (('far', 1), (20, 9))), ('down', (('far', 5), (20, 13))))
                 )
+
+
+
+    def test_frame_pivot_m(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+
+        f2 = f1.unset_index()
+        post1 = f2.pivot('z', 'y', 'a', func=np.sum)
+        self.assertEqual(post1.to_pairs(0),
+            ((None, (('far', 1), (20, 9))), ('down', (('far', 5), (20, 13))))
+            )
+
+        with self.assertRaises(ErrorInitFrame):
+            # no fields remain to populate data.
+            _ = f2[['z', 'y']].pivot('z', 'y')
+
+        with self.assertRaises(ErrorInitFrame):
+            # cannot create a pivot Frame from a field (q) that is not a column
+            _ = f2.pivot('q')
 
 
     #---------------------------------------------------------------------------

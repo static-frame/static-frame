@@ -3650,7 +3650,7 @@ class Frame(ContainerOperand):
         return self.__class__(array, columns=self._columns, index=self._index)
 
     @doc_inject(class_name='Frame')
-    def clip(self,
+    def clip(self, *,
             lower=None,
             upper=None,
             axis: tp.Optional[int] = None):
@@ -3717,7 +3717,7 @@ class Frame(ContainerOperand):
         return self.transpose()
 
 
-    def duplicated(self,
+    def duplicated(self, *,
             axis=0,
             exclude_first=False,
             exclude_last=False) -> 'Series':
@@ -3734,7 +3734,7 @@ class Frame(ContainerOperand):
             return Series(duplicates, index=self._index)
         return Series(duplicates, index=self._columns)
 
-    def drop_duplicated(self,
+    def drop_duplicated(self, *,
             axis=0,
             exclude_first: bool = False,
             exclude_last: bool = False
@@ -3749,16 +3749,33 @@ class Frame(ContainerOperand):
                 exclude_last=exclude_last)
 
         if not duplicates.any():
-            return self
+            return self.__class__(
+                    self._blocks.copy(),
+                    index=self._index,
+                    columns=self._columns,
+                    own_data=True,
+                    own_index=True,
+                    name=self._name)
 
         keep = ~duplicates
+
         if axis == 0: # return rows with index indexed
-            return self.__class__(self.values[keep],
+            return self.__class__(
+                    self.values[keep],
                     index=self._index[keep],
-                    columns=self._columns)
-        return self.__class__(self.values[:, keep],
-                index=self._index,
-                columns=self._columns[keep])
+                    columns=self._columns,
+                    own_index=True,
+                    name=self._name
+                    )
+        elif axis == 1:
+            return self.__class__(
+                    self.values[:, keep],
+                    index=self._index,
+                    columns=self._columns[keep],
+                    own_index=True,
+                    name=self._name
+                    )
+        # invalid axis will raise in array_to_duplicated
 
     def set_index(self,
             column: GetItemKeyType,
@@ -4470,8 +4487,8 @@ class Frame(ContainerOperand):
                     f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
-        except:
-            raise
+        except: #pragma: no cover
+            raise #pragma: no cover
         finally:
             if is_file:
                 f.close()
