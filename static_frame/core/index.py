@@ -609,7 +609,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def copy(self) -> 'Index':
+    def copy(self: I) -> I:
         '''
         Return a new Index.
         '''
@@ -618,7 +618,7 @@ class Index(IndexBase):
             self._update_array_cache()
         return self.__class__(labels=self, name=self._name)
 
-    def relabel(self, mapper: CallableOrMapping) -> 'Index':
+    def relabel(self: I, mapper: CallableOrMapping) -> I:
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -784,7 +784,7 @@ class Index(IndexBase):
             if isinstance(result, BOOL_TYPES):
                 result = np.full(len(self._labels), result)
             else:
-                raise RuntimeError('unexpected branch from non-array result of operator application to array')
+                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
 
         result.flags.writeable = False
         return result
