@@ -130,6 +130,7 @@ class IndexBase(ContainerOperand):
         from static_frame import Index
         from static_frame import IndexGO
         from static_frame import IndexDate
+        from static_frame import IndexDateGO
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
 
@@ -141,7 +142,7 @@ class IndexBase(ContainerOperand):
             return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
             if not is_static:
-                raise NotImplementedError('No grow-only version of IndexDate yet exists')
+                return IndexDateGO(value, name=value.name)
             return IndexDate(value, name=value.name)
 
         if not is_static:

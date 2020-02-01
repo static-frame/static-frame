@@ -58,6 +58,7 @@ from static_frame.core.display import Display
 from static_frame.core.container import ContainerOperand
 
 from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.exception import AxisInvalid
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -962,7 +963,6 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield (idx, slice(0, b.shape[1]))
 
-    # @profile
     def _key_to_block_slices(self,
             key: GetItemKeyTypeCompound,
             retain_key_order: bool = True
@@ -1233,7 +1233,7 @@ class TypeBlocks(ContainerOperand):
         # index is columns here
         if wrap and index_start_pos == 0 and row_start_pos == 0:
             yield from self._blocks
-        if not wrap and column_shift == 0 and row_shift == 0:
+        elif not wrap and column_shift == 0 and row_shift == 0:
             yield from self._blocks
         else:
             block_start_idx, block_start_column = self._index[index_start_pos]
@@ -2314,7 +2314,7 @@ class TypeBlocks(ContainerOperand):
                     limit=limit
                     ))
 
-        raise NotImplementedError(f'no support for axis {axis}')
+        raise AxisInvalid(f'no support for axis {axis}')
 
 
     def fillna_backward(self,
@@ -2337,7 +2337,7 @@ class TypeBlocks(ContainerOperand):
                     )))
             return self.from_blocks(blocks)
 
-        raise NotImplementedError(f'no support for axis {axis}')
+        raise AxisInvalid(f'no support for axis {axis}')
 
 
 

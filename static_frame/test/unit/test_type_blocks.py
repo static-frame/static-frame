@@ -22,7 +22,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
 from static_frame.core.exception import ErrorInitTypeBlocks
-
+from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
 
@@ -184,10 +184,22 @@ class TestUnit(TestCase):
             [(1, slice(0, 1, None)), (1, slice(2, 3, None)), (2, slice(0, 1, None))]
             )
 
+    #---------------------------------------------------------------------------
+
+    def test_type_blocks_key_to_block_slices_a(self) -> None:
+        a1 = np.array([1, 2, -1])
+        a2 = np.array([[False, True], [True, True], [False, True]])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        self.assertEqual(list(tb1._key_to_block_slices(None)),
+                [(0, slice(0, 1, None)), (1, slice(0, 2, None))]
+                )
+
+        with self.assertRaises(NotImplementedError):
+            list(tb1._key_to_block_slices('a'))
 
 
-
-
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_extract_a(self) -> None:
 
@@ -645,6 +657,7 @@ class TestUnit(TestCase):
                 [  0. ,   0. ,   2. ,   0. ,   0.1]])
 
 
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_extend_a(self) -> None:
         a1 = np.array([1, 2, 3])
@@ -667,7 +680,17 @@ class TestUnit(TestCase):
                 match_dtype=object,
                 )
 
+    def test_type_blocks_extend_b(self) -> None:
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
 
+        tb2 = TypeBlocks.from_blocks(np.array([3, 4]))
+
+        with self.assertRaises(RuntimeError):
+            tb1.extend(tb2)
+
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_mask_blocks_a(self) -> None:
 
@@ -1642,6 +1665,7 @@ class TestUnit(TestCase):
             tb1.fillna_leading(value=3, axis=2)
 
 
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_fillna_forward_a(self) -> None:
 
@@ -1653,6 +1677,7 @@ class TestUnit(TestCase):
 
                 post2 = tb.fillna_backward(axis=axis)
                 self.assertEqual(tb.shape, post2.shape)
+
 
 
     def test_type_blocks_fillna_forward_b(self) -> None:
@@ -1859,6 +1884,22 @@ class TestUnit(TestCase):
                 tb1.fillna_backward(axis=1, limit=2).values.tolist(),
                 [[543, 3, 3, 3, None, None, 10, 10, 10, None], [601, None, 4, 4, 4, 23, 23, 88, 88, None], [234, 3, 3, None, None, None, 40, 40, 40, None]])
 
+
+
+    def test_type_blocks_fillna_forward_j(self) -> None:
+
+
+        a2 = np.array([None, None, None])
+        a3 = np.array([543, 601, 234])
+        tb1 = TypeBlocks.from_blocks((a3, a2,))
+
+        with self.assertRaises(AxisInvalid):
+            tb1.fillna_forward(axis=3)
+
+        with self.assertRaises(AxisInvalid):
+            tb1.fillna_backward(axis=3)
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_from_none_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -2200,6 +2241,7 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
     def test_type_blocks_roll_blocks_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, -1, 6], [0, 0, 1]], dtype=object)
@@ -2258,7 +2300,30 @@ class TestUnit(TestCase):
                 match_dtype=object
                 )
 
+    def test_type_blocks_roll_blocks_c(self) -> None:
 
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        self.assertEqual(
+                TypeBlocks.from_blocks(tb1._shift_blocks(0, 0, True)).values.tolist(),
+                [[1, 'a', 'b'], [2, 'c', 'd'], [3, 'oe', 'od']]
+                )
+
+    def test_type_blocks_roll_blocks_d(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        self.assertEqual(
+                TypeBlocks.from_blocks(tb1._shift_blocks(0, 0, False)).values.tolist(),
+                [[1, 'a', 'b'], [2, 'c', 'd'], [3, 'oe', 'od']]
+                )
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_from_blocks_a(self) -> None:
 
         a1 = np.full((3, 0), False)

@@ -9,6 +9,7 @@ from io import StringIO
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import IndexDate
+from static_frame import IndexDateGO
 from static_frame import IndexHierarchy
 from static_frame import Series
 # from static_frame import Frame
@@ -695,6 +696,15 @@ class TestUnit(TestCase):
         self.assertEqual(idx.values.tolist(),
                 [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)])
 
+    def test_index_from_pandas_c(self) -> None:
+        import pandas
+
+        pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
+        idx = IndexDateGO.from_pandas(pdidx)
+        self.assertEqual(idx.values.tolist(),
+                [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)]
+                )
+
     #---------------------------------------------------------------------------
     def test_index_iter_a(self) -> None:
 
@@ -754,9 +764,18 @@ class TestUnit(TestCase):
                 ['c', 'b', 'a']
                 )
 
+    def test_index_intersection_c(self) -> None:
+        idx1 = Index((10, 20))
+        idx2 = idx1.intersection(Series([20, 30]))
+        self.assertEqual(idx2.values.tolist(), [20])
 
-    # TODO; add test for hierarchical index
 
+    def test_index_intersection_d(self) -> None:
+        idx1 = Index((10, 20))
+        with self.assertRaises(NotImplementedError):
+            idx2 = idx1.intersection('b')
+
+    #---------------------------------------------------------------------------
 
     def test_index_union_a(self) -> None:
 
@@ -840,6 +859,13 @@ class TestUnit(TestCase):
 
         idx2 = IndexGO(())
         self.assertFalse(bool(idx2))
+
+    def test_index_bool_b(self) -> None:
+
+        idx1 = IndexGO(())
+        self.assertFalse(bool(idx1))
+        idx1.append('a')
+        self.assertTrue(bool(idx1))
 
     def test_index_astype_a(self) -> None:
 
