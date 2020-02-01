@@ -1626,8 +1626,6 @@ class TypeBlocks(ContainerOperand):
             slices: one or more contiguous selections
             iterable of integers: one or more non-contiguous and/or repeated selections
 
-        Note: Boolean-based selection is not (yet?) implemented here, but instead will be implemented at the `loc` level. This might imply that Boolean selection is only available with `loc`.
-
         Returns:
             TypeBlocks, or a single element if both are coordinats
         '''
