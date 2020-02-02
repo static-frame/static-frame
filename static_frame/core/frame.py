@@ -3497,8 +3497,8 @@ class Frame(ContainerOperand):
     def _iter_element_iloc_items(self):
         yield from self._blocks.element_items()
 
-    def _iter_element_iloc(self):
-        yield from (x for _, x in self._iter_element_iloc_items())
+    # def _iter_element_iloc(self):
+    #     yield from (x for _, x in self._iter_element_iloc_items())
 
     def _iter_element_loc_items(self) -> tp.Iterator[
             tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
