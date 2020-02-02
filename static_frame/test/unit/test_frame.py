@@ -6499,8 +6499,7 @@ class TestUnit(TestCase):
             # this results in an index of size 2 being created, as we dro the leves with a postive depth; next support negative depth?
             f2 = f1.relabel_drop_level(index=-1)
 
-
-
+    #---------------------------------------------------------------------------
 
     def test_frame_clip_a(self) -> None:
 
@@ -6616,6 +6615,30 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 2), ('y', 30), ('z', 22))), ('b', (('x', 2), ('y', 34), ('z', 95))))
                 )
+
+
+    def test_frame_clip_g(self) -> None:
+
+        records = (
+                (2, 2),
+                (30, 34),
+                (22, 95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.clip(upper=Series((1, 10), index=('b', 'c')))
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.clip(upper=(3, 4))
+
+
+        f2 = f1.clip(upper=Series((1, 10), index=('b', 'c')), axis=1)
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 2.0), ('y', 30.0), ('z', 22.0))), ('b', (('x', 1.0), ('y', 1.0), ('z', 1.0)))))
 
 
     #---------------------------------------------------------------------------
