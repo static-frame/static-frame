@@ -719,12 +719,13 @@ class TypeBlocks(ContainerOperand):
             group_source = self._extract_array(column_key=key)
             if group_source.ndim > 1:
                 unique_axis = 0
-
         elif axis == 1:
             # axis 1 means we return column groups; key is a row key
             group_source = self._extract_array(row_key=key)
             if group_source.ndim > 1 and group_source.shape[0] > 1:
                 unique_axis = 1
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         groups, locations = array_to_groups_and_locations(
                 group_source,

@@ -1220,7 +1220,6 @@ class TestUnit(TestCase):
 
         f2 = FrameGO(index=('w', 'x', 'y', 'z'))
 
-        # import ipdb; ipdb.set_trace()
         f1.extend(f2)
         self.assertEqual(f1.shape, (3, 5)) # extension happens, but no change in shape
 
@@ -2217,6 +2216,10 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
+        with self.assertRaises(AxisInvalid):
+            post = tuple(f1._axis_group_iloc_items(4, axis=-1))
+
+
         post = tuple(f1._axis_group_iloc_items(4, axis=0)) # row iter, group by column 4
 
         group1, group_frame_1 = post[0]
@@ -2538,6 +2541,23 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_cumsum_b(self) -> None:
+
+        records = (
+                (2, 2, 3),
+                (30, 34, 60),
+                (2, np.nan, 1),
+                (30, np.nan, 50),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        f2 = f1.cumsum(skipna=False)
+
+        self.assertEqual(f1.cumsum(skipna=False, axis=1).fillna(None).to_pairs(0),
+                (('p', (('w', 2.0), ('x', 30.0), ('y', 2.0), ('z', 30.0))), ('q', (('w', 4.0), ('x', 64.0), ('y', None), ('z', None))), ('r', (('w', 7.0), ('x', 124.0), ('y', None), ('z', None))))
+                )
 
     def test_frame_cumprod_a(self) -> None:
 
@@ -3159,6 +3179,10 @@ class TestUnit(TestCase):
         f = Frame.from_records(
                 records, columns=columns, index=index,name='foo')
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        with self.assertRaises(AxisInvalid):
+            _ = f.iter_group('s', axis=-1).apply(lambda x: x.shape)
+
         post = f.iter_group('s').apply(lambda x: x.shape)
         self.assertEqual(post.to_pairs(),
                 ((False, (2, 3)), (True, (2, 3)))
@@ -3302,6 +3326,7 @@ class TestUnit(TestCase):
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
 
+    #---------------------------------------------------------------------------
     def test_frame_iter_group_index_a(self) -> None:
 
         records = (
@@ -3366,6 +3391,9 @@ class TestUnit(TestCase):
         f = Frame.from_records(
                 records, columns=columns, index=index,name='foo')
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
+
+        with self.assertRaises(AxisInvalid):
+            _ = f.iter_group_index_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
 
         post = f.iter_group_index_items(0).apply(lambda k, x: f'{k}:{x.size}')
 
@@ -6238,7 +6266,6 @@ class TestUnit(TestCase):
                 )
 
         f = Frame.from_records(labels)
-        # import ipdb; ipdb.set_trace()
         f = f.astype[[0, 1]](int)
 
 

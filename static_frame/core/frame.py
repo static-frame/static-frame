@@ -3289,7 +3289,10 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # grouping methods naturally return their "index" as the group element
 
-    def _axis_group_iloc_items(self, key, *, axis):
+    def _axis_group_iloc_items(self,
+            key,
+            *,
+            axis: int):
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
 
@@ -3309,12 +3312,12 @@ class Frame(ContainerOperand):
                         own_columns=True,
                         own_data=True)
             else:
-                raise NotImplementedError()
+                raise AxisInvalid(f'invalid axis: {axis}') #pragma: no cover (already caught above)
 
     def _axis_group_sort_items(self,
             key,
             iloc_key,
-            axis
+            axis: int
             ) -> tp.Generator[tp.Tuple[tp.Hashable, 'Frame'], None, None]:
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
@@ -3363,7 +3366,7 @@ class Frame(ContainerOperand):
         elif axis == 1: # column iterator, selecting rows for group by
             iloc_key = self._index.loc_to_iloc(key)
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         # Optimized sorting approach is only supported in a limited number of cases
         if (self.columns.depth == 1 and
@@ -3396,7 +3399,7 @@ class Frame(ContainerOperand):
         elif axis == 1: # maintain index, group by columns
             ref_index = self._columns
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         values = ref_index.values_at_depth(depth_level)
         group_to_tuple = values.ndim > 1
@@ -3424,8 +3427,6 @@ class Frame(ContainerOperand):
                         own_index=True,
                         own_columns=True,
                         own_data=True)
-            else:
-                raise NotImplementedError()
 
     def _axis_group_index(self,
             depth_level: DepthLevelSpecifier = 0,
