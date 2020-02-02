@@ -4981,6 +4981,17 @@ class TestUnit(TestCase):
             _ = f1.drop_duplicated(axis=-1)
 
 
+    def test_frame_drop_duplicated_c(self) -> None:
+        f1 = Frame.from_records(
+                [[1, 2], [1, 2], [3, 3]],
+                index=('a', 'b', 'c'),
+                columns=('p', 'q'))
+        f2 = f1.drop_duplicated(axis=0)
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('c', 3),)), ('q', (('c', 3),)))
+                )
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_concat_a(self) -> None:
         records = (

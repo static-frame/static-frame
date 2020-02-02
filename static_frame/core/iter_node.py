@@ -113,7 +113,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting key, value pairs.
 
-        {args}
+        Args:
+            {mapping}
         '''
         get = getattr(mapping, 'get')
         func: AnyCallable = lambda k: get(k, k)
@@ -129,7 +130,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting values.
 
-        {args}
+        Args:
+            {mapping}
         '''
         yield from (v for _, v in self.map_any_iter_items(mapping))
 
@@ -142,7 +144,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} Returns a new container.
 
-        {args}
+        Args:
+            {mapping}
             {dtype}
         '''
         return self._apply_constructor(
@@ -160,7 +163,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting key, value pairs.
 
-        {args}
+        Args:
+            {mapping}
+            {fill_value}
         '''
         get = getattr(mapping, 'get')
         func: AnyCallable = lambda k: get(k, fill_value)
@@ -178,7 +183,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting values.
 
-        {args}
+        Args:
+            {mapping}
+            {fill_value}
         '''
         yield from (v for _, v in self.map_fill_iter_items(mapping, fill_value=fill_value))
 
@@ -192,7 +199,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} Returns a new container.
 
-        {args}
+        Args:
+            {mapping}
+            {fill_value}
             {dtype}
         '''
         return self._apply_constructor(
@@ -207,7 +216,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting key, value pairs.
 
-        {args}
+        Args:
+            {mapping}
         '''
         func = getattr(mapping, '__getitem__')
         if self._yield_type is IterNodeType.VALUES:
@@ -222,7 +232,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting values.
 
-        {args}
+        Args:
+            {mapping}
         '''
         yield from (v for _, v in self.map_all_iter_items(mapping=mapping))
 
@@ -235,7 +246,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} Returns a new container.
 
-        {args}
+        Args:
+            {mapping}
             {dtype}
         '''
         return self._apply_constructor(
@@ -250,7 +262,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting key, value pairs.
 
-        {args}
+        Args:
+            {func}
         '''
         # depend on yield type, we determine what the passed in function expects to take
         if self._yield_type is IterNodeType.VALUES:
@@ -265,7 +278,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} A generator of resulting values.
 
-        {args}
+        Args:
+            {func}
         '''
         yield from (v for _, v in self.apply_iter_items(func=func))
 
@@ -278,7 +292,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         {doc} Returns a new container.
 
-        {args}
+        Args:
+            {func}
             {dtype}
         '''
         if not callable(func):

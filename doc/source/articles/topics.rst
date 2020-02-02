@@ -20,6 +20,7 @@ Beyond Pandas __repr__: Consistent, Configurable, & Modular Display in StaticFra
 Consistent naming, Pythonic API
 
     Constructors in Conventional Locations
+    the interface attribute
 
 Immutable Data: No need for defensive copies.
 

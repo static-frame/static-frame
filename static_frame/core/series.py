@@ -1490,12 +1490,16 @@ class Series(ContainerOperand):
     def T(self):
         return self.transpose()
 
-
+    @doc_inject(selector='duplicated')
     def duplicated(self, *,
             exclude_first=False,
             exclude_last=False) -> np.ndarray:
         '''
         Return a same-sized Boolean Series that shows True for all b values that are duplicated.
+
+        Args:
+            {exclude_first}
+            {exclude_last}
         '''
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
@@ -1503,12 +1507,17 @@ class Series(ContainerOperand):
         duplicates.flags.writeable = False
         return self.__class__(duplicates, index=self._index)
 
+    @doc_inject(selector='duplicated')
     def drop_duplicated(self, *,
             exclude_first: bool = False,
             exclude_last: bool = False
             ) -> 'Series':
         '''
         Return a Series with duplicated values removed.
+
+        Args:
+            {exclude_first}
+            {exclude_last}
         '''
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
@@ -1519,9 +1528,13 @@ class Series(ContainerOperand):
                 name=self._name
                 )
 
+    @doc_inject(select='astype')
     def astype(self, dtype: DtypeSpecifier) -> 'Series':
         '''
         Return a Series with type determined by `dtype` argument. Note that for Series, this is a simple function, whereas for ``Frame``, this is an interface exposing both a callable and a getitem interface.
+
+        Args:
+            {dtype}
         '''
         return self.__class__(
                 self.values.astype(dtype),

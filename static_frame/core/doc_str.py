@@ -21,7 +21,9 @@ LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of l
 
 ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
 
-DTYPE_SPECIFIER = '''A value suitable for speicfying a NumPy dtype.'''
+DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
+
+AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default.'''
 
 class DOC_TEMPLATE:
 
@@ -113,7 +115,7 @@ class DOC_TEMPLATE:
             labels: {INDEX_INITIALIZER}
             name: A hashable object to name the Index.
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            dtype: {DTYPE_SPECIFIER}'''
+            {DTYPE_SPECIFIER}'''
             )
 
     index_date_time_init = dict(
@@ -165,40 +167,38 @@ class DOC_TEMPLATE:
 
 
     map_any = dict(
-            doc = 'Apply a mapping; for values not in the mapping, the value is returned.',
-            args = '''
-        Args:
-            mapping: A mapping type, such as a dictionary or Series.
-            ''',
-            dtype = f'dtype: {DTYPE_SPECIFIER}'
+            doc='Apply a mapping; for values not in the mapping, the value is returned.',
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER,
             )
 
     map_fill = dict(
             doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
-            args = '''
-        Args:
-            mapping: A mapping type, such as a dictionary or Series.
-            fill_value: Value to be returned if the values is not a key in the mapping.
-            ''',
-            dtype = f'dtype: {DTYPE_SPECIFIER}'
+            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
+            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
+            dtype=DTYPE_SPECIFIER
             )
 
     map_all = dict(
             doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
-            args = '''
-        Args:
-            mapping: A mapping type, such as a dictionary or Series.
-            ''',
-            dtype = f'dtype: {DTYPE_SPECIFIER}'
+            mapping='mapping: A mapping type, such as a dictionary or Series.',
+            dtype=DTYPE_SPECIFIER
             )
 
     apply = dict(
-            doc = 'Apply a function to each value.',
-            args = '''
-        Args:
-            func: A function that takes a value.
-            ''',
-            dtype = f'dtype: {DTYPE_SPECIFIER}'
+            doc='Apply a function to each value.',
+            func='func: A function that takes a value.',
+            dtype=DTYPE_SPECIFIER
+            )
+
+    astype = dict(
+            dtype=DTYPE_SPECIFIER
+            )
+
+    duplicated = dict(
+            exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
+            exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
+            axis=AXIS,
             )
 
 

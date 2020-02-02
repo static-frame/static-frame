@@ -597,9 +597,13 @@ class IndexHierarchy(IndexBase):
     # NOTE: Index implements drop property
 
     @property
+    @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType:
         '''
         Retype one or more depths. Can be used as as function to retype the entire ``IndexHierarchy``; alternatively, a ``__getitem__`` interface permits retyping selected depths.
+
+        Args:
+            {dtype}
         '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 

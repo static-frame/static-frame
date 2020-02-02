@@ -2062,9 +2062,13 @@ class Frame(ContainerOperand):
             )
 
     @property
+    @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType:
         '''
         Retype one or more columns. Can be used as as function to retype the entire ``Frame``; alternatively, a ``__getitem__`` interface permits retyping selected columns.
+
+        Args:
+            {dtype}
         '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
@@ -3716,13 +3720,18 @@ class Frame(ContainerOperand):
         '''
         return self.transpose()
 
-
+    @doc_inject(selector='duplicated')
     def duplicated(self, *,
             axis=0,
             exclude_first=False,
             exclude_last=False) -> 'Series':
         '''
         Return an axis-sized Boolean Series that shows True for all rows (axis 0) or columns (axis 1) duplicated.
+
+        Args:
+            {axis}
+            {exclude_first}
+            {exclude_last}
         '''
         # TODO: might be able to do this witnout calling .values and passing in TypeBlocks, but TB needs to support roll
         duplicates = array_to_duplicated(self.values,
@@ -3734,13 +3743,19 @@ class Frame(ContainerOperand):
             return Series(duplicates, index=self._index)
         return Series(duplicates, index=self._columns)
 
+    @doc_inject(selector='duplicated')
     def drop_duplicated(self, *,
             axis=0,
             exclude_first: bool = False,
             exclude_last: bool = False
             ) -> 'Frame':
         '''
-        Return a Frame with duplicated values removed.
+        Return a Frame with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
+
+        Args:
+            {axis}
+            {exclude_first}
+            {exclude_last}
         '''
         # NOTE: can avoid calling .vaalues with extensions to TypeBlocks
         duplicates = array_to_duplicated(self.values,

@@ -530,9 +530,13 @@ class Index(IndexBase):
             )
 
 
+    @doc_inject(select='astype')
     def astype(self, dtype: DtypeSpecifier) -> 'Index':
         '''
         Return an Index with type determined by `dtype` argument. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
+
+        Args:
+            {dtype}
         '''
         return self.__class__(
                 self.values.astype(dtype),
