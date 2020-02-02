@@ -122,6 +122,12 @@ class TestUnit(TestCase):
         self.assertEqual(idx.loc_to_iloc('d'), 3)
 
 
+    def test_index_loc_to_iloc_b(self) -> None:
+        idx = Index(('a', 'b', 'c', 'd'))
+        post = idx.loc_to_iloc(Series(['b', 'c']))
+        self.assertEqual(post, [1, 2])
+
+    #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
         self.assertTrue(idx.mloc == idx[:2].mloc)

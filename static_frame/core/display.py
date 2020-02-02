@@ -788,7 +788,6 @@ class Display:
 
     @staticmethod
     def type_color_markup(
-            type_label: str,
             type_category: tp.Type[DisplayTypeCategory],
             config: DisplayConfig
             ) -> str:
@@ -825,7 +824,6 @@ class Display:
                     config=config)
             if config.type_color:
                 format_str = cls.type_color_markup(
-                        type_str_raw,
                         type_category,
                         config)
             else:

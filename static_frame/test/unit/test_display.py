@@ -5,7 +5,6 @@ import typing as tp
 import hashlib
 import json
 
-
 import numpy as np
 
 from static_frame.test.test_case import TestCase
@@ -25,7 +24,9 @@ from static_frame import DisplayActive
 
 from static_frame.core.display import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
-
+from static_frame.core.display import terminal_ansi
+from static_frame.core.display import DisplayTypeBool
+from static_frame.core.display import DisplayTypeInt
 from static_frame.test.test_case import temp_file
 
 
@@ -77,7 +78,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @skip_win  # type: ignore
+    @skip_win  #type: ignore
     def test_display_active_a(self) -> None:
 
         fp1 = DisplayActive._default_fp()
@@ -105,7 +106,7 @@ class TestUnit(TestCase):
 
 
 
-    @skip_win  # type: ignore
+    @skip_win  #type: ignore
     def test_display_cell_align_left_b(self) -> None:
         config_right = sf.DisplayConfig.from_default(cell_align_left=False, type_color=False)
         config_left = sf.DisplayConfig.from_default(cell_align_left=True, type_color=False)
@@ -643,6 +644,24 @@ class TestUnit(TestCase):
         self.assertEqual(post,
             '''\\begin{table}[ht]\n\\centering\nx\n\\label{table:foo}\n\\end{table}'''
             )
+
+
+    @skip_win #type: ignore
+    def test_display_type_color_markup_a(self) -> None:
+
+        config1 = DisplayConfig(display_format=DisplayFormats.TERMINAL)
+        post1 = Display.type_color_markup(DisplayTypeInt, config1)
+
+        if terminal_ansi():
+            self.assertEqual(post1, '\x1b[38;5;239m{}\x1b[0m')
+        else:
+            self.assertEqual(post1, '{}')
+
+        config2 = DisplayConfig(display_format=DisplayFormats.HTML_TABLE)
+        post2 = Display.type_color_markup(DisplayTypeInt, config2)
+        self.assertEqual(post2, '<span style="color: #505050">{}</span>')
+
+
 
 
     #---------------------------------------------------------------------------

@@ -76,7 +76,7 @@ class TestUnit(TestCase):
     def test_index_date_b(self) -> None:
 
         with self.assertRaises(Exception):
-            IndexDate([3,4,5], dtype=np.int64)  # type: ignore #pylint: disable=E1123
+            IndexDate([3,4,5], dtype=np.int64)  #type: ignore #pylint: disable=E1123
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
@@ -557,6 +557,13 @@ class TestUnit(TestCase):
                 datetime.date(2018, 3, 14),
                 datetime.date(2018, 3, 11)])
 
+
+    def test_index_datetime_to_pandas_a(self) -> None:
+
+        for cls in (IndexYear, IndexYearMonth):
+            index = cls.from_year_range('2010', '2018') #type: ignore
+            with self.assertRaises(NotImplementedError):
+                _ = index.to_pandas()
 
 
 if __name__ == '__main__':
