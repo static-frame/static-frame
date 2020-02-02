@@ -543,6 +543,22 @@ class TestUnit(TestCase):
                 [datetime.date(2018, 3, 13), datetime.date(2018, 3, 15), datetime.date(2018, 3, 17)])
 
 
+    #---------------------------------------------------------------------------
+    def test_index_datetime_append_a(self) -> None:
+        index = IndexDateGO.from_date_range('2018-03-12', '2018-03-14')
+        with self.assertRaises(KeyError):
+            index.append('2018-03-12')
+
+        index.append('2018-03-11')
+
+        self.assertEqual(index.values.tolist(),
+                [datetime.date(2018, 3, 12),
+                datetime.date(2018, 3, 13),
+                datetime.date(2018, 3, 14),
+                datetime.date(2018, 3, 11)])
+
+
+
 if __name__ == '__main__':
     unittest.main()
 
