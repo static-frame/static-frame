@@ -3618,7 +3618,7 @@ class Frame(ContainerOperand):
                         for key in iloc_keys]
                 order = np.lexsort(sort_array)
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'invalid axos: {axis}')
 
         if not ascending:
             order = order[::-1]

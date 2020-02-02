@@ -3499,6 +3499,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(f2.columns.__class__, IndexYearMonth)
 
+    #---------------------------------------------------------------------------
+
     def test_frame_sort_values_a(self) -> None:
         # reindex both axis
         records = (
@@ -3612,6 +3614,23 @@ class TestUnit(TestCase):
                      ('y', (('b', 3.1), ('c', False), ('a', 2))),
                      ('z', (('b', False), ('c', 3.4), ('a', 6))))
         self.assertEqual(expected2, f2_sorted.to_pairs(axis=1))
+
+
+    def test_frame_sort_values_f(self) -> None:
+        # Ensure index sorting works on internally homogenous frames
+        data = np.array([[3, 7, 3],
+                         [8, 1, 4],
+                         [2, 9, 6]])
+        f1 = sf.Frame(data, columns=tuple('abc'), index=tuple('xyz'))
+
+        with self.assertRaises(AxisInvalid):
+            _ = f1.sort_values(('x', 'z'), axis=-1)
+
+        f1_sorted = f1.sort_values(('x', 'z'), axis=0)
+        self.assertEqual(f1_sorted.to_pairs(0),
+                (('a', (('x', 3), ('y', 8), ('z', 2))), ('c', (('x', 3), ('y', 4), ('z', 6))), ('b', (('x', 7), ('y', 1), ('z', 9))))
+                )
+
 
 
     #---------------------------------------------------------------------------
