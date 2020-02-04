@@ -9,6 +9,7 @@ import invoke
 def clean(context):
     '''Clean doc and build artifacts
     '''
+    context.run('rm -rf htmlcov')
     context.run('rm -rf doc/build')
     context.run('rm -rf build')
     context.run('rm -rf dist')
@@ -48,6 +49,15 @@ def test(context, unit=False, filename=None):
     cmd = f'pytest -s --color no --disable-pytest-warnings --tb=native {fp}'
     print(cmd)
     context.run(cmd)
+
+
+@invoke.task
+def coverage(context):
+    cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
+    print(cmd)
+    context.run(cmd)
+    import webbrowser
+    webbrowser.open('htmlcov/index.html')
 
 
 @invoke.task

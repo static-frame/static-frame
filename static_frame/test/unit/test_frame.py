@@ -509,6 +509,17 @@ class TestUnit(TestCase):
                 (('a', ((0, 1), (1, 2))), ('b', ((0, 3), (1, 4))))
                 )
 
+    def test_frame_from_pandas_e(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=(3, 4)), index=('x', 'y'))
+        f = Frame.from_pandas(df, own_data=True, consolidate_blocks=True)
+        self.assertEqual(f.to_pairs(0),
+                (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))))
+
+        self.assertEqual(f._blocks.shapes.tolist(), [(2, 2)])
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
@@ -641,6 +652,74 @@ class TestUnit(TestCase):
                 )
         # String arrays will come in as objects
         self.assertEqualFrames(f1, f2, check_dtypes=False)
+
+
+    def test_frame_from_arrow_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+        at = f1.to_arrow()
+
+        f2 = Frame.from_arrow(at,
+                index_depth=f1.index.depth,
+                columns_depth=f1.columns.depth,
+                consolidate_blocks=True
+                )
+        self.assertEqual(f2._blocks.shapes.tolist(),
+                [(4, 2), (4,), (4,)])
+
+
+
+    def test_frame_from_arrow_c(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        f1 = Frame.from_records(records)
+        at = f1.to_arrow(include_index=False, include_columns=False)
+        f2 = Frame.from_arrow(at,
+                index_depth=0,
+                columns_depth=0,
+                consolidate_blocks=True
+                )
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1), (1, 30), (2, 54), (3, 65))), (1, ((0, 2), (1, 34), (2, 95), (3, 73))), (2, ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), (3, ((0, False), (1, True), (2, False), (3, True))))
+                )
+
+
+    def test_frame_from_arrow_d(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        f1 = Frame.from_records(records)
+        f1 = f1.set_index(0, drop=True)
+        at = f1.to_arrow(include_index=True, include_columns=False)
+        f2 = Frame.from_arrow(at,
+                index_depth=1,
+                columns_depth=0,
+                consolidate_blocks=True
+                )
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((1, 2), (30, 34), (54, 95), (65, 73))), (1, ((1, 'a'), (30, 'b'), (54, 'c'), (65, 'd'))), (2, ((1, False), (30, True), (54, False), (65, True))))
+                )
+
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_to_parquet_a(self) -> None:
         records = (
