@@ -15,18 +15,20 @@ Beyond Pandas __repr__: Consistent, Configurable, & Modular Display in StaticFra
 
 
 10 Reasons to Upgrade from Pandas to StaticFrame
-
+StaticFrame for Pandas Users
 
 Consistent naming, Pythonic API
 
     Constructors in Conventional Locations
     the interface attribute
+    Consuming generators
+
+Display types in color: Be aware of your types.
 
 Immutable Data: No need for defensive copies.
 
     Show case of mutating a passed in 2D array behind Pandas back
 
-Display types in color: Be aware of your types.
 
 Assignment is a function; assignment preserves types.
 
