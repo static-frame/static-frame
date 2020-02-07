@@ -9,6 +9,8 @@ What is New in Static Frame
 
 Made ``Frame.clip``, ``Frame.duplicated``, ``Frame.drop_duplicated`` key-word argument only. Made ``Series.clip``, ``Series.duplicated``, ``Series.drop_duplicated`` key-word argument only.
 
+``Frame.iter_series`` now sets the ``name`` attribute of the Series from the appropriate index.
+
 
 0.5.12
 ----------

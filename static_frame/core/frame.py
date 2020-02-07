@@ -3276,10 +3276,12 @@ class Frame(ContainerOperand):
         '''
         if axis == 1:
             index = self._columns.values
+            labels = self._index.values
         elif axis == 0:
             index = self._index
-        for axis_values in self._blocks.axis_values(axis):
-            yield Series(axis_values, index=index)
+            labels = self._columns.values
+        for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
+            yield Series(axis_values, index=index, name=label)
 
     def _axis_series_items(self, axis):
         keys = self._index if axis == 1 else self._columns
