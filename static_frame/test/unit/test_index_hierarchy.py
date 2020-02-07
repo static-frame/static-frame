@@ -1792,6 +1792,23 @@ class TestUnit(TestCase):
                 [np.dtype('float64'), np.dtype('float64')])
 
 
+    #---------------------------------------------------------------------------
+
+    def test_index_hierarchy_head_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        self.assertEqual(ih1.head().values.tolist(),
+            [[1, 'a', 2], [1, 'a', 5], [1, 'b', 2], [1, 'b', 5], [2, 'a', 2]]
+            )
+
+    def test_index_hierarchy_tail_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        self.assertEqual(ih1.tail().values.tolist(),
+            [[1, 'b', 5], [2, 'a', 2], [2, 'a', 5], [2, 'b', 2], [2, 'b', 5]]
+            )
 
 
 if __name__ == '__main__':

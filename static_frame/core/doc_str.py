@@ -103,9 +103,21 @@ class DOC_TEMPLATE:
             )
 
     relabel_drop_level = dict(
-            doc='''Return a new ``{class_name}``, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
+            doc='''Return a new :obj:`static_frame.{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
+            )
+
+    head = dict(
+            doc='''Return a :obj:`static_frame.{class_name}` consisting only of the top elements as specified by ``count``.
+            ''',
+            count='''count: Number of elements to be returned from the top of the :obj:`static_frame.{class_name}`''',
+            )
+
+    tail = dict(
+            doc='''Return a :obj:`static_frame.{class_name}` consisting only of the bottom elements as specified by ``count``.
+            ''',
+            count='''count: Number of elements to be returned from the bottom of the :obj:`static_frame.{class_name}`''',
             )
 
 

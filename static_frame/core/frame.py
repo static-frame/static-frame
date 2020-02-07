@@ -4009,13 +4009,21 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
+    @doc_inject(selector='head', class_name='Frame')
     def head(self, count: int = 5) -> 'Frame':
-        '''Return a Frame consisting only of the top rows as specified by ``count``.
+        '''{doc}
+
+        Args:
+            {count}
         '''
         return self.iloc[:count]
 
+    @doc_inject(selector='tail', class_name='Frame')
     def tail(self, count: int = 5) -> 'Frame':
-        '''Return a Frame consisting only of the bottom rows as specified by ``count``.
+        '''{doc}
+
+        Args:
+            {count}
         '''
         return self.iloc[-count:]
 

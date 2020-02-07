@@ -1605,20 +1605,21 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
-
+    @doc_inject(selector='head', class_name='Series')
     def head(self, count: int = 5) -> 'Series':
-        '''Return a Series consisting only of the top elements as specified by ``count``.
+        '''{doc}
 
         Args:
-            count: Number of elements to be returned from the top of the Series.
+            {count}
         '''
         return self.iloc[:count]
 
+    @doc_inject(selector='tail', class_name='Series')
     def tail(self, count: int = 5) -> 'Series':
-        '''Return a Series consisting only of the bottom elements as specified by ``count``.
+        '''{doc}
 
         Args:
-            count: Number of elements to be returned from the bottom of the Series.
+            {count}
         '''
         return self.iloc[-count:]
 

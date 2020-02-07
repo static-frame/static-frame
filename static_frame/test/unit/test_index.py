@@ -900,6 +900,17 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             idx1.values_at_depth(1)
 
+    #---------------------------------------------------------------------------
+
+    def test_index_head_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(idx1.head(2).values.tolist(), ['a' ,'b'])
+
+    def test_index_tail_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        self.assertEqual(idx1.tail(2).values.tolist(), ['d' ,'e'])
 
 
 

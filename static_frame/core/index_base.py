@@ -263,8 +263,28 @@ class IndexBase(ContainerOperand):
         return bool(self._labels.size)
 
     #---------------------------------------------------------------------------
-    # set operations
+    # transformations resulting in reduced dimensionality
 
+    @doc_inject(selector='head', class_name='Index')
+    def head(self: I, count: int = 5) -> I:
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Index')
+    def tail(self: I, count: int = 5) -> I:
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self.iloc[-count:]
+
+    #---------------------------------------------------------------------------
+    # set operations
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],

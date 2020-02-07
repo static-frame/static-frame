@@ -1,7 +1,8 @@
 Transformations & Utilities
 =============================================
 
-The following utilites transform a container into a container of similar size.
+The following utilities transform a container into a container of similar size.
+
 
 Index
 --------
@@ -10,6 +11,9 @@ Index
 
 .. automethod:: static_frame.Index.roll
 
+.. automethod:: static_frame.Index.head
+
+.. automethod:: static_frame.Index.tail
 
 
 Series
