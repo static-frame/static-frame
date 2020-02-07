@@ -16,6 +16,8 @@ from static_frame.core.display import Display
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerOperand
+# from static_frame.core.selector_node import InterfaceGetItem
+# from static_frame.core.selector_node import TContainer
 
 
 if tp.TYPE_CHECKING:
@@ -43,6 +45,7 @@ class IndexBase(ContainerOperand):
     _name: tp.Hashable
     values: np.ndarray
     depth: int
+    iloc: tp.Any # this does not work: InterfaceGetItem[I]
 
     __pos__: tp.Callable[['IndexBase'], np.ndarray]
     __neg__: tp.Callable[['IndexBase'], np.ndarray]
@@ -82,6 +85,7 @@ class IndexBase(ContainerOperand):
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
+
 
     #---------------------------------------------------------------------------
     # class attrs
@@ -272,7 +276,7 @@ class IndexBase(ContainerOperand):
         Args:
             {count}
         '''
-        return self.iloc[:count]
+        return self.iloc[:count] #type: ignore
 
     @doc_inject(selector='tail', class_name='Index')
     def tail(self: I, count: int = 5) -> I:
@@ -281,7 +285,7 @@ class IndexBase(ContainerOperand):
         Args:
             {count}
         '''
-        return self.iloc[-count:]
+        return self.iloc[-count:] #type: ignore
 
     #---------------------------------------------------------------------------
     # set operations

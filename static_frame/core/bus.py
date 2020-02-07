@@ -276,7 +276,7 @@ class Bus(ContainerBase):
             return values
         series = Series(
                 values,
-                index=self._series._index.iloc[key], # type: ignore
+                index=self._series._index.iloc[key],
                 name=self._name)
         return self.__class__(series=series,
                 store=self._store,
@@ -301,7 +301,7 @@ class Bus(ContainerBase):
                 return values
 
         series = Series(values,
-                index=self._series._index.iloc[iloc_key], #type: ignore
+                index=self._series._index.iloc[iloc_key],
                 own_index=True,
                 name=self._name)
         return self.__class__(series=series,

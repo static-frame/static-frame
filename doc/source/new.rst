@@ -11,6 +11,7 @@ Made ``Frame.clip``, ``Frame.duplicated``, ``Frame.drop_duplicated`` key-word ar
 
 ``Frame.iter_series`` now sets the ``name`` attribute of the Series from the appropriate index.
 
+Added ``Index.head()``, ``Index.tail()``, ``IndexHierarchy.head()``, ``IndexHierarchy.tail()``.
 
 0.5.12
 ----------
