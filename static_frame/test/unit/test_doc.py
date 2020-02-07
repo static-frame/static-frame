@@ -742,19 +742,21 @@ Jupiter  0.0
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 
 >>> next(iter(f.iter_series(axis=0)))
-<Series>
+<Series: diameter>
 <Index>
-Earth    12756
-Mars     6792
-Jupiter  142984
-<<U7>    <int64>
+Earth              12756
+Mars               6792
+Jupiter            142984
+<<U7>              <int64>
+
 
 >>> next(iter(f.iter_series(axis=1)))
-<Series>
+<Series: Earth>
 <Index>
-diameter 12756.0
-mass     5.97
-<<U8>    <float64>
+diameter        12756.0
+mass            5.97
+<<U8>           <float64>
+
 
 >>> f.iter_series(0).apply(lambda s: s.mean())
 <Series>

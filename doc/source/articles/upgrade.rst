@@ -1,7 +1,7 @@
 
 
 
-Ten Tips to Aid Your Transition from Pandas to StaticFrame
+Ten Tips for Transitioning from Pandas to StaticFrame
 =============================================================
 
 Now that Pandas 1.0 is out, it is the perfect time consider upgrading to an alternative that offers a more consistent interface and reduces opportunities for error: StaticFrame.
@@ -36,6 +36,8 @@ Constructors in Conventional Locations
 1  1.777   tau
 
 
+
+
 >>> sf.Frame.from_json('[{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}]')
 <Frame>
 <Index> name  mass      <<U4>
@@ -55,7 +57,6 @@ Constructors in Conventional Locations
 
 
 Specialized, Explicit Constructors
-............................................
 
 Pandas default constructors accept a staggering diversity of inputs.
 
@@ -93,7 +94,6 @@ top      173.0
 
 
 Self-Documenting Interface
-............................................
 
 All StaticFrame containers expose an ``interface`` attribute that lists the entire public interface of the class or instance.
 
@@ -388,26 +388,6 @@ strange  QUARK
 <<U7>    <<U6>
 
 
-And we can reuse the same iterator to do map application:
-
-
->>> f['type'].iter_element().map_fill(dict(lepton='lep'), fill_value=None)
-<Series>
-<Index>
-muon     lep
-tau      lep
-charm    None
-strange  None
-<<U7>    <object>
-
->>> f['type'].iter_element().map_any(dict(lepton='lep'))
-<Series>
-<Index>
-muon     lep
-tau      lep
-charm    quark
-strange  quark
-<<U7>    <<U5>
 
 
 
@@ -725,6 +705,8 @@ strange 0.1       -0.333
 <<U7>   <float64> <float64>
 
 
+Mixing Selection Types with HLoc and ILoc
+
 
 StaticFrame is consistent in what ``loc`` arguments mean: the first argument is a row selector, the second argument is a column selector. For selection within an ``IndexHierarchy`` found on either or both rows and columns, the ``sf.HLoc`` selector modifier is used.
 
@@ -749,29 +731,10 @@ charge                      -1.0
 
 
 
-
-Mixing Selection Types with HLoc and ILoc
+No. 9: Indices are Always Unique
 _______________________________________________
 
-Just like ``sf.HLoc`` permits doing hierarchical selection within a single ``loc`` argument, ``sf.ILoc`` permits doing ordinal selection within a ``loc`` selection..
 
-
->>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
-
->>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
-
-
->>> f.loc[sf.HLoc['quark'], sf.ILoc[-1]]
-<Series: charge>
-<IndexHierarchy: ('type', 'name')>
-quark                              charm   0.666
-quark                              strange -0.333
-<<U7>                              <<U7>   <float64>
-
-
-
->>> f.unset_index().sort_values('mass').loc[sf.ILoc[-1], 'charge']
--1.0
 
 
 

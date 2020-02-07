@@ -3274,12 +3274,13 @@ class Frame(ContainerOperand):
     def _axis_series(self, axis):
         '''Generator of Series across an axis
         '''
+        # reference the indices and let the constructor reuse what is reusable
         if axis == 1:
-            index = self._columns.values
-            labels = self._index.values
+            index = self._columns
+            labels = self._index
         elif axis == 0:
             index = self._index
-            labels = self._columns.values
+            labels = self._columns
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
             yield Series(axis_values, index=index, name=label)
 
