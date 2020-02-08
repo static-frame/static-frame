@@ -686,13 +686,14 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 
 def resolve_type_iter(
         values: tp.Iterable[tp.Any],
-        # sample_size: int = 10,
+        restrict_copy: bool = False
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
     Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
 
     Args:
-        values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
+        values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values.
+        restrict_copy: if True, reject making a copy, even if a generator is given
     Returns:
         resolved, has_tuple, values
     '''
@@ -703,16 +704,12 @@ def resolve_type_iter(
         values = tp.cast(tp.Sequence[tp.Any], values)
         return None, False, values
 
+    if restrict_copy:
+        copy_values = False
+
     v_iter = iter(values)
 
     if copy_values:
-        # will copy in loop below; check for empty iterables and exit early
-        # try:
-        #     front = next(v_iter)
-        # except StopIteration: # if no values
-        #     return None, False, EMPTY_TUPLE
-        # v_iter = chain((front,), v_iter)
-        # do not create list unless we are sure we have more than 1 value
         values_post = []
 
     resolved = None # None is valid specifier if the type is not ambiguous
@@ -753,11 +750,6 @@ def resolve_type_iter(
             if copy_values:
                 values_post.extend(v_iter)
             break
-
-        # if i >= sample_size:
-        #     if copy_values:
-        #         values_post.extend(v_iter)
-        #     break
 
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
@@ -855,19 +847,11 @@ def iterable_to_array_2d(
     # consume values into a tuple
     values = tuple(values)
 
-    # sample_size = 10
-    sample = [] # create explicit sample list to avoid full iteration and  copying
-    # count = 0
-
-    for sub in values:
-        for element in sub:
-            sample.append(element)
-            # count += 1
-            # if count >= sample_size:
-            #     break
-
-    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence
-    dtype, _, _ = resolve_type_iter(sample)
+    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrrict copy is True
+    dtype, _, _ = resolve_type_iter(
+            (y for z in values for y in z),
+            restrict_copy=True
+            )
 
     array = np.array(values, dtype=dtype)
     if array.ndim != 2:
