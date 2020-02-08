@@ -686,36 +686,32 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
 
 def resolve_type_iter(
         values: tp.Iterable[tp.Any],
-        sample_size: int = 10,
+        # sample_size: int = 10,
         ) -> tp.Tuple[DtypeSpecifier, bool, tp.Sequence[tp.Any]]:
     '''
     Determine an appropriate DtypeSpecifier for values in an iterable. This does not try to determine the actual dtype, but instead, if the DtypeSpecifier needs to be object rather than None (which lets NumPy auto detect). This is expected to only operate on 1D data.
 
     Args:
         values: can be a generator that will be exhausted in processing; if a generator, a copy will be made and returned as values
-        sample_size: number or elements to examine to determine DtypeSpecifier.
     Returns:
         resolved, has_tuple, values
     '''
 
     is_gen, copy_values = is_gen_copy_values(values)
 
-    if not is_gen:
+    if not is_gen and len(values) == 0: #type: ignore
         values = tp.cast(tp.Sequence[tp.Any], values)
-        if len(values) == 0:
-            return None, False, values
+        return None, False, values
 
     v_iter = iter(values)
 
     if copy_values:
         # will copy in loop below; check for empty iterables and exit early
-        try:
-            front = next(v_iter)
-        except StopIteration:
-            # if no values, can return a float-type array
-            return None, False, EMPTY_TUPLE
-
-        v_iter = chain((front,), v_iter)
+        # try:
+        #     front = next(v_iter)
+        # except StopIteration: # if no values
+        #     return None, False, EMPTY_TUPLE
+        # v_iter = chain((front,), v_iter)
         # do not create list unless we are sure we have more than 1 value
         values_post = []
 
@@ -726,7 +722,7 @@ def resolve_type_iter(
     has_inexact = False
     has_big_int = False
 
-    for i, v in enumerate(v_iter, start=1):
+    for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
             # for array construcdtion, cannot use dictlike, so must convert to list
@@ -753,15 +749,15 @@ def resolve_type_iter(
             elif has_big_int and has_inexact:
                 resolved = object
 
-        else: # resolved is object, cam exit
+        else: # resolved is object, can exit
             if copy_values:
                 values_post.extend(v_iter)
             break
 
-        if i >= sample_size:
-            if copy_values:
-                values_post.extend(v_iter)
-            break
+        # if i >= sample_size:
+        #     if copy_values:
+        #         values_post.extend(v_iter)
+        #     break
 
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
@@ -784,7 +780,7 @@ def iterable_to_array_1d(
     '''
     if isinstance(values, np.ndarray):
         if dtype is not None and dtype != values.dtype:
-            raise RuntimeError('supplied dtype not set on supplied array')
+            raise RuntimeError(f'supplied dtype {dtype} not set on supplied array')
         return values, len(values) <= 1
 
     values_for_construct: tp.Sequence[tp.Any]
@@ -859,19 +855,19 @@ def iterable_to_array_2d(
     # consume values into a tuple
     values = tuple(values)
 
-    sample_size = 10
+    # sample_size = 10
     sample = [] # create explicit sample list to avoid full iteration and  copying
-    count = 0
+    # count = 0
 
     for sub in values:
         for element in sub:
             sample.append(element)
-            count += 1
-            if count >= sample_size:
-                break
+            # count += 1
+            # if count >= sample_size:
+            #     break
 
     # if we provide whole generator to resolve_type_iter, it will copy the entire sequence
-    dtype, _, _ = resolve_type_iter(sample, sample_size=sample_size)
+    dtype, _, _ = resolve_type_iter(sample)
 
     array = np.array(values, dtype=dtype)
     if array.ndim != 2:

@@ -6025,12 +6025,20 @@ class TestUnit(TestCase):
         records = (('x', 't'), (1, 2))
         f1 = sf.Frame.from_records(records)
 
+        self.assertEqual(
+                f1.to_pairs(0),
+                ((0, ((0, 'x'), (1, 1))), (1, ((0, 't'), (1, 2))))
+                )
 
-        # self.assertEqual(
-        #         f1.to_pairs(0),
-        #         ((0, ((0, 'x'), (1, 1))), (1, ((0, 't'), (1, 2))))
-        #         )
 
+
+    def test_frame_from_records_p(self) -> None:
+
+        records = [('x', 't')] * 10 + [(1, 2)] #type: ignore
+        f1 = sf.Frame.from_records(records)
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 'x'), (1, 'x'), (2, 'x'), (3, 'x'), (4, 'x'), (5, 'x'), (6, 'x'), (7, 'x'), (8, 'x'), (9, 'x'), (10, 1))), (1, ((0, 't'), (1, 't'), (2, 't'), (3, 't'), (4, 't'), (5, 't'), (6, 't'), (7, 't'), (8, 't'), (9, 't'), (10, 2))))
+                )
 
 
     #---------------------------------------------------------------------------

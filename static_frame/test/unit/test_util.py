@@ -1619,7 +1619,7 @@ class TestUnit(TestCase):
     def test_resolve_type_iter_k(self) -> None:
         resolved, has_tuple, values = resolve_type_iter((x for x in ())) #type: ignore
         self.assertEqual(resolved, None)
-        self.assertEqual(values, ())
+        self.assertEqual(len(values), 0)
         self.assertEqual(has_tuple, False)
 
     #---------------------------------------------------------------------------

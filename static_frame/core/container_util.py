@@ -460,56 +460,6 @@ def rehierarch_and_map(*,
     return index, order_lex
 
 
-# def array_from_value_iter(
-#         key: tp.Hashable,
-#         idx: int,
-#         get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
-#         get_col_dtype: tp.Optional[tp.Callable],
-#         row_reference: tp.Union[tp.Sequence, tp.Dict],
-#         row_count: int,
-#         ):
-#     '''
-#     Return a single array given keys and collections.
-
-#     Args:
-#         get_value_iter: Iterator of a values
-#         dtypes: if an
-#         key: hashable for looking up field in `get_value_iter`.
-#         idx: integer position to extract from dtypes
-#     '''
-#     # for each column, try to get a column_type, or None
-#     if get_col_dtype is None:
-#         field_ref = row_reference[key]
-#         # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-#         column_type = (type(field_ref)
-#                 if not isinstance(field_ref, (str, np.datetime64))
-#                 else None)
-#         column_type_explicit = False
-#     else: # column_type returned here can be None.
-#         column_type = get_col_dtype(idx)
-#         column_type_explicit = True
-
-#     values = None
-#     if column_type is not None:
-#         try:
-#             values = np.fromiter(
-#                     get_value_iter(key),
-#                     count=row_count,
-#                     dtype=column_type)
-#         except (ValueError, TypeError):
-#             # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
-#             if not column_type_explicit:
-#                 # reset to None if not explicit and failued in fromiter
-#                 column_type = None
-#     if values is None:
-#         # let array constructor determine type if column_type is None
-#         values = np.array(tuple(get_value_iter(key)), dtype=column_type)
-
-#     values.flags.writeable = False
-#     return values
-
-
-
 
 def array_from_value_iter(
         key: tp.Hashable,
@@ -533,7 +483,6 @@ def array_from_value_iter(
     else: # column_type returned here can be None.
         column_type = get_col_dtype(idx)
         # if this value is None we cannot tell if it was explicitly None or just was not specified
-
 
     values = None
     if column_type is not None:

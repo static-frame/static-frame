@@ -845,7 +845,7 @@ class FrameFloat_from_records(PerfTest):
 
     @staticmethod
     def sf() -> None:
-        post = sf.Frame.from_records(list(SampleData.get('npf_float_10k')))
+        post = sf.Frame.from_records(list(SampleData.get('npf_float_10k')), dtypes=[float]*100)
         assert post.shape == (10000, 100)
 
 
@@ -859,12 +859,13 @@ class FrameMixed_from_records(PerfTest):
         # make data into a list to force type identification
         post = pd.DataFrame.from_records(list(SampleData.get('npf_mixed_10k')))
         assert post.shape == (10000, 100)
+        assert post.dtypes[2] == object
 
     @staticmethod
     def sf() -> None:
         post = sf.Frame.from_records(list(SampleData.get('npf_mixed_10k')))
-        # NOTE: this presently casts a mixed typed column into Bools
         assert post.shape == (10000, 100)
+        assert post.dtypes[2] == object
 
 
 
