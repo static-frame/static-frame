@@ -254,8 +254,10 @@ class TestUnit(TestCase):
         # NOTE: presently the inner lists get flattend when used in from records
         a1 = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
         f1 = Frame.from_records(a1)
+
         self.assertEqual(f1.to_pairs(0),
-                ((0, ((0, 1), (1, 5))), (1, ((0, 2), (1, 6))), (2, ((0, 3), (1, 7))), (3, ((0, 4), (1, 8)))))
+                ((0, ((0, [1, 2]), (1, [5, 6]))), (1, ((0, [3, 4]), (1, [7, 8]))))
+                )
 
 
     def test_frame_init_v(self) -> None:
@@ -4599,12 +4601,12 @@ class TestUnit(TestCase):
                 lines = f.readlines()
 
             self.assertEqual(lines,
-                    ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
+                    ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60']
                     )
 
             f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
             self.assertEqual(f2.to_pairs(0),
-                    ((('I', 'a'), (('p', 10), ('q', 50))), (('I', 'b'), (('p', 20), ('q', 60))), (('II', 'a'), (('p', 50), ('q', -50))), (('II', 'b'), (('p', 60), ('q', -60))))
+                    ((('I', 'a'), (('p', 10.0), ('q', 50.0))), (('I', 'b'), (('p', 20.0), ('q', 60.4))), (('II', 'a'), (('p', 50), ('q', -50))), (('II', 'b'), (('p', 60), ('q', -60))))
                     )
 
 
@@ -4622,12 +4624,12 @@ class TestUnit(TestCase):
                 lines = f.readlines()
 
             self.assertEqual(lines,
-                    ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10,20,50,60\n', 'q,50,60,-50,-60']
+                    ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60']
                     )
             f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
             self.assertEqual(
                     f2.to_pairs(0),
-                    (((10, 'I'), (('p', 10), ('q', 50))), ((10, 'II'), (('p', 20), ('q', 60))), ((20, 'I'), (('p', 50), ('q', -50))), ((20, 'II'), (('p', 60), ('q', -60))))
+                    (((10, 'I'), (('p', 10.0), ('q', 50.0))), ((10, 'II'), (('p', 20.0), ('q', 60.4))), ((20, 'I'), (('p', 50), ('q', -50))), ((20, 'II'), (('p', 60), ('q', -60))))
                     )
 
 
@@ -4843,7 +4845,7 @@ class TestUnit(TestCase):
             f2 = Frame.from_xlsx(fp,
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
-            self.assertEqualFrames(f1, f2)
+            self.assertEqualFrames(f1, f2, check_dtypes=False)
 
     @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
@@ -6018,6 +6020,16 @@ class TestUnit(TestCase):
                 ((0, ((0, 3), (1, 5))), (1, ((0, 4), (1, 6))))
                 )
 
+    def test_frame_from_records_o(self) -> None:
+
+        records = (('x', 't'), (1, 2))
+        f1 = sf.Frame.from_records(records)
+
+
+        # self.assertEqual(
+        #         f1.to_pairs(0),
+        #         ((0, ((0, 'x'), (1, 1))), (1, ((0, 't'), (1, 2))))
+        #         )
 
 
 

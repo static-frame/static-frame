@@ -611,12 +611,14 @@ class Frame(ContainerOperand):
             column_name_getter = row_reference._fields.__getitem__
             columns = []
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-
-        def get_col_dtype(col_idx):
-            if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            return dtypes[col_idx]
+        if dtypes:
+            dtypes_is_map = dtypes_mappable(dtypes)
+            def get_col_dtype(col_idx):
+                if dtypes_is_map:
+                    return dtypes.get(columns[col_idx], None)
+                return dtypes[col_idx]
+        else:
+            get_col_dtype = None
 
         col_count = len(row_reference)
 
@@ -635,7 +637,6 @@ class Frame(ContainerOperand):
                         key=col_idx,
                         idx=col_idx,
                         get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
-                        dtypes=dtypes,
                         row_reference=row_reference,
                         row_count=row_count
                         )
@@ -684,12 +685,15 @@ class Frame(ContainerOperand):
             :py:class:`static_frame.Frame`
         '''
         columns = []
-        dtypes_is_map = dtypes_mappable(dtypes)
 
-        def get_col_dtype(col_idx):
-            if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            return dtypes[col_idx]
+        if dtypes:
+            dtypes_is_map = dtypes_mappable(dtypes)
+            def get_col_dtype(col_idx):
+                if dtypes_is_map:
+                    return dtypes.get(columns[col_idx], None)
+                return dtypes[col_idx]
+        else:
+            get_col_dtype = None
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -727,7 +731,6 @@ class Frame(ContainerOperand):
                         idx=col_idx,
                         get_value_iter=get_value_iter,
                         get_col_dtype=get_col_dtype,
-                        dtypes=dtypes,
                         row_reference=row_reference,
                         row_count=row_count
                         )
