@@ -31,6 +31,9 @@ class HLoc(metaclass=HLocMeta):
     def __iter__(self) -> tp.Iterator[GetItemKeyType]:
         return self.key.__iter__()
 
+    def __len__(self) -> int:
+        return self.key.__len__()
+
     def __getitem__(self, key: int) -> GetItemKeyType:
         '''
         Each key reprsents a hierarchical level; if a key is not specified, the default should be to return the null slice.

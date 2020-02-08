@@ -795,6 +795,7 @@ class TestUnit(TestCase):
                 [False, True, False, True])
 
 
+    #---------------------------------------------------------------------------
     def test_frame_getitem_a(self) -> None:
 
         records = (
@@ -825,6 +826,43 @@ class TestUnit(TestCase):
                 f1[f1.columns.loc['r':]].to_pairs(0),  # type: ignore  # https://github.com/python/typeshed/pull/3024
                 (('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
                 )
+
+
+    def test_frame_getitem_c(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 50, 'b', True))
+
+        f1 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('A', 'B'), (1, 2)),
+                index=('x','y'))
+
+        # we can use a tuple to select a single column if a hierarchical index
+        self.assertEqual(f1[('A', 2)].to_pairs(),
+                (('x', 2), ('y', 50))
+                )
+
+
+    def test_frame_getitem_d(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 50, 'b', True))
+
+        f1 = FrameGO.from_records(records,
+                columns=Index([('A', 1), ('A', 2), ('B', 1), ('B', 2)]),
+                index=('x','y'))
+
+        self.assertEqual(f1[('A', 2)].to_pairs(),
+                (('x', 2), ('y', 50))
+                )
+        self.assertEqual(f1[[('A', 2), ('B', 1)]].to_pairs(0),
+                ((('A', 2), (('x', 2), ('y', 50))), (('B', 1), (('x', 'a'), ('y', 'b'))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_frame_length_a(self) -> None:
@@ -1103,12 +1141,16 @@ class TestUnit(TestCase):
         # 3d array raises exception
         f = sf.FrameGO.from_element('a', index=range(3), columns=sf.IndexHierarchy.from_labels((('a', 1),)))
 
+        f[sf.HLoc['a', 2]] = 3
         # this was resulting in a mal-formed blocks
-        with self.assertRaises(TypeError):
-            f[sf.HLoc['a', 2]] = 3
+        with self.assertRaises(RuntimeError):
+            f[sf.HLoc['a', 2]] = False
 
-        self.assertEqual(f.shape, (3, 1))
-        self.assertEqual(f.columns.shape, (1, 2))
+        self.assertEqual(f.shape, (3, 2))
+        self.assertEqual(f.columns.shape, (2, 2))
+        self.assertEqual(f.to_pairs(0),
+                ((('a', 1), ((0, 'a'), (1, 'a'), (2, 'a'))), (('a', 2), ((0, 3), (1, 3), (2, 3))))
+                )
 
 
     def test_frame_setitem_i(self) -> None:
@@ -1124,6 +1166,41 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1['t'] = [1, 2, 4]
 
+
+    def test_frame_setitem_j(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 50, 'b', True))
+
+        f1 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('A', 'B'), (1, 2)),
+                index=('x','y'))
+
+        # set and retrieve with the same kye
+        key = ('C', 1)
+        f1[key] = 3
+        post = f1[key]
+        self.assertEqual(post.to_pairs(), (('x', 3), ('y', 3)))
+
+        with self.assertRaises(RuntimeError):
+            f1[('C', 2, 3)] = False
+
+        with self.assertRaises(RuntimeError):
+            f1[HLoc['C', 2, 3]] = False
+
+        with self.assertRaises(RuntimeError):
+            f1[('C',)] = False
+
+        with self.assertRaises(RuntimeError):
+            f1[HLoc['C',]] = False
+
+        # can assign to a right-sized HLoc
+        f1[HLoc['C', 2]] = False
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), (('x', 1), ('y', 30))), (('A', 2), (('x', 2), ('y', 50))), (('B', 1), (('x', 'a'), ('y', 'b'))), (('B', 2), (('x', False), ('y', True))), (('C', 1), (('x', 3), ('y', 3))), (('C', 2), (('x', False), ('y', False))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -1648,6 +1725,7 @@ class TestUnit(TestCase):
                 (('a', ((0, False), (1, False))), ('b', ((0, 'x'), (1, 'x'))), ('c', ((0, 'x'), (1, 'x'))), ('d', ((0, 'x'), (1, 'x'))), ('e', ((0, False), (1, False)))))
 
 
+    #---------------------------------------------------------------------------
 
     def test_frame_assign_iloc_a(self) -> None:
 
@@ -7496,7 +7574,7 @@ class TestUnit(TestCase):
         fa2 = FrameAssign(f1, iloc_key=None, bloc_key=f1)
 
 
-    #---------------------------------------------------------------------------
+
 
 
 if __name__ == '__main__':

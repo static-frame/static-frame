@@ -2941,10 +2941,11 @@ class Frame(ContainerOperand):
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
-        if isinstance(key, tuple):
-            raise KeyError('__getitem__ does not support multiple indexers')
+        # if isinstance(key, tuple) and self._columns.depth == 1:
+        #     raise KeyError('__getitem__ does not support multiple indexers on a 1D Index')
         iloc_column_key = self._columns.loc_to_iloc(key)
         return None, iloc_column_key
+
 
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
         iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)

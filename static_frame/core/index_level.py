@@ -238,7 +238,9 @@ class IndexLevel:
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
-    def leaf_loc_to_iloc(self, key: tp.Iterable[tp.Hashable]) -> int:
+    def leaf_loc_to_iloc(self,
+            key: tp.Union[tp.Iterable[tp.Hashable], tp.Type[ILoc], tp.Type[HLoc]]
+            ) -> int:
         '''Given an iterable of single-element level keys (a leaf loc), return the iloc value.
 
         Note that key components (level selectors) cannot be slices, lists, or np.ndarray.
@@ -248,22 +250,22 @@ class IndexLevel:
 
         node = self
         pos = 0
+        key_depth_max = len(key) - 1 # this works for an HLoc
 
-        for k in key:
+        for key_depth, k in enumerate(key):
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
                 node = node.targets[node.index.loc_to_iloc(k)]
                 pos += node.offset
-            else: # targets is None, meaning we are done
-
-                # assume that k returns an integer
+            else: # targets is None, meaning we are at max depth
+                # k returns an integer
                 offset = node.index.loc_to_iloc(k)
-                assert isinstance(offset, INT_TYPES)
+                if key_depth == key_depth_max:
+                    return pos + offset
+                break # return exception below if key_depth not max depth
 
-                return pos + offset
-
-        raise ValueError('Invalid key length.')
+        raise KeyError(f'Invalid key length {len(key)}; must be length {next(self.depths())}.')
 
     def loc_to_iloc(self, key: GetItemKeyTypeCompound) -> GetItemKeyType:
         '''

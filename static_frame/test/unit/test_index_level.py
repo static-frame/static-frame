@@ -209,7 +209,7 @@ class TestUnit(TestCase):
         lvl0 = IndexLevel(index=groups,
                 targets=ArrayGO((lvl1a, lvl1b, lvl1c)))
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             lvl0.leaf_loc_to_iloc(('A'))
 
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
