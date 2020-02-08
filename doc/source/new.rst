@@ -13,6 +13,8 @@ Made ``Frame.clip``, ``Frame.duplicated``, ``Frame.drop_duplicated`` key-word ar
 
 Added ``Index.head()``, ``Index.tail()``, ``IndexHierarchy.head()``, ``IndexHierarchy.tail()``.
 
+``Frame.from_records`` and related routines now do full type induction per column; all type induction on untyped iterables now examines all values.
+
 0.5.12
 ----------
 
