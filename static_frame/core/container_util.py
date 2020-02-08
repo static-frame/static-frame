@@ -516,7 +516,6 @@ def array_from_value_iter(
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
         get_col_dtype: tp.Optional[tp.Callable],
-        row_reference: tp.Union[tp.Sequence, tp.Dict],
         row_count: int,
         ):
     '''
@@ -530,11 +529,6 @@ def array_from_value_iter(
     '''
     # for each column, try to get a column_type, or None
     if get_col_dtype is None:
-        # field_ref = row_reference[key]
-        # # string, datetime64 types requires size in dtype specification, so cannot use np.fromiter, as we do not know the size of all columns
-        # column_type = (type(field_ref)
-        #         if not isinstance(field_ref, (str, np.datetime64))
-        #         else None)
         column_type = None
     else: # column_type returned here can be None.
         column_type = get_col_dtype(idx)
@@ -560,18 +554,6 @@ def array_from_value_iter(
                 )
 
     return values
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

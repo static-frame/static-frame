@@ -637,7 +637,6 @@ class Frame(ContainerOperand):
                         key=col_idx,
                         idx=col_idx,
                         get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
-                        row_reference=row_reference,
                         row_count=row_count
                         )
                 yield values
@@ -731,7 +730,6 @@ class Frame(ContainerOperand):
                         idx=col_idx,
                         get_value_iter=get_value_iter,
                         get_col_dtype=get_col_dtype,
-                        row_reference=row_reference,
                         row_count=row_count
                         )
                 yield values
