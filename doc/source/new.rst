@@ -8,7 +8,7 @@ What is New in Static Frame
 
 Removed deprecated ``Frame`` and ``Series`` non-specialized constructor usage; removed support for providing mapping types to ``apply``.
 
-Improved support for using tuples in ``Frame.__getitem__`` on ``IndexHierarchy`` and ``Index`` with tuple labels.
+Improved support for using tuples in ``Frame.__getitem__`` and ``FrameGO.__setitem__`` with ``IndexHierarchy`` and ``Index`` with tuple labels.
 
 
 0.5.13
