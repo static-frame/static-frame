@@ -72,13 +72,10 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_and_map
-# from static_frame.core.container_util import index_constructor_empty
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
-
 from static_frame.core.exception import ErrorInitSeries
-# from static_frame.core.exception import deprecated
 
 from static_frame.core.doc_str import doc_inject
 
@@ -325,15 +322,10 @@ class Series(ContainerOperand):
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif hasattr(values, '__iter__') and not isinstance(values, str):
-                # while iterable_to_array_1d will correctly handle a string (returning an array of length 1), we will not recognize the string as an element, and thus not defer creating values until we have a shape (which is what we need to do)
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
-                # # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
-                # def values_constructor(shape): #pylint: disable=E0102 #pragma: no cover
-                #     self.values = np.full(shape, values, dtype=dtype) #pragma: no cover
-                #     self.values.flags.writeable = False #pragma: no cover
 
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
@@ -382,9 +374,6 @@ class Series(ContainerOperand):
         if self.values.ndim != self._NDIM:
             raise ErrorInitSeries('dimensionality of final values not supported')
 
-        # this appears to be unreachable
-        # if len(self.values) != shape:
-        #     raise ErrorInitSeries('values and index do not match length')
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
