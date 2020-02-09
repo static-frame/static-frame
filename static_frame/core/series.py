@@ -1245,11 +1245,7 @@ class Series(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
         '''
-        if self._index.depth > 1:
-            # use getitem to ensure we get a hashaable back
-            yield from ((self._index[j], k) for j, k in enumerate(self.values))
-        else:
-            yield from zip(self._index.values, self.values)
+        yield from zip(self._index, self.values)
 
     def _axis_element(self, *, axis=0) -> tp.Iterator[tp.Any]:
         yield from self.values
