@@ -64,7 +64,6 @@ To install full support of input and output routines via PIP::
     pip install static-frame [extras]
 
 
-
 Dependencies
 --------------
 
