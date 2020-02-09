@@ -2276,7 +2276,7 @@ class Frame(ContainerOperand):
             {own_columns}
         '''
         if index is None and columns is None:
-            raise Exception('must specify one of index or columns')
+            raise RuntimeError('must specify one of index or columns')
 
         if index is not None:
             if isinstance(index, IndexBase):
@@ -2344,6 +2344,8 @@ class Frame(ContainerOperand):
             columns: {relabel_input}
         '''
         # create new index objects in both cases so as to call with own*
+        if index is None and columns is None:
+            raise RuntimeError('must specify one of index or columns')
 
         own_index = False
         if index is IndexAutoFactory:
