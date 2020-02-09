@@ -1728,29 +1728,23 @@ def slices_from_targets(
                 zip_longest(target_index, target_index[1:], fillvalue=length)
                 )
     else:
-        # NOTE: usage of None here is awkward; try to use zero
+        # use None to signal first value, but store 0
         target_slices = (
-                slice((start+1 if start is not None else start), stop)
+                slice((start+1 if start is not None else 0), stop)
                 for start, stop in
                 zip(chain((None,), target_index[:-1]), target_index)
                 )
 
     for target_slice, value in zip(target_slices, target_values):
+        # asserts not necessary as slices are created above; but mypy needs them
+        assert target_slice.start is not None and target_slice.stop is not None
 
         # all conditions that are noop slices
         if target_slice.start == target_slice.stop: #pylint: disable=R1724
+            # matches case where start is 0 and stop is 0
             continue
-        elif (directional_forward
-                and target_slice.start is not None
-                and target_slice.start >= length):
+        elif directional_forward and target_slice.start >= length:
             continue
-        elif (not directional_forward
-                and target_slice.start is None
-                and target_slice.stop == 0):
-            continue
-        elif target_slice.stop is None:
-            # stop value should never be None
-            raise NotImplementedError('unexpected slice', target_slice)
 
         # only process if first value of slice is NaN
         if slice_condition(target_slice):

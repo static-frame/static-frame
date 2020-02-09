@@ -10,7 +10,7 @@ import pstats
 import sys
 import datetime
 
-from pyinstrument import Profiler
+from pyinstrument import Profiler #type: ignore
 import numpy as np
 import pandas as pd
 import static_frame as sf

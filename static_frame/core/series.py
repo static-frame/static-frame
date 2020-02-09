@@ -778,7 +778,8 @@ class Series(ContainerOperand):
             return array # assume immutable
 
         def slice_condition(target_slice: slice) -> bool:
-            return sel[target_slice][0]
+            # we can assume start is not None
+            return sel[target_slice.start]
 
         # type is already compatible, no need for check
         assigned = array.copy()
