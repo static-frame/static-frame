@@ -21,8 +21,10 @@ No. 1: Consistent Interfaces
 ______________________________________
 
 
-Constructors in Conventional Locations
-............................................
+An interface can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API in many ways to support greater consistency in all of these characteristics.
+
+
+Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class:
 
 
 >>> pd.read_json('[{"name":"muon", "mass":0.106},{"name":"tau", "mass":1.777}]')
@@ -36,6 +38,7 @@ Constructors in Conventional Locations
 1  1.777   tau
 
 
+As there is no benefit to this diversity, StaticFrame places all constructors on the class they construct.
 
 
 >>> sf.Frame.from_json('[{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}]')
@@ -53,6 +56,7 @@ Constructors in Conventional Locations
 0       muon  0.106
 1       tau   1.777
 <int64> <<U4> <float64>
+
 
 
 
@@ -93,9 +97,7 @@ top      173.0
 
 
 
-Self-Documenting Interface
-
-All StaticFrame containers expose an ``interface`` attribute that lists the entire public interface of the class or instance.
+Having explicit constructors leads to lots of constructors. To help discover the constructors you are looking for, StaticFrame containers expose an ``interface`` attribute that lists the entire public interface of the class or instance.
 
 
 >>> sf.Series.interface.shape

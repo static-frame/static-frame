@@ -778,7 +778,7 @@ class Series(ContainerOperand):
             return array # assume immutable
 
         def slice_condition(target_slice: slice) -> bool:
-            # we can assume start is not None
+            # NOTE: start is never None
             return sel[target_slice.start]
 
         # type is already compatible, no need for check
