@@ -2107,8 +2107,7 @@ class TypeBlocks(ContainerOperand):
 
                         def slice_condition(target_slice: slice) -> bool:
                             # NOTE: start is never None
-                            return sel[target_slice.start]
-                            #return sel[target_slice][0] # type: ignore
+                            return sel[target_slice.start] # type: ignore
 
                     else: # 2D blocks
                         target_index = target_indexes[i]
@@ -2118,8 +2117,7 @@ class TypeBlocks(ContainerOperand):
 
                         def slice_condition(target_slice: slice) -> bool:
                             # NOTE: start is never None
-                            return sel[target_slice.start, i]
-                            # return sel[target_slice, i][0] # type: ignore
+                            return sel[target_slice.start, i] # type: ignore
 
                     for target_slice, value in slices_from_targets(
                             target_index=target_index,
@@ -2273,8 +2271,7 @@ class TypeBlocks(ContainerOperand):
 
                         def slice_condition(target_slice: slice) -> bool:
                             # NOTE: start is never None
-                            return sel[i, target_slice.start]
-                            # return sel[i, target_slice][0] # type: ignore
+                            return sel[i, target_slice.start] # type: ignore
 
                         target_slice = None
                         for target_slice, value in slices_from_targets(
