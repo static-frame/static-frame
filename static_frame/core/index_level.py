@@ -252,6 +252,7 @@ class IndexLevel:
         pos = 0
         key_depth_max = len(key) - 1 # this works for an HLoc
 
+        # NOTE: rather than a for/enumerate, this could use a while loop on an iter() and explicitly look at next() results to determine if the key matches
         for key_depth, k in enumerate(key):
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
@@ -261,6 +262,7 @@ class IndexLevel:
             else: # targets is None, meaning we are at max depth
                 # k returns an integer
                 offset = node.index.loc_to_iloc(k)
+                assert isinstance(offset, INT_TYPES) # enforces leaf loc
                 if key_depth == key_depth_max:
                     return pos + offset
                 break # return exception below if key_depth not max depth

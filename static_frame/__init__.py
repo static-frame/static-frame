@@ -2,7 +2,6 @@
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
 
-
 from static_frame.core.util import GetItemKeyType as GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound as GetItemKeyTypeCompound
 from static_frame.core.util import CallableOrMapping as CallableOrMapping
@@ -73,5 +72,5 @@ from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
 from static_frame.core.store import StoreConfig as StoreConfig
 
-__version__ = '0.5.13' # use -dev for new version in development
+__version__ = '0.6.0' # use -dev for new version in development
 
