@@ -10,6 +10,7 @@ import pstats
 import sys
 import datetime
 
+from pyinstrument import Profiler
 import numpy as np
 import pandas as pd
 import static_frame as sf
@@ -45,7 +46,12 @@ python3 test_performance.py SeriesIntFloat_dropna --profile
             default=('core',),
             )
     p.add_argument('--profile',
-            help='Turn on profiling',
+            help='Turn on profiling with cProfile',
+            action='store_true',
+            default=False,
+            )
+    p.add_argument('--instrument',
+            help='Turn on instrumenting with pyinstrument',
             action='store_true',
             default=False,
             )
@@ -77,8 +83,8 @@ def profile(cls: tp.Type[PerfTest],
     '''
 
     f = getattr(cls, function)
-
     pr = cProfile.Profile()
+
     pr.enable()
     for _ in range(cls.NUMBER):
         f()
@@ -88,6 +94,24 @@ def profile(cls: tp.Type[PerfTest],
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     print(s.getvalue())
+
+def instrument(cls: tp.Type[PerfTest],
+        function: str = 'sf'
+        ) -> None:
+    '''
+    Profile the `sf` function from the supplied class.
+    '''
+
+    f = getattr(cls, function)
+    profiler = Profiler()
+
+    profiler.start()
+    for _ in range(cls.NUMBER):
+        f()
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))
+
 
 PerformanceRecord = tp.MutableMapping[str, tp.Union[str, float]]
 
@@ -167,6 +191,8 @@ def main() -> None:
                     records.append(performance(module, cls))
                 if options.profile:
                     profile(cls)
+                if options.instrument:
+                    instrument(cls)
 
     itemize = False # make CLI option maybe
 
