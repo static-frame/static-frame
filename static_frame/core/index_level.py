@@ -250,10 +250,10 @@ class IndexLevel:
 
         node = self
         pos = 0
-        key_depth_max = len(key) - 1 # this works for an HLoc
+        key_depth_max = len(key) - 1 #type: ignore
 
         # NOTE: rather than a for/enumerate, this could use a while loop on an iter() and explicitly look at next() results to determine if the key matches
-        for key_depth, k in enumerate(key):
+        for key_depth, k in enumerate(key): #type: ignore
             if isinstance(k, KEY_MULTIPLE_TYPES):
                 raise RuntimeError(f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].')
             if node.targets is not None:
@@ -267,7 +267,7 @@ class IndexLevel:
                     return pos + offset
                 break # return exception below if key_depth not max depth
 
-        raise KeyError(f'Invalid key length {len(key)}; must be length {next(self.depths())}.')
+        raise KeyError(f'Invalid key length {key_depth_max + 1}; must be length {next(self.depths())}.')
 
     def loc_to_iloc(self, key: GetItemKeyTypeCompound) -> GetItemKeyType:
         '''

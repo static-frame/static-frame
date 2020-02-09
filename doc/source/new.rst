@@ -6,7 +6,9 @@ What is New in Static Frame
 0.6.0
 ----------
 
+Removed deprecated ``Frame`` and ``Series`` non-specialized constructor usage; removed support for providing mapping types to ``apply``.
 
+Improved support for using tuples in ``Frame.__getitem__`` on ``IndexHierarchy`` and ``Index`` with tuple labels.
 
 
 0.5.13

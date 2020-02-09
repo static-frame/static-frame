@@ -123,7 +123,7 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import deprecated
+# from static_frame.core.exception import deprecated
 
 from static_frame.core.doc_str import doc_inject
 
@@ -1894,32 +1894,29 @@ class Frame(ContainerOperand):
 
         elif isinstance(data, dict):
             raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
-
         elif isinstance(data, Series):
             raise ErrorInitFrame('use Frame.from_series to create a Frame from a Series.')
-
-        # post deprication, use this
-        # else:
-        #     raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
-
-        elif not hasattr(data, '__len__') or isinstance(data, str):
-            # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
-
-            deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element.') #pragma: no cover
-
-            def blocks_constructor(shape): #pylint: disable=E0102 #pragma: no cover
-                a = np.full(shape, data) #pragma: no cover
-                a.flags.writeable = False #pragma: no cover
-                self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
-
         else:
-            # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame. The array cas be 1D (to produce one column) or 2D; greater dimensionality will raise exception.
+            raise ErrorInitFrame('use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).')
 
-            deprecated('The Frame initializer no longer supports creation from untyped iterables; use Frame.from_records to create a Frame from an iterable of iterables; use Frame.from_elements to create a Frame from an iterable.') #pragma: no cover
+        # elif not hasattr(data, '__len__') or isinstance(data, str):
+        #     # and data is a single element to scale to size of index and columns; must defer until after index realization; or, data is FRAME_INITIALIZER_DEFAULT, and index or columns is an iterator, and size as not yet been evaluated
 
-            a = np.array(data) #pragma: no cover
-            a.flags.writeable = False #pragma: no cover
-            self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
+        #     deprecated('The Frame initializer no longer supports creation from an element; use Frame.from_element to create a Frame from an element.') #pragma: no cover
+
+        #     def blocks_constructor(shape): #pylint: disable=E0102 #pragma: no cover
+        #         a = np.full(shape, data) #pragma: no cover
+        #         a.flags.writeable = False #pragma: no cover
+        #         self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
+
+        # else:
+        #     # assume that the argument is castable into an array using default dtype discovery, and can build a TypeBlock that is compatible with this Frame. The array cas be 1D (to produce one column) or 2D; greater dimensionality will raise exception.
+
+        #     deprecated('The Frame initializer no longer supports creation from untyped iterables; use Frame.from_records to create a Frame from an iterable of iterables; use Frame.from_elements to create a Frame from an iterable.') #pragma: no cover
+
+        #     a = np.array(data) #pragma: no cover
+        #     a.flags.writeable = False #pragma: no cover
+        #     self._blocks = TypeBlocks.from_blocks(a) #pragma: no cover
 
         # counts can be zero (not None) if _block was created but is empty
         row_count, col_count = (self._blocks._shape

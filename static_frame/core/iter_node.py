@@ -17,7 +17,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
 
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import deprecated
+# from static_frame.core.exception import deprecated
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -297,8 +297,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {dtype}
         '''
         if not callable(func):
-            deprecated('Using apply() methods with non-callables is on longer supported; use map_fill(), map_any(), or map_all()') #pragma: no cover
-            return self.map_any(func, dtype=dtype) #pragma: no cover
+            raise RuntimeError('Using apply() methods with non-callables is not longer supported; use map_fill(), map_any(), or map_all()')
 
         return self._apply_constructor(
                 self.apply_iter_items(func),

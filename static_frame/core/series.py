@@ -78,7 +78,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import deprecated
+# from static_frame.core.exception import deprecated
 
 from static_frame.core.doc_str import doc_inject
 
@@ -329,11 +329,11 @@ class Series(ContainerOperand):
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
-                deprecated('The Series initializer no longer supports creation from an element; use Series.from_element to create a Series from an element.') #pragma: no cover
-                # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
-                def values_constructor(shape): #pylint: disable=E0102 #pragma: no cover
-                    self.values = np.full(shape, values, dtype=dtype) #pragma: no cover
-                    self.values.flags.writeable = False #pragma: no cover
+                raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
+                # # we cannot create the values until we realize the index, which might be hierarchical and not have final size equal to length
+                # def values_constructor(shape): #pylint: disable=E0102 #pragma: no cover
+                #     self.values = np.full(shape, values, dtype=dtype) #pragma: no cover
+                #     self.values.flags.writeable = False #pragma: no cover
 
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
