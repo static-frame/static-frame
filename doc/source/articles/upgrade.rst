@@ -1,22 +1,20 @@
 
 
 
-Ten Tips for Upgrading from Pandas to StaticFrame
+Ten Tips for Transitioning from Pandas to StaticFrame
 =============================================================
 
-Now that Pandas 1.0 is out, it is the perfect time upgrade to an alternative that offers a more consistent interface and reduces opportunities for error: StaticFrame.
+Instead of upgrading to Pandas 1.0, consider an alternative that offers a more consistent interface and reduces opportunities for error: StaticFrame.
 
 
 Why StaticFrame
 ______________________
 
-After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made my code hard to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
+After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made code harder to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.s
 
 Now, after nearly three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame.
 
-As we approach a 1.0 release, we are looking for feedback. While we have a strong emphasis on test (with 99% coverage and batteries of property tests) we value real-world feedback. Please post questions and issues on GitHub (https://github.com/InvestmentSystems/static-frame).
-
-What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different.
+What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different, and that difference is there to improve maintainability and reduce opportunities for error.
 
 
 No. 1: Consistent Interfaces
@@ -25,8 +23,7 @@ ______________________________________
 
 An interface can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API in many ways to support greater consistency in all of these characteristics.
 
-
-Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class:
+Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class.
 
 
 >>> pd.read_json('[{"name":"muon", "mass":0.106},{"name":"tau", "mass":1.777}]')
@@ -40,7 +37,7 @@ Pandas places its ``DataFrame`` constructors in at least two places: on the root
 1  1.777   tau
 
 
-As there is no benefit to this diversity, StaticFrame places all constructors on the class they construct.
+There is no benefit to this diversity. StaticFrame places all constructors on the class they construct.
 
 
 >>> sf.Frame.from_json('[{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}]')
@@ -60,43 +57,48 @@ As there is no benefit to this diversity, StaticFrame places all constructors on
 <int64> <<U4> <float64>
 
 
+While a default constructor might take a variety of inputs, specialized, explicit constructors are easier to maintain. For example, while Pandas has some specialized ``DataFrame`` constructors (such as ``pd.DataFrame.from_records``, the default ``DataFrame`` constructor accepts a staggering diversity of inputs, including the same inputs as ``pd.DataFrame.from_records``.
 
 
-Specialized, Explicit Constructors
+>>> pd.DataFrame.from_records([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
+    mass  name
+0  0.106  muon
+1  1.777   tau
 
-Pandas default constructors accept a staggering diversity of inputs.
+>>> pd.DataFrame([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
+    mass  name
+0  0.106  muon
+1  1.777   tau
 
-
->>> pd.Series(np.nan, index=('up', 'charm', 'top'))
-up      NaN
-charm   NaN
-top     NaN
-dtype: float64
-
->>> pd.Series({'up': 0.002, 'charm': 1.3, 'top': 173})
-up         0.002
-charm      1.300
-top      173.000
-dtype: float64
+>>> pd.DataFrame([[0.106, "muon"], [1.777, "tau"]], columns=('mass', 'name'))
+    mass  name
+0  0.106  muon
+1  1.777   tau
 
 
+StaticFrame enforces the usage of explicit constructors, creating code that is easier to maintain because function signatures are more narowly defined. We see below that the default constructor will not take untyped data, and instead requires explicit constructors.
 
->>> sf.Series.from_element(np.nan, index=('up', 'charm', 'top'))
-<Series>
+
+>>> sf.Frame([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
+Traceback (most recent call last):
+static_frame.core.exception.ErrorInitFrame: use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).
+
+
+>>> sf.Frame.from_dict_records([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
+<Frame>
+<Index> name  mass      <<U4>
 <Index>
-up       nan
-charm    nan
-top      nan
-<<U5>    <float64>
+0       muon  0.106
+1       tau   1.777
+<int64> <<U4> <float64>
 
->>> sf.Series.from_dict({'up': 0.002, 'charm': 1.3, 'top': 173})
-<Series>
+>>> sf.Frame.from_records([[0.106, "muon"], [1.777, "tau"]], columns=('mass', 'name'))
+<Frame>
+<Index> mass      name  <<U4>
 <Index>
-up       0.002
-charm    1.3
-top      173.0
-<<U5>    <float64>
-
+0       0.106     muon
+1       1.777     tau
+<int64> <float64> <<U4>
 
 
 Having explicit constructors leads to lots of constructors. To help discover the constructors you are looking for, StaticFrame containers expose an ``interface`` attribute that lists the entire public interface of the class or instance.
@@ -481,7 +483,7 @@ strange   0.1       -0.333    quark  False
 
 
 
-No 7: Typed Datetime Indices: Everything is not a Nanosecond
+No 7: Everything is not a Nanosecond
 __________________________________________________________________
 
 Pandas models every date or timestamp as a NumPy nanosecond ``datetime64`` object, regardless if nanosecond resolution is needed or practical. This has the amusing side effect of creating a "Y2262 problem": not permitting dates beyond 2262-04-11.
@@ -739,6 +741,8 @@ No. 9: Indices are Always Unique
 _______________________________________________
 
 
+Remembering to set ``verify_integrity`` to ``True``.
+
 
 
 
@@ -776,6 +780,7 @@ up       0.002
 charm    1.3
 top      173.0
 <<U5>    <float64>
+
 >>> s.to_pandas()
 up         0.002
 charm      1.300
