@@ -1,20 +1,22 @@
 
 
 
-Ten Tips for Transitioning from Pandas to StaticFrame
+Ten Tips for Upgrading from Pandas to StaticFrame
 =============================================================
 
-Now that Pandas 1.0 is out, it is the perfect time consider upgrading to an alternative that offers a more consistent interface and reduces opportunities for error: StaticFrame.
+Now that Pandas 1.0 is out, it is the perfect time upgrade to an alternative that offers a more consistent interface and reduces opportunities for error: StaticFrame.
 
 
 Why StaticFrame
 ______________________
 
-After working with Pandas for years to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool for that work. Sure, Pandas speed was similar to NumPy. And yet, Pandas interface inconsistency made Pandas code hard to read and maintain. In addition, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So, in May of 2017, I began implementation of a library more suitable for critical production systems.
+After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made my code hard to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
-Now, after a few years of development and refinement, we are observing excellent results replacing Pandas with StaticFrame in our production systems. As we approach a 1.0 release, we are looking for feedback. While we have a strong emphasis on test, with 99% coverage and batteries of property tests, real-world feedback is always valuable. Please report issues, feature requests, or discussion items on GitHub (https://github.com/InvestmentSystems/static-frame).
+Now, after nearly three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame.
 
-What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many features are the same (e.g., there is a ``Frame`` and a ``Series`` that have ``loc`` and ``iloc`` selectors), much is different.
+As we approach a 1.0 release, we are looking for feedback. While we have a strong emphasis on test (with 99% coverage and batteries of property tests) we value real-world feedback. Please post questions and issues on GitHub (https://github.com/InvestmentSystems/static-frame).
+
+What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different.
 
 
 No. 1: Consistent Interfaces
