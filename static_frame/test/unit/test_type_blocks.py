@@ -1188,6 +1188,8 @@ class TestUnit(TestCase):
         self.assertEqual(len(disp), 5)
 
 
+    #---------------------------------------------------------------------------
+
     def test_type_blocks_axis_values_a(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
         a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
@@ -1220,6 +1222,17 @@ class TestUnit(TestCase):
                 [[1, 4, 0], [2, 5, 0], [3, 6, 1], [False, True, True], [False, False, False], [True, True, True], ['a', 'c', 'oe'], ['b', 'd', 'od']])
 
 
+    def test_type_blocks_axis_values_c(self) -> None:
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        tb = TypeBlocks.from_blocks((a1, a2, a3))
+
+        with self.assertRaises(AxisInvalid):
+            _ = next(tb.axis_values(-1))
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_extract_iloc_mask_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])

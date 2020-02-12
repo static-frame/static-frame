@@ -380,7 +380,10 @@ class TypeBlocks(ContainerOperand):
                 row_dtype=self._row_dtype,
                 row_multiple=True)
 
-    def axis_values(self, axis: int = 0, reverse: bool = False) -> tp.Iterator[np.ndarray]:
+    def axis_values(self,
+            axis: int = 0,
+            reverse: bool = False
+            ) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
 
         Args:
@@ -434,7 +437,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     yield b[:, column] # excpeted to be immutable
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'no support for axis: {axis}')
 
 
     def element_items(self) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
