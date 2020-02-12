@@ -10,20 +10,20 @@ Instead of upgrading to Pandas 1.0, consider an alternative that offers a more c
 Why StaticFrame
 ______________________
 
-After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made code harder to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.s
+After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made code harder to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
 Now, after nearly three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame.
 
-What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different, and that difference is there to improve maintainability and reduce opportunities for error.
+What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different, and that difference improves maintainability and reduce opportunities for error.
 
 
 No. 1: Consistent Interfaces
 ______________________________________
 
 
-An interface can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API in many ways to support greater consistency in all of these characteristics.
+An API can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API in many ways to support greater consistency in all of these characteristics.
 
-Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class.
+One of the first things you need. Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class.
 
 
 >>> pd.read_json('[{"name":"muon", "mass":0.106},{"name":"tau", "mass":1.777}]')
