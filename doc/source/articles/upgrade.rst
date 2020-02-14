@@ -10,20 +10,22 @@ Instead of upgrading to Pandas 1.0, consider an alternative that offers a more c
 Why StaticFrame
 ______________________
 
-After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API made code harder to maintain. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
+After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard to maintain code. Further, Pandas inconsistent approach to data ownership, and support for mutation and undesirable side effects, led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
 Now, after nearly three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame.
 
-What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different, and that difference improves maintainability and reduce opportunities for error.
+What follows are ten tips to aid in the transition from Pandas to StaticFrame. While many interfaces in StaticFrame are the same as in Pandas, many others are different, and that difference improves maintainability and reduces opportunities for error.
 
 
 No. 1: Consistent Interfaces
 ______________________________________
 
 
-An API can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API in many ways to support greater consistency in all of these characteristics.
+An API can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from the Pandas API to support greater consistency in all of these areas.
 
-One of the first things you need. Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (`pd`, as commonly imported) and (as is more conventional) on the ``DataFrame`` class.
+One of the first things you need are constructors. Pandas places its ``DataFrame`` constructors in at least two places: on the root namespace (``pd``, as commonly imported) and (as is expected) on the ``DataFrame`` class.
+
+For example, JSON data is loaded from a function on the ``pd`` namespace, while records are loaded from the ``DataFrame`` class.
 
 
 >>> pd.read_json('[{"name":"muon", "mass":0.106},{"name":"tau", "mass":1.777}]')
@@ -37,7 +39,7 @@ One of the first things you need. Pandas places its ``DataFrame`` constructors i
 1  1.777   tau
 
 
-There is no benefit to this diversity. StaticFrame places all constructors on the class they construct.
+For the user, there is no benefit to this diversity. StaticFrame places all constructors on the class they construct. For example, ``from_json`` and ``from_dict_records`` are available on the ``Frame`` class.
 
 
 >>> sf.Frame.from_json('[{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}]')
@@ -56,6 +58,8 @@ There is no benefit to this diversity. StaticFrame places all constructors on th
 1       tau   1.777
 <int64> <<U4> <float64>
 
+
+Note that StaticFrame has both a specialized ``from_dict_records`` constructor (explicitly for handling dictionary records, where keys might not align) and a ``from_records`` constructor (for sequence types that are all the same size).
 
 While a default constructor might take a variety of inputs, specialized, explicit constructors are easier to maintain. For example, while Pandas has some specialized ``DataFrame`` constructors (such as ``pd.DataFrame.from_records``, the default ``DataFrame`` constructor accepts a staggering diversity of inputs, including the same inputs as ``pd.DataFrame.from_records``.
 
@@ -76,51 +80,53 @@ While a default constructor might take a variety of inputs, specialized, explici
 1  1.777   tau
 
 
-StaticFrame enforces the usage of explicit constructors, creating code that is easier to maintain because function signatures are more narowly defined. We see below that the default constructor will not take untyped data, and instead requires explicit constructors.
-
+Having multiple ways to do the same thing is undesirable. StaticFrame enforces the usage of explicit constructors, creating code that is easier to maintain because function signatures are more narowly defined. As shown below, the default ``Frame`` constructor will not take untyped data.
 
 >>> sf.Frame([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
 Traceback (most recent call last):
 static_frame.core.exception.ErrorInitFrame: use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).
 
 
->>> sf.Frame.from_dict_records([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
-<Frame>
-<Index> name  mass      <<U4>
-<Index>
-0       muon  0.106
-1       tau   1.777
-<int64> <<U4> <float64>
-
->>> sf.Frame.from_records([[0.106, "muon"], [1.777, "tau"]], columns=('mass', 'name'))
-<Frame>
-<Index> mass      name  <<U4>
-<Index>
-0       0.106     muon
-1       1.777     tau
-<int64> <float64> <<U4>
-
-
 Having explicit constructors leads to lots of constructors. To help discover the constructors you are looking for, StaticFrame containers expose an ``interface`` attribute that lists the entire public interface of the class or instance.
 
+>>> sf.Frame.interface.shape
+(388, 3)
 
->>> sf.Series.interface.shape
-(264, 3)
+We can filter this table just to the constructors using a ``loc`` selection.
 
 
->>> sf.Series.interface.loc[sf.Series.interface['group'] == 'Constructor']
-<Frame: Series>
-<Index>             cls    group       doc                  <<U5>
+>>> sf.Frame.interface.loc[sf.Frame.interface['group'] == 'Constructor']
+<Frame: Frame>
+<Index>                   cls   group       doc                  <<U5>
 <Index: name>
-__init__()          Series Constructor
-from_concat()       Series Constructor Concatenate multi...
-from_concat_items() Series Constructor Produce a Series ...
-from_dict()         Series Constructor Series constructi...
-from_element()      Series Constructor
-from_items()        Series Constructor Series constructi...
-from_pandas()       Series Constructor Given a Pandas Se...
-<<U51>              <<U6>  <<U15>      <<U53>
-
+__init__()                Frame Constructor
+from_arrow()              Frame Constructor Convert an Arrow ...
+from_concat()             Frame Constructor Concatenate multi...
+from_concat_items()       Frame Constructor Produce a Frame w...
+from_csv()                Frame Constructor Specialized versi...
+from_delimited()          Frame Constructor Create a Frame fr...
+from_dict()               Frame Constructor Create a Frame fr...
+from_dict_records()       Frame Constructor Frame constructor...
+from_dict_records_items() Frame Constructor Frame constructor...
+from_element()            Frame Constructor Create a Frame fr...
+from_element_iloc_items() Frame Constructor Given an iterable...
+from_element_loc_items()  Frame Constructor This function is ...
+from_elements()           Frame Constructor Create a Frame fr...
+from_hdf5()               Frame Constructor Load Frame from t...
+from_items()              Frame Constructor Frame constructor...
+from_json()               Frame Constructor Frame constructor...
+from_json_url()           Frame Constructor Frame constructor...
+from_pandas()             Frame Constructor Given a Pandas Da...
+from_parquet()            Frame Constructor Realize a Frame f...
+from_records()            Frame Constructor Frame constructor...
+from_records_items()      Frame Constructor Frame constructor...
+from_series()             Frame Constructor Frame constructor...
+from_sql()                Frame Constructor Frame constructor...
+from_sqlite()             Frame Constructor Load Frame from t...
+from_structured_array()   Frame Constructor Convert a NumPy s...
+from_tsv()                Frame Constructor Specialized versi...
+from_xlsx()               Frame Constructor Load Frame from t...
+<<U51>                    <<U5> <<U15>      <<U53>
 
 
 
