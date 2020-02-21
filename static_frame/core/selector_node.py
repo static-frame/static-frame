@@ -127,17 +127,17 @@ class InterfaceAssign2D(tp.Generic[TContainer]):
 
     @property
     def bloc(self) -> InterfaceGetItem[TContainer]:
-        '''Boolean based selection.'''
+        '''Boolean based assignment.'''
         return InterfaceGetItem(self._func_bloc)
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
-        '''Integer-position based selection.'''
+        '''Integer-position based assignment.'''
         return InterfaceGetItem(self._func_iloc)
 
     @property
     def loc(self) -> InterfaceGetItem[TContainer]:
-        '''Label-based selection.
+        '''Label-based assignment.
         '''
         return InterfaceGetItem(self._func_loc)
 

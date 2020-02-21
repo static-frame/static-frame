@@ -900,6 +900,7 @@ _DT64_YEAR = np.dtype('datetime64[Y]')
 _DT64_M = np.dtype('datetime64[m]')
 _DT64_S = np.dtype('datetime64[s]')
 _DT64_MS = np.dtype('datetime64[ms]')
+_DT64_NS = np.dtype('datetime64[ns]')
 
 _TD64_DAY = np.timedelta64(1, 'D')
 _TD64_MONTH = np.timedelta64(1, 'M')
@@ -907,6 +908,7 @@ _TD64_YEAR = np.timedelta64(1, 'Y')
 _TD64_M = np.timedelta64(1, 'm')
 _TD64_S = np.timedelta64(1, 's')
 _TD64_MS = np.timedelta64(1, 'ms')
+_TD64_NS = np.timedelta64(1, 'ns')
 
 _DT_NOT_FROM_INT = (_DT64_DAY, _DT64_MONTH)
 

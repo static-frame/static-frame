@@ -3,6 +3,15 @@
 What is New in Static Frame
 ===============================
 
+
+0.6.1
+----------
+
+The ``bloc`` and ``assign.bloc`` selectors on ``Frame`` now use ``[]`` instead of ``()``, aligning the interface with other selectors.
+
+Added ``IndexNanosecond`` and ``IndexNanosecondGO`` indices.
+
+
 0.6.0
 ----------
 

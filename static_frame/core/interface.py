@@ -50,7 +50,6 @@ Interface = namedtuple('Interface', (
         'doc'
         ))
 
-
 class InterfaceGroup:
     Attribute = 'Attribute'
     Constructor = 'Constructor'
@@ -133,17 +132,11 @@ class InterfaceSummary:
 
     GETITEM = '__getitem__'
 
-    # SELECTOR_ROOT = {'__getitem__', 'iloc', 'loc'}
-
     # must all be members of InterfaceSelection2D
     ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
-
     ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
 
-
     _CLS_TO_INSTANCE_CACHE: tp.Dict[int, int] = {}
-
-
 
     # astype is a normal function in Series, is a selector in Frame
 
@@ -276,10 +269,6 @@ class InterfaceSummary:
                     display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
                     doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
-
-                # display = f'{name}.bloc()'
-                # doc = cls.scrub_doc(getattr(InterfaceAssign2D, 'bloc').__doc__)
-                # yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
             elif callable(obj):
                 display = f'{name}()'

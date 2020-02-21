@@ -18,12 +18,13 @@ from static_frame.core.util import YearInitializer
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 
-from static_frame.core.util import _DT64_DAY
-from static_frame.core.util import _DT64_MONTH
 from static_frame.core.util import _DT64_YEAR
+from static_frame.core.util import _DT64_MONTH
+from static_frame.core.util import _DT64_DAY
 from static_frame.core.util import _DT64_M
 from static_frame.core.util import _DT64_S
 from static_frame.core.util import _DT64_MS
+from static_frame.core.util import _DT64_NS
 
 from static_frame.core.util import _TD64_DAY
 from static_frame.core.util import _TD64_MONTH
@@ -445,3 +446,23 @@ class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
     __slots__ = _INDEX_GO_SLOTS
 
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
+
+
+#-------------------------------------------------------------------------------
+
+@doc_inject(selector='index_date_time_init')
+class IndexNanosecond(_IndexDatetime):
+    '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ns]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = _DT64_NS
+    __slots__ = _INDEX_SLOTS
+
+class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexNanosecond
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO

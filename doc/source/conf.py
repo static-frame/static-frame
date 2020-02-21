@@ -72,11 +72,20 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.IndexGO,
             sf.IndexHierarchy,
             sf.IndexHierarchyGO,
-            sf.IndexDate,
-            sf.IndexYearMonth,
             sf.IndexYear,
-            sf.IndexMillisecond,
+            sf.IndexYearGO,
+            sf.IndexYearMonth,
+            sf.IndexYearMonthGO,
+            sf.IndexDate,
+            sf.IndexDateGO,
+            sf.IndexMinute,
+            sf.IndexMinuteGO,
             sf.IndexSecond,
+            sf.IndexSecondGO,
+            sf.IndexMillisecond,
+            sf.IndexMillisecondGO,
+            sf.IndexNanosecond,
+            sf.IndexNanosecondGO,
             ):
         # import ipdb; ipdb.set_trace()
         post['interface'].append((target.__name__, target.interface))

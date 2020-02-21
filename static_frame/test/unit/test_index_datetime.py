@@ -7,19 +7,20 @@ import datetime
 # from io import StringIO
 
 from static_frame import Index
-# from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import IndexDateGO
 
 # from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
 
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
 
 from static_frame import IndexYear
 from static_frame import IndexYearGO
+
+from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
+
+from static_frame import IndexDate
+from static_frame import IndexDateGO
 
 from static_frame import IndexSecond
 from static_frame import IndexSecondGO
@@ -29,6 +30,9 @@ from static_frame import IndexMinuteGO
 
 from static_frame import IndexMillisecond
 from static_frame import IndexMillisecondGO
+
+from static_frame import IndexNanosecond
+from static_frame import IndexNanosecondGO
 
 # from static_frame import HLoc
 # from static_frame import ILoc
@@ -52,7 +56,7 @@ class TestUnit(TestCase):
                 (IndexMinute, IndexMinuteGO),
                 (IndexSecond, IndexSecondGO),
                 (IndexMillisecond, IndexMillisecondGO),
-
+                (IndexNanosecond, IndexNanosecondGO),
                 ):
             self.assertEqual(base._MUTABLE_CONSTRUCTOR, base_go)
             self.assertEqual(base_go._IMMUTABLE_CONSTRUCTOR, base)
@@ -521,6 +525,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx1.loc['2018-01'].values.tolist(),
                 [datetime.datetime(2018, 1, 1, 3, 30), datetime.datetime(2018, 1, 1, 3, 45)])
+
+
+    def test_index_nanosecond_a(self) -> None:
+
+        idx1 = IndexNanosecond(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
+        self.assertTrue(len(idx1.loc['2019']), 1)
+        self.assertTrue(len(idx1.loc['2018']), 2)
+
+        # NP reduces nanoseconds to integers
+        self.assertEqual(idx1.values.tolist(),
+                [1514777400000000000, 1514778300000000000, 1546400700000000000])
 
 
     #---------------------------------------------------------------------------
