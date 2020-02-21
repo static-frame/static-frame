@@ -52,7 +52,9 @@ if __name__ == '__main__':
         embed(user_ns=imports, colors='neutral')
 
     else:
-        banner = f'Python {version} on {platform}\n' + '\n'.join(
-                f'>>> {command}' for command in commands
+        banner_head = f'Python {version} on {platform}\n'
+        banner_body = '\n'.join(f'>>> {command}' for command in commands)
+        interact(banner=(banner_head + HexColor.format_terminal(0x505050, banner_body)),
+                local=imports,
+                exitmsg=''
                 )
-        interact(banner=HexColor.format_terminal(0x505050, banner), local=imports, exitmsg='')

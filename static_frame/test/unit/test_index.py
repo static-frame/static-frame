@@ -707,9 +707,19 @@ class TestUnit(TestCase):
 
         pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
         idx = IndexDateGO.from_pandas(pdidx)
+        self.assertFalse(idx.STATIC)
         self.assertEqual(idx.values.tolist(),
                 [datetime.date(2018, 1, 1), datetime.date(2018, 6, 1)]
                 )
+
+
+    def test_index_from_pandas_d(self) -> None:
+        import pandas
+
+        pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
+        with self.assertRaises(ErrorInitIndex):
+            idx = Index.from_pandas(pdidx)
+
 
     #---------------------------------------------------------------------------
     def test_index_iter_a(self) -> None:

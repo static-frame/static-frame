@@ -18,7 +18,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerOperand
 # from static_frame.core.selector_node import InterfaceGetItem
 # from static_frame.core.selector_node import TContainer
-
+from static_frame.core.exception import ErrorInitIndex
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -126,31 +126,32 @@ class IndexBase(ContainerOperand):
     @classmethod
     def from_pandas(cls,
             value: 'pandas.DataFrame',
-            *,
-            is_static: bool = True) -> 'IndexBase':
+            ) -> 'IndexBase':
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
         import pandas
+        from static_frame.core.index_datetime import _IndexDatetime
         from static_frame import Index
         from static_frame import IndexGO
-        from static_frame import IndexDate
-        from static_frame import IndexDateGO
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
 
         if isinstance(value, pandas.MultiIndex):
             # iterating over a hierarchucal index will iterate over labels
             name = tuple(value.names)
-            if not is_static:
+            if not cls.STATIC:
                 return IndexHierarchyGO.from_labels(value, name=name)
             return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
-            if not is_static:
-                return IndexDateGO(value, name=value.name)
-            return IndexDate(value, name=value.name)
+            # coming from a Pandas datetime index, in the absence of other information, the best match is a Nanosecond index
+            if not issubclass(cls, _IndexDatetime):
+                raise ErrorInitIndex(f'cannot create a datetime Index from {cls}')
+            if not cls.STATIC:
+                return cls(value, name=value.name)
+            return cls(value, name=value.name)
 
-        if not is_static:
+        if not cls.STATIC:
             return IndexGO(value, name=value.name)
         return Index(value, name=value.name)
 

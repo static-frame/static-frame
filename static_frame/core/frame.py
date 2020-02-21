@@ -1747,9 +1747,8 @@ class Frame(ContainerOperand):
             name = None
 
         return cls(blocks,
-                index=IndexBase.from_pandas(value.index),
-                columns=IndexBase.from_pandas(value.columns,
-                        is_static=cls._COLUMNS_CONSTRUCTOR.STATIC),
+                index=Index.from_pandas(value.index),
+                columns=cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns),
                 name=name,
                 own_data=True,
                 own_index=True,
