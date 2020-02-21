@@ -2009,6 +2009,10 @@ class Frame(ContainerOperand):
         return InterfaceGetItem(self._extract_iloc)
 
     @property
+    def bloc(self) -> InterfaceGetItem:
+        return InterfaceGetItem(self._extract_bloc)
+
+    @property
     def drop(self) -> InterfaceSelection2D:
         return InterfaceSelection2D(
             func_iloc=self._drop_iloc,
@@ -2933,17 +2937,8 @@ class Frame(ContainerOperand):
                 column_key=iloc_column_key
                 )
 
-    @doc_inject(selector='selector')
-    def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
-        '''Selector of columns by label.
 
-        Args:
-            key: {key_loc}
-        '''
-        return self._extract(*self._compound_loc_to_getitem_iloc(key))
-
-
-    def bloc(self, key: Bloc2DKeyType) -> Series:
+    def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
         2D Boolean selector, selected by either a Boolean 2D Frame or array.
         '''
@@ -2956,6 +2951,17 @@ class Frame(ContainerOperand):
                 for x, y in zip(*np.nonzero(bloc_key))
                 )
         return Series(values, index=index, own_index=True)
+
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
+        '''Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        '''
+        return self._extract(*self._compound_loc_to_getitem_iloc(key))
+
 
     #---------------------------------------------------------------------------
 

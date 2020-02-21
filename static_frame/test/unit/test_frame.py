@@ -1906,12 +1906,12 @@ class TestUnit(TestCase):
 
         sel = np.array([[False, True, False, True, False],
                 [True, False, True, False, True]])
-        f2 = f1.assign.bloc(sel)(-10)
+        f2 = f1.assign.bloc[sel](-10)
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('x', 1), ('y', -10))), ('q', (('x', -10), ('y', 50))), ('r', (('x', 'a'), ('y', -10))), ('s', (('x', -10), ('y', True))), ('t', (('x', True), ('y', -10))))
                 )
 
-        f3 = f1.assign.bloc(sel)(None)
+        f3 = f1.assign.bloc[sel](None)
         self.assertEqual(f3.to_pairs(0),
                 (('p', (('x', 1), ('y', None))), ('q', (('x', None), ('y', 50))), ('r', (('x', 'a'), ('y', None))), ('s', (('x', None), ('y', True))), ('t', (('x', True), ('y', None))))
                 )
@@ -1930,7 +1930,7 @@ class TestUnit(TestCase):
                 [True, False, True, False]])
 
         # assignment from a frame of the same size
-        f2 =f1.assign.bloc(sel)(f1 * 100)
+        f2 =f1.assign.bloc[sel](f1 * 100)
 
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('x', 1), ('y', 3000))), ('q', (('x', 200), ('y', 50))), ('r', (('x', 20), ('y', -400))), ('s', (('x', 4000), ('y', 5))))
@@ -1949,7 +1949,7 @@ class TestUnit(TestCase):
 
         sel = f1 >= 20
 
-        f2 = f1.assign.bloc(sel)(f1 * 100)
+        f2 = f1.assign.bloc[sel](f1 * 100)
 
         match = (('p', (('x', 1), ('y', 3000))), ('q', (('x', 2), ('y', 5000))), ('r', (('x', 2000), ('y', -4))), ('s', (('x', 4000), ('y', 5))))
 
@@ -1957,7 +1957,7 @@ class TestUnit(TestCase):
 
         # reording the value will have no affect
         f3 = f1.reindex(columns=('r','q','s','p'))
-        f4 = f1.assign.bloc(sel)(f3 * 100)
+        f4 = f1.assign.bloc[sel](f3 * 100)
 
         self.assertEqual(f4.to_pairs(0), match)
 
@@ -1979,7 +1979,7 @@ class TestUnit(TestCase):
                 columns=('q', 'r',),
                 index=('y',))
 
-        self.assertEqual(f1.assign.bloc(sel)(f2).to_pairs(0),
+        self.assertEqual(f1.assign.bloc[sel](f2).to_pairs(0),
                 (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', -100))), ('r', (('x', 20), ('y', -100))), ('s', (('x', 40), ('y', 5))))
             )
 
@@ -1995,19 +1995,19 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             # invalid bloc_key
-            f1.assign.bloc([[True, False], [False, True]])(3)
+            f1.assign.bloc[[[True, False], [False, True]]](3)
 
         with self.assertRaises(RuntimeError):
-            f1.assign.bloc(np.array([[True, False, False], [False, True, True]]))(3)
+            f1.assign.bloc[np.array([[True, False, False], [False, True, True]])](3)
 
         with self.assertRaises(RuntimeError):
-            f1.assign.bloc(np.array([[True, False], [False, True]]))(np.array([[100, 200, 10], [200, 300, 30]]))
+            f1.assign.bloc[np.array([[True, False], [False, True]])](np.array([[100, 200, 10], [200, 300, 30]]))
 
 
         a1 = np.array([[True, False], [False, True]])
         a2 = np.array([[100, 200], [200, 300]])
         self.assertEqual(
-                f1.assign.bloc(a1)(a2).to_pairs(0),
+                f1.assign.bloc[a1](a2).to_pairs(0),
                 (('p', (('x', 100), ('y', 30))), ('q', (('x', 20), ('y', 300))))
                 )
 
@@ -7191,17 +7191,17 @@ class TestUnit(TestCase):
                 columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
                 name='f3')
 
-        s1 = f1.bloc((f1 <= 2) | (f1 > 4))
+        s1 = f1.bloc[(f1 <= 2) | (f1 > 4)]
         self.assertEqual(s1.to_pairs(),
                 ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
                 )
 
-        s2 = f2.bloc((f2 < 0))
+        s2 = f2.bloc[(f2 < 0)]
         self.assertEqual(s2.to_pairs(),
                 (((('II', 'a'), 'x'), -5), ((('II', 'a'), 'y'), -5), ((('II', 'b'), 'y'), -3000))
                 )
 
-        s3 = f3.bloc(f3 < 11)
+        s3 = f3.bloc[f3 < 11]
         self.assertEqual(s3.to_pairs(),
                 ((('p', ('I', 'a')), 10), (('q', ('II', 'a')), -50), (('q', ('II', 'b')), -60))
                 )
@@ -7214,7 +7214,7 @@ class TestUnit(TestCase):
                 index=('a', 'b'),
                 columns=['d', 'c'])
         self.assertEqual(
-                f.assign.bloc(f)('T').assign.bloc(~f)('').to_pairs(0),
+                f.assign.bloc[f]('T').assign.bloc[~f]('').to_pairs(0),
                 (('d', (('a', 'T'), ('b', ''))), ('c', (('a', ''), ('b', 'T'))))
                 )
 

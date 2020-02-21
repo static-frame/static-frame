@@ -5,7 +5,6 @@ import numpy as np
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import Bloc2DKeyType
 
 from static_frame.core.doc_str import doc_inject
 
@@ -126,10 +125,10 @@ class InterfaceAssign2D(tp.Generic[TContainer]):
         '''
         return self._func_getitem(key)
 
-    def bloc(self, key: Bloc2DKeyType) -> tp.Any:
-        '''2D Boolean-based assignment.
-        '''
-        return self._func_bloc(key)
+    @property
+    def bloc(self) -> InterfaceGetItem[TContainer]:
+        '''Boolean based selection.'''
+        return InterfaceGetItem(self._func_bloc)
 
     @property
     def iloc(self) -> InterfaceGetItem[TContainer]:
