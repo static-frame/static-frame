@@ -133,9 +133,13 @@ class InterfaceSummary:
 
     GETITEM = '__getitem__'
 
-    SELECTOR_ROOT = {'__getitem__', 'iloc', 'loc'}
-    # SELECTOR_COMPOUND = {'drop', 'mask', 'masked_array', 'assign'}
+    # SELECTOR_ROOT = {'__getitem__', 'iloc', 'loc'}
+
+    # must all be members of InterfaceSelection2D
     ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
+
+    ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
+
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[int, int] = {}
 
@@ -261,10 +265,6 @@ class InterfaceSummary:
                 display = f'{name}[]' if name != cls.GETITEM else '[]'
                 yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
-            elif name == 'bloc':
-                display = f'{name}()'
-                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
-
             elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
                     display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
@@ -272,14 +272,14 @@ class InterfaceSummary:
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
             elif isinstance(obj, InterfaceAssign2D):
-                for field in cls.ATTR_SELECTOR_NODE:
+                for field in cls.ATTR_SELECTOR_NODE_ASSIGN:
                     display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
-                    doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
+                    doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
                     yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
-                display = f'{name}.bloc()'
-                doc = cls.scrub_doc(getattr(InterfaceAssign2D, 'bloc').__doc__)
-                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+                # display = f'{name}.bloc()'
+                # doc = cls.scrub_doc(getattr(InterfaceAssign2D, 'bloc').__doc__)
+                # yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
 
             elif callable(obj):
                 display = f'{name}()'
