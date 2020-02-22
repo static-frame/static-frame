@@ -11,7 +11,7 @@ The ``bloc`` and ``assign.bloc`` selectors on ``Frame`` now use ``[]`` instead o
 
 Added ``IndexNanosecond`` and ``IndexNanosecondGO`` indices.
 
-All ``iter_*`` interfaces now explictly define and require keyword-only arguments.
+All ``iter_*`` interfaces now explictly define specialized arguments.
 
 
 0.6.0
