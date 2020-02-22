@@ -31,16 +31,7 @@ from static_frame import IndexAutoFactory
 
 from static_frame import HLoc
 
-# from static_frame.core.util import isna_array
-# from static_frame.core.util import resolve_dtype
-# from static_frame.core.util import resolve_dtype_iter
-# from static_frame.core.util import array_to_duplicated
-
-
-# from static_frame.core.container import _all
-# from static_frame.core.container import _any
-# from static_frame.core.container import _nanall
-# from static_frame.core.container import _nanany
+from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
 
@@ -2204,7 +2195,33 @@ class TestUnit(TestCase):
         self.assertEqual('s4', s4.name)
 
 
+    #---------------------------------------------------------------------------
 
+    def test_series_iter_group_a(self) -> None:
+
+        s1 = Series((10, 4, 10, 4, 10),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=object)
+
+        group = tuple(s1.iter_group(axis=0))
+
+        self.assertEqual(group[0].to_pairs(),
+                (('a', 10), ('c', 10), ('e', 10)))
+
+        self.assertEqual(group[1].to_pairs(),
+                (('b', 4), ('d', 4)))
+
+        with self.assertRaises(AxisInvalid):
+            tuple(s1.iter_group(axis=1))
+
+        with self.assertRaises(TypeError):
+            tuple(s1.iter_group('sdf')) #type: ignore
+
+        with self.assertRaises(TypeError):
+            tuple(s1.iter_group(foo='sdf')) #type: ignore
+
+
+    #---------------------------------------------------------------------------
     def test_series_iter_group_index_a(self) -> None:
 
         s1 = Series((10, 3, 15, 21, 28),
@@ -2221,14 +2238,14 @@ class TestUnit(TestCase):
         shapes = ('square', 'circle', 'triangle')
         s1 = sf.Series(range(6), index=sf.IndexHierarchy.from_product(shapes, colors))
 
-        post = tuple(s1.iter_group_index(0))
+        post = tuple(s1.iter_group_index(depth_level=0))
         self.assertTrue(len(post), 3)
 
-        self.assertEqual(s1.iter_group_index(0).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_index(depth_level=0).apply(np.sum).to_pairs(),
                 (('circle', 5), ('square', 1), ('triangle', 9))
                 )
 
-        self.assertEqual(s1.iter_group_index(1).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_index(depth_level=1).apply(np.sum).to_pairs(),
                 (('green', 9), ('red', 6))
                 )
 
@@ -2238,12 +2255,14 @@ class TestUnit(TestCase):
         shapes = ('square', 'circle', 'triangle')
         textures = ('smooth', 'rough')
 
-        s1 = sf.Series(range(12), index=sf.IndexHierarchy.from_product(shapes, colors, textures))
+        s1 = sf.Series(range(12),
+                index=sf.IndexHierarchy.from_product(shapes, colors, textures)
+                )
 
-        post = tuple(s1.iter_group_index([0, 2]))
+        post = tuple(s1.iter_group_index(depth_level=[0, 2]))
         self.assertTrue(len(post), 6)
 
-        self.assertEqual(s1.iter_group_index([0, 2]).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_index(depth_level=[0, 2]).apply(np.sum).to_pairs(),
                 ((('circle', 'rough'), 12), (('circle', 'smooth'), 10), (('square', 'rough'), 4), (('square', 'smooth'), 2), (('triangle', 'rough'), 20), (('triangle', 'smooth'), 18))
                 )
 

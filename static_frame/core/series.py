@@ -60,6 +60,9 @@ from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeDepthLevel
+
 from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.index import Index
@@ -75,7 +78,9 @@ from static_frame.core.container_util import rehierarch_and_map
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
+
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import AxisInvalid
 
 from static_frame.core.doc_str import doc_inject
 
@@ -452,9 +457,10 @@ class Series(ContainerOperand):
                 func_getitem=self._extract_loc_assign
                 )
 
+    #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNode:
-        return IterNode(
+    def iter_group(self) -> IterNodeAxis:
+        return IterNodeAxis(
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
@@ -462,18 +468,18 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_group_items(self) -> IterNode:
-        return IterNode(
+    def iter_group_items(self) -> IterNodeAxis:
+        return IterNodeAxis(
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
                 yield_type=IterNodeType.ITEMS
                 )
 
-
+    #---------------------------------------------------------------------------
     @property
-    def iter_group_index(self) -> IterNode:
-        return IterNode(
+    def iter_group_index(self) -> IterNodeDepthLevel:
+        return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_index_items,
                 function_values=self._axis_group_index,
@@ -482,8 +488,8 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_group_index_items(self) -> IterNode:
-        return IterNode(
+    def iter_group_index_items(self) -> IterNodeDepthLevel:
+        return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_index_items,
                 function_values=self._axis_group_index,
@@ -491,10 +497,10 @@ class Series(ContainerOperand):
                 apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
                 )
 
-
+    #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNode:
-        return IterNode(
+    def iter_element(self) -> IterNodeAxis:
+        return IterNodeAxis(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -502,8 +508,8 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNode:
-        return IterNode(
+    def iter_element_items(self) -> IterNodeAxis:
+        return IterNodeAxis(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -1231,12 +1237,18 @@ class Series(ContainerOperand):
     # axis functions
 
     def _axis_group_items(self, *, axis=0):
+        if axis != 0:
+            raise AxisInvalid(f'invalid axis {axis}')
+
         groups, locations = array_to_groups_and_locations(self.values)
         for idx, g in enumerate(groups):
             selection = locations == idx
             yield g, self._extract_iloc(selection)
 
     def _axis_group(self, *, axis=0):
+        if axis != 0:
+            raise AxisInvalid(f'invalid axis {axis}')
+
         yield from (x for _, x in self._axis_group_items(axis=axis))
 
 
@@ -1245,9 +1257,15 @@ class Series(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
         '''
+        if axis != 0:
+            raise AxisInvalid(f'invalid axis {axis}')
+
         yield from zip(self._index, self.values)
 
     def _axis_element(self, *, axis=0) -> tp.Iterator[tp.Any]:
+        if axis != 0:
+            raise AxisInvalid(f'invalid axis {axis}')
+
         yield from self.values
 
 

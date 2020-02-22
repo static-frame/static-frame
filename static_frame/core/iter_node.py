@@ -16,6 +16,8 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.util import DepthLevelSpecifier
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -328,7 +330,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                         use_threads=use_threads),
                 dtype=dtype)
 
-    def __iter__(self) -> tp.Union[tp.Iterator[tp.Any], tp.Iterator[tp.Tuple[tp.Any, tp.Any]]]:
+    def __iter__(self) -> tp.Union[
+            tp.Iterator[tp.Any],
+            tp.Iterator[tp.Tuple[tp.Any, tp.Any]]
+            ]:
         '''
         Return a generator based on the yield type.
         '''
@@ -341,19 +346,20 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
 #-------------------------------------------------------------------------------
 
+_ITER_NODE_SLOTS = (
+        '_container',
+        '_func_values',
+        '_func_items',
+        '_yield_type',
+        '_apply_type'
+        )
+
 class IterNode(tp.Generic[FrameOrSeries]):
     '''Interface to a type of iteration on :py:class:`static_frame.Series` and :py:class:`static_frame.Frame`.
     '''
-    # '''Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
-    # '''
+    # Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
 
-    __slots__ = (
-            '_container',
-            '_func_values',
-            '_func_items',
-            '_yield_type',
-            '_apply_type'
-            )
+    __slots__ = _ITER_NODE_SLOTS
 
     def __init__(self, *,
             container: FrameOrSeries,
@@ -362,6 +368,11 @@ class IterNode(tp.Generic[FrameOrSeries]):
             yield_type: IterNodeType,
             apply_type: IterNodeApplyType = IterNodeApplyType.SERIES_ITEMS
             ) -> None:
+        '''
+        Args:
+            function_values: will be partialed with arguments given with __call__.
+            function_items: will be partialed with arguments given with __call__.
+        '''
 
         self._container: FrameOrSeries = container
         self._func_values = function_values
@@ -370,7 +381,10 @@ class IterNode(tp.Generic[FrameOrSeries]):
         self._apply_type = apply_type
 
     # Returns IterNodeDelegate... may need some TypeVar wizardry here...
-    def __call__(self, *args: object, **kwargs: object) -> IterNodeDelegate[FrameOrSeries]:
+    def __call__(self,
+            *args: object,
+            **kwargs: object
+            ) -> IterNodeDelegate[FrameOrSeries]:
         '''
         In usage as an iteator, the args passed here are expected to be argument for the core iterators, i.e., axis arguments.
         '''
@@ -415,3 +429,54 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., FrameOrSeries], apply_constructor)
                 )
+
+
+# specialize IterNode based on arguments given to __call__
+
+class IterNodeAxis(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, *, #type: ignore
+            axis: int = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self, axis=axis)
+
+
+class IterNodeDepthLevel(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, *, #type: ignore
+            depth_level: DepthLevelSpecifier = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self, depth_level=depth_level)
+
+
+class IterNodeAxisWindow(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, *, #type: ignore
+            axis: int = 0,
+            size: int = 2,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[AnyCallable] = None,
+            window_valid: tp.Optional[AnyCallable] = None,
+            label_shift: int = 0,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self,
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                )
+
