@@ -504,6 +504,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArg:
+        '''
+        Iterator of elements.
+        '''
         return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,
@@ -513,6 +516,9 @@ class Series(ContainerOperand):
 
     @property
     def iter_element_items(self) -> IterNodeNoArg:
+        '''
+        Iterator of label, element pairs.
+        '''
         return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,

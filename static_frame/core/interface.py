@@ -29,6 +29,13 @@ from static_frame.core.display import Display
 
 # from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
+from static_frame.core.iter_node import IterNodeNoArg
+from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeGroup
+from static_frame.core.iter_node import IterNodeGroupAxis
+from static_frame.core.iter_node import IterNodeDepthLevel
+from static_frame.core.iter_node import IterNodeDepthLevelAxis
+from static_frame.core.iter_node import IterNodeWindow
 
 # from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
@@ -248,12 +255,29 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Exporter, display, doc)
 
             elif name.startswith('iter_'):
-                display = f'{name}(axis)'
+                # assert isinstance(obj, IterNode)
+                if isinstance(obj, IterNodeNoArg):
+                    display = f'{name}()'
+                elif isinstance(obj, IterNodeAxis):
+                    display = f'{name}(axis)'
+                elif isinstance(obj, IterNodeGroup):
+                    display = f'{name}()'
+                elif isinstance(obj, IterNodeGroupAxis):
+                    display = f'{name}(key, axis)'
+                elif isinstance(obj, IterNodeDepthLevel):
+                    display = f'{name}(depth_level)'
+                elif isinstance(obj, IterNodeDepthLevelAxis):
+                    display = f'{name}(depth_level, axis)'
+                elif isinstance(obj, IterNodeWindow):
+                    display = f'{name}(size, step, axis, ...)'
+                else:
+                    display = f'{name}()'
+
                 yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
                 for field in cls.ATTR_ITER_NODE:
-                    display = f'{name}(axis).{field}()'
+                    display_sub = f'{display}.{field}()'
                     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
-                    yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
+                    yield Interface(cls_name, InterfaceGroup.Iterator, display_sub, doc)
 
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 display = f'{name}[]' if name != cls.GETITEM else '[]'

@@ -70,7 +70,7 @@ class DOC_TEMPLATE:
     '''
 
     name = '''
-    A hashable attached to this container.
+    A hashable label attached to this container.
     '''
 
     #---------------------------------------------------------------------------

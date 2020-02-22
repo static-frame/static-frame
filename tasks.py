@@ -47,7 +47,7 @@ def interface(context, container=None):
     if not container:
         def frames():
             for cls in sorted(subclasses(ContainerBase), key=lambda cls: cls.__name__):
-                yield cls.interface
+                yield cls.interface.unset_index()
         f = sf.Frame.from_concat(frames(), axis=0, index=sf.IndexAutoFactory)
     else:
         f = getattr(sf, container).interface
