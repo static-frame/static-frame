@@ -704,7 +704,7 @@ Jupiter  0.0
 >>> [x for x in f.iter_tuple(axis=1)]
 [Axis(diameter=12756.0, mass=5.97), Axis(diameter=6792.0, mass=0.642), Axis(diameter=142984.0, mass=1898.0)]
 
->>> f.iter_tuple(1).apply(lambda nt: nt.mass / (4 / 3 * np.pi * (nt.diameter * 0.5) ** 3))
+>>> f.iter_tuple(axis=1).apply(lambda nt: nt.mass / (4 / 3 * np.pi * (nt.diameter * 0.5) ** 3))
 <Series>
 <Index>
 Earth    5.49328558e-12
@@ -758,7 +758,7 @@ mass            5.97
 <<U8>           <float64>
 
 
->>> f.iter_series(0).apply(lambda s: s.mean())
+>>> f.iter_series(axis=0).apply(lambda s: s.mean())
 <Series>
 <Index>
 diameter 54177.333333333336
@@ -772,13 +772,13 @@ mass     634.8706666666667
 #start_frame_iter_series_items_a
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'))
 
->>> [(k, v.mean()) for k, v in f.iter_series_items(0)]
+>>> [(k, v.mean()) for k, v in f.iter_series_items(axis=0)]
 [('diameter', 54177.333333333336), ('mass', 634.8706666666667)]
 
->>> [(k, v.max()) for k, v in f.iter_series_items(1)]
+>>> [(k, v.max()) for k, v in f.iter_series_items(axis=1)]
 [('Earth', 12756.0), ('Mars', 6792.0), ('Jupiter', 142984.0)]
 
->>> f.iter_series_items(0).apply(lambda k, v: v.mean() if k == 'diameter' else v.sum())
+>>> f.iter_series_items(axis=0).apply(lambda k, v: v.mean() if k == 'diameter' else v.sum())
 <Series>
 <Index>
 diameter 54177.333333333336

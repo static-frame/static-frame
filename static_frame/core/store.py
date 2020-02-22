@@ -290,7 +290,7 @@ class Store:
             index_values = index.values
 
             def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
-                for idx, row in enumerate(frame.iter_array(1)):
+                for idx, row in enumerate(frame.iter_array(axis=1)):
                     if index.depth > 1:
                         index_row = index_values[idx] # this is an array
                     else:

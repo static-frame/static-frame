@@ -373,14 +373,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
             function_values: will be partialed with arguments given with __call__.
             function_items: will be partialed with arguments given with __call__.
         '''
-
         self._container: FrameOrSeries = container
         self._func_values = function_values
         self._func_items = function_items
         self._yield_type = yield_type
         self._apply_type = apply_type
 
-    # Returns IterNodeDelegate... may need some TypeVar wizardry here...
     def __call__(self,
             *args: object,
             **kwargs: object
@@ -418,7 +416,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     )
         elif self._apply_type is IterNodeApplyType.INDEX_LABELS:
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
-            # import ipdb; ipdb.set_trace()
             apply_constructor = Series.from_items
         else:
             raise NotImplementedError()
@@ -431,26 +428,76 @@ class IterNode(tp.Generic[FrameOrSeries]):
                 )
 
 
+#-------------------------------------------------------------------------------
 # specialize IterNode based on arguments given to __call__
+
+class IterNodeNoArg(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, #type: ignore
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self)
+
 
 class IterNodeAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, *, #type: ignore
+    def __call__(self, #type: ignore
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.__call__(self, axis=axis)
+
+
+class IterNodeGroup(IterNode[FrameOrSeries]):
+    '''
+    Iterator on 1D groupings where no args are required (but axis is retained for compatibility)
+    '''
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, #type: ignore
+            *,
+            axis: int = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self, axis=axis)
+
+class IterNodeGroupAxis(IterNode[FrameOrSeries]):
+    '''
+    Iterator on 2D groupings where key and axis are required.
+    '''
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, #type: ignore
+            key,
+            *,
+            axis: int = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self, key=key, axis=axis)
 
 
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, *, #type: ignore
+    def __call__(self, #type: ignore
             depth_level: DepthLevelSpecifier = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.__call__(self, depth_level=depth_level)
+
+
+class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self, #type: ignore
+            depth_level: DepthLevelSpecifier = 0,
+            *,
+            axis: int = 0
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.__call__(self, depth_level=depth_level, axis=axis)
 
 
 class IterNodeWindow(IterNode[FrameOrSeries]):

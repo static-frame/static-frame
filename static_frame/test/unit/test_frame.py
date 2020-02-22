@@ -973,11 +973,11 @@ class TestUnit(TestCase):
                 )
 
         # iter columns
-        post = f1.iter_array(0).apply_pool(np.sum, max_workers=4, use_threads=True)
+        post = f1.iter_array(axis=0).apply_pool(np.sum, max_workers=4, use_threads=True)
         self.assertEqual(post.shape, (100,))
         self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
-        post = f1.iter_array(0).apply_pool(np.sum, max_workers=4, use_threads=False)
+        post = f1.iter_array(axis=0).apply_pool(np.sum, max_workers=4, use_threads=False)
         self.assertEqual(post.shape, (100,))
         self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
@@ -2377,19 +2377,19 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(1),
                 (('w', (('p', 1), ('q', 2), ('r', 'a'), ('s', False), ('t', True))), ('x', (('p', 30), ('q', 34), ('r', 'b'), ('s', True), ('t', False))), ('y', (('p', 54), ('q', 95), ('r', 'c'), ('s', False), ('t', False))), ('z', (('p', 65), ('q', 73), ('r', 'd'), ('s', True), ('t', True)))))
 
-        for x in f1.iter_tuple(0):
+        for x in f1.iter_tuple(axis=0):
             self.assertTrue(len(x), 4)
 
-        for x in f1.iter_tuple(1):
+        for x in f1.iter_tuple(axis=1):
             self.assertTrue(len(x), 5)
 
 
         f2 = f1[['p', 'q']]
 
-        s1 = f2.iter_array(0).apply(np.sum)
+        s1 = f2.iter_array(axis=0).apply(np.sum)
         self.assertEqual(list(s1.items()), [('p', 150), ('q', 204)])
 
-        s2 = f2.iter_array(1).apply(np.sum)
+        s2 = f2.iter_array(axis=1).apply(np.sum)
         self.assertEqual(list(s2.items()),
                 [('w', 3), ('x', 64), ('y', 149), ('z', 138)])
 
@@ -2398,7 +2398,7 @@ class TestUnit(TestCase):
                 return tp.cast(int, np.sum(vals))
             return None
 
-        s3 = f2.iter_array_items(1).apply(sum_if)
+        s3 = f2.iter_array_items(axis=1).apply(sum_if)
         self.assertEqual(list(s3.items()),
                 [('w', None), ('x', 64), ('y', None), ('z', 138)])
 
@@ -3406,6 +3406,28 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_iter_group_c(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index, name='foo')
+
+        with self.assertRaises(TypeError):
+            next(iter(f.iter_group(foo='x')))
+
+        with self.assertRaises(TypeError):
+            next(iter(f.iter_group(3, 5)))
+
+        self.assertEqual(next(iter(f.iter_group('q'))).to_pairs(0),
+                (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', 'a'), ('w', 'c'))), ('s', (('z', False), ('w', False))), ('t', (('z', False), ('w', False))))
+                )
+
+
     def test_frame_iter_group_items_a(self) -> None:
 
         # testing a hierarchical index and columns, selecting column with a tuple
@@ -3538,6 +3560,13 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('x', 'y', 'z'))
+
+        with self.assertRaises(TypeError):
+            f1.iter_group_index(3, 4)
+
+        with self.assertRaises(TypeError):
+            f1.iter_group_index(foo=4)
+
 
         post = tuple(f1.iter_group_index(0, axis=0))
 
@@ -7591,7 +7620,7 @@ class TestUnit(TestCase):
                 columns=list('ABCD'),
                 index=self.get_letters(20))
 
-        post0 = tuple(f1._axis_window_items(axis=0))
+        post0 = tuple(f1._axis_window_items(size=2, axis=0))
         self.assertEqual(len(post0), 19)
         self.assertEqual(post0[0][0], 'b')
         self.assertEqual(post0[0][1].__class__, Frame)
@@ -7601,7 +7630,7 @@ class TestUnit(TestCase):
         self.assertEqual(post0[-1][1].__class__, Frame)
         self.assertEqual(post0[-1][1].shape, (2, 4))
 
-        post1 = tuple(f1._axis_window_items(axis=1))
+        post1 = tuple(f1._axis_window_items(size=2, axis=1))
         self.assertEqual(len(post1), 3)
 
         self.assertEqual(post1[0][0], 'B')
@@ -7623,7 +7652,7 @@ class TestUnit(TestCase):
                 columns=list('ABCD'),
                 index=self.get_letters(20))
 
-        post0 = tuple(f1._axis_window_items(axis=0, as_array=True))
+        post0 = tuple(f1._axis_window_items(size=2, axis=0, as_array=True))
         self.assertEqual(len(post0), 19)
         self.assertEqual(post0[0][0], 'b')
         self.assertEqual(post0[0][1].__class__, np.ndarray)
@@ -7633,7 +7662,7 @@ class TestUnit(TestCase):
         self.assertEqual(post0[-1][1].__class__, np.ndarray)
         self.assertEqual(post0[-1][1].shape, (2, 4))
 
-        post1 = tuple(f1._axis_window_items(axis=1, as_array=True))
+        post1 = tuple(f1._axis_window_items(size=2, axis=1, as_array=True))
         self.assertEqual(len(post1), 3)
 
         self.assertEqual(post1[0][0], 'B')

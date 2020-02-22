@@ -90,7 +90,14 @@ from static_frame.core.container_util import index_constructor_empty
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNode
+# from static_frame.core.iter_node import IterNode
+
+from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeDepthLevelAxis
+from static_frame.core.iter_node import IterNodeWindow
+from static_frame.core.iter_node import IterNodeGroupAxis
+from static_frame.core.iter_node import IterNodeNoArg
+
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -2055,8 +2062,8 @@ class Frame(ContainerOperand):
 
     # generators
     @property
-    def iter_array(self) -> IterNode:
-        return IterNode(
+    def iter_array(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
             function_items=self._axis_array_items,
@@ -2064,8 +2071,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_array_items(self) -> IterNode:
-        return IterNode(
+    def iter_array_items(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
             function_items=self._axis_array_items,
@@ -2073,8 +2080,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_tuple(self) -> IterNode:
-        return IterNode(
+    def iter_tuple(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_tuple,
             function_items=self._axis_tuple_items,
@@ -2082,8 +2089,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_tuple_items(self) -> IterNode:
-        return IterNode(
+    def iter_tuple_items(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_tuple,
             function_items=self._axis_tuple_items,
@@ -2091,8 +2098,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_series(self) -> IterNode:
-        return IterNode(
+    def iter_series(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_series,
             function_items=self._axis_series_items,
@@ -2100,17 +2107,18 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_series_items(self) -> IterNode:
-        return IterNode(
+    def iter_series_items(self) -> IterNodeAxis:
+        return IterNodeAxis(
             container=self,
             function_values=self._axis_series,
             function_items=self._axis_series_items,
             yield_type=IterNodeType.ITEMS
             )
 
+    #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNode:
-        return IterNode(
+    def iter_group(self) -> IterNodeGroupAxis:
+        return IterNodeGroupAxis(
             container=self,
             function_values=self._axis_group_loc,
             function_items=self._axis_group_loc_items,
@@ -2119,8 +2127,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_group_items(self) -> IterNode:
-        return IterNode(
+    def iter_group_items(self) -> IterNodeGroupAxis:
+        return IterNodeGroupAxis(
             container=self,
             function_values=self._axis_group_loc,
             function_items=self._axis_group_loc_items,
@@ -2129,8 +2137,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_group_index(self) -> IterNode:
-        return IterNode(
+    def iter_group_index(self) -> IterNodeDepthLevelAxis:
+        return IterNodeDepthLevelAxis(
             container=self,
             function_values=self._axis_group_index,
             function_items=self._axis_group_index_items,
@@ -2139,8 +2147,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_group_index_items(self) -> IterNode:
-        return IterNode(
+    def iter_group_index_items(self) -> IterNodeDepthLevelAxis:
+        return IterNodeDepthLevelAxis(
             container=self,
             function_values=self._axis_group_index,
             function_items=self._axis_group_index_items,
@@ -2151,10 +2159,10 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
 
     @property
-    def iter_window(self) -> IterNode:
+    def iter_window(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNode(
+        return IterNodeWindow(
             container=self,
             function_values=function_values,
             function_items=function_items,
@@ -2162,10 +2170,10 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_window_items(self) -> IterNode:
+    def iter_window_items(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNode(
+        return IterNodeWindow(
             container=self,
             function_values=function_values,
             function_items=function_items,
@@ -2173,10 +2181,10 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_window_array(self) -> IterNode:
+    def iter_window_array(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNode(
+        return IterNodeWindow(
             container=self,
             function_values=function_values,
             function_items=function_items,
@@ -2184,10 +2192,10 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_window_array_items(self) -> IterNode:
+    def iter_window_array_items(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNode(
+        return IterNodeWindow(
             container=self,
             function_values=function_values,
             function_items=function_items,
@@ -2196,8 +2204,8 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNode:
-        return IterNode(
+    def iter_element(self) -> IterNodeNoArg:
+        return IterNodeNoArg(
             container=self,
             function_values=self._iter_element_loc,
             function_items=self._iter_element_loc_items,
@@ -2206,8 +2214,8 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_element_items(self) -> IterNode:
-        return IterNode(
+    def iter_element_items(self) -> IterNodeNoArg:
+        return IterNodeNoArg(
             container=self,
             function_values=self._iter_element_loc,
             function_items=self._iter_element_loc_items,
@@ -3349,7 +3357,9 @@ class Frame(ContainerOperand):
         yield group, build_frame(slice(start, None), index[start:])
 
 
-    def _axis_group_loc_items(self, key, *, axis=0):
+    def _axis_group_loc_items(self, key, *,
+            axis: int = 0
+            ):
         if axis == 0: # row iterator, selecting columns for group by
             iloc_key = self._columns.loc_to_iloc(key)
         elif axis == 1: # column iterator, selecting rows for group by
@@ -3368,13 +3378,16 @@ class Frame(ContainerOperand):
                 has_object = self._blocks._row_dtype == DTYPE_OBJECT
 
             if not has_object:
-                yield from self._axis_group_sort_items(key=key, iloc_key=iloc_key, axis=axis)
-                return
+                yield from self._axis_group_sort_items(key=key,
+                        iloc_key=iloc_key,
+                        axis=axis)
+        else:
+            yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
-        yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
-
-    def _axis_group_loc(self, key, *, axis=0):
+    def _axis_group_loc(self, key, *,
+            axis: int = 0
+            ):
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
 
 
@@ -3426,8 +3439,8 @@ class Frame(ContainerOperand):
 
 
     def _axis_window_items(self, *,
+            size: int,
             axis: int = 0,
-            size: int = 2,
             step: int = 1,
             window_sized: bool = True,
             window_func: tp.Optional[AnyCallable] = None,
@@ -3441,8 +3454,8 @@ class Frame(ContainerOperand):
         '''
         yield from axis_window_items(
                 source=self,
-                axis=axis,
                 size=size,
+                axis=axis,
                 step=step,
                 window_sized=window_sized,
                 window_func=window_func,
@@ -3455,8 +3468,8 @@ class Frame(ContainerOperand):
 
 
     def _axis_window(self, *,
+            size: int,
             axis: int = 0,
-            size: int = 2,
             step: int = 1,
             window_sized: bool = True,
             window_func: tp.Optional[AnyCallable] = None,
@@ -3467,8 +3480,8 @@ class Frame(ContainerOperand):
             as_array: bool = False,
             ):
         yield from (x for _, x in self._axis_window_items(
-                axis=axis,
                 size=size,
+                axis=axis,
                 step=step,
                 window_sized=window_sized,
                 window_func=window_func,

@@ -60,9 +60,10 @@ from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
 # from static_frame.core.iter_node import IterNode
-from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeGroup
 from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeWindow
+from static_frame.core.iter_node import IterNodeNoArg
 
 from static_frame.core.iter_node import IterNodeApplyType
 
@@ -460,8 +461,8 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeAxis:
-        return IterNodeAxis(
+    def iter_group(self) -> IterNodeGroup:
+        return IterNodeGroup(
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
@@ -469,8 +470,8 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeAxis:
-        return IterNodeAxis(
+    def iter_group_items(self) -> IterNodeGroup:
+        return IterNodeGroup(
                 container=self,
                 function_items=self._axis_group_items,
                 function_values=self._axis_group,
@@ -500,8 +501,8 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeAxis:
-        return IterNodeAxis(
+    def iter_element(self) -> IterNodeNoArg:
+        return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -509,8 +510,8 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeAxis:
-        return IterNodeAxis(
+    def iter_element_items(self) -> IterNodeNoArg:
+        return IterNodeNoArg(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -1237,7 +1238,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # axis functions
 
-    def _axis_group_items(self, *, axis=0):
+    def _axis_group_items(self, *,
+            axis: int = 0
+            ):
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
 
@@ -1246,27 +1249,20 @@ class Series(ContainerOperand):
             selection = locations == idx
             yield g, self._extract_iloc(selection)
 
-    def _axis_group(self, *, axis=0):
-        if axis != 0:
-            raise AxisInvalid(f'invalid axis {axis}')
-
+    def _axis_group(self, *,
+            axis: int = 0
+            ):
         yield from (x for _, x in self._axis_group_items(axis=axis))
 
 
-    def _axis_element_items(self, *,
-            axis=0
+    def _axis_element_items(self,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, value pairs, equivalent to Series.items(). Rpeated to have a common signature as other axis functions.
         '''
-        if axis != 0:
-            raise AxisInvalid(f'invalid axis {axis}')
-
         yield from zip(self._index, self.values)
 
-    def _axis_element(self, *, axis=0) -> tp.Iterator[tp.Any]:
-        if axis != 0:
-            raise AxisInvalid(f'invalid axis {axis}')
-
+    def _axis_element(self,
+            ) -> tp.Iterator[tp.Any]:
         yield from self.values
 
 
