@@ -254,8 +254,8 @@ def matmul(
 
 def axis_window_items( *,
         source: tp.Union['Series', 'Frame'],
+        size: int,
         axis: int = 0,
-        size: int = 2,
         step: int = 1,
         window_sized: bool = True,
         window_func: tp.Optional[AnyCallable] = None,
@@ -263,7 +263,7 @@ def axis_window_items( *,
         label_shift: int = 0,
         start_shift: int = 0,
         size_increment: int = 0,
-        window_array: bool = False,
+        as_array: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs pairs.
 
@@ -276,7 +276,7 @@ def axis_window_items( *,
         label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., o return the first label of the window, the shift will be the size minus one.
         start_shift: shift from 0 to determine where the collection of windows begins.
         size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
-        window_array: if True, the window is returned as an array instead of a SF object.
+        as_array: if True, the window is returned as an array instead of a SF object.
     '''
     if size <= 0:
         raise RuntimeError('window size must be greater than 0')
@@ -287,11 +287,11 @@ def axis_window_items( *,
 
     if source_ndim == 1:
         labels = source._index
-        if window_array:
+        if as_array:
             values = source.values
     else:
         labels = source._index if axis == 0 else source._columns
-        if window_array:
+        if as_array:
             values = source._blocks.values
 
     count_window_max = len(labels)
@@ -301,24 +301,25 @@ def axis_window_items( *,
     count = 0
 
     while True:
+        # idx_left, size can chagne over iterations
         idx_right = idx_left + size - 1
 
         # floor idx_left at 0
         key = slice(max(idx_left, 0), idx_right + 1)
 
         if source_ndim == 1:
-            if window_array:
+            if as_array:
                 window = values[key]
             else:
                 window = source._extract_iloc(key)
         else:
             if axis == 0:
-                if window_array:
+                if as_array:
                     window = values[key]
                 else: # use low level iloc selector
                     window = source._extract(row_key=key)
             else:
-                if window_array:
+                if as_array:
                     window = values[NULL_SLICE, key]
                 else:
                     window = source._extract(column_key=key)

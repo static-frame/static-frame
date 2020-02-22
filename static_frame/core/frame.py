@@ -2152,8 +2152,8 @@ class Frame(ContainerOperand):
 
     @property
     def iter_window(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=False)
-        function_items = partial(self._axis_window_items, window_array=False)
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
         return IterNode(
             container=self,
             function_values=function_values,
@@ -2163,8 +2163,8 @@ class Frame(ContainerOperand):
 
     @property
     def iter_window_items(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=False)
-        function_items = partial(self._axis_window_items, window_array=False)
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
         return IterNode(
             container=self,
             function_values=function_values,
@@ -2174,8 +2174,8 @@ class Frame(ContainerOperand):
 
     @property
     def iter_window_array(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=True)
-        function_items = partial(self._axis_window_items, window_array=True)
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
         return IterNode(
             container=self,
             function_values=function_values,
@@ -2185,8 +2185,8 @@ class Frame(ContainerOperand):
 
     @property
     def iter_window_array_items(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=True)
-        function_items = partial(self._axis_window_items, window_array=True)
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
         return IterNode(
             container=self,
             function_values=function_values,
@@ -3435,7 +3435,7 @@ class Frame(ContainerOperand):
             label_shift: int = 0,
             start_shift: int = 0,
             size_increment: int = 0,
-            window_array: bool = False,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
@@ -3450,7 +3450,7 @@ class Frame(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                window_array=window_array
+                as_array=as_array
                 )
 
 
@@ -3464,7 +3464,7 @@ class Frame(ContainerOperand):
             label_shift: int = 0,
             start_shift: int = 0,
             size_increment: int = 0,
-            window_array: bool = False,
+            as_array: bool = False,
             ):
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
@@ -3476,7 +3476,7 @@ class Frame(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                window_array=window_array
+                as_array=as_array
                 ))
 
 

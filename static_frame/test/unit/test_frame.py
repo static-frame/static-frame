@@ -7623,7 +7623,7 @@ class TestUnit(TestCase):
                 columns=list('ABCD'),
                 index=self.get_letters(20))
 
-        post0 = tuple(f1._axis_window_items(axis=0, window_array=True))
+        post0 = tuple(f1._axis_window_items(axis=0, as_array=True))
         self.assertEqual(len(post0), 19)
         self.assertEqual(post0[0][0], 'b')
         self.assertEqual(post0[0][1].__class__, np.ndarray)
@@ -7633,7 +7633,7 @@ class TestUnit(TestCase):
         self.assertEqual(post0[-1][1].__class__, np.ndarray)
         self.assertEqual(post0[-1][1].shape, (2, 4))
 
-        post1 = tuple(f1._axis_window_items(axis=1, window_array=True))
+        post1 = tuple(f1._axis_window_items(axis=1, as_array=True))
         self.assertEqual(len(post1), 3)
 
         self.assertEqual(post1[0][0], 'B')

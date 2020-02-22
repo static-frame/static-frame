@@ -2319,7 +2319,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(s1._axis_window_items(window_array=True, size=2, step=1, label_shift=0))
+        post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=0))
 
         # first window has second label, and first two values
         self.assertEqual(post[0][1].tolist(), [1, 2])
@@ -2333,7 +2333,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(s1._axis_window_items(window_array=True, size=2, step=1, label_shift=-1))
+        post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=-1))
 
         # first window has first label, and first two values
         self.assertEqual(post[0][1].tolist(), [1, 2])
@@ -2349,7 +2349,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         # this is an expanding window anchored at the first index
-        post = tuple(s1._axis_window_items(window_array=True, size=1, step=0, size_increment=1))
+        post = tuple(s1._axis_window_items(as_array=True, size=1, step=0, size_increment=1))
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1])
@@ -2363,7 +2363,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(s1._axis_window_items(window_array=True, size=5, start_shift=-5, window_sized=False))
+        post = tuple(s1._axis_window_items(as_array=True, size=5, start_shift=-5, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1])
@@ -2381,7 +2381,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         # start shift needs to be 1 less than window to go to start of window
-        post = tuple(s1._axis_window_items(window_array=True, size=5, label_shift=-4, window_sized=False))
+        post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
@@ -2399,7 +2399,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         # start shift needs to be 1 less than window to go to start of window
-        post = tuple(s1._axis_window_items(window_array=True, size=5, label_shift=-4, window_sized=True))
+        post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=True))
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
@@ -2416,17 +2416,17 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         with self.assertRaises(RuntimeError):
-            tuple(s1._axis_window_items(window_array=True, size=0))
+            tuple(s1._axis_window_items(as_array=True, size=0))
 
         with self.assertRaises(RuntimeError):
-            tuple(s1._axis_window_items(window_array=True, step=-1))
+            tuple(s1._axis_window_items(size=2, as_array=True, step=-1))
 
 
     def test_series_axis_window_items_h(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(s1._axis_window_items(window_array=True, size=1))
+        post = tuple(s1._axis_window_items(as_array=True, size=1))
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1])
 
@@ -2439,7 +2439,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
         # step equal to window size produces adaject windows
-        post = tuple(s1._axis_window_items(window_array=True, size=3, step=3))
+        post = tuple(s1._axis_window_items(as_array=True, size=3, step=3))
 
         self.assertEqual(post[0][0], 'c')
         self.assertEqual(post[0][1].tolist(), [1, 2, 3])
@@ -2455,7 +2455,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
         # adjacent windows with label on first value, keeping incomplete windows
-        post = tuple(s1._axis_window_items(window_array=True, size=3, step=3, label_shift=-2, window_sized=False))
+        post = tuple(s1._axis_window_items(as_array=True, size=3, step=3, label_shift=-2, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
         self.assertEqual(post[0][1].tolist(), [1, 2, 3])
@@ -2472,7 +2472,7 @@ class TestUnit(TestCase):
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
         # adjacent windows with label on first value, keeping incomplete windows
-        post = tuple(s1._axis_window_items(window_array=True, size=3, window_valid=lambda w: np.sum(w) % 2 == 1))
+        post = tuple(s1._axis_window_items(as_array=True, size=3, window_valid=lambda w: np.sum(w) % 2 == 1))
 
         self.assertEqual(post[0][0], 'd')
         self.assertEqual(post[0][1].tolist(), [2, 3, 4])
@@ -2490,7 +2490,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
         # adjacent windows with label on first value, keeping incomplete windows
         weight = np.array([.25, .5, .5, .25])
-        post = tuple(s1._axis_window_items(window_array=True, size=4, window_func=lambda a: a * weight))
+        post = tuple(s1._axis_window_items(as_array=True, size=4, window_func=lambda a: a * weight))
 
         self.assertEqual(post[0][0], 'd')
         self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1])
@@ -2505,14 +2505,14 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         self.assertEqual(
-                tuple(tuple(a) for a in s1.iter_window_array()),
+                tuple(tuple(a) for a in s1.iter_window_array(size=2)),
                 ((1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20))
                 )
 
     def test_series_iter_window_arrray_b(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
-        s2 = s1.iter_window_array().apply(np.mean)
+        s2 = s1.iter_window_array(size=2).apply(np.mean)
         self.assertEqual(s2.to_pairs(),
                 (('b', 1.5), ('c', 2.5), ('d', 3.5), ('e', 4.5), ('f', 5.5), ('g', 6.5), ('h', 7.5), ('i', 8.5), ('j', 9.5), ('k', 10.5), ('l', 11.5), ('m', 12.5), ('n', 13.5), ('o', 14.5), ('p', 15.5), ('q', 16.5), ('r', 17.5), ('s', 18.5), ('t', 19.5))
         )
@@ -2522,7 +2522,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         self.assertEqual(
-                tuple(s.index.values.tolist() for s in s1.iter_window()), # type: ignore
+                tuple(s.index.values.tolist() for s in s1.iter_window(size=2)), # type: ignore
                 (['a', 'b'], ['b', 'c'], ['c', 'd'], ['d', 'e'], ['e', 'f'], ['f', 'g'], ['g', 'h'], ['h', 'i'], ['i', 'j'], ['j', 'k'], ['k', 'l'], ['l', 'm'], ['m', 'n'], ['n', 'o'], ['o', 'p'], ['p', 'q'], ['q', 'r'], ['r', 's'], ['s', 't'])
                 )
 
@@ -2531,6 +2531,25 @@ class TestUnit(TestCase):
                     ).apply(lambda s: len(s.index)).to_pairs(),
             (('a', 5), ('g', 5), ('m', 5), ('s', 2))
         )
+
+
+    def test_series_iter_window_b(self) -> None:
+
+        s1 = Series(range(10), index=self.get_letters(10))
+
+        with self.assertRaises(TypeError):
+            s1.iter_window() #type: ignore
+
+        with self.assertRaises(TypeError):
+            s1.iter_window(3) #type: ignore
+
+        with self.assertRaises(TypeError):
+            s1.iter_window(foo=3) #type: ignore
+
+        self.assertEqual(
+                tuple(x.to_pairs() for x in s1.iter_window(size=2, step=2)), #type: ignore
+                ((('a', 0), ('b', 1)), (('c', 2), ('d', 3)), (('e', 4), ('f', 5)), (('g', 6), ('h', 7)), (('i', 8), ('j', 9)))
+                )
 
 
     def test_series_bool_a(self) -> None:

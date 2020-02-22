@@ -453,13 +453,13 @@ class IterNodeDepthLevel(IterNode[FrameOrSeries]):
         return IterNode.__call__(self, depth_level=depth_level)
 
 
-class IterNodeAxisWindow(IterNode[FrameOrSeries]):
+class IterNodeWindow(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self, *, #type: ignore
+            size: int,
             axis: int = 0,
-            size: int = 2,
             step: int = 1,
             window_sized: bool = True,
             window_func: tp.Optional[AnyCallable] = None,

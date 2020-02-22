@@ -59,9 +59,10 @@ from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNode
+# from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeAxis
 from static_frame.core.iter_node import IterNodeDepthLevel
+from static_frame.core.iter_node import IterNodeWindow
 
 from static_frame.core.iter_node import IterNodeApplyType
 
@@ -518,49 +519,49 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_window(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=False)
-        function_items = partial(self._axis_window_items, window_array=False)
-        return IterNode(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+    def iter_window(self) -> IterNodeWindow:
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
-    def iter_window_items(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=False)
-        function_items = partial(self._axis_window_items, window_array=False)
-        return IterNode(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+    def iter_window_items(self) -> IterNodeWindow:
+        function_values = partial(self._axis_window, as_array=False)
+        function_items = partial(self._axis_window_items, as_array=False)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
 
     @property
-    def iter_window_array(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=True)
-        function_items = partial(self._axis_window_items, window_array=True)
-        return IterNode(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+    def iter_window_array(self) -> IterNodeWindow:
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
-    def iter_window_array_items(self) -> IterNode:
-        function_values = partial(self._axis_window, window_array=True)
-        function_items = partial(self._axis_window_items, window_array=True)
-        return IterNode(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+    def iter_window_array_items(self) -> IterNodeWindow:
+        function_values = partial(self._axis_window, as_array=True)
+        function_items = partial(self._axis_window_items, as_array=True)
+        return IterNodeWindow(
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
     #---------------------------------------------------------------------------
     # index manipulation
 
@@ -1295,8 +1296,8 @@ class Series(ContainerOperand):
 
 
     def _axis_window_items(self, *,
+            size: int,
             axis: int = 0,
-            size: int = 2,
             step: int = 1,
             window_sized: bool = True,
             window_func: tp.Optional[AnyCallable] = None,
@@ -1304,7 +1305,7 @@ class Series(ContainerOperand):
             label_shift: int = 0,
             start_shift: int = 0,
             size_increment: int = 0,
-            window_array: bool = False,
+            as_array: bool = False,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
         '''Generator of index, processed-window pairs.
         '''
@@ -1319,12 +1320,12 @@ class Series(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                window_array=window_array
+                as_array=as_array
                 )
 
     def _axis_window(self, *,
+            size: int,
             axis: int = 0,
-            size: int = 2,
             step: int = 1,
             window_sized: bool = True,
             window_func: tp.Optional[AnyCallable] = None,
@@ -1332,7 +1333,7 @@ class Series(ContainerOperand):
             label_shift: int = 0,
             start_shift: int = 0,
             size_increment: int = 0,
-            window_array: bool = False,
+            as_array: bool = False,
             ):
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
@@ -1344,7 +1345,7 @@ class Series(ContainerOperand):
                 label_shift=label_shift,
                 start_shift=start_shift,
                 size_increment=size_increment,
-                window_array=window_array
+                as_array=as_array
                 ))
 
 
