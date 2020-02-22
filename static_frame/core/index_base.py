@@ -131,7 +131,7 @@ class IndexBase(ContainerOperand):
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
         import pandas
-        from static_frame.core.index_datetime import _IndexDatetime
+        from static_frame.core.index_datetime import IndexDatetime
         from static_frame import Index
         from static_frame import IndexGO
         from static_frame import IndexHierarchy
@@ -145,7 +145,7 @@ class IndexBase(ContainerOperand):
             return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
             # coming from a Pandas datetime index, in the absence of other information, the best match is a Nanosecond index
-            if not issubclass(cls, _IndexDatetime):
+            if not issubclass(cls, IndexDatetime):
                 raise ErrorInitIndex(f'cannot create a datetime Index from {cls}')
             if not cls.STATIC:
                 return cls(value, name=value.name)
@@ -159,7 +159,9 @@ class IndexBase(ContainerOperand):
     # name interface
 
     @property
+    @doc_inject()
     def name(self) -> tp.Hashable:
+        '''{}'''
         return self._name
 
     @property
@@ -205,7 +207,7 @@ class IndexBase(ContainerOperand):
         Return the dtype of the underlying NumPy array.
 
         Returns:
-            :py:class:`numpy.dtype`
+            :obj:`numpy.dtype`
         '''
         if self._recache:
             self._update_array_cache()
@@ -217,7 +219,7 @@ class IndexBase(ContainerOperand):
         Return a tuple describing the shape of the underlying NumPy array.
 
         Returns:
-            :py:class:`tp.Tuple[int]`
+            :obj:`tp.Tuple[int]`
         '''
         if self._recache:
             self._update_array_cache()
@@ -229,7 +231,7 @@ class IndexBase(ContainerOperand):
         Return the number of dimensions.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         if self._recache:
             self._update_array_cache()
@@ -241,7 +243,7 @@ class IndexBase(ContainerOperand):
         Return the size of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         if self._recache:
             self._update_array_cache()
@@ -253,7 +255,7 @@ class IndexBase(ContainerOperand):
         Return the total bytes of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         if self._recache:
             self._update_array_cache()

@@ -62,7 +62,7 @@ from static_frame.core.exception import AxisInvalid
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
-    '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :py:class:`Frame` for core, unindexed array management.
+    '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
 
     A TypeBlocks instance can have a zero size shape (where the length of one axis is zero). Internally, when axis 0 (rows) is of size 0, we store similarly sized arrays. When axis 1 (columns) is of size 0, we do not store arrays, as such arrays do not define a type (as tyupes are defined by columns).
     '''
@@ -869,11 +869,14 @@ class TypeBlocks(ContainerOperand):
         '''
         return self._shape[0]
 
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
-        '''
-        Return a ``Display`` instance.
+        '''{doc}
+
+        Args:
+            {config}
         '''
         config = config or DisplayActive.get()
         d = None

@@ -73,7 +73,7 @@ CONTINUATION_TOKEN_INACTIVE = object()
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
     '''
-    A hierarchy of :py:class:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
+    A hierarchy of :obj:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
     '''
     __slots__ = (
             '_levels',
@@ -115,7 +115,7 @@ class IndexHierarchy(IndexBase):
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
         Returns:
-            :py:class:`static_frame.IndexHierarchy`
+            :obj:`static_frame.IndexHierarchy`
 
         '''
         indices = [] # store in a list, where index is depth
@@ -216,7 +216,7 @@ class IndexHierarchy(IndexBase):
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
 
         Returns:
-            :py:class:`static_frame.IndexHierarchy`
+            :obj:`static_frame.IndexHierarchy`
         '''
         return cls(cls._tree_to_index_level(tree), name=name)
 
@@ -624,9 +624,15 @@ class IndexHierarchy(IndexBase):
             return self._levels.__len__()
         return len(self._labels)
 
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''{doc}
+
+        Args:
+            {config}
+        '''
         config = config or DisplayActive.get()
 
         if self._recache:
@@ -713,7 +719,7 @@ class IndexHierarchy(IndexBase):
         Return a Series of dytpes for each index depth.
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         from static_frame.core.series import Series
 
@@ -730,7 +736,7 @@ class IndexHierarchy(IndexBase):
         Return a Series of Index classes for each index depth.
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         from static_frame.core.series import Series
         if self._name and len(self._name) == self.depth:
@@ -1130,7 +1136,7 @@ class IndexHierarchy(IndexBase):
 class IndexHierarchyGO(IndexHierarchy):
 
     '''
-    A hierarchy of :py:class:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
+    A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''
 
     STATIC = False

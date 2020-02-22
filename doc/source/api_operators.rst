@@ -2,7 +2,7 @@
 Operators
 =============================================
 
-:py:class:`Series`, :py:class:`Frame`, and :py:class:`Index`, as well as their derived classes, provide support for the full range of operators available with NumPy. In addition, :py:class:`Series` and  :py:class:`Frame` feature index-alignment and automatic index expansion when both operands are StaticFrame objects.
+:obj:`Series`, :obj:`Frame`, and :obj:`Index`, as well as their derived classes, provide support for the full range of operators available with NumPy. In addition, :obj:`Series` and  :obj:`Frame` feature index-alignment and automatic index expansion when both operands are StaticFrame objects.
 
 
 Index

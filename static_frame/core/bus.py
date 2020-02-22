@@ -359,10 +359,14 @@ class Bus(ContainerBase):
 
 
     #---------------------------------------------------------------------------
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
-        '''Return a Display of the Bus.
+        '''{doc}
+
+        Args:
+            {config}
         '''
         # NOTE: the key change is providing the Bus as the displayed class
 

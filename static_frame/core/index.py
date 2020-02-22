@@ -279,7 +279,7 @@ _INDEX_SLOTS = (
 
 @doc_inject(selector='index_init')
 class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :py:class:`Series` and as index and columns in :py:class:`Frame`. Base class of all 1D indices.
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.
 
     {args}
     '''
@@ -556,10 +556,15 @@ class Index(IndexBase):
             self._update_array_cache()
         return len(self._labels)
 
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
             ) -> Display:
+        '''{doc}
 
+        Args:
+            {config}
+        '''
         config = config or DisplayActive.get()
 
         if self._recache:
@@ -1031,7 +1036,7 @@ class _IndexGOMixin:
 
 @doc_inject(selector='index_init')
 class IndexGO(_IndexGOMixin, Index):
-    '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :py:class:`FrameGO`.
+    '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
 
     {args}
     '''

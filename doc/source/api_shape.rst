@@ -4,7 +4,7 @@ Size, Shape & Type
 =======================================================
 
 
-:py:class:`static_frame.Series` and :py:class:`static_frame.Frame` store underlying data in one or two-dimensional NumPy arrays. Attributes similar to those found on NumPy arrays are available to describe the characteristics of the container.
+:obj:`static_frame.Series` and :obj:`static_frame.Frame` store underlying data in one or two-dimensional NumPy arrays. Attributes similar to those found on NumPy arrays are available to describe the characteristics of the container.
 
 
 

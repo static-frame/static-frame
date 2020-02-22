@@ -1,5 +1,6 @@
 import sys
 import os
+import typing as tp
 
 import invoke
 
@@ -30,6 +31,29 @@ def performance(context):
     # NOTE: we do not get to see incremental output when running this
     cmd = 'python static_frame/performance/main.py --performance "*"'
     context.run(cmd)
+
+
+@invoke.task
+def interface(context, container=None):
+    from static_frame.core.container import ContainerBase
+    import static_frame as sf
+
+    def subclasses(cls) -> tp.Iterator[tp.Type]:
+        if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
+            yield cls
+        for sub in cls.__subclasses__():
+            yield from subclasses(sub)
+
+    if not container:
+        def frames():
+            for cls in sorted(subclasses(ContainerBase), key=lambda cls: cls.__name__):
+                yield cls.interface
+        f = sf.Frame.from_concat(frames(), axis=0, index=sf.IndexAutoFactory)
+    else:
+        f = getattr(sf, container).interface
+
+    print(f.display_tall())
+
 
 
 #-------------------------------------------------------------------------------

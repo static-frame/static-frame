@@ -2,13 +2,13 @@
 Assignment / Dropping / Masking
 =======================================================
 
-:py:class:`Series` and :py:class:`Frame` provide interface attributes for exposing assignment-like operations, dropping data, and producing masks. Each interface attribute exposes a root ``__getitem__`` interface, as well as ``__getitem__`` interfaces on ``loc`` and ``iloc`` attributes, exposing the full range selection approaches.
+:obj:`static_frame.Series` and :obj:`static_frame.Frame` provide interface attributes for exposing assignment-like operations, dropping data, and producing masks. Each interface attribute exposes a root ``__getitem__`` interface, as well as ``__getitem__`` interfaces on ``loc`` and ``iloc`` attributes, exposing the full range selection approaches.
 
 
 Assignment
 ---------------------------
 
-The assign-to-copy interfaces permit expressive assignment to new containers with the same flexibility as Pandas and NumPy. As all underlying data is immutable, the caller will not be mutated. With ``Frame`` objects, the minimum amount of data will be copied to the new ``Frame``, depending on the type of assignment and the organization of the underlying ``TypeBlocks``.
+The assign-to-copy interfaces permit expressive assignment to new containers with the same flexibility as Pandas and NumPy. As all underlying data is immutable, the caller will not be mutated. With :obj:`static_frame.Frame` objects, the minimum amount of data will be copied to the new :obj:`static_frame.Frame`, depending on the type of assignment and the organization of the underlying ``TypeBlocks``.
 
 
 Series
@@ -22,9 +22,9 @@ Series
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices.
 
-    :param value: The value to be assigned. Can be a single value, an iterable of values, or a ``Series``.
+    :param value: The value to be assigned. Can be a single value, an iterable of values, or a :obj:`static_frame.Series`.
 
-    :returns: :py:class:`static_frame.Series`
+    :returns: :obj:`static_frame.Series`
 
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
@@ -44,9 +44,9 @@ Frame
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices. The root ``__getitem__`` interface is a column selector; ``loc`` and ``iloc`` interfaces accept one or two arguments, for either row selection or row and column selection (respectively).
 
-    :param value: The value to be assigned. Can be a single value, an iterable of values, a ``Series``, or a ``Frame``.
+    :param value: The value to be assigned. Can be a single value, an iterable of values, a :obj:`static_frame.Series`, or a :obj:`static_frame.Frame`.
 
-    :returns: :py:class:`static_frame.Frame`
+    :returns: :obj:`static_frame.Frame`
 
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
@@ -60,7 +60,7 @@ Frame
 Dropping Data
 --------------------------------
 
-While data from a ``Series`` or ``Frame`` can be excluded through common selection interfaces, in some cases it is more efficient and readable to specify what to drop rather than what to keep. The drop interface return new containers, efficiently removing the values specified by the key. For ``Frame``, removal of rows and columns can happen simultaneously.
+While data from a :obj:`static_frame.Series` or :obj:`static_frame.Frame` can be excluded through common selection interfaces, in some cases it is more efficient and readable to specify what to drop rather than what to keep. The drop interface return new containers, efficiently removing the values specified by the key. For :obj:`static_frame.Frame`, removal of rows and columns can happen simultaneously.
 
 
 Series
@@ -74,7 +74,7 @@ Series
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices.
 
-    :returns: :py:class:`static_frame.Series`
+    :returns: :obj:`static_frame.Series`
 
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
@@ -96,7 +96,7 @@ Frame
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices. The root ``__getitem__`` interface is a column selector; ``loc`` and ``iloc`` interfaces accept one or two arguments, for either row selection or row and column selection (respectively).
 
-    :returns: :py:class:`static_frame.Frame`
+    :returns: :obj:`static_frame.Frame`
 
 
 
@@ -111,7 +111,7 @@ Frame
 Masking Data
 ------------------------------
 
-While Boolean ``Series`` and ``Frame`` can be created directly or with comparison operators (or functions like ``isin()``), in some cases it is desirable to directly specify a mask through the common selection idioms.
+While Boolean :obj:`static_frame.Series` and :obj:`static_frame.Frame` can be created directly or with comparison operators (or functions like ``isin()``), in some cases it is desirable to directly specify a mask through the common selection idioms.
 
 
 Series
@@ -121,11 +121,11 @@ Series
 .. py:method:: Series.mask.loc[key]
 .. py:method:: Series.mask.iloc[key]
 
-    Mask (set to ``True``) the values specified by the key and return a Boolean ``Series``.
+    Mask (set to ``True``) the values specified by the key and return a Boolean :obj:`static_frame.Series`.
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices.
 
-    :returns: :py:class:`static_frame.Series`
+    :returns: :obj:`static_frame.Series`
 
 
 Frame
@@ -135,11 +135,11 @@ Frame
 .. py:method:: Frame.mask.loc[key]
 .. py:method:: Frame.mask.iloc[key]
 
-    Mask (set to ``True``) the values specified by the key and return a Boolean ``Frame``.
+    Mask (set to ``True``) the values specified by the key and return a Boolean :obj:`static_frame.Frame`.
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices. The root ``__getitem__`` interface is a column selector; ``loc`` and ``iloc`` interfaces accept one or two arguments, for either row selection or row and column selection (respectively).
 
-    :returns: :py:class:`static_frame.Frame`
+    :returns: :obj:`static_frame.Frame`
 
 
 
@@ -163,7 +163,7 @@ Series
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices.
 
-    :returns: :py:class:`np.ma.MaskedArray`
+    :returns: :obj:`np.ma.MaskedArray`
 
 
 Frame
@@ -177,5 +177,5 @@ Frame
 
     :param key: A selector, either a label, a list of labels, a slice of labels, or a Boolean array. The root ``__getitem__`` takes loc labels, ``loc`` takes loc labels, and ``iloc`` takes integer indices. The root ``__getitem__`` interface is a column selector; ``loc`` and ``iloc`` interfaces accept one or two arguments, for either row selection or row and column selection (respectively).
 
-    :returns: :py:class:`np.ma.MaskedArray`
+    :returns: :obj:`np.ma.MaskedArray`
 

@@ -16,7 +16,7 @@ class HLocMeta(type):
         return tp.cast(tp.Iterable[GetItemKeyType], cls(key))
 
 class HLoc(metaclass=HLocMeta):
-    '''A wrapper for embedding hierarchical specificiations for :py:class:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
+    '''A wrapper for embedding hierarchical specificiations for :obj:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
 
     Implemented as a container of hiearchical keys that defiines NULL slices for all lower dimensions that are not defined at construction.
     '''

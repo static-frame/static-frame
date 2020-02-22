@@ -27,7 +27,7 @@ StaticFrame relyies entirely on NumPy for types and numeric computation routines
 Immutability
 ***********************************
 
-The :py:class:`static_frame.Series` and :py:class:`static_frame.Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
+The :obj:`static_frame.Series` and :obj:`static_frame.Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python

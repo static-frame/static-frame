@@ -165,7 +165,7 @@ class Series(ContainerOperand):
             dtype: dtype or valid dtype specifier.
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         index = []
         def values():
@@ -196,7 +196,7 @@ class Series(ContainerOperand):
             dtype: dtype or valid dtype specifier.
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         return cls.from_items(mapping.items(),
                 name=name,
@@ -289,7 +289,7 @@ class Series(ContainerOperand):
             {own_index}
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         if own_data:
             data = value.values
@@ -402,7 +402,9 @@ class Series(ContainerOperand):
     # name interface
 
     @property
+    @doc_inject()
     def name(self) -> tp.Hashable:
+        '''{}'''
         return self._name
 
     def rename(self, name: tp.Hashable) -> 'Series':
@@ -1022,10 +1024,14 @@ class Series(ContainerOperand):
         '''
         return self.values.__len__()
 
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
-        '''Return a Display of the Series.
+        '''{doc}
+
+        Args:
+            {config}
         '''
         config = config or DisplayActive.get()
 
@@ -1076,7 +1082,7 @@ class Series(ContainerOperand):
         Return the dtype of the underlying NumPy array.
 
         Returns:
-            :py:class:`numpy.dtype`
+            :obj:`numpy.dtype`
         '''
         return self.values.dtype
 
@@ -1086,7 +1092,7 @@ class Series(ContainerOperand):
         Return a tuple describing the shape of the underlying NumPy array.
 
         Returns:
-            :py:class:`tp.Tuple[int]`
+            :obj:`tp.Tuple[int]`
         '''
         return self.values.shape
 
@@ -1096,7 +1102,7 @@ class Series(ContainerOperand):
         Return the number of dimensions, which for a `Series` is always 1.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         return self._NDIM
 
@@ -1106,7 +1112,7 @@ class Series(ContainerOperand):
         Return the size of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         return self.values.size
 
@@ -1116,7 +1122,7 @@ class Series(ContainerOperand):
         Return the total bytes of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         return self.values.nbytes
 
@@ -1744,14 +1750,14 @@ class Series(ContainerOperand):
 
     def to_frame(self, axis: int = 1):
         '''
-        Return a :py:class:`static_frame.Frame` view of this :py:class:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+        Return a :obj:`static_frame.Frame` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
         '''
         from static_frame import Frame
         return self._to_frame(constructor=Frame, axis=axis)
 
     def to_frame_go(self, axis: int = 1):
         '''
-        Return :py:class:`static_frame.FrameGO` view of this :py:class:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+        Return :obj:`static_frame.FrameGO` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
         '''
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis)

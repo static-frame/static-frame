@@ -65,7 +65,7 @@ class InterfaceGroup:
 
 class InterfaceSummary:
 
-    DOC_CHARS = 50
+    DOC_CHARS = 100
 
     EXCLUDE_PRIVATE = {
         '__class__',
@@ -155,6 +155,7 @@ class InterfaceSummary:
         doc = doc.replace('`', '')
         doc = doc.replace(':py:meth:', '')
         doc = doc.replace(':obj:', '')
+        doc = doc.replace('static_frame.', '')
 
         # split and join removes contiguous whitespace
         msg = ' '.join(doc.split())
@@ -194,7 +195,7 @@ class InterfaceSummary:
         for name_attr in dir(target.__class__): # get metaclass
             if name_attr == 'interface':
                 # getting interface off of the class will recurse
-                yield name_attr, None, None
+                yield name_attr, None, ContainerBase.__class__.interface
 
         for name_attr in dir(target):
             if name_attr == 'interface':

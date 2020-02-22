@@ -46,12 +46,12 @@ from static_frame.core.doc_str import doc_inject
 if tp.TYPE_CHECKING:
     import pandas  #pylint: disable = W0611 #pragma: no cover
 
-I = tp.TypeVar('I', bound='_IndexDatetime')
+I = tp.TypeVar('I', bound='IndexDatetime')
 
 #-------------------------------------------------------------------------------
 # Specialized index for dates
 
-class _IndexDatetime(Index):
+class IndexDatetime(Index):
     '''
     Derivation of Index to support Datetime operations. Derived classes must define _DTYPE.
     '''
@@ -150,7 +150,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
-class IndexYear(_IndexDatetime):
+class IndexYear(IndexDatetime):
     '''A mapping of years (via NumPy datetime64[Y]) to positions, immutable and of fixed size.
 
     {args}
@@ -233,7 +233,7 @@ IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
-class IndexYearMonth(_IndexDatetime):
+class IndexYearMonth(IndexDatetime):
     '''A mapping of year months (via NumPy datetime64[M]) to positions, immutable and of fixed size.
 
     {args}
@@ -319,7 +319,7 @@ IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
-class IndexDate(_IndexDatetime):
+class IndexDate(IndexDatetime):
     '''A mapping of dates (via NumPy datetime64[D]) to positions, immutable and of fixed size.
 
     {args}
@@ -393,7 +393,7 @@ IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
-class IndexMinute(_IndexDatetime):
+class IndexMinute(IndexDatetime):
     '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
 
     {args}
@@ -412,7 +412,7 @@ IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
-class IndexSecond(_IndexDatetime):
+class IndexSecond(IndexDatetime):
     '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
 
     {args}
@@ -431,7 +431,7 @@ IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
-class IndexMillisecond(_IndexDatetime):
+class IndexMillisecond(IndexDatetime):
     '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ms]) to positions, immutable and of fixed size.
 
     {args}
@@ -451,7 +451,7 @@ IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
-class IndexNanosecond(_IndexDatetime):
+class IndexNanosecond(IndexDatetime):
     '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ns]) to positions, immutable and of fixed size.
 
     {args}

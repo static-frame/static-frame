@@ -343,7 +343,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
 
         # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
@@ -687,7 +687,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         columns = []
 
@@ -774,7 +774,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
 
         '''
         index = []
@@ -809,7 +809,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
 
         '''
         index = []
@@ -852,7 +852,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         columns = []
 
@@ -1139,7 +1139,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         # from a structured array, we assume we want to get the columns labels
         data, index_arrays, columns_labels = cls._structured_array_to_d_ia_cl(
@@ -1175,7 +1175,7 @@ class Frame(ContainerOperand):
         Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         index = Index(index)
         columns = cls._COLUMNS_CONSTRUCTOR(columns)
@@ -1214,7 +1214,7 @@ class Frame(ContainerOperand):
 
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         if not own_index:
             index = index_from_optional_constructor(index,
@@ -1340,7 +1340,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         data = json.loads(json_data)
         return cls.from_dict_records(data,
@@ -1367,7 +1367,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         return cls.from_json(_read_url(url), #pragma: no cover
                 name=name,
@@ -1410,7 +1410,7 @@ class Frame(ContainerOperand):
             {consolidate_blocks}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
@@ -1568,7 +1568,7 @@ class Frame(ContainerOperand):
         Specialized version of :py:meth:`Frame.from_delimited` for CSV files.
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         return cls.from_delimited(fp,
                 delimiter=',',
@@ -1605,7 +1605,7 @@ class Frame(ContainerOperand):
         Specialized version of :py:meth:`Frame.from_delimited` for TSV files.
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         return cls.from_delimited(fp,
                 delimiter='\t',
@@ -1713,7 +1713,7 @@ class Frame(ContainerOperand):
             {own_data}
 
         Returns:
-            :py:class:`static_frame.Frame`
+            :obj:`static_frame.Frame`
         '''
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
@@ -1988,7 +1988,9 @@ class Frame(ContainerOperand):
     # name interface
 
     @property
+    @doc_inject()
     def name(self) -> tp.Hashable:
+        '''{}'''
         return self._name
 
     def rename(self, name: tp.Hashable) -> 'Frame':
@@ -2646,9 +2648,15 @@ class Frame(ContainerOperand):
         '''
         return self._blocks._shape[0]
 
+    @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''{doc}
+
+        Args:
+            {config}
+        '''
         config = config or DisplayActive.get()
 
         # create an empty display, then populate with index
@@ -2753,7 +2761,7 @@ class Frame(ContainerOperand):
         Return a Series of dytpes for each realizable column.
 
         Returns:
-            :py:class:`static_frame.Series`
+            :obj:`static_frame.Series`
         '''
         return Series(self._blocks.dtypes,
                 index=immutable_index_filter(self._columns),
@@ -2775,7 +2783,7 @@ class Frame(ContainerOperand):
         Return a tuple describing the shape of the underlying NumPy array.
 
         Returns:
-            :py:class:`tp.Tuple[int]`
+            :obj:`tp.Tuple[int]`
         '''
         return self._blocks._shape
 
@@ -2785,7 +2793,7 @@ class Frame(ContainerOperand):
         Return the number of dimensions, which for a `Frame` is always 2.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         return self._NDIM
 
@@ -2795,7 +2803,7 @@ class Frame(ContainerOperand):
         Return the size of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
 
         return self._blocks.size
@@ -2806,7 +2814,7 @@ class Frame(ContainerOperand):
         Return the total bytes of the underlying NumPy array.
 
         Returns:
-            :py:class:`int`
+            :obj:`int`
         '''
         return self._blocks.nbytes
 
@@ -3846,7 +3854,7 @@ class Frame(ContainerOperand):
             reorder_for_hierarchy: reorder the rows to produce a hierarchible Index from the selected columns, assuming hierarchability is possible.
 
         Returns:
-            :py:class:`Frame`
+            :obj:`Frame`
         '''
         if isinstance(columns, tuple):
             column_loc = list(columns)
@@ -4718,7 +4726,7 @@ class Frame(ContainerOperand):
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
-    '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :py:class:`Frame`.
+    '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :obj:`Frame`.
     '''
 
     __slots__ = (

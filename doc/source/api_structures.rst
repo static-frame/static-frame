@@ -7,7 +7,7 @@ Structures
 Primary Containers
 ---------------------
 
-The primary components of the StaticFrame library are the one-dimensional :py:class:`static_frame.Series` and the two-dimensional :py:class:`static_frame.Frame` and :py:class:`static_frame.FrameGO`.
+The primary components of the StaticFrame library are the one-dimensional :obj:`static_frame.Series` and the two-dimensional :obj:`static_frame.Frame` and :obj:`static_frame.FrameGO`.
 
 While `Frame` and `Series` are immutable, the `FrameGO` permits a type of grow-only mutation, the addition of columns.
 
@@ -40,7 +40,7 @@ While `Frame` and `Series` are immutable, the `FrameGO` permits a type of grow-o
 Index Mappings
 ---------------------
 
-Index mapping classes are used to map labels to ordinal positions on the :py:class:`Series`, :py:class:`Frame`, and :py:class:`FrameGO`.
+Index mapping classes are used to map labels to ordinal positions on the :obj:`Series`, :obj:`Frame`, and :obj:`FrameGO`.
 
 
 .. autoclass:: static_frame.Index
@@ -73,7 +73,7 @@ Index mapping classes are used to map labels to ordinal positions on the :py:cla
 .. admonition:: Deviations from Pandas
     :class: Warning
 
-    :py:class:`Index` and :py:class:`IndexGO` require that all labels are unique. Duplicated labels will raise an error in all cases. This deviates form Pandas, where Index objects permit duplicate labels. This also makes options like the ``verify_integrity`` argument to ``pd.Series.set_index`` and ``pd.DataFrame.set_index`` unnecessary.
+    :obj:`Index` and :obj:`IndexGO` require that all labels are unique. Duplicated labels will raise an error in all cases. This deviates form Pandas, where Index objects permit duplicate labels. This also makes options like the ``verify_integrity`` argument to ``pd.Series.set_index`` and ``pd.DataFrame.set_index`` unnecessary.
 
 
 .. autoclass:: static_frame.IndexHierarchy

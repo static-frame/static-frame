@@ -9,11 +9,11 @@ from static_frame.core.util import AnyCallable
 
 #NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
 
-OWN_INDEX = '''own_index: Flag the passed index as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
-OWN_DATA = '''own_data: Flag the data values as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
-OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this ``{class_name}``. Primarily used by internal clients.'''
+OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
 INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
 
@@ -31,25 +31,25 @@ class DOC_TEMPLATE:
     # functions
 
     to_html = '''
-    Return an HTML table representation of this ``{class_name}`` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
+    Return an HTML table representation of this :obj:`static_frame.{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
 
     Args:
-        config: Optional :py:class:`static_frame.DisplayConfig` instance.
+        config: Optional :obj:`static_frame.DisplayConfig` instance.
     '''
 
     to_html_datatables = '''
-    Return a complete HTML representation of this ``{class_name}`` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
+    Return a complete HTML representation of this :obj:`static_frame.{class_name} using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
 
     Args:
         fp: optional file path to write; if not provided, a temporary file will be created. Note: the caller is responsible for deleting this file.
         show: if True, the file will be opened with a webbrowser.
-        config: Optional :py:class:`static_frame.DisplayConfig` instance.
+        config: Optional :obj:`static_frame.DisplayConfig` instance.
 
     Returns:
         Absolute file path to the file written.
     '''
 
-    clip = '''Apply a clip opertion to this ``{class_name}``. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    clip = '''Apply a clip opertion to this :obj:`static_frame.{class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
     ufunc_skipna = '''{header}
 
@@ -65,7 +65,13 @@ class DOC_TEMPLATE:
         depth_level: a depth level, starting from zero.
     '''
 
+    interface = '''
+    A :obj:`static_frame.Frame` documenting the interface of this class.
+    '''
 
+    name = '''
+    A hashable attached to this container.
+    '''
 
     #---------------------------------------------------------------------------
     # dict entries
@@ -75,7 +81,7 @@ class DOC_TEMPLATE:
             )
 
     reindex = dict(
-            doc='''Return a new ``{class_name}`` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
+            doc='''Return a new :obj:`static_frame.{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
             ''',
             index_initializer=INDEX_INITIALIZER,
             fill_value='''fill_value: A value to be used to fill space created by a new index that has values not found in the previous index.''',
@@ -84,7 +90,7 @@ class DOC_TEMPLATE:
             )
 
     relabel = dict(
-            doc ='''Return a new ``{class_name}`` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            doc ='''Return a new :obj:`static_frame.{class_name} with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
@@ -92,12 +98,12 @@ class DOC_TEMPLATE:
             )
 
     relabel_flat = dict(
-            doc='''Return a new ``{class_name}``, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
+            doc='''Return a new :obj:`static_frame.{class_name}`, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
             ''',
             )
 
     relabel_add_level = dict(
-            doc='''Return a new ``{class_name}``, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
+            doc='''Return a new :obj:`static_frame.{class_name}, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )
@@ -212,6 +218,12 @@ class DOC_TEMPLATE:
             exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
             axis=AXIS,
             )
+
+    display = dict(
+            doc='Return a :obj:`static_frame.Display`, capable of providing a string representation.',
+            config='config: A :obj:`static_frame.DisplayConfig` instance. If not provided, the :obj:`static_frame.DisplayActive` will be used.'
+            )
+
 
 
 def doc_inject(*,

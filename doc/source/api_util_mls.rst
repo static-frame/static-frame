@@ -2,7 +2,7 @@
 Mathematical / Logical / Statistical Utilities
 ====================================================
 
-:py:class:`Series`, :py:class:`Frame`, and :py:class:`Index`, as well as their derived classes, provide support for common mathematical and statisticasl operations with NumPy.
+:obj:`Series`, :obj:`Frame`, and :obj:`Index`, as well as their derived classes, provide support for common mathematical and statisticasl operations with NumPy.
 
 Index
 ---------

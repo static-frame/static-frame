@@ -28,6 +28,9 @@ from static_frame.core.display import DisplayConfig
 # from static_frame.core.display import DisplayConfigs
 from static_frame.core.display import DisplayActive
 
+from static_frame.core.doc_str import doc_inject
+
+
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
@@ -301,9 +304,9 @@ class ContainerMeta(type):
     '''
 
     @property
+    @doc_inject()
     def interface(cls) -> 'Frame':
-        '''A ``Frame`` documenting the interface of this class.
-        '''
+        '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(cls)
 
@@ -452,9 +455,9 @@ class ContainerBase(metaclass=ContainerMeta):
     # common display functions
 
     @property
+    @doc_inject()
     def interface(self) -> 'Frame':
-        '''A ``Frame`` documenting the interface of this class.
-        '''
+        '''{}'''
         from static_frame.core.interface import InterfaceSummary
         return InterfaceSummary.to_frame(self.__class__)
 
@@ -466,9 +469,15 @@ class ContainerBase(metaclass=ContainerMeta):
     def __repr__(self) -> str:
         return repr(self.display())
 
+    @doc_inject(selector='display')
     def display_tall(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''Maximize vertical presentation. {doc}
+
+        Args:
+            {config}
+        '''
         config = config or DisplayActive.get()
         args = config.to_dict()
         args.update(dict(
@@ -478,9 +487,15 @@ class ContainerBase(metaclass=ContainerMeta):
                 ))
         return self.display(config=DisplayConfig(**args))
 
+    @doc_inject(selector='display')
     def display_wide(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''Maximize horizontal presentation. {doc}
+
+        Args:
+            {config}
+        '''
         config = config or DisplayActive.get()
         args = config.to_dict()
         args.update(dict(

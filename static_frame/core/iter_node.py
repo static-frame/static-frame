@@ -41,7 +41,7 @@ class IterNodeType(Enum):
 
 class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     '''
-    Delegate returned from :py:class:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
+    Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
     '''
 
     __slots__ = (
@@ -303,7 +303,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                 self.apply_iter_items(func),
                 dtype=dtype)
 
-
+    @doc_inject(selector='apply')
     def apply_pool(self,
             func: AnyCallable,
             *,
@@ -313,11 +313,11 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             use_threads: bool = False
             ) -> FrameOrSeries:
         '''
-        Apply passed function to each object iterated, where the object depends on the creation of this instance. Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
+        {doc} Employ parallel processing with either the ProcessPoolExecutor or ThreadPoolExecutor.
 
         Args:
-            func: A function.
-            dtype: Type used to create the returned array.
+            {func}
+            {dtype}
             max_workers: Passed to the pool_executor, where None defaults to the max number of machine processes.
             chunksize: Passed to the pool executor.
             use_thread: When True, the ThreadPoolExecutor will be used rather than the default ProcessPoolExecutor.
@@ -355,7 +355,7 @@ _ITER_NODE_SLOTS = (
         )
 
 class IterNode(tp.Generic[FrameOrSeries]):
-    '''Interface to a type of iteration on :py:class:`static_frame.Series` and :py:class:`static_frame.Frame`.
+    '''Interface to a type of iteration on :obj:`static_frame.Series` and :obj:`static_frame.Frame`.
     '''
     # Stores two version of a generator function: one to yield single values, another to yield items pairs. The latter is needed in all cases, as when we use apply we return a Series, and need to have recourse to an index.
 

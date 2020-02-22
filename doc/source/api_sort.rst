@@ -1,7 +1,7 @@
 Sorting
 ===============================
 
-:py:class:`Index`, :py:class:`Series` and :py:class:`Frame` provide sorting. In all cases, a new object is returned.
+:obj:`Index`, :obj:`Series` and :obj:`Frame` provide sorting. In all cases, a new object is returned.
 
 
 Index

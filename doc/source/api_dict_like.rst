@@ -3,7 +3,7 @@
 Dictionary-Like Interface
 ===============================
 
-:py:class:`Series` and :py:class:`Frame` provide dictionary-like interfaces.
+:obj:`Series` and :obj:`Frame` provide dictionary-like interfaces.
 
 For more flexible iteration of keys and values, see Iterators, below.
 
@@ -48,7 +48,7 @@ Frame
 
 .. py:attribute:: Frame.values
 
-    2D NumPy array of :py:class:`Frame` values
+    2D NumPy array of :obj:`Frame` values
 
 .. automethod:: static_frame.Frame.items
 
