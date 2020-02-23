@@ -2415,7 +2415,7 @@ class TypeBlocks(ContainerOperand):
 
         Args:
             value: value to fill missing with; can be an element or a same-sized array.
-            value_valid: Optionally provide a same-size array mask value setting.
+            value_valid: Optionally provide a same-size array mask of the value setting (useful for carrying forward information from labels).
         '''
         return self.from_blocks(
                 self._assign_blocks_from_boolean_blocks(

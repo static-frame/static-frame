@@ -4235,6 +4235,35 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_fillna_d(self) -> None:
+
+        f1 = Frame.from_records([
+                [None, 2, 3, 0],
+                [3, 30, None, None],
+                [0, None, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+
+        f2 = Frame.from_records([
+                [300, 230],
+                [110, 200],
+                ],
+                columns=tuple('CB'),
+                index=tuple('yx'),
+                )
+
+        f3 = f1.fillna(f2)
+
+        self.assertEqual(f3.to_pairs(0),
+                (('A', (('w', None), ('x', 3), ('y', 0))), ('B', (('w', 2), ('x', 30), ('y', 230))), ('C', (('w', 3), ('x', 110), ('y', 2))), ('D', (('w', 0), ('x', None), ('y', 3))))
+                )
+
+        # assure we do not fill with float when reindexing
+        self.assertEqual([type(v) for v in f3['B'].values.tolist()], [int, int, int])
+
+    #---------------------------------------------------------------------------
+
     def test_frame_fillna_leading_a(self) -> None:
         a2 = np.array([
                 [None, None, None, None],

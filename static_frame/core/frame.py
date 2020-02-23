@@ -69,6 +69,7 @@ from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import dtype_to_na
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -2567,7 +2568,13 @@ class Frame(ContainerOperand):
             if not isinstance(value, Frame):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
             # not sure what fill_value is best here, as value Frame might have hetergenous types; this might result in some undesirable type coercion
-            fill = value.reindex(index=self.index, columns=self.columns).values
+            fill_value = dtype_to_na(value._blocks._row_dtype)
+
+            fill = value.reindex(
+                    index=self.index,
+                    columns=self.columns,
+                    fill_value=fill_value
+                    ).values
             # produce a Boolean array that shows True only for labels (index, columns) found in the original `value` argument (before reindexing) and also in the target; this will be used to not set a NA when the value to fill was produced by reindexing.
             fill_valid = self._blocks.extract_iloc_mask((
                     self.index.isin(value.index.values),
