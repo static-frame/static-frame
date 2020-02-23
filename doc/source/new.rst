@@ -13,6 +13,8 @@ Added ``IndexNanosecond`` and ``IndexNanosecondGO`` indices.
 
 All ``iter_*`` interfaces now explictly define arguments.
 
+``Frame.fillna()`` and ``Series.fillna()`` now accept ``Frame`` and ``Series``, respectively, as arguments.
+
 
 0.6.0
 ----------
