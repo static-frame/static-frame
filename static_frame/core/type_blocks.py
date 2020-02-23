@@ -1430,21 +1430,25 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield b # no change
 
-
+    #---------------------------------------------------------------------------
+    # There are two approaches to setting values from Boolean indicators; the difference is if the Booleans are given in a single array, or in block-aligned arrays.
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
-            value: object
+            value: object,
+            value_valid: tp.Optional[np.ndarray]
             ) -> tp.Iterator[np.ndarray]:
         '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
             value: Must be a single value or an array
+            value_valid: same size Boolean area to be combined with targets
         '''
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
+            assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
             value_dtype = np.array(value).dtype
             is_element = True
@@ -1456,21 +1460,27 @@ class TypeBlocks(ContainerOperand):
             if block is None or target is None:
                 raise Exception('blocks or targets do not align')
 
+            if not is_element:
+                if block.ndim == 1:
+                    end = start + 1
+                    value_slice = start
+                else:
+                    end = start + block.shape[1]
+                    value_slice = slice(start, end)
+
+                # update target to valid values
+                value_valid_part = value_valid[NULL_SLICE, value_slice]
+                target &= value_valid_part
+                value_part = value[NULL_SLICE, value_slice][target]
+                start = end # always update start
+            else:
+                value_part = value
+
+            # evalaute after updating target
             if not target.any(): # works for ndim 1 and 2
                 yield block
-            else:
-                if not is_element:
-                    if block.ndim == 1:
-                        end = start + 1
-                        value_slice = start
-                    else:
-                        end = start + block.shape[1]
-                        value_slice = slice(start, end)
-                    value_part = value[NULL_SLICE, value_slice][target]
-                    start = end # always update start
-                else:
-                    value_part = value
 
+            else:
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
                     assigned = block.copy()
@@ -1530,6 +1540,7 @@ class TypeBlocks(ContainerOperand):
 
             start = end # always update start
 
+    #---------------------------------------------------------------------------
     def _slice_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
             column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
@@ -2395,14 +2406,23 @@ class TypeBlocks(ContainerOperand):
         return row_key, column_key
 
 
-    def fillna(self, value: object) -> 'TypeBlocks':
+    def fillna(self,
+            value: object,
+            value_valid: tp.Optional[np.ndarray] = None,
+            ) -> 'TypeBlocks':
         '''
         Return a new TypeBlocks instance that fills missing values with the passed value.
+
+        Args:
+            value: value to fill missing with; can be an element or a same-sized array.
+            value_valid: Optionally provide a same-size array mask value setting.
         '''
         return self.from_blocks(
                 self._assign_blocks_from_boolean_blocks(
                         targets=(isna_array(b) for b in self._blocks),
-                        value=value)
+                        value=value,
+                        value_valid=value_valid
+                        )
                 )
 
 

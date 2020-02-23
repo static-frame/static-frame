@@ -2566,13 +2566,19 @@ class Frame(ContainerOperand):
         if hasattr(value, '__iter__') and not isinstance(value, str):
             if not isinstance(value, Frame):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
-            # cannot use  self._reindex_other_like_iloc as we do not have a sel yet
-            # this might result in some undesirable type coercion; only alternative is to try to retain blocks
-            value = value.reindex(index=self.index,
-                    columns=self.columns,
-                    ).values
+            # not sure what fill_value is best here, as value Frame might have hetergenous types; this might result in some undesirable type coercion
+            fill = value.reindex(index=self.index, columns=self.columns).values
+            # produce a Boolean array that shows True only for labels (index, columns) found in the original `value` argument (before reindexing) and also in the target; this will be used to not set a NA when the value to fill was produced by reindexing.
+            fill_valid = self._blocks.extract_iloc_mask((
+                    self.index.isin(value.index.values),
+                    self.columns.isin(value.columns.values)
+                    )).values
+        else:
+            fill = value
+            fill_valid = None
 
-        return self.__class__(self._blocks.fillna(value),
+        return self.__class__(
+                self._blocks.fillna(fill, fill_valid),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,

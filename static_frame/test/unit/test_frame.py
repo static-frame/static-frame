@@ -4206,6 +4206,34 @@ class TestUnit(TestCase):
                 (('A', (('w', 300.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 200.0), ('y', 1.0))), ('C', (('w', 3), ('x', 20), ('y', 2))), ('D', (('w', 0), ('x', 1), ('y', 3))))
                 )
 
+    def test_frame_fillna_c(self) -> None:
+
+        f1 = Frame.from_records([
+                [np.nan, 2, 3, 0],
+                [3, 30, None, None],
+                [0, np.nan, 2, 3]],
+                columns=tuple('ABCD'),
+                index=tuple('wxy'),
+                )
+
+        f2 = Frame.from_records([
+                [300, 230],
+                [110, 200],
+                [580, 750],
+                ],
+                columns=tuple('AB'),
+                index=tuple('yxw'),
+                )
+
+        f3 = f1.fillna(f2)
+
+        self.assertEqual(f3.dtypes.values.tolist(),
+                [np.dtype('float64'), np.dtype('float64'), np.dtype('O'), np.dtype('O')]
+                )
+        self.assertEqual(f3.to_pairs(0),
+                (('A', (('w', 580.0), ('x', 3.0), ('y', 0.0))), ('B', (('w', 2.0), ('x', 30.0), ('y', 230.0))), ('C', (('w', 3), ('x', None), ('y', 2))), ('D', (('w', 0), ('x', None), ('y', 3))))
+                )
+
 
     def test_frame_fillna_leading_a(self) -> None:
         a2 = np.array([

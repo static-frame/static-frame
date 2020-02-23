@@ -772,7 +772,6 @@ class Series(ContainerOperand):
             value_dtype = value.dtype
             # choose a fill value that will not force a type coercion
             fill_value = dtype_to_na(value_dtype)
-
             # find targets that are NaN in self and have labels in value; otherwise, might fill values after reindexing, and end up filling a fill_value rather than keeping original (na) value
             sel = self.index.isin(
                     intersect1d(self.index.values[sel], value.index.values))
