@@ -69,6 +69,7 @@ from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
 from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import dtype_to_na
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -2563,11 +2564,21 @@ class Frame(ContainerOperand):
         Args:
             {value}
         '''
+        if hasattr(value, '__iter__') and not isinstance(value, str):
+            if not isinstance(value, Frame):
+                raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
+            # cannot use  self._reindex_other_like_iloc as we do not have a sel yet
+            # this might result in some undesirable type coercion; only alternative is to try to retain blocks
+            value = value.reindex(index=self.index,
+                    columns=self.columns,
+                    ).values
+
         return self.__class__(self._blocks.fillna(value),
                 index=self._index,
                 columns=self._columns,
                 name=self._name,
-                own_data=True)
+                own_data=True
+                )
 
     @doc_inject(selector='fillna')
     def fillna_leading(self,

@@ -1436,31 +1436,48 @@ class TypeBlocks(ContainerOperand):
             targets: tp.Iterable[np.ndarray],
             value: object
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign value into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
+        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
-            value: Must be a single value, rather than an array
+            value: Must be a single value or an array
         '''
         if isinstance(value, np.ndarray):
-            raise Exception('cannot assign an array with Boolean targets')
-        else:
+            value_dtype = value.dtype
+            is_element = False
+            assert value.shape == self.shape
+        else: # assumed to be non-string, non-iterable
             value_dtype = np.array(value).dtype
+            is_element = True
+
+        start = 0
+        value_slice: tp.Union[int, slice]
 
         for block, target in zip_longest(self._blocks, targets):
             if block is None or target is None:
                 raise Exception('blocks or targets do not align')
 
-            if not target.any():
+            if not target.any(): # works for ndim 1 and 2
                 yield block
             else:
+                if not is_element:
+                    if block.ndim == 1:
+                        end = start + 1
+                        value_slice = start
+                    else:
+                        end = start + block.shape[1]
+                        value_slice = slice(start, end)
+                    value_part = value[NULL_SLICE, value_slice][target]
+                    start = end # always update start
+                else:
+                    value_part = value
+
                 assigned_dtype = resolve_dtype(value_dtype, block.dtype)
                 if block.dtype == assigned_dtype:
                     assigned = block.copy()
                 else:
                     assigned = block.astype(assigned_dtype)
 
-                # assert assigned.shape == target.shape
-                assigned[target] = value
+                assigned[target] = value_part
                 assigned.flags.writeable = False
                 yield assigned
 
@@ -1470,9 +1487,8 @@ class TypeBlocks(ContainerOperand):
             value: tp.Any # an array, or element for single assigment
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Given an Boolean array of targets, fill targets from value, where value is either a single value or an array.
+        Given an Boolean array of targets, fill targets from value, where value is either a single value or an array. Unlike with _assign_blocks_from_boolean_blocks, this method takes a single block_key.
         '''
-
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
             is_element = False
@@ -1503,8 +1519,6 @@ class TypeBlocks(ContainerOperand):
                     assigned = block.copy()
                 else:
                     assigned = block.astype(assigned_dtype)
-
-                assert assigned.shape == target.shape
 
                 if is_element:
                     assigned[target] = value

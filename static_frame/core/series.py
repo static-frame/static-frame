@@ -1849,7 +1849,8 @@ class SeriesAssign:
 
     def __call__(self,
             value, # any possible assignment type
-            fill_value=np.nan):
+            fill_value=np.nan
+            ):
         '''
         Calling with a value performs the assignment. The `name` attribute is propagated.
         '''
