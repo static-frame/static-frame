@@ -622,6 +622,49 @@ class TestUnit(TestCase):
             _ = s1.fillna(np.arange(3))
 
 
+    def test_series_fillna_d(self) -> None:
+
+        s1 = Series((np.nan, 3, np.nan, 4), index=tuple('abcd'))
+        s2 = Series((100, 200), index=tuple('ca'))
+        s3 = s1.fillna(s2)
+        self.assertEqual(s3.dtype, float)
+        self.assertEqual(s3.to_pairs(),
+                (('a', 200.0), ('b', 3.0), ('c', 100.0), ('d', 4.0))
+                )
+
+    def test_series_fillna_e(self) -> None:
+
+        s1 = Series((None, None, 'foo', 'bar'), index=tuple('abcd'))
+        s2 = Series((100, 200), index=tuple('ca'))
+        s3 = s1.fillna(s2)
+        self.assertEqual(s3.dtype, object)
+        self.assertEqual(type(s3['a']), int)
+        self.assertEqual(s3.to_pairs(),
+                (('a', 200), ('b', None), ('c', 'foo'), ('d', 'bar'))
+                )
+
+
+    def test_series_fillna_f(self) -> None:
+
+        s1 = Series((None, None, 'foo', 'bar'), index=tuple('abcd'))
+        s2 = Series((100, 200))
+        s3 = s1.fillna(s2)
+        # no alignment, return the same Series
+        self.assertEqual(id(s3), id(s1))
+
+
+
+    def test_series_fillna_g(self) -> None:
+
+        s1 = Series((np.nan, 3, np.nan, 4), index=tuple('abcd'))
+        s2 = Series((False, True), index=tuple('ba'))
+        s3 = s1.fillna(s2)
+        self.assertEqual(s3.dtype, object)
+        self.assertEqual(s3.fillna(-1).to_pairs(),
+                (('a', True), ('b', 3.0), ('c', -1), ('d', 4.0))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_fillna_directional_a(self) -> None:

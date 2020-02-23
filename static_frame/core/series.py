@@ -41,13 +41,14 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
-# from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import dtype_to_na
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
 
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmax_1d
+from static_frame.core.util import intersect1d
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
@@ -580,7 +581,10 @@ class Series(ContainerOperand):
             fill_value=np.nan) -> 'Series':
         '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
         '''
-        return value.reindex(self._index._extract_iloc(iloc_key), fill_value=fill_value)
+        return value.reindex(
+                self._index._extract_iloc(iloc_key),
+                fill_value=fill_value
+                )
 
     @doc_inject(selector='reindex', class_name='Series')
     def reindex(self,
@@ -734,7 +738,7 @@ class Series(ContainerOperand):
 
     def dropna(self) -> 'Series':
         '''
-        Return a new ``Series`` after removing values of NaN or None.
+        Return a new :obj:`static_frame.Series` after removing values of NaN or None.
         '''
         # get positions that we want to keep
         sel = np.logical_not(isna_array(self.values))
@@ -750,8 +754,10 @@ class Series(ContainerOperand):
                 own_index=True)
 
     @doc_inject(selector='fillna')
-    def fillna(self, value) -> 'Series':
-        '''Return a new ``Series`` after replacing null (NaN or None) with the supplied value.
+    def fillna(self,
+            value: tp.Any # an element or a Series
+            ) -> 'Series':
+        '''Return a new :obj:`static_frame.Series` after replacing null (NaN or None) with the supplied value. The value can be element or
 
         Args:
             {value}
@@ -760,10 +766,27 @@ class Series(ContainerOperand):
         if not np.any(sel):
             return self
 
-        if isinstance(value, np.ndarray):
-            raise RuntimeError('cannot assign an array to fillna')
+        if hasattr(value, '__iter__') and not isinstance(value, str):
+            if not isinstance(value, Series):
+                raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Series')
+            value_dtype = value.dtype
+            # choose a fill value that will not force a type coercion
+            fill_value = dtype_to_na(value_dtype)
 
-        assignable_dtype = resolve_dtype(np.array(value).dtype, self.values.dtype)
+            # find targets that are NaN in self and have labels in value; otherwise, might fill values after reindexing, and end up filling a fill_value rather than keeping original (na) value
+            sel = self.index.isin(
+                    intersect1d(self.index.values[sel], value.index.values))
+            if not np.any(sel): # avoid copying, retyping
+                return self
+
+            # must reindex to align ordering; just get array
+            value = self._reindex_other_like_iloc(value,
+                    sel,
+                    fill_value=fill_value).values
+        else:
+            value_dtype = np.array(value).dtype
+
+        assignable_dtype = resolve_dtype(value_dtype, self.values.dtype)
 
         if self.values.dtype == assignable_dtype:
             assigned = self.values.copy()
@@ -1831,6 +1854,7 @@ class SeriesAssign:
         Calling with a value performs the assignment. The `name` attribute is propagated.
         '''
         if isinstance(value, Series):
+            # instead of using fill_value here, might be better to use dtype_to_na, so as to not coerce the type of the value to be assigned
             value = self.container._reindex_other_like_iloc(value,
                     self.iloc_key,
                     fill_value=fill_value).values
