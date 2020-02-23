@@ -32,6 +32,7 @@ from static_frame import IndexAutoFactory
 from static_frame import HLoc
 
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitSeries
 
 nan = np.nan
 
@@ -153,26 +154,28 @@ class TestUnit(TestCase):
     def test_series_init_m(self) -> None:
 
         # if index is None or IndexAutoFactory, we supply an index of 0
-        s1 = sf.Series.from_element('a', index=(0,))
+        s1 = Series.from_element('a', index=(0,))
         self.assertEqual(s1.to_pairs(),
                 ((0, 'a'),))
 
         # an element with an explicitl empty index results in an empty series
-        s2 = sf.Series.from_element('a', index=())
+        s2 = Series.from_element('a', index=())
         self.assertEqual(s2.to_pairs(), ())
 
     def test_series_init_n(self) -> None:
         with self.assertRaises(RuntimeError):
-            # results in 2D array
-            s1 = sf.Series(np.array([['a', 'b']]))
+            s1 = Series(np.array([['a', 'b']]))
 
-        s2 = sf.Series([['a', 'b']], dtype=object)
+        s2 = Series([['a', 'b']], dtype=object)
         self.assertEqual(s2.to_pairs(),
             ((0, ['a', 'b']),)
             )
 
     def test_series_init_o(self) -> None:
-        s1 = sf.Series.from_element('T', index=())
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series('T', index=range(3))
+
+        s1 = Series.from_element('T', index=())
         self.assertEqual(s1.to_pairs(), ())
 
 
