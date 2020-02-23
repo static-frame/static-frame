@@ -4178,7 +4178,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('A', dtype('O')), ('B', dtype('int64')), ('C', dtype('O')), ('D', dtype('int64'))))
 
-
+    @skip_win #type: ignore
     def test_frame_fillna_b(self) -> None:
 
         f1 = Frame.from_records([

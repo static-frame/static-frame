@@ -1448,7 +1448,7 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
-            assert value_valid.shape == self.shape
+            assert value_valid.shape == self.shape #type: ignore
         else: # assumed to be non-string, non-iterable
             value_dtype = np.array(value).dtype
             is_element = True
@@ -1469,7 +1469,7 @@ class TypeBlocks(ContainerOperand):
                     value_slice = slice(start, end)
 
                 # update target to valid values
-                value_valid_part = value_valid[NULL_SLICE, value_slice]
+                value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
                 target &= value_valid_part
                 value_part = value[NULL_SLICE, value_slice][target]
                 start = end # always update start
