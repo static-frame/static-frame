@@ -158,7 +158,7 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property
+    @property #type: ignore
     @doc_inject()
     def name(self) -> tp.Hashable:
         '''{}'''

@@ -303,7 +303,7 @@ class ContainerMeta(type):
     '''Lowest level metaclass for providing interface property on class.
     '''
 
-    @property
+    @property #type: ignore
     @doc_inject()
     def interface(cls) -> 'Frame':
         '''{}'''
@@ -454,7 +454,7 @@ class ContainerBase(metaclass=ContainerMeta):
     #---------------------------------------------------------------------------
     # common display functions
 
-    @property
+    @property #type: ignore
     @doc_inject()
     def interface(self) -> 'Frame':
         '''{}'''
