@@ -69,7 +69,6 @@ from static_frame.core.util import argmax_2d
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
 from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import dtype_to_na
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
