@@ -97,6 +97,15 @@ matrix:
         - pip install -r requirements-test.txt
         - pip install numpy==1.15.4
 
+    - name: forward compatibility Pandas 1.0.1
+      language: python
+      os: linux
+      dist: xenial
+      python: 3.7.4
+      install:
+        - pip install -r requirements-test.txt
+        - pip install pandas==1.0.1
+
 
 # common
 
