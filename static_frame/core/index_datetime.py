@@ -125,8 +125,7 @@ class IndexDatetime(Index):
         '''Return a Pandas Index.
         '''
         import pandas
-        # do not need a copy as Pandas will coerce to datetime64
-        return pandas.DatetimeIndex(self.values,
+        return pandas.DatetimeIndex(self.values.copy(),
                 name=self._name)
 
 #-------------------------------------------------------------------------------

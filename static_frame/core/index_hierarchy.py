@@ -1063,7 +1063,7 @@ class IndexHierarchy(IndexBase):
         '''Return a Pandas MultiIndex.
         '''
         import pandas
-        mi = pandas.MultiIndex.from_tuples(array2d_to_tuples(self.__iter__()))
+        mi = pandas.MultiIndex.from_tuples(self.__iter__())
         mi.name = self._name
         mi.names = self.names
         return mi
@@ -1071,7 +1071,7 @@ class IndexHierarchy(IndexBase):
     def flat(self) -> IndexBase:
         '''Return a flat, one-dimensional index of tuples for each level.
         '''
-        return self._INDEX_CONSTRUCTOR(array2d_to_tuples(self.__iter__()))
+        return self._INDEX_CONSTRUCTOR(self.__iter__())
 
     def add_level(self, level: tp.Hashable):
         '''Return an IndexHierarchy with a new root level added.
