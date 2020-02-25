@@ -15,6 +15,8 @@ All ``iter_*`` interfaces now explictly define arguments.
 
 ``Frame.fillna()`` and ``Series.fillna()`` now accept ``Frame`` and ``Series``, respectively, as arguments.
 
+``Series.sort_index``, ``Series.sort_values``, ``Frame.sort_index``, ``Frame.sort_columns``, and ``Frame.sort_values`` now retain index/columns name after sorting.
+
 
 0.6.0
 ----------
