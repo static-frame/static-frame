@@ -1447,14 +1447,15 @@ class Series(ContainerOperand):
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+        index = self._index.from_labels(index_values, name=self._index._name)
 
         values = self.values[order]
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=index_values,
+                index=index,
                 name=self._name,
-                index_constructor=self._index.from_labels
+                own_index=True
                 )
 
     def sort_values(self,
@@ -1472,14 +1473,15 @@ class Series(ContainerOperand):
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+        index = self._index.from_labels(index_values, name=self._index._name)
 
         values = self.values[order]
         values.flags.writeable = False
 
         return self.__class__(values,
-                index=index_values,
+                index=index,
                 name=self._name,
-                index_constructor=self._index.from_labels
+                own_index=True
                 )
 
     def isin(self, other) -> 'Series':

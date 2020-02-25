@@ -1459,9 +1459,21 @@ class TestUnit(TestCase):
         self.assertEqual(post.index.__class__, IndexHierarchy)
 
 
+    def test_series_sort_index_d(self) -> None:
+
+        index = IndexHierarchy.from_product((0, 1), (10, 20), name='foo')
+        s1 = Series(list('abcd'), index=index)
+        s2 = s1.sort_index()
+        self.assertEqual(s2.index.name, s1.index.name)
+
+
+
+
+
+    #---------------------------------------------------------------------------
     def test_series_sort_values_a(self) -> None:
 
-        index = IndexYearMonth.from_date_range('2017-12-15', '2018-03-15')
+        index = IndexYearMonth.from_date_range('2017-12-15', '2018-03-15', name='foo')
         s = Series(list('abcd'), index=index)
 
         post = s.sort_values(ascending=False)
@@ -1472,6 +1484,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(post.index.__class__, IndexYearMonth)
+        self.assertEqual(post.index.name, 'foo')
 
     def test_series_sort_values_b(self) -> None:
 

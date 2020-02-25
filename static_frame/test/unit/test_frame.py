@@ -3646,6 +3646,7 @@ class TestUnit(TestCase):
 
         self.assertTrue(tuple(reversed(f)) == tuple(reversed(columns)))
 
+    #---------------------------------------------------------------------------
 
     def test_frame_sort_index_a(self) -> None:
         # reindex both axis
@@ -3682,14 +3683,18 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r'),
-                index=IndexHierarchy.from_product((1, 2), (10, 20)),
+                index=IndexHierarchy.from_product((1, 2), (10, 20), name='foo'),
                 )
 
         post = f1.sort_index(ascending=False)
 
+        self.assertEqual(post.index.name, f1.index.name)
         self.assertEqual(post.to_pairs(0),
                 (('p', (((2, 20), 'd'), ((2, 10), 'c'), ((1, 20), 'b'), ((1, 10), 'a'))), ('q', (((2, 20), True), ((2, 10), False), ((1, 20), True), ((1, 10), False))), ('r', (((2, 20), True), ((2, 10), False), ((1, 20), False), ((1, 10), False))))
                 )
+
+
+    #---------------------------------------------------------------------------
 
 
     def test_frame_sort_columns_a(self) -> None:
@@ -3724,11 +3729,13 @@ class TestUnit(TestCase):
                 )
 
         f1 = Frame.from_records(records,
-                columns=IndexHierarchy.from_product((1, 2), (10, 20)),
+                columns=IndexHierarchy.from_product((1, 2), (10, 20), name='foo'),
                 index=('z', 'x', 'w', 'y'),
                 )
 
         f2 = f1.sort_columns(ascending=False)
+
+        self.assertEqual(f2.columns.name, f1.columns.name)
 
         self.assertEqual(
             f2.to_pairs(0),
@@ -3835,11 +3842,13 @@ class TestUnit(TestCase):
         f1 = f1.set_index('a')
         f1 = f1.sort_values('b', ascending=False)
         self.assertEqual(f1.to_pairs(0), match)
+        self.assertEqual(f1.index.name, 'a')
 
         f2 = FrameGO(a1, columns=('a', 'b'))
         f2 = f2.set_index('a') # type: ignore
         f2 = f2.sort_values('b', ascending=False) # type: ignore
         self.assertEqual(f2.to_pairs(0), match)
+        self.assertEqual(f2.index.name, 'a')
 
 
     def test_frame_sort_values_e(self) -> None:

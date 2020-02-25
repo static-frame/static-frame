@@ -3560,7 +3560,8 @@ class Frame(ContainerOperand):
     def sort_index(self,
             *,
             ascending: bool = True,
-            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND
+            ) -> 'Frame':
         '''
         Return a new Frame ordered by the sorted Index.
         '''
@@ -3576,14 +3577,15 @@ class Frame(ContainerOperand):
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+        index = self._index.from_labels(index_values, name=self._index.name)
 
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
-                index=index_values,
+                index=index,
                 columns=self._columns,
-                own_data=True,
                 name=self._name,
-                index_constructor=self._index.from_labels,
+                own_data=True,
+                own_index=True,
                 )
 
     def sort_columns(self,
@@ -3605,14 +3607,15 @@ class Frame(ContainerOperand):
 
         columns_values = self._columns.values[order]
         columns_values.flags.writeable = False
+        columns = self._columns.from_labels(columns_values,  name=self._columns.name)
 
         blocks = self._blocks[order]
         return self.__class__(blocks,
                 index=self._index,
-                columns=columns_values,
-                own_data=True,
+                columns=columns,
                 name=self._name,
-                columns_constructor=self._columns.from_labels
+                own_data=True,
+                own_columns=True,
                 )
 
     def sort_values(self,
@@ -3660,24 +3663,32 @@ class Frame(ContainerOperand):
         if axis == 0:
             column_values = self._columns.values[order]
             column_values.flags.writeable = False
+            columns = self._columns.from_labels(
+                    column_values,
+                    name=self._columns._name
+                    )
             blocks = self._blocks[order]
             return self.__class__(blocks,
                     index=self._index,
-                    columns=column_values,
-                    own_data=True,
+                    columns=columns,
                     name=self._name,
-                    columns_constructor=self._columns.from_labels
+                    own_data=True,
+                    own_columns=True
                     )
 
         index_values = self._index.values[order]
         index_values.flags.writeable = False
+        index = self._index.from_labels(
+                index_values,
+                name=self._index._name
+                )
         blocks = self._blocks.iloc[order]
         return self.__class__(blocks,
-                index=index_values,
+                index=index,
                 columns=self._columns,
-                own_data=True,
                 name=self._name,
-                index_constructor=self._index.from_labels
+                own_data=True,
+                own_index=True
                 )
 
     def isin(self, other) -> 'Frame':
