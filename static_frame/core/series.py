@@ -483,21 +483,21 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_index(self) -> IterNodeDepthLevel:
+    def iter_group_labels(self) -> IterNodeDepthLevel:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=self._axis_group_index_items,
-                function_values=self._axis_group_index,
+                function_items=self._axis_group_labels_items,
+                function_values=self._axis_group_labels,
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
                 )
 
     @property
-    def iter_group_index_items(self) -> IterNodeDepthLevel:
+    def iter_group_labels_items(self) -> IterNodeDepthLevel:
         return IterNodeDepthLevel(
                 container=self,
-                function_items=self._axis_group_index_items,
-                function_values=self._axis_group_index,
+                function_items=self._axis_group_labels_items,
+                function_values=self._axis_group_labels,
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT
                 )
@@ -1301,7 +1301,7 @@ class Series(ContainerOperand):
 
 
 
-    def _axis_group_index_items(self,
+    def _axis_group_labels_items(self,
             depth_level: DepthLevelSpecifier = 0,
             ):
 
@@ -1317,10 +1317,10 @@ class Series(ContainerOperand):
                 g = tuple(g)
             yield g, self._extract_iloc(selection)
 
-    def _axis_group_index(self,
+    def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
             ):
-        yield from (x for _, x in self._axis_group_index_items(
+        yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level))
 
 

@@ -2140,21 +2140,21 @@ class Frame(ContainerOperand):
             )
 
     @property
-    def iter_group_index(self) -> IterNodeDepthLevelAxis:
+    def iter_group_labels(self) -> IterNodeDepthLevelAxis:
         return IterNodeDepthLevelAxis(
             container=self,
-            function_values=self._axis_group_index,
-            function_items=self._axis_group_index_items,
+            function_values=self._axis_group_labels,
+            function_items=self._axis_group_labels_items,
             yield_type=IterNodeType.VALUES,
             apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
 
     @property
-    def iter_group_index_items(self) -> IterNodeDepthLevelAxis:
+    def iter_group_labels_items(self) -> IterNodeDepthLevelAxis:
         return IterNodeDepthLevelAxis(
             container=self,
-            function_values=self._axis_group_index,
-            function_items=self._axis_group_index_items,
+            function_values=self._axis_group_labels,
+            function_items=self._axis_group_labels_items,
             yield_type=IterNodeType.ITEMS,
             apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
             )
@@ -3422,7 +3422,7 @@ class Frame(ContainerOperand):
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
 
 
-    def _axis_group_index_items(self,
+    def _axis_group_labels_items(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
             axis=0):
@@ -3461,11 +3461,11 @@ class Frame(ContainerOperand):
                         own_columns=True,
                         own_data=True)
 
-    def _axis_group_index(self,
+    def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
             axis=0):
-        yield from (x for _, x in self._axis_group_index_items(
+        yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level, axis=axis))
 
 

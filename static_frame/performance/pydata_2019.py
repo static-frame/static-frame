@@ -384,7 +384,7 @@ class BuoySingleYear2D:
 
         def gen():
             for date, date_frame in targets.iter_group_items('date'):
-                for station_id, station in date_frame.iter_group_index_items(0):
+                for station_id, station in date_frame.iter_group_labels_items(0):
                     yield date, station_id, len(station)
 
         post = sf.Frame.from_records(gen(), columns=('date', 'station_id', 'count'))

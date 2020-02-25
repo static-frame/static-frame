@@ -17,6 +17,9 @@ All ``iter_*`` interfaces now explictly define arguments.
 
 ``Series.sort_index``, ``Series.sort_values``, ``Frame.sort_index``, ``Frame.sort_columns``, and ``Frame.sort_values`` now retain index/columns name after sorting.
 
+Renamed ``Series.iter_group_index()``, ``Series.iter_group_index_items()``, ``Frame.iter_group_index()``, ``Frame.iter_group_index_items()`` to ``Series.iter_group_labels()``, ``Series.iter_group_labels_items()``, ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``
+
+
 
 0.6.0
 ----------

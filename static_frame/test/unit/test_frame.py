@@ -3562,17 +3562,17 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         with self.assertRaises(TypeError):
-            f1.iter_group_index(3, 4)
+            f1.iter_group_labels(3, 4)
 
         with self.assertRaises(TypeError):
-            f1.iter_group_index(foo=4)
+            f1.iter_group_labels(foo=4)
 
 
-        post = tuple(f1.iter_group_index(0, axis=0))
+        post = tuple(f1.iter_group_labels(0, axis=0))
 
         self.assertEqual(len(post), 3)
         self.assertEqual(
-                f1.iter_group_index(0, axis=0).apply(lambda x: x[['p', 'q']].values.sum()).to_pairs(),
+                f1.iter_group_labels(0, axis=0).apply(lambda x: x[['p', 'q']].values.sum()).to_pairs(),
                 (('x', 4), ('y', 64), ('z', 97))
                 )
 
@@ -3588,7 +3588,7 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'))
 
         # with axis 1, we are grouping based on columns while maintain the index
-        post_tuple = tuple(f1.iter_group_index(1, axis=1))
+        post_tuple = tuple(f1.iter_group_labels(1, axis=1))
 
         self.assertEqual(len(post_tuple), 2)
 
@@ -3605,7 +3605,7 @@ class TestUnit(TestCase):
             )
 
         self.assertEqual(
-                f1.iter_group_index(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
+                f1.iter_group_labels(1, axis=1).apply(lambda x: x.iloc[:, 0].sum()).to_pairs(),
                 (('a', 34), ('b', 131))
                 )
 
@@ -3623,9 +3623,9 @@ class TestUnit(TestCase):
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
 
         with self.assertRaises(AxisInvalid):
-            _ = f.iter_group_index_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
+            _ = f.iter_group_labels_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
 
-        post = f.iter_group_index_items(0).apply(lambda k, x: f'{k}:{x.size}')
+        post = f.iter_group_labels_items(0).apply(lambda k, x: f'{k}:{x.size}')
 
         self.assertEqual(post.to_pairs(),
                 (('A', 'A:6'), ('B', 'B:6'))
