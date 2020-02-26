@@ -273,7 +273,7 @@ def axis_window_items( *,
         window_sized: if True, windows that do not meet the size are skipped.
         window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
         window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-        label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., o return the first label of the window, the shift will be the size minus one.
+        label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
         start_shift: shift from 0 to determine where the collection of windows begins.
         size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
