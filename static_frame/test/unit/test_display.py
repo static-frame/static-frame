@@ -285,6 +285,12 @@ class TestUnit(TestCase):
                 '<<U2>    <int64>'])
 
 
+    def test_display_rows_b(self) -> None:
+        # this isseu was found only with Frame, not with Series
+        dc = DisplayConfig(display_rows=8)
+        d = Frame(np.arange(7)).display(dc)
+        print(d.to_rows())
+        # import ipdb; ipdb.set_trace()
 
     @skip_win  # type: ignore
     def test_display_display_columns_a(self) -> None:

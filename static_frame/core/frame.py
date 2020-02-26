@@ -2714,6 +2714,8 @@ class Frame(ContainerOperand):
             else:
                 d.extend_iterable(column, header='')
 
+        #-----------------------------------------------------------------------
+        # prepare columns display
         config_transpose = config.to_transpose()
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._name),
@@ -2723,7 +2725,7 @@ class Frame(ContainerOperand):
         display_columns = self._columns.display(
                 config=config_transpose)
 
-        # add spacers for a wide index
+        # add spacers to from of columns when we have a hierarchical index
         for _ in range(self._index.depth - 1):
             # will need a width equal to the column depth
             row = [Display.to_cell('', config=config)
@@ -2737,6 +2739,7 @@ class Frame(ContainerOperand):
         else: # can just flatten a single column into one row
             display_columns_horizontal = display_columns.flatten()
 
+        #-----------------------------------------------------------------------
         d.insert_displays(
                 display_cls.flatten(),
                 display_columns_horizontal,

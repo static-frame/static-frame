@@ -1174,7 +1174,8 @@ class Display:
 
     def extend_iterable(self,
             iterable: tp.Sequence[tp.Any],
-            header: HeaderInitializer) -> None:
+            header: HeaderInitializer
+            ) -> None:
         '''
         Add an iterable of strings as a column to the display.
         '''
@@ -1184,6 +1185,7 @@ class Display:
             row_idx_start = 1
 
         # truncate iterable if necessary
+        # NOTE: remove subtraction of self.DATA_MARGINS
         count_max = self._config.display_rows - self.DATA_MARGINS
 
         if len(iterable) > count_max:
