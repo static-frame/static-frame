@@ -292,7 +292,7 @@ class TestUnit(TestCase):
     def test_display_rows_b(self) -> None:
         # this isseu was found only with Frame, not with Series
         dc = DisplayConfig(display_rows=8, type_color=False)
-        self.assertEqual(Frame(np.arange(7)).display(dc).to_rows(),
+        self.assertEqual(Frame(np.arange(7, dtype=np.int64)).display(dc).to_rows(),
                 ['<Frame>',
                 '<Index> 0       <int64>',
                 '<Index>',
@@ -306,7 +306,7 @@ class TestUnit(TestCase):
                 '<int64> <int64>']
                 )
 
-        self.assertEqual(Frame(np.arange(8)).display(dc).to_rows(),
+        self.assertEqual(Frame(np.arange(8, dtype=np.int64)).display(dc).to_rows(),
                 ['<Frame>',
                 '<Index> 0       <int64>',
                 '<Index>',
@@ -321,7 +321,7 @@ class TestUnit(TestCase):
                 '<int64> <int64>']
                 )
 
-        self.assertEqual(Frame(np.arange(9)).display(dc).to_rows(),
+        self.assertEqual(Frame(np.arange(9, dtype=np.int64)).display(dc).to_rows(),
                 ['<Frame>',
                 '<Index> 0       <int64>',
                 '<Index>',
