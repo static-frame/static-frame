@@ -19,6 +19,7 @@ All ``iter_*`` interfaces now explictly define arguments.
 
 Renamed ``Series.iter_group_index()``, ``Series.iter_group_index_items()``, ``Frame.iter_group_index()``, ``Frame.iter_group_index_items()`` to ``Series.iter_group_labels()``, ``Series.iter_group_labels_items()``, ``Frame.iter_group_labels()``, ``Frame.iter_group_labels_items()``
 
+Fixed issue in ``Frame`` display where, when at or one less than the count of ``display_rows``, would display different numbers of rows for the ``Index`` and the body of the ``Frame``.
 
 
 0.6.0
