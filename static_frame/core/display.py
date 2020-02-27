@@ -749,8 +749,6 @@ class Display:
     CELL_EMPTY = DisplayCell(FORMAT_EMPTY, '')
     ELLIPSIS = '...' # this string is appended to truncated entries
     CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
-    # ELLIPSIS_INDICES = (None,)
-    DATA_MARGINS = 2 # columns / rows that seperate data
     ELLIPSIS_CENTER_SENTINEL = object()
 
     #---------------------------------------------------------------------------
@@ -891,7 +889,7 @@ class Display:
                 row = row[2: len(row) - end_slice_len].strip()
                 rows.append([cls.to_cell(row, config=config)])
         else:
-            count_max = config.display_rows - cls.DATA_MARGINS
+            count_max = config.display_rows
             # print('comparing values to count_max', len(values), count_max)
             if len(values) > config.display_rows:
                 data_half_count = Display.truncate_half_count(count_max)
@@ -1164,7 +1162,7 @@ class Display:
 
     def extend_display(self, display: 'Display') -> None:
         '''
-        Mutate this display by extending to the right with the passed display.
+        Mutate this display by extending to the right (adding columns) with the passed display.
         '''
         # NOTE: do not want to pass config or call format here as we call this for each column or block we add
         for row_idx, row in enumerate(display._rows):
@@ -1177,7 +1175,7 @@ class Display:
             header: HeaderInitializer
             ) -> None:
         '''
-        Add an iterable of strings as a column to the display.
+        Add a single iterable (as a column) to the display.
         '''
         row_idx_start = 0
         if header is not None:
@@ -1185,8 +1183,7 @@ class Display:
             row_idx_start = 1
 
         # truncate iterable if necessary
-        # NOTE: remove subtraction of self.DATA_MARGINS
-        count_max = self._config.display_rows - self.DATA_MARGINS
+        count_max = self._config.display_rows
 
         if len(iterable) > count_max:
             data_half_count = self.truncate_half_count(count_max)

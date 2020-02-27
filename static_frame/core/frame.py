@@ -2694,9 +2694,8 @@ class Frame(ContainerOperand):
 
         if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
-            # get target column count in the absence of meta data, subtracting 2
             data_half_count = Display.truncate_half_count(
-                    config.display_columns - Display.DATA_MARGINS)
+                    config.display_columns)
 
             column_gen = partial(_gen_skip_middle,
                     forward_iter=partial(self._blocks.axis_values, axis=0),

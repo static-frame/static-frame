@@ -257,7 +257,7 @@ class TestUnit(TestCase):
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
 
-
+        # import ipdb; ipdb.set_trace()
         self.assertEqual(s.display(config_rows_12).to_rows(),
                 [
                 '<Series>',
@@ -266,7 +266,9 @@ class TestUnit(TestCase):
                 'ac       1',
                 'ad       2',
                 'ae       3',
+                'af       4',
                 '...      ...',
+                'wy       320',
                 'wz       321',
                 'xy       322',
                 'xz       323',
@@ -279,7 +281,9 @@ class TestUnit(TestCase):
                 '<Index>',
                 'ab       0',
                 'ac       1',
+                'ad       2',
                 '...      ...',
+                'xy       322',
                 'xz       323',
                 'yz       324',
                 '<<U2>    <int64>'])
@@ -287,10 +291,50 @@ class TestUnit(TestCase):
 
     def test_display_rows_b(self) -> None:
         # this isseu was found only with Frame, not with Series
-        dc = DisplayConfig(display_rows=8)
-        d = Frame(np.arange(7)).display(dc)
-        print(d.to_rows())
-        # import ipdb; ipdb.set_trace()
+        dc = DisplayConfig(display_rows=8, type_color=False)
+        self.assertEqual(Frame(np.arange(7)).display(dc).to_rows(),
+                ['<Frame>',
+                '<Index> 0       <int64>',
+                '<Index>',
+                '0       0',
+                '1       1',
+                '2       2',
+                '3       3',
+                '4       4',
+                '5       5',
+                '6       6',
+                '<int64> <int64>']
+                )
+
+        self.assertEqual(Frame(np.arange(8)).display(dc).to_rows(),
+                ['<Frame>',
+                '<Index> 0       <int64>',
+                '<Index>',
+                '0       0',
+                '1       1',
+                '2       2',
+                '3       3',
+                '4       4',
+                '5       5',
+                '6       6',
+                '7       7',
+                '<int64> <int64>']
+                )
+
+        self.assertEqual(Frame(np.arange(9)).display(dc).to_rows(),
+                ['<Frame>',
+                '<Index> 0       <int64>',
+                '<Index>',
+                '0       0',
+                '1       1',
+                '2       2',
+                '...     ...',
+                '6       6',
+                '7       7',
+                '8       8',
+                '<int64> <int64>']
+                )
+
 
     @skip_win  # type: ignore
     def test_display_display_columns_a(self) -> None:
@@ -306,25 +350,25 @@ class TestUnit(TestCase):
         self.assertEqual(
                 f.display(config_columns_8).to_rows(),
                 ['<FrameGO>',
+                '<IndexGO> ab      ac      ad      ... xy      xz      yz      <<U2>',
+                '<Index>                           ...',
+                '0         0       1       2       ... 322     323     324',
+                '1         0       1       2       ... 322     323     324',
+                '2         0       1       2       ... 322     323     324',
+                '3         0       1       2       ... 322     323     324',
+                '<int64>   <int64> <int64> <int64> ... <int64> <int64> <int64>']
+                )
+
+        self.assertEqual(
+                f.display(config_columns_5).to_rows(),
+                ['<FrameGO>',
                 '<IndexGO> ab      ac      ... xz      yz      <<U2>',
                 '<Index>                   ...',
                 '0         0       1       ... 323     324',
                 '1         0       1       ... 323     324',
                 '2         0       1       ... 323     324',
                 '3         0       1       ... 323     324',
-                '<int64>   <int64> <int64> ... <int64> <int64>']
-                )
-
-        self.assertEqual(
-                f.display(config_columns_5).to_rows(),
-                ['<FrameGO>',
-                '<IndexGO> ab      ... yz      <<U2>',
-                '<Index>           ...',
-                '0         0       ... 324',
-                '1         0       ... 324',
-                '2         0       ... 324',
-                '3         0       ... 324',
-                '<int64>   <int64> ... <int64>'])
+                '<int64>   <int64> <int64> ... <int64> <int64>'])
 
 
     @skip_win  # type: ignore
@@ -387,10 +431,10 @@ class TestUnit(TestCase):
         f = Frame(a1, index=index, columns=cols)
 
         self.assertEqual(
-                len(tuple(f.display(config_rows_12_cols_8).to_rows())), 13)
+                len(tuple(f.display(config_rows_12_cols_8).to_rows())), 15)
 
         self.assertEqual(
-                len(tuple(f.display(config_rows_7_cols_5).to_rows())), 9)
+                len(tuple(f.display(config_rows_7_cols_5).to_rows())), 11)
 
 
     def test_display_type_attributes_a(self) -> None:
@@ -640,7 +684,7 @@ class TestUnit(TestCase):
     def test_display_tall(self) -> None:
         f = Frame.from_element(None, index=range(40), columns=range(20))
         self.assertEqual(len(f.display_tall().to_rows()), 44)
-        self.assertEqual(len(f.display_wide().to_rows()), 37)
+        self.assertEqual(len(f.display_wide().to_rows()), 39)
 
 
     #---------------------------------------------------------------------------
