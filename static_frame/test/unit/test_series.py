@@ -2576,6 +2576,8 @@ class TestUnit(TestCase):
                 (('b', 1.5), ('c', 2.5), ('d', 3.5), ('e', 4.5), ('f', 5.5), ('g', 6.5), ('h', 7.5), ('i', 8.5), ('j', 9.5), ('k', 10.5), ('l', 11.5), ('m', 12.5), ('n', 13.5), ('o', 14.5), ('p', 15.5), ('q', 16.5), ('r', 17.5), ('s', 18.5), ('t', 19.5))
         )
 
+
+    #---------------------------------------------------------------------------
     def test_series_iter_window_a(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
@@ -2609,6 +2611,16 @@ class TestUnit(TestCase):
                 tuple(x.to_pairs() for x in s1.iter_window(size=2, step=2)), #type: ignore
                 ((('a', 0), ('b', 1)), (('c', 2), ('d', 3)), (('e', 4), ('f', 5)), (('g', 6), ('h', 7)), (('i', 8), ('j', 9)))
                 )
+
+    def test_series_iter_window_c(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+
+        self.assertEqual(
+                tuple(w.tolist() for w in s1.iter_window_array(size=7, step=7, window_sized=True)),
+                ([1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14])
+                )
+        # import ipdb; ipdb.set_trace()
 
 
     def test_series_bool_a(self) -> None:
