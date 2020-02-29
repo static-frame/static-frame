@@ -775,7 +775,6 @@ class IndexHierarchy(IndexBase):
                 name=self._name
                 )
 
-
     def rehierarch(self,
             depth_map: tp.Iterable[int]
             ) -> 'IndexHierarchy':
@@ -788,7 +787,6 @@ class IndexHierarchy(IndexBase):
                 depth_map=depth_map,
                 )
         return index
-
 
     #---------------------------------------------------------------------------
 

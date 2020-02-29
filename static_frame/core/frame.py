@@ -18,7 +18,6 @@ from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
@@ -3354,11 +3353,15 @@ class Frame(ContainerOperand):
 
         def build_frame(key, index):
             if axis == 0:
-                data: TypeBlocks = frame_sorted._blocks._extract(row_key=key)
-                return Frame(data, columns=self.columns, index=index, own_data=True)
+                return Frame(frame_sorted._blocks._extract(row_key=key),
+                        columns=self.columns,
+                        index=index,
+                        own_data=True)
             else:
-                data = frame_sorted._blocks._extract(column_key=key)
-                return Frame(data, columns=index, index=self.index, own_data=True)
+                return Frame(frame_sorted._blocks._extract(column_key=key),
+                        columns=index,
+                        index=self.index,
+                        own_data=True)
 
         if axis == 0:
             max_iloc: int = len(self._index)
@@ -3372,8 +3375,8 @@ class Frame(ContainerOperand):
                 return frame_sorted.iloc[iloc_key, i]
 
         group: tp.Hashable = get_group(0)
-        start: int = 0
-        i: int = 0
+        start = 0
+        i = 0
 
         while i < max_iloc:
             next_group: tp.Hashable = get_group(i)
@@ -3390,9 +3393,15 @@ class Frame(ContainerOperand):
         yield group, build_frame(slice(start, None), index[start:])
 
 
-    def _axis_group_loc_items(self, key, *,
+    def _axis_group_loc_items(self,
+            key: GetItemKeyType,
+            *,
             axis: int = 0
             ):
+        '''
+        Args:
+            key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
+        '''
         if axis == 0: # row iterator, selecting columns for group by
             iloc_key = self._columns.loc_to_iloc(key)
         elif axis == 1: # column iterator, selecting rows for group by
@@ -3403,7 +3412,7 @@ class Frame(ContainerOperand):
         # Optimized sorting approach is only supported in a limited number of cases
         if (self.columns.depth == 1 and
                 self.index.depth == 1 and
-                not isinstance(key, KEY_ITERABLE_TYPES)):
+                not isinstance(key, KEY_MULTIPLE_TYPES)):
 
             if axis == 0:
                 has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
@@ -3418,7 +3427,9 @@ class Frame(ContainerOperand):
             yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
 
-    def _axis_group_loc(self, key, *,
+    def _axis_group_loc(self,
+            key: GetItemKeyType,
+            *,
             axis: int = 0
             ):
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
@@ -3470,7 +3481,7 @@ class Frame(ContainerOperand):
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level, axis=axis))
 
-
+    #---------------------------------------------------------------------------
     def _axis_window_items(self, *,
             size: int,
             axis: int = 0,
@@ -3524,8 +3535,6 @@ class Frame(ContainerOperand):
                 size_increment=size_increment,
                 as_array=as_array
                 ))
-
-
 
 
     #---------------------------------------------------------------------------

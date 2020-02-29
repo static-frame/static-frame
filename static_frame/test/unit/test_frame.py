@@ -3443,6 +3443,7 @@ class TestUnit(TestCase):
         f1 = f1.relabel_add_level(columns='i')
 
         groups = list(f1.iter_group_items(('i', 'a'), axis=0))
+
         self.assertEqual(groups[0][0], 'a')
         self.assertEqual(groups[0][1].to_pairs(0),
                 ((('i', 'a'), ((('a', 999999), 'a'), (('a', 201810), 'a'))), (('i', 'b'), ((('a', 999999), 999999), (('a', 201810), 201810))), (('i', 'c'), ((('a', 999999), 0.1), (('a', 201810), 0.1)))))
@@ -3548,6 +3549,37 @@ class TestUnit(TestCase):
         self.assertEqual([(2, 1), (3, 3), (3, 5)], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
+
+    def test_frame_iter_group_items_e(self) -> None:
+        columns = tuple('pqrst')
+        index = tuple('zxwy')
+        records = (('A', 1, 'a', False, False),
+                   ('A', 2, 'b', True, False),
+                   ('B', 1, 'c', False, False),
+                   ('B', 2, 'd', True, True))
+
+        f = Frame.from_records(
+                records, columns=columns, index=index,name='foo')
+
+        #  using an array to select
+        self.assertEqual(
+                tuple(k for k, v in f.iter_group_items(f.columns == 's')),
+                ((False,), (True,))
+                )
+
+        self.assertEqual(
+                tuple(k for k, v in f.iter_group_items(f.columns.isin(('p', 't')))),
+                (('A', False), ('B', False), ('B', True))
+                )
+        self.assertEqual(
+                tuple(k for k, v in f.iter_group_items(['s', 't'])),
+                ((False, False), (True, False), (True, True))
+                )
+
+        self.assertEqual(
+                tuple(k for k, v in f.iter_group_items(slice('s','t'))), #type: ignore
+                ((False, False), (True, False), (True, True))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_iter_group_index_a(self) -> None:

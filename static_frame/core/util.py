@@ -151,7 +151,15 @@ GetItemKeyType = tp.Union[
 
 # keys that might include a multiple dimensions speciation; tuple is used to identify compound extraction
 GetItemKeyTypeCompound = tp.Union[
-        tp.Tuple[tp.Any, ...], int, np.integer, slice, tp.List[tp.Any], None, 'Index', 'Series', np.ndarray]
+        tp.Tuple[tp.Any, ...],
+        int,
+        np.integer,
+        slice,
+        tp.List[tp.Any],
+        None,
+        'Index',
+        'Series',
+        np.ndarray]
 
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
