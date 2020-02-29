@@ -1590,6 +1590,20 @@ class TestUnit(TestCase):
         post = f.loc[f['a'] == True]
         self.assertEqual(post.shape, (0, 2))
 
+    def test_frame_loc_h(self) -> None:
+
+        f1 = Frame(index=('a', 'b', 'c'))
+        s1 = f1.loc['b']
+        self.assertEqual(s1.name, 'b')
+        self.assertEqual(len(s1), 0)
+
+        f2 = Frame(columns=('a', 'b', 'c'))
+        s2 = f2['c']
+        self.assertEqual(s2.name, 'c')
+        self.assertEqual(len(s2), 0)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_items_a(self) -> None:

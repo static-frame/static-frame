@@ -2900,9 +2900,21 @@ class Frame(ContainerOperand):
                 if self._columns.depth > 1:
                     name_column = tuple(name_column)
 
+        # determine if an axis is not multi; if one axis is not multi, we return a Series instead of a Frame
         axis_nm = self._extract_axis_not_multi(row_key, column_key)
+        blocks_shape = blocks._shape
 
-        if blocks._shape == (1, 1):
+        if blocks_shape[0] == 0 or blocks_shape[1] == 0:
+            # return a 0-sized Series
+            if axis_nm[0]: # if row not multi
+                return Series(EMPTY_TUPLE,
+                        index=immutable_index_filter(columns),
+                        name=name_row)
+            elif axis_nm[1]:
+                return Series(EMPTY_TUPLE,
+                        index=index,
+                        name=name_column)
+        elif blocks_shape == (1, 1):
             # if TypeBlocks did not return an element, need to determine which axis to use for Series index
             if axis_nm[0]: # if row not multi
                 return Series(blocks.values[0],
@@ -2913,13 +2925,13 @@ class Frame(ContainerOperand):
                         index=index,
                         name=name_column)
             # if both are multi, we return a Frame
-        elif blocks._shape[0] == 1: # if one row
+        elif blocks_shape[0] == 1: # if one row
             if axis_nm[0]: # if row key not multi
                 # best to use blocks.values, as will need to consolidate dtypes; will always return a 2D array
                 return Series(blocks.values[0],
                         index=immutable_index_filter(columns),
                         name=name_row)
-        elif blocks._shape[1] == 1: # if one column
+        elif blocks_shape[1] == 1: # if one column
             if axis_nm[1]: # if column key is not multi
                 return Series(
                         column_1d_filter(blocks._blocks[0]),
