@@ -81,5 +81,21 @@ from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
 from static_frame.core.store import StoreConfig as StoreConfig
 
+
+from static_frame.core.exception import ErrorInit
+from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexLevel
+from static_frame.core.exception import ErrorInitBus
+from static_frame.core.exception import ErrorInitStore
+from static_frame.core.exception import ErrorInitStoreConfig
+from static_frame.core.exception import LocEmpty
+from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import StoreFileMutation
+
+
 __version__ = '0.6.0' # use -dev for new version in development
 
