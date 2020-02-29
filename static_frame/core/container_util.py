@@ -326,6 +326,7 @@ def axis_window_items( *,
             idx_label = idx_right + label_shift
             if idx_label < 0: # do not wrap around
                 raise IndexError()
+            #if we cannot get a lable, the window is invalid
             label = labels.iloc[idx_label]
         except IndexError: # an invalid label has to be dropped
             valid = False
@@ -334,6 +335,7 @@ def axis_window_items( *,
             valid = False
         if valid and window_valid and not window_valid(window):
             valid = False
+
 
         if valid:
             if window_func:

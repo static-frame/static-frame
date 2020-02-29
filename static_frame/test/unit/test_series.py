@@ -2617,10 +2617,14 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         self.assertEqual(
-                tuple(w.tolist() for w in s1.iter_window_array(size=7, step=7, window_sized=True)),
-                ([1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14])
+                tuple(w.tolist() for w in s1.iter_window_array(
+                        size=7,
+                        step=7,
+                        window_sized=False,
+                        label_shift=-6,
+                        )),
+                ([1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14], [15, 16, 17, 18, 19, 20])
                 )
-        # import ipdb; ipdb.set_trace()
 
 
     def test_series_bool_a(self) -> None:
