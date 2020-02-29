@@ -21,6 +21,8 @@ Renamed ``Series.iter_group_index()``, ``Series.iter_group_index_items()``, ``Fr
 
 Fixed issue in ``Frame`` display where, when at or one less than the count of ``display_rows``, would display different numbers of rows for the ``Index`` and the body of the ``Frame``.
 
+Zero-sized ``Frame`` now return zero-sized ``Series`` from selection where possible.
+
 
 0.6.0
 ----------
