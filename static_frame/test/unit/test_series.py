@@ -2617,7 +2617,7 @@ class TestUnit(TestCase):
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
         self.assertEqual(
-                tuple(w.tolist() for w in s1.iter_window_array(
+                tuple(w.tolist() for w in s1.iter_window_array( #type: ignore
                         size=7,
                         step=7,
                         window_sized=False,
