@@ -51,7 +51,8 @@ from static_frame.core.container_util import matmul
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
-from static_frame.core.iter_node import IterNode
+# from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNodeApplyType
 
@@ -512,8 +513,8 @@ class Index(IndexBase):
         yield from zip(self._positions, self._labels)
 
     @property
-    def iter_label(self) -> IterNode:
-        return IterNode(
+    def iter_label(self) -> IterNodeDepthLevel:
+        return IterNodeDepthLevel(
                 container=self,
                 function_items=self._iter_label_items,
                 function_values=self._iter_label,

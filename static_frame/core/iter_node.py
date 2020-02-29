@@ -17,6 +17,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import KEY_ITERABLE_TYPES
 
 
 if tp.TYPE_CHECKING:
@@ -379,7 +380,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
         self._yield_type = yield_type
         self._apply_type = apply_type
 
-    def __call__(self,
+    def get_delegate(self,
             *args: object,
             **kwargs: object
             ) -> IterNodeDelegate[FrameOrSeries]:
@@ -435,19 +436,19 @@ class IterNodeNoArg(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
+    def __call__(self,
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self)
+        return IterNode.get_delegate(self)
 
 
 class IterNodeAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
+    def __call__(self,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self, axis=axis)
+        return IterNode.get_delegate(self, axis=axis)
 
 
 class IterNodeGroup(IterNode[FrameOrSeries]):
@@ -457,11 +458,11 @@ class IterNodeGroup(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
+    def __call__(self,
             *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self, axis=axis)
+        return IterNode.get_delegate(self, axis=axis)
 
 class IterNodeGroupAxis(IterNode[FrameOrSeries]):
     '''
@@ -470,41 +471,41 @@ class IterNodeGroupAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
-            key,
+    def __call__(self,
+            key: KEY_ITERABLE_TYPES, # type: ignore
             *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self, key=key, axis=axis)
+        return IterNode.get_delegate(self, key=key, axis=axis)
 
 
 class IterNodeDepthLevel(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
+    def __call__(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self, depth_level=depth_level)
+        return IterNode.get_delegate(self, depth_level=depth_level)
 
 
 class IterNodeDepthLevelAxis(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, #type: ignore
+    def __call__(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
             axis: int = 0
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self, depth_level=depth_level, axis=axis)
+        return IterNode.get_delegate(self, depth_level=depth_level, axis=axis)
 
 
 class IterNodeWindow(IterNode[FrameOrSeries]):
 
     __slots__ = _ITER_NODE_SLOTS
 
-    def __call__(self, *, #type: ignore
+    def __call__(self, *,
             size: int,
             axis: int = 0,
             step: int = 1,
@@ -515,7 +516,7 @@ class IterNodeWindow(IterNode[FrameOrSeries]):
             start_shift: int = 0,
             size_increment: int = 0,
             ) -> IterNodeDelegate[FrameOrSeries]:
-        return IterNode.__call__(self,
+        return IterNode.get_delegate(self,
                 axis=axis,
                 size=size,
                 step=step,

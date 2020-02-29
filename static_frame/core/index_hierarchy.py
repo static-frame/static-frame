@@ -49,7 +49,7 @@ from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNode
+from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.hloc import HLoc
@@ -585,8 +585,8 @@ class IndexHierarchy(IndexBase):
         yield from enumerate(self._levels.iter(depth_level=depth_level))
 
     @property
-    def iter_label(self) -> IterNode:
-        return IterNode(
+    def iter_label(self) -> IterNodeDepthLevel:
+        return IterNodeDepthLevel(
                 container=self,
                 function_items=self._iter_label_items,
                 function_values=self._iter_label,
