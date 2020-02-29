@@ -2568,7 +2568,7 @@ class TestUnit(TestCase):
                 ((1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11), (11, 12), (12, 13), (13, 14), (14, 15), (15, 16), (16, 17), (17, 18), (18, 19), (19, 20))
                 )
 
-    def test_series_iter_window_arrray_b(self) -> None:
+    def test_series_iter_window_array_b(self) -> None:
 
         s1 = Series(range(1, 21), index=self.get_letters(20))
         s2 = s1.iter_window_array(size=2).apply(np.mean)
@@ -2627,6 +2627,25 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_iter_window_d(self) -> None:
+        post1 = sf.Series(range(12)).iter_window_array(
+                size=5,
+                start_shift=-10,
+                window_sized=True).apply(np.mean)
+
+        self.assertEqual(post1.to_pairs(),
+                ((4, 2.0), (5, 3.0), (6, 4.0), (7, 5.0), (8, 6.0), (9, 7.0), (10, 8.0), (11, 9.0)))
+
+        post2 = sf.Series(range(12)).iter_window_array(
+                size=5,
+                start_shift=0,
+                window_sized=True).apply(np.mean)
+
+        self.assertEqual(post2.to_pairs(),
+                ((4, 2.0), (5, 3.0), (6, 4.0), (7, 5.0), (8, 6.0), (9, 7.0), (10, 8.0), (11, 9.0)))
+
+
+    #---------------------------------------------------------------------------
     def test_series_bool_a(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20))
         self.assertTrue(bool(s1))

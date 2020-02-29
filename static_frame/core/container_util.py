@@ -270,7 +270,7 @@ def axis_window_items( *,
         window_sized: if True, windows that do not meet the size are skipped.
         window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
         window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-        label_shift: shift, relative to the right-most data point contained in the window, to derive the label paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
+        label_shift: shift, relative to the right-most data point contained in the window, to derive the label to be paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
         start_shift: shift from 0 to determine where the collection of windows begins.
         size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
@@ -291,18 +291,24 @@ def axis_window_items( *,
         if as_array:
             values = source._blocks.values
 
-    count_window_max = len(labels)
-    idx_left_max = count_window_max - 1
+    if start_shift >= 0:
+        count_window_max = len(labels)
+    else: # add for iterations when less than 0
+        count_window_max = len(labels) + abs(start_shift)
 
+    idx_left_max = count_window_max - 1
     idx_left = start_shift
     count = 0
 
     while True:
-        # idx_left, size can chagne over iterations
+        # idx_left, size can change over iterations
         idx_right = idx_left + size - 1
 
-        # floor idx_left at 0
-        key = slice(max(idx_left, 0), idx_right + 1)
+        # floor idx_left at 0 so as to not wrap
+        idx_left_floored = max(idx_left, 0)
+        idx_right_floored = max(idx_right, -1) # will add one
+
+        key = slice(idx_left_floored, idx_right_floored + 1)
 
         if source_ndim == 1:
             if as_array:
@@ -336,7 +342,6 @@ def axis_window_items( *,
         if valid and window_valid and not window_valid(window):
             valid = False
 
-
         if valid:
             if window_func:
                 window = window_func(window)
@@ -346,7 +351,9 @@ def axis_window_items( *,
         size += size_increment
         count += 1
 
-        if count > count_window_max or idx_left > idx_left_max:
+        # import ipdb; ipdb.set_trace()
+
+        if count > count_window_max or idx_left > idx_left_max or size < 0:
             break
 
 
