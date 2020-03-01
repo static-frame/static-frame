@@ -1718,13 +1718,15 @@ class Frame(ContainerOperand):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks():
+            from pandas.core.dtypes.common import is_dtype_equal
+
             pairs = value.dtypes.items()
             column_start, dtype_current = next(pairs)
 
             column_last = column_start
             for column, dtype in pairs:
 
-                if dtype != dtype_current:
+                if is_dtype_equal(dtype, dtype_current):
                     # use loc to select before calling .values
                     array = value.loc[NULL_SLICE,
                             slice(column_start, column_last)].values
