@@ -1,0 +1,5 @@
+for 202003 version, used the following to convert PNG to ICO
+
+https://convertico.com/
+
+could not find imagemagick version that produced multiple sizes from one image.
