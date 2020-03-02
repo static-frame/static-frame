@@ -1,4 +1,4 @@
-.. figure:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/sf-line.png
+.. figure:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/sf-logo-web_horizontal.png
    :width: 340px
    :align: center
 

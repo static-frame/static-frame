@@ -38,7 +38,7 @@ class DOC_TEMPLATE:
     '''
 
     to_html_datatables = '''
-    Return a complete HTML representation of this :obj:`static_frame.{class_name} using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
+    Return a complete HTML representation of this :obj:`static_frame.{class_name}` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
 
     Args:
         fp: optional file path to write; if not provided, a temporary file will be created. Note: the caller is responsible for deleting this file.
@@ -49,7 +49,7 @@ class DOC_TEMPLATE:
         Absolute file path to the file written.
     '''
 
-    clip = '''Apply a clip opertion to this :obj:`static_frame.{class_name}. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    clip = '''Apply a clip opertion to this :obj:`static_frame.{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
     ufunc_skipna = '''{header}
 
@@ -90,7 +90,7 @@ class DOC_TEMPLATE:
             )
 
     relabel = dict(
-            doc ='''Return a new :obj:`static_frame.{class_name} with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            doc ='''Return a new :obj:`static_frame.{class_name}` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
@@ -103,7 +103,7 @@ class DOC_TEMPLATE:
             )
 
     relabel_add_level = dict(
-            doc='''Return a new :obj:`static_frame.{class_name}, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
+            doc='''Return a new :obj:`static_frame.{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )

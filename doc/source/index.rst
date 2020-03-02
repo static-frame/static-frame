@@ -1,7 +1,7 @@
 .. documentation master file
 
-.. image:: ../images/sf-icon.png
-   :scale: 7 %
+.. image:: ../images/sf-logo-web_icon.png
+   :scale: 15 %
    :align: center
 
 StaticFrame

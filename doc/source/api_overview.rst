@@ -4,7 +4,7 @@ API Overview
 
 For each container, the complete public API is presented below. Note that interface endpoints, such as ``iter_element``, are expanded to show all interface sub components, such as ``apply`` and ``map_any``.
 
-This is an overview; for detailed documentation, start with :ref:`structures`.
+This is an overview for quick reference; for detailed documentation, start with :ref:`structures`.
 
 
 .. jinja:: ctx
@@ -25,9 +25,9 @@ This is an overview; for detailed documentation, start with :ref:`structures`.
 
         {% for label, row in frame_sub.iter_tuple_items(axis=1) -%}
             {% if label == "[]" -%}
-            :obj:`static_frame.{{name}}{{label}}`, "{{row.doc}}"
+            ":obj:`static_frame.{{name}}{{label}}`", "{{row.doc}}"
             {% else -%}
-            :obj:`static_frame.{{name}}.{{label}}`, "{{row.doc}}"
+            ":obj:`static_frame.{{name}}.{{label}}`", "{{row.doc}}"
             {% endif -%}
         {% endfor %}
 
