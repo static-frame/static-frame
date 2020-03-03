@@ -1,5 +1,4 @@
-.. figure:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/sf-logo-web_circ.png
-   :width: 340px
+.. figure:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/sf-logo-web_circ-small.png
    :align: center
 
 
