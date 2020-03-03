@@ -243,6 +243,9 @@ def mloc(array: np.ndarray) -> int:
 def immutable_filter(src_array: np.ndarray) -> np.ndarray:
     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
     '''
+    # if hasattr(src_array, 'to_numpy'):  # is pandas.core.arrays.base.ExtensionArray
+    #     src_array = src_array.to_numpy(copy=True)
+    #     src_array.flags.writeable = False
     if src_array.flags.writeable:
         dst_array = src_array.copy()
         dst_array.flags.writeable = False

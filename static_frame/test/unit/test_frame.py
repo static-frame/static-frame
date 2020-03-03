@@ -526,6 +526,24 @@ class TestUnit(TestCase):
 
         self.assertEqual(f._blocks.shapes.tolist(), [(2, 2)])
 
+    def test_frame_from_pandas_f(self) -> None:
+        import pandas as pd
+
+
+        df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b')))
+
+        if hasattr(df, 'convert_dtypes'):
+            df = df.convert_dtypes()
+
+        df.name = 'foo'
+
+        f = Frame.from_pandas(df)
+        self.assertEqual(f.to_pairs(0),
+                (('a', ((0, 1), (1, 2))),
+                 ('b', ((0, '3'), (1, '4'))),
+                 ('c', ((0, 1.5), (1, 2.5))),
+                 ('d', ((0, 'a'), (1, 'b'))))
+                )
 
     #---------------------------------------------------------------------------
 
