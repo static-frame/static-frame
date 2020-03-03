@@ -1735,7 +1735,9 @@ class TestUnit(TestCase):
     def test_series_from_pandas_b(self) -> None:
         import pandas as pd
 
-        pds = pd.Series([3,4,5], index=list('abc')).convert_dtypes()
+        pds = pd.Series([3,4,5], index=list('abc'))
+        if hasattr(pds, 'convert_dtypes'):
+            pds = pds.convert_dtypes()
         sfs = Series.from_pandas(pds)
         self.assertEqual(list(pds.items()), list(sfs.items()))
 

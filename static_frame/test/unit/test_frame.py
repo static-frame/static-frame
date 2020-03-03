@@ -529,7 +529,12 @@ class TestUnit(TestCase):
     def test_frame_from_pandas_f(self) -> None:
         import pandas as pd
 
-        df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b'))).convert_dtypes()
+
+        df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b')))
+
+        if hasattr(df, 'convert_dtypes'):
+            df = df.convert_dtypes()
+
         df.name = 'foo'
 
         f = Frame.from_pandas(df)

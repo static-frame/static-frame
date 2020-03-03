@@ -240,12 +240,12 @@ def mloc(array: np.ndarray) -> int:
     return tp.cast(int, array.__array_interface__['data'][0])
 
 
-def immutable_filter(src_array: tp.Union[np.ndarray, 'pandas.PandasArray']) -> np.ndarray:
+def immutable_filter(src_array: np.ndarray) -> np.ndarray:
     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
     '''
-    if hasattr(src_array, 'to_numpy'):  # is pandas.core.arrays.base.ExtensionArray
-        src_array = src_array.to_numpy(copy=True)
-        src_array.flags.writeable = False
+    # if hasattr(src_array, 'to_numpy'):  # is pandas.core.arrays.base.ExtensionArray
+    #     src_array = src_array.to_numpy(copy=True)
+    #     src_array.flags.writeable = False
     if src_array.flags.writeable:
         dst_array = src_array.copy()
         dst_array.flags.writeable = False
