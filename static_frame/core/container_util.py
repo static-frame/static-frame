@@ -26,6 +26,10 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import iterable_to_array_1d
 
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_STR
+from static_frame.core.util import DTYPE_BOOL
+
 from static_frame.core.index_base import IndexBase
 
 def dtypes_mappable(dtypes: DtypesSpecifier):
@@ -52,7 +56,7 @@ def pandas_version_under_1() -> bool:
 
 def pandas_to_numpy(
         container: tp.Any,
-        own_data: bool = False,
+        own_data: bool,
         ) -> np.ndarray:
     '''Convert Pandas container to a numpy array in pandas 1.0, where we have Pandas own dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
     '''
@@ -74,7 +78,7 @@ def pandas_to_numpy(
     else:
         from pandas import StringDtype
         from pandas import BooleanDtype
-        from pandas import DatetimeTZDtype
+        # from pandas import DatetimeTZDtype
 
         # from pandas import Int8Dtype
         # from pandas import Int16Dtype
@@ -87,7 +91,7 @@ def pandas_to_numpy(
         # from pandas import UInt8Dtype
 
         if isinstance(dtype_src, BooleanDtype):
-            dtype = np.dtype(bool)
+            dtype = DTYPE_BOOL
         elif isinstance(dtype_src, StringDtype):
             # trying to use a dtype argument for strings results in a converting pd.NA to a string "<NA>"
             if ndim == 1:
@@ -95,9 +99,9 @@ def pandas_to_numpy(
             else:
                 has_na = container.isna().any().any()
             if has_na:
-                dtype = object
+                dtype = DTYPE_OBJECT
             else: # can use a string type
-                dtype = np.dtype(str)
+                dtype = DTYPE_STR
         else:
             dtype = None
 

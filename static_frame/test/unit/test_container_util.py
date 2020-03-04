@@ -281,18 +281,18 @@ class TestUnit(TestCase):
 
             s1 = pd.Series([3, 4, np.nan]).convert_dtypes()
 
-            a1 = pandas_to_numpy(s1)
+            a1 = pandas_to_numpy(s1, own_data=False)
             self.assertEqual(a1.dtype, np.dtype('O'))
 
-            a2 = pandas_to_numpy(s1[:2])
+            a2 = pandas_to_numpy(s1[:2], own_data=False)
             self.assertEqual(a2.dtype, np.dtype('int64'))
 
             s2 = pd.Series([False, True, np.nan]).convert_dtypes()
 
-            a3 = pandas_to_numpy(s2)
+            a3 = pandas_to_numpy(s2, own_data=False)
             self.assertEqual(a3.dtype, np.dtype('O'))
 
-            a4 = pandas_to_numpy(s2[:2])
+            a4 = pandas_to_numpy(s2[:2], own_data=False)
             self.assertEqual(a4.dtype, np.dtype('bool'))
 
 

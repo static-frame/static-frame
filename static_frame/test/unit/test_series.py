@@ -1750,6 +1750,75 @@ class TestUnit(TestCase):
         sfs = Series.from_pandas(pds, own_data=True)
         self.assertEqual(list(pds.items()), list(sfs.items()))
 
+
+    def test_series_from_pandas_c(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', np.nan], index=list('abc'))
+        if hasattr(pds1, 'convert_dtypes'):
+            pds1 = pds1.convert_dtypes()
+            sfs1 = Series.from_pandas(pds1)
+            self.assertEqual(sfs1.dtype, np.dtype('O'))
+
+        pds2 = pd.Series(['a', 'b', 'c'], index=list('abc'))
+        if hasattr(pds2,  'convert_dtypes'):
+            pds2 = pds2.convert_dtypes()
+            sfs2 = Series.from_pandas(pds2)
+            self.assertEqual(sfs2.dtype, np.dtype('<U1'))
+
+        pds3 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds3,  'convert_dtypes'):
+            pds3 = pds3.convert_dtypes()
+            sfs3 = Series.from_pandas(pds3)
+            self.assertEqual(sfs3.dtype, np.dtype('O'))
+
+        pds4 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds4,  'convert_dtypes'):
+            pds4 = pds4.convert_dtypes()
+            sfs4 = Series.from_pandas(pds4)
+            self.assertEqual(sfs4.dtype, np.dtype('O'))
+
+        pds5 = pd.Series([False, True, False], index=list('abc'))
+        if hasattr(pds5,  'convert_dtypes'):
+            pds5 = pds5.convert_dtypes()
+            sfs5 = Series.from_pandas(pds5)
+            self.assertEqual(sfs5.dtype, np.dtype('bool'))
+
+
+    def test_series_from_pandas_d(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', np.nan], index=list('abc'))
+        if hasattr(pds1, 'convert_dtypes'):
+            pds1 = pds1.convert_dtypes()
+            sfs1 = Series.from_pandas(pds1, own_data=True)
+            self.assertEqual(sfs1.dtype, np.dtype('O'))
+
+        pds2 = pd.Series(['a', 'b', 'c'], index=list('abc'))
+        if hasattr(pds2,  'convert_dtypes'):
+            pds2 = pds2.convert_dtypes()
+            sfs2 = Series.from_pandas(pds2, own_data=True)
+            self.assertEqual(sfs2.dtype, np.dtype('<U1'))
+
+        pds3 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds3,  'convert_dtypes'):
+            pds3 = pds3.convert_dtypes()
+            sfs3 = Series.from_pandas(pds3, own_data=True)
+            self.assertEqual(sfs3.dtype, np.dtype('O'))
+
+        pds4 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds4,  'convert_dtypes'):
+            pds4 = pds4.convert_dtypes()
+            sfs4 = Series.from_pandas(pds4, own_data=True)
+            self.assertEqual(sfs4.dtype, np.dtype('O'))
+
+        pds5 = pd.Series([False, True, False], index=list('abc'))
+        if hasattr(pds5,  'convert_dtypes'):
+            pds5 = pds5.convert_dtypes()
+            sfs5 = Series.from_pandas(pds5, own_data=True)
+            self.assertEqual(sfs5.dtype, np.dtype('bool'))
+
+
     def test_series_to_pandas_a(self) -> None:
 
         s1 = Series(range(4),
