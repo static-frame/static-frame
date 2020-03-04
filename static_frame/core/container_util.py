@@ -60,6 +60,8 @@ def pandas_to_numpy(
         ) -> np.ndarray:
     '''Convert Pandas container to a numpy array in pandas 1.0, where we have Pandas own dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
     '''
+    # NOTE: we should probably convert pd.NA to np.nan; we can do this with fillna only if we have an object array
+
     # only to be used with pandas 1.0 and greater
     if hasattr(container, 'dtype'): # Series
         dtype_src = container.dtype
