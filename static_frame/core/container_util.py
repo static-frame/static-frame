@@ -78,8 +78,9 @@ def pandas_to_numpy(
         # only int, uint dtypes have this attribute
         dtype = dtype_src.numpy_dtype
     else:
-        from pandas import StringDtype
-        from pandas import BooleanDtype
+        from pandas import StringDtype #pylint: disable=E0611
+        from pandas import BooleanDtype #pylint: disable=E0611
+
         # from pandas import DatetimeTZDtype
 
         # from pandas import Int8Dtype
