@@ -46,6 +46,78 @@ def is_static(value: IndexConstructor) -> bool:
     return getattr(value.__self__, STATIC_ATTR)
 
 
+def pandas_version_under_1() -> bool:
+    import pandas
+    return not hasattr(pandas, 'NA') # object introduced in 1.0
+
+def pandas_to_numpy(
+        container: tp.Any,
+        own_data: bool = False,
+        ) -> np.ndarray:
+    '''Convert Pandas container to a numpy array in pandas 1.0, where we have Pandas own dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
+    '''
+    # only to be used with pandas 1.0 and greater
+    if hasattr(container, 'dtype'): # Series
+        dtype_src = container.dtype
+        ndim = 1
+    else: # DataFrame, assume contiguous dtypes
+        dtypes = container.dtypes.unique()
+        assert len(dtypes) == 1
+        dtype_src = dtypes[0]
+        ndim = 2
+
+    if isinstance(dtype_src, np.dtype):
+        dtype = dtype_src
+    elif hasattr(dtype_src, 'numpy_dtype'):
+        # only int, uint dtypes have this attribute
+        dtype = dtype_src.numpy_dtype
+    else:
+        from pandas import StringDtype
+        from pandas import BooleanDtype
+        from pandas import DatetimeTZDtype
+
+        # from pandas import Int8Dtype
+        # from pandas import Int16Dtype
+        # from pandas import Int32Dtype
+        # from pandas import Int64Dtype
+
+        # from pandas import UInt16Dtype
+        # from pandas import UInt32Dtype
+        # from pandas import UInt64Dtype
+        # from pandas import UInt8Dtype
+
+        if isinstance(dtype_src, BooleanDtype):
+            dtype = np.dtype(bool)
+        elif isinstance(dtype_src, StringDtype):
+            # trying to use a dtype argument for strings results in a converting pd.NA to a string "<NA>"
+            if ndim == 1:
+                has_na = container.isna().any()
+            else:
+                has_na = container.isna().any().any()
+            if has_na:
+                dtype = object
+            else: # can use a string type
+                dtype = np.dtype(str)
+        else:
+            dtype = None
+
+    try:
+        array = container.to_numpy(copy=not own_data, dtype=dtype)
+    except (ValueError, TypeError):
+        # cannot convert to '<class 'int'>'-dtype NumPy array with missing values. Specify an appropriate 'na_value' for this dtype; this will go to object
+        # TypeError: boolean value of NA is ambiguous
+        array = container.to_numpy(copy=not own_data)
+
+    array.flags.writeable = False
+    return array
+
+
+
+
+
+
+
+
 def index_from_optional_constructor(
         value: IndexInitializer,
         *,

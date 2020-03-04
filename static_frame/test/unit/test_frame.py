@@ -529,7 +529,6 @@ class TestUnit(TestCase):
     def test_frame_from_pandas_f(self) -> None:
         import pandas as pd
 
-
         df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b')))
 
         if hasattr(df, 'convert_dtypes'):
@@ -544,6 +543,56 @@ class TestUnit(TestCase):
                  ('c', ((0, 1.5), (1, 2.5))),
                  ('d', ((0, 'a'), (1, 'b'))))
                 )
+
+
+    @skip_win #type: ignore
+    def test_frame_from_pandas_g(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=(1.5,2.5), c=('3','4'), d=('a','b')))
+
+        if hasattr(df, 'convert_dtypes'):
+            df = df.convert_dtypes()
+            f = Frame.from_pandas(df)
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('int64')), ('b', np.dtype('float64')), ('c', np.dtype('<U1')), ('d', np.dtype('<U1'))))
+        else:
+            f = Frame.from_pandas(df)
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('int64')), ('b', np.dtype('float64')), ('c', np.dtype('O')), ('d', np.dtype('O'))))
+
+    def test_frame_from_pandas_h(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(
+                dict(a=(False, True), b=(True, False), c=('q','r'), d=('a','b'), e=(False, False)))
+
+        if hasattr(df, 'convert_dtypes'):
+            df = df.convert_dtypes()
+            f = Frame.from_pandas(df)
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('bool')), ('b', np.dtype('bool')), ('c', np.dtype('<U1')), ('d', np.dtype('<U1')), ('e', np.dtype('bool'))))
+        else:
+            f = Frame.from_pandas(df)
+            # we do not have a chance to re-evaluate string types, so they come in as object
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('bool')), ('b', np.dtype('bool')), ('c', np.dtype('O')), ('d', np.dtype('O')), ('e', np.dtype('bool'))))
+
+    def test_frame_from_pandas_i(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(
+                dict(a=(False, True), b=(True, np.nan), c=('q','r'), d=('a', np.nan), e=(False, False)))
+
+        if hasattr(df, 'convert_dtypes'):
+            df = df.convert_dtypes()
+            f = Frame.from_pandas(df)
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('O')), ('b', np.dtype('O')), ('c', np.dtype('O')), ('d', np.dtype('O')), ('e', np.dtype('bool'))))
+        else:
+            f = Frame.from_pandas(df)
+            self.assertEqual(f.dtypes.to_pairs(),
+                    (('a', np.dtype('bool')), ('b', np.dtype('O')), ('c', np.dtype('O')), ('d', np.dtype('O')), ('e', np.dtype('bool'))))
 
     #---------------------------------------------------------------------------
 

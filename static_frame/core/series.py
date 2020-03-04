@@ -78,6 +78,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_and_map
+from static_frame.core.container_util import pandas_version_under_1
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -292,11 +293,14 @@ class Series(ContainerOperand):
         Returns:
             :obj:`static_frame.Series`
         '''
-        if own_data:
-            data = value.values
-            data.flags.writeable = False
+        if pandas_version_under_1():
+            if own_data:
+                data = value.values
+                data.flags.writeable = False
+            else:
+                data = immutable_filter(value.values)
         else:
-            data = immutable_filter(value.values)
+            data = value.to_numpy(copy=not own_data)
 
         return cls(data,
                 index=IndexBase.from_pandas(value.index),

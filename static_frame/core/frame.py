@@ -87,6 +87,8 @@ from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import index_constructor_empty
+from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import pandas_to_numpy
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -1715,37 +1717,47 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        pdvu1 = pandas_version_under_1()
+
+        def part_to_array(part):
+            if pdvu1:
+                array = part.values
+                if own_data:
+                    array.flags.writeable = False
+            else:
+                array = pandas_to_numpy(part, own_data=own_data)
+            return array
+
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
-        def blocks():
-            # might use this instead of equality check
-
+        def blocks() -> tp.Iterator[np.ndarray]:
             pairs = value.dtypes.items()
             column_start, dtype_current = next(pairs)
-
             column_last = column_start
+            yield_block = False
+
             for column, dtype in pairs:
+                try:
+                    if dtype != dtype_current:
+                        yield_block = True
+                except TypeError:
+                    # data type not understood, happens with pd datatypes to np dtypes in pd >= 1
+                    yield_block = True
 
-                # from pandas.core.dtypes.common import is_dtype_equal
-                # if is_dtype_equal(dtype, dtype_current):
-
-                if dtype != dtype_current:
+                if yield_block:
                     # use loc to select before calling .values
-                    array = value.loc[NULL_SLICE,
-                            slice(column_start, column_last)].values
-                    if own_data:
-                        array.flags.writeable = False
-                    yield array
+                    part = value.loc[NULL_SLICE, slice(column_start, column_last)]
+                    yield part_to_array(part)
+
                     column_start = column
                     dtype_current = dtype
+                    yield_block = False
 
                 column_last = column
 
             # always have left over
-            array = value.loc[NULL_SLICE, slice(column_start, None)].values
-            if own_data:
-                array.flags.writeable = False
-            yield array
+            part = value.loc[NULL_SLICE, slice(column_start, None)]
+            yield part_to_array(part)
 
         if consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
