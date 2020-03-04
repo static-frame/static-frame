@@ -1037,7 +1037,7 @@ def array_to_groups_and_locations(
 
 
 def isna_element(value: tp.Any) -> bool:
-    '''Return Boolean if value is an NA.
+    '''Return Boolean if value is an NA. This does not yet handle pd.NA
     '''
     try:
         return tp.cast(bool, np.isnan(value))
