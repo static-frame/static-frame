@@ -23,6 +23,8 @@ Fixed issue in ``Frame`` display where, when at or one less than the count of ``
 
 Zero-sized ``Frame`` now return zero-sized ``Series`` from selection where possible.
 
+``Frame.sort_values`` now accepts multiple labels given as any iterable.
+
 
 0.6.0
 ----------

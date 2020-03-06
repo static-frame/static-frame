@@ -69,6 +69,8 @@ from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import dtype_to_na
+from static_frame.core.util import is_hashable
+from static_frame.core.util import reversed_iter
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -3668,34 +3670,34 @@ class Frame(ContainerOperand):
         Return a new Frame ordered by the sorted values, where values is given by single column or iterable of columns.
 
         Args:
-            key: a key or tuple of keys. Presently a list is not supported.
+            key: a key or iterable of keys.
         '''
         # argsort lets us do the sort once and reuse the results
         if axis == 0: # get a column ordering based on one or more rows
             col_count = self._columns.__len__()
-            if key in self._index:
+            if is_hashable(key) and key in self._index:
                 iloc_key = self._index.loc_to_iloc(key)
                 sort_array = self._blocks._extract_array(row_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._index.loc_to_iloc(key) for key in reversed(key))
+                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(key))
                 sort_array = [self._blocks._extract_array(row_key=key)
                         for key in iloc_keys]
                 order = np.lexsort(sort_array)
         elif axis == 1: # get a row ordering based on one or more columns
-            if key in self._columns:
+            if is_hashable(key) and key in self._columns:
                 iloc_key = self._columns.loc_to_iloc(key)
                 sort_array = self._blocks._extract_array(column_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._columns.loc_to_iloc(key) for key in reversed(key))
+                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(key))
                 sort_array = [self._blocks._extract_array(column_key=key)
                         for key in iloc_keys]
                 order = np.lexsort(sort_array)
         else:
-            raise AxisInvalid(f'invalid axos: {axis}')
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         if not ascending:
             order = order[::-1]

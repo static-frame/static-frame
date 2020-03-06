@@ -178,6 +178,7 @@ def is_callable_or_mapping(value: CallableOrMapping) -> bool:
 
 CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallable]]
 
+# for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
 PathSpecifier = tp.Union[str, Path]
@@ -235,6 +236,27 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 
+def is_hashable(value: tp.Any) -> bool:
+    '''
+    Determine if a value is hashable without raising an exception.
+    '''
+    try:
+        hash(value)
+        return True
+    except TypeError:
+        pass
+    return False
+
+def reversed_iter(value: tp.Iterator[tp.Any]) -> tp.Iterator[tp.Any]:
+    '''Wrapper around built-in reversed() that handles generators by realizing them and then reversing.
+    '''
+    try:
+        yield from reversed(value) #type: ignore
+    except TypeError:
+        pass
+    yield from reversed(tuple(value))
+
+
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
     '''
@@ -244,9 +266,6 @@ def mloc(array: np.ndarray) -> int:
 def immutable_filter(src_array: np.ndarray) -> np.ndarray:
     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
     '''
-    # if hasattr(src_array, 'to_numpy'):  # is pandas.core.arrays.base.ExtensionArray
-    #     src_array = src_array.to_numpy(copy=True)
-    #     src_array.flags.writeable = False
     if src_array.flags.writeable:
         dst_array = src_array.copy()
         dst_array.flags.writeable = False

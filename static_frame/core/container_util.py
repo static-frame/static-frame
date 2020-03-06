@@ -63,7 +63,7 @@ def pandas_to_numpy(
     # NOTE: we should probably convert pd.NA to np.nan; we can do this with fillna only if we have an object array
 
     # only to be used with pandas 1.0 and greater
-    if hasattr(container, 'dtype'): # Series
+    if hasattr(container, 'dtype'): # Series, Index
         dtype_src = container.dtype
         ndim = 1
     else: # DataFrame, assume contiguous dtypes
