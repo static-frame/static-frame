@@ -13,6 +13,8 @@ What is New in Static Frame
 
 Removed creation of internal mapping object for ``IndexAutoFactory`` indices, or where ``Index`` are created where ``loc_is_iloc``.
 
+Improved induction of dtype for labels array stored in ``Index``.
+
 
 0.6.1
 ----------

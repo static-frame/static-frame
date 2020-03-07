@@ -145,7 +145,7 @@ Mars
 <Index>
 ME
 MA
-<object>
+<<U2>
 
 #end_index_a
 
@@ -469,7 +469,7 @@ mass     823.9900000000001
 Mars
 Saturn
 Neptune
-<object>
+<<U7>
 
 >>> index = sf.Index(('Venus', 'Saturn', 'Neptune'))
 >>> index.relabel({'Neptune': 'Uranus'})
@@ -477,14 +477,14 @@ Neptune
 Venus
 Saturn
 Uranus
-<object>
+<<U6>
 
 >>> index.relabel(lambda x: x[:2].upper())
 <Index>
 VE
 SA
 NE
-<object>
+<<U2>
 
 #end_index_relabel_a
 
@@ -498,14 +498,15 @@ NE
 Mercury  0
 Saturn   62
 Neptune  13
-<object> <int64>
+<<U7>    <int64>
+
 >>> s.relabel(lambda x: x[:2].upper())
 <Series>
 <Index>
 VE       0
 SA       62
 NE       13
-<object> <int64>
+<<U2>    <int64>
 
 #end_series_relabel_a
 
@@ -530,12 +531,12 @@ Neptune  13.0
 
 >>> f.relabel(index=lambda x: x[:2].upper(), columns={'mass': 'mass(1e24kg)'})
 <Frame>
-<Index>  diameter mass(1e24kg) <object>
+<Index> diameter mass(1e24kg) <<U12>
 <Index>
-EA       12756    5.97
-MA       6792     0.642
-JU       142984   1898.0
-<object> <int64>  <float64>
+EA      12756    5.97
+MA      6792     0.642
+JU      142984   1898.0
+<<U2>   <int64>  <float64>
 
 #end_frame_relabel_a
 

@@ -334,19 +334,13 @@ class Index(IndexBase):
                 labels = EMPTY_ARRAY
             else:
                 labels, _ = iterable_to_array_1d(labels, dtype=dtype)
-
         else: # labels may be an expired generator, must use the mapping
-            labels_len = len(mapping)
-            if labels_len == 0:
+            if len(mapping) == 0:
                 labels = EMPTY_ARRAY
             else:
-                # NOTE: use iterable to array
-                labels = np.empty(labels_len, dtype=dtype if dtype else object)
-                for k, v in mapping.items():
-                    labels[v] = k
-                labels.flags.writeable = False
-
-        assert labels.flags.writeable == False
+                labels, _ = iterable_to_array_1d(mapping, dtype=dtype)
+        # all arrays are immutable
+        # assert labels.flags.writeable == False
         return labels
 
     @staticmethod
@@ -458,11 +452,11 @@ class Index(IndexBase):
             if not loc_is_iloc:
                 self._map = self._get_map(labels, positions)
                 size = len(self._map)
-            else: # assume labels are unique
+            else: # must assume labels are unique
                 size = len(labels)
                 if positions is None:
                     positions = PositionsAllocator.get(size)
-        else: # map given
+        else: # map shared from another Index
             size = len(self._map)
 
         # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
