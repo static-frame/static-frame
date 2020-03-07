@@ -201,7 +201,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(), ((0, 'a'),))
 
 
-
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
@@ -1140,6 +1139,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.iloc[2:].to_pairs(), (('c', 2), ('d', 3)))
 
+    #---------------------------------------------------------------------------
 
 
     def test_series_loc_extract_a(self) -> None:
@@ -1198,6 +1198,16 @@ class TestUnit(TestCase):
 
         post2 = s1[HLoc['A', 2]]
         self.assertEqual(post2, 1)
+
+
+    def test_series_loc_extract_g(self) -> None:
+
+        s1 = Series(('a', 'b', 'c', 'd'))
+        post = s1.loc[0:2].to_pairs()
+        self.assertEqual(post,
+                ((0, 'a'), (1, 'b'), (2, 'c'))
+                )
+
 
 
     #---------------------------------------------------------------------------

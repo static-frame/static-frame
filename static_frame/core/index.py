@@ -34,6 +34,7 @@ from static_frame.core.util import immutable_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import slice_to_inclusive_slice
 
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
@@ -689,6 +690,8 @@ class Index(IndexBase):
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
                     return key.astype(DTYPE_INT_DEFAULT)
+            elif isinstance(key, slice):
+                key = slice_to_inclusive_slice(key)
             return key
 
         if key_transform:

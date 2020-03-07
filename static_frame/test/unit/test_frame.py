@@ -1669,6 +1669,17 @@ class TestUnit(TestCase):
         self.assertEqual(s2.name, 'c')
         self.assertEqual(len(s2), 0)
 
+    def test_frame_loc_i(self) -> None:
+
+        f1 = Frame(np.arange(16).reshape((4, 4)))
+
+        self.assertEqual(f1.loc[:2, :2].to_pairs(0),
+                ((0, ((0, 0), (1, 4), (2, 8))), (1, ((0, 1), (1, 5), (2, 9))), (2, ((0, 2), (1, 6), (2, 10))))
+                )
+
+        self.assertEqual(f1.iloc[:2, :2].to_pairs(0),
+                ((0, ((0, 0), (1, 4))), (1, ((0, 1), (1, 5))))
+                )
 
 
     #---------------------------------------------------------------------------

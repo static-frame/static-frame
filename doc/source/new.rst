@@ -4,6 +4,14 @@ What is New in Static Frame
 ===============================
 
 
+0.6.2
+----------
+
+``Frame.sort_values`` now accepts multiple labels given as any iterable.
+
+``loc`` selection on ``Series`` or ``Frame`` with ``IndexAutoFactory`` style indices now treat the slice stop as inclusive.
+
+
 0.6.1
 ----------
 
@@ -22,8 +30,6 @@ Renamed ``Series.iter_group_index()``, ``Series.iter_group_index_items()``, ``Fr
 Fixed issue in ``Frame`` display where, when at or one less than the count of ``display_rows``, would display different numbers of rows for the ``Index`` and the body of the ``Frame``.
 
 Zero-sized ``Frame`` now return zero-sized ``Series`` from selection where possible.
-
-``Frame.sort_values`` now accepts multiple labels given as any iterable.
 
 
 0.6.0
