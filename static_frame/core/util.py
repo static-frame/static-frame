@@ -805,6 +805,14 @@ def iterable_to_array_1d(
             raise RuntimeError(f'supplied dtype {dtype} not set on supplied array')
         return values, len(values) <= 1
 
+    if isinstance(values, range):
+        # translate range to np.arange to avoid iteration
+        array = np.arange(start=values.start,
+                stop=values.stop,
+                step=values.step)
+        array.flags.writeable = False
+        return array, True
+
     values_for_construct: tp.Sequence[tp.Any]
 
     # values for construct will only be a copy when necessary in iteration to find type
