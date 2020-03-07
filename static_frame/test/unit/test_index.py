@@ -397,7 +397,7 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(len(index.__slots__), 9)
+        self.assertEqual(len(index.__slots__), 8)
         self.assertFalse(index.STATIC)
         self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
         self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
@@ -413,15 +413,15 @@ class TestUnit(TestCase):
 
         index = IndexGO((), loc_is_iloc=True)
         index.append(0)
-        self.assertTrue(index._loc_is_iloc)
+        self.assertTrue(index._map is None)
 
         index.append(1)
         self.assertTrue(1 in index)
         self.assertFalse('a' in index)
-        self.assertTrue(index._loc_is_iloc)
+        self.assertTrue(index._map is None)
 
         index.append('a')
-        self.assertFalse(index._loc_is_iloc)
+        self.assertFalse(index._map is None)
         self.assertTrue('a' in index)
         self.assertTrue(1 in index)
 
@@ -431,15 +431,15 @@ class TestUnit(TestCase):
 
         index = IndexGO((), loc_is_iloc=True)
         index.append(0)
-        self.assertTrue(index._loc_is_iloc)
+        self.assertTrue(index._map is None)
 
         index.append(1)
         self.assertTrue(1 in index)
         self.assertFalse('a' in index)
-        self.assertTrue(index._loc_is_iloc)
+        self.assertTrue(index._map is None)
 
         index.append(-1)
-        self.assertFalse(index._loc_is_iloc)
+        self.assertFalse(index._map is None)
         self.assertTrue(-1 in index)
         self.assertTrue(1 in index)
 

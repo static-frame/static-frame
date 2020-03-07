@@ -95,8 +95,8 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 ((0, ((0, 1), (1, 3), (2, 5))), (1, ((0, 2), (1, 4), (2, 6))))
                 )
-        self.assertTrue(f4._index._loc_is_iloc)
-        self.assertTrue(f4._columns._loc_is_iloc)
+        self.assertTrue(f4._index._map is None)
+        self.assertTrue(f4._columns._map is None)
 
 
     def test_frame_init_c(self) -> None:
@@ -977,14 +977,14 @@ class TestUnit(TestCase):
         self.assertEqual(f1.iloc[[0,1,3], [0,2]].values.tolist(),
                 [[0, 2], [4, 6], [12, 14]])
 
-        self.assertTrue(f1._index._loc_is_iloc)
-        self.assertTrue(f1._columns._loc_is_iloc)
+        self.assertTrue(f1._index._map is None)
+        self.assertTrue(f1._columns._map is None)
 
         f1[4] = list(range(5))
-        self.assertTrue(f1._columns._loc_is_iloc)
+        self.assertTrue(f1._columns._map is None)
 
         f1[20] = list(range(5))
-        self.assertFalse(f1._columns._loc_is_iloc)
+        self.assertFalse(f1._columns._map is None)
 
         self.assertEqual(f1.values.tolist(),
                 [[0, 1, 2, 3, 0, 0],
@@ -4120,9 +4120,9 @@ class TestUnit(TestCase):
             )
         self.assertFalse(f2.columns.STATIC)
         f2[4] = None
-        self.assertTrue(f2.columns._loc_is_iloc)
+        self.assertTrue(f2.columns._map is None)
         f2[6] = None
-        self.assertFalse(f2.columns._loc_is_iloc)
+        self.assertFalse(f2.columns._map is None)
 
         self.assertEqual(f2.to_pairs(0),
                 ((0, (('a', 1), ('b', 30))), (1, (('a', 2), ('b', 34))), (2, (('a', 'a'), ('b', 'b'))), (3, (('a', False), ('b', True))), (4, (('a', None), ('b', None))), (6, (('a', None), ('b', None))))

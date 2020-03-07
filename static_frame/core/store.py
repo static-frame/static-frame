@@ -42,10 +42,10 @@ class StoreConfig:
     def from_frame(cls, frame: Frame) -> 'StoreConfig':
         '''Derive a config from a Frame.
         '''
-        include_index = frame.index.depth > 1 or not frame.index._loc_is_iloc
+        include_index = frame.index.depth > 1 or not frame.index._map is None
         index_depth = 0 if not include_index else frame.index.depth
 
-        include_columns = frame.columns.depth > 1 or not frame.columns._loc_is_iloc
+        include_columns = frame.columns.depth > 1 or not frame.columns._map is None
         columns_depth = 0 if not include_columns else frame.columns.depth
 
         return cls(

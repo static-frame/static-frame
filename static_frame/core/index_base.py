@@ -37,11 +37,10 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # type defs
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
+    _map: tp.Optional[tp.Dict[tp.Hashable, tp.Any]]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
-    _loc_is_iloc: bool
     _name: tp.Hashable
     values: np.ndarray
     depth: int

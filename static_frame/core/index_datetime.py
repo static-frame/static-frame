@@ -136,7 +136,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     __slots__ = () # define in derived class
 
     def append(self, value: tp.Hashable) -> None:
-        '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; do not need to check for _loc_is_iloc.
+        '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         value = to_datetime64(value, self._DTYPE)
         if value in self._map:
