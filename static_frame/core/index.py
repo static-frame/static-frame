@@ -348,7 +348,7 @@ class Index(IndexBase):
             size: int,
             positions: tp.Optional[tp.Sequence[int]]):
         # positions is either None or an ndarray
-        if isinstance(positions, np.ndarray): # if an np array can handle directly
+        if isinstance(positions, np.ndarray):
             return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
