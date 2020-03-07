@@ -11,6 +11,8 @@ What is New in Static Frame
 
 ``loc`` selection on ``Series`` or ``Frame`` with ``IndexAutoFactory`` style indices now treat the slice stop as inclusive.
 
+Removed creation of internal mapping object for ``IndexAutoFactory`` indices, or where ``Index`` are created where ``loc_is_iloc``.
+
 
 0.6.1
 ----------
