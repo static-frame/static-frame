@@ -132,7 +132,7 @@ class IndexDatetime(Index):
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
     _DTYPE: tp.Optional[np.dtype]
-    _map: tp.Dict[tp.Hashable, tp.Any]
+    _map: tp.Optional[tp.Dict[tp.Hashable, tp.Any]]
     __slots__ = () # define in derived class
 
     def append(self, value: tp.Hashable) -> None:

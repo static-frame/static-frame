@@ -298,7 +298,7 @@ class Index(IndexBase):
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
+    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
@@ -308,7 +308,7 @@ class Index(IndexBase):
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
-            mapping: tp.Optional[tp.Dict[tp.Hashable, tp.Any]],
+            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
             labels: tp.Iterable[tp.Hashable],
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
