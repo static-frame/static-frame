@@ -809,7 +809,8 @@ def iterable_to_array_1d(
         # translate range to np.arange to avoid iteration
         array = np.arange(start=values.start,
                 stop=values.stop,
-                step=values.step)
+                step=values.step,
+                dtype=dtype)
         array.flags.writeable = False
         return array, True
 
