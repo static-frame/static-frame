@@ -409,6 +409,43 @@ class TestUnit(TestCase):
             index.append((2, 5))
 
 
+    def test_index_go_d(self) -> None:
+
+        index = IndexGO((), loc_is_iloc=True)
+        index.append(0)
+        self.assertTrue(index._loc_is_iloc)
+
+        index.append(1)
+        self.assertTrue(1 in index)
+        self.assertFalse('a' in index)
+        self.assertTrue(index._loc_is_iloc)
+
+        index.append('a')
+        self.assertFalse(index._loc_is_iloc)
+        self.assertTrue('a' in index)
+        self.assertTrue(1 in index)
+
+
+
+    def test_index_go_e(self) -> None:
+
+        index = IndexGO((), loc_is_iloc=True)
+        index.append(0)
+        self.assertTrue(index._loc_is_iloc)
+
+        index.append(1)
+        self.assertTrue(1 in index)
+        self.assertFalse('a' in index)
+        self.assertTrue(index._loc_is_iloc)
+
+        index.append(-1)
+        self.assertFalse(index._loc_is_iloc)
+        self.assertTrue(-1 in index)
+        self.assertTrue(1 in index)
+
+
+
+
     #---------------------------------------------------------------------------
 
 

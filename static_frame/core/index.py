@@ -43,7 +43,7 @@ from static_frame.core.selector_node import InterfaceSelection1D
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import to_datetime64
-
+from static_frame.core.util import INT_TYPES
 
 from static_frame.core.util import resolve_dtype
 from static_frame.core.container import ContainerOperand
@@ -310,8 +310,8 @@ class Index(IndexBase):
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
-            mapping,
-            labels,
+            mapping: tp.Optional[tp.Dict[tp.Hashable, tp.Any]],
+            labels: tp.Iterable[tp.Hashable],
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
         '''Derive labels, a cache of the mapping keys in a sequence type (either an ndarray or a list).
@@ -321,6 +321,7 @@ class Index(IndexBase):
         This method is overridden in the derived class.
 
         Args:
+            mapping: Can be None if loc_is_iloc.
             labels: might be an expired Generator, but if it is an immutable ndarray, we can use it without a copy.
         '''
         # pre-fetching labels for faster get_item construction
@@ -334,17 +335,11 @@ class Index(IndexBase):
             labels, _ = iterable_to_array_1d(labels, dtype=dtype)
 
         else: # labels may be an expired generator, must use the mapping
-
-            # NOTE: explore why this does not work
-            # if dtype is None:
-            #     labels = np.array(list(mapping.keys()), dtype=object)
-            # else:
-            #     labels = np.fromiter(mapping.keys(), count=len(mapping), dtype=dtype)
-
             labels_len = len(mapping)
             if labels_len == 0:
                 labels = EMPTY_ARRAY
             else:
+                # NOTE: use iterable to array
                 labels = np.empty(labels_len, dtype=dtype if dtype else object)
                 for k, v in mapping.items():
                     labels[v] = k
@@ -354,18 +349,17 @@ class Index(IndexBase):
 
     @staticmethod
     def _extract_positions(
-            mapping,
-            positions: tp.Iterable[int]):
+            size: int,
+            positions: tp.Optional[tp.Iterable[int]]):
         # positions is either None or an ndarray
         if isinstance(positions, np.ndarray): # if an np array can handle directly
             return immutable_filter(positions)
-
-        return PositionsAllocator.get(len(mapping))
+        return PositionsAllocator.get(size)
 
     @staticmethod
     def _get_map(
             labels: tp.Iterable[tp.Hashable],
-            positions=None
+            positions: tp.Optional[tp.Sequence[int]] = None
             ) -> tp.Dict[tp.Hashable, int]:
         '''
         Return a dictionary mapping index labels to integer positions.
@@ -421,8 +415,8 @@ class Index(IndexBase):
             # self._DTYPE is None, passed dtype is not None, use dtype
             dtype_extract = dtype
 
+        #-----------------------------------------------------------------------
         # handle all Index subclasses
-        # check isinstance(labels, IndexBase)
         if issubclass(labels.__class__, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
@@ -447,6 +441,7 @@ class Index(IndexBase):
                 labels = array2d_to_tuples(array)
         # else: assume an iterable suitable for labels usage
 
+        #-----------------------------------------------------------------------
         if self._DTYPE is not None:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not isinstance(labels, np.ndarray):
@@ -456,22 +451,31 @@ class Index(IndexBase):
                 labels = labels.astype(dtype_extract)
 
         self._name = name if name is None else name_filter(name)
+        self._loc_is_iloc = loc_is_iloc
 
         if self._map is None:
-            self._map = self._get_map(labels, positions)
+            if not self._loc_is_iloc:
+                self._map = self._get_map(labels, positions)
+                size = len(self._map)
+            else: # assume labels are unique
+                size = len(labels)
+                if positions is None:
+                    positions = PositionsAllocator.get(size)
+        else: # map given
+            size = len(self._map)
 
         # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
         self._labels = self._extract_labels(self._map, labels, dtype_extract)
-        self._positions = self._extract_positions(self._map, positions)
+        self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
             raise ErrorInitIndex('invalid label dtype for this Index',
                     self._labels.dtype, self._DTYPE)
-        if len(self._map) != len(self._labels):
+
+
+        if not self._loc_is_iloc and len(self._map) != len(self._labels):
             raise ErrorInitIndex(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
 
-        # NOTE: automatic discovery is possible, but not yet implemented
-        self._loc_is_iloc = loc_is_iloc
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state):
@@ -852,27 +856,16 @@ class Index(IndexBase):
             self._update_array_cache()
         return reversed(self._labels)
 
-    # def keys(self) -> KeysView:
-    #     '''
-    #     Iterator of index labels.
-    #     '''
-    #     return self._map.keys()
-
     def __contains__(self, value) -> bool:
         '''Return True if value in the labels.
         '''
+        if self._loc_is_iloc:
+            if isinstance(value, INT_TYPES):
+                return value >= 0 and value < len(self)
+            return False
+
         return self._map.__contains__(value)
 
-    # def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
-    #     '''Iterator of pairs of index label and value.
-    #     '''
-    #     return self._map.items()
-
-    # def get(self, key, default=None):
-    #     '''
-    #     Return the value found at the index key, else the default if the key is not found.
-    #     '''
-    #     return self._map.get(key, default)
 
     #---------------------------------------------------------------------------
     # utility functions
@@ -977,13 +970,13 @@ class _IndexGOMixin:
         return labels
 
     def _extract_positions(self,
-            mapping,
+            size: int,
             positions
             ) -> tp.Iterable[tp.Any]:
         '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
-        positions = Index._extract_positions(mapping, positions)
-        self._positions_mutable_count = len(positions)
+        positions = Index._extract_positions(size, positions)
+        self._positions_mutable_count = size
         return positions
 
     def _update_array_cache(self):
@@ -1005,11 +998,22 @@ class _IndexGOMixin:
     def append(self, value: tp.Hashable) -> None:
         '''append a value
         '''
-        if value in self._map:
+        if self.__contains__(value):
             raise KeyError(f'duplicate key append attempted: {value}')
 
-        # the new value is the count
-        self._map[value] = self._positions_mutable_count
+        create_map = False
+        if self._loc_is_iloc:
+            if not (isinstance(value, INT_TYPES)
+                    and value == self._positions_mutable_count):
+                # not an increment that keeps _loc_is_iloc relationship
+                self._loc_is_iloc = False
+                if self._map is not None:
+                    raise RuntimeError('Index in invalid state')
+                # create map after updating self._labels_mutable
+                create_map = True
+        else:
+            # the new value is the count
+            self._map[value] = self._positions_mutable_count
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(
@@ -1019,12 +1023,9 @@ class _IndexGOMixin:
             self._labels_mutable_dtype = np.array(value).dtype
 
         self._labels_mutable.append(value)
-        # check value before incrementing
-        if self._loc_is_iloc:
-            if isinstance(value, int) and value == self._positions_mutable_count:
-                pass # an increment that keeps loc is iloc relationship
-            else:
-                self._loc_is_iloc = False
+
+        if create_map:
+            self._map = self._get_map(labels=self._labels_mutable)
 
         self._positions_mutable_count += 1
         self._recache = True
