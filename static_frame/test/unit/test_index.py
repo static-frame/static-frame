@@ -93,7 +93,7 @@ class TestUnit(TestCase):
         mapping = {x:x for x in range(3)}
 
         with self.assertRaises(RuntimeError):
-            _ = Index._extract_labels(
+            _ = Index._extract_labels( #type: ignore
                     mapping=mapping,
                     labels=labels,
                     dtype=float

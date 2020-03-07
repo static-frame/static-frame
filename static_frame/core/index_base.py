@@ -37,7 +37,7 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # type defs
 
-    _map: tp.Optional[tp.Dict[tp.Hashable, tp.Any]]
+    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool

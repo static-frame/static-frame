@@ -946,12 +946,13 @@ class _IndexGOMixin:
     STATIC = False
     __slots__ = () # define in derived class
 
+    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
 
     def _extract_labels(self,
-            mapping,
+            mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
             labels: tp.Iterable[tp.Hashable],
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
