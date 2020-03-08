@@ -24,21 +24,10 @@ from static_frame.core.util import dtype_to_na
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import column_1d_filter
 from static_frame.core.util import row_1d_filter
-
-from static_frame.core.container import _ufunc_logical_skipna
-
 from static_frame.core.util import _read_url
 from static_frame.core.util import _ufunc_set_2d
-
-# from static_frame import Index
-
-# from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
-
-# from static_frame.core.util import collection_and_dtype_to_array
-
-
 
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift
@@ -95,127 +84,6 @@ class TestUnit(TestCase):
                 center_sentinel=0)
 
         self.assertEqual(list(post), [3, 2, 0, 2, 3])
-
-
-
-
-    def test_ufunc_logical_skipna_a(self) -> None:
-
-        # empty arrays
-        a1 = np.array([], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False), True)
-
-        a1 = np.array([], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), False)
-
-
-        # float arrays 1d
-        a1 = np.array([2.4, 5.4], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=True), True)
-
-        a1 = np.array([2.4, 0], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False), False)
-
-        a1 = np.array([0, np.nan, 0], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=True), False)
-
-        a1 = np.array([0, np.nan, 0], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), True)
-
-
-        # float arrays 2d
-        a1 = np.array([[2.4, 5.4, 3.2], [2.4, 5.4, 3.2]], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True, True, True])
-
-
-        a1 = np.array([[2.4, 5.4, 3.2], [2.4, 5.4, 3.2]], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                [True, True])
-
-        a1 = np.array([[2.4, 5.4, 0], [2.4, 5.4, 3.2]], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True, True, False])
-
-        a1 = np.array([[2.4, 5.4, 0], [2.4, 5.4, 3.2]], dtype=float)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                [False, True])
-
-
-        # object arrays
-        a1 = np.array([[2.4, 5.4, 0], [2.4, None, 3.2]], dtype=object)
-
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                [False, False])
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True, False, False])
-
-
-        a1 = np.array([[2.4, 5.4, 0], [2.4, np.nan, 3.2]], dtype=object)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True, True, False])
-
-
-    def test_ufunc_logical_skipna_b(self) -> None:
-        # object arrays
-
-        a1 = np.array([['sdf', '', 'wer'], [True, False, True]], dtype=object)
-
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True, False, True]
-                )
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                [False, False]
-                )
-
-
-        # string arrays
-        a1 = np.array(['sdf', ''], dtype=str)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0), False)
-        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=True, axis=0), False)
-
-
-        a1 = np.array([['sdf', '', 'wer'], ['sdf', '', 'wer']], dtype=str)
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
-                [True,  False,  True])
-
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
-                [False, False])
-
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.any, skipna=False, axis=0).tolist(),
-                [True,  False,  True])
-
-        self.assertEqual(
-                _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
-                [True, True])
-
-
-    def test_ufunc_logical_skipna_c(self) -> None:
-
-        a1 = np.array([], dtype=float)
-        with self.assertRaises(NotImplementedError):
-            _ufunc_logical_skipna(a1, np.sum, skipna=True)
-
-
-    def test_ufunc_logical_skipna_d(self) -> None:
-
-        a1 = np.array(['2018-01-01', '2018-02-01'], dtype=np.datetime64)
-        post = _ufunc_logical_skipna(a1, np.all, skipna=True)
-        self.assertTrue(post)
-
-
-    def test_ufunc_logical_skipna_e(self) -> None:
-
-        a1 = np.array([['2018-01-01', '2018-02-01'],
-                ['2018-01-01', '2018-02-01']], dtype=np.datetime64)
-        post = _ufunc_logical_skipna(a1, np.all, skipna=True)
-        self.assertEqual(post.tolist(), [True, True])
-
 
 
 

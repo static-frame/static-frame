@@ -1617,6 +1617,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.get('a'), 0)
         self.assertEqual(s1.get('f', -1), -1)
 
+    #---------------------------------------------------------------------------
 
     def test_series_all_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -1624,14 +1625,67 @@ class TestUnit(TestCase):
         self.assertEqual(s1.all(), False)
         self.assertEqual(s1.any(), True)
 
-
     def test_series_all_b(self) -> None:
         s1 = Series([True, True, np.nan, True], index=('a', 'b', 'c', 'd'), dtype=object)
 
-        self.assertEqual(s1.all(skipna=False), True)
-        self.assertEqual(s1.all(skipna=True), False)
+        self.assertEqual(s1.all(skipna=True), True)
+        self.assertEqual(s1.any(), True)
+        self.assertTrue(np.isnan(s1.all(skipna=False)))
+
+    def test_series_all_c(self) -> None:
+        s1 = Series([1, np.nan, 1], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
         self.assertEqual(s1.any(), True)
 
+    def test_series_all_d(self) -> None:
+        s1 = Series([True, np.nan, True], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+
+    def test_series_all_e(self) -> None:
+        s1 = Series([True, None, True], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+
+    def test_series_all_f(self) -> None:
+        s1 = Series([True, None, 1], index=('a', 'b', 'c'))
+        self.assertTrue(np.isnan(s1.all(skipna=False)))
+        self.assertTrue(np.isnan(s1.any(skipna=False)))
+
+    def test_series_all_g(self) -> None:
+        s1 = Series(['', 'sdf', np.nan], index=('a', 'b', 'c'))
+        self.assertTrue(np.isnan(s1.all(skipna=False)))
+        self.assertTrue(np.isnan(s1.any(skipna=False)))
+
+    def test_series_all_h(self) -> None:
+        s1 = Series(['', 'sdf', 'wer'], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_i(self) -> None:
+        s1 = Series(['sdf', 'wer'], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_j(self) -> None:
+        s1 = Series(['', 'sdf', 'wer', 30], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_k(self) -> None:
+        s1 = Series(['sdf', 'wer', 30], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_m(self) -> None:
+        s1 = Series(['', 0, False], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), False)
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_unique_a(self) -> None:
         s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)

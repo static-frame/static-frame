@@ -14,12 +14,16 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_NAT_KIND
+from static_frame.core.util import isna_array
+
 # from static_frame.core.util import DTYPE_BOOL
 # from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import NAT
 
 from static_frame.core.doc_str import DOC_TEMPLATE
 
@@ -82,6 +86,28 @@ _RIGHT_OPERATOR_MAP = {
 
 
 #-------------------------------------------------------------------------------
+def _ufunc_logical_withna(
+        array: np.ndarray,
+        isna: np.ndarray,
+        ufunc: AnyCallable,
+        axis: int,
+        element_missing: tp.Any,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    '''
+    Perform a logical (and, or) ufunc on an array that has already been identified as having a NULL (as given in the `isna` array), propagating `element_missing` (NaN or NaT) on an axis if ndim > 1.
+    '''
+    if array.ndim == 1:
+        return element_missing
+    if out is not None:
+        # cann use out if we need to do an astype conversion
+        raise NotImplementedError()
+    # do not need fill values, as will set to nan after eval
+    v = array.astype(bool) # object, datetime64 arrays can be converted to bool
+    v = ufunc(v, axis=axis).astype(object) # get the axis result
+    v[np.any(isna, axis=axis)] = np.nan # propagate NaN
+    return v
+
 def _ufunc_logical_skipna(
         array: np.ndarray,
         ufunc: AnyCallable,
@@ -93,43 +119,76 @@ def _ufunc_logical_skipna(
     Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
     '''
     if ufunc != np.all and ufunc != np.any:
-        raise NotImplementedError('unsupported ufunc')
+        raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
 
     if len(array) == 0:
         # TODO: handle if this is ndim == 2 and has no length
         # any() of an empty array is False
         return ufunc == np.all
 
-    if array.dtype.kind == 'b':
-        return ufunc(array, axis=axis, out=out)
+    kind = array.dtype.kind
 
-    if array.dtype.kind in DTYPE_NAN_KIND:
-        if skipna:
-            # replace nans with nonzero value; faster to use masked array?
+    #---------------------------------------------------------------------------
+    # types that cannot have NA
+    if kind == 'b':
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_INT_KIND:
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_STR_KIND:
+        # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
+        return ufunc(array != '', axis=axis, out=out)
+
+    #---------------------------------------------------------------------------
+    # types that can have NA
+
+    if kind in DTYPE_NAN_KIND:
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            fill_value = 0.0 if ufunc == np.any else 1.0
             v = array.copy()
-            v[np.isnan(array)] = 0
+            v[isna] = fill_value
             return ufunc(v, axis=axis, out=out)
         return ufunc(array, axis=axis, out=out)
 
-    if array.dtype.kind in DTYPE_INT_KIND:
-        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_NAT_KIND:
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        # all dates are truthy, special handling only to propagate NaNs
+        if hasna and not skipna:
+            return _ufunc_logical_withna(array,
+                    isna=isna,
+                    ufunc=ufunc,
+                    axis=axis,
+                    element_missing=NAT,
+                    out=out)
+        # to ignore NaN, simply fall back on all-truth behavior, below
+
+    if kind == 'O':
+        # all object types: convert to boolean aray then process
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            # supply True for np.all, False for np.any
+            fill_value = False if ufunc == np.any else True
+            v = array.copy()
+            v[isna] = fill_value
+            v = v.astype(bool)
+        elif hasna and not skipna:
+            return _ufunc_logical_withna(array,
+                    isna=isna,
+                    ufunc=ufunc,
+                    axis=axis,
+                    element_missing=np.nan,
+                    out=out)
+        else:
+            v = array.astype(bool)
+        return ufunc(v, axis=axis, out=out)
 
     # all types other than strings or objects assume truthy
-    if array.dtype.kind != 'O' and array.dtype.kind not in DTYPE_STR_KIND:
-        if array.ndim == 1:
-            return True
-        return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
-
-    # convert to boolean aray then process
-    if skipna:
-        v = np.fromiter(((False if x is np.nan else bool(x)) for x in array.flat),
-                count=array.size,
-                dtype=bool).reshape(array.shape)
-    else:
-        v = np.fromiter((bool(x) for x in array.flat),
-                count=array.size,
-                dtype=bool).reshape(array.shape)
-    return ufunc(v, axis=axis, out=out)
+    if array.ndim == 1:
+        return True
+    return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
 
 
 def _all(array: np.ndarray,

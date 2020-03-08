@@ -765,7 +765,7 @@ class TypeBlocks(ContainerOperand):
 
         Args:
             composable: when True, the function application will return a correct result by applying the function to blocks first, and then the result of the blocks (i.e., add, prod); where observation count is relevant (i.e., mean, var, std), this must be False.
-            dtype: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
+            dtypes: if we know the return type of func, we can provide it here to avoid having to use the row dtype.
 
         Returns:
             As this is a reduction of axis where the caller (a Frame) is likely to return a Series, this function is not a generator of blocks, but instead just returns a consolidated 1d array.
@@ -817,8 +817,7 @@ class TypeBlocks(ContainerOperand):
                 dtype = self._row_dtype
                 astype_pre = True # if no dtypes given (like bool) we can coerce
 
-            # If dtypes werer specified, we know we have specific targets in mind for output
-
+            # If dtypes were specified, we know we have specific targets in mind for output
             out = np.empty(shape, dtype=dtype)
             # print('out', out, out.dtype, self._row_dtype)
             for idx, b in enumerate(self._blocks):

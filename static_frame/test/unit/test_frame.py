@@ -7950,6 +7950,73 @@ class TestUnit(TestCase):
         fa2 = FrameAssign(f1, iloc_key=None, bloc_key=f1)
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_any_a(self) -> None:
+        records = (
+                (2, 2),
+                (30, 0),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.all().to_pairs(),
+                (('a', True), ('b', False)))
+        self.assertEqual(f1.any().to_pairs(),
+                (('a', True), ('b', True)))
+
+        self.assertEqual(f1.all(axis=1).to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.any(axis=1).to_pairs(),
+                (('x', True), ('y', True), ('z', True)))
+
+
+    def test_frame_any_b(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 0),
+                (np.nan, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.all().to_pairs(),
+                (('a', True), ('b', False)))
+        self.assertEqual(f1.any().to_pairs(),
+                (('a', True), ('b', True)))
+
+        self.assertEqual(f1.all(axis=1).to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+        self.assertEqual(f1.any(axis=1).to_pairs(),
+                (('x', True), ('y', False), ('z', True)))
+
+
+
+    # def test_frame_any_c(self) -> None:
+    #     records = (
+    #             (2, 2),
+    #             (np.nan, 0),
+    #             (np.nan, -95),
+    #             )
+    #     f1 = Frame.from_records(records,
+    #             columns=('a', 'b'),
+    #             index=('x', 'y', 'z')
+    #             )
+
+    #     self.assertEqual(f1.all(skipna=False).to_pairs(),
+    #             (('a', True), ('b', False)))
+    #     self.assertEqual(f1.any(skipna=False).to_pairs(),
+    #             (('a', True), ('b', True)))
+
+    #     self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
+    #             (('x', True), ('y', False), ('z', True)))
+    #     self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
+    #             (('x', True), ('y', False), ('z', True)))
+
 
 
 
