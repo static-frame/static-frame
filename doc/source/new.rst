@@ -9,7 +9,7 @@ What is New in Static Frame
 
 ``Frame.sort_values`` now accepts multiple labels given as any iterable.
 
-``loc`` selection on ``Series`` or ``Frame`` with ``IndexAutoFactory`` style indices now treat the slice stop as inclusive.
+``loc`` selection on ``Series`` or ``Frame`` with ``IndexAutoFactory``-style indices now treat the slice stop as inclusive.
 
 Removed creation of internal mapping object for ``IndexAutoFactory`` indices, or where ``Index`` are created where ``loc_is_iloc``.
 

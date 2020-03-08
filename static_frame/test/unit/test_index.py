@@ -303,12 +303,10 @@ class TestUnit(TestCase):
         a1 = idx * 2
         self.assertEqual(a1.tolist(), [40, 60, 80, 100, 120])
 
-
     def test_index_binary_operators_e(self) -> None:
         idx1 = Index((20, 30, 40, 50))
         idx2 = Index((20, 3, 4, 5))
         self.assertEqual(idx1.values @ idx2, idx1.values @ idx2.values)
-
         self.assertEqual(idx1.values.tolist() @ idx2, idx1.values @ idx2.values)
 
     #---------------------------------------------------------------------------
