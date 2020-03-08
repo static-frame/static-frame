@@ -345,7 +345,7 @@ class ContainerOperandMeta(ContainerMeta):
             def func(self: tp.Any, other: tp.Any) -> tp.Any: #pylint: disable=E0102
                 return self._ufunc_binary_operator(operator=operator_func, other=other)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError() #pragma: no cover
 
         f = wraps(func_wrapper)(func)
         f.__name__ = func_name

@@ -150,6 +150,18 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1 = IndexHierarchy((3,))  # type: ignore
 
+    def test_hierarchy_init_j(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name=('a', 'b', 'c'))
+
+        # can access as a .name, but not a .names
+        self.assertEqual(ih1.name, ('a', 'b', 'c'))
+        with self.assertRaises(RuntimeError):
+            _ = ih1.names # unexpected names formation: ('a', 'b', 'c'), does not meet depth 2
 
 
     #---------------------------------------------------------------------------

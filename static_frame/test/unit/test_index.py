@@ -309,6 +309,7 @@ class TestUnit(TestCase):
         idx2 = Index((20, 3, 4, 5))
         self.assertEqual(idx1.values @ idx2, idx1.values @ idx2.values)
 
+        self.assertEqual(idx1.values.tolist() @ idx2, idx1.values @ idx2.values)
 
     #---------------------------------------------------------------------------
 

@@ -1,8 +1,6 @@
 '''
 Tools for documenting the SF interface.
 '''
-
-# from enum import Enum
 from collections import namedtuple
 import typing as tp
 
@@ -27,7 +25,6 @@ from static_frame.core.index_datetime import IndexYear
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import Display
 
-# from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeDelegate
 from static_frame.core.iter_node import IterNodeNoArg
 from static_frame.core.iter_node import IterNodeAxis
@@ -37,12 +34,10 @@ from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeDepthLevelAxis
 from static_frame.core.iter_node import IterNodeWindow
 
-# from static_frame.core.container import ContainerMeta
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
-# from static_frame.core.util import InterfaceSelection1D # used on index.drop
 from static_frame.core.selector_node import InterfaceSelection2D
 from static_frame.core.selector_node import InterfaceAssign2D
 
@@ -255,7 +250,7 @@ class InterfaceSummary:
                 yield Interface(cls_name, InterfaceGroup.Exporter, display, doc)
 
             elif name.startswith('iter_'):
-                # assert isinstance(obj, IterNode)
+                # replace with inspect call
                 if isinstance(obj, IterNodeNoArg):
                     display = f'{name}()'
                 elif isinstance(obj, IterNodeAxis):
@@ -271,7 +266,7 @@ class InterfaceSummary:
                 elif isinstance(obj, IterNodeWindow):
                     display = f'{name}(size, step, axis, ...)'
                 else:
-                    display = f'{name}()'
+                    raise NotImplementedError() #pragma: no cover
 
                 yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
                 for field in cls.ATTR_ITER_NODE:

@@ -464,7 +464,7 @@ class Index(IndexBase):
         self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
-            raise ErrorInitIndex('invalid label dtype for this Index',
+            raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
 
         if self._map is not None and len(self._map) != len(self._labels):
