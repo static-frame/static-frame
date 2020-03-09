@@ -7996,26 +7996,35 @@ class TestUnit(TestCase):
 
 
 
-    # def test_frame_any_c(self) -> None:
-    #     records = (
-    #             (2, 2),
-    #             (np.nan, 0),
-    #             (np.nan, -95),
-    #             )
-    #     f1 = Frame.from_records(records,
-    #             columns=('a', 'b'),
-    #             index=('x', 'y', 'z')
-    #             )
+    def test_frame_any_c(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 0),
+                (np.nan, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
 
-    #     self.assertEqual(f1.all(skipna=False).to_pairs(),
-    #             (('a', True), ('b', False)))
-    #     self.assertEqual(f1.any(skipna=False).to_pairs(),
-    #             (('a', True), ('b', True)))
 
-    #     self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
-    #             (('x', True), ('y', False), ('z', True)))
-    #     self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
-    #             (('x', True), ('y', False), ('z', True)))
+        # import ipdb; ipdb.set_trace()
+
+        with self.assertRaises(TypeError):
+            self.assertEqual(f1.all(skipna=False).to_pairs(),
+                    (('a', True), ('b', False)))
+
+        with self.assertRaises(TypeError):
+            self.assertEqual(f1.any(skipna=False).to_pairs(),
+                    (('a', True), ('b', True)))
+
+        with self.assertRaises(TypeError):
+            self.assertEqual(f1.all(axis=1, skipna=False).to_pairs(),
+                    (('x', True), ('y', False), ('z', True)))
+
+        with self.assertRaises(TypeError):
+            self.assertEqual(f1.any(axis=1, skipna=False).to_pairs(),
+                    (('x', True), ('y', False), ('z', True)))
 
 
 

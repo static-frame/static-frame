@@ -23,7 +23,7 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import NAT
+# from static_frame.core.util import NAT
 
 from static_frame.core.doc_str import DOC_TEMPLATE
 
@@ -86,28 +86,31 @@ _RIGHT_OPERATOR_MAP = {
 
 
 #-------------------------------------------------------------------------------
-def _ufunc_logical_withna(
-        array: np.ndarray,
-        isna: np.ndarray,
-        ufunc: AnyCallable,
-        axis: int,
-        element_missing: tp.Any,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    '''
-    Perform a logical (and, or) ufunc on an array that has already been identified as having a NULL (as given in the `isna` array), propagating `element_missing` (NaN or NaT) on an axis if ndim > 1.
-    '''
-    if array.ndim == 1:
-        return element_missing
-    if out is not None:
-        # cann use out if we need to do an astype conversion
-        raise NotImplementedError()
-    # do not need fill values, as will set to nan after eval
-    v = array.astype(bool) # object, datetime64 arrays can be converted to bool
-    v = ufunc(v, axis=axis).astype(object) # get the axis result
-    v[np.any(isna, axis=axis)] = np.nan # propagate NaN
-    return v
+# NOTE: this was an approach to doing nan propagation when skipna=False; this approach could not use the out argument, which is used in TypeBlocks. Forcing type coercion to object occasionally is hard to reason about, and makes TypeBlock implementation difficult. Thus, we raise a TypeError.
 
+# def _ufunc_logical_withna(
+#         array: np.ndarray,
+#         isna: np.ndarray,
+#         ufunc: AnyCallable,
+#         axis: int,
+#         element_missing: tp.Any,
+#         out: tp.Optional[np.ndarray] = None
+#         ) -> np.ndarray:
+#     '''
+#     Perform a logical (and, or) ufunc on an array that has already been identified as having a NULL (as given in the `isna` array), propagating `element_missing` (NaN or NaT) on an axis if ndim > 1.
+#     '''
+#     if array.ndim == 1:
+#         return element_missing
+#     if out is not None:
+#         # cann use out if we need to do an astype conversion
+#         raise NotImplementedError()
+#     # do not need fill values, as will set to nan after eval
+#     v = array.astype(bool) # object, datetime64 arrays can be converted to bool
+#     v = ufunc(v, axis=axis).astype(object) # get the axis result
+#     v[np.any(isna, axis=axis)] = np.nan # propagate NaN
+#     return v
+
+#-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(
         array: np.ndarray,
         ufunc: AnyCallable,
@@ -149,6 +152,10 @@ def _ufunc_logical_skipna(
             v = array.copy()
             v[isna] = fill_value
             return ufunc(v, axis=axis, out=out)
+        elif hasna and not skipna:
+            # if array.ndim == 1:
+            #     return np.nan
+            raise TypeError('cannot propagate NaN without expanding to object array result')
         return ufunc(array, axis=axis, out=out)
 
     if kind in DTYPE_NAT_KIND:
@@ -156,12 +163,9 @@ def _ufunc_logical_skipna(
         hasna = isna.any() # returns single value for 1d, 2d
         # all dates are truthy, special handling only to propagate NaNs
         if hasna and not skipna:
-            return _ufunc_logical_withna(array,
-                    isna=isna,
-                    ufunc=ufunc,
-                    axis=axis,
-                    element_missing=NAT,
-                    out=out)
+            # if array.ndim == 1:
+            #     return NAT
+            raise TypeError('cannot propagate NaN without expanding to object array result')
         # to ignore NaN, simply fall back on all-truth behavior, below
 
     if kind == 'O':
@@ -172,15 +176,12 @@ def _ufunc_logical_skipna(
             # supply True for np.all, False for np.any
             fill_value = False if ufunc == np.any else True
             v = array.copy()
+            v = v.astype(bool) # nan will be converted to True
             v[isna] = fill_value
-            v = v.astype(bool)
         elif hasna and not skipna:
-            return _ufunc_logical_withna(array,
-                    isna=isna,
-                    ufunc=ufunc,
-                    axis=axis,
-                    element_missing=np.nan,
-                    out=out)
+            # if array.ndim == 1:
+            #     return np.nan
+            raise TypeError('cannot propagate NaN without expanding to object array result')
         else:
             v = array.astype(bool)
         return ufunc(v, axis=axis, out=out)

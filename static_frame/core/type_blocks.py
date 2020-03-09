@@ -803,7 +803,6 @@ class TypeBlocks(ContainerOperand):
                 return result
 
             # this will be uninitialzied and thus, if a value is not assigned, will have garbage
-            # dtype = None if not dtypes else dtypes[0]
             if dtypes:
                 # Favor self._row_dtype's kind if it is in dtypes, else take first of passed dtypes
                 for dt in dtypes:
@@ -823,7 +822,6 @@ class TypeBlocks(ContainerOperand):
             for idx, b in enumerate(self._blocks):
 
                 if astype_pre and b.dtype != dtype:
-                    # import ipdb; ipdb.set_trace()
                     b = b.astype(dtype)
 
                 if axis == 0: # Combine rows, end with columns shape.
