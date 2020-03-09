@@ -4,6 +4,12 @@ What is New in Static Frame
 ===============================
 
 
+0.6.3
+----------
+
+Improvements to ``any`` and ``all`` methods on all containers when NAs are presernt. An Exception will now be raised when NAs are found and ``skipna=False``.
+
+
 0.6.2
 ----------
 
