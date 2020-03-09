@@ -97,5 +97,5 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import StoreFileMutation
 
 
-__version__ = '0.6.2' # use -dev for new version in development
+__version__ = '0.6.3' # use -dev for new version in development
 

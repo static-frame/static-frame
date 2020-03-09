@@ -1644,7 +1644,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.all(), True)
         self.assertEqual(s1.any(), True)
 
-
     def test_series_all_e(self) -> None:
         s1 = Series([True, None, True], index=('a', 'b', 'c'))
         self.assertEqual(s1.all(), True)

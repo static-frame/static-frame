@@ -283,6 +283,7 @@ class TestUnit(TestCase):
 
             a1 = pandas_to_numpy(s1, own_data=False)
             self.assertEqual(a1.dtype, np.dtype('O'))
+            self.assertAlmostEqualValues(a1.tolist(), [3, 4, np.nan])
 
             a2 = pandas_to_numpy(s1[:2], own_data=False)
             self.assertEqual(a2.dtype, np.dtype('int64'))
@@ -291,6 +292,7 @@ class TestUnit(TestCase):
 
             a3 = pandas_to_numpy(s2, own_data=False)
             self.assertEqual(a3.dtype, np.dtype('O'))
+            self.assertAlmostEqualValues(a3.tolist(), [False, True, np.nan])
 
             a4 = pandas_to_numpy(s2[:2], own_data=False)
             self.assertEqual(a4.dtype, np.dtype('bool'))

@@ -57,63 +57,81 @@ def pandas_version_under_1() -> bool:
 def pandas_to_numpy(
         container: tp.Any,
         own_data: bool,
+        fill_value: tp.Any = np.nan
         ) -> np.ndarray:
-    '''Convert Pandas container to a numpy array in pandas 1.0, where we have Pandas own dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
-    '''
-    # NOTE: we should probably convert pd.NA to np.nan; we can do this with fillna only if we have an object array
+    '''Convert Pandas container to a numpy array in pandas 1.0, where we might have Pandas extension dtypes that may have pd.NA. If no pd.NA, can go back to numpy types.
 
-    # only to be used with pandas 1.0 and greater
-    if hasattr(container, 'dtype'): # Series, Index
+    If coming from a Pandas extension type, will convert pd.NA to `fill_value` in the resulting object array. For object dtypes, pd.NA may pass on into SF; the only way to find them is an expensive iteration and `is` comparison, which we are not sure we want to do at this time.
+
+    Args:
+        fill_value: if replcaing pd.NA, what to replace it with. Ultimately, this can use FillValueAuto to avoid going to object in all cases.
+    '''
+    # NOTE: only to be used with pandas 1.0 and greater
+
+    if container.ndim == 1: # Series, Index
         dtype_src = container.dtype
         ndim = 1
-    else: # DataFrame, assume contiguous dtypes
+    elif container.ndim == 2: # DataFrame, assume contiguous dtypes
         dtypes = container.dtypes.unique()
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2
+    else:
+        raise NotImplementedError(f'no handling for ndim {container.ndim}')
 
     if isinstance(dtype_src, np.dtype):
         dtype = dtype_src
+        is_extension_dtype = False
     elif hasattr(dtype_src, 'numpy_dtype'):
         # only int, uint dtypes have this attribute
         dtype = dtype_src.numpy_dtype
+        is_extension_dtype = True
     else:
+        dtype = None # resolve below
+        is_extension_dtype = True
+
+    if is_extension_dtype:
+        isna = container.isna() # returns a NumPy Boolean type
+        hasna = isna.values.any() # will work for ndim 1 and 2
+
         from pandas import StringDtype #pylint: disable=E0611
         from pandas import BooleanDtype #pylint: disable=E0611
-
         # from pandas import DatetimeTZDtype
-
         # from pandas import Int8Dtype
         # from pandas import Int16Dtype
         # from pandas import Int32Dtype
         # from pandas import Int64Dtype
-
         # from pandas import UInt16Dtype
         # from pandas import UInt32Dtype
         # from pandas import UInt64Dtype
         # from pandas import UInt8Dtype
 
         if isinstance(dtype_src, BooleanDtype):
-            dtype = DTYPE_BOOL
+            dtype = DTYPE_OBJECT if hasna else DTYPE_BOOL
         elif isinstance(dtype_src, StringDtype):
             # trying to use a dtype argument for strings results in a converting pd.NA to a string "<NA>"
-            if ndim == 1:
-                has_na = container.isna().any()
-            else:
-                has_na = container.isna().any().any()
-            if has_na:
-                dtype = DTYPE_OBJECT
-            else: # can use a string type
-                dtype = DTYPE_STR
+            dtype = DTYPE_OBJECT if hasna else DTYPE_STR
         else:
-            dtype = None
+            # if an extension type and it hasna, have to go to object; otherwise, set to None or the dtype obtained above
+            dtype = DTYPE_OBJECT if hasna else dtype
 
-    try:
-        array = container.to_numpy(copy=not own_data, dtype=dtype)
-    except (ValueError, TypeError):
-        # cannot convert to '<class 'int'>'-dtype NumPy array with missing values. Specify an appropriate 'na_value' for this dtype; this will go to object
-        # TypeError: boolean value of NA is ambiguous
-        array = container.to_numpy(copy=not own_data)
+        try:
+            array = container.to_numpy(copy=not own_data, dtype=dtype)
+        except (ValueError, TypeError):
+            # cannot convert to '<class 'int'>'-dtype NumPy array with missing values. Specify an appropriate 'na_value' for this dtype; this will go to object
+            # TypeError: boolean value of NA is ambiguous
+            array = container.to_numpy(copy=not own_data)
+
+        if hasna:
+            # if hasna and extension dtype, should be an object array; please pd.NA objects with fill_value (np.nan)
+            assert array.dtype == DTYPE_OBJECT
+            array[isna] = fill_value
+
+    else: # not an extension dtype
+        if own_data:
+            array = container.values
+        else:
+            array = container.values.copy()
 
     array.flags.writeable = False
     return array
