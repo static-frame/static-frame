@@ -7,7 +7,9 @@ What is New in Static Frame
 0.6.3
 ----------
 
-Improvements to ``any`` and ``all`` methods on all containers when NAs are presernt. An Exception will now be raised when NAs are found and ``skipna=False``.
+Improvements to ``any`` and ``all`` methods on all containers when using ``skipna=True`` and NAs are presernt; now, a ``TypeError`` will now be raised when NAs are found and ``skipna=False``.
+
+When converting from Pandas 1.0 extension dtypes, proper NumPy types are used if no ``pd.NA`` are present; if ``pd.NA`` are present, they are replaced with ``np.nan`` in the resulting object array.
 
 
 0.6.2
