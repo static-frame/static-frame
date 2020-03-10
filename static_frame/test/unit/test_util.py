@@ -1797,5 +1797,13 @@ class TestUnit(TestCase):
         self.assertEqual(post1.tolist(), [0, 1, 2])
 
 
+    def test_ufunc_set_1d_c(self) -> None:
+
+        post1 = _ufunc_set_1d(np.union1d, np.array([False, True]), np.array([False, True]), assume_unique=True)
+        self.assertEqual(post1.tolist(), [False, True])
+
+        post2 = _ufunc_set_1d(np.union1d, np.array([False, True]), np.array(['a', 'b']), assume_unique=True)
+        self.assertEqual(set(post2.tolist()), set((False, True, 'b', 'a')))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1433,8 +1433,9 @@ def _ufunc_set_1d(
 
         if len(array) == len(other):
             compare = array == other
+            # if sizes are the same, the result of == is mostly length 2; comparison to some arrays (i.e., string), will result in a single Boolean, but it should always be False
             if isinstance(compare, BOOL_TYPES) and compare:
-                return array
+                return array #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 return array
 
