@@ -419,7 +419,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
             apply_constructor = Series.from_items
         else:
-            raise NotImplementedError()
+            raise NotImplementedError() #pragma: no cover
 
         return IterNodeDelegate(
                 func_values=func_values,
