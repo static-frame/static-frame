@@ -3440,20 +3440,23 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        # NOTE: might identify when key is a list of one item
+
         # Optimized sorting approach is only supported in a limited number of cases
         if (self.columns.depth == 1 and
                 self.index.depth == 1 and
-                not isinstance(key, KEY_MULTIPLE_TYPES)):
-
+                not isinstance(key, KEY_MULTIPLE_TYPES)
+                ):
             if axis == 0:
                 has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
             else:
                 has_object = self._blocks._row_dtype == DTYPE_OBJECT
-
             if not has_object:
                 yield from self._axis_group_sort_items(key=key,
                         iloc_key=iloc_key,
                         axis=axis)
+            else:
+                yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
         else:
             yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
