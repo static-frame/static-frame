@@ -3,6 +3,13 @@
 What is New in Static Frame
 ===============================
 
+0.6.4
+----------
+
+Fixed issue introduced into ``Frame.iter_group`` and ``Frame.iter_group_items`` when selecting a single column with an object dytpe.
+
+Fixed mapping lookups to use single-argument tuples in ``map_any_iter_items`` and ``map_fill_iter_items`` and related methods.
+
 
 0.6.3
 ----------

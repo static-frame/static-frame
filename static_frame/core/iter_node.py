@@ -118,7 +118,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {mapping}
         '''
         get = getattr(mapping, 'get')
-        # func: AnyCallable = lambda k: get(k, k)
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, v)) for k, v in self._func_items())
         else:
@@ -169,7 +168,6 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {fill_value}
         '''
         get = getattr(mapping, 'get')
-        # func: AnyCallable = lambda k: get(k, fill_value)
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, fill_value)) for k, v in self._func_items())
         else:
@@ -220,6 +218,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {mapping}
         '''
+        # want exception to raise if key not found
         func = getattr(mapping, '__getitem__')
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
