@@ -1289,6 +1289,29 @@ class TestUnit(TestCase):
                 ((('a', 'x'), '10'), (('a', 'y'), '3'), (('a', 'z'), '15'), (('b', 'x'), '21'), (('b', 'y'), '28'), (('b', 'z'), '50')))
 
 
+    def test_series_iter_element_c(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        with self.assertRaises(RuntimeError):
+            s1.iter_element().apply({15:150})
+
+        post1 = tuple(s1.iter_element_items().map_any_iter_items({('c', 15): 150}))
+        self.assertEqual(post1,
+                (('a', 10), ('b', 3), ('c', 150), ('d', 21), ('e', 28)))
+
+        post2 = tuple(s1.iter_element_items().map_fill_iter_items(
+                {('c', 15): 150}, fill_value=0))
+        self.assertEqual(post2,
+                (('a', 0), ('b', 0), ('c', 150), ('d', 0), ('e', 0)))
+
+        post3 = tuple(s1.iter_element_items().map_all_iter_items(
+                {(k, v): v * 10 for k, v in s1.items()}))
+        self.assertEqual(post3,
+                (('a', 100), ('b', 30), ('c', 150), ('d', 210), ('e', 280)))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_element_map_any_a(self) -> None:
