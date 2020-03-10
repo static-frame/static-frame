@@ -3680,26 +3680,29 @@ class TestUnit(TestCase):
         data = [[1, 2, objs[0]], [3, 4, objs[0]], [5, 6, objs[1]]]
         f = sf.Frame.from_records(data, columns=tuple('abc'))
 
-        post1 = tuple((k, v) for k, v in f.iter_group_items('c'))
-        post2 = tuple((k, v) for k, v in f.iter_group_items(['c']))
+        post1 = {k: v for k, v in f.iter_group_items('c')}
+        post2 = {k[0]: v for k, v in f.iter_group_items(['c'])} #as a list, this gets a multiple key
 
         self.assertEqual(len(post1), 2)
         self.assertEqual(len(post1), len(post2))
 
-        self.assertEqual(post1[0][1].shape, (2, 3))
-        self.assertEqual(post1[0][1].shape, post2[0][1].shape)
-        self.assertEqual(post1[0][1].to_pairs(0),
-                (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, objs[0]), (1, objs[0])))))
-        self.assertEqual(post2[0][1].to_pairs(0),
-                (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, objs[0]), (1, objs[0])))))
+        obj_a = objs[0]
+        obj_b = objs[1]
+
+        self.assertEqual(post1[obj_a].shape, (2, 3))
+        self.assertEqual(post1[obj_a].shape, post2[obj_a].shape)
+        self.assertEqual(post1[obj_a].to_pairs(0),
+                (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, obj_a), (1, obj_a)))))
+        self.assertEqual(post2[obj_a].to_pairs(0),
+                (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, obj_a), (1, obj_a)))))
 
 
-        self.assertEqual(post1[1][1].shape, (1, 3))
-        self.assertEqual(post1[1][1].shape, post2[1][1].shape)
-        self.assertEqual(post1[1][1].to_pairs(0),
-                (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, objs[1]),))))
-        self.assertEqual(post2[1][1].to_pairs(0),
-                (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, objs[1]),))))
+        self.assertEqual(post1[obj_b].shape, (1, 3))
+        self.assertEqual(post1[obj_b].shape, post2[obj_b].shape)
+        self.assertEqual(post1[obj_b].to_pairs(0),
+                (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, obj_b),))))
+        self.assertEqual(post2[obj_b].to_pairs(0),
+                (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, obj_b),))))
 
 
     #---------------------------------------------------------------------------
