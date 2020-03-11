@@ -82,6 +82,7 @@ class IndexBase(ContainerOperand):
 
     _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
+    _UFUNC_DIFFERENCE: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
@@ -345,6 +346,13 @@ class IndexBase(ContainerOperand):
                 self.__class__._UFUNC_UNION,
                 other)
 
+    def difference(self: I, other: 'IndexBase') -> I:
+        '''
+        Perform difference with another Index, container, or NumPy array. Retains order.
+        '''
+        return self._ufunc_set(
+                self.__class__._UFUNC_DIFFERENCE,
+                other)
 
     #---------------------------------------------------------------------------
     # metaclass-applied functions
