@@ -1425,8 +1425,6 @@ def _ufunc_set_1d(
     elif is_difference:
         if len(array) == 0:
             return np.array(EMPTY_TUPLE, dtype=dtype)
-        elif len(other) == 0:
-            return array
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1434,6 +1432,9 @@ def _ufunc_set_1d(
             if len(array) == 0:
                 return other
             elif len(other) == 0:
+                return array
+        elif is_difference:
+            if len(other) == 0:
                 return array
 
         if len(array) == len(other):
@@ -1510,8 +1511,6 @@ def _ufunc_set_2d(
     elif is_difference:
         if len(array) == 0:
             return np.array(EMPTY_TUPLE, dtype=dtype)
-        elif len(other) == 0:
-            return array
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1519,6 +1518,9 @@ def _ufunc_set_2d(
             if len(array) == 0:
                 return other
             elif len(other) == 0:
+                return array
+        elif is_difference:
+            if len(other) == 0:
                 return array
 
         if array.shape == other.shape:

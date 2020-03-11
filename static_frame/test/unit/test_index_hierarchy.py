@@ -1011,7 +1011,7 @@ class TestUnit(TestCase):
             ih1.rehierarch([0,])
 
 
-    def test_hierarchy_intersection_a(self) -> None:
+    def test_hierarchy_set_operators_a(self) -> None:
 
         labels = (
                 ('I', 'A'),
@@ -1031,17 +1031,20 @@ class TestUnit(TestCase):
 
         ih2 = IndexHierarchy.from_labels(labels)
 
-        post = ih1.intersection(ih2)
-        self.assertEqual(post.values.tolist(),
+        post1 = ih1.intersection(ih2)
+        self.assertEqual(post1.values.tolist(),
                 [['II', 'A'], ['II', 'B']])
 
-        post = ih1.union(ih2)
-        self.assertEqual(post.values.tolist(),
+        post2 = ih1.union(ih2)
+        self.assertEqual(post2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B']])
 
+        post3 = ih1.difference(ih2)
+        self.assertEqual(post3.values.tolist(),
+                [['I', 'A'], ['I', 'B']])
 
 
-    def test_hierarchy_intersection_b(self) -> None:
+    def test_hierarchy_set_operators_b(self) -> None:
 
         labels = (
                 ('II', 'B'),
@@ -1055,12 +1058,65 @@ class TestUnit(TestCase):
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
-            [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post2 = ih1.intersection(ih2)
         self.assertEqual(post2.values.tolist(),
-            [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
+        post3 = ih1.difference(ih2)
+        self.assertEqual(post3.values.tolist(),
+                [])
+
+
+    def test_hierarchy_set_operators_c(self) -> None:
+
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(())
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.union(ih2)
+        self.assertEqual(post1.values.tolist(),
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+
+        post2 = ih1.intersection(ih2)
+        self.assertEqual(post2.values.tolist(),
+                [])
+
+        post3 = ih1.difference(ih2)
+        self.assertEqual(post3.values.tolist(),
+                [])
+
+
+    def test_hierarchy_set_operators_d(self) -> None:
+
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = IndexHierarchy.from_labels(())
+
+        post1 = ih1.union(ih2)
+        self.assertEqual(post1.values.tolist(),
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+
+        post2 = ih1.intersection(ih2)
+        self.assertEqual(post2.values.tolist(),
+                [])
+
+        post3 = ih1.difference(ih2)
+        self.assertEqual(post3.values.tolist(),
+                [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
     #---------------------------------------------------------------------------
 
