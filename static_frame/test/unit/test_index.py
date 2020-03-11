@@ -756,10 +756,26 @@ class TestUnit(TestCase):
 
     def test_index_from_pandas_d(self) -> None:
         import pandas
-
         pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
-        with self.assertRaises(ErrorInitIndex):
-            idx = Index.from_pandas(pdidx)
+        idx = Index.from_pandas(pdidx)
+        self.assertEqual(
+                idx.values.tolist(),
+                [1514764800000000000, 1527811200000000000]
+                )
+
+    def test_index_from_pandas_e(self) -> None:
+        import pandas
+        idx = pandas.DatetimeIndex([datetime.date(2014, 12, i) for i in range(1, 10)])
+        index1 = Index.from_pandas(idx)
+        self.assertTrue(index1.STATIC)
+        self.assertEqual(index1.values.tolist(),
+                [1417392000000000000, 1417478400000000000, 1417564800000000000, 1417651200000000000, 1417737600000000000, 1417824000000000000, 1417910400000000000, 1417996800000000000, 1418083200000000000]
+                )
+        index2 = IndexGO.from_pandas(idx)
+        self.assertFalse(index2.STATIC)
+        self.assertEqual(index2.values.tolist(),
+                [1417392000000000000, 1417478400000000000, 1417564800000000000, 1417651200000000000, 1417737600000000000, 1417824000000000000, 1417910400000000000, 1417996800000000000, 1418083200000000000]
+                )
 
 
     #---------------------------------------------------------------------------

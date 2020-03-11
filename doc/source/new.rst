@@ -3,6 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.5
+----------
+
+Refined ``IndexBase.from_pandas``.
+
 
 0.6.4
 ----------
