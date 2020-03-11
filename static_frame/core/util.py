@@ -234,6 +234,15 @@ YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
+class NpOperator1dFuncType(tp.Protocol):
+    def __call__(self,
+            array: np.ndarray,
+            other: np.ndarray,
+            *,
+            assume_unique: bool=False
+        ) -> np.ndarray:
+        pass
+
 #-------------------------------------------------------------------------------
 
 def is_hashable(value: tp.Any) -> bool:
@@ -1396,7 +1405,7 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
 # extension to union and intersection handling
 
 def _ufunc_set_1d(
-        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
+        func: NpOperator1dFuncType,
         array: np.ndarray,
         other: np.ndarray,
         *,
@@ -1476,7 +1485,7 @@ def _ufunc_set_1d(
     return func(array, other, **func_kwargs)
 
 def _ufunc_set_2d(
-        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
+        func: NpOperator1dFuncType,
         array: np.ndarray,
         other: np.ndarray,
         *,

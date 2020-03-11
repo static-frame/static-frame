@@ -896,7 +896,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_c(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
         idx2 = Index((2, 3, '4', 'five', 6.6, object()))
 
         idx3 = idx1.difference(idx2)
@@ -906,7 +906,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_d(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
         idx2 = Index((2, 1, '3', 'five', object()))
 
         idx3 = idx1.difference(idx2)
