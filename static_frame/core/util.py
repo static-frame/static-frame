@@ -234,15 +234,6 @@ YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
-class NpOperator1dFuncType(tp.Protocol):
-    def __call__(self,
-            array: np.ndarray,
-            other: np.ndarray,
-            *,
-            assume_unique: bool=False
-        ) -> np.ndarray:
-        pass
-
 #-------------------------------------------------------------------------------
 
 def is_hashable(value: tp.Any) -> bool:
@@ -1405,7 +1396,7 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
 # extension to union and intersection handling
 
 def _ufunc_set_1d(
-        func: NpOperator1dFuncType,
+        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
         *,
@@ -1482,10 +1473,10 @@ def _ufunc_set_1d(
         return v
 
     func_kwargs = {} if is_union else dict(assume_unique=assume_unique)
-    return func(array, other, **func_kwargs)
+    return func(array, other, **func_kwargs) # type: ignore (Callable doesn't support optional kwargs)
 
 def _ufunc_set_2d(
-        func: NpOperator1dFuncType,
+        func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
         array: np.ndarray,
         other: np.ndarray,
         *,
@@ -1595,7 +1586,7 @@ def _ufunc_set_2d(
 
     if width == 1:
         # let the function flatten the array, then reshape into 2D
-        post = func(array, other, **func_kwargs)
+        post = func(array, other, **func_kwargs)  # type: ignore
         return post.reshape(len(post), width)
 
     # this approach based on https://stackoverflow.com/questions/9269681/intersection-of-2d-numpy-ndarrays
@@ -1606,7 +1597,7 @@ def _ufunc_set_2d(
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
 
-    return func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width)
+    return func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
 
 
 def union1d(array: np.ndarray,
