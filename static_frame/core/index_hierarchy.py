@@ -21,6 +21,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
+from static_frame.core.util import setdiff2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import isin
@@ -102,6 +103,7 @@ class IndexHierarchy(IndexBase):
 
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
+    _UFUNC_DIFFERENCE = setdiff2d
 
     #---------------------------------------------------------------------------
     # constructors

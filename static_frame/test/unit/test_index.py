@@ -872,6 +872,48 @@ class TestUnit(TestCase):
                 ['c', 'b', 'a']
                 )
 
+    def test_index_difference_a(self) -> None:
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(idx3.values.tolist(), [])
+
+    def test_index_difference_b(self) -> None:
+        idx1 = Index(())
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(idx3.values.tolist(), [])
+
+        idx4 = Index(('c', 'b', 'a'))
+        idx5 = Index(())
+
+        idx6 = idx4.difference(idx5)
+        self.assertEqual(idx6.values.tolist(),
+                ['c', 'b', 'a']
+                )
+
+    def test_index_difference_c(self) -> None:
+        obj = object()
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx2 = Index((2, 3, '4', 'five', 6.6, object()))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(set(idx3.values.tolist()),
+                set([np.nan, 1, 4.4, obj, '3', None])
+                ) # Note: order is lost...
+
+    def test_index_difference_d(self) -> None:
+        obj = object()
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx2 = Index((2, 1, '3', 'five', object()))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(set(idx3.values.tolist()),
+                set([np.nan, None, 4.4, obj])
+                ) # Note: order is lost...
+
 
 
     def test_index_to_html_a(self) -> None:

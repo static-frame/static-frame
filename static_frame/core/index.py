@@ -42,6 +42,7 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection1D
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
+from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import INT_TYPES
 
@@ -292,6 +293,7 @@ class Index(IndexBase):
 
     _UFUNC_UNION = union1d
     _UFUNC_INTERSECTION = intersect1d
+    _UFUNC_DIFFERENCE = setdiff1d
 
     _DTYPE: tp.Optional[np.dtype] = None # for specialized indices requiring a typed labels
 
