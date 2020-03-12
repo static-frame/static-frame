@@ -20,6 +20,8 @@ from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
 from static_frame import IndexYearGO
+from static_frame import IndexYear
+from static_frame import IndexDate
 
 from static_frame import Series
 from static_frame import Frame
@@ -612,6 +614,37 @@ class TestUnit(TestCase):
                 ((0, ((0, 1), (1, 2))), (1, ((0, '3'), (1, '4'))), (2, ((0, 1.5), (1, 2.5))), (3, ((0, 'a'), (1, 'b'))))
                 )
 
+    def test_frame_from_pandas_k(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame.from_records(
+                [(1,2), ('3','4'), (1.5, 2.5), ('a','b')],
+                index=('2012', '2013', '2014', '2015'),
+                columns=('2020-01', '2020-02')
+                )
+
+        f = Frame.from_pandas(df,
+                index_constructor=IndexYear,
+                columns_constructor=IndexYearMonth
+                )
+
+        self.assertEqual(f.to_pairs(0),
+                ((np.datetime64('2020-01'), ((np.datetime64('2012'), 1), (np.datetime64('2013'), '3'), (np.datetime64('2014'), 1.5), (np.datetime64('2015'), 'a'))), (np.datetime64('2020-02'), ((np.datetime64('2012'), 2), (np.datetime64('2013'), '4'), (np.datetime64('2014'), 2.5), (np.datetime64('2015'), 'b'))))
+                )
+
+    def test_frame_from_pandas_m(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame.from_records(
+                [(1,2), (3,4), (1.5, 2.5)],
+                index=pd.date_range('2012-01-01', '2012-01-03'),
+                )
+        f = sf.Frame.from_pandas(df, index_constructor=IndexDate)
+        self.assertTrue(f.index.__class__ is IndexDate)
+
+        self.assertEqual(f.to_pairs(0),
+                ((0, ((np.datetime64('2012-01-01'), 1.0), (np.datetime64('2012-01-02'), 3.0), (np.datetime64('2012-01-03'), 1.5))), (1, ((np.datetime64('2012-01-01'), 2.0), (np.datetime64('2012-01-02'), 4.0), (np.datetime64('2012-01-03'), 2.5))))
+                )
 
     #---------------------------------------------------------------------------
 
