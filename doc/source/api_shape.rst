@@ -22,6 +22,8 @@ Series
 
 .. autoattribute:: static_frame.Series.dtype
 
+.. autoattribute:: static_frame.Series.name
+
 
 
 Examples
@@ -46,6 +48,7 @@ Frame
 
 .. autoattribute:: static_frame.Frame.dtypes
 
+.. autoattribute:: static_frame.Frame.name
 
 
 Examples
@@ -57,4 +60,19 @@ Examples
    :end-before: end_frame_shape_a
 
 
+
+FrameGO
+---------
+
+.. autoattribute:: static_frame.FrameGO.shape
+
+.. autoattribute:: static_frame.FrameGO.ndim
+
+.. autoattribute:: static_frame.FrameGO.size
+
+.. autoattribute:: static_frame.FrameGO.nbytes
+
+.. autoattribute:: static_frame.FrameGO.dtypes
+
+.. autoattribute:: static_frame.FrameGO.name
 
