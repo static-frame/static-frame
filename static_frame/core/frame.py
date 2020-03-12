@@ -1707,6 +1707,8 @@ class Frame(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.DataFrame',
             *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> 'Frame':
@@ -1772,13 +1774,31 @@ class Frame(ContainerOperand):
         else:
             name = None
 
+        own_index = True
+        if index_constructor is IndexAutoFactory:
+            index = None
+            own_index = False
+        elif index_constructor is not None:
+            index = index_constructor(value.index)
+        else:
+            index = Index.from_pandas(value.index)
+
+        own_columns = True
+        if columns_constructor is IndexAutoFactory:
+            columns = None
+            own_columns = False
+        elif columns_constructor is not None:
+            columns = columns_constructor(value.columns)
+        else:
+            columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
+
         return cls(blocks,
-                index=Index.from_pandas(value.index),
-                columns=cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns),
+                index=index,
+                columns=columns,
                 name=name,
                 own_data=True,
-                own_index=True,
-                own_columns=True
+                own_index=own_index,
+                own_columns=own_columns
                 )
 
     @classmethod

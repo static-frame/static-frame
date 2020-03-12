@@ -594,6 +594,25 @@ class TestUnit(TestCase):
             self.assertEqual(f.dtypes.to_pairs(),
                     (('a', np.dtype('bool')), ('b', np.dtype('O')), ('c', np.dtype('O')), ('d', np.dtype('O')), ('e', np.dtype('bool'))))
 
+
+    def test_frame_from_pandas_j(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=('3','4'), c=(1.5,2.5), d=('a','b')))
+
+        f = Frame.from_pandas(df,
+                index_constructor=IndexAutoFactory,
+                columns_constructor=IndexAutoFactory
+                )
+
+        self.assertTrue(f.index._map is None)
+        self.assertTrue(f.columns._map is None)
+
+        self.assertEqual(f.to_pairs(0),
+                ((0, ((0, 1), (1, 2))), (1, ((0, '3'), (1, '4'))), (2, ((0, 1.5), (1, 2.5))), (3, ((0, 'a'), (1, 'b'))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
