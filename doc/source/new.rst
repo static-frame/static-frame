@@ -3,6 +3,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.6
+----------
+
+Added ``index_constructor`` and ``columns_constructor`` parameters to ``Frame.from_pandas``.
+
+
+
+
 0.6.5
 ----------
 
