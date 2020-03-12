@@ -1468,12 +1468,12 @@ def _ufunc_set_1d(
             result = frozenset(array) & frozenset(other)
         else:
             result = frozenset(array).difference(frozenset(other))
-
         v, _ = iterable_to_array_1d(result, dtype)
         return v
 
-    func_kwargs = {} if is_union else dict(assume_unique=assume_unique)
-    return func(array, other, **func_kwargs) # type: ignore (Callable doesn't support optional kwargs)
+    if is_union:
+        return func(array, other)
+    return func(array, other, assume_unique=assume_unique) # type: ignore (Callable doesn't support optional kwargs)
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
