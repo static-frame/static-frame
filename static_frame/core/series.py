@@ -437,16 +437,25 @@ class Series(ContainerOperand):
 
     @property
     def loc(self) -> InterfaceGetItem:
+        '''
+        Interface for label-based selection.
+        '''
         return InterfaceGetItem(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItem:
+        '''
+        Interface for position-based selection.
+        '''
         return InterfaceGetItem(self._extract_iloc)
 
     # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
 
     @property
     def drop(self) -> InterfaceSelection2D:
+        '''
+        Interface for dropping elements from :obj:`static_frame.Series`.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
@@ -455,6 +464,9 @@ class Series(ContainerOperand):
 
     @property
     def mask(self) -> InterfaceSelection2D:
+        '''
+        Interface for extracting Boolean :obj:`static_frame.Series`.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
@@ -463,6 +475,9 @@ class Series(ContainerOperand):
 
     @property
     def masked_array(self) -> InterfaceSelection2D:
+        '''
+        Interface for extracting NumPy Masked Arrays.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
@@ -471,6 +486,9 @@ class Series(ContainerOperand):
 
     @property
     def assign(self) -> InterfaceSelection2D:
+        '''
+        Interface for doing assignment-like selection and replacement.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
@@ -480,6 +498,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup:
+        '''
+        Iterator of :obj:`static_frame.Series`, where each :obj:`static_frame.Series` is matches unique values.
+        '''
         return IterNodeGroup(
                 container=self,
                 function_items=self._axis_group_items,

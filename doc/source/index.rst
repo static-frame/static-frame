@@ -40,32 +40,18 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :numbered:
    :caption: API Overview
 
    api_overview
 
-
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :numbered:
-   :caption: API Reference
+   :caption: API Detail
 
-   api_structures
-   api_creation
-   api_shape
-   api_selection
-   api_dict_like
-   api_assignment
-   api_index
-   api_iter
-   api_missing
-   api_sort
-   api_transform
-   api_util_mls
-   api_operators
-   api_export
+   api_detail
 
 
 :ref:`genindex`

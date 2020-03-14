@@ -96,6 +96,18 @@ from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import StoreFileMutation
 
+from static_frame.core.iter_node import IterNodeNoArg
+from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeGroup
+from static_frame.core.iter_node import IterNodeGroupAxis
+from static_frame.core.iter_node import IterNodeDepthLevel
+from static_frame.core.iter_node import IterNodeDepthLevelAxis
+from static_frame.core.iter_node import IterNodeWindow
+
+
+from static_frame.core.interface import InterfaceSelection2D
+from static_frame.core.interface import InterfaceAssign2D
+
 
 __version__ = '0.6.5' # use -dev for new version in development
 

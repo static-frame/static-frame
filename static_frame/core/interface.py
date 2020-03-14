@@ -45,13 +45,6 @@ from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
 
 
-Interface = namedtuple('Interface', (
-        'cls',
-        'group',
-        'name',
-        'doc'
-        ))
-
 class InterfaceGroup:
     Attribute = 'Attribute'
     Constructor = 'Constructor'
@@ -63,6 +56,18 @@ class InterfaceGroup:
     OperatorBinary = 'Operator Binary'
     OperatorUnary = 'Operator Unary'
     Selector = 'Selector'
+
+
+class Interface(tp.NamedTuple):
+    cls: tp.Type[ContainerBase]
+    group: InterfaceGroup
+    signature: str
+    doc: str
+    reference: str = '' # a qualified name as a string for doc gen
+    use_signature: bool = False
+    reference_is_attr: bool = False
+    reference_end_point: str = ''
+    reference_end_point_is_attr: bool = False
 
 
 class InterfaceSummary:
@@ -214,6 +219,8 @@ class InterfaceSummary:
         for name_attr, obj, obj_cls in sorted(cls.name_obj_iter(target)):
             # properties resdie on the class
             doc = ''
+            reference = '' # reference attribute to use
+
             if isinstance(obj_cls, property):
                 doc = cls.scrub_doc(obj_cls.__doc__)
             elif hasattr(obj, '__doc__'):
@@ -225,86 +232,199 @@ class InterfaceSummary:
                 name = name_attr
 
             cls_name = target.__name__
+            reference = f'{cls_name}.{name}'
 
             if name in cls.DICT_LIKE:
                 display = f'{name}()' if name != 'values' else name
-                yield Interface(cls_name, InterfaceGroup.DictLike, display, doc)
+                yield Interface(cls_name,
+                        InterfaceGroup.DictLike,
+                        display,
+                        doc,
+                        reference)
 
             elif name in cls.DISPLAY:
                 display = f'{name}()' if name != 'interface' else name
-                yield Interface(cls_name, InterfaceGroup.Display, display, doc)
+                yield Interface(cls_name,
+                        InterfaceGroup.Display,
+                        display,
+                        doc,
+                        reference)
 
             elif name == 'astype':
-                yield Interface(cls_name, InterfaceGroup.Method, name, doc)
+                yield Interface(cls_name,
+                        InterfaceGroup.Method,
+                        name,
+                        doc,
+                        reference)
+
                 if isinstance(obj, InterfaceAsType): # an InterfaceAsType
                     display = f'{name}[]'
                     doc = cls.scrub_doc(getattr(InterfaceAsType, cls.GETITEM).__doc__)
-                    yield Interface(cls_name, InterfaceGroup.Method, display, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.Method,
+                            display,
+                            doc,
+                            reference,
+                            use_signature=True,
+                            reference_is_attr=True)
 
             elif name.startswith('from_') or name == '__init__':
                 display = f'{name}()'
-                yield Interface(cls_name, InterfaceGroup.Constructor, display, doc)
+                yield Interface(cls_name,
+                        InterfaceGroup.Constructor,
+                        display,
+                        doc,
+                        reference)
 
             elif name.startswith('to_'):
                 display = f'{name}()'
-                yield Interface(cls_name, InterfaceGroup.Exporter, display, doc)
+                yield Interface(cls_name,
+                        InterfaceGroup.Exporter,
+                        display,
+                        doc,
+                        reference)
 
             elif name.startswith('iter_'):
                 # replace with inspect call
+                reference_is_attr = True
+
                 if isinstance(obj, IterNodeNoArg):
                     display = f'{name}()'
+                    # reference = 'IterNodeNoArg.__call__'
                 elif isinstance(obj, IterNodeAxis):
                     display = f'{name}(axis)'
+                    # reference = 'IterNodeAxis.__call__'
                 elif isinstance(obj, IterNodeGroup):
                     display = f'{name}()'
+                    # reference = 'IterNodeGroup.__call__'
                 elif isinstance(obj, IterNodeGroupAxis):
                     display = f'{name}(key, axis)'
+                    # reference = 'IterNodeGroupAxis.__call__'
                 elif isinstance(obj, IterNodeDepthLevel):
                     display = f'{name}(depth_level)'
+                    # reference = 'IterNodeDepthLevel.__call__'
                 elif isinstance(obj, IterNodeDepthLevelAxis):
                     display = f'{name}(depth_level, axis)'
+                    # reference = 'IterNodeDepthLevelAxis.__call__'
                 elif isinstance(obj, IterNodeWindow):
                     display = f'{name}(size, step, axis, ...)'
+                    # reference = 'IterNodeWindow.__call__'
                 else:
                     raise NotImplementedError() #pragma: no cover
 
-                yield Interface(cls_name, InterfaceGroup.Iterator, display, doc)
-                for field in cls.ATTR_ITER_NODE:
+                yield Interface(cls_name,
+                        InterfaceGroup.Iterator,
+                        display,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        reference_is_attr=True,
+                        )
+
+                for field in cls.ATTR_ITER_NODE: # apply, map, etc
                     display_sub = f'{display}.{field}()'
+                    reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
                     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
-                    yield Interface(cls_name, InterfaceGroup.Iterator, display_sub, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.Iterator,
+                            display_sub,
+                            doc,
+                            reference,
+                            use_signature=True,
+                            reference_is_attr=True,
+                            reference_end_point=reference_end_point,
+                            )
 
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
-                display = f'{name}[]' if name != cls.GETITEM else '[]'
-                yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+                if name != cls.GETITEM:
+                    display = f'{name}[]'
+                    reference_is_attr = True
+                else:
+                    display = f'[]'
+                    reference_is_attr = False
+
+                # display = f'{name}[]' if name != cls.GETITEM else '[]'
+                yield Interface(cls_name,
+                        InterfaceGroup.Selector,
+                        display,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        reference_is_attr=True)
 
             elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
-                    display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
+                    if field != cls.GETITEM:
+                        display = f'{name}.{field}[]'
+                        reference_end_point_is_attr = True
+                    else:
+                        display = f'{name}[]'
+                        reference_end_point_is_attr = False
+
+                    reference_end_point = f'{InterfaceSelection2D.__name__}.{field}'
                     doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
-                    yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.Selector,
+                            display,
+                            doc,
+                            reference,
+                            use_signature=True,
+                            reference_is_attr=True,
+                            reference_end_point=reference_end_point,
+                            reference_end_point_is_attr=reference_end_point_is_attr)
 
             elif isinstance(obj, InterfaceAssign2D):
                 for field in cls.ATTR_SELECTOR_NODE_ASSIGN:
-                    display = f'{name}.{field}[]' if field != cls.GETITEM else f'{name}[]'
-                    doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
-                    yield Interface(cls_name, InterfaceGroup.Selector, display, doc)
+                    if field != cls.GETITEM:
+                        display = f'{name}.{field}[]'
+                        reference_end_point_is_attr = True
+                    else:
+                        display = f'{name}[]'
+                        reference_end_point_is_attr = False
 
-            elif callable(obj):
+                    reference_end_point = f'{InterfaceAssign2D.__name__}.{field}'
+                    doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
+                    yield Interface(cls_name,
+                            InterfaceGroup.Selector,
+                            display,
+                            doc,
+                            reference,
+                            use_signature=True,
+                            reference_is_attr=True,
+                            reference_end_point=reference_end_point,
+                            reference_end_point_is_attr=reference_end_point_is_attr)
+
+            elif callable(obj): # general methods
                 display = f'{name}()'
                 if name_attr in _UFUNC_UNARY_OPERATORS:
-                    yield Interface(cls_name, InterfaceGroup.OperatorUnary, display, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.OperatorUnary,
+                            display,
+                            doc,
+                            reference)
                 elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP:
-                    yield Interface(cls_name, InterfaceGroup.OperatorBinary, display, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.OperatorBinary,
+                            display,
+                            doc,
+                            reference)
                 else:
-                    yield Interface(cls_name, InterfaceGroup.Method, display, doc)
-            else:
-                yield Interface(cls_name, InterfaceGroup.Attribute, name, doc)
+                    yield Interface(cls_name,
+                            InterfaceGroup.Method,
+                            display,
+                            doc,
+                            reference)
+            else: # attributes
+                yield Interface(cls_name,
+                        InterfaceGroup.Attribute,
+                        name,
+                        doc,
+                        reference)
 
     @classmethod
     def to_frame(cls, target: ContainerMeta) -> Frame:
         f = Frame.from_records(cls.interrogate(target), name=target.__name__)
-        f = f.sort_values(('cls', 'group', 'name'))
-        f = f.set_index('name', drop=True)
+        f = f.sort_values(('cls', 'group', 'signature'))
+        f = f.set_index('signature', drop=True)
         return f
 

@@ -2159,6 +2159,9 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroupAxis:
+        '''
+        Iterate over Frames grouped by unique values in one or more rows or columns.
+        '''
         return IterNodeGroupAxis(
             container=self,
             function_values=self._axis_group_loc,
