@@ -283,6 +283,7 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value,
             *,
+            index_constructor: IndexConstructor = None,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
@@ -303,10 +304,19 @@ class Series(ContainerOperand):
         else:
             data = pandas_to_numpy(value, own_data=own_data)
 
+        own_index = True
+        if index_constructor is IndexAutoFactory:
+            index = None
+            own_index = False
+        elif index_constructor is not None:
+            index = index_constructor(value.index)
+        else: # if None
+            index = Index.from_pandas(value.index)
+
         return cls(data,
-                index=IndexBase.from_pandas(value.index),
+                index=index,
                 name=value.name,
-                own_index=True
+                own_index=own_index
                 )
 
 

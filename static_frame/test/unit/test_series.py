@@ -1807,7 +1807,7 @@ class TestUnit(TestCase):
                 (('A', 'a'), ('B', 'b'), ('C', 'c'))
                 )
 
-
+    #---------------------------------------------------------------------------
     def test_series_from_pandas_a(self) -> None:
         import pandas as pd
 
@@ -1911,6 +1911,31 @@ class TestUnit(TestCase):
             self.assertEqual(sfs5.dtype, np.dtype('bool'))
 
 
+
+    def test_series_from_pandas_e(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', None], index=list('abc'))
+        self.assertEqual(sf.Series.from_pandas(pds1,
+                index_constructor=sf.IndexAutoFactory).to_pairs(),
+                ((0, 'a'), (1, 'b'), (2, None))
+                )
+
+
+    def test_series_from_pandas_f(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', None], index=('2012', '2013', '2014'))
+        self.assertEqual(sf.Series.from_pandas(pds1,
+                index_constructor=sf.IndexYear).to_pairs(),
+                ((np.datetime64('2012'), 'a'),
+                (np.datetime64('2013'), 'b'),
+                (np.datetime64('2014'), None))
+                )
+
+
+
+    #---------------------------------------------------------------------------
     def test_series_to_pandas_a(self) -> None:
 
         s1 = Series(range(4),
