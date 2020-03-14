@@ -1443,15 +1443,14 @@ def _ufunc_set_1d(
 
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
             if isinstance(compare, BOOL_TYPES) and compare:
-                arrays_are_equal = True
+                arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
-
             if arrays_are_equal:
                 if is_difference:
                     return np.array(EMPTY_TUPLE, dtype=dtype)
                 else:
-                    return array #pragma: no cover
+                    return array
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KIND
@@ -1529,7 +1528,7 @@ def _ufunc_set_2d(
 
             # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
             if isinstance(compare, BOOL_TYPES) and compare:
-                arrays_are_equal = True
+                arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
 
@@ -1793,16 +1792,11 @@ def isin(
 
     if result is None:
         assume_unique = array_is_unique and other_is_unique
-        try:
-            if array.ndim == 1:
-                result = np.in1d(array, other, assume_unique=assume_unique)
-            else:
-                # NOTE: likely faster to do this at the block level
-                result = np.isin(array, other, assume_unique=assume_unique)
-        except TypeError:
-            # Numpy can fail if array's dtypes are incompatible
-            # NOTE: need more information on cases that result in this
-            result = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        if array.ndim == 1:
+            result = np.in1d(array, other, assume_unique=assume_unique)
+        else:
+            # NOTE: likely faster to do this at the block level
+            result = np.isin(array, other, assume_unique=assume_unique)
 
     result.flags.writeable = False
     return result
@@ -1826,7 +1820,7 @@ def slices_from_targets(
     Args:
         target_index: iterable of integers, where integers are positions where (as commonly used) values along an axis were previously NA, or will be NA. Often the result of binary_transition()
         target_values: values found at the index positions
-        length: the maximum lengh in the target array
+        length: the maximum length in the target array
         directional_forward: determine direction
         limit: set a max size for all slices
         slice_condition: optional function for filtering slices.

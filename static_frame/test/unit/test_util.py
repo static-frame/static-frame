@@ -57,6 +57,8 @@ from static_frame.core.util import argmax_2d
 
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _ufunc_set_1d
+from static_frame.core.util import slices_from_targets
+
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -1902,6 +1904,27 @@ class TestUnit(TestCase):
 
         post2 = _ufunc_set_1d(np.union1d, np.array([False, True]), np.array(['a', 'b']), assume_unique=True)
         self.assertEqual(set(post2.tolist()), set((False, True, 'b', 'a')))
+
+
+    #---------------------------------------------------------------------------
+
+    def test_slices_from_targets_a(self) -> None:
+
+        target_index = binary_transition(np.array([False, True, True, True, False, False]))
+        target_values = list(range(len(target_index)))
+
+        post_iter = slices_from_targets(
+                target_index=target_index,
+                target_values=target_values,
+                length=len(target_values),
+                directional_forward=True,
+                limit=2,
+                slice_condition=lambda x: True,
+                )
+
+        post = tuple(post_iter)
+        self.assertEqual(post, ((slice(1, 4, None), 0),))
+
 
 if __name__ == '__main__':
     unittest.main()
