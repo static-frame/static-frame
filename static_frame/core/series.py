@@ -1555,12 +1555,14 @@ class Series(ContainerOperand):
         return self.__class__(array, index=self._index, name=self._name)
 
     def transpose(self) -> 'Series':
-        '''The transpositon of a Series is itself.
+        '''Transpose. For a 1D immutable container, this returns a reference to self.
         '''
         return self
 
     @property
     def T(self):
+        '''Transpose. For a 1D immutable container, this returns a reference to self.
+        '''
         return self.transpose()
 
     @doc_inject(selector='duplicated')

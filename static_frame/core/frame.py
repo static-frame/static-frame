@@ -3825,7 +3825,7 @@ class Frame(ContainerOperand):
 
 
     def transpose(self) -> 'Frame':
-        '''Return a tansposed version of the ``Frame``.
+        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.__class__(self._blocks.transpose(),
                 index=self._columns,
@@ -3835,7 +3835,7 @@ class Frame(ContainerOperand):
 
     @property
     def T(self) -> 'Frame':
-        '''Return a transposed version of the ``Frame``.
+        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.transpose()
 
