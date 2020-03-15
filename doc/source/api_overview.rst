@@ -1,11 +1,12 @@
+.. _api-overview:
 
 API Overview
 ===============================
 
 
-For each container, the complete public API is presented below. Note that interface endpoints, such as ``iter_element``, are expanded to show all interface sub components, such as ``apply`` and ``map_any``.
+For each container, the complete public API is presented below. Note that interface endpoints are expanded to show all interface sub components.
 
-This is an overview for quick reference; for detailed documentation, start with :ref:`structures`.
+This is an overview for quick reference; for detailed documentation, see :ref:`api-detail`.
 
 
 .. jinja:: ctx

@@ -1,10 +1,11 @@
+.. _api-detail:
 
 API Detail
 ===============================
 
+For each container, the complete public API is presented below. Note that interface endpoints are expanded to show all interface sub components.
 
-
-For each container, the complete public API is presented below.
+This is the full API documentation; for an overview, see :ref:`api-overview`.
 
 
 .. jinja:: ctx
