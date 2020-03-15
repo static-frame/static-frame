@@ -88,7 +88,11 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
             ):
-        post['interface'].append((target.__name__, target))
+        post['interface'].append((
+                target.__name__,
+                target,
+                InterfaceSummary.to_frame(target, minimized=False) # need full
+                ))
 
 
     # post['InterfaceSummary'] = InterfaceSummary

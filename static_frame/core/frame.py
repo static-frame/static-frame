@@ -2104,6 +2104,9 @@ class Frame(ContainerOperand):
     # generators
     @property
     def iter_array(self) -> IterNodeAxis:
+        '''
+        Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
@@ -2113,6 +2116,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_array_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
@@ -3774,9 +3780,9 @@ class Frame(ContainerOperand):
         '''{}
 
         Args:
-            lower: value, ``Series``, ``Frame``
-            upper: value, ``Series``, ``Frame``
-            axis: required if ``lower`` or ``upper`` are given as a ``Series``.
+            lower: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            upper: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            axis: required if ``lower`` or ``upper`` are given as a :obj:`static_frame.Series`.
         '''
         if lower is None and upper is None:
             return self.__class__(self._blocks.copy(),

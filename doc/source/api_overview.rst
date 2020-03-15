@@ -1,4 +1,7 @@
 
+API Overview
+===============================
+
 
 For each container, the complete public API is presented below. Note that interface endpoints, such as ``iter_element``, are expanded to show all interface sub components, such as ``apply`` and ``map_any``.
 
@@ -7,16 +10,20 @@ This is an overview for quick reference; for detailed documentation, start with 
 
 .. jinja:: ctx
 
-    {% for name, cls in interface %}
+    {% for name, cls, frame in interface %}
 
     {{ name }}
     -------------------------------------------------
 
 
-    {% for group, frame_sub in cls.interface.iter_group_items('group', axis=0) %}
+    {% for group, frame_sub in frame.iter_group_items('group', axis=0) %}
+
+    .. _api-overview-{{ name }}-{{ group }}:
 
     {{ name }}: {{ group }}
     ..........................................................
+
+    API Detail: :ref:`api-detail-{{ name }}-{{ group }}`
 
     .. csv-table::
         :header-rows: 0

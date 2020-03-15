@@ -40,17 +40,11 @@ Immutable data structures for one- and two-dimensional calculations with self-al
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :numbered:
    :caption: API Overview
 
    api_overview
-
-.. toctree::
-   :maxdepth: 1
-   :numbered:
-   :caption: API Detail
-
    api_detail
 
 
