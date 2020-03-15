@@ -105,9 +105,9 @@ from static_frame.core.iter_node import IterNodeDepthLevelAxis
 from static_frame.core.iter_node import IterNodeWindow
 
 
-from static_frame.core.interface import InterfaceSelection2D
-from static_frame.core.interface import InterfaceAssign2D
-from static_frame.core.interface import InterfaceAsType
+from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAssign2D
+from static_frame.core.selector_node import InterfaceAsType
 
 __version__ = '0.6.5' # use -dev for new version in development
 
