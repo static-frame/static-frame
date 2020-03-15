@@ -1,7 +1,6 @@
 '''
 Tools for documenting the SF interface.
 '''
-from collections import namedtuple
 import typing as tp
 
 import numpy as np
