@@ -24,7 +24,7 @@ This is an overview for quick reference; for detailed documentation, see :ref:`a
     {{ name }}: {{ group }}
     ..........................................................
 
-    API Detail: :ref:`api-detail-{{ name }}-{{ group }}`
+    Detail: :ref:`api-detail-{{ name }}-{{ group }}`
 
     .. csv-table::
         :header-rows: 0

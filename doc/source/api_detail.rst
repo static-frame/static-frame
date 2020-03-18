@@ -17,7 +17,6 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     .. autoclass:: static_frame.{{cls.__name__}}
 
-
     {% for group, frame_sub in frame.iter_group_items('group', axis=0) %}
 
     .. _api-detail-{{ name }}-{{ group }}:
@@ -25,16 +24,15 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
     {{ name }}: {{ group }}
     ..........................................................
 
-    API Overview: :ref:`api-overview-{{ name }}-{{ group }}`
-
+    Overview: :ref:`api-overview-{{ name }}-{{ group }}`
 
     {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
 
-    {# for debuggin, write-out full row { row } #}
+
 
     {% if row.use_signature and signature.startswith('[') %}
 
-    .. py:method:: {{ name }}{{ signature }}
+    .. py:method:: {{ name }}{{ signature }}  {# NOTE: no dot! #}
 
     {% elif row.use_signature and signature.startswith('interface') %}
 
@@ -57,6 +55,7 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
     {% endif %}
 
 
+
     {# if a signature has been used, then we need to augment with doc with reference #}
     {% if row.use_signature %}
 
@@ -71,6 +70,7 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
         {% endif %}
 
     {% endif %}
+
 
 
     {# if reference_end_point is defined, always include it #}
@@ -88,6 +88,14 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     {% endif %}
 
+
+    ``start_{{ name }}-{{ signature }}``
+
+
+    .. literalinclude:: ../../static_frame/test/unit/test_doc.py
+       :language: python
+       :start-after: start_{{ name }}-{{ signature }}
+       :end-before: end_{{ name }}-{{ signature }}
 
 
     {% endfor %}

@@ -75,37 +75,32 @@ Neptune  11
 #-------------------------------------------------------------------------------
 # API docs
 
-
-#start_series_a
 >>> import numpy as np
 >>> import static_frame as sf
 
+
+#start_Series-from_dict()
 >>> sf.Series.from_dict(dict(Mercury=167, Neptune=-200), dtype=np.int64)
 <Series>
 <Index>
 Mercury  167
 Neptune  -200
 <<U7>    <int64>
+#end_Series-from_dict()
 
+
+#start_Series-__init__()
 >>> sf.Series((167, -200), index=('Mercury', 'Neptune'), dtype=np.int64)
 <Series>
 <Index>
 Mercury  167
 Neptune  -200
 <<U7>    <int64>
+#end_Series-__init__()
 
-#end_series_a
 
 
-#start_frame_a
->>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
-<Frame>
-<Index> temperature distance  <<U11>
-<Index>
-Mars    -65         227.9
-Neptune -200        4495.1
-<<U7>   <int64>     <float64>
-
+#start_Frame-from_dict()
 >>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
@@ -114,12 +109,11 @@ Earth   12756    5.97
 Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
-
-#end_frame_a
-
+#end_Frame-from_dict()
 
 
-#start_framego_a
+
+#start_FrameGO-from_dict()
 >>> f = sf.FrameGO.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 >>> f['radius'] = f['diameter'] * 0.5
 >>> f
@@ -130,11 +124,10 @@ Earth     12756    5.97      6378.0
 Jupiter   142984   1898.0    71492.0
 Saturn    120536   568.0     60268.0
 <<U7>     <int64>  <float64> <float64>
+#end_FrameGO-from_dict()
 
-#end_framego_a
 
-
-#start_index_a
+#start_Index-__init__()
 >>> sf.Index(('Mercury', 'Mars'), dtype=object)
 <Index>
 Mercury
@@ -146,11 +139,10 @@ Mars
 ME
 MA
 <<U2>
+#end_Index-__init__()
 
-#end_index_a
 
-
-#start_indexgo_a
+#start_IndexGO-append()
 >>> a = sf.IndexGO(('Uranus', 'Neptune'))
 >>> a.append('Pluto')
 >>> a
@@ -159,26 +151,22 @@ Uranus
 Neptune
 Pluto
 <<U7>
+#end_IndexGO-append()
 
-#end_indexgo_a
 
-
-#start_series_from_items_a
+#start_Series-from_items()
 >>> sf.Series.from_items(zip(('Mercury', 'Jupiter'), (4879, 12756)), dtype=np.int64)
 <Series>
 <Index>
 Mercury  4879
 Jupiter  12756
 <<U7>    <int64>
-
-#end_series_from_items_a
-
+#end_Series-from_items()
 
 
 
 
-
-#start_frame_from_records_a
+#start_Frame-from_records()
 >>> index = ('Mercury', 'Venus', 'Earth', 'Mars')
 >>> columns = ('diameter', 'gravity', 'temperature')
 >>> records = ((4879, 3.7, 167), (12104, 8.9, 464), (12756, 9.8, 15), (6792, 3.7, -65))
@@ -191,13 +179,13 @@ Venus   12104    8.9       464
 Earth   12756    9.8       15
 Mars    6792     3.7       -65
 <<U7>   <int64>  <float64> <int64>
-
-#end_frame_from_records_a
-
+#end_Frame-from_records()
 
 
 
-#start_frame_from_items_a
+
+
+#start_Frame-from_items()
 >>> sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
@@ -206,12 +194,11 @@ Earth   12756    5.97
 Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
-
-#end_frame_from_items_a
-
+#end_Frame-from_items()
 
 
-#start_frame_from_concat_a
+
+#start_Frame-from_concat()
 >>> f1 = sf.Frame.from_dict(dict(diameter=(12756, 142984), mass=(5.97, 1898)), index=('Earth', 'Jupiter'))
 >>> f2 = sf.Frame.from_dict(dict(mass=(0.642, 102), moons=(2, 14)), index=('Mars', 'Neptune'))
 >>> sf.Frame.from_concat((f1, f2))
@@ -232,12 +219,11 @@ Jupiter 1898.0
 Mars    0.642
 Neptune 102.0
 <<U7>   <float64>
-
-#end_frame_from_concat_a
-
+#end_Frame-from_concat()
 
 
-#start_frame_from_structured_array_a
+
+#start_Frame-from_structured_array()
 >>> a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)], dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
 >>> sf.Frame.from_structured_array(a, index_depth=1)
 <Frame>
@@ -246,13 +232,11 @@ Neptune 102.0
 Venus    4.869999885559082 464
 Neptune  102.0             -200
 <object> <float32>         <int32>
-
-
-#end_frame_from_structured_array_a
+#end_Frame-from_structured_array()
 
 
 
-#start_frame_from_csv_a
+#start_Frame-from_csv()
 >>> from io import StringIO
 >>> filelike = StringIO('name,mass,temperature\\nVenus,4.87,464\\nNeptune,102,-200')
 >>> sf.Frame.from_csv(filelike, index_depth=1, dtypes=dict(temperature=np.int64))
@@ -262,11 +246,10 @@ Neptune  102.0             -200
 Venus   4.87      464
 Neptune 102.0     -200
 <<U7>   <float64> <int64>
+#end_Frame-from_csv()
 
-#end_frame_from_csv_a
 
-
-#start_series_dict_like_a
+#start_Series-items()
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s
 <Series>
@@ -278,17 +261,23 @@ Saturn   62
 Uranus   27
 Neptune  14
 <<U7>    <int64>
->>> len(s)
-6
 >>> [k for k, v in s.items() if v > 60]
 ['Jupiter', 'Saturn']
+#end_Series-items()
+
+
+#start_Series-get()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> [s.get(k, None) for k in ('Mercury', 'Neptune', 'Pluto')]
 [None, 14, None]
 >>> 'Pluto' in s
-False
+#end_Series-get()
 
-#end_series_dict_like_a
-
+#start_Series-__len__()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> len(s)
+6
+#end_Series-__len__()
 
 
 
@@ -1251,3 +1240,20 @@ class TestUnit(doctest.DocTestCase, TestCase):
 if __name__ == "__main__":
     import unittest
     unittest.main()
+
+
+
+
+
+# UNUSED
+
+
+# #start_Frame-from_records()
+# >>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
+# <Frame>
+# <Index> temperature distance  <<U11>
+# <Index>
+# Mars    -65         227.9
+# Neptune -200        4495.1
+# <<U7>   <int64>     <float64>
+# #end_Frame-from_records()
