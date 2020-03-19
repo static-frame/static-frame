@@ -3,13 +3,13 @@
 What is New in Static Frame
 ===============================
 
+
 0.6.6
 ----------
 
 Added ``difference`` method to all ``Index`` subclasses.
 
 Added ``index_constructor`` and ``columns_constructor`` parameters to ``Frame.from_pandas``; ``index_constructor`` added to ``Series.from_pandas``.
-
 
 
 0.6.5
