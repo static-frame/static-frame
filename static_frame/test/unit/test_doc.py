@@ -86,6 +86,7 @@ Neptune  11
 Mercury  167
 Neptune  -200
 <<U7>    <int64>
+
 #end_Series-from_dict()
 
 
@@ -96,6 +97,7 @@ Neptune  -200
 Mercury  167
 Neptune  -200
 <<U7>    <int64>
+
 #end_Series-__init__()
 
 
@@ -109,6 +111,7 @@ Earth   12756    5.97
 Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
+
 #end_Frame-from_dict()
 
 
@@ -124,6 +127,7 @@ Earth     12756    5.97      6378.0
 Jupiter   142984   1898.0    71492.0
 Saturn    120536   568.0     60268.0
 <<U7>     <int64>  <float64> <float64>
+
 #end_FrameGO-from_dict()
 
 
@@ -139,6 +143,7 @@ Mars
 ME
 MA
 <<U2>
+
 #end_Index-__init__()
 
 
@@ -151,6 +156,7 @@ Uranus
 Neptune
 Pluto
 <<U7>
+
 #end_IndexGO-append()
 
 
@@ -161,6 +167,7 @@ Pluto
 Mercury  4879
 Jupiter  12756
 <<U7>    <int64>
+
 #end_Series-from_items()
 
 
@@ -179,6 +186,7 @@ Venus   12104    8.9       464
 Earth   12756    9.8       15
 Mars    6792     3.7       -65
 <<U7>   <int64>  <float64> <int64>
+
 #end_Frame-from_records()
 
 
@@ -194,6 +202,7 @@ Earth   12756    5.97
 Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
+
 #end_Frame-from_items()
 
 
@@ -219,6 +228,7 @@ Jupiter 1898.0
 Mars    0.642
 Neptune 102.0
 <<U7>   <float64>
+
 #end_Frame-from_concat()
 
 
@@ -232,6 +242,7 @@ Neptune 102.0
 Venus    4.869999885559082 464
 Neptune  102.0             -200
 <object> <float32>         <int32>
+
 #end_Frame-from_structured_array()
 
 
@@ -246,6 +257,7 @@ Neptune  102.0             -200
 Venus   4.87      464
 Neptune 102.0     -200
 <<U7>   <float64> <int64>
+
 #end_Frame-from_csv()
 
 
@@ -263,6 +275,7 @@ Neptune  14
 <<U7>    <int64>
 >>> [k for k, v in s.items() if v > 60]
 ['Jupiter', 'Saturn']
+
 #end_Series-items()
 
 
@@ -270,13 +283,15 @@ Neptune  14
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> [s.get(k, None) for k in ('Mercury', 'Neptune', 'Pluto')]
 [None, 14, None]
->>> 'Pluto' in s
+
 #end_Series-get()
+
 
 #start_Series-__len__()
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> len(s)
 6
+
 #end_Series-__len__()
 
 

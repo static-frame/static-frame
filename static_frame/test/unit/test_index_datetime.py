@@ -581,6 +581,18 @@ class TestUnit(TestCase):
                 _ = index.to_pandas()
 
 
+    #---------------------------------------------------------------------------
+
+    def test_index_datetime_nanosecond_a(self) -> None:
+        index1 = IndexNanosecond(('2020-01-01', '2020-02-01'))
+        index2 = IndexYearMonth(index1)
+        self.assertEqual(
+                index2.values.tolist(),
+                [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
+                )
+
+
+
 if __name__ == '__main__':
     unittest.main()
 
