@@ -93,10 +93,6 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
                 target,
                 InterfaceSummary.to_frame(target, minimized=False) # need full
                 ))
-
-
-    # post['InterfaceSummary'] = InterfaceSummary
-
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}

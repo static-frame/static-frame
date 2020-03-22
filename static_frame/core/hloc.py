@@ -13,6 +13,7 @@ class HLocMeta(type):
             ) -> tp.Iterable[GetItemKeyType]:
         if not isinstance(key, tuple):
             key = (key,)
+        # NOTE: tp.case is a performance hit and should be removed
         return tp.cast(tp.Iterable[GetItemKeyType], cls(key))
 
 class HLoc(metaclass=HLocMeta):

@@ -88,8 +88,9 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     {% endif %}
 
+
     {# ---------------------------------------------------------------------- #}
-    {# ``start_{{ name }}-{{ signature }}`` #}
+    {# ``start_{{ name }}-{{ row.signature_no_args }}`` #}
 
     .. literalinclude:: ../../static_frame/test/unit/test_doc.py
        :language: python

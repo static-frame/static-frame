@@ -67,6 +67,7 @@ class Interface(tp.NamedTuple):
     reference_is_attr: bool = False
     reference_end_point: str = ''
     reference_end_point_is_attr: bool = False
+    signature_no_args: str = ''
 
 
 class InterfaceSummary:
@@ -240,7 +241,9 @@ class InterfaceSummary:
                         InterfaceGroup.DictLike,
                         signature,
                         doc,
-                        reference)
+                        reference,
+                        signature_no_args=signature
+                        )
 
             elif name in cls.DISPLAY:
                 if name != 'interface':
@@ -249,13 +252,17 @@ class InterfaceSummary:
                             InterfaceGroup.Display,
                             signature,
                             doc,
-                            reference)
+                            reference,
+                            signature_no_args=signature
+                            )
                 else: # interface attr
                     yield Interface(cls_name,
                             InterfaceGroup.Display,
                             name,
                             doc,
-                            use_signature=True)
+                            use_signature=True,
+                            signature_no_args=name
+                            )
 
             elif name == 'astype':
                 # InterfaceAsType found on Frame, IndexHierarchy
@@ -272,20 +279,25 @@ class InterfaceSummary:
                                 use_signature=True,
                                 reference_is_attr=True,
                                 reference_end_point=reference_end_point,
+                                signature_no_args=signature
                                 )
                 else: # Series, Index, astype is just a method
                     yield Interface(cls_name,
                             InterfaceGroup.Method,
                             name,
                             doc,
-                            reference)
+                            reference,
+                            signature_no_args=signature
+                            )
             elif name.startswith('from_') or name == '__init__':
                 signature = f'{name}()'
                 yield Interface(cls_name,
                         InterfaceGroup.Constructor,
                         signature,
                         doc,
-                        reference)
+                        reference,
+                        signature_no_args=signature
+                        )
 
             elif name.startswith('to_'):
                 signature = f'{name}()'
@@ -293,33 +305,29 @@ class InterfaceSummary:
                         InterfaceGroup.Exporter,
                         signature,
                         doc,
-                        reference)
+                        reference,
+                        signature_no_args=signature
+                        )
 
             elif name.startswith('iter_'):
                 # replace with inspect call
                 reference_is_attr = True
+                signature_no_args = f'{name}()'
 
                 if isinstance(obj, IterNodeNoArg):
                     signature = f'{name}()'
-                    # reference = 'IterNodeNoArg.__call__'
                 elif isinstance(obj, IterNodeAxis):
                     signature = f'{name}(axis)'
-                    # reference = 'IterNodeAxis.__call__'
                 elif isinstance(obj, IterNodeGroup):
                     signature = f'{name}()'
-                    # reference = 'IterNodeGroup.__call__'
                 elif isinstance(obj, IterNodeGroupAxis):
                     signature = f'{name}(key, axis)'
-                    # reference = 'IterNodeGroupAxis.__call__'
                 elif isinstance(obj, IterNodeDepthLevel):
                     signature = f'{name}(depth_level)'
-                    # reference = 'IterNodeDepthLevel.__call__'
                 elif isinstance(obj, IterNodeDepthLevelAxis):
                     signature = f'{name}(depth_level, axis)'
-                    # reference = 'IterNodeDepthLevelAxis.__call__'
                 elif isinstance(obj, IterNodeWindow):
                     signature = f'{name}(size, step, axis, ...)'
-                    # reference = 'IterNodeWindow.__call__'
                 else:
                     raise NotImplementedError() #pragma: no cover
 
@@ -330,20 +338,24 @@ class InterfaceSummary:
                         reference,
                         use_signature=True,
                         reference_is_attr=True,
+                        signature_no_args=signature_no_args,
                         )
 
                 for field in cls.ATTR_ITER_NODE: # apply, map, etc
-                    display_sub = f'{signature}.{field}()'
+                    signature_sub = f'{signature}.{field}()'
+                    signature_sub_no_args = f'{signature_no_args}.{field}()'
+
                     reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
                     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
                     yield Interface(cls_name,
                             InterfaceGroup.Iterator,
-                            display_sub,
+                            signature_sub,
                             doc,
                             reference,
                             use_signature=True,
                             reference_is_attr=True,
                             reference_end_point=reference_end_point,
+                            signature_no_args=signature_sub_no_args
                             )
 
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
@@ -361,7 +373,9 @@ class InterfaceSummary:
                         doc,
                         reference,
                         use_signature=True,
-                        reference_is_attr=True)
+                        reference_is_attr=True,
+                        signature_no_args=signature
+                        )
 
             elif isinstance(obj, InterfaceSelection2D):
                 for field in cls.ATTR_SELECTOR_NODE:
@@ -382,7 +396,9 @@ class InterfaceSummary:
                             use_signature=True,
                             reference_is_attr=True,
                             reference_end_point=reference_end_point,
-                            reference_end_point_is_attr=reference_end_point_is_attr)
+                            reference_end_point_is_attr=reference_end_point_is_attr,
+                            signature_no_args=signature
+                            )
 
             elif isinstance(obj, InterfaceAssign2D):
                 for field in cls.ATTR_SELECTOR_NODE_ASSIGN:
@@ -403,7 +419,9 @@ class InterfaceSummary:
                             use_signature=True,
                             reference_is_attr=True,
                             reference_end_point=reference_end_point,
-                            reference_end_point_is_attr=reference_end_point_is_attr)
+                            reference_end_point_is_attr=reference_end_point_is_attr,
+                            signature_no_args=signature
+                            )
 
             elif callable(obj): # general methods
                 signature = f'{name}()'
@@ -412,25 +430,33 @@ class InterfaceSummary:
                             InterfaceGroup.OperatorUnary,
                             signature,
                             doc,
-                            reference)
+                            reference,
+                            signature_no_args=signature
+                            )
                 elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP:
                     yield Interface(cls_name,
                             InterfaceGroup.OperatorBinary,
                             signature,
                             doc,
-                            reference)
+                            reference,
+                            signature_no_args=signature
+                            )
                 else:
                     yield Interface(cls_name,
                             InterfaceGroup.Method,
                             signature,
                             doc,
-                            reference)
+                            reference,
+                            signature_no_args=signature
+                            )
             else: # attributes
                 yield Interface(cls_name,
                         InterfaceGroup.Attribute,
                         name,
                         doc,
-                        reference)
+                        reference,
+                        signature_no_args=name
+                        )
 
     @classmethod
     def to_frame(cls,
