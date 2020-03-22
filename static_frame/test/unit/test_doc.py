@@ -377,7 +377,7 @@ Neptune  False
 #start_Series-iter_element().apply_iter()
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> [x for x in s.iter_element().apply_iter(lambda v: v > 20)]
-[False, False, True, True, Trualse]
+[False, False, True, True, True, False]
 
 #end_Series-iter_element().apply_iter()
 
