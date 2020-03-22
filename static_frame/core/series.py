@@ -78,6 +78,8 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_and_map
+from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import pandas_to_numpy
 
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
@@ -281,6 +283,7 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value,
             *,
+            index_constructor: IndexConstructor = None,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
@@ -292,16 +295,28 @@ class Series(ContainerOperand):
         Returns:
             :obj:`static_frame.Series`
         '''
-        if own_data:
-            data = value.values
-            data.flags.writeable = False
+        if pandas_version_under_1():
+            if own_data:
+                data = value.values
+                data.flags.writeable = False
+            else:
+                data = immutable_filter(value.values)
         else:
-            data = immutable_filter(value.values)
+            data = pandas_to_numpy(value, own_data=own_data)
+
+        own_index = True
+        if index_constructor is IndexAutoFactory:
+            index = None
+            own_index = False
+        elif index_constructor is not None:
+            index = index_constructor(value.index)
+        else: # if None
+            index = Index.from_pandas(value.index)
 
         return cls(data,
-                index=IndexBase.from_pandas(value.index),
+                index=index,
                 name=value.name,
-                own_index=True
+                own_index=own_index
                 )
 
 
@@ -422,16 +437,25 @@ class Series(ContainerOperand):
 
     @property
     def loc(self) -> InterfaceGetItem:
+        '''
+        Interface for label-based selection.
+        '''
         return InterfaceGetItem(self._extract_loc)
 
     @property
     def iloc(self) -> InterfaceGetItem:
+        '''
+        Interface for position-based selection.
+        '''
         return InterfaceGetItem(self._extract_iloc)
 
     # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
 
     @property
     def drop(self) -> InterfaceSelection2D:
+        '''
+        Interface for dropping elements from :obj:`static_frame.Series`.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
@@ -440,6 +464,9 @@ class Series(ContainerOperand):
 
     @property
     def mask(self) -> InterfaceSelection2D:
+        '''
+        Interface for extracting Boolean :obj:`static_frame.Series`.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
@@ -448,6 +475,9 @@ class Series(ContainerOperand):
 
     @property
     def masked_array(self) -> InterfaceSelection2D:
+        '''
+        Interface for extracting NumPy Masked Arrays.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
@@ -456,6 +486,9 @@ class Series(ContainerOperand):
 
     @property
     def assign(self) -> InterfaceSelection2D:
+        '''
+        Interface for doing assignment-like selection and replacement.
+        '''
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
@@ -465,6 +498,9 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup:
+        '''
+        Iterator of :obj:`static_frame.Series`, where each :obj:`static_frame.Series` is matches unique values.
+        '''
         return IterNodeGroup(
                 container=self,
                 function_items=self._axis_group_items,
@@ -1519,12 +1555,14 @@ class Series(ContainerOperand):
         return self.__class__(array, index=self._index, name=self._name)
 
     def transpose(self) -> 'Series':
-        '''The transpositon of a Series is itself.
+        '''Transpose. For a 1D immutable container, this returns a reference to self.
         '''
         return self
 
     @property
     def T(self):
+        '''Transpose. For a 1D immutable container, this returns a reference to self.
+        '''
         return self.transpose()
 
     @doc_inject(selector='duplicated')

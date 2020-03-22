@@ -69,6 +69,8 @@ from static_frame.core.util import resolve_dtype
 from static_frame.core.util import key_normalize
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import dtype_to_na
+from static_frame.core.util import is_hashable
+from static_frame.core.util import reversed_iter
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelection2D
@@ -87,6 +89,8 @@ from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import index_constructor_empty
+from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import pandas_to_numpy
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
@@ -1703,6 +1707,8 @@ class Frame(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.DataFrame',
             *,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> 'Frame':
@@ -1715,37 +1721,47 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        pdvu1 = pandas_version_under_1()
+
+        def part_to_array(part):
+            if pdvu1:
+                array = part.values
+                if own_data:
+                    array.flags.writeable = False
+            else:
+                array = pandas_to_numpy(part, own_data=own_data)
+            return array
+
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
-        def blocks():
-            # might use this instead of equality check
-
+        def blocks() -> tp.Iterator[np.ndarray]:
             pairs = value.dtypes.items()
             column_start, dtype_current = next(pairs)
-
             column_last = column_start
+            yield_block = False
+
             for column, dtype in pairs:
+                try:
+                    if dtype != dtype_current:
+                        yield_block = True
+                except TypeError:
+                    # data type not understood, happens with pd datatypes to np dtypes in pd >= 1
+                    yield_block = True
 
-                # from pandas.core.dtypes.common import is_dtype_equal
-                # if is_dtype_equal(dtype, dtype_current):
-
-                if dtype != dtype_current:
+                if yield_block:
                     # use loc to select before calling .values
-                    array = value.loc[NULL_SLICE,
-                            slice(column_start, column_last)].values
-                    if own_data:
-                        array.flags.writeable = False
-                    yield array
+                    part = value.loc[NULL_SLICE, slice(column_start, column_last)]
+                    yield part_to_array(part)
+
                     column_start = column
                     dtype_current = dtype
+                    yield_block = False
 
                 column_last = column
 
             # always have left over
-            array = value.loc[NULL_SLICE, slice(column_start, None)].values
-            if own_data:
-                array.flags.writeable = False
-            yield array
+            part = value.loc[NULL_SLICE, slice(column_start, None)]
+            yield part_to_array(part)
 
         if consolidate_blocks:
             blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(blocks()))
@@ -1758,13 +1774,31 @@ class Frame(ContainerOperand):
         else:
             name = None
 
+        own_index = True
+        if index_constructor is IndexAutoFactory:
+            index = None
+            own_index = False
+        elif index_constructor is not None:
+            index = index_constructor(value.index)
+        else:
+            index = Index.from_pandas(value.index)
+
+        own_columns = True
+        if columns_constructor is IndexAutoFactory:
+            columns = None
+            own_columns = False
+        elif columns_constructor is not None:
+            columns = columns_constructor(value.columns)
+        else:
+            columns = cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns)
+
         return cls(blocks,
-                index=Index.from_pandas(value.index),
-                columns=cls._COLUMNS_CONSTRUCTOR.from_pandas(value.columns),
+                index=index,
+                columns=columns,
                 name=name,
                 own_data=True,
-                own_index=True,
-                own_columns=True
+                own_index=own_index,
+                own_columns=own_columns
                 )
 
     @classmethod
@@ -2070,6 +2104,9 @@ class Frame(ContainerOperand):
     # generators
     @property
     def iter_array(self) -> IterNodeAxis:
+        '''
+        Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
@@ -2079,6 +2116,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_array_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
             container=self,
             function_values=self._axis_array,
@@ -2125,6 +2165,9 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroupAxis:
+        '''
+        Iterate over Frames grouped by unique values in one or more rows or columns.
+        '''
         return IterNodeGroupAxis(
             container=self,
             function_values=self._axis_group_loc,
@@ -3426,20 +3469,23 @@ class Frame(ContainerOperand):
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        # NOTE: might identify when key is a list of one item
+
         # Optimized sorting approach is only supported in a limited number of cases
         if (self.columns.depth == 1 and
                 self.index.depth == 1 and
-                not isinstance(key, KEY_MULTIPLE_TYPES)):
-
+                not isinstance(key, KEY_MULTIPLE_TYPES)
+                ):
             if axis == 0:
                 has_object = self._blocks.dtypes[iloc_key] == DTYPE_OBJECT
             else:
                 has_object = self._blocks._row_dtype == DTYPE_OBJECT
-
             if not has_object:
                 yield from self._axis_group_sort_items(key=key,
                         iloc_key=iloc_key,
                         axis=axis)
+            else:
+                yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
         else:
             yield from self._axis_group_iloc_items(key=iloc_key, axis=axis)
 
@@ -3656,34 +3702,34 @@ class Frame(ContainerOperand):
         Return a new Frame ordered by the sorted values, where values is given by single column or iterable of columns.
 
         Args:
-            key: a key or tuple of keys. Presently a list is not supported.
+            key: a key or iterable of keys.
         '''
         # argsort lets us do the sort once and reuse the results
         if axis == 0: # get a column ordering based on one or more rows
             col_count = self._columns.__len__()
-            if key in self._index:
+            if is_hashable(key) and key in self._index:
                 iloc_key = self._index.loc_to_iloc(key)
                 sort_array = self._blocks._extract_array(row_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._index.loc_to_iloc(key) for key in reversed(key))
+                iloc_keys = (self._index.loc_to_iloc(k) for k in reversed_iter(key))
                 sort_array = [self._blocks._extract_array(row_key=key)
                         for key in iloc_keys]
                 order = np.lexsort(sort_array)
         elif axis == 1: # get a row ordering based on one or more columns
-            if key in self._columns:
+            if is_hashable(key) and key in self._columns:
                 iloc_key = self._columns.loc_to_iloc(key)
                 sort_array = self._blocks._extract_array(column_key=iloc_key)
                 order = np.argsort(sort_array, kind=kind)
             else: # assume an iterable of keys
                 # order so that highest priority is last
-                iloc_keys = (self._columns.loc_to_iloc(key) for key in reversed(key))
+                iloc_keys = (self._columns.loc_to_iloc(k) for k in reversed_iter(key))
                 sort_array = [self._blocks._extract_array(column_key=key)
                         for key in iloc_keys]
                 order = np.lexsort(sort_array)
         else:
-            raise AxisInvalid(f'invalid axos: {axis}')
+            raise AxisInvalid(f'invalid axis: {axis}')
 
         if not ascending:
             order = order[::-1]
@@ -3734,9 +3780,9 @@ class Frame(ContainerOperand):
         '''{}
 
         Args:
-            lower: value, ``Series``, ``Frame``
-            upper: value, ``Series``, ``Frame``
-            axis: required if ``lower`` or ``upper`` are given as a ``Series``.
+            lower: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            upper: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            axis: required if ``lower`` or ``upper`` are given as a :obj:`static_frame.Series`.
         '''
         if lower is None and upper is None:
             return self.__class__(self._blocks.copy(),
@@ -3779,7 +3825,7 @@ class Frame(ContainerOperand):
 
 
     def transpose(self) -> 'Frame':
-        '''Return a tansposed version of the ``Frame``.
+        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.__class__(self._blocks.transpose(),
                 index=self._columns,
@@ -3789,7 +3835,7 @@ class Frame(ContainerOperand):
 
     @property
     def T(self) -> 'Frame':
-        '''Return a transposed version of the ``Frame``.
+        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.transpose()
 

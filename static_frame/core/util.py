@@ -62,6 +62,7 @@ DTYPE_NAT_KIND = ('M', 'm')
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
+DTYPE_STR = np.dtype(str)
 DTYPE_INT_DEFAULT = np.dtype(np.int64)
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
@@ -177,6 +178,7 @@ def is_callable_or_mapping(value: CallableOrMapping) -> bool:
 
 CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallable]]
 
+# for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
 PathSpecifier = tp.Union[str, Path]
@@ -234,6 +236,27 @@ YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 
+def is_hashable(value: tp.Any) -> bool:
+    '''
+    Determine if a value is hashable without raising an exception.
+    '''
+    try:
+        hash(value)
+        return True
+    except TypeError:
+        pass
+    return False
+
+def reversed_iter(value: tp.Iterator[tp.Any]) -> tp.Iterator[tp.Any]:
+    '''Wrapper around built-in reversed() that handles generators by realizing them and then reversing.
+    '''
+    try:
+        yield from reversed(value) #type: ignore
+    except TypeError:
+        pass
+    yield from reversed(tuple(value))
+
+
 def mloc(array: np.ndarray) -> int:
     '''Return the memory location of an array.
     '''
@@ -243,9 +266,6 @@ def mloc(array: np.ndarray) -> int:
 def immutable_filter(src_array: np.ndarray) -> np.ndarray:
     '''Pass an immutable array; otherwise, return an immutable copy of the provided array.
     '''
-    # if hasattr(src_array, 'to_numpy'):  # is pandas.core.arrays.base.ExtensionArray
-    #     src_array = src_array.to_numpy(copy=True)
-    #     src_array.flags.writeable = False
     if src_array.flags.writeable:
         dst_array = src_array.copy()
         dst_array.flags.writeable = False
@@ -263,7 +283,7 @@ def name_filter(name: tp.Hashable) -> tp.Hashable:
     return name
 
 def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
-    '''Reprsent a 1D array as a 2D array with length as rows of a single-column array.
+    '''Represent a 1D array as a 2D array with length as rows of a single-column array.
 
     Return:
         row, column count for a block of ndim 1 or ndim 2.
@@ -785,6 +805,15 @@ def iterable_to_array_1d(
             raise RuntimeError(f'supplied dtype {dtype} not set on supplied array')
         return values, len(values) <= 1
 
+    if isinstance(values, range):
+        # translate range to np.arange to avoid iteration
+        array = np.arange(start=values.start,
+                stop=values.stop,
+                step=values.step,
+                dtype=dtype)
+        array.flags.writeable = False
+        return array, True
+
     values_for_construct: tp.Sequence[tp.Any]
 
     # values for construct will only be a copy when necessary in iteration to find type
@@ -898,6 +927,11 @@ def slice_to_ascending_slice(
     start = next(reversed(range(*key.indices(size))))
     return slice(start, stop, -key.step)
 
+def slice_to_inclusive_slice(key: slice) -> slice:
+    '''Make a stop exclusive key inclusive by adding one to the stop value.
+    '''
+    stop = None if key.stop is None else key.stop + 1
+    return slice(key.start, stop, key.step)
 
 
 
@@ -1036,7 +1070,7 @@ def array_to_groups_and_locations(
 
 
 def isna_element(value: tp.Any) -> bool:
-    '''Return Boolean if value is an NA.
+    '''Return Boolean if value is an NA. This does not yet handle pd.NA
     '''
     try:
         return tp.cast(bool, np.isnan(value))
@@ -1374,19 +1408,22 @@ def _ufunc_set_1d(
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
-    if func == np.intersect1d:
-        is_union = False
-    elif func == np.union1d:
-        is_union = True
-    else:
+    is_union = func == np.union1d
+    is_intersection = func == np.intersect1d
+    is_difference = func == np.setdiff1d
+
+    if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
 
     dtype = resolve_dtype(array.dtype, other.dtype)
 
     # optimizations for empty arrays
-    if not is_union: # intersection with empty
+    if is_intersection:
         if len(array) == 0 or len(other) == 0:
             # not sure what DTYPE is correct to return here
+            return np.array(EMPTY_TUPLE, dtype=dtype)
+    elif is_difference:
+        if len(array) == 0:
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
@@ -1396,13 +1433,24 @@ def _ufunc_set_1d(
                 return other
             elif len(other) == 0:
                 return array
+        elif is_difference:
+            if len(other) == 0:
+                return array
 
         if len(array) == len(other):
+            arrays_are_equal = False
             compare = array == other
+
+            # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
             if isinstance(compare, BOOL_TYPES) and compare:
-                return array
+                arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                return array
+                arrays_are_equal = True
+            if arrays_are_equal:
+                if is_difference:
+                    return np.array(EMPTY_TUPLE, dtype=dtype)
+                else:
+                    return array
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KIND
@@ -1415,13 +1463,16 @@ def _ufunc_set_1d(
     if set_compare or dtype.kind == 'O':
         if is_union:
             result = frozenset(array) | frozenset(other)
-        else:
+        elif is_intersection:
             result = frozenset(array) & frozenset(other)
+        else:
+            result = frozenset(array).difference(frozenset(other))
         v, _ = iterable_to_array_1d(result, dtype)
         return v
 
-    return func(array, other)
-
+    if is_union:
+        return func(array, other)
+    return func(array, other, assume_unique=assume_unique) # type: ignore (Callable doesn't support optional kwargs)
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
@@ -1441,20 +1492,23 @@ def _ufunc_set_2d(
     Returns:
         Either a 2D array, or a 1D object array of tuples.
     '''
-    if func == np.intersect1d:
-        is_union = False
-    elif func == np.union1d:
-        is_union = True
-    else:
+    is_union = func == np.union1d
+    is_intersection = func == np.intersect1d
+    is_difference = func == np.setdiff1d
+
+    if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
 
     # if either are object, or combination resovle to object, get object
     dtype = resolve_dtype(array.dtype, other.dtype)
 
     # optimizations for empty arrays
-    if not is_union: # intersection with empty
+    if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
             # not sure what DTYPE is correct to return here
+            return np.array(EMPTY_TUPLE, dtype=dtype)
+    elif is_difference:
+        if len(array) == 0:
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
@@ -1464,14 +1518,25 @@ def _ufunc_set_2d(
                 return other
             elif len(other) == 0:
                 return array
+        elif is_difference:
+            if len(other) == 0:
+                return array
 
-        # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
         if array.shape == other.shape:
+            arrays_are_equal = False
             compare = array == other
+
+            # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
             if isinstance(compare, BOOL_TYPES) and compare:
-                return array
+                arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
-                return array
+                arrays_are_equal = True
+
+            if arrays_are_equal:
+                if is_difference:
+                    return np.array(EMPTY_TUPLE, dtype=dtype)
+                else:
+                    return array
 
     if dtype.kind == 'O':
         # assume that 1D arrays arrays are arrays of tuples
@@ -1487,8 +1552,10 @@ def _ufunc_set_2d(
 
         if is_union:
             result = array_set | other_set
-        else:
+        elif is_intersection:
             result = array_set & other_set
+        else:
+            result = array_set.difference(other_set)
 
         # NOTE: this sort may not always be succesful
         try:
@@ -1514,9 +1581,11 @@ def _ufunc_set_2d(
     if other.dtype != dtype:
         other = other.astype(dtype)
 
+    func_kwargs = {} if is_union else dict(assume_unique=assume_unique)
+
     if width == 1:
         # let the function flatten the array, then reshape into 2D
-        post = func(array, other)
+        post = func(array, other, **func_kwargs)  # type: ignore
         return post.reshape(len(post), width)
 
     # this approach based on https://stackoverflow.com/questions/9269681/intersection-of-2d-numpy-ndarrays
@@ -1527,7 +1596,7 @@ def _ufunc_set_2d(
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
 
-    return func(array_view, other_view).view(dtype).reshape(-1, width)
+    return func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
 
 
 def union1d(array: np.ndarray,
@@ -1555,7 +1624,21 @@ def intersect1d(
             other,
             assume_unique=assume_unique)
 
-def union2d(array: np.ndarray,
+def setdiff1d(
+        array: np.ndarray,
+        other: np.ndarray,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    '''
+    Difference on 1D array, handling diverse types and short-circuiting to preserve order where appropriate
+    '''
+    return _ufunc_set_1d(np.setdiff1d,
+        array,
+        other,
+        assume_unique=assume_unique)
+
+def union2d(
+        array: np.ndarray,
         other: np.ndarray,
         *,
         assume_unique: bool=False
@@ -1568,7 +1651,8 @@ def union2d(array: np.ndarray,
             other,
             assume_unique=assume_unique)
 
-def intersect2d(array: np.ndarray,
+def intersect2d(
+        array: np.ndarray,
         other: np.ndarray,
         *,
         assume_unique: bool=False
@@ -1581,6 +1665,19 @@ def intersect2d(array: np.ndarray,
             other,
             assume_unique=assume_unique)
 
+def setdiff2d(
+        array: np.ndarray,
+        other: np.ndarray,
+        *,
+        assume_unique: bool=False
+        ) -> np.ndarray:
+    '''
+    Difference on 2D array, handling diverse types and short-circuiting to preserve order where appropriate.
+    '''
+    return _ufunc_set_2d(np.setdiff1d,
+        array,
+        other,
+        assume_unique=assume_unique)
 
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
@@ -1695,16 +1792,11 @@ def isin(
 
     if result is None:
         assume_unique = array_is_unique and other_is_unique
-        try:
-            if array.ndim == 1:
-                result = np.in1d(array, other, assume_unique=assume_unique)
-            else:
-                # NOTE: likely faster to do this at the block level
-                result = np.isin(array, other, assume_unique=assume_unique)
-        except TypeError:
-            # Numpy can fail if array's dtypes are incompatible
-            # NOTE: need more information on cases that result in this
-            result = np.full(array.shape, False, dtype=DTYPE_BOOL)
+        if array.ndim == 1:
+            result = np.in1d(array, other, assume_unique=assume_unique)
+        else:
+            # NOTE: likely faster to do this at the block level
+            result = np.isin(array, other, assume_unique=assume_unique)
 
     result.flags.writeable = False
     return result
@@ -1728,7 +1820,7 @@ def slices_from_targets(
     Args:
         target_index: iterable of integers, where integers are positions where (as commonly used) values along an axis were previously NA, or will be NA. Often the result of binary_transition()
         target_values: values found at the index positions
-        length: the maximum lengh in the target array
+        length: the maximum length in the target array
         directional_forward: determine direction
         limit: set a max size for all slices
         slice_condition: optional function for filtering slices.

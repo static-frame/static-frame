@@ -18,7 +18,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerOperand
 # from static_frame.core.selector_node import InterfaceGetItem
 # from static_frame.core.selector_node import TContainer
-from static_frame.core.exception import ErrorInitIndex
+# from static_frame.core.exception import ErrorInitIndex
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -37,11 +37,10 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # type defs
 
-    _map: tp.Dict[tp.Hashable, tp.Any]
+    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
-    _loc_is_iloc: bool
     _name: tp.Hashable
     values: np.ndarray
     depth: int
@@ -83,6 +82,7 @@ class IndexBase(ContainerOperand):
 
     _UFUNC_UNION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
     _UFUNC_INTERSECTION: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
+    _UFUNC_DIFFERENCE: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray]
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
@@ -131,11 +131,13 @@ class IndexBase(ContainerOperand):
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
         import pandas
-        from static_frame.core.index_datetime import IndexDatetime
         from static_frame import Index
         from static_frame import IndexGO
         from static_frame import IndexHierarchy
         from static_frame import IndexHierarchyGO
+        from static_frame import IndexNanosecond
+        from static_frame import IndexNanosecondGO
+        from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.MultiIndex):
             # iterating over a hierarchucal index will iterate over labels
@@ -144,12 +146,13 @@ class IndexBase(ContainerOperand):
                 return IndexHierarchyGO.from_labels(value, name=name)
             return IndexHierarchy.from_labels(value, name=name)
         elif isinstance(value, pandas.DatetimeIndex):
-            # coming from a Pandas datetime index, in the absence of other information, the best match is a Nanosecond index
-            if not issubclass(cls, IndexDatetime):
-                raise ErrorInitIndex(f'cannot create a datetime Index from {cls}')
-            if not cls.STATIC:
+            # if IndexDatetime, use cls, else use IndexNanosecond
+            if issubclass(cls, IndexDatetime):
                 return cls(value, name=value.name)
-            return cls(value, name=value.name)
+            else:
+                if not cls.STATIC:
+                    return IndexNanosecondGO(value, name=value.name)
+                return IndexNanosecond(value, name=value.name)
 
         if not cls.STATIC:
             return IndexGO(value, name=value.name)
@@ -343,6 +346,13 @@ class IndexBase(ContainerOperand):
                 self.__class__._UFUNC_UNION,
                 other)
 
+    def difference(self: I, other: 'IndexBase') -> I:
+        '''
+        Perform difference with another Index, container, or NumPy array. Retains order.
+        '''
+        return self._ufunc_set(
+                self.__class__._UFUNC_DIFFERENCE,
+                other)
 
     #---------------------------------------------------------------------------
     # metaclass-applied functions

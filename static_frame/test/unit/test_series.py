@@ -201,7 +201,6 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(), ((0, 'a'),))
 
 
-
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
@@ -1140,6 +1139,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1.iloc[2:].to_pairs(), (('c', 2), ('d', 3)))
 
+    #---------------------------------------------------------------------------
 
 
     def test_series_loc_extract_a(self) -> None:
@@ -1198,6 +1198,16 @@ class TestUnit(TestCase):
 
         post2 = s1[HLoc['A', 2]]
         self.assertEqual(post2, 1)
+
+
+    def test_series_loc_extract_g(self) -> None:
+
+        s1 = Series(('a', 'b', 'c', 'd'))
+        post = s1.loc[0:2].to_pairs()
+        self.assertEqual(post,
+                ((0, 'a'), (1, 'b'), (2, 'c'))
+                )
+
 
 
     #---------------------------------------------------------------------------
@@ -1277,6 +1287,29 @@ class TestUnit(TestCase):
 
         self.assertEqual(s2.to_pairs(),
                 ((('a', 'x'), '10'), (('a', 'y'), '3'), (('a', 'z'), '15'), (('b', 'x'), '21'), (('b', 'y'), '28'), (('b', 'z'), '50')))
+
+
+    def test_series_iter_element_c(self) -> None:
+
+        s1 = Series((10, 3, 15, 21, 28),
+                index=('a', 'b', 'c', 'd', 'e'),
+                )
+        with self.assertRaises(RuntimeError):
+            s1.iter_element().apply({15:150})
+
+        post1 = tuple(s1.iter_element_items().map_any_iter_items({('c', 15): 150}))
+        self.assertEqual(post1,
+                (('a', 10), ('b', 3), ('c', 150), ('d', 21), ('e', 28)))
+
+        post2 = tuple(s1.iter_element_items().map_fill_iter_items(
+                {('c', 15): 150}, fill_value=0))
+        self.assertEqual(post2,
+                (('a', 0), ('b', 0), ('c', 150), ('d', 0), ('e', 0)))
+
+        post3 = tuple(s1.iter_element_items().map_all_iter_items(
+                {(k, v): v * 10 for k, v in s1.items()}))
+        self.assertEqual(post3,
+                (('a', 100), ('b', 30), ('c', 150), ('d', 210), ('e', 280)))
 
 
     #---------------------------------------------------------------------------
@@ -1607,6 +1640,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.get('a'), 0)
         self.assertEqual(s1.get('f', -1), -1)
 
+    #---------------------------------------------------------------------------
 
     def test_series_all_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -1614,14 +1648,72 @@ class TestUnit(TestCase):
         self.assertEqual(s1.all(), False)
         self.assertEqual(s1.any(), True)
 
-
     def test_series_all_b(self) -> None:
         s1 = Series([True, True, np.nan, True], index=('a', 'b', 'c', 'd'), dtype=object)
 
-        self.assertEqual(s1.all(skipna=False), True)
-        self.assertEqual(s1.all(skipna=True), False)
+        self.assertEqual(s1.all(skipna=True), True)
         self.assertEqual(s1.any(), True)
 
+        with self.assertRaises(TypeError):
+            self.assertTrue(np.isnan(s1.all(skipna=False)))
+
+    def test_series_all_c(self) -> None:
+        s1 = Series([1, np.nan, 1], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_d(self) -> None:
+        s1 = Series([True, np.nan, True], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_e(self) -> None:
+        s1 = Series([True, None, True], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+
+    def test_series_all_f(self) -> None:
+        s1 = Series([True, None, 1], index=('a', 'b', 'c'))
+        with self.assertRaises(TypeError):
+            self.assertTrue(np.isnan(s1.all(skipna=False)))
+        with self.assertRaises(TypeError):
+            self.assertTrue(np.isnan(s1.any(skipna=False)))
+
+    def test_series_all_g(self) -> None:
+        s1 = Series(['', 'sdf', np.nan], index=('a', 'b', 'c'))
+        with self.assertRaises(TypeError):
+            self.assertTrue(np.isnan(s1.all(skipna=False)))
+        with self.assertRaises(TypeError):
+            self.assertTrue(np.isnan(s1.any(skipna=False)))
+
+    def test_series_all_h(self) -> None:
+        s1 = Series(['', 'sdf', 'wer'], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_i(self) -> None:
+        s1 = Series(['sdf', 'wer'], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_j(self) -> None:
+        s1 = Series(['', 'sdf', 'wer', 30], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_k(self) -> None:
+        s1 = Series(['sdf', 'wer', 30], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), True)
+        self.assertEqual(s1.any(), True)
+
+    def test_series_all_m(self) -> None:
+        s1 = Series(['', 0, False], index=('a', 'b', 'c'))
+        self.assertEqual(s1.all(), False)
+        self.assertEqual(s1.any(), False)
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_unique_a(self) -> None:
         s1 = Series([10, 10, 2, 2], index=('a', 'b', 'c', 'd'), dtype=np.int64)
@@ -1715,7 +1807,7 @@ class TestUnit(TestCase):
                 (('A', 'a'), ('B', 'b'), ('C', 'c'))
                 )
 
-
+    #---------------------------------------------------------------------------
     def test_series_from_pandas_a(self) -> None:
         import pandas as pd
 
@@ -1750,6 +1842,100 @@ class TestUnit(TestCase):
         sfs = Series.from_pandas(pds, own_data=True)
         self.assertEqual(list(pds.items()), list(sfs.items()))
 
+
+    def test_series_from_pandas_c(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', np.nan], index=list('abc'))
+        if hasattr(pds1, 'convert_dtypes'):
+            pds1 = pds1.convert_dtypes()
+            sfs1 = Series.from_pandas(pds1)
+            self.assertEqual(sfs1.dtype, np.dtype('O'))
+
+        pds2 = pd.Series(['a', 'b', 'c'], index=list('abc'))
+        if hasattr(pds2,  'convert_dtypes'):
+            pds2 = pds2.convert_dtypes()
+            sfs2 = Series.from_pandas(pds2)
+            self.assertEqual(sfs2.dtype, np.dtype('<U1'))
+
+        pds3 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds3,  'convert_dtypes'):
+            pds3 = pds3.convert_dtypes()
+            sfs3 = Series.from_pandas(pds3)
+            self.assertEqual(sfs3.dtype, np.dtype('O'))
+
+        pds4 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds4,  'convert_dtypes'):
+            pds4 = pds4.convert_dtypes()
+            sfs4 = Series.from_pandas(pds4)
+            self.assertEqual(sfs4.dtype, np.dtype('O'))
+
+        pds5 = pd.Series([False, True, False], index=list('abc'))
+        if hasattr(pds5,  'convert_dtypes'):
+            pds5 = pds5.convert_dtypes()
+            sfs5 = Series.from_pandas(pds5)
+            self.assertEqual(sfs5.dtype, np.dtype('bool'))
+
+
+    def test_series_from_pandas_d(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', np.nan], index=list('abc'))
+        if hasattr(pds1, 'convert_dtypes'):
+            pds1 = pds1.convert_dtypes()
+            sfs1 = Series.from_pandas(pds1, own_data=True)
+            self.assertEqual(sfs1.dtype, np.dtype('O'))
+
+        pds2 = pd.Series(['a', 'b', 'c'], index=list('abc'))
+        if hasattr(pds2,  'convert_dtypes'):
+            pds2 = pds2.convert_dtypes()
+            sfs2 = Series.from_pandas(pds2, own_data=True)
+            self.assertEqual(sfs2.dtype, np.dtype('<U1'))
+
+        pds3 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds3,  'convert_dtypes'):
+            pds3 = pds3.convert_dtypes()
+            sfs3 = Series.from_pandas(pds3, own_data=True)
+            self.assertEqual(sfs3.dtype, np.dtype('O'))
+
+        pds4 = pd.Series([False, True, np.nan], index=list('abc'))
+        if hasattr(pds4,  'convert_dtypes'):
+            pds4 = pds4.convert_dtypes()
+            sfs4 = Series.from_pandas(pds4, own_data=True)
+            self.assertEqual(sfs4.dtype, np.dtype('O'))
+
+        pds5 = pd.Series([False, True, False], index=list('abc'))
+        if hasattr(pds5,  'convert_dtypes'):
+            pds5 = pds5.convert_dtypes()
+            sfs5 = Series.from_pandas(pds5, own_data=True)
+            self.assertEqual(sfs5.dtype, np.dtype('bool'))
+
+
+
+    def test_series_from_pandas_e(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', None], index=list('abc'))
+        self.assertEqual(sf.Series.from_pandas(pds1,
+                index_constructor=sf.IndexAutoFactory).to_pairs(),
+                ((0, 'a'), (1, 'b'), (2, None))
+                )
+
+
+    def test_series_from_pandas_f(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', None], index=('2012', '2013', '2014'))
+        self.assertEqual(sf.Series.from_pandas(pds1,
+                index_constructor=sf.IndexYear).to_pairs(),
+                ((np.datetime64('2012'), 'a'),
+                (np.datetime64('2013'), 'b'),
+                (np.datetime64('2014'), None))
+                )
+
+
+
+    #---------------------------------------------------------------------------
     def test_series_to_pandas_a(self) -> None:
 
         s1 = Series(range(4),

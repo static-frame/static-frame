@@ -118,11 +118,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {mapping}
         '''
         get = getattr(mapping, 'get')
-        func: AnyCallable = lambda k: get(k, k)
         if self._yield_type is IterNodeType.VALUES:
-            yield from ((k, func(v)) for k, v in self._func_items())
+            yield from ((k, get(v, v)) for k, v in self._func_items())
         else:
-            yield from ((k, func(k,  v)) for k, v in self._func_items())
+            yield from ((k, get((k,  v), v)) for k, v in self._func_items())
 
     @doc_inject(selector='map_any')
     def map_any_iter(self,
@@ -169,11 +168,10 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             {fill_value}
         '''
         get = getattr(mapping, 'get')
-        func: AnyCallable = lambda k: get(k, fill_value)
         if self._yield_type is IterNodeType.VALUES:
-            yield from ((k, func(v)) for k, v in self._func_items())
+            yield from ((k, get(v, fill_value)) for k, v in self._func_items())
         else:
-            yield from ((k, func(k,  v)) for k, v in self._func_items())
+            yield from ((k, get((k,  v), fill_value)) for k, v in self._func_items())
 
     @doc_inject(selector='map_fill')
     def map_fill_iter(self,
@@ -220,11 +218,12 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         Args:
             {mapping}
         '''
+        # want exception to raise if key not found
         func = getattr(mapping, '__getitem__')
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
-            yield from ((k, func(k,  v)) for k, v in self._func_items())
+            yield from ((k, func((k,  v))) for k, v in self._func_items())
 
     @doc_inject(selector='map_all')
     def map_all_iter(self,
@@ -419,7 +418,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
             # when this is used with hierarchical indices, we are likely to not get a unique values; thus, passing this to an Index constructor is awkward. instead, simply create a Series
             apply_constructor = Series.from_items
         else:
-            raise NotImplementedError()
+            raise NotImplementedError() #pragma: no cover
 
         return IterNodeDelegate(
                 func_values=func_values,

@@ -4,6 +4,48 @@ What is New in Static Frame
 ===============================
 
 
+0.6.6
+----------
+
+Added ``difference`` method to all ``Index`` subclasses.
+
+Added ``index_constructor`` and ``columns_constructor`` parameters to ``Frame.from_pandas``; ``index_constructor`` added to ``Series.from_pandas``.
+
+
+0.6.5
+----------
+
+Refined ``IndexBase.from_pandas``.
+
+
+0.6.4
+----------
+
+Fixed issue introduced into ``Frame.iter_group`` and ``Frame.iter_group_items`` when selecting a single column with an object dytpe.
+
+Fixed mapping lookups to use single-argument tuples in ``map_any_iter_items`` and ``map_fill_iter_items`` and related methods.
+
+
+0.6.3
+----------
+
+Improvements to ``any`` and ``all`` methods on all containers when using ``skipna=True`` and NAs are presernt; now, a ``TypeError`` will now be raised when NAs are found and ``skipna=False``.
+
+When converting from Pandas 1.0 extension dtypes, proper NumPy types are used if no ``pd.NA`` are present; if ``pd.NA`` are present, they are replaced with ``np.nan`` in the resulting object array.
+
+
+0.6.2
+----------
+
+``Frame.sort_values`` now accepts multiple labels given as any iterable.
+
+``loc`` selection on ``Series`` or ``Frame`` with ``IndexAutoFactory``-style indices now treat the slice stop as inclusive.
+
+Removed creation of internal mapping object for ``IndexAutoFactory`` indices, or where ``Index`` are created where ``loc_is_iloc``.
+
+Improved induction of dtype for labels array stored in ``Index``.
+
+
 0.6.1
 ----------
 

@@ -71,10 +71,10 @@ class IndexDatetime(Index):
     #---------------------------------------------------------------------------
     # dict like interface
 
-    def __contains__(self, value: object) -> bool:
+    def __contains__(self, value: tp.Any) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
-        return self._map.__contains__(to_datetime64(value))
+        return self._map.__contains__(to_datetime64(value)) #type: ignore
 
     #---------------------------------------------------------------------------
     # operators
@@ -132,17 +132,17 @@ class IndexDatetime(Index):
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
     _DTYPE: tp.Optional[np.dtype]
-    _map: tp.Dict[tp.Hashable, tp.Any]
+    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
     __slots__ = () # define in derived class
 
     def append(self, value: tp.Hashable) -> None:
-        '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; do not need to check for _loc_is_iloc.
+        '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         value = to_datetime64(value, self._DTYPE)
-        if value in self._map:
+        if value in self._map: #type: ignore
             raise KeyError(f'duplicate key append attempted: {value}')
         # the new value is the count
-        self._map[value] = self._positions_mutable_count
+        self._map[value] = self._positions_mutable_count #type: ignore
         self._labels_mutable.append(value)
         self._positions_mutable_count += 1 #pylint: disable=E0237
         self._recache = True #pylint: disable=E0237

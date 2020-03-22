@@ -28,6 +28,7 @@ from static_frame.core.util import AnyCallable
 
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
+from static_frame.core.interface import InterfaceSummary
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -87,9 +88,11 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
             ):
-        # import ipdb; ipdb.set_trace()
-        post['interface'].append((target.__name__, target.interface))
-
+        post['interface'].append((
+                target.__name__,
+                target,
+                InterfaceSummary.to_frame(target, minimized=False) # need full
+                ))
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}

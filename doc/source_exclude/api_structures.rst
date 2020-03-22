@@ -9,7 +9,7 @@ Primary Containers
 
 The primary components of the StaticFrame library are the one-dimensional :obj:`static_frame.Series` and the two-dimensional :obj:`static_frame.Frame` and :obj:`static_frame.FrameGO`.
 
-While `Frame` and `Series` are immutable, the `FrameGO` permits a type of grow-only mutation, the addition of columns.
+While `Frame` and `Series` are immutable, the `FrameGO` permits a type of grow-only mutation: the addition of columns.
 
 
 
@@ -68,6 +68,8 @@ Index mapping classes are used to map labels to ordinal positions on the :obj:`S
 .. autoclass:: static_frame.IndexSecond
 
 .. autoclass:: static_frame.IndexMillisecond
+
+.. autoclass:: static_frame.IndexNanosecond
 
 
 .. admonition:: Deviations from Pandas

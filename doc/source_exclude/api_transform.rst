@@ -15,6 +15,12 @@ Index
 
 .. automethod:: static_frame.Index.tail
 
+.. automethod:: static_frame.Index.union
+
+.. automethod:: static_frame.Index.intersection
+
+.. automethod:: static_frame.Index.difference
+
 
 Series
 ---------

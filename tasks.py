@@ -38,6 +38,7 @@ def interface(context, container=None):
     from static_frame.core.container import ContainerBase
     import static_frame as sf
 
+
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
             yield cls
@@ -46,7 +47,8 @@ def interface(context, container=None):
 
     if not container:
         def frames():
-            for cls in sorted(subclasses(ContainerBase), key=lambda cls: cls.__name__):
+            for cls in sorted(subclasses(ContainerBase),
+                    key=lambda cls: cls.__name__):
                 yield cls.interface.unset_index()
         f = sf.Frame.from_concat(frames(), axis=0, index=sf.IndexAutoFactory)
     else:
@@ -54,6 +56,51 @@ def interface(context, container=None):
 
     print(f.display_tall())
 
+@invoke.task
+def example(context, container=None):
+    from static_frame.test.unit.test_doc import api_example_str
+    from static_frame.core.display_color import HexColor
+    from doc.source.conf import get_jinja_contexts
+
+    start_prefix = '#start_'
+    end_prefix = '#end_'
+
+    defined = set()
+    signature_start = ''
+    signature_end = ''
+
+    for line in api_example_str.split('\n'):
+        if line.startswith(start_prefix):
+            signature_start = line.replace(start_prefix, '').strip()
+            # print(signature_start)
+        elif line.startswith(end_prefix):
+            signature_end = line.replace(end_prefix, '').strip()
+            # print(signature_end)
+            if signature_start == signature_end:
+                defined.add(signature_start)
+                signature_start = ''
+                signature_end = ''
+
+    # print(defined)
+    unmatched = set()
+    matched = set()
+
+    for name, cls, frame in get_jinja_contexts()['interface']:
+        if container and name != container:
+            continue
+        for signature, row in frame.iter_tuple_items(axis=1):
+            target = f'{name}-{row.signature_no_args}'
+            if target in defined:
+                matched.add(target)
+                print(HexColor.format_terminal(0x505050, target))
+            else:
+                unmatched.add(target)
+                print(target)
+
+
+    for line in sorted(defined - matched):
+        print(HexColor.format_terminal(0xff2222, line))
+    # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------

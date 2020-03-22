@@ -75,11 +75,11 @@ Neptune  11
 #-------------------------------------------------------------------------------
 # API docs
 
-
-#start_series_a
 >>> import numpy as np
 >>> import static_frame as sf
 
+
+#start_Series-from_dict()
 >>> sf.Series.from_dict(dict(Mercury=167, Neptune=-200), dtype=np.int64)
 <Series>
 <Index>
@@ -87,6 +87,10 @@ Mercury  167
 Neptune  -200
 <<U7>    <int64>
 
+#end_Series-from_dict()
+
+
+#start_Series-__init__()
 >>> sf.Series((167, -200), index=('Mercury', 'Neptune'), dtype=np.int64)
 <Series>
 <Index>
@@ -94,18 +98,501 @@ Mercury  167
 Neptune  -200
 <<U7>    <int64>
 
-#end_series_a
+#end_Series-__init__()
 
 
-#start_frame_a
->>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
-<Frame>
-<Index> temperature distance  <<U11>
+
+
+
+#start_Index-__init__()
+>>> sf.Index(('Mercury', 'Mars'), dtype=object)
 <Index>
-Mars    -65         227.9
-Neptune -200        4495.1
-<<U7>   <int64>     <float64>
+Mercury
+Mars
+<object>
 
+>>> sf.Index(name[:2].upper() for name in ('Mercury', 'Mars'))
+<Index>
+ME
+MA
+<<U2>
+
+#end_Index-__init__()
+
+
+#start_IndexGO-append()
+>>> a = sf.IndexGO(('Uranus', 'Neptune'))
+>>> a.append('Pluto')
+>>> a
+<IndexGO>
+Uranus
+Neptune
+Pluto
+<<U7>
+
+#end_IndexGO-append()
+
+
+
+#-------------------------------------------------------------------------------
+# Series
+
+
+
+#start_Series-from_items()
+>>> sf.Series.from_items(zip(('Mercury', 'Jupiter'), (4879, 12756)), dtype=np.int64)
+<Series>
+<Index>
+Mercury  4879
+Jupiter  12756
+<<U7>    <int64>
+
+#end_Series-from_items()
+
+
+#start_Series-items()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s
+<Series>
+<Index>
+Earth    1
+Mars     2
+Jupiter  67
+Saturn   62
+Uranus   27
+Neptune  14
+<<U7>    <int64>
+>>> [k for k, v in s.items() if v > 60]
+['Jupiter', 'Saturn']
+
+#end_Series-items()
+
+
+#start_Series-get()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> [s.get(k, None) for k in ('Mercury', 'Neptune', 'Pluto')]
+[None, 14, None]
+
+#end_Series-get()
+
+
+#start_Series-__len__()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> len(s)
+6
+
+#end_Series-__len__()
+
+
+#start_Series-__sub__()
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s
+<Series>
+<Index>
+Venus    108.2
+Earth    149.6
+Saturn   1433.5
+<<U6>    <float64>
+
+>>> abs(s - s['Earth'])
+<Series>
+<Index>
+Venus    41.39999999999999
+Earth    0.0
+Saturn   1283.9
+<<U6>    <float64>
+
+#end_Series-__sub__()
+
+
+#start_Series-__gt__()
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s > s['Earth']
+<Series>
+<Index>
+Venus    False
+Earth    False
+Saturn   True
+<<U6>    <bool>
+
+#end_Series-__gt__()
+
+
+#start_Series-__truediv__()
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+
+>>> s / s['Earth']
+<Series>
+<Index>
+Venus    0.7232620320855615
+Earth    1.0
+Saturn   9.582219251336898
+<<U6>    <float64>
+
+#end_Series-__truediv__()
+
+
+#start_Series-__mul__()
+>>> s1 = sf.Series((1, 2), index=('Earth', 'Mars'))
+>>> s2 = sf.Series((2, 0), index=('Mars', 'Mercury'))
+>>> s1 * s2
+<Series>
+<Index>
+Earth    nan
+Mars     4.0
+Mercury  nan
+<<U7>    <float64>
+
+#end_Series-__mul__()
+
+
+#start_Series-__eq__()
+>>> s1 = sf.Series((1, 2), index=('Earth', 'Mars'))
+>>> s2 = sf.Series((2, 0), index=('Mars', 'Mercury'))
+
+>>> s1 == s2
+<Series>
+<Index>
+Earth    False
+Mars     True
+Mercury  False
+<<U7>    <bool>
+
+#end_Series-__eq__()
+
+
+
+#start_Series-relabel()
+>>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'), dtype=np.int64)
+
+>>> s.relabel({'Venus': 'Mercury'})
+<Series>
+<Index>
+Mercury  0
+Saturn   62
+Neptune  13
+<<U7>    <int64>
+
+>>> s.relabel(lambda x: x[:2].upper())
+<Series>
+<Index>
+VE       0
+SA       62
+NE       13
+<<U2>    <int64>
+
+#end_Series-relabel()
+
+
+
+#start_Series-reindex()
+>>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'))
+
+>>> s.reindex(('Venus', 'Earth', 'Mars', 'Neptune'))
+<Series>
+<Index>
+Venus    0.0
+Earth    nan
+Mars     nan
+Neptune  13.0
+<<U7>    <float64>
+
+#end_Series-reindex()
+
+
+#start_Series-shape
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s
+<Series>
+<Index>
+Earth    1
+Mars     2
+Jupiter  67
+Saturn   62
+Uranus   27
+Neptune  14
+<<U7>    <int64>
+>>> s.shape
+(6,)
+
+#end_Series-shape
+
+
+#start_Series-ndim
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s.ndim
+1
+
+#end_Series-ndim
+
+
+#start_Series-size
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s.size
+6
+
+#end_Series-size
+
+
+#start_Series-nbytes
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s.nbytes
+48
+
+#end_Series-nbytes
+
+
+#start_Series-dtype
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s.dtype
+dtype('int64')
+
+#end_Series-dtype
+
+
+#start_Series-iter_element()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> [x for x in s.iter_element()]
+[1, 2, 67, 62, 27, 14]
+
+#end_Series-iter_element()
+
+
+#start_Series-iter_element().apply()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s.iter_element().apply(lambda v: v > 20)
+<Series>
+<Index>
+Earth    False
+Mars     False
+Jupiter  True
+Saturn   True
+Uranus   True
+Neptune  False
+<<U7>    <bool>
+
+#end_Series-iter_element().apply()
+
+
+#start_Series-iter_element().apply_iter()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> [x for x in s.iter_element().apply_iter(lambda v: v > 20)]
+[False, False, True, True, Trualse]
+
+#end_Series-iter_element().apply_iter()
+
+
+
+#start_Series-iter_element_items()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> [x for x in s.iter_element_items()]
+[('Earth', 1), ('Mars', 2), ('Jupiter', 67), ('Saturn', 62), ('Uranus', 27), ('Neptune', 14)]
+
+#end_Series-iter_element_items()
+
+
+#start_Series-iter_element_items().apply()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+>>> s.iter_element_items().apply(lambda k, v: v if 'u' in k else None)
+<Series>
+<Index>
+Earth    None
+Mars     None
+Jupiter  67
+Saturn   62
+Uranus   27
+Neptune  14
+<<U7>    <object>
+
+#end_Series-iter_element_items().apply()
+
+
+#start_Series-iter_element_items().apply_iter_items()
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
+
+>>> [x for x in s.iter_element_items().apply_iter_items(lambda k, v: k.upper() if v > 20 else None)]
+[('Earth', None), ('Mars', None), ('Jupiter', 'JUPITER'), ('Saturn', 'SATURN'), ('Uranus', 'URANUS'), ('Neptune', None)]
+
+
+#end_Series-iter_element_items().apply_iter_items()
+
+
+#start_Series-iter_group()
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
+>>> next(iter(s.iter_group()))
+<Series>
+<Index>
+Mercury  0
+Venus    0
+<<U7>    <int64>
+>>> [x.values.tolist() for x in s.iter_group()]
+[[0, 0], [1], [2]]
+
+#end_Series-iter_group()
+
+
+#start_Series-iter_group_items()
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
+>>> [(k, v.index.values.tolist()) for k, v in iter(s.iter_group_items()) if k > 0]
+[(1, ['Earth']), (2, ['Mars'])]
+
+#end_Series-iter_group_items()
+
+
+#start_Series-assign[]
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s
+<Series>
+<Index>
+Venus    108.2
+Earth    149.6
+Saturn   1433.5
+<<U6>    <float64>
+>>> s.assign['Earth'](150)
+<Series>
+<Index>
+Venus    108.2
+Earth    150.0
+Saturn   1433.5
+<<U6>    <float64>
+>>> s.assign['Earth':](0)
+<Series>
+<Index>
+Venus    108.2
+Earth    0.0
+Saturn   0.0
+<<U6>    <float64>
+
+#end_Series-assign[]
+
+
+#start_Series-assign.loc[]
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s.assign.loc[s < 150](0)
+<Series>
+<Index>
+Venus    0.0
+Earth    0.0
+Saturn   1433.5
+<<U6>    <float64>
+
+#end_Series-assign.loc[]
+
+
+#start_Series-assign.iloc[]
+>>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
+>>> s.assign.iloc[-1](0)
+<Series>
+<Index>
+Venus    108.2
+Earth    149.6
+Saturn   0.0
+<<U6>    <float64>
+
+#end_Series-assign.iloc[]
+
+
+#start_Series-drop[]
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
+>>> s
+<Series>
+<Index>
+Mercury  0
+Venus    0
+Earth    1
+Mars     2
+<<U7>    <int64>
+>>> s.drop[s < 1]
+<Series>
+<Index>
+Earth    1
+Mars     2
+<<U7>    <int64>
+>>> s.drop[['Mercury', 'Mars']]
+<Series>
+<Index>
+Venus    0
+Earth    1
+<<U7>    <int64>
+
+#end_Series-drop[]
+
+
+#start_Series-drop.iloc[]
+>>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
+>>> s.drop.iloc[-2:]
+<Series>
+<Index>
+Mercury  0
+Venus    0
+<<U7>    <int64>
+
+#end_Series-drop.iloc[]
+
+
+#start_Series-[]
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s
+<Series>
+<Index>
+Earth    1
+Mars     2
+Jupiter  67
+Saturn   62
+Uranus   27
+Neptune  14
+<<U7>    <int64>
+
+>>> s['Mars']
+2
+>>> s['Mars':]
+<Series>
+<Index>
+Mars     2
+Jupiter  67
+Saturn   62
+Uranus   27
+Neptune  14
+<<U7>    <int64>
+>>> s[['Mars', 'Saturn']]
+<Series>
+<Index>
+Mars     2
+Saturn   62
+<<U7>    <int64>
+>>> s[s > 60]
+<Series>
+<Index>
+Jupiter  67
+Saturn   62
+<<U7>    <int64>
+
+#end_Series-[]
+
+
+#start_Series-iloc[]
+>>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
+>>> s.iloc[-2:]
+<Series>
+<Index>
+Uranus   27
+Neptune  14
+<<U7>    <int64>
+
+#end_Series-iloc[]
+
+
+
+
+
+#-------------------------------------------------------------------------------
+# Frame
+
+
+
+
+
+#start_Frame-from_dict()
 >>> sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
@@ -115,11 +602,11 @@ Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
 
-#end_frame_a
+#end_Frame-from_dict()
 
 
 
-#start_framego_a
+#start_FrameGO-from_dict()
 >>> f = sf.FrameGO.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 >>> f['radius'] = f['diameter'] * 0.5
 >>> f
@@ -131,54 +618,10 @@ Jupiter   142984   1898.0    71492.0
 Saturn    120536   568.0     60268.0
 <<U7>     <int64>  <float64> <float64>
 
-#end_framego_a
+#end_FrameGO-from_dict()
 
 
-#start_index_a
->>> sf.Index(('Mercury', 'Mars'), dtype=object)
-<Index>
-Mercury
-Mars
-<object>
-
->>> sf.Index(name[:2].upper() for name in ('Mercury', 'Mars'))
-<Index>
-ME
-MA
-<object>
-
-#end_index_a
-
-
-#start_indexgo_a
->>> a = sf.IndexGO(('Uranus', 'Neptune'))
->>> a.append('Pluto')
->>> a
-<IndexGO>
-Uranus
-Neptune
-Pluto
-<<U7>
-
-#end_indexgo_a
-
-
-#start_series_from_items_a
->>> sf.Series.from_items(zip(('Mercury', 'Jupiter'), (4879, 12756)), dtype=np.int64)
-<Series>
-<Index>
-Mercury  4879
-Jupiter  12756
-<<U7>    <int64>
-
-#end_series_from_items_a
-
-
-
-
-
-
-#start_frame_from_records_a
+#start_Frame-from_records()
 >>> index = ('Mercury', 'Venus', 'Earth', 'Mars')
 >>> columns = ('diameter', 'gravity', 'temperature')
 >>> records = ((4879, 3.7, 167), (12104, 8.9, 464), (12756, 9.8, 15), (6792, 3.7, -65))
@@ -192,12 +635,13 @@ Earth   12756    9.8       15
 Mars    6792     3.7       -65
 <<U7>   <int64>  <float64> <int64>
 
-#end_frame_from_records_a
+#end_Frame-from_records()
 
 
 
 
-#start_frame_from_items_a
+
+#start_Frame-from_items()
 >>> sf.Frame.from_items((('diameter', (12756, 142984, 120536)), ('mass', (5.97, 1898, 568))), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
 <Frame>
 <Index> diameter mass      <<U8>
@@ -207,11 +651,11 @@ Jupiter 142984   1898.0
 Saturn  120536   568.0
 <<U7>   <int64>  <float64>
 
-#end_frame_from_items_a
+#end_Frame-from_items()
 
 
 
-#start_frame_from_concat_a
+#start_Frame-from_concat()
 >>> f1 = sf.Frame.from_dict(dict(diameter=(12756, 142984), mass=(5.97, 1898)), index=('Earth', 'Jupiter'))
 >>> f2 = sf.Frame.from_dict(dict(mass=(0.642, 102), moons=(2, 14)), index=('Mars', 'Neptune'))
 >>> sf.Frame.from_concat((f1, f2))
@@ -233,11 +677,11 @@ Mars    0.642
 Neptune 102.0
 <<U7>   <float64>
 
-#end_frame_from_concat_a
+#end_Frame-from_concat()
 
 
 
-#start_frame_from_structured_array_a
+#start_Frame-from_structured_array()
 >>> a = np.array([('Venus', 4.87, 464), ('Neptune', 102, -200)], dtype=[('name', object), ('mass', 'f4'), ('temperature', 'i4')])
 >>> sf.Frame.from_structured_array(a, index_depth=1)
 <Frame>
@@ -247,12 +691,11 @@ Venus    4.869999885559082 464
 Neptune  102.0             -200
 <object> <float32>         <int32>
 
-
-#end_frame_from_structured_array_a
-
+#end_Frame-from_structured_array()
 
 
-#start_frame_from_csv_a
+
+#start_Frame-from_csv()
 >>> from io import StringIO
 >>> filelike = StringIO('name,mass,temperature\\nVenus,4.87,464\\nNeptune,102,-200')
 >>> sf.Frame.from_csv(filelike, index_depth=1, dtypes=dict(temperature=np.int64))
@@ -263,32 +706,7 @@ Venus   4.87      464
 Neptune 102.0     -200
 <<U7>   <float64> <int64>
 
-#end_frame_from_csv_a
-
-
-#start_series_dict_like_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
->>> s
-<Series>
-<Index>
-Earth    1
-Mars     2
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> len(s)
-6
->>> [k for k, v in s.items() if v > 60]
-['Jupiter', 'Saturn']
->>> [s.get(k, None) for k in ('Mercury', 'Neptune', 'Pluto')]
-[None, 14, None]
->>> 'Pluto' in s
-False
-
-#end_series_dict_like_a
-
+#end_Frame-from_csv()
 
 
 
@@ -323,70 +741,6 @@ True
 #end_frame_dict_like_a
 
 
-
-
-
-
-
-
-
-#start_series_operators_a
->>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
->>> s
-<Series>
-<Index>
-Venus    108.2
-Earth    149.6
-Saturn   1433.5
-<<U6>    <float64>
-
->>> abs(s - s['Earth'])
-<Series>
-<Index>
-Venus    41.39999999999999
-Earth    0.0
-Saturn   1283.9
-<<U6>    <float64>
-
->>> s > s['Earth']
-<Series>
-<Index>
-Venus    False
-Earth    False
-Saturn   True
-<<U6>    <bool>
-
->>> s / s['Earth']
-<Series>
-<Index>
-Venus    0.7232620320855615
-Earth    1.0
-Saturn   9.582219251336898
-<<U6>    <float64>
-
-#end_series_operators_a
-
-
-#start_series_operators_b
->>> s1 = sf.Series((1, 2), index=('Earth', 'Mars'))
->>> s2 = sf.Series((2, 0), index=('Mars', 'Mercury'))
->>> s1 * s2
-<Series>
-<Index>
-Earth    nan
-Mars     4.0
-Mercury  nan
-<<U7>    <float64>
-
->>> s1 == s2
-<Series>
-<Index>
-Earth    False
-Mars     True
-Mercury  False
-<<U7>    <bool>
-
-#end_series_operators_b
 
 
 
@@ -469,7 +823,7 @@ mass     823.9900000000001
 Mars
 Saturn
 Neptune
-<object>
+<<U7>
 
 >>> index = sf.Index(('Venus', 'Saturn', 'Neptune'))
 >>> index.relabel({'Neptune': 'Uranus'})
@@ -477,51 +831,16 @@ Neptune
 Venus
 Saturn
 Uranus
-<object>
+<<U6>
 
 >>> index.relabel(lambda x: x[:2].upper())
 <Index>
 VE
 SA
 NE
-<object>
+<<U2>
 
 #end_index_relabel_a
-
-
-#start_series_relabel_a
->>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'), dtype=np.int64)
-
->>> s.relabel({'Venus': 'Mercury'})
-<Series>
-<Index>
-Mercury  0
-Saturn   62
-Neptune  13
-<object> <int64>
->>> s.relabel(lambda x: x[:2].upper())
-<Series>
-<Index>
-VE       0
-SA       62
-NE       13
-<object> <int64>
-
-#end_series_relabel_a
-
-#start_series_reindex_a
->>> s = sf.Series((0, 62, 13), index=('Venus', 'Saturn', 'Neptune'))
-
->>> s.reindex(('Venus', 'Earth', 'Mars', 'Neptune'))
-<Series>
-<Index>
-Venus    0.0
-Earth    nan
-Mars     nan
-Neptune  13.0
-<<U7>    <float64>
-
-#end_series_reindex_a
 
 
 
@@ -530,12 +849,12 @@ Neptune  13.0
 
 >>> f.relabel(index=lambda x: x[:2].upper(), columns={'mass': 'mass(1e24kg)'})
 <Frame>
-<Index>  diameter mass(1e24kg) <object>
+<Index> diameter mass(1e24kg) <<U12>
 <Index>
-EA       12756    5.97
-MA       6792     0.642
-JU       142984   1898.0
-<object> <int64>  <float64>
+EA      12756    5.97
+MA      6792     0.642
+JU      142984   1898.0
+<<U2>   <int64>  <float64>
 
 #end_frame_relabel_a
 
@@ -563,49 +882,6 @@ Mercury nan       nan
 #end_frame_reindex_a
 
 
-
-#start_series_iter_element_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
->>> [x for x in s.iter_element()]
-[1, 2, 67, 62, 27, 14]
-
->>> s.iter_element().apply(lambda v: v > 20)
-<Series>
-<Index>
-Earth    False
-Mars     False
-Jupiter  True
-Saturn   True
-Uranus   True
-Neptune  False
-<<U7>    <bool>
->>> [x for x in s.iter_element().apply_iter(lambda v: v > 20)]
-[False, False, True, True, True, False]
-
-#end_series_iter_element_a
-
-
-#start_series_iter_element_items_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
-
->>> [x for x in s.iter_element_items()]
-[('Earth', 1), ('Mars', 2), ('Jupiter', 67), ('Saturn', 62), ('Uranus', 27), ('Neptune', 14)]
-
->>> s.iter_element_items().apply(lambda k, v: v if 'u' in k else None)
-<Series>
-<Index>
-Earth    None
-Mars     None
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <object>
-
->>> [x for x in s.iter_element_items().apply_iter_items(lambda k, v: k.upper() if v > 20 else None)]
-[('Earth', None), ('Mars', None), ('Jupiter', 'JUPITER'), ('Saturn', 'SATURN'), ('Uranus', 'URANUS'), ('Neptune', None)]
-
-#end_series_iter_element_items_a
 
 
 
@@ -788,26 +1064,6 @@ mass     1904.612
 #end_frame_iter_series_items_a
 
 
-#start_series_iter_group_a
->>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
->>> next(iter(s.iter_group()))
-<Series>
-<Index>
-Mercury  0
-Venus    0
-<<U7>    <int64>
->>> [x.values.tolist() for x in s.iter_group()]
-[[0, 0], [1], [2]]
-
-#end_series_iter_group_a
-
-
-#start_series_iter_group_items_a
->>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'))
->>> [(k, v.index.values.tolist()) for k, v in iter(s.iter_group_items()) if k > 0]
-[(1, ['Earth']), (2, ['Mars'])]
-
-#end_series_iter_group_items_a
 
 
 #start_frame_iter_group_a
@@ -833,45 +1089,6 @@ Venus   4.87      0
 #end_frame_iter_group_items_a
 
 
-#start_series_assign_a
->>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
->>> s
-<Series>
-<Index>
-Venus    108.2
-Earth    149.6
-Saturn   1433.5
-<<U6>    <float64>
->>> s.assign['Earth'](150)
-<Series>
-<Index>
-Venus    108.2
-Earth    150.0
-Saturn   1433.5
-<<U6>    <float64>
->>> s.assign['Earth':](0)
-<Series>
-<Index>
-Venus    108.2
-Earth    0.0
-Saturn   0.0
-<<U6>    <float64>
->>> s.assign.loc[s < 150](0)
-<Series>
-<Index>
-Venus    0.0
-Earth    0.0
-Saturn   1433.5
-<<U6>    <float64>
->>> s.assign.iloc[-1](0)
-<Series>
-<Index>
-Venus    108.2
-Earth    149.6
-Saturn   0.0
-<<U6>    <float64>
-
-#end_series_assign_a
 
 #start_frame_assign_a
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
@@ -920,37 +1137,6 @@ Jupiter 142984   0.0
 
 
 
-#start_series_drop_a
->>> s = sf.Series((0, 0, 1, 2), index=('Mercury', 'Venus', 'Earth', 'Mars'), dtype=np.int64)
->>> s
-<Series>
-<Index>
-Mercury  0
-Venus    0
-Earth    1
-Mars     2
-<<U7>    <int64>
->>> s.drop[s < 1]
-<Series>
-<Index>
-Earth    1
-Mars     2
-<<U7>    <int64>
->>> s.drop[['Mercury', 'Mars']]
-<Series>
-<Index>
-Venus    0
-Earth    1
-<<U7>    <int64>
->>> s.drop.iloc[-2:]
-<Series>
-<Index>
-Mercury  0
-Venus    0
-<<U7>    <int64>
-
-#end_series_drop_a
-
 #start_frame_drop_a
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64, temperature=np.int64))
 >>> f
@@ -989,30 +1175,6 @@ Jupiter 142984
 
 
 
-#start_series_shape_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
->>> s
-<Series>
-<Index>
-Earth    1
-Mars     2
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s.shape
-(6,)
->>> s.ndim
-1
->>> s.size
-6
->>> s.nbytes
-48
->>> s.dtype
-dtype('int64')
-
-#end_series_shape_a
 
 
 #start_frame_shape_a
@@ -1042,53 +1204,6 @@ mass     float64
 
 #end_frame_shape_a
 
-
-
-#start_series_selection_a
->>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
->>> s
-<Series>
-<Index>
-Earth    1
-Mars     2
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
-
->>> s['Mars']
-2
->>> s['Mars':]
-<Series>
-<Index>
-Mars     2
-Jupiter  67
-Saturn   62
-Uranus   27
-Neptune  14
-<<U7>    <int64>
->>> s[['Mars', 'Saturn']]
-<Series>
-<Index>
-Mars     2
-Saturn   62
-<<U7>    <int64>
->>> s[s > 60]
-<Series>
-<Index>
-Jupiter  67
-Saturn   62
-<<U7>    <int64>
-
->>> s.iloc[-2:]
-<Series>
-<Index>
-Uranus   27
-Neptune  14
-<<U7>    <int64>
-
-#end_series_selection_a
 
 
 
@@ -1250,3 +1365,20 @@ class TestUnit(doctest.DocTestCase, TestCase):
 if __name__ == "__main__":
     import unittest
     unittest.main()
+
+
+
+
+
+# UNUSED
+
+
+# #start_Frame-from_records()
+# >>> sf.Frame.from_records(((-65, 227.9), (-200, 4495.1)), columns=('temperature', 'distance'), index=('Mars', 'Neptune'), dtypes=dict(temperature=np.int64))
+# <Frame>
+# <Index> temperature distance  <<U11>
+# <Index>
+# Mars    -65         227.9
+# Neptune -200        4495.1
+# <<U7>   <int64>     <float64>
+# #end_Frame-from_records()

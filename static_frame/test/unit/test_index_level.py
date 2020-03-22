@@ -38,6 +38,9 @@ class TestUnit(TestCase):
 
         level2 = IndexLevelGO(index=groups, targets=ArrayGO(targets))
 
+        with self.assertRaises(RuntimeError):
+            level0.extend(IndexLevelGO(index=observations))
+
         level0.extend(level2)
 
         self.assertEqual(len(level0.get_labels()), 10)
@@ -264,6 +267,9 @@ class TestUnit(TestCase):
         lvl0 = IndexLevelGO(index=category,
                 targets=ArrayGO((lvl1a, lvl1b)))
 
+        with self.assertRaises(RuntimeError):
+            # RuntimeError: level for extension does not have necessary levels.
+            lvl0.extend(lvl1b)
 
         lvl0.append(('II', 'B', 'z')) # depth not found is 2
         self.assertEqual(

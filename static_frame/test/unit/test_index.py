@@ -93,7 +93,7 @@ class TestUnit(TestCase):
         mapping = {x:x for x in range(3)}
 
         with self.assertRaises(RuntimeError):
-            _ = Index._extract_labels(
+            _ = Index._extract_labels( #type: ignore
                     mapping=mapping,
                     labels=labels,
                     dtype=float
@@ -105,6 +105,11 @@ class TestUnit(TestCase):
                 index.values.tolist(),
                 [(0, 1, 2), (3, 4, 5)]
                 )
+
+
+    def test_index_init_h(self) -> None:
+        index = Index(range(10, 20, 2))
+        self.assertEqual(index.values.tolist(), list(range(10, 20, 2)))
 
 
     #---------------------------------------------------------------------------
@@ -298,12 +303,11 @@ class TestUnit(TestCase):
         a1 = idx * 2
         self.assertEqual(a1.tolist(), [40, 60, 80, 100, 120])
 
-
     def test_index_binary_operators_e(self) -> None:
         idx1 = Index((20, 30, 40, 50))
         idx2 = Index((20, 3, 4, 5))
         self.assertEqual(idx1.values @ idx2, idx1.values @ idx2.values)
-
+        self.assertEqual(idx1.values.tolist() @ idx2, idx1.values @ idx2.values)
 
     #---------------------------------------------------------------------------
 
@@ -397,7 +401,7 @@ class TestUnit(TestCase):
 
         index = IndexGO(('a', 'b', 'c'))
         index.append('d')
-        self.assertEqual(len(index.__slots__), 9)
+        self.assertEqual(len(index.__slots__), 8)
         self.assertFalse(index.STATIC)
         self.assertEqual(index._IMMUTABLE_CONSTRUCTOR, Index)
         self.assertEqual(Index._MUTABLE_CONSTRUCTOR, IndexGO)
@@ -407,6 +411,43 @@ class TestUnit(TestCase):
         index = IndexGO(('a', (2, 5), 'c'))
         with self.assertRaises(KeyError):
             index.append((2, 5))
+
+
+    def test_index_go_d(self) -> None:
+
+        index = IndexGO((), loc_is_iloc=True)
+        index.append(0)
+        self.assertTrue(index._map is None)
+
+        index.append(1)
+        self.assertTrue(1 in index)
+        self.assertFalse('a' in index)
+        self.assertTrue(index._map is None)
+
+        index.append('a')
+        self.assertFalse(index._map is None)
+        self.assertTrue('a' in index)
+        self.assertTrue(1 in index)
+
+
+
+    def test_index_go_e(self) -> None:
+
+        index = IndexGO((), loc_is_iloc=True)
+        index.append(0)
+        self.assertTrue(index._map is None)
+
+        index.append(1)
+        self.assertTrue(1 in index)
+        self.assertFalse('a' in index)
+        self.assertTrue(index._map is None)
+
+        index.append(-1)
+        self.assertFalse(index._map is None)
+        self.assertTrue(-1 in index)
+        self.assertTrue(1 in index)
+
+
 
 
     #---------------------------------------------------------------------------
@@ -715,10 +756,26 @@ class TestUnit(TestCase):
 
     def test_index_from_pandas_d(self) -> None:
         import pandas
-
         pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
-        with self.assertRaises(ErrorInitIndex):
-            idx = Index.from_pandas(pdidx)
+        idx = Index.from_pandas(pdidx)
+        self.assertEqual(
+                idx.values.tolist(),
+                [1514764800000000000, 1527811200000000000]
+                )
+
+    def test_index_from_pandas_e(self) -> None:
+        import pandas
+        idx = pandas.DatetimeIndex([datetime.date(2014, 12, i) for i in range(1, 10)])
+        index1 = Index.from_pandas(idx)
+        self.assertTrue(index1.STATIC)
+        self.assertEqual(index1.values.tolist(),
+                [1417392000000000000, 1417478400000000000, 1417564800000000000, 1417651200000000000, 1417737600000000000, 1417824000000000000, 1417910400000000000, 1417996800000000000, 1418083200000000000]
+                )
+        index2 = IndexGO.from_pandas(idx)
+        self.assertFalse(index2.STATIC)
+        self.assertEqual(index2.values.tolist(),
+                [1417392000000000000, 1417478400000000000, 1417564800000000000, 1417651200000000000, 1417737600000000000, 1417824000000000000, 1417910400000000000, 1417996800000000000, 1418083200000000000]
+                )
 
 
     #---------------------------------------------------------------------------
@@ -814,6 +871,48 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.values.tolist(),
                 ['c', 'b', 'a']
                 )
+
+    def test_index_difference_a(self) -> None:
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(idx3.values.tolist(), [])
+
+    def test_index_difference_b(self) -> None:
+        idx1 = Index(())
+        idx2 = Index(('c', 'b', 'a'))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(idx3.values.tolist(), [])
+
+        idx4 = Index(('c', 'b', 'a'))
+        idx5 = Index(())
+
+        idx6 = idx4.difference(idx5)
+        self.assertEqual(idx6.values.tolist(),
+                ['c', 'b', 'a']
+                )
+
+    def test_index_difference_c(self) -> None:
+        obj = object()
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx2 = Index((2, 3, '4', 'five', 6.6, object()))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(set(idx3.values.tolist()),
+                set([np.nan, 1, 4.4, obj, '3', None])
+                ) # Note: order is lost...
+
+    def test_index_difference_d(self) -> None:
+        obj = object()
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx2 = Index((2, 1, '3', 'five', object()))
+
+        idx3 = idx1.difference(idx2)
+        self.assertEqual(set(idx3.values.tolist()),
+                set([np.nan, None, 4.4, obj])
+                ) # Note: order is lost...
 
 
 

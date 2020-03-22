@@ -32,7 +32,6 @@ from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
 
-
 from static_frame.core.index_datetime import IndexYear as IndexYear
 from static_frame.core.index_datetime import IndexYearGO as IndexYearGO
 
@@ -54,9 +53,8 @@ from static_frame.core.index_datetime import IndexMillisecondGO as IndexMillisec
 from static_frame.core.index_datetime import IndexNanosecond as IndexNanosecond
 from static_frame.core.index_datetime import IndexNanosecondGO as IndexNanosecondGO
 
-
-
 from static_frame.core.index import ILoc as ILoc
+from static_frame.core.hloc import HLoc as HLoc
 
 from static_frame.core.index_level import IndexLevel as IndexLevel
 from static_frame.core.index_level import IndexLevelGO as IndexLevelGO
@@ -66,8 +64,6 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchy
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
 from static_frame.core.index_auto import IndexAutoFactoryType
-
-from static_frame.core.hloc import HLoc as HLoc
 
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
@@ -80,7 +76,6 @@ from static_frame.core.bus import Bus as Bus
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.store import StoreConfigMap as StoreConfigMap
 from static_frame.core.store import StoreConfig as StoreConfig
-
 
 from static_frame.core.exception import ErrorInit
 from static_frame.core.exception import ErrorInitTypeBlocks
@@ -96,6 +91,18 @@ from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import StoreFileMutation
 
+from static_frame.core.iter_node import IterNodeNoArg
+from static_frame.core.iter_node import IterNodeAxis
+from static_frame.core.iter_node import IterNodeGroup
+from static_frame.core.iter_node import IterNodeGroupAxis
+from static_frame.core.iter_node import IterNodeDepthLevel
+from static_frame.core.iter_node import IterNodeDepthLevelAxis
+from static_frame.core.iter_node import IterNodeWindow
 
-__version__ = '0.6.1' # use -dev for new version in development
+
+from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAssign2D
+from static_frame.core.selector_node import InterfaceAsType
+
+__version__ = '0.6.6' # use -dev for new version in development
 
