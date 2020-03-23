@@ -4,6 +4,12 @@ What is New in Static Frame
 ===============================
 
 
+0.6.7
+----------
+
+Fixed potential issue in assigning a column to a ``FrameGO`` from a generator that raises an exception.
+
+
 0.6.6
 ----------
 
