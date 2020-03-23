@@ -1326,6 +1326,39 @@ class TestUnit(TestCase):
                 ((('A', 1), (('x', 1), ('y', 30))), (('A', 2), (('x', 2), ('y', 50))), (('B', 1), (('x', 'a'), ('y', 'b'))), (('B', 2), (('x', False), ('y', True))), (('C', 1), (('x', 3), ('y', 3))), (('C', 2), (('x', False), ('y', False))))
                 )
 
+
+
+    def test_frame_setitem_k(self) -> None:
+        f1 = sf.FrameGO.from_records(np.arange(9).reshape(3,3))
+
+        def gen1():
+           yield 1
+           raise ValueError('gen1')
+
+        try:
+            f1['a'] = gen1()
+        except ValueError:
+            pass
+
+        self.assertEqual(f1.shape, (3, 3))
+        self.assertEqual(len(f1.columns), 3)
+
+    def test_frame_setitem_m(self) -> None:
+        f1 = sf.FrameGO.from_records(np.arange(9).reshape(3,3))
+
+        def gen1():
+           raise ValueError('gen1')
+           yield 1
+
+        try:
+            f1['a'] = gen1()
+        except ValueError:
+            pass
+
+        self.assertEqual(f1.shape, (3, 3))
+        self.assertEqual(len(f1.columns), 3)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:

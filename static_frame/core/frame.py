@@ -4858,34 +4858,32 @@ class FrameGO(Frame):
         if key in self._columns:
             raise RuntimeError(f'The provided key ({key}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
 
-        # this might fail if key is a sequence, or otherwise not compatible
-        self._columns.append(key)
-
         row_count = len(self._index)
 
         if isinstance(value, Series):
-            # NOTE: performance test if it is faster to compare indices and not call reindex() if we can avoid it?
             # select only the values matching our index
-            self._blocks.append(
-                    value.reindex(
-                    self.index, fill_value=fill_value).values)
+            block = value.reindex(self.index, fill_value=fill_value).values
+
         elif isinstance(value, np.ndarray): # is numpy array
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1 or len(value) != row_count:
                 # block may have zero shape if created without columns
                 raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
-            self._blocks.append(value)
+            block = value # NOTE: could own_data here with additional argument
+
         else:
             if not hasattr(value, '__iter__') or isinstance(value, str):
-                value = np.full(row_count, value)
+                block = np.full(row_count, value)
+                block.flags.writeable = False
             else:
-                value, _ = iterable_to_array_1d(value)
+                block, _ = iterable_to_array_1d(value) # returns immutable
 
-            if value.ndim != 1 or len(value) != row_count:
+            if block.ndim != 1 or len(block) != row_count:
                 raise RuntimeError('incorrectly sized, unindexed value')
 
-            value.flags.writeable = False
-            self._blocks.append(value)
+        # Wait until after extracting block from value before updating _columns, as value evaluation might fail.
+        self._columns.append(key)
+        self._blocks.append(block)
 
 
     def extend_items(self,
