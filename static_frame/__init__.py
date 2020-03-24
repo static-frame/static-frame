@@ -104,5 +104,5 @@ from static_frame.core.selector_node import InterfaceSelection2D
 from static_frame.core.selector_node import InterfaceAssign2D
 from static_frame.core.selector_node import InterfaceAsType
 
-__version__ = '0.6.6' # use -dev for new version in development
+__version__ = '0.6.7' # use -dev for new version in development
 
