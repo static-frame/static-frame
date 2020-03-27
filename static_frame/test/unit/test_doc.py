@@ -667,6 +667,7 @@ Jupiter 142984.0  1898.0    nan
 Mars    nan       0.642     2.0
 Neptune nan       102.0     14.0
 <<U7>   <float64> <float64> <float64>
+
 >>> sf.Frame.from_concat((f1, f2), union=False)
 <Frame>
 <Index> mass      <<U8>
@@ -710,7 +711,7 @@ Neptune 102.0     -200
 
 
 
-#start_frame_dict_like_a
+#start_Frame-items()
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(temperature=np.int64, diameter=np.int64))
 >>> f
 <Frame>
@@ -724,6 +725,13 @@ Saturn  120536   -140
 3
 >>> [k for k, v in f.items() if (v < 0).any()]
 ['temperature']
+
+#end_Frame-items()
+
+
+#start_Frame-get()
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(temperature=np.int64, diameter=np.int64))
+
 >>> f.get('diameter')
 <Series: diameter>
 <Index>
@@ -731,22 +739,38 @@ Earth              12756
 Jupiter            142984
 Saturn             120536
 <<U7>              <int64>
+
 >>> f.get('mass', np.nan)
 nan
+
+#end_Frame-get()
+
+
+
+
+
+
+#start_Frame-__contains__()
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(temperature=np.int64, diameter=np.int64))
+
 >>> 'temperature' in f
 True
+
+#end_Frame-__contains__()
+
+
+
+
+#start_Frame-values
+>>> f = sf.Frame.from_dict(dict(diameter=(12756, 142984, 120536), temperature=(15, -110, -140)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(temperature=np.int64, diameter=np.int64))
+
 >>> f.values.tolist()
 [[12756, 15], [142984, -110], [120536, -140]]
 
-#end_frame_dict_like_a
+#end_Frame-values
 
 
-
-
-
-
-
-#start_frame_operators_a
+#start_Frame-__truediv__()
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
@@ -766,7 +790,19 @@ Mars    0.5324553151458138 0.10753768844221107
 Jupiter 11.209156475384132 317.92294807370183
 <<U7>   <float64>          <float64>
 
-#end_frame_operators_a
+#end_Frame-__truediv__()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
