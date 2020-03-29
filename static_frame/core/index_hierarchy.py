@@ -670,7 +670,7 @@ class IndexHierarchy(IndexBase):
 
     @property
     def values(self) -> np.ndarray:
-        '''An 2D array of labels. Note: type coercion might be necessary.
+        '''A 2D NumPy array of the values in the Frame. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
         '''
         if self._recache:
             self._update_array_cache()

@@ -2808,7 +2808,7 @@ class Frame(ContainerOperand):
 
     @property
     def values(self) -> np.ndarray:
-        '''A 2D array of values. Note: type coercion might be necessary.
+        '''A 2D NumPy array of the values in the Frame. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
         '''
         return self._blocks.values
 
