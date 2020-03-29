@@ -81,25 +81,23 @@ def example(context, container=None):
                 signature_start = ''
                 signature_end = ''
 
-    # print(defined)
-    unmatched = set()
-    matched = set()
+    signatures = set()
 
+    # discover all signatures; if it is defined, print in a darker color
     for name, cls, frame in get_jinja_contexts()['interface']:
-        if container and name != container:
-            continue
         for signature, row in frame.iter_tuple_items(axis=1):
             target = f'{name}-{row.signature_no_args}'
+            signatures.add(target) # accumulate all signatures
+            if container and name != container:
+                continue
             if target in defined:
-                matched.add(target)
                 print(HexColor.format_terminal(0x505050, target))
             else:
-                unmatched.add(target)
                 print(target)
 
 
-    for line in sorted(defined - matched):
-        print(HexColor.format_terminal(0xff2222, line))
+    for line in sorted(defined - signatures):
+        print(HexColor.format_terminal(0x00ccff, line))
     # import ipdb; ipdb.set_trace()
 
 
