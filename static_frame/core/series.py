@@ -118,7 +118,6 @@ class Series(ContainerOperand):
     sum: tp.Callable[['Series'], tp.Any]
 
     values: np.ndarray
-    '''Values doc string'''
 
     _index: IndexBase
 
