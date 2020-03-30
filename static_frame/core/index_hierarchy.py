@@ -669,8 +669,10 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     @property
+    @doc_inject(selector='values_2d', class_name='IndexHierarchy')
     def values(self) -> np.ndarray:
-        '''A 2D NumPy array of the values in the Frame. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
+        '''
+        {}
         '''
         if self._recache:
             self._update_array_cache()

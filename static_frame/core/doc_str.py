@@ -73,6 +73,15 @@ class DOC_TEMPLATE:
     A hashable label attached to this container.
     '''
 
+    values_2d = '''
+    A 2D NumPy array of all values in the :obj:`static_frame.{class_name}. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
+    '''
+
+    values_1d = '''
+    A 1D NumPy array of the values in the :obj:`static_frame.{class_name}. This array will have the same dtype as the container.
+    '''
+
+
     #---------------------------------------------------------------------------
     # dict entries
     selector = dict(

@@ -116,7 +116,10 @@ class Series(ContainerOperand):
             )
 
     sum: tp.Callable[['Series'], tp.Any]
+
     values: np.ndarray
+    '''Values doc string'''
+
     _index: IndexBase
 
     _NDIM: int = 1
@@ -277,7 +280,6 @@ class Series(ContainerOperand):
         return cls(values, index=ih, own_index=own_index)
 
 
-
     @classmethod
     @doc_inject()
     def from_pandas(cls,
@@ -338,7 +340,6 @@ class Series(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # values assignment
-
         values_constructor = None # if deferred
 
         if not isinstance(values, np.ndarray):

@@ -584,8 +584,10 @@ class Index(IndexBase):
     # core internal representation
 
     @property
+    @doc_inject(selector='values_1d', class_name='Index')
     def values(self) -> np.ndarray:
-        '''A 1D array of labels. Note that these are they labels, i.e., the keys of the mapping, not the values, i.e. where those keys point to.
+        '''
+        {}
         '''
         if self._recache:
             self._update_array_cache()
