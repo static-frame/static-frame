@@ -35,6 +35,9 @@ class DOC_TEMPLATE:
 
     Args:
         config: Optional :obj:`static_frame.DisplayConfig` instance.
+
+    Returns:
+        :obj:`str`
     '''
 
     to_html_datatables = '''
@@ -46,7 +49,7 @@ class DOC_TEMPLATE:
         config: Optional :obj:`static_frame.DisplayConfig` instance.
 
     Returns:
-        Absolute file path to the file written.
+        :obj:`str`, absolute file path to the file written.
     '''
 
     clip = '''Apply a clip opertion to this :obj:`static_frame.{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
@@ -71,6 +74,9 @@ class DOC_TEMPLATE:
 
     name = '''
     A hashable label attached to this container.
+
+    Returns:
+        Hashable
     '''
 
     values_2d = '''

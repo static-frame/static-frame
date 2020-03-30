@@ -101,10 +101,10 @@ RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitialize
 @doc_inject(selector='container_init', class_name='Series')
 class Series(ContainerOperand):
     '''
-    A one-dimensional ordered, labelled collection, immutable and of fixed size.
+    A one-dimensional ordered, labelled container, immutable and of fixed size.
 
     Args:
-        values: An iterable of values, or a single object, to be aligned with the supplied (or automatically generated) index. Alternatively, a dictionary of index / value pairs can be provided.
+        values: An iterable of values to be aligned with the supplied (or automatically generated) index.
         {index}
         {own_index}
     '''
@@ -133,8 +133,13 @@ class Series(ContainerOperand):
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
             own_index: bool = False,
-            ):
+            ) -> 'Series':
+        '''
+        Create a :obj:`static_frame.Series` from a single element. The size of the resultant container will be determined by the ``index`` argument.
 
+        Returns:
+            :obj:`static_frame.Series`
+        '''
         if own_index:
             index_final = index
         else:
@@ -221,6 +226,9 @@ class Series(ContainerOperand):
         Args:
             containers: Iterable of ``Series`` from which values in the new ``Series`` are drawn.
             index: If None, the resultant index will be the concatenation of all indices (assuming they are unique in combination). If ``IndexAutoFactory``, the resultant index is a auto-incremented integer index. Otherwise, the value is used as a index initializer.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         array_values = []
         if index is None:
@@ -256,6 +264,9 @@ class Series(ContainerOperand):
 
         Args:
             items: Iterable of pairs of label, :obj:`Series`
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         array_values = []
 
@@ -331,6 +342,9 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             own_index: bool = False
             ) -> None:
+        '''
+        Default constructor of :obj:`static_frame.Series`.
+        '''
         # doc string at class definition
         self._name = name if name is None else name_filter(name)
 
@@ -402,6 +416,9 @@ class Series(ContainerOperand):
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         '''
         Returns a reverse iterator on the series' index.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return reversed(self._index)
 
@@ -1156,7 +1173,7 @@ class Series(ContainerOperand):
         Return a tuple describing the shape of the underlying NumPy array.
 
         Returns:
-            :obj:`tp.Tuple[int]`
+            :obj:`Tuple[int]`
         '''
         return self.values.shape
 
@@ -1421,7 +1438,10 @@ class Series(ContainerOperand):
     @property
     def index(self):
         '''
-        The ``IndexBase`` instance assigned for labels.
+        The index instance assigned to this container.
+
+        Returns:
+            :obj:`stastic_frame.Index`
         '''
         return self._index
 
@@ -1431,29 +1451,44 @@ class Series(ContainerOperand):
     def keys(self) -> Index:
         '''
         Iterator of index labels.
+
+        Returns:
+            tp.Iterator[tp.Hashable]
         '''
         return self._index
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Iterator of index labels, same as :py:meth:`Series.keys`.
+        Iterator of index labels, same as :obj:`static_frame.Series.keys`.
+
+        Returns:
+            :obj:`Iterator[tp.Hashasble]`
         '''
         return self._index.__iter__()
 
     def __contains__(self, value) -> bool:
         '''
         Inclusion of value in index labels.
+
+        Returns:
+            :obj:`bool`
         '''
         return self._index.__contains__(value)
 
     def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''Iterator of pairs of index label and value.
+
+        Returns:
+            obj:`Iterator[Tuple[Hashable, Any]]`
         '''
         return zip(self._index.values, self.values)
 
     def get(self, key: tp.Hashable, default=None) -> tp.Any:
         '''
         Return the value found at the index key, else the default if the key is not found.
+
+        Returns:
+            tp.Any
         '''
         if key not in self._index:
             return default
@@ -1469,6 +1504,14 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted Index.
+
+        Args:
+            *
+            ascending: if True, values are sorted low to high
+            kind: sort algorithm
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         # argsort lets us do the sort once and reuse the results
         if self._index.depth > 1:
@@ -1501,6 +1544,9 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''
         Return a new Series ordered by the sorted values.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(self.values, kind=kind)
@@ -1523,6 +1569,9 @@ class Series(ContainerOperand):
     def isin(self, other) -> 'Series':
         '''
         Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         array = isin(self.values, other)
         return self.__class__(array, index=self._index, name=self._name)
@@ -1537,6 +1586,9 @@ class Series(ContainerOperand):
         Args:
             lower: value or ``Series`` to define the inclusive lower bound.
             upper: value or ``Series`` to define the inclusive upper bound.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         args = [lower, upper]
         for idx, arg in enumerate(args):
@@ -1556,12 +1608,18 @@ class Series(ContainerOperand):
 
     def transpose(self) -> 'Series':
         '''Transpose. For a 1D immutable container, this returns a reference to self.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return self
 
     @property
-    def T(self):
+    def T(self) -> 'Series':
         '''Transpose. For a 1D immutable container, this returns a reference to self.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return self.transpose()
 
@@ -1575,6 +1633,9 @@ class Series(ContainerOperand):
         Args:
             {exclude_first}
             {exclude_last}
+
+        Returns:
+            :obj:`numpy.ndarray`
         '''
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
@@ -1593,6 +1654,9 @@ class Series(ContainerOperand):
         Args:
             {exclude_first}
             {exclude_last}
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
@@ -1610,6 +1674,9 @@ class Series(ContainerOperand):
 
         Args:
             {dtype}
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return self.__class__(
                 self.values.astype(dtype),
@@ -1627,6 +1694,9 @@ class Series(ContainerOperand):
         Args:
             shift: Postive or negative integer shift.
             include_index: Determine if the Index is shifted with the underlying data.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         if shift % len(self.values):
             values = array_shift(
@@ -1660,6 +1730,9 @@ class Series(ContainerOperand):
         Args:
             shift: Postive or negative integer shift.
             fill_value: Value to be used to fill data missing after the shift.
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
 
         if shift:
@@ -1686,6 +1759,9 @@ class Series(ContainerOperand):
 
         Args:
             {count}
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return self.iloc[:count]
 
@@ -1695,6 +1771,9 @@ class Series(ContainerOperand):
 
         Args:
             {count}
+
+        Returns:
+            :obj:`static_frame.Series`
         '''
         return self.iloc[-count:]
 
@@ -1707,6 +1786,9 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
+
+        Returns:
+            tp.Hashable
         '''
         # if skipna is False and a NaN is returned, this will raise
         post = argmin_1d(self.values, skipna=skipna)
@@ -1723,6 +1805,9 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
+
+        Returns:
+            int
         '''
         return argmin_1d(self.values, skipna=skipna)
 
@@ -1735,6 +1820,9 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
+
+        Returns:
+            tp.Hashable
         '''
         post = argmax_1d(self.values, skipna=skipna)
         if isinstance(post, FLOAT_TYPES): # NaN was returned
@@ -1750,6 +1838,9 @@ class Series(ContainerOperand):
 
         Args:
             {skipna}
+
+        Returns:
+            int
         '''
         return argmax_1d(self.values, skipna=skipna)
 
@@ -1760,6 +1851,9 @@ class Series(ContainerOperand):
     def unique(self) -> np.ndarray:
         '''
         Return a NumPy array of unqiue values.
+
+        Returns:
+            :obj:`numpy.ndarray`
         '''
         return ufunc_unique(self.values)
 
@@ -1769,6 +1863,9 @@ class Series(ContainerOperand):
     def to_pairs(self) -> tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]:
         '''
         Return a tuple of tuples, where each inner tuple is a pair of index label, value.
+
+        Returns:
+            tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]]
         '''
         if isinstance(self._index, IndexHierarchy):
             index_values = list(array2d_to_tuples(self._index.values))
@@ -1816,23 +1913,32 @@ class Series(ContainerOperand):
                 )
 
 
-    def to_frame(self, axis: int = 1):
+    def to_frame(self, axis: int = 1) -> 'Frame':
         '''
         Return a :obj:`static_frame.Frame` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Returns:
+            :obj:`static_frame.Frame`
         '''
         from static_frame import Frame
         return self._to_frame(constructor=Frame, axis=axis)
 
-    def to_frame_go(self, axis: int = 1):
+    def to_frame_go(self, axis: int = 1) -> 'FrameGO':
         '''
         Return :obj:`static_frame.FrameGO` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+
+        Returns:
+            :obj:`static_frame.FrameGO`
         '''
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis)
 
-    def to_pandas(self) -> 'DataFrame':
+    def to_pandas(self) -> 'pd.Series':
         '''
         Return a Pandas Series.
+
+        Returns:
+            :obj:`pandas.Series`
         '''
         import pandas
         return pandas.Series(self.values.copy(),
