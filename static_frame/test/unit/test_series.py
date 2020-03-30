@@ -48,7 +48,7 @@ class TestUnit(TestCase):
         s1 = Series.from_element(10, index=('a', 'b', 'c', 'd'))
 
         with self.assertRaises(AttributeError):
-            s1.g = 30 #pylint: disable=E0237
+            s1.g = 30 #type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             s1.__dict__ #pylint: disable=W0104
 
