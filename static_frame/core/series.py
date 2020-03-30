@@ -423,7 +423,7 @@ class Series(ContainerOperand):
         return reversed(self._index)
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
@@ -1441,7 +1441,7 @@ class Series(ContainerOperand):
         The index instance assigned to this container.
 
         Returns:
-            :obj:`stastic_frame.Index`
+            :obj:`static_frame.Index`
         '''
         return self._index
 
@@ -1453,7 +1453,7 @@ class Series(ContainerOperand):
         Iterator of index labels.
 
         Returns:
-            tp.Iterator[tp.Hashable]
+            :obj:`Iterator[Hashable]`
         '''
         return self._index
 
@@ -1462,7 +1462,7 @@ class Series(ContainerOperand):
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
         Returns:
-            :obj:`Iterator[tp.Hashasble]`
+            :obj:`Iterator[Hashasble]`
         '''
         return self._index.__iter__()
 
@@ -1479,7 +1479,7 @@ class Series(ContainerOperand):
         '''Iterator of pairs of index label and value.
 
         Returns:
-            obj:`Iterator[Tuple[Hashable, Any]]`
+            :obj:`Iterator[Tuple[Hashable, Any]]`
         '''
         return zip(self._index.values, self.values)
 
@@ -1488,7 +1488,7 @@ class Series(ContainerOperand):
         Return the value found at the index key, else the default if the key is not found.
 
         Returns:
-            tp.Any
+            :obj:`Any`
         '''
         if key not in self._index:
             return default

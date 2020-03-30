@@ -59,6 +59,7 @@ class DOC_TEMPLATE:
     Args:
         axis: Axis, defaulting to axis 0.
         skipna: Skip missing (NaN) values, defaulting to True.
+
     '''
 
     label_widths_at_depth = '''
@@ -76,7 +77,7 @@ class DOC_TEMPLATE:
     A hashable label attached to this container.
 
     Returns:
-        Hashable
+        :obj:`Hashable`
     '''
 
     values_2d = '''
