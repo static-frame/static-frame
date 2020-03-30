@@ -111,6 +111,19 @@ Jupiter  12756
 #end_Series-from_items()
 
 
+#start_Series-from_element()
+>>> sf.Series.from_element('lepton', index=('electron', 'muon', 'tau'))
+<Series>
+<Index>
+electron lepton
+muon     lepton
+tau      lepton
+<<U8>    <<U6>
+
+#end_Series-from_element()
+
+
+
 #start_Series-items()
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'), dtype=np.int64)
 >>> s
