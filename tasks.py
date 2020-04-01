@@ -72,14 +72,14 @@ def example(context, container=None):
     for line in api_example_str.split('\n'):
         if line.startswith(start_prefix):
             signature_start = line.replace(start_prefix, '').strip()
-            # print(signature_start)
         elif line.startswith(end_prefix):
             signature_end = line.replace(end_prefix, '').strip()
-            # print(signature_end)
             if signature_start == signature_end:
                 defined.add(signature_start)
                 signature_start = ''
                 signature_end = ''
+            else:
+                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
 
     signatures = set()
 
@@ -98,7 +98,6 @@ def example(context, container=None):
 
     for line in sorted(defined - signatures):
         print(HexColor.format_terminal(0x00ccff, line))
-    # import ipdb; ipdb.set_trace()
 
 
 #-------------------------------------------------------------------------------
