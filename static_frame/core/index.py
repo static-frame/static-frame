@@ -629,12 +629,16 @@ class Index(IndexBase):
         # this is not a complete deepcopy, as _labels here is an immutable np array (a new map will be created); if this is an IndexGO, we will pass the cached, immutable NP array
         if self._recache:
             self._update_array_cache()
+
         return self.__class__(labels=self, name=self._name)
 
     def relabel(self: I, mapper: CallableOrMapping) -> I:
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
             getitem = getattr(mapper, '__getitem__')

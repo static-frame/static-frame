@@ -4270,6 +4270,14 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.relabel()
 
+    def test_frame_relabel_g(self) -> None:
+
+        f1 = FrameGO.from_elements([1, 2], columns=['a'])
+        f1['b'] = f1['a']
+        f2 = f1.relabel(columns={'a': 'c',})
+        self.assertEqual(f2.to_pairs(0),
+                (('c', ((0, 1), (1, 2))), ('b', ((0, 1), (1, 2))))
+                )
 
     #---------------------------------------------------------------------------
     def test_frame_rehierarch_a(self) -> None:
