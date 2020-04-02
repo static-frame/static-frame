@@ -3,6 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.8
+----------
+
+Fixed issue in using ``relabel()`` on columns in ``FrameGO``.
+
 
 0.6.7
 ----------
