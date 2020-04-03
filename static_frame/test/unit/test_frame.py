@@ -7040,6 +7040,7 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
 
     def test_frame_drop_a(self) -> None:
         records = (
@@ -7074,6 +7075,39 @@ class TestUnit(TestCase):
                 (('p', (('w', 2),)), ('q', (('w', 2),)), ('r', (('w', 'a'),)), ('s', (('w', False),)), ('t', (('w', False),))))
 
 
+    def test_frame_drop_c(self) -> None:
+
+        index = IndexHierarchy.from_product(['x'], ['a', 'b'])
+        f1 = Frame.from_elements([1, 2], index=index, columns=['a'])
+        f2 = f1.drop['a']
+        self.assertEqual(f2.shape, (2, 0))
+
+
+    def test_frame_drop_d(self) -> None:
+
+        columns = sf.IndexHierarchy.from_product([10, 20], ['a', 'b'])
+
+        f1 = Frame(np.arange(8).reshape(2, 4), columns=columns)
+        f2 = f1.drop[(20, 'a')]
+        self.assertEqual(f2.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))), ((10, 'b'), ((0, 1), (1, 5))), ((20, 'b'), ((0, 3), (1, 7))))
+                )
+
+        f3 = f1.drop[(10, 'b'):] #type: ignore
+        self.assertEqual(f3.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))),)
+                )
+
+        f4 = f1.drop[[(10, 'b'), (20, 'b')]]
+        self.assertEqual(f4.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))), ((20, 'a'), ((0, 2), (1, 6))))
+                )
+
+        f5 = f1.drop[:]
+        self.assertEqual(f5.shape, (2, 0))
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_roll_a(self) -> None:
 

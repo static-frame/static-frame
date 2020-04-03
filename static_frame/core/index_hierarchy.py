@@ -227,7 +227,7 @@ class IndexHierarchy(IndexBase):
     def from_labels(cls: tp.Type[IH],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
-            name: tp.Hashable = None,
+            name: tp.Optional[tp.Hashable] = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE

@@ -7,7 +7,8 @@ from static_frame.core.util import write_optional_file
 # from static_frame.core.util import IndexInitializer
 # from static_frame.core.util import IndexConstructor
 from static_frame.core.util import UFunc
-
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import KeyTransformType
 
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayActive
@@ -86,11 +87,18 @@ class IndexBase(ContainerOperand):
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
+    loc_to_iloc: tp.Callable[
+            [GetItemKeyType, tp.Optional[int], KeyTransformType],
+            GetItemKeyType
+            ]
 
     #---------------------------------------------------------------------------
     # class attrs
 
     STATIC: bool = True
+
+    #---------------------------------------------------------------------------
+    # base class interface, mostly for mpy
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -106,17 +114,18 @@ class IndexBase(ContainerOperand):
     def _update_array_cache(self) -> None:
         raise NotImplementedError()
 
-
     def copy(self: I) -> I:
         raise NotImplementedError()
-
 
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
 
-
     @classmethod
-    def from_labels(cls: tp.Type[I], labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> I:
+    def from_labels(cls: tp.Type[I],
+            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            *,
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
         raise NotImplementedError()
 
 
@@ -353,6 +362,38 @@ class IndexBase(ContainerOperand):
         return self._ufunc_set(
                 self.__class__._UFUNC_DIFFERENCE,
                 other)
+
+    #---------------------------------------------------------------------------
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+
+        This can be applied to both Index and IndexHierarchy, as in both cases we are doing an axis 0 operation. We never drop columns from the underlying array in an IndexHierarchy.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if key is None:
+            if self.STATIC: # immutable, no selection, can return self
+                return self
+            labels = self._labels # already immutable
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
+            # can use labels, as we already recached
+            # use Boolean area to select indices from positions, as np.delete does not work with arrays
+            labels = np.delete(self._labels, self._positions[key], axis=0)
+            labels.flags.writeable = False
+        else:
+            labels = np.delete(self._labels, key, axis=0)
+            labels.flags.writeable = False
+
+        # from labels will work with both Index and IndexHierarchy
+        return self.__class__.from_labels(labels, name=self._name)
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
+
+
 
     #---------------------------------------------------------------------------
     # metaclass-applied functions

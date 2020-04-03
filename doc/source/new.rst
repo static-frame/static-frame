@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Fixed issue in using ``relabel()`` on columns in ``FrameGO``.
 
+Fixed issue in using ``Frame.drop`` with ``IndexHierarchy`` on either axis.
+
 
 0.6.7
 ----------
