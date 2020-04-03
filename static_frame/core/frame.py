@@ -4934,12 +4934,11 @@ class FrameGO(Frame):
 
 
     #---------------------------------------------------------------------------
-    def to_frame(self) -> Frame:
-        '''
-        Return Frame version of this Frame.
-        '''
-        # copying blocks does not copy underlying data
-        return Frame(self._blocks.copy(),
+
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> Frame:
+        return constructor(self._blocks.copy(),
                 index=self.index,
                 columns=self.columns.values,
                 name=self._name,
@@ -4948,18 +4947,19 @@ class FrameGO(Frame):
                 own_columns=False # need to make static only
                 )
 
+
+    def to_frame(self) -> Frame:
+        '''
+        Return Frame version of this Frame.
+        '''
+        return self._to_frame(Frame)
+
     def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO version of this Frame.
         '''
-        return FrameGO(self._blocks.copy(),
-                index=self.index,
-                columns=self.columns.values,
-                name=self._name,
-                own_data=True,
-                own_index=True,
-                own_columns=False
-                )
+        return self._to_frame(FrameGO)
+
 
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.

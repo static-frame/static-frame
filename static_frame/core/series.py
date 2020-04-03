@@ -1876,7 +1876,10 @@ class Series(ContainerOperand):
 
 
 
-    def _to_frame(self, constructor, axis: int = 1):
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand],
+            axis: int = 1
+            ):
         '''
         Common Frame construction utilities.
         '''
