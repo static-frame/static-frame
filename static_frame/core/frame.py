@@ -4947,16 +4947,15 @@ class FrameGO(Frame):
                 own_columns=False # need to make static only
                 )
 
-
     def to_frame(self) -> Frame:
         '''
-        Return Frame version of this Frame.
+        Return Frame version of this FrameGO.
         '''
         return self._to_frame(Frame)
 
     def to_frame_go(self) -> 'FrameGO':
         '''
-        Return a FrameGO version of this Frame.
+        Return a FrameGO version of this FrameGO.
         '''
         return self._to_frame(FrameGO)
 

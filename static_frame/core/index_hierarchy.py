@@ -7,6 +7,8 @@ from ast import literal_eval
 
 import numpy as np
 
+from static_frame.core.container import ContainerOperand
+
 from static_frame.core.util import DEFAULT_SORT_KIND
 
 from static_frame.core.index_base import IndexBase
@@ -65,6 +67,7 @@ if tp.TYPE_CHECKING:
 
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO #pylint: disable=W0611 #pragma: no cover
 
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
@@ -1051,15 +1054,44 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # export
 
-    def to_frame(self) -> 'Frame':
-        '''
-        Return the index as a Frame.
-        '''
-        from static_frame import Frame
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> 'Frame':
         # NOTE: this should be done by column to preserve types per depth
-        return Frame.from_records(self.values,
+        return constructor(
+                self.values,
                 columns=range(self._depth),
                 index=None)
+
+    def to_frame(self) -> 'Frame':
+        '''
+        Return :obj:`Frame` version of this :obj:`IndexHiearchy`.
+        '''
+        from static_frame import Frame
+        return self._to_frame(Frame)
+
+    def to_frame_go(self) -> 'FrameGO':
+        '''
+        Return a :obj:`FrameGO` version of this :obj:`IndexHierarchy`.
+        '''
+        from static_frame import FrameGO
+        return self._to_frame(FrameGO)
+
+
+
+    # def to_frame(self) -> 'Frame':
+    #     '''
+    #     Return the index as a Frame.
+    #     '''
+    #     from static_frame import Frame
+    #     # NOTE: this should be done by column to preserve types per depth
+    #     return Frame.from_records(self.values,
+    #             columns=range(self._depth),
+    #             index=None)
+
+    # def to_frame_go(self) -> 'FrameGO':
+
+
 
     def to_pandas(self) -> 'DataFrame':
         '''Return a Pandas MultiIndex.
