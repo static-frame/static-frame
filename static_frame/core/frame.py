@@ -4533,6 +4533,12 @@ class Frame(ContainerOperand):
 
         return xarray.Dataset(data_vars, coords=coords)
 
+    def to_frame(self) -> 'Frame':
+        '''
+        Return Frame version of this Frame, which is (as the Frame is immutable) is self.
+        '''
+        return self
+
     def to_frame_go(self) -> 'FrameGO':
         '''
         Return a FrameGO view of this Frame. As underlying data is immutable, this is a no-copy operation.
@@ -4631,14 +4637,9 @@ class Frame(ContainerOperand):
                     f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
-        except: #pragma: no cover
-            raise #pragma: no cover
         finally:
             if is_file:
                 f.close()
-        if is_file:
-            f.close()
-
 
     def to_csv(self,
             fp: PathSpecifierOrFileLike,
@@ -4951,8 +4952,14 @@ class FrameGO(Frame):
         '''
         Return a FrameGO version of this Frame.
         '''
-        raise ErrorInitFrame('This Frame is already a FrameGO')
-
+        return FrameGO(self._blocks.copy(),
+                index=self.index,
+                columns=self.columns.values,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                own_columns=False
+                )
 
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.

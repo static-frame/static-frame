@@ -6852,9 +6852,47 @@ class TestUnit(TestCase):
 
     def test_frame_to_frame_go_d(self) -> None:
 
-        f1 = FrameGO(columns=('a', 'b'))
-        with self.assertRaises(ErrorInitFrame):
-            f2 = f1.to_frame_go() #pylint: disable=E1111
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.to_frame_go()
+
+        f1['x'] = None
+        f2['a'] = -1
+
+        self.assertEqual(f1.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
+                )
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('a', (('w', -1), ('x', -1))))
+                )
+
+    def test_frame_to_frame_go_e(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.to_frame()
+        f3 = f1.to_frame_go()
+
+        self.assertTrue(id(f1) == id(f2))
+        self.assertTrue(id(f1) != id(f3))
+
+        f3['x'] = None
+
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
+                )
 
     #---------------------------------------------------------------------------
 
