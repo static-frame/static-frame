@@ -6,13 +6,13 @@ matrix:
 
   include:
 
-    # - name: CPython 3.8.0 on Ubuntu 16.04
-    #   language: python
-    #   os: linux
-    #   dist: xenial
-    #   python: 3.8.0
-    #   before_install:
-    #     - sudo apt-get install -y libhdf5-dev
+    - name: CPython 3.8.2 on Ubuntu 16.04
+      language: python
+      os: linux
+      dist: xenial
+      python: 3.8.2
+      before_install:
+        - sudo apt-get install -y libhdf5-dev
 
     - name: CPython 3.7.4 on Ubuntu 16.04
       language: python
@@ -79,32 +79,23 @@ matrix:
       script: pylint static_frame
 
 
-    - name: forward compatibility NumPy 1.18.1
+    - name: forward compatibility NumPy 1.18.2
       language: python
       os: linux
       dist: xenial
       python: 3.7.4
       install:
         - pip install -r requirements-test.txt
-        - pip install numpy==1.18.1
+        - pip install numpy==1.18.2
 
-    - name: backward compatibility NumPy 1.15.4
+    - name: forward compatibility Pandas 1.0.3
       language: python
       os: linux
       dist: xenial
       python: 3.7.4
       install:
         - pip install -r requirements-test.txt
-        - pip install numpy==1.15.4
-
-    - name: forward compatibility Pandas 1.0.1
-      language: python
-      os: linux
-      dist: xenial
-      python: 3.7.4
-      install:
-        - pip install -r requirements-test.txt
-        - pip install pandas==1.0.1
+        - pip install pandas==1.0.3
 
 
 # common
