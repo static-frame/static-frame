@@ -1078,21 +1078,6 @@ class IndexHierarchy(IndexBase):
         return self._to_frame(FrameGO)
 
 
-
-    # def to_frame(self) -> 'Frame':
-    #     '''
-    #     Return the index as a Frame.
-    #     '''
-    #     from static_frame import Frame
-    #     # NOTE: this should be done by column to preserve types per depth
-    #     return Frame.from_records(self.values,
-    #             columns=range(self._depth),
-    #             index=None)
-
-    # def to_frame_go(self) -> 'FrameGO':
-
-
-
     def to_pandas(self) -> 'DataFrame':
         '''Return a Pandas MultiIndex.
         '''
