@@ -1824,17 +1824,30 @@ class Frame(ContainerOperand):
         if columns_depth > 0:
             columns = []
 
+        pdvu1 = pandas_version_under_1()
+
         def blocks():
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
-                # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray
-                array_final = chunked_array.to_pandas(
-                        ignore_metadata=True).values
+                # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
+                series = chunked_array.to_pandas(
+                        date_as_object=False, # get an np array
+                        self_destruct=True, # documented as "experimental"
+                        ignore_metadata=True,
+                        )
+                if pdvu1:
+                    array_final = series.values
+                    array_final.flags.writeable = False
+                else:
+                    array_final = pandas_to_numpy(series, own_data=True)
+
                 if col_idx >= index_start_pos and col_idx <= index_end_pos:
                     index_arrays.append(array_final)
                     continue
+
                 if columns_depth > 0:
                     columns.append(name)
+
                 yield array_final
 
         if consolidate_blocks:
@@ -1889,6 +1902,7 @@ class Frame(ContainerOperand):
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
                 columns=columns_select,
+                use_pandas_metadata=False,
                 )
         return cls.from_arrow(table,
                 index_depth=index_depth,

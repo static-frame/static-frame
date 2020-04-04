@@ -16,6 +16,10 @@ Enabled ``include_index``, ``include_columns`` parameters for ``Frame.to_parquet
 
 Added ``columns_select`` parameter to ``Frame.from_parquet``.
 
+Updated requirements: pyarrow==0.16.0
+
+Refined ``Frame.from_arrow`` usage of ChunkedArray, disabling ``date_as_object``, enabling ``self_destruct``, and improving handling of NumPy array extraction.
+
 
 0.6.7
 ----------

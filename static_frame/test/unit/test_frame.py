@@ -884,7 +884,27 @@ class TestUnit(TestCase):
                 (('0', ((0, 1), (1, 30), (2, 54), (3, 65))), ('1', ((0, 2), (1, 34), (2, 95), (3, 73))), ('2', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('3', ((0, False), (1, True), (2, False), (3, True))))
                 )
 
+    def test_frame_to_parquet_c(self) -> None:
+        records = (
+                (1, 'a', False),
+                (30, 'b', True),
+                (54, 'c', False),
+                (65, 'd', True),
+                )
+        index = IndexDate.from_date_range('2017-12-15', '2017-12-18')
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c'))
+        f1['d'] = index.values
 
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=True)
+            f2 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('a', ((0, 1), (1, 30), (2, 54), (3, 65))), ('b', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('c', ((0, False), (1, True), (2, False), (3, True))), ('d', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-16T00:00:00.000000000')), (2, np.datetime64('2017-12-17T00:00:00.000000000')), (3, np.datetime64('2017-12-18T00:00:00.000000000')))))
+                )
+        self.assertTrue(f2.index._map is None)
 
     def test_frame_from_parquet_a(self) -> None:
         records = (
@@ -930,6 +950,8 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('d', ((0, False), (1, True), (2, False), (3, True))), ('a', ((0, 1), (1, 30), (2, 54), (3, 65))))
                 )
+
+        self.assertTrue(f2.index._map is None)
 
 
     #---------------------------------------------------------------------------
