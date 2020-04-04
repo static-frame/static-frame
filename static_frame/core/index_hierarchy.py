@@ -1049,8 +1049,6 @@ class IndexHierarchy(IndexBase):
             values.flags.writeable = False
         return self.__class__.from_labels(values, name=self._name)
 
-
-
     #---------------------------------------------------------------------------
     # export
 

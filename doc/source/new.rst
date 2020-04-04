@@ -12,6 +12,10 @@ Fixed issue in using ``Frame.drop`` with ``IndexHierarchy`` on either axis.
 
 Unified ``to_frame`` and ``to_frame_go`` interfaces on ``Frame``, ``FrameGO``, and ``IndexHierarchy``.
 
+Enabled ``include_index``, ``include_columns`` parameters for ``Frame.to_parquet``.
+
+Added ``columns_select`` parameter to ``Frame.from_parquet``.
+
 
 0.6.7
 ----------

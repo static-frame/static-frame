@@ -908,6 +908,30 @@ class TestUnit(TestCase):
         self.assertEqualFrames(f1, f2, check_dtypes=False)
 
 
+    def test_frame_from_parquet_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = ('a', 'b', 'c', 'd')
+        f1 = Frame.from_records(records,
+                columns=columns,
+                )
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_select=('d', 'a'),
+                    columns_depth=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('d', ((0, False), (1, True), (2, False), (3, True))), ('a', ((0, 1), (1, 30), (2, 54), (3, 65))))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_xarray_a(self) -> None:

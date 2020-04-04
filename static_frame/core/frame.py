@@ -1419,6 +1419,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
+        # TODO: add columns_select as usecols styles selective loading
 
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
@@ -1873,6 +1874,7 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
             consolidate_blocks: bool = False,
             name: tp.Hashable = None,
             ) -> 'Frame':
@@ -1881,7 +1883,13 @@ class Frame(ContainerOperand):
         '''
         import pyarrow.parquet as pq
 
-        table = pq.read_table(fp)
+        if columns_select and index_depth != 0:
+            raise ErrorInitFrame(f'cannot create load index_depth {index_depth} when columns_select is specified.')
+
+        # NOTE: the order of columns_select will determine their order
+        table = pq.read_table(fp,
+                columns=columns_select,
+                )
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
