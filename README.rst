@@ -69,7 +69,7 @@ Dependencies
 Core StaticFrame requires the following:
 
 - Python >= 3.6
-- NumPy >= 1.16.6
+- NumPy >= 1.16.5
 
 For extended input and output, the following packages are required:
 
@@ -77,7 +77,7 @@ For extended input and output, the following packages are required:
 - xlsxwriter >= 1.1.2
 - openpyxl >= 3.0.0
 - xarray >= 0.13.0
-- tables >= 3.5.1
+- tables >= 3.6.1
 - pyarrow >= 0.16.0
 
 
