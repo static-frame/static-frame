@@ -863,6 +863,27 @@ class TestUnit(TestCase):
         with temp_file('.parquet') as fp:
             f1.to_parquet(fp)
 
+    def test_frame_to_parquet_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=False)
+            f2 = Frame.from_parquet(fp)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('0', ((0, 1), (1, 30), (2, 54), (3, 65))), ('1', ((0, 2), (1, 34), (2, 95), (3, 73))), ('2', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('3', ((0, False), (1, True), (2, False), (3, True))))
+                )
+
 
 
     def test_frame_from_parquet_a(self) -> None:

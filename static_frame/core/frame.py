@@ -4475,7 +4475,10 @@ class Frame(ContainerOperand):
         '''
         import pyarrow.parquet as pq
 
-        table = self.to_arrow()
+        table = self.to_arrow(
+                include_index=include_index,
+                include_columns=include_columns
+                )
         fp = path_filter(fp)
         pq.write_table(table, fp)
 
