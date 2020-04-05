@@ -481,7 +481,7 @@ class ContainerOperandMeta(ContainerMeta):
             attrs: tp.Dict[str, object
             ]) -> type:
         '''
-        Create and assign all autopopulated functions.
+        Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
         '''
         for opperand_count, func_name in chain(
                 product((1,), _UFUNC_UNARY_OPERATORS),
@@ -511,6 +511,12 @@ class ContainerBase(metaclass=ContainerMeta):
     Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperaand; only Bus inherits from ContainerBase.
     '''
     __slots__ = EMPTY_TUPLE
+
+    #---------------------------------------------------------------------------
+    # class attrs
+
+    STATIC: bool = True
+
     #---------------------------------------------------------------------------
     # common display functions
 
@@ -573,7 +579,7 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
 
     __slots__ = EMPTY_TUPLE
 
-    interface: 'Frame'
+    interface: 'Frame' # property that returns a Frame
 
     __pos__: tp.Callable[[T], T]
     __neg__: tp.Callable[[T], T]
@@ -645,3 +651,17 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
         raise NotImplementedError() # pragma: no cover
 
 
+    # NOTE: this was an exploration of delegating the same instance in the case of creation from an immutable type. It almost works, but prooves tricky to identify exactly the cases where this should be permissible as all constructors take multiple arguments
+
+    # def __new__(cls, *args, **kwargs):
+    #     if cls.STATIC:
+    #         arg_init = None
+    #         if not kwargs and len(args) == 1:
+    #             arg_init = args[0]
+    #         elif not args and kwargs:
+    #             arg_first = cls.__init__.__code__.co_varnames[1]
+    #             if arg_first in kwargs:
+    #                 arg_init = kwargs[arg_first]
+    #         if arg_init.__class__ is cls:
+    #             return arg_init
+    #     return object.__new__(cls)

@@ -76,6 +76,8 @@ class TypeBlocks(ContainerOperand):
             'iloc',
             )
 
+    STATIC = False
+
     #---------------------------------------------------------------------------
     # constructors
 
@@ -231,7 +233,7 @@ class TypeBlocks(ContainerOperand):
         if self._blocks:
             self._row_dtype = resolve_dtype_iter(b.dtype for b in self._blocks)
         else:
-            # NOTE: this violates the type and may break something downstream; however, this is desirable when appending such that this value does not force an undesirable type resolution
+            # NOTE: this violates the type; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
         self.iloc = InterfaceGetItem(self._extract_iloc)

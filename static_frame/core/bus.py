@@ -72,6 +72,8 @@ class Bus(ContainerBase):
     _store: tp.Optional[Store]
     _config: StoreConfigMap
 
+    STATIC = False
+
     @staticmethod
     def _deferred_series(labels: tp.Iterable[str]) -> Series:
         '''

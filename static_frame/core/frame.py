@@ -4872,6 +4872,7 @@ class FrameGO(Frame):
             '_name'
             )
 
+    STATIC = False
     _COLUMNS_CONSTRUCTOR = IndexGO
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
 

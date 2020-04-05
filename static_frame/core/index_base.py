@@ -93,11 +93,6 @@ class IndexBase(ContainerOperand):
             ]
 
     #---------------------------------------------------------------------------
-    # class attrs
-
-    STATIC: bool = True
-
-    #---------------------------------------------------------------------------
     # base class interface, mostly for mpy
 
     def _ufunc_axis_skipna(self, *,
