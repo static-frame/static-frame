@@ -400,10 +400,8 @@ class Series(ContainerOperand):
         if not self._index.STATIC:
             raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
-        shape = self._index.__len__()
-
         if values_constructor:
-            values_constructor(shape) # updates self.values
+            values_constructor(self._index.__len__()) # updates self.values
 
         #-----------------------------------------------------------------------
         # final evaluation

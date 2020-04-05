@@ -20,6 +20,8 @@ Updated requirements: pyarrow==0.16.0
 
 Refined ``Frame.from_arrow`` usage of ChunkedArray, disabling ``date_as_object``, enabling ``self_destruct``, and improving handling of NumPy array extraction.
 
+Added ``STATIC`` attribute to ``ContainerBase`` and all subclasses.
+
 
 0.6.7
 ----------
