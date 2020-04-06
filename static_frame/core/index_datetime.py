@@ -66,7 +66,7 @@ class IndexDatetime(Index):
             *,
             name: tp.Optional[tp.Hashable] = None
             ):
-        # reduce to arguments relevant for these derived classes
+        # __init__ here leaves out the dtype argument, reducing the signature to arguments relevant for these derived classes
         Index.__init__(self, labels=labels, name=name)
 
     #---------------------------------------------------------------------------

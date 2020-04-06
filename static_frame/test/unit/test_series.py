@@ -201,6 +201,33 @@ class TestUnit(TestCase):
         self.assertEqual(s1.to_pairs(), ((0, 'a'),))
 
 
+    def test_series_init_t(self) -> None:
+        s1 = Series(('a', 'b', 'c'), index=(10, 20, 30))
+        s2 = Series(s1)
+        s3 = Series(values=s1)
+
+        # experimented with, but did not enable, for object aliasing when immutable
+        self.assertTrue(id(s1) != id(s2))
+        self.assertTrue(id(s1) != id(s3))
+
+        # same array is used
+        self.assertTrue(id(s1.values) == id(s2.values))
+        self.assertTrue(id(s1.values) == id(s3.values))
+
+        # same index is used
+        self.assertTrue(id(s1.index) == id(s2.index))
+        self.assertTrue(id(s1.index) == id(s3.index))
+
+        # can swap in a different index
+        s4 = Series(s1, index=('x', 'y', 'z'))
+        self.assertEqual(s4.to_pairs(),
+                (('x', 'a'), ('y', 'b'), ('z', 'c'))
+                )
+        self.assertTrue(id(s1.values) == id(s4.values))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:

@@ -58,8 +58,8 @@ class InterfaceGroup:
 
 
 class Interface(tp.NamedTuple):
-    cls: tp.Type[ContainerBase]
-    group: InterfaceGroup
+    cls: str
+    group: str # should be InterfaceGroup
     signature: str
     doc: str
     reference: str = '' # a qualified name as a string for doc gen
@@ -144,7 +144,7 @@ class InterfaceSummary:
     ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
     ATTR_ASTYPE = ('__call__', '__getitem__')
 
-    _CLS_TO_INSTANCE_CACHE: tp.Dict[int, int] = {}
+    _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
 
     # astype is a normal function in Series, is a selector in Frame
 
@@ -179,10 +179,10 @@ class InterfaceSummary:
         '''
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
-                instance = target.from_blocks(np.array((0,)))
+                instance = target.from_blocks(np.array((0,))) #type: ignore
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
-                instance = target.from_frames((f,))
+                instance = target.from_frames((f,)) #type: ignore
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
@@ -192,18 +192,20 @@ class InterfaceSummary:
             elif issubclass(target, Frame):
                 instance = target.from_elements((0,))
             else:
-                instance = target((0,))
+                instance = target((0,)) #type: ignore
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
         return cls._CLS_TO_INSTANCE_CACHE[target]
 
     @classmethod
-    def name_obj_iter(cls, target: tp.Type[ContainerBase]):
+    def name_obj_iter(cls,
+            target: tp.Type[ContainerBase],
+            ) -> tp.Iterator[tp.Tuple[str, tp.Any, tp.Any]]:
         instance = cls.get_instance(target=target)
 
         for name_attr in dir(target.__class__): # get metaclass
             if name_attr == 'interface':
                 # getting interface off of the class will recurse
-                yield name_attr, None, ContainerBase.__class__.interface
+                yield name_attr, None, ContainerBase.__class__.interface #type: ignore
 
         for name_attr in dir(target):
             if name_attr == 'interface':
@@ -460,7 +462,7 @@ class InterfaceSummary:
 
     @classmethod
     def to_frame(cls,
-            target: ContainerMeta,
+            target: tp.Type[ContainerBase],
             *,
             minimized: bool = True,
             ) -> Frame:
@@ -471,7 +473,7 @@ class InterfaceSummary:
         f = f.sort_values(('cls', 'group', 'signature'))
         f = f.set_index('signature', drop=True)
         if minimized:
-            return f[['cls', 'group', 'doc']]
-        return f
+            return f[['cls', 'group', 'doc']] #type: ignore
+        return f #type: ignore
 
 

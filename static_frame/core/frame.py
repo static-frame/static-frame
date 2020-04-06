@@ -1419,6 +1419,7 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.loadtxt.html
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
+        # TODO: add columns_select as usecols styles selective loading
 
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
@@ -1823,17 +1824,30 @@ class Frame(ContainerOperand):
         if columns_depth > 0:
             columns = []
 
+        pdvu1 = pandas_version_under_1()
+
         def blocks():
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
-                # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray
-                array_final = chunked_array.to_pandas(
-                        ignore_metadata=True).values
+                # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
+                series = chunked_array.to_pandas(
+                        date_as_object=False, # get an np array
+                        self_destruct=True, # documented as "experimental"
+                        ignore_metadata=True,
+                        )
+                if pdvu1:
+                    array_final = series.values
+                    array_final.flags.writeable = False
+                else:
+                    array_final = pandas_to_numpy(series, own_data=True)
+
                 if col_idx >= index_start_pos and col_idx <= index_end_pos:
                     index_arrays.append(array_final)
                     continue
+
                 if columns_depth > 0:
                     columns.append(name)
+
                 yield array_final
 
         if consolidate_blocks:
@@ -1873,6 +1887,7 @@ class Frame(ContainerOperand):
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
+            columns_select: tp.Optional[tp.Iterable[str]] = None,
             consolidate_blocks: bool = False,
             name: tp.Hashable = None,
             ) -> 'Frame':
@@ -1881,7 +1896,14 @@ class Frame(ContainerOperand):
         '''
         import pyarrow.parquet as pq
 
-        table = pq.read_table(fp)
+        if columns_select and index_depth != 0:
+            raise ErrorInitFrame(f'cannot create load index_depth {index_depth} when columns_select is specified.')
+
+        # NOTE: the order of columns_select will determine their order
+        table = pq.read_table(fp,
+                columns=columns_select,
+                use_pandas_metadata=False,
+                )
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
@@ -4475,7 +4497,10 @@ class Frame(ContainerOperand):
         '''
         import pyarrow.parquet as pq
 
-        table = self.to_arrow()
+        table = self.to_arrow(
+                include_index=include_index,
+                include_columns=include_columns
+                )
         fp = path_filter(fp)
         pq.write_table(table, fp)
 
@@ -4532,6 +4557,12 @@ class Frame(ContainerOperand):
                 for k, v in zip(columns_values, columns_arrays())}
 
         return xarray.Dataset(data_vars, coords=coords)
+
+    def to_frame(self) -> 'Frame':
+        '''
+        Return Frame version of this Frame, which is (as the Frame is immutable) is self.
+        '''
+        return self
 
     def to_frame_go(self) -> 'FrameGO':
         '''
@@ -4631,14 +4662,9 @@ class Frame(ContainerOperand):
                     f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
-        except: #pragma: no cover
-            raise #pragma: no cover
         finally:
             if is_file:
                 f.close()
-        if is_file:
-            f.close()
-
 
     def to_csv(self,
             fp: PathSpecifierOrFileLike,
@@ -4846,6 +4872,7 @@ class FrameGO(Frame):
             '_name'
             )
 
+    STATIC = False
     _COLUMNS_CONSTRUCTOR = IndexGO
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
 
@@ -4933,12 +4960,11 @@ class FrameGO(Frame):
 
 
     #---------------------------------------------------------------------------
-    def to_frame(self) -> Frame:
-        '''
-        Return Frame version of this Frame.
-        '''
-        # copying blocks does not copy underlying data
-        return Frame(self._blocks.copy(),
+
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand]
+            ) -> Frame:
+        return constructor(self._blocks.copy(),
                 index=self.index,
                 columns=self.columns.values,
                 name=self._name,
@@ -4947,11 +4973,17 @@ class FrameGO(Frame):
                 own_columns=False # need to make static only
                 )
 
+    def to_frame(self) -> Frame:
+        '''
+        Return Frame version of this FrameGO.
+        '''
+        return self._to_frame(Frame)
+
     def to_frame_go(self) -> 'FrameGO':
         '''
-        Return a FrameGO version of this Frame.
+        Return a FrameGO version of this FrameGO.
         '''
-        raise ErrorInitFrame('This Frame is already a FrameGO')
+        return self._to_frame(FrameGO)
 
 
 #-------------------------------------------------------------------------------

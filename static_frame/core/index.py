@@ -2,7 +2,6 @@ import typing as tp
 from collections.abc import KeysView
 import operator as operator_mod
 from itertools import zip_longest
-
 from functools import reduce
 
 import numpy as np
@@ -23,6 +22,7 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import DTYPE_DATETIME_KIND
 
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import KeyTransformType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DtypeSpecifier
 # from static_frame.core.util import IndexSpecifier
@@ -364,7 +364,7 @@ class Index(IndexBase):
     def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
-            name: tp.Hashable = None
+            name: tp.Optional[tp.Hashable] = None
             ) -> 'Index':
         '''
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
@@ -640,7 +640,7 @@ class Index(IndexBase):
     def loc_to_iloc(self,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
-            key_transform: tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]] = None
+            key_transform: KeyTransformType = None
             ) -> GetItemKeyType:
         '''
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
@@ -723,32 +723,6 @@ class Index(IndexBase):
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)
-
-
-    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
-        '''Create a new index after removing the values specified by the loc key.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        if key is None:
-            labels = self._labels # already immutable
-        elif isinstance(key, np.ndarray) and key.dtype == bool:
-            # can use labels, as we already recached
-            # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(self._labels, self._positions[key])
-            labels.flags.writeable = False
-        else:
-            labels = np.delete(self._labels, key)
-            labels.flags.writeable = False
-
-        return self.__class__(labels, name=self._name)
-
-    def _drop_loc(self, key: GetItemKeyType) -> 'Index':
-        '''Create a new index after removing the values specified by the loc key.
-        '''
-        return self._drop_iloc(self.loc_to_iloc(key))
-
 
     #---------------------------------------------------------------------------
     # operators

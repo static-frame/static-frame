@@ -163,6 +163,8 @@ GetItemKeyTypeCompound = tp.Union[
         'Series',
         np.ndarray]
 
+KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
+
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]

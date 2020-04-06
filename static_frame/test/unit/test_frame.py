@@ -863,7 +863,48 @@ class TestUnit(TestCase):
         with temp_file('.parquet') as fp:
             f1.to_parquet(fp)
 
+    def test_frame_to_parquet_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
 
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=False)
+            f2 = Frame.from_parquet(fp)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('0', ((0, 1), (1, 30), (2, 54), (3, 65))), ('1', ((0, 2), (1, 34), (2, 95), (3, 73))), ('2', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('3', ((0, False), (1, True), (2, False), (3, True))))
+                )
+
+    def test_frame_to_parquet_c(self) -> None:
+        records = (
+                (1, 'a', False),
+                (30, 'b', True),
+                (54, 'c', False),
+                (65, 'd', True),
+                )
+        index = IndexDate.from_date_range('2017-12-15', '2017-12-18')
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b', 'c'))
+        f1['d'] = index.values
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=True)
+            f2 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('a', ((0, 1), (1, 30), (2, 54), (3, 65))), ('b', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('c', ((0, False), (1, True), (2, False), (3, True))), ('d', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-16T00:00:00.000000000')), (2, np.datetime64('2017-12-17T00:00:00.000000000')), (3, np.datetime64('2017-12-18T00:00:00.000000000')))))
+                )
+        self.assertTrue(f2.index._map is None)
 
     def test_frame_from_parquet_a(self) -> None:
         records = (
@@ -885,6 +926,32 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
 
         self.assertEqualFrames(f1, f2, check_dtypes=False)
+
+
+    def test_frame_from_parquet_b(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = ('a', 'b', 'c', 'd')
+        f1 = Frame.from_records(records,
+                columns=columns,
+                )
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_select=('d', 'a'),
+                    columns_depth=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('d', ((0, False), (1, True), (2, False), (3, True))), ('a', ((0, 1), (1, 30), (2, 54), (3, 65))))
+                )
+
+        self.assertTrue(f2.index._map is None)
 
 
     #---------------------------------------------------------------------------
@@ -6852,9 +6919,47 @@ class TestUnit(TestCase):
 
     def test_frame_to_frame_go_d(self) -> None:
 
-        f1 = FrameGO(columns=('a', 'b'))
-        with self.assertRaises(ErrorInitFrame):
-            f2 = f1.to_frame_go() #pylint: disable=E1111
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.to_frame_go()
+
+        f1['x'] = None
+        f2['a'] = -1
+
+        self.assertEqual(f1.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
+                )
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('a', (('w', -1), ('x', -1))))
+                )
+
+    def test_frame_to_frame_go_e(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'))
+
+        f2 = f1.to_frame()
+        f3 = f1.to_frame_go()
+
+        self.assertTrue(id(f1) == id(f2))
+        self.assertTrue(id(f1) != id(f3))
+
+        f3['x'] = None
+
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('w', 2), ('x', 34))), ('q', (('w', 'a'), ('x', 'b'))), ('r', (('w', False), ('x', True))), ('x', (('w', None), ('x', None))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -7040,6 +7145,7 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
 
     def test_frame_drop_a(self) -> None:
         records = (
@@ -7074,6 +7180,39 @@ class TestUnit(TestCase):
                 (('p', (('w', 2),)), ('q', (('w', 2),)), ('r', (('w', 'a'),)), ('s', (('w', False),)), ('t', (('w', False),))))
 
 
+    def test_frame_drop_c(self) -> None:
+
+        index = IndexHierarchy.from_product(['x'], ['a', 'b'])
+        f1 = Frame.from_elements([1, 2], index=index, columns=['a'])
+        f2 = f1.drop['a']
+        self.assertEqual(f2.shape, (2, 0))
+
+
+    def test_frame_drop_d(self) -> None:
+
+        columns = sf.IndexHierarchy.from_product([10, 20], ['a', 'b'])
+
+        f1 = Frame(np.arange(8).reshape(2, 4), columns=columns)
+        f2 = f1.drop[(20, 'a')]
+        self.assertEqual(f2.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))), ((10, 'b'), ((0, 1), (1, 5))), ((20, 'b'), ((0, 3), (1, 7))))
+                )
+
+        f3 = f1.drop[(10, 'b'):] #type: ignore
+        self.assertEqual(f3.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))),)
+                )
+
+        f4 = f1.drop[[(10, 'b'), (20, 'b')]]
+        self.assertEqual(f4.to_pairs(0),
+                (((10, 'a'), ((0, 0), (1, 4))), ((20, 'a'), ((0, 2), (1, 6))))
+                )
+
+        f5 = f1.drop[:]
+        self.assertEqual(f5.shape, (2, 0))
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_roll_a(self) -> None:
 

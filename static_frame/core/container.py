@@ -368,7 +368,7 @@ class ContainerMeta(type):
     def interface(cls) -> 'Frame':
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
-        return InterfaceSummary.to_frame(cls)
+        return InterfaceSummary.to_frame(cls) #type: ignore
 
 
 class ContainerOperandMeta(ContainerMeta):
@@ -481,7 +481,7 @@ class ContainerOperandMeta(ContainerMeta):
             attrs: tp.Dict[str, object
             ]) -> type:
         '''
-        Create and assign all autopopulated functions.
+        Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
         '''
         for opperand_count, func_name in chain(
                 product((1,), _UFUNC_UNARY_OPERATORS),
@@ -511,6 +511,12 @@ class ContainerBase(metaclass=ContainerMeta):
     Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperaand; only Bus inherits from ContainerBase.
     '''
     __slots__ = EMPTY_TUPLE
+
+    #---------------------------------------------------------------------------
+    # class attrs
+
+    STATIC: bool = True
+
     #---------------------------------------------------------------------------
     # common display functions
 
@@ -573,7 +579,7 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
 
     __slots__ = EMPTY_TUPLE
 
-    interface: 'Frame'
+    interface: 'Frame' # property that returns a Frame
 
     __pos__: tp.Callable[[T], T]
     __neg__: tp.Callable[[T], T]
@@ -643,5 +649,4 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
 
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
         raise NotImplementedError() # pragma: no cover
-
 

@@ -3,10 +3,32 @@
 What is New in Static Frame
 ===============================
 
+0.6.9
+----------
+
+``Series`` default constructor now efficiently handles ``Series`` given as ``values``.
+
+
+
+
 0.6.8
 ----------
 
 Fixed issue in using ``relabel()`` on columns in ``FrameGO``.
+
+Fixed issue in using ``Frame.drop`` with ``IndexHierarchy`` on either axis.
+
+Unified ``to_frame`` and ``to_frame_go`` interfaces on ``Frame``, ``FrameGO``, and ``IndexHierarchy``.
+
+Enabled ``include_index``, ``include_columns`` parameters for ``Frame.to_parquet``.
+
+Added ``columns_select`` parameter to ``Frame.from_parquet``.
+
+Updated requirements: pyarrow==0.16.0
+
+Refined ``Frame.from_arrow`` usage of ChunkedArray, disabling ``date_as_object``, enabling ``self_destruct``, and improving handling of NumPy array extraction.
+
+Added ``STATIC`` attribute to ``ContainerBase`` and all subclasses.
 
 
 0.6.7

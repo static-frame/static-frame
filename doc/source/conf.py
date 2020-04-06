@@ -69,6 +69,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.Series,
             sf.Frame,
             sf.FrameGO,
+            sf.Bus,
             sf.Index,
             sf.IndexGO,
             sf.IndexHierarchy,
@@ -91,7 +92,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
         post['interface'].append((
                 target.__name__,
                 target,
-                InterfaceSummary.to_frame(target, minimized=False) # need full
+                InterfaceSummary.to_frame(target, minimized=False) #type: ignore
                 ))
     return post
 

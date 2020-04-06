@@ -1508,6 +1508,23 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_hierarchy_to_frame_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+
+        self.assertEqual(ih1.to_frame().to_pairs(0),
+                ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), (1, ((0, 'x'), (1, 'y'), (2, 'x'), (3, 'y'))))
+                )
+
+        f2 = ih1.to_frame_go()
+        f2[-1] = None
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), (1, ((0, 'x'), (1, 'y'), (2, 'x'), (3, 'y'))), (-1, ((0, None), (1, None), (2, None), (3, None))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_to_html_datatables(self) -> None:
 

@@ -358,6 +358,14 @@ class Series(ContainerOperand):
         if not isinstance(values, np.ndarray):
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
+            elif isinstance(values, Series):
+                self.values = values.values # take immutable array
+                if dtype is not None and dtype != values.dtype:
+                    raise ErrorInitSeries(f'when supplying values via Series, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the Series ({values.dtype})')
+                if index is None and index_constructor is None:
+                    # set up for direct assignment below; index is always immutable
+                    index = values.index
+                    own_index = True
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
@@ -400,10 +408,8 @@ class Series(ContainerOperand):
         if not self._index.STATIC:
             raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
-        shape = self._index.__len__()
-
         if values_constructor:
-            values_constructor(shape) # updates self.values
+            values_constructor(self._index.__len__()) # updates self.values
 
         #-----------------------------------------------------------------------
         # final evaluation
@@ -1876,7 +1882,10 @@ class Series(ContainerOperand):
 
 
 
-    def _to_frame(self, constructor, axis: int = 1):
+    def _to_frame(self,
+            constructor: tp.Type[ContainerOperand],
+            axis: int = 1
+            ):
         '''
         Common Frame construction utilities.
         '''
