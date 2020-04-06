@@ -3,6 +3,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.9
+----------
+
+``Series`` default constructor now efficiently handles ``Series`` given as ``values``.
+
+
+
+
 0.6.8
 ----------
 
