@@ -368,7 +368,7 @@ class ContainerMeta(type):
     def interface(cls) -> 'Frame':
         '''{}'''
         from static_frame.core.interface import InterfaceSummary
-        return InterfaceSummary.to_frame(cls)
+        return InterfaceSummary.to_frame(cls) #type: ignore
 
 
 class ContainerOperandMeta(ContainerMeta):

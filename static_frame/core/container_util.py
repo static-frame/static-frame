@@ -8,6 +8,7 @@ import numpy as np
 import typing as tp
 
 if tp.TYPE_CHECKING:
+    import pandas as pd
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
@@ -32,7 +33,9 @@ from static_frame.core.util import DTYPE_BOOL
 
 from static_frame.core.index_base import IndexBase
 
-def dtypes_mappable(dtypes: DtypesSpecifier):
+
+
+def dtypes_mappable(dtypes: DtypesSpecifier) -> bool:
     '''
     Determine if the dtypes argument can be used by name lookup, rather than index.
     '''
@@ -43,11 +46,11 @@ def dtypes_mappable(dtypes: DtypesSpecifier):
 def is_static(value: IndexConstructor) -> bool:
     try:
         # if this is a class constructor
-        return getattr(value, STATIC_ATTR)
+        return getattr(value, STATIC_ATTR) #type: ignore
     except AttributeError:
         pass
     # assume this is a class method
-    return getattr(value.__self__, STATIC_ATTR)
+    return getattr(value.__self__, STATIC_ATTR) #type: ignore
 
 
 def pandas_version_under_1() -> bool:
@@ -55,7 +58,7 @@ def pandas_version_under_1() -> bool:
     return not hasattr(pandas, 'NA') # object introduced in 1.0
 
 def pandas_to_numpy(
-        container: tp.Any,
+        container: tp.Union['pd.Index', 'pd.Series', 'pd.DataFrame'],
         own_data: bool,
         fill_value: tp.Any = np.nan
         ) -> np.ndarray:
@@ -77,7 +80,7 @@ def pandas_to_numpy(
         dtype_src = dtypes[0]
         ndim = 2
     else:
-        raise NotImplementedError(f'no handling for ndim {container.ndim}')
+        raise NotImplementedError(f'no handling for ndim {container.ndim}') #pragma: no cover
 
     if isinstance(dtype_src, np.dtype):
         dtype = dtype_src
@@ -160,7 +163,7 @@ def index_from_optional_constructor(
     # default constructor could be a function with a STATIC attribute
     if isinstance(value, IndexBase):
         # if default is STATIC, and value is not STATIC, get an immutabel
-        if is_static(default_constructor): # type: ignore
+        if is_static(default_constructor):
             if not value.STATIC:
                 # v: ~S, dc: S, use immutable alternative
                 return value._IMMUTABLE_CONSTRUCTOR(value)
@@ -176,18 +179,19 @@ def index_from_optional_constructor(
     # cannot always deterine satic status from constructors; fallback on using default constructor
     return default_constructor(value)
 
-def index_constructor_empty(index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']):
+def index_constructor_empty(
+        index: tp.Union[IndexInitializer, 'IndexAutoFactoryType']
+        ) -> bool:
     '''
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
-
     return index is None or index is IndexAutoFactory or (
-            hasattr(index, '__len__') and len(index) == 0)
+            hasattr(index, '__len__') and len(index) == 0) #type: ignore
 
 def matmul(
-        lhs: tp.Union['Series', 'Frame', tp.Iterable],
-        rhs: tp.Union['Series', 'Frame', tp.Iterable],
+        lhs: tp.Union['Series', 'Frame', np.ndarray],
+        rhs: tp.Union['Series', 'Frame', np.ndarray],
         ) -> tp.Any: #tp.Union['Series', 'Frame']:
     '''
     Implementation of matrix multiplication for Series and Frame
@@ -333,6 +337,8 @@ def matmul(
     if ndim == 0:
         return data
 
+    assert constructor is not None
+
     data.flags.writeable = False
     if ndim == 1:
         return constructor(data,
@@ -372,6 +378,9 @@ def axis_window_items( *,
         size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
     '''
+    from static_frame.core.frame import Frame
+    from static_frame.core.series import Series
+
     if size <= 0:
         raise RuntimeError('window size must be greater than 0')
     if step < 0:
@@ -380,10 +389,12 @@ def axis_window_items( *,
     source_ndim = source.ndim
 
     if source_ndim == 1:
+        assert isinstance(source, Series) # for mypy
         labels = source._index
         if as_array:
             values = source.values
     else:
+        assert isinstance(source, Frame) # for mypy
         labels = source._index if axis == 0 else source._columns
         if as_array:
             values = source._blocks.values
@@ -417,12 +428,12 @@ def axis_window_items( *,
                 if as_array:
                     window = values[key]
                 else: # use low level iloc selector
-                    window = source._extract(row_key=key)
+                    window = source._extract(row_key=key) #type: ignore
             else:
                 if as_array:
                     window = values[NULL_SLICE, key]
                 else:
-                    window = source._extract(column_key=key)
+                    window = source._extract(column_key=key) #type: ignore
 
         valid = True
         try:
@@ -522,11 +533,11 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
 
 def rehierarch_and_map(*,
         labels: np.ndarray,
-        depth_map: tp.Iterable[int],
+        depth_map: tp.Sequence[int],
         index_constructor: IndexConstructor,
         index_constructors: tp.Optional[IndexConstructors] = None,
-        name: tp.Hashable = None,
-        ) -> tp.Tuple['IndexHierarchy', tp.Sequence[int]]:
+        name: tp.Optional[tp.Hashable] = None,
+        ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
     '''
@@ -542,7 +553,7 @@ def rehierarch_and_map(*,
     labels_sort = np.full(labels_post.shape, 0)
 
     # get ordering of vlues found in each level
-    order = [defaultdict(int) for _ in range(depth)]
+    order: tp.List[tp.Dict[tp.Hashable, int]] = [defaultdict(int) for _ in range(depth)]
 
     for idx_row, label in enumerate(labels):
         label = tuple(label)
@@ -569,9 +580,9 @@ def array_from_value_iter(
         key: tp.Hashable,
         idx: int,
         get_value_iter: tp.Callable[[tp.Hashable], tp.Iterator[tp.Any]],
-        get_col_dtype: tp.Optional[tp.Callable],
+        get_col_dtype: tp.Optional[tp.Callable[[int], np.dtype]],
         row_count: int,
-        ):
+        ) -> np.ndarray:
     '''
     Return a single array given keys and collections.
 
