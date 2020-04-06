@@ -3,6 +3,7 @@ import datetime
 
 import numpy as np
 
+from automap import AutoMap  # pylint: disable = E0611
 
 # from static_frame.core.util import DTYPE_DATETIME_KIND
 
@@ -132,17 +133,18 @@ class IndexDatetime(Index):
 class _IndexDatetimeGOMixin(_IndexGOMixin):
 
     _DTYPE: tp.Optional[np.dtype]
-    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
+    _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
     def append(self, value: tp.Hashable) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         value = to_datetime64(value, self._DTYPE)
-        if value in self._map: #type: ignore
-            raise KeyError(f'duplicate key append attempted: {value}')
-        # the new value is the count
-        self._map[value] = self._positions_mutable_count #type: ignore
+        if self._map is not None:
+            try:
+                self._map.add(value)
+            except ValueError:
+                raise KeyError(f'duplicate key append attempted: {value}')
         self._labels_mutable.append(value)
         self._positions_mutable_count += 1 #pylint: disable=E0237
         self._recache = True #pylint: disable=E0237
