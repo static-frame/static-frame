@@ -11,7 +11,6 @@ from static_frame.core.bus import Bus
 from static_frame.core.util import _DT64_S
 
 from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerMeta
 from static_frame.core.container import ContainerOperand
 
 from static_frame.core.type_blocks import TypeBlocks

@@ -8,7 +8,7 @@ import numpy as np
 import typing as tp
 
 if tp.TYPE_CHECKING:
-    import pandas as pd
+    import pandas as pd #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
