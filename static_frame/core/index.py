@@ -956,7 +956,7 @@ class _IndexGOMixin:
         if self.__contains__(value):
             raise KeyError(f'duplicate key append attempted: {value}')
 
-        # if loc_is_iloc, we might need to initialzie map  if not an increment that keeps loc_is_iloc relationship; create map after updating self._labels_mutable
+        # if loc_is_iloc, we might need to initialize map  if not an increment that keeps loc_is_iloc relationship; create map after updating self._labels_mutable
         initialize_map = False
         if self._map is None: # loc_is_iloc
             if not (isinstance(value, INT_TYPES)
