@@ -15,6 +15,7 @@ from urllib import request
 import tempfile
 from pathlib import Path
 
+from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np
 
 
@@ -121,7 +122,7 @@ INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complex
 NUMERIC_TYPES = (int, float, complex, np.number)
 
 BOOL_TYPES = (bool, np.bool_)
-DICTLIKE_TYPES = (abc.Set, dict)
+DICTLIKE_TYPES = (abc.Set, dict, FrozenAutoMap)
 
 
 # iterables that cannot be used in NP array constructors; asumes that dictlike types have already been identified

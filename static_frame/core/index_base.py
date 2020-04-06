@@ -1,6 +1,8 @@
 import typing as tp
 import numpy as np
 
+from automap import FrozenAutoMap  # pylint: disable = E0611
+
 from static_frame.core.util import mloc
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import write_optional_file
@@ -38,7 +40,7 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # type defs
 
-    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
+    _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool

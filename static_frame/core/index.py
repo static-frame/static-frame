@@ -6,6 +6,9 @@ from functools import reduce
 
 import numpy as np
 
+from automap import AutoMap
+from automap import FrozenAutoMap
+
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import EMPTY_TUPLE
@@ -300,7 +303,7 @@ class Index(IndexBase):
     # for compatability with IndexHierarchy, where this is implemented as a property method
     depth: int = 1
 
-    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
+    _map: tp.Optional[FrozenAutoMap]
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
@@ -354,27 +357,6 @@ class Index(IndexBase):
             return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
-    @staticmethod
-    def _get_map(
-            labels: tp.Iterable[tp.Hashable],
-            positions: tp.Optional[tp.Sequence[int]] = None
-            ) -> tp.Dict[tp.Hashable, int]:
-        '''
-        Return a dictionary mapping index labels to integer positions.
-
-        NOTE: this function is critical to Index performance.
-
-        Args:
-            lables: an Iterable of hashables; can be a generator.
-        '''
-        if positions is not None: # can zip both without new collection
-            return dict(zip(labels, positions))
-        if hasattr(labels, '__len__'):
-            # unhashable 2D numpy arrays will raise
-            return dict(zip(labels, range(len(labels))))
-        # support labels as a generator
-        return {v: k for k, v in enumerate(labels)}
-
     #---------------------------------------------------------------------------
     # constructors
 
@@ -399,7 +381,7 @@ class Index(IndexBase):
             ) -> None:
 
         self._recache: bool = False
-        self._map: tp.Dict[tp.Hashable, int] = None
+        self._map: tp.Optional[FrozenAutoMap] = None
 
         positions = None
 
@@ -452,7 +434,10 @@ class Index(IndexBase):
 
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
-                self._map = self._get_map(labels, positions)
+                try:
+                    self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
+                except ValueError:
+                    raise ErrorInitIndex(f'labels ({len(labels)}) have non-unique values ({len(set(labels))})')
                 size = len(self._map)
             else: # must assume labels are unique
                 size = len(labels)
@@ -468,9 +453,6 @@ class Index(IndexBase):
         if self._DTYPE and self._labels.dtype != self._DTYPE:
             raise ErrorInitIndex('invalid label dtype for this Index', #pragma: no cover
                     self._labels.dtype, self._DTYPE)
-
-        if self._map is not None and len(self._map) != len(self._labels):
-            raise ErrorInitIndex(f'labels ({len(self._labels)}) have non-unique values ({len(self._map)})')
 
 
     #---------------------------------------------------------------------------
@@ -922,7 +904,7 @@ class _IndexGOMixin:
     STATIC = False
     __slots__ = () # define in derived class
 
-    _map: tp.Optional[tp.Dict[tp.Hashable, int]]
+    _map: tp.Optional[AutoMap]
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
@@ -982,7 +964,7 @@ class _IndexGOMixin:
                 initialize_map = True
         else:
             # the new value is the count
-            self._map[value] = self._positions_mutable_count
+            self._map.add(value)
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(
@@ -994,7 +976,7 @@ class _IndexGOMixin:
         self._labels_mutable.append(value)
 
         if initialize_map:
-            self._map = self._get_map(labels=self._labels_mutable)
+            self._map = AutoMap(self._labels_mutable)
 
         self._positions_mutable_count += 1
         self._recache = True
