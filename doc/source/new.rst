@@ -8,7 +8,9 @@ What is New in Static Frame
 
 ``Series`` default constructor now efficiently handles ``Series`` given as ``values``.
 
+``Frame`` default constructor now efficiently handles ``Frame`` given as ``data``.
 
+``AutoMap`` now serves as the core mapping structure for all ``Index`` object, offering better performance, immutability, and internal uniqueness checks.
 
 
 0.6.8

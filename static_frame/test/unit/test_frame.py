@@ -275,6 +275,32 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             f1 = Frame(None, index=range(3), columns=range(3))
 
+    def test_frame_init_w(self) -> None:
+
+        f1 = Frame.from_dict(dict(a=(1,2), b=(3,4)), index=('x', 'y'))
+        f2 = Frame(f1)
+        self.assertEqual(f1._blocks.mloc.tolist(), f2._blocks.mloc.tolist())
+        self.assertEqualFrames(f1, f2)
+
+        f3 = Frame(f1, index=IndexAutoFactory, columns=IndexAutoFactory)
+        self.assertEqual(f3.to_pairs(0),
+                ((0, ((0, 1), (1, 2))), (1, ((0, 3), (1, 4))))
+                )
+        self.assertEqual(f1._blocks.mloc.tolist(), f3._blocks.mloc.tolist())
+
+        f4 = FrameGO(f1, index=('p', 'q'))
+        f4['c'] = None
+        self.assertEqual(f4.to_pairs(0),
+                (('a', (('p', 1), ('q', 2))), ('b', (('p', 3), ('q', 4))), ('c', (('p', None), ('q', None)))))
+        # first two values are stil equal
+        self.assertEqual(f1._blocks.mloc.tolist(), f4._blocks.mloc.tolist()[:2])
+
+        f5 = Frame(f4)
+        self.assertEqual(f5.to_pairs(0),
+                (('a', (('p', 1), ('q', 2))), ('b', (('p', 3), ('q', 4))), ('c', (('p', None), ('q', None))))
+                )
+        self.assertTrue(f5.columns.STATIC)
+
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
 

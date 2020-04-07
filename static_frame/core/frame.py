@@ -1943,13 +1943,11 @@ class Frame(ContainerOperand):
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
                 self._blocks = TypeBlocks.from_blocks(data._blocks)
-
         elif isinstance(data, np.ndarray):
             if own_data:
                 data.flags.writeable = False
             # from_blocks will apply immutable filter
             self._blocks = TypeBlocks.from_blocks(data)
-
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
             def blocks_constructor(shape): #pylint: disable=E0102
@@ -1957,6 +1955,16 @@ class Frame(ContainerOperand):
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')
                 self._blocks = TypeBlocks.from_zero_size_shape(shape)
+        elif isinstance(data, Frame):
+            self._blocks = data._blocks.copy()
+            if index is None and index_constructor is None:
+                # set up for direct assignment below; index is always immutable
+                index = data.index
+                own_index = True
+            if columns is None and columns_constructor is None:
+                # cannot own, but can let constructors handle potential mutability
+                columns = data.columns
+                columns_empty = index_constructor_empty(columns)
 
         elif isinstance(data, dict):
             raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
