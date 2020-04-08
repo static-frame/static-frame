@@ -2006,7 +2006,11 @@ class SeriesAssign:
             fill_value=np.nan
             ):
         '''
-        Calling with a value performs the assignment. The `name` attribute is propagated.
+        Execute the assingment with the provided ``value``. The `name` attribute is propagated to the returned container.
+
+        Args:
+            value: The value to assign. This can be a element, iterable, or :obj:`Series`.
+            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
             # instead of using fill_value here, might be better to use dtype_to_na, so as to not coerce the type of the value to be assigned
