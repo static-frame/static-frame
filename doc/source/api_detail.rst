@@ -94,8 +94,8 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     .. literalinclude:: ../../static_frame/test/unit/test_doc.py
        :language: python
-       :start-after: start_{{ name }}-{{ signature }}
-       :end-before: end_{{ name }}-{{ signature }}
+       :start-after: start_{{ name }}-{{ row.signature_no_args }}
+       :end-before: end_{{ name }}-{{ row.signature_no_args }}
 
 
     {% endfor %}

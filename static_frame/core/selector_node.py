@@ -168,4 +168,7 @@ class InterfaceAsType:
         return self._func_getitem(key)
 
     def __call__(self, dtype: np.dtype) -> 'Frame':
+        '''
+        Apply a single ``dtype`` to all columns.
+        '''
         return self._func_getitem(NULL_SLICE)(dtype)

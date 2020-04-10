@@ -2,6 +2,8 @@
 Tools for documenting the SF interface.
 '''
 import typing as tp
+import inspect
+from itertools import chain
 
 import numpy as np
 
@@ -9,6 +11,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 
 from static_frame.core.util import _DT64_S
+from static_frame.core.util import AnyCallable
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
@@ -22,6 +25,7 @@ from static_frame.core.index_datetime import IndexYear
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import Display
+from static_frame.core.frame import FrameAsType
 
 from static_frame.core.iter_node import IterNodeDelegate
 from static_frame.core.iter_node import IterNodeNoArg
@@ -71,7 +75,7 @@ class Interface(tp.NamedTuple):
 
 class InterfaceSummary:
 
-    DOC_CHARS = 100
+    DOC_CHARS = 80
 
     EXCLUDE_PRIVATE = {
         '__class__',
@@ -141,11 +145,86 @@ class InterfaceSummary:
     # must all be members of InterfaceSelection2D
     ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
     ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
+    # astype is a normal function in Serie=s, is a selector in Frame
     ATTR_ASTYPE = ('__call__', '__getitem__')
-
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
 
-    # astype is a normal function in Series, is a selector in Frame
+    @staticmethod
+    def _get_parameters(
+            func: AnyCallable,
+            is_getitem: bool = False,
+            max_args: int = 3,
+            ) -> str:
+        # might need special handling for methods on built-ins
+        sig = inspect.signature(func)
+
+        positional = []
+        kwarg_only = ['*'] # preload
+        var_positional = ''
+        var_keyword = ''
+
+        count = 0
+        count_total = 0
+        for p in sig.parameters.values():
+            if count == 0 and p.name == 'self':
+                continue # do not increment counts
+
+            if count < max_args:
+                if p.kind == p.KEYWORD_ONLY:
+                    kwarg_only.append(p.name)
+                elif p.kind == p.VAR_POSITIONAL:
+                    var_positional = p.name
+                elif p.kind == p.VAR_KEYWORD:
+                    var_keyword = p.name
+                else:
+                    positional.append(p.name)
+                count += 1
+            count_total += 1
+
+        suffix = '' if count >= count_total else f', {Display.ELLIPSIS}'
+
+        # if truthy, update to a proper iterable
+        if var_positional:
+            var_positional = ('*' + var_positional,)
+        if var_keyword:
+            var_keyword = ('**' + var_keyword,)
+
+        if len(kwarg_only) > 1: # do not count the preload
+            param_repr = ', '.join(chain(positional, kwarg_only, var_positional, var_keyword))
+        else:
+            param_repr = ', '.join(chain(positional, var_positional, var_keyword))
+
+        if is_getitem:
+            return f'[{param_repr}{suffix}]'
+        return f'({param_repr}{suffix})'
+
+    @classmethod
+    def _get_signatures(cls,
+            name: str,
+            func: AnyCallable,
+            *,
+            is_getitem: bool,
+            func_delegate: tp.Optional[AnyCallable] = None,
+            ):
+
+        params = cls._get_parameters(func, is_getitem)
+
+        # delegate is always assumed to not be a getitem- style call sig
+        if func_delegate:
+            delegate = cls._get_parameters(func_delegate)
+            delegate_no_args = '()'
+        else:
+            delegate = ''
+            delegate_no_args = ''
+
+        signature = f'{name}{params}{delegate}'
+
+        if is_getitem:
+            signature_no_args = f'{name}[]{delegate_no_args}'
+        else:
+            signature_no_args = f'{name}(){delegate_no_args}'
+
+        return signature, signature_no_args
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -213,6 +292,7 @@ class InterfaceSummary:
                 continue
             yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
 
+
     @classmethod
     def interrogate(cls,
             target: tp.Type[ContainerBase]
@@ -237,7 +317,14 @@ class InterfaceSummary:
             reference = f'{cls_name}.{name}'
 
             if name in cls.DICT_LIKE:
-                signature = f'{name}()' if name != 'values' else name
+                if name == 'values':
+                    signature = signature_no_args = name
+                else:
+                    signature, signature_no_args = cls._get_signatures(
+                            name,
+                            obj,
+                            is_getitem=False
+                            )
                 yield Interface(cls_name,
                         InterfaceGroup.DictLike,
                         signature,
@@ -248,13 +335,18 @@ class InterfaceSummary:
 
             elif name in cls.DISPLAY:
                 if name != 'interface':
-                    signature = f'{name}()'
+                    # signature = f'{name}()'
+                    signature, signature_no_args = cls._get_signatures(
+                            name,
+                            obj,
+                            is_getitem=False
+                            )
                     yield Interface(cls_name,
                             InterfaceGroup.Display,
                             signature,
                             doc,
                             reference,
-                            signature_no_args=signature
+                            signature_no_args=signature_no_args
                             )
                 else: # interface attr
                     yield Interface(cls_name,
@@ -269,8 +361,26 @@ class InterfaceSummary:
                 # InterfaceAsType found on Frame, IndexHierarchy
                 if isinstance(obj, InterfaceAsType):
                     for field in cls.ATTR_ASTYPE:
-                        signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
+
+                        reference_obj = getattr(InterfaceAsType, field)
                         reference_end_point = f'{InterfaceAsType.__name__}.{field}'
+
+                        # signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
+
+                        if field == cls.GETITEM:
+                            # the getitem version returns a FrameAsType
+                            signature, signature_no_args = cls._get_signatures(
+                                    name,
+                                    reference_obj,
+                                    is_getitem=True,
+                                    func_delegate=FrameAsType.__call__
+                                    )
+                        else:
+                            signature, signature_no_args = cls._get_signatures(
+                                    name,
+                                    reference_obj,
+                                    is_getitem=False
+                                    )
                         doc = cls.scrub_doc(getattr(InterfaceAsType, field).__doc__)
                         yield Interface(cls_name,
                                 InterfaceGroup.Method,
@@ -280,7 +390,7 @@ class InterfaceSummary:
                                 use_signature=True,
                                 reference_is_attr=True,
                                 reference_end_point=reference_end_point,
-                                signature_no_args=signature
+                                signature_no_args=signature_no_args
                                 )
                 else: # Series, Index, astype is just a method
                     yield Interface(cls_name,
@@ -291,46 +401,44 @@ class InterfaceSummary:
                             signature_no_args=signature
                             )
             elif name.startswith('from_') or name == '__init__':
-                signature = f'{name}()'
+                signature, signature_no_args = cls._get_signatures(
+                        name,
+                        obj,
+                        is_getitem=False
+                        )
+                # signature = f'{name}()'
                 yield Interface(cls_name,
                         InterfaceGroup.Constructor,
                         signature,
                         doc,
                         reference,
-                        signature_no_args=signature
+                        signature_no_args=signature_no_args
                         )
 
             elif name.startswith('to_'):
-                signature = f'{name}()'
+                signature, signature_no_args = cls._get_signatures(
+                        name,
+                        obj,
+                        is_getitem=False
+                        )
+                # signature = f'{name}()'
                 yield Interface(cls_name,
                         InterfaceGroup.Exporter,
                         signature,
                         doc,
                         reference,
-                        signature_no_args=signature
+                        signature_no_args=signature_no_args
                         )
 
             elif name.startswith('iter_'):
                 # replace with inspect call
                 reference_is_attr = True
-                signature_no_args = f'{name}()'
 
-                if isinstance(obj, IterNodeNoArg):
-                    signature = f'{name}()'
-                elif isinstance(obj, IterNodeAxis):
-                    signature = f'{name}(axis)'
-                elif isinstance(obj, IterNodeGroup):
-                    signature = f'{name}()'
-                elif isinstance(obj, IterNodeGroupAxis):
-                    signature = f'{name}(key, axis)'
-                elif isinstance(obj, IterNodeDepthLevel):
-                    signature = f'{name}(depth_level)'
-                elif isinstance(obj, IterNodeDepthLevelAxis):
-                    signature = f'{name}(depth_level, axis)'
-                elif isinstance(obj, IterNodeWindow):
-                    signature = f'{name}(size, step, axis, ...)'
-                else:
-                    raise NotImplementedError() #pragma: no cover
+                signature, signature_no_args = cls._get_signatures(
+                        name,
+                        obj.__call__,
+                        is_getitem=False
+                        )
 
                 yield Interface(cls_name,
                         InterfaceGroup.Iterator,
