@@ -246,9 +246,9 @@ class Interface(tp.NamedTuple):
     doc: str
     reference: str = '' # a qualified name as a string for doc gen
     use_signature: bool = False
-    reference_is_attr: bool = False
-    reference_end_point: str = ''
-    reference_end_point_is_attr: bool = False
+    is_attr: bool = False
+    delegate_reference: str = ''
+    delegate_is_attr: bool = False
     signature_no_args: str = ''
 
     @classmethod
@@ -318,8 +318,8 @@ class Interface(tp.NamedTuple):
         if isinstance(obj, InterfaceAsType):
             for field in Features.ATTR_ASTYPE:
 
-                reference_obj = getattr(InterfaceAsType, field)
-                reference_end_point = f'{InterfaceAsType.__name__}.{field}'
+                delegate_obj = getattr(InterfaceAsType, field)
+                delegate_reference = f'{InterfaceAsType.__name__}.{field}'
 
                 # signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
 
@@ -327,14 +327,14 @@ class Interface(tp.NamedTuple):
                     # the cls.getitem version returns a FrameAsType
                     signature, signature_no_args = _get_signatures(
                             name,
-                            reference_obj,
+                            delegate_obj,
                             is_getitem=True,
                             delegate_func=FrameAsType.__call__
                             )
                 else:
                     signature, signature_no_args = _get_signatures(
                             name,
-                            reference_obj,
+                            delegate_obj,
                             is_getitem=False
                             )
                 doc = Features.scrub_doc(getattr(InterfaceAsType, field).__doc__)
@@ -344,8 +344,8 @@ class Interface(tp.NamedTuple):
                         doc,
                         reference,
                         use_signature=True,
-                        reference_is_attr=True,
-                        reference_end_point=reference_end_point,
+                        is_attr=True,
+                        delegate_reference=delegate_reference,
                         signature_no_args=signature_no_args
                         )
         else: # Series, Index, astype is just a method
@@ -412,7 +412,7 @@ class Interface(tp.NamedTuple):
             doc
             ) -> tp.Iterator['Interface']:
 
-        reference_is_attr = True
+        is_attr = True
         signature, signature_no_args = _get_signatures(
                 name,
                 obj.__call__,
@@ -425,21 +425,21 @@ class Interface(tp.NamedTuple):
                 doc,
                 reference,
                 use_signature=True,
-                reference_is_attr=True,
+                is_attr=True,
                 signature_no_args=signature_no_args,
                 )
 
         for field in Features.ATTR_ITER_NODE: # apply, map, etc
 
-            reference_obj = getattr(IterNodeDelegate, field)
-            reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
-            doc = Features.scrub_doc(reference_obj.__doc__)
+            delegate_obj = getattr(IterNodeDelegate, field)
+            delegate_reference = f'{IterNodeDelegate.__name__}.{field}'
+            doc = Features.scrub_doc(delegate_obj.__doc__)
 
             signature, signature_no_args = _get_signatures(
                     name,
-                    reference_obj,
+                    obj.__call__,
                     is_getitem=False,
-                    delegate_func=reference_obj,
+                    delegate_func=delegate_obj,
                     delegate_name=field
                     )
             # import ipdb; ipdb.set_trace()
@@ -452,8 +452,8 @@ class Interface(tp.NamedTuple):
                     doc,
                     reference,
                     use_signature=True,
-                    reference_is_attr=True,
-                    reference_end_point=reference_end_point,
+                    is_attr=True,
+                    delegate_reference=delegate_reference,
                     signature_no_args=signature_no_args
                     )
 
@@ -584,48 +584,13 @@ class InterfaceSummary(Features):
                         reference=reference,
                         doc=doc)
 
-
-                # reference_is_attr = True
-                # signature, signature_no_args = _get_signatures(
-                #         name,
-                #         obj.__call__,
-                #         is_getitem=False
-                #         )
-
-                # yield Interface(cls_name,
-                #         InterfaceGroup.Iterator,
-                #         signature,
-                #         doc,
-                #         reference,
-                #         use_signature=True,
-                #         reference_is_attr=True,
-                #         signature_no_args=signature_no_args,
-                #         )
-
-                # for field in cls.ATTR_ITER_NODE: # apply, map, etc
-                #     signature_sub = f'{signature}.{field}()'
-                #     signature_sub_no_args = f'{signature_no_args}.{field}()'
-
-                #     reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
-                #     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
-                #     yield Interface(cls_name,
-                #             InterfaceGroup.Iterator,
-                #             signature_sub,
-                #             doc,
-                #             reference,
-                #             use_signature=True,
-                #             reference_is_attr=True,
-                #             reference_end_point=reference_end_point,
-                #             signature_no_args=signature_sub_no_args
-                #             )
-
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 if name != cls.GETITEM:
                     signature = f'{name}[]'
-                    reference_is_attr = True
+                    is_attr = True
                 else:
                     signature = f'[]'
-                    reference_is_attr = False
+                    is_attr = False
 
                 # signature = f'{name}[]' if name != cls.GETITEM else '[]'
                 yield Interface(cls_name,
@@ -634,7 +599,7 @@ class InterfaceSummary(Features):
                         doc,
                         reference,
                         use_signature=True,
-                        reference_is_attr=True,
+                        is_attr=True,
                         signature_no_args=signature
                         )
 
@@ -642,12 +607,12 @@ class InterfaceSummary(Features):
                 for field in cls.ATTR_SELECTOR_NODE:
                     if field != cls.GETITEM:
                         signature = f'{name}.{field}[]'
-                        reference_end_point_is_attr = True
+                        delegate_is_attr = True
                     else:
                         signature = f'{name}[]'
-                        reference_end_point_is_attr = False
+                        delegate_is_attr = False
 
-                    reference_end_point = f'{InterfaceSelection2D.__name__}.{field}'
+                    delegate_reference = f'{InterfaceSelection2D.__name__}.{field}'
                     doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
                     yield Interface(cls_name,
                             InterfaceGroup.Selector,
@@ -655,9 +620,9 @@ class InterfaceSummary(Features):
                             doc,
                             reference,
                             use_signature=True,
-                            reference_is_attr=True,
-                            reference_end_point=reference_end_point,
-                            reference_end_point_is_attr=reference_end_point_is_attr,
+                            is_attr=True,
+                            delegate_reference=delegate_reference,
+                            delegate_is_attr=delegate_is_attr,
                             signature_no_args=signature
                             )
 
@@ -665,12 +630,12 @@ class InterfaceSummary(Features):
                 for field in cls.ATTR_SELECTOR_NODE_ASSIGN:
                     if field != cls.GETITEM:
                         signature = f'{name}.{field}[]'
-                        reference_end_point_is_attr = True
+                        delegate_is_attr = True
                     else:
                         signature = f'{name}[]'
-                        reference_end_point_is_attr = False
+                        delegate_is_attr = False
 
-                    reference_end_point = f'{InterfaceAssign2D.__name__}.{field}'
+                    delegate_reference = f'{InterfaceAssign2D.__name__}.{field}'
                     doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
                     yield Interface(cls_name,
                             InterfaceGroup.Selector,
@@ -678,9 +643,9 @@ class InterfaceSummary(Features):
                             doc,
                             reference,
                             use_signature=True,
-                            reference_is_attr=True,
-                            reference_end_point=reference_end_point,
-                            reference_end_point_is_attr=reference_end_point_is_attr,
+                            is_attr=True,
+                            delegate_reference=delegate_reference,
+                            delegate_is_attr=delegate_is_attr,
                             signature_no_args=signature
                             )
 

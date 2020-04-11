@@ -44,7 +44,7 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     .. py:method:: {{ name }}.{{ signature }}
 
-    {% elif group == 'Attribute' or signature in ('interface', 'values') or row.reference_is_attr %}
+    {% elif group == 'Attribute' or signature in ('interface', 'values') or row.is_attr %}
 
     .. autoattribute:: static_frame.{{ row.reference }}
 
@@ -59,7 +59,7 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
     {# if a signature has been used, then we need to augment with doc with reference #}
     {% if row.use_signature %}
 
-        {% if row.reference and row.reference_is_attr %}
+        {% if row.reference and row.is_attr %}
 
         .. autoattribute:: static_frame.{{ row.reference }}
 
@@ -73,16 +73,16 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
 
 
-    {# if reference_end_point is defined, always include it #}
-    {% if row.reference_end_point %}
+    {# if delegate_reference is defined, always include it #}
+    {% if row.delegate_reference %}
 
-        {% if row.reference_end_point_is_attr %}
+        {% if row.delegate_is_attr %}
 
-        .. autoattribute:: static_frame.{{ row.reference_end_point }}
+        .. autoattribute:: static_frame.{{ row.delegate_reference }}
 
         {% else %}
 
-        .. automethod:: static_frame.{{ row.reference_end_point }}
+        .. automethod:: static_frame.{{ row.delegate_reference }}
 
         {% endif %}
 
