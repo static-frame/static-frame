@@ -46,36 +46,98 @@ from static_frame.core.selector_node import InterfaceAssign2D
 from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
 
+#-------------------------------------------------------------------------------
+# function inspection utilities
 
-class InterfaceGroup:
-    Attribute = 'Attribute'
-    Constructor = 'Constructor'
-    DictLike = 'Dictionary-Like'
-    Display = 'Display'
-    Exporter = 'Exporter'
-    Iterator = 'Iterator'
-    Method = 'Method'
-    OperatorBinary = 'Operator Binary'
-    OperatorUnary = 'Operator Unary'
-    Selector = 'Selector'
+def _get_parameters(
+        func: AnyCallable,
+        is_getitem: bool = False,
+        max_args: int = 3,
+        ) -> str:
+    # might need special handling for methods on built-ins
+    sig = inspect.signature(func)
+
+    positional = []
+    kwarg_only = ['*'] # preload
+    var_positional = ''
+    var_keyword = ''
+
+    count = 0
+    count_total = 0
+    for p in sig.parameters.values():
+        if count == 0 and p.name == 'self':
+            continue # do not increment counts
+
+        if count < max_args:
+            if p.kind == p.KEYWORD_ONLY:
+                kwarg_only.append(p.name)
+            elif p.kind == p.VAR_POSITIONAL:
+                var_positional = p.name
+            elif p.kind == p.VAR_KEYWORD:
+                var_keyword = p.name
+            else:
+                positional.append(p.name)
+            count += 1
+        count_total += 1
+
+    suffix = '' if count >= count_total else f', {Display.ELLIPSIS}'
+
+    # if truthy, update to a proper iterable
+    if var_positional:
+        var_positional = ('*' + var_positional,)
+    if var_keyword:
+        var_keyword = ('**' + var_keyword,)
+
+    if len(kwarg_only) > 1: # do not count the preload
+        param_repr = ', '.join(chain(positional, kwarg_only, var_positional, var_keyword))
+    else:
+        param_repr = ', '.join(chain(positional, var_positional, var_keyword))
+
+    if is_getitem:
+        return f'[{param_repr}{suffix}]'
+    return f'({param_repr}{suffix})'
 
 
-class Interface(tp.NamedTuple):
-    cls: str
-    group: str # should be InterfaceGroup
-    signature: str
-    doc: str
-    reference: str = '' # a qualified name as a string for doc gen
-    use_signature: bool = False
-    reference_is_attr: bool = False
-    reference_end_point: str = ''
-    reference_end_point_is_attr: bool = False
-    signature_no_args: str = ''
+def _get_signatures(
+        name: str,
+        func: AnyCallable,
+        *,
+        is_getitem: bool = False,
+        delegate_func: tp.Optional[AnyCallable] = None,
+        delegate_name: str = '',
+        ) -> tp.Tuple[str, str]:
+
+    if delegate_func:
+        delegate = _get_parameters(delegate_func)
+        if delegate_name:
+            delegate = f'.{delegate_name}{delegate}'
+        # delegate is always assumed to not be a cls.getitem- style call sig
+        delegate_no_args = '()'
+    else:
+        delegate = ''
+        delegate_no_args = ''
+
+    signature = f'{name}{_get_parameters(func, is_getitem)}{delegate}'
+
+    if is_getitem:
+        signature_no_args = f'{name}[]{delegate_no_args}'
+    else:
+        signature_no_args = f'{name}(){delegate_no_args}'
+
+    return signature, signature_no_args
 
 
-class InterfaceSummary:
+#-------------------------------------------------------------------------------
+class Features:
+    '''
+    Core utilities neede by both Interface and InterfaceSummary
+    '''
 
     DOC_CHARS = 80
+
+    # astype is a normal function in Serie=s, is a selector in Frame
+    ATTR_ASTYPE = ('__call__', '__getitem__')
+    GETITEM = '__getitem__'
 
     EXCLUDE_PRIVATE = {
         '__class__',
@@ -124,6 +186,11 @@ class InterfaceSummary:
         'interface',
         }
 
+
+    # must all be members of InterfaceSelection2D
+    ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
+    ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
+
     ATTR_ITER_NODE = (
         'apply',
         'apply_iter',
@@ -140,99 +207,6 @@ class InterfaceSummary:
         'map_fill_iter_items',
         )
 
-    GETITEM = '__getitem__'
-
-    # must all be members of InterfaceSelection2D
-    ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
-    ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
-    # astype is a normal function in Serie=s, is a selector in Frame
-    ATTR_ASTYPE = ('__call__', '__getitem__')
-    _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
-
-    @staticmethod
-    def _get_parameters(
-            func: AnyCallable,
-            is_getitem: bool = False,
-            max_args: int = 3,
-            ) -> str:
-        # might need special handling for methods on built-ins
-        sig = inspect.signature(func)
-
-        positional = []
-        kwarg_only = ['*'] # preload
-        var_positional = ''
-        var_keyword = ''
-
-        count = 0
-        count_total = 0
-        for p in sig.parameters.values():
-            if count == 0 and p.name == 'self':
-                continue # do not increment counts
-
-            if count < max_args:
-                if p.kind == p.KEYWORD_ONLY:
-                    kwarg_only.append(p.name)
-                elif p.kind == p.VAR_POSITIONAL:
-                    var_positional = p.name
-                elif p.kind == p.VAR_KEYWORD:
-                    var_keyword = p.name
-                else:
-                    positional.append(p.name)
-                count += 1
-            count_total += 1
-
-        suffix = '' if count >= count_total else f', {Display.ELLIPSIS}'
-
-        # if truthy, update to a proper iterable
-        if var_positional:
-            var_positional = ('*' + var_positional,)
-        if var_keyword:
-            var_keyword = ('**' + var_keyword,)
-
-        if len(kwarg_only) > 1: # do not count the preload
-            param_repr = ', '.join(chain(positional, kwarg_only, var_positional, var_keyword))
-        else:
-            param_repr = ', '.join(chain(positional, var_positional, var_keyword))
-
-        if is_getitem:
-            return f'[{param_repr}{suffix}]'
-        return f'({param_repr}{suffix})'
-
-    @classmethod
-    def _get_signatures(cls,
-            name: str,
-            func: AnyCallable,
-            *,
-            is_getitem: bool,
-            func_delegate: tp.Optional[AnyCallable] = None,
-            ):
-
-        params = cls._get_parameters(func, is_getitem)
-
-        # delegate is always assumed to not be a getitem- style call sig
-        if func_delegate:
-            delegate = cls._get_parameters(func_delegate)
-            delegate_no_args = '()'
-        else:
-            delegate = ''
-            delegate_no_args = ''
-
-        signature = f'{name}{params}{delegate}'
-
-        if is_getitem:
-            signature_no_args = f'{name}[]{delegate_no_args}'
-        else:
-            signature_no_args = f'{name}(){delegate_no_args}'
-
-        return signature, signature_no_args
-
-    @classmethod
-    def is_public(cls, field: str) -> bool:
-        if field.startswith('_') and not field.startswith('__'):
-            return False
-        if field in cls.EXCLUDE_PRIVATE:
-            return False
-        return True
 
     @classmethod
     def scrub_doc(cls, doc: tp.Optional[str]) -> str:
@@ -248,6 +222,256 @@ class InterfaceSummary:
         if len(msg) <= cls.DOC_CHARS:
             return msg
         return msg[:cls.DOC_CHARS].strip() + Display.ELLIPSIS
+
+
+#-------------------------------------------------------------------------------
+class InterfaceGroup:
+    Attribute = 'Attribute'
+    Constructor = 'Constructor'
+    DictLike = 'Dictionary-Like'
+    Display = 'Display'
+    Exporter = 'Exporter'
+    Iterator = 'Iterator'
+    Method = 'Method'
+    OperatorBinary = 'Operator Binary'
+    OperatorUnary = 'Operator Unary'
+    Selector = 'Selector'
+
+
+class Interface(tp.NamedTuple):
+
+    cls_name: str
+    group: str # should be InterfaceGroup
+    signature: str
+    doc: str
+    reference: str = '' # a qualified name as a string for doc gen
+    use_signature: bool = False
+    reference_is_attr: bool = False
+    reference_end_point: str = ''
+    reference_end_point_is_attr: bool = False
+    signature_no_args: str = ''
+
+    @classmethod
+    def from_dict_like(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+        if name == 'values':
+            signature = signature_no_args = name
+        else:
+            signature, signature_no_arg_get_signatures = _get_signatures(
+                    name,
+                    obj,
+                    is_getitem=False
+                    )
+        yield cls(cls_name,
+                InterfaceGroup.DictLike,
+                signature,
+                doc,
+                reference,
+                signature_no_args=signature
+                )
+
+    @classmethod
+    def from_display(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+        if name != 'interface':
+            # signature = f'{name}()'
+            signature, signature_no_args = _get_signatures(
+                    name,
+                    obj,
+                    is_getitem=False
+                    )
+            yield cls(cls_name,
+                    InterfaceGroup.Display,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
+        else: # interface attr
+            yield cls(cls_name,
+                    InterfaceGroup.Display,
+                    name,
+                    doc,
+                    use_signature=True,
+                    signature_no_args=name
+                    )
+
+    @classmethod
+    def from_astype(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+        # InterfaceAsType found on Frame, IndexHierarchy
+        if isinstance(obj, InterfaceAsType):
+            for field in Features.ATTR_ASTYPE:
+
+                reference_obj = getattr(InterfaceAsType, field)
+                reference_end_point = f'{InterfaceAsType.__name__}.{field}'
+
+                # signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
+
+                if field == Features.GETITEM:
+                    # the cls.getitem version returns a FrameAsType
+                    signature, signature_no_args = _get_signatures(
+                            name,
+                            reference_obj,
+                            is_getitem=True,
+                            delegate_func=FrameAsType.__call__
+                            )
+                else:
+                    signature, signature_no_args = _get_signatures(
+                            name,
+                            reference_obj,
+                            is_getitem=False
+                            )
+                doc = Features.scrub_doc(getattr(InterfaceAsType, field).__doc__)
+                yield cls(cls_name,
+                        InterfaceGroup.Method,
+                        signature,
+                        doc,
+                        reference,
+                        use_signature=True,
+                        reference_is_attr=True,
+                        reference_end_point=reference_end_point,
+                        signature_no_args=signature_no_args
+                        )
+        else: # Series, Index, astype is just a method
+            signature, signature_no_args = _get_signatures(name, obj)
+            yield cls(cls_name,
+                    InterfaceGroup.Method,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
+
+
+    @classmethod
+    def from_constructor(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+
+        signature, signature_no_args = _get_signatures(
+                name,
+                obj,
+                is_getitem=False
+                )
+        yield cls(cls_name,
+                InterfaceGroup.Constructor,
+                signature,
+                doc,
+                reference,
+                signature_no_args=signature_no_args
+                )
+
+    @classmethod
+    def from_exporter(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+
+        signature, signature_no_args = _get_signatures(
+                name,
+                obj,
+                is_getitem=False
+                )
+        yield cls(cls_name,
+                InterfaceGroup.Exporter,
+                signature,
+                doc,
+                reference,
+                signature_no_args=signature_no_args
+                )
+
+    @classmethod
+    def from_iterator(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+
+        reference_is_attr = True
+        signature, signature_no_args = _get_signatures(
+                name,
+                obj.__call__,
+                is_getitem=False
+                )
+
+        yield cls(cls_name,
+                InterfaceGroup.Iterator,
+                signature,
+                doc,
+                reference,
+                use_signature=True,
+                reference_is_attr=True,
+                signature_no_args=signature_no_args,
+                )
+
+        for field in Features.ATTR_ITER_NODE: # apply, map, etc
+
+            reference_obj = getattr(IterNodeDelegate, field)
+            reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
+            doc = Features.scrub_doc(reference_obj.__doc__)
+
+            signature, signature_no_args = _get_signatures(
+                    name,
+                    reference_obj,
+                    is_getitem=False,
+                    delegate_func=reference_obj,
+                    delegate_name=field
+                    )
+            # import ipdb; ipdb.set_trace()
+            # signature_sub = f'{signature}.{field}()'
+            # signature_sub_no_args = f'{signature_no_args}.{field}()'
+
+            yield cls(cls_name,
+                    InterfaceGroup.Iterator,
+                    signature,
+                    doc,
+                    reference,
+                    use_signature=True,
+                    reference_is_attr=True,
+                    reference_end_point=reference_end_point,
+                    signature_no_args=signature_no_args
+                    )
+
+
+#-------------------------------------------------------------------------------
+
+class InterfaceSummary(Features):
+
+    _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
+
+    @classmethod
+    def is_public(cls, field: str) -> bool:
+        if field.startswith('_') and not field.startswith('__'):
+            return False
+        if field in cls.EXCLUDE_PRIVATE:
+            return False
+        return True
+
 
 
     @classmethod
@@ -293,6 +517,7 @@ class InterfaceSummary:
             yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
 
 
+    #---------------------------------------------------------------------------
     @classmethod
     def interrogate(cls,
             target: tp.Type[ContainerBase]
@@ -317,155 +542,82 @@ class InterfaceSummary:
             reference = f'{cls_name}.{name}'
 
             if name in cls.DICT_LIKE:
-                if name == 'values':
-                    signature = signature_no_args = name
-                else:
-                    signature, signature_no_args = cls._get_signatures(
-                            name,
-                            obj,
-                            is_getitem=False
-                            )
-                yield Interface(cls_name,
-                        InterfaceGroup.DictLike,
-                        signature,
-                        doc,
-                        reference,
-                        signature_no_args=signature
-                        )
-
+                yield from Interface.from_dict_like(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
             elif name in cls.DISPLAY:
-                if name != 'interface':
-                    # signature = f'{name}()'
-                    signature, signature_no_args = cls._get_signatures(
-                            name,
-                            obj,
-                            is_getitem=False
-                            )
-                    yield Interface(cls_name,
-                            InterfaceGroup.Display,
-                            signature,
-                            doc,
-                            reference,
-                            signature_no_args=signature_no_args
-                            )
-                else: # interface attr
-                    yield Interface(cls_name,
-                            InterfaceGroup.Display,
-                            name,
-                            doc,
-                            use_signature=True,
-                            signature_no_args=name
-                            )
-
+                yield from Interface.from_display(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
             elif name == 'astype':
-                # InterfaceAsType found on Frame, IndexHierarchy
-                if isinstance(obj, InterfaceAsType):
-                    for field in cls.ATTR_ASTYPE:
-
-                        reference_obj = getattr(InterfaceAsType, field)
-                        reference_end_point = f'{InterfaceAsType.__name__}.{field}'
-
-                        # signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
-
-                        if field == cls.GETITEM:
-                            # the getitem version returns a FrameAsType
-                            signature, signature_no_args = cls._get_signatures(
-                                    name,
-                                    reference_obj,
-                                    is_getitem=True,
-                                    func_delegate=FrameAsType.__call__
-                                    )
-                        else:
-                            signature, signature_no_args = cls._get_signatures(
-                                    name,
-                                    reference_obj,
-                                    is_getitem=False
-                                    )
-                        doc = cls.scrub_doc(getattr(InterfaceAsType, field).__doc__)
-                        yield Interface(cls_name,
-                                InterfaceGroup.Method,
-                                signature,
-                                doc,
-                                reference,
-                                use_signature=True,
-                                reference_is_attr=True,
-                                reference_end_point=reference_end_point,
-                                signature_no_args=signature_no_args
-                                )
-                else: # Series, Index, astype is just a method
-                    yield Interface(cls_name,
-                            InterfaceGroup.Method,
-                            name,
-                            doc,
-                            reference,
-                            signature_no_args=signature
-                            )
+                yield from Interface.from_astype(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
             elif name.startswith('from_') or name == '__init__':
-                signature, signature_no_args = cls._get_signatures(
-                        name,
-                        obj,
-                        is_getitem=False
-                        )
-                # signature = f'{name}()'
-                yield Interface(cls_name,
-                        InterfaceGroup.Constructor,
-                        signature,
-                        doc,
-                        reference,
-                        signature_no_args=signature_no_args
-                        )
-
+                yield from Interface.from_constructor(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
             elif name.startswith('to_'):
-                signature, signature_no_args = cls._get_signatures(
-                        name,
-                        obj,
-                        is_getitem=False
-                        )
-                # signature = f'{name}()'
-                yield Interface(cls_name,
-                        InterfaceGroup.Exporter,
-                        signature,
-                        doc,
-                        reference,
-                        signature_no_args=signature_no_args
-                        )
-
+                yield from Interface.from_exporter(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
             elif name.startswith('iter_'):
-                # replace with inspect call
-                reference_is_attr = True
+                yield from Interface.from_iterator(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
 
-                signature, signature_no_args = cls._get_signatures(
-                        name,
-                        obj.__call__,
-                        is_getitem=False
-                        )
 
-                yield Interface(cls_name,
-                        InterfaceGroup.Iterator,
-                        signature,
-                        doc,
-                        reference,
-                        use_signature=True,
-                        reference_is_attr=True,
-                        signature_no_args=signature_no_args,
-                        )
+                # reference_is_attr = True
+                # signature, signature_no_args = _get_signatures(
+                #         name,
+                #         obj.__call__,
+                #         is_getitem=False
+                #         )
 
-                for field in cls.ATTR_ITER_NODE: # apply, map, etc
-                    signature_sub = f'{signature}.{field}()'
-                    signature_sub_no_args = f'{signature_no_args}.{field}()'
+                # yield Interface(cls_name,
+                #         InterfaceGroup.Iterator,
+                #         signature,
+                #         doc,
+                #         reference,
+                #         use_signature=True,
+                #         reference_is_attr=True,
+                #         signature_no_args=signature_no_args,
+                #         )
 
-                    reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
-                    doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
-                    yield Interface(cls_name,
-                            InterfaceGroup.Iterator,
-                            signature_sub,
-                            doc,
-                            reference,
-                            use_signature=True,
-                            reference_is_attr=True,
-                            reference_end_point=reference_end_point,
-                            signature_no_args=signature_sub_no_args
-                            )
+                # for field in cls.ATTR_ITER_NODE: # apply, map, etc
+                #     signature_sub = f'{signature}.{field}()'
+                #     signature_sub_no_args = f'{signature_no_args}.{field}()'
+
+                #     reference_end_point = f'{IterNodeDelegate.__name__}.{field}'
+                #     doc = cls.scrub_doc(getattr(IterNodeDelegate, field).__doc__)
+                #     yield Interface(cls_name,
+                #             InterfaceGroup.Iterator,
+                #             signature_sub,
+                #             doc,
+                #             reference,
+                #             use_signature=True,
+                #             reference_is_attr=True,
+                #             reference_end_point=reference_end_point,
+                #             signature_no_args=signature_sub_no_args
+                #             )
 
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 if name != cls.GETITEM:
@@ -577,10 +729,10 @@ class InterfaceSummary:
         Reduce to key fields.
         '''
         f = Frame.from_records(cls.interrogate(target), name=target.__name__)
-        f = f.sort_values(('cls', 'group', 'signature'))
+        f = f.sort_values(('cls_name', 'group', 'signature'))
         f = f.set_index('signature', drop=True)
         if minimized:
-            return f[['cls', 'group', 'doc']] #type: ignore
+            return f[['cls_name', 'group', 'doc']] #type: ignore
         return f #type: ignore
 
 

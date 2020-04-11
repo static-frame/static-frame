@@ -81,11 +81,11 @@ class DOC_TEMPLATE:
     '''
 
     values_2d = '''
-    A 2D NumPy array of all values in the :obj:`static_frame.{class_name}. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
+    A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, hereogenous columnar types might be coerced to a compatible type.
     '''
 
     values_1d = '''
-    A 1D NumPy array of the values in the :obj:`static_frame.{class_name}. This array will have the same dtype as the container.
+    A 1D NumPy array of the values in the :obj:`{class_name}`. This array will have the same dtype as the container.
     '''
 
 
@@ -97,7 +97,7 @@ class DOC_TEMPLATE:
             )
 
     reindex = dict(
-            doc='''Return a new :obj:`static_frame.{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
+            doc='''Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
             ''',
             index_initializer=INDEX_INITIALIZER,
             fill_value='''fill_value: A value to be used to fill space created by a new index that has values not found in the previous index.''',
@@ -106,7 +106,7 @@ class DOC_TEMPLATE:
             )
 
     relabel = dict(
-            doc ='''Return a new :obj:`static_frame.{class_name}` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
+            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never chagned in a relabeling operation. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
@@ -114,32 +114,32 @@ class DOC_TEMPLATE:
             )
 
     relabel_flat = dict(
-            doc='''Return a new :obj:`static_frame.{class_name}`, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
+            doc='''Return a new :obj:`{class_name}`, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
             ''',
             )
 
     relabel_add_level = dict(
-            doc='''Return a new :obj:`static_frame.{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
+            doc='''Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )
 
     relabel_drop_level = dict(
-            doc='''Return a new :obj:`static_frame.{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
+            doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
             )
 
     head = dict(
-            doc='''Return a :obj:`static_frame.{class_name}` consisting only of the top elements as specified by ``count``.
+            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
             ''',
-            count='''count: Number of elements to be returned from the top of the :obj:`static_frame.{class_name}`''',
+            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
             )
 
     tail = dict(
-            doc='''Return a :obj:`static_frame.{class_name}` consisting only of the bottom elements as specified by ``count``.
+            doc='''Return a :obj:`{class_name}` consisting only of the bottom elements as specified by ``count``.
             ''',
-            count='''count: Number of elements to be returned from the bottom of the :obj:`static_frame.{class_name}`''',
+            count='''count: Number of elements to be returned from the bottom of the :obj:`{class_name}`''',
             )
 
 
