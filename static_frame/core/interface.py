@@ -425,7 +425,7 @@ class Interface(tp.NamedTuple):
                 doc,
                 reference,
                 use_signature=True,
-                is_attr=True,
+                is_attr=True, # doc as attr so sphinx does not add parens to sig
                 signature_no_args=signature_no_args,
                 )
 
