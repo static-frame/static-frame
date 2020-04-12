@@ -442,10 +442,6 @@ class Interface(tp.NamedTuple):
                     delegate_func=delegate_obj,
                     delegate_name=field
                     )
-            # import ipdb; ipdb.set_trace()
-            # signature_sub = f'{signature}.{field}()'
-            # signature_sub_no_args = f'{signature_no_args}.{field}()'
-
             yield cls(cls_name,
                     InterfaceGroup.Iterator,
                     signature,
@@ -455,6 +451,87 @@ class Interface(tp.NamedTuple):
                     is_attr=True,
                     delegate_reference=delegate_reference,
                     signature_no_args=signature_no_args
+                    )
+
+    @classmethod
+    def from_getitem(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+        '''
+        For root __getitem__ methods, as well as __getitem__ on InterfaceGetItem objects.
+        '''
+        if name != Features.GETITEM:
+            target = obj.__getitem__
+        else:
+            target = obj
+            name = ''
+
+        signature, signature_no_args = _get_signatures(
+                name,
+                target,
+                is_getitem=True
+                )
+
+        yield Interface(cls_name,
+                InterfaceGroup.Selector,
+                signature,
+                doc,
+                reference,
+                use_signature=True,
+                is_attr=True,
+                signature_no_args=signature
+                )
+
+
+    @classmethod
+    def from_selection(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['Interface']:
+
+        for field in Features.ATTR_SELECTOR_NODE:
+
+            # get from object, not class
+            delegate_obj = getattr(obj, field)
+            delegate_reference = f'{InterfaceSelection2D.__name__}.{field}'
+            doc = Features.scrub_doc(delegate_obj.__doc__)
+
+            if field != Features.GETITEM:
+                # it is ia selector_node.InterfaceGetItem object
+                delegate_is_attr = True
+                signature, signature_no_args = _get_signatures(
+                        f'{name}.{field}',
+                        delegate_obj.__getitem__,
+                        is_getitem=True,
+                        )
+            else: # is getitem
+                delegate_is_attr = False
+                signature, signature_no_args = _get_signatures(
+                        name,
+                        delegate_obj,
+                        is_getitem=True,
+                        )
+
+
+            print(name, signature)
+
+            yield Interface(cls_name,
+                    InterfaceGroup.Selector,
+                    signature,
+                    doc,
+                    reference,
+                    use_signature=True,
+                    is_attr=True,
+                    delegate_reference=delegate_reference,
+                    delegate_is_attr=delegate_is_attr,
+                    signature_no_args=signature
                     )
 
 
@@ -526,7 +603,7 @@ class InterfaceSummary(Features):
         for name_attr, obj, obj_cls in sorted(cls.name_obj_iter(target)):
             # properties resdie on the class
             doc = ''
-            reference = '' # reference attribute to use
+            # reference = '' # reference attribute to use
 
             if isinstance(obj_cls, property):
                 doc = cls.scrub_doc(obj_cls.__doc__)
@@ -583,48 +660,21 @@ class InterfaceSummary(Features):
                         obj=obj,
                         reference=reference,
                         doc=doc)
-
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
-                if name != cls.GETITEM:
-                    signature = f'{name}[]'
-                    is_attr = True
-                else:
-                    signature = f'[]'
-                    is_attr = False
-
-                # signature = f'{name}[]' if name != cls.GETITEM else '[]'
-                yield Interface(cls_name,
-                        InterfaceGroup.Selector,
-                        signature,
-                        doc,
-                        reference,
-                        use_signature=True,
-                        is_attr=True,
-                        signature_no_args=signature
-                        )
-
-            elif isinstance(obj, InterfaceSelection2D):
-                for field in cls.ATTR_SELECTOR_NODE:
-                    if field != cls.GETITEM:
-                        signature = f'{name}.{field}[]'
-                        delegate_is_attr = True
-                    else:
-                        signature = f'{name}[]'
-                        delegate_is_attr = False
-
-                    delegate_reference = f'{InterfaceSelection2D.__name__}.{field}'
-                    doc = cls.scrub_doc(getattr(InterfaceSelection2D, field).__doc__)
-                    yield Interface(cls_name,
-                            InterfaceGroup.Selector,
-                            signature,
-                            doc,
-                            reference,
-                            use_signature=True,
-                            is_attr=True,
-                            delegate_reference=delegate_reference,
-                            delegate_is_attr=delegate_is_attr,
-                            signature_no_args=signature
-                            )
+                yield from Interface.from_getitem(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
+            elif isinstance(obj, InterfaceSelection2D) and name != 'assign' :
+                yield from Interface.from_selection(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc)
+            #TODO: not handling assignemnt on 1D Series, where obj is InterfaceSelection2D
 
             elif isinstance(obj, InterfaceAssign2D):
                 for field in cls.ATTR_SELECTOR_NODE_ASSIGN:

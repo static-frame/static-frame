@@ -512,6 +512,7 @@ class Series(ContainerOperand):
         '''
         Interface for doing assignment-like selection and replacement.
         '''
+        # NOTE: this is not a InterfaceAssign2D, like on Frame
         return InterfaceSelection2D(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
