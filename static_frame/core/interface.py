@@ -40,8 +40,10 @@ from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
-from static_frame.core.selector_node import InterfaceSelection2D
-from static_frame.core.selector_node import InterfaceAssign2D
+from static_frame.core.selector_node import InterfaceSelectDuo
+from static_frame.core.selector_node import InterfaceSelectTrio
+from static_frame.core.selector_node import InterfaceAssignTrio
+from static_frame.core.selector_node import InterfaceAssignQuartet
 
 from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
@@ -187,9 +189,10 @@ class Features:
         }
 
 
-    # must all be members of InterfaceSelection2D
-    ATTR_SELECTOR_NODE = ('__getitem__', 'iloc', 'loc',)
-    ATTR_SELECTOR_NODE_ASSIGN = ('__getitem__', 'iloc', 'loc', 'bloc')
+    # must all be members of InterfaceSelectTrio
+    ATTR_SELECTOR_DUO = ('iloc', 'loc',)
+    ATTR_SELECTOR_TRIO = ('__getitem__', 'iloc', 'loc',)
+    ATTR_SELECTOR_QUARTET = ('__getitem__', 'iloc', 'loc', 'bloc')
 
     ATTR_ITER_NODE = (
         'apply',
@@ -489,18 +492,19 @@ class Interface(tp.NamedTuple):
 
     @classmethod
     def from_selection(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
+            interface_attrs: tp.Iterable[str]
             ) -> tp.Iterator['Interface']:
 
-        for field in Features.ATTR_SELECTOR_NODE:
+        for field in interface_attrs:
 
             # get from object, not class
             delegate_obj = getattr(obj, field)
-            delegate_reference = f'{InterfaceSelection2D.__name__}.{field}'
+            delegate_reference = f'{InterfaceSelectTrio.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
             if field != Features.GETITEM:
@@ -663,17 +667,27 @@ class InterfaceSummary(Features):
                         obj=obj,
                         reference=reference,
                         doc=doc)
-            elif isinstance(obj, InterfaceSelection2D) and name != 'assign' :
+            elif obj.__class__ is InterfaceSelectDuo:
                 yield from Interface.from_selection(
                         cls_name=cls_name,
                         name=name,
                         obj=obj,
                         reference=reference,
-                        doc=doc)
-            #TODO: not handling assignemnt on 1D Series, where obj is InterfaceSelection2D
+                        doc=doc,
+                        interface_attrs=Features.ATTR_SELECTOR_DUO)
+            elif obj.__class__ is InterfaceSelectTrio:
+                yield from Interface.from_selection(
+                        cls_name=cls_name,
+                        name=name,
+                        obj=obj,
+                        reference=reference,
+                        doc=doc,
+                        interface_attrs=Features.ATTR_SELECTOR_TRIO)
 
-            elif isinstance(obj, InterfaceAssign2D):
-                for field in cls.ATTR_SELECTOR_NODE_ASSIGN:
+
+            elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
+                # TODO: update to pass interface_attrs to generic from_assign
+                for field in cls.ATTR_SELECTOR_QUARTET:
                     if field != cls.GETITEM:
                         signature = f'{name}.{field}[]'
                         delegate_is_attr = True
@@ -681,8 +695,8 @@ class InterfaceSummary(Features):
                         signature = f'{name}[]'
                         delegate_is_attr = False
 
-                    delegate_reference = f'{InterfaceAssign2D.__name__}.{field}'
-                    doc = cls.scrub_doc(getattr(InterfaceAssign2D, field).__doc__)
+                    delegate_reference = f'{InterfaceAssignQuartet.__name__}.{field}'
+                    doc = cls.scrub_doc(getattr(InterfaceAssignQuartet, field).__doc__)
                     yield Interface(cls_name,
                             InterfaceGroup.Selector,
                             signature,

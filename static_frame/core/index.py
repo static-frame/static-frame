@@ -42,7 +42,7 @@ from static_frame.core.util import slice_to_inclusive_slice
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelection1D
+from static_frame.core.selector_node import InterfaceSelectDuo
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -507,8 +507,8 @@ class Index(IndexBase):
 
 
     @property
-    def drop(self) -> InterfaceSelection1D:
-        return InterfaceSelection1D(
+    def drop(self) -> InterfaceSelectDuo:
+        return InterfaceSelectDuo(
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             )

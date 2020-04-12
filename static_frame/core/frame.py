@@ -73,8 +73,8 @@ from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
 
 from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelection2D
-from static_frame.core.selector_node import InterfaceAssign2D
+from static_frame.core.selector_node import InterfaceSelectTrio
+from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 
 from static_frame.core.index_correspondence import IndexCorrespondence
@@ -2090,30 +2090,30 @@ class Frame(ContainerOperand):
         return InterfaceGetItem(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelection2D:
-        return InterfaceSelection2D(
+    def drop(self) -> InterfaceSelectTrio:
+        return InterfaceSelectTrio(
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
 
     @property
-    def mask(self) -> InterfaceSelection2D:
-        return InterfaceSelection2D(
+    def mask(self) -> InterfaceSelectTrio:
+        return InterfaceSelectTrio(
             func_iloc=self._extract_iloc_mask,
             func_loc=self._extract_loc_mask,
             func_getitem=self._extract_getitem_mask)
 
     @property
-    def masked_array(self) -> InterfaceSelection2D:
-        return InterfaceSelection2D(
+    def masked_array(self) -> InterfaceSelectTrio:
+        return InterfaceSelectTrio(
             func_iloc=self._extract_iloc_masked_array,
             func_loc=self._extract_loc_masked_array,
             func_getitem=self._extract_getitem_masked_array)
 
     @property
-    def assign(self) -> InterfaceAssign2D:
+    def assign(self) -> InterfaceAssignQuartet:
         # all functions that return a FrameAssign
-        return InterfaceAssign2D(
+        return InterfaceAssignQuartet(
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
             func_getitem=self._extract_getitem_assign,

@@ -35,7 +35,7 @@ class InterfaceGetItem(tp.Generic[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceSelection1D(tp.Generic[TContainer]):
+class InterfaceSelectDuo(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc and loc
     '''
 
@@ -59,9 +59,7 @@ class InterfaceSelection1D(tp.Generic[TContainer]):
     def loc(self) -> InterfaceGetItem[TContainer]:
         return InterfaceGetItem(self._func_loc)
 
-
-#-------------------------------------------------------------------------------
-class InterfaceSelection2D(tp.Generic[TContainer]):
+class InterfaceSelectTrio(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -97,7 +95,8 @@ class InterfaceSelection2D(tp.Generic[TContainer]):
         '''
         return InterfaceGetItem(self._func_loc)
 
-class InterfaceAssign2D(tp.Generic[TContainer]):
+
+class InterfaceSelectQuartet(tp.Generic[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -140,6 +139,31 @@ class InterfaceAssign2D(tp.Generic[TContainer]):
         '''Label-based assignment.
         '''
         return InterfaceGetItem(self._func_loc)
+
+
+#-------------------------------------------------------------------------------
+
+
+# class InterfaceSelectDuo(InterfaceSelectDuo[TContainer]):
+#     pass
+
+
+# class InterfaceSelectTrio(InterfaceSelectTrio[TContainer]):
+#     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
+#     '''
+#     pass
+
+class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
+    '''For assignment on Series.
+    '''
+    pass
+
+
+class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
+    '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
+    '''
+    pass
+
 
 #-------------------------------------------------------------------------------
 

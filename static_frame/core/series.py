@@ -44,7 +44,8 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import dtype_to_na
 
 from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelection2D
+from static_frame.core.selector_node import InterfaceAssignTrio
+from static_frame.core.selector_node import InterfaceSelectTrio
 
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmax_1d
@@ -475,45 +476,45 @@ class Series(ContainerOperand):
     # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
 
     @property
-    def drop(self) -> InterfaceSelection2D:
+    def drop(self) -> InterfaceSelectTrio:
         '''
         Interface for dropping elements from :obj:`static_frame.Series`.
         '''
-        return InterfaceSelection2D(
+        return InterfaceSelectTrio(
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
                 func_getitem=self._drop_loc
                 )
 
     @property
-    def mask(self) -> InterfaceSelection2D:
+    def mask(self) -> InterfaceSelectTrio:
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
-        return InterfaceSelection2D(
+        return InterfaceSelectTrio(
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
                 func_getitem=self._extract_loc_mask
                 )
 
     @property
-    def masked_array(self) -> InterfaceSelection2D:
+    def masked_array(self) -> InterfaceSelectTrio:
         '''
         Interface for extracting NumPy Masked Arrays.
         '''
-        return InterfaceSelection2D(
+        return InterfaceSelectTrio(
                 func_iloc=self._extract_iloc_masked_array,
                 func_loc=self._extract_loc_masked_array,
                 func_getitem=self._extract_loc_masked_array
                 )
 
     @property
-    def assign(self) -> InterfaceSelection2D:
+    def assign(self) -> InterfaceAssignTrio:
         '''
         Interface for doing assignment-like selection and replacement.
         '''
-        # NOTE: this is not a InterfaceAssign2D, like on Frame
-        return InterfaceSelection2D(
+        # NOTE: this is not a InterfaceAssignQuartet, like on Frame
+        return InterfaceAssignTrio(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign

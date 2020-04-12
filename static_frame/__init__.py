@@ -100,8 +100,8 @@ from static_frame.core.iter_node import IterNodeDepthLevelAxis
 from static_frame.core.iter_node import IterNodeWindow
 
 
-from static_frame.core.selector_node import InterfaceSelection2D
-from static_frame.core.selector_node import InterfaceAssign2D
+from static_frame.core.selector_node import InterfaceSelectTrio
+from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 
 __version__ = '0.6.9' # use -dev for new version in development
