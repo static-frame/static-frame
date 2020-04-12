@@ -504,23 +504,19 @@ class Interface(tp.NamedTuple):
             doc = Features.scrub_doc(delegate_obj.__doc__)
 
             if field != Features.GETITEM:
-                # it is ia selector_node.InterfaceGetItem object
                 delegate_is_attr = True
                 signature, signature_no_args = _get_signatures(
-                        f'{name}.{field}',
+                        f'{name}.{field}', # make compound interface
                         delegate_obj.__getitem__,
                         is_getitem=True,
                         )
             else: # is getitem
                 delegate_is_attr = False
                 signature, signature_no_args = _get_signatures(
-                        name,
+                        name, # on the root, no change necessary
                         delegate_obj,
                         is_getitem=True,
                         )
-
-
-            print(name, signature)
 
             yield Interface(cls_name,
                     InterfaceGroup.Selector,
