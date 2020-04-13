@@ -5,8 +5,9 @@ import numpy as np
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
-
+from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.assign import Assign
 
 
 if tp.TYPE_CHECKING:
@@ -23,9 +24,16 @@ if tp.TYPE_CHECKING:
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus')
 GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
 
-class InterfaceGetItem(tp.Generic[TContainer]):
+
+class Interface(tp.Generic[TContainer]):
+    __slots__ = EMPTY_TUPLE
+    INTERFACE = EMPTY_TUPLE
+
+
+class InterfaceGetItem(Interface[TContainer]):
 
     __slots__ = ('_func',)
+    INTERFACE = ('__getitem__',)
 
     def __init__(self, func: tp.Callable[[GetItemKeyType], TContainer]) -> None:
         self._func: tp.Callable[[GetItemKeyType], TContainer] = func
@@ -35,7 +43,7 @@ class InterfaceGetItem(tp.Generic[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-class InterfaceSelectDuo(tp.Generic[TContainer]):
+class InterfaceSelectDuo(Interface[TContainer]):
     '''An instance to serve as an interface to all of iloc and loc
     '''
 
@@ -43,6 +51,7 @@ class InterfaceSelectDuo(tp.Generic[TContainer]):
             '_func_iloc',
             '_func_loc',
             )
+    INTERFACE = ('iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
@@ -59,7 +68,7 @@ class InterfaceSelectDuo(tp.Generic[TContainer]):
     def loc(self) -> InterfaceGetItem[TContainer]:
         return InterfaceGetItem(self._func_loc)
 
-class InterfaceSelectTrio(tp.Generic[TContainer]):
+class InterfaceSelectTrio(Interface[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -68,6 +77,7 @@ class InterfaceSelectTrio(tp.Generic[TContainer]):
             '_func_loc',
             '_func_getitem',
             )
+    INTERFACE = ('__getitem__', 'iloc', 'loc')
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
@@ -96,7 +106,7 @@ class InterfaceSelectTrio(tp.Generic[TContainer]):
         return InterfaceGetItem(self._func_loc)
 
 
-class InterfaceSelectQuartet(tp.Generic[TContainer]):
+class InterfaceSelectQuartet(Interface[TContainer]):
     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
     '''
 
@@ -106,6 +116,7 @@ class InterfaceSelectQuartet(tp.Generic[TContainer]):
             '_func_getitem',
             '_func_bloc',
             )
+    INTERFACE = ('__getitem__', 'iloc', 'loc', 'bloc')
 
     def __init__(self, *,
             func_iloc: GetItemFunc,
@@ -143,35 +154,66 @@ class InterfaceSelectQuartet(tp.Generic[TContainer]):
 
 #-------------------------------------------------------------------------------
 
-
-# class InterfaceSelectDuo(InterfaceSelectDuo[TContainer]):
-#     pass
-
-
-# class InterfaceSelectTrio(InterfaceSelectTrio[TContainer]):
-#     '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
-#     '''
-#     pass
-
 class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
-    '''For assignment on Series.
+    '''For assignment with __getitem__, iloc, loc.
     '''
-    pass
+
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            'delegate'
+            )
+
+    def __init__(self, *,
+            func_iloc: GetItemFunc,
+            func_loc: GetItemFunc,
+            func_getitem: GetItemFunc,
+            delegate: tp.Type[Assign]
+            ) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
+
+        self.delegate = delegate
 
 
 class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
-    '''An instance to serve as an interface to all of iloc, loc, and __getitem__ extractors.
+    '''For assignment with __getitem__, iloc, loc, bloc.
     '''
-    pass
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            '_func_bloc',
+            'delegate'
+            )
+
+    def __init__(self, *,
+            func_iloc: GetItemFunc,
+            func_loc: GetItemFunc,
+            func_getitem: GetItemFunc,
+            func_bloc: tp.Any, # not sure what is the right type
+            delegate: tp.Type[Assign]
+            ) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
+        self._func_bloc = func_bloc
+
+        self.delegate = delegate
 
 
 #-------------------------------------------------------------------------------
 
-class InterfaceAsType:
+class InterfaceAsType(Interface[TContainer]):
     '''An instance to serve as an interface to __getitem__ extractors.
     '''
 
     __slots__ = ('_func_getitem',)
+    INTERFACE = ('__getitem__', '__call__')
 
     def __init__(self,
             func_getitem: tp.Callable[[GetItemKeyType], 'FrameAsType']

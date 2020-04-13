@@ -128,6 +128,8 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+from static_frame.core.assign import Assign
+
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 
@@ -2117,7 +2119,8 @@ class Frame(ContainerOperand):
             func_iloc=self._extract_iloc_assign,
             func_loc=self._extract_loc_assign,
             func_getitem=self._extract_getitem_assign,
-            func_bloc=self._extract_bloc_assign
+            func_bloc=self._extract_bloc_assign,
+            delegate=FrameAssign,
             )
 
     @property
@@ -4997,7 +5000,7 @@ class FrameGO(Frame):
 #-------------------------------------------------------------------------------
 # utility delegates returned from selection routines and exposing the __call__ interface.
 
-class FrameAssign:
+class FrameAssign(Assign):
     __slots__ = (
         'container',
         'iloc_key',
@@ -5023,7 +5026,11 @@ class FrameAssign:
             fill_value: tp.Any = np.nan
             ) -> 'Frame':
         '''
-        Called with ``file_value`` to execute assignment configured fromthe init key.
+        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
+
+        Args:
+            value: Value to assign, which can be a :obj:`Series`, :obj:`Frame`, np.ndarray, or element.
+            fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if self.iloc_key is not None:
             # NOTE: the iloc key's order is not relevant in assignment

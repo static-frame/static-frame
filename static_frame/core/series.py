@@ -85,6 +85,8 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 
+from static_frame.core.assign import Assign
+
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import AxisInvalid
 
@@ -517,7 +519,8 @@ class Series(ContainerOperand):
         return InterfaceAssignTrio(
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
-                func_getitem=self._extract_loc_assign
+                func_getitem=self._extract_loc_assign,
+                delegate=SeriesAssign
                 )
 
     #---------------------------------------------------------------------------
@@ -1993,7 +1996,7 @@ class Series(ContainerOperand):
 
 
 #-------------------------------------------------------------------------------
-class SeriesAssign:
+class SeriesAssign(Assign):
     __slots__ = ('container', 'iloc_key')
 
     def __init__(self,
@@ -2008,10 +2011,10 @@ class SeriesAssign:
             fill_value=np.nan
             ):
         '''
-        Execute the assingment with the provided ``value``. The `name` attribute is propagated to the returned container.
+        Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
         Args:
-            value: The value to assign. This can be a element, iterable, or :obj:`Series`.
+            value:  Value to assign, which can be a :obj:`Series`, np.ndarray, or element.
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
