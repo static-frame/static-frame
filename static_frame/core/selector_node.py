@@ -27,7 +27,7 @@ GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TCon
 
 class Interface(tp.Generic[TContainer]):
     __slots__ = EMPTY_TUPLE
-    INTERFACE = EMPTY_TUPLE
+    INTERFACE: tp.Tuple[str, ...] = EMPTY_TUPLE
 
 
 class InterfaceGetItem(Interface[TContainer]):

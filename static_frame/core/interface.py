@@ -87,9 +87,9 @@ def _get_parameters(
 
     # if truthy, update to a proper iterable
     if var_positional:
-        var_positional = ('*' + var_positional,)
+        var_positional = ('*' + var_positional,) #type: ignore
     if var_keyword:
-        var_keyword = ('**' + var_keyword,)
+        var_keyword = ('**' + var_keyword,)  #type: ignore
 
     if len(kwarg_only) > 1: # do not count the preload
         param_repr = ', '.join(chain(positional, kwarg_only, var_positional, var_keyword))
