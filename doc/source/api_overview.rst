@@ -29,11 +29,11 @@ This is an overview for quick reference; for detailed documentation, see :ref:`a
     .. csv-table::
         :header-rows: 0
 
-        {% for label, row in frame_sub.iter_tuple_items(axis=1) -%}
-            {% if label == "[]" -%}
-            ":obj:`static_frame.{{name}}{{label}}`", "{{row.doc}}"
+        {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
+            {% if signature.startswith('[') -%}
+            ":obj:`static_frame.{{name}}{{signature}}`", "{{row.doc}}"
             {% else -%}
-            ":obj:`static_frame.{{name}}.{{label}}`", "{{row.doc}}"
+            ":obj:`static_frame.{{name}}.{{signature}}`", "{{row.doc}}"
             {% endif -%}
         {% endfor %}
 

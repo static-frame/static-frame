@@ -138,8 +138,6 @@ class Features:
 
     DOC_CHARS = 80
 
-    # astype is a normal function in Serie=s, is a selector in Frame
-    ATTR_ASTYPE = ('__call__', '__getitem__')
     GETITEM = '__getitem__'
 
     EXCLUDE_PRIVATE = {
@@ -190,11 +188,6 @@ class Features:
         }
 
 
-    # must all be members of InterfaceSelectTrio
-    # ATTR_SELECTOR_DUO = ('iloc', 'loc',)
-    # ATTR_SELECTOR_TRIO = ('__getitem__', 'iloc', 'loc',)
-    # ATTR_SELECTOR_QUARTET = ('__getitem__', 'iloc', 'loc', 'bloc')
-
     ATTR_ITER_NODE = (
         'apply',
         'apply_iter',
@@ -240,6 +233,7 @@ class InterfaceGroup:
     OperatorBinary = 'Operator Binary'
     OperatorUnary = 'Operator Unary'
     Selector = 'Selector'
+    Assignment = 'Assignment'
 
 
 class InterfaceRecord(tp.NamedTuple):
@@ -320,12 +314,10 @@ class InterfaceRecord(tp.NamedTuple):
             ) -> tp.Iterator['InterfaceRecord']:
         # InterfaceAsType found on Frame, IndexHierarchy
         if isinstance(obj, InterfaceAsType):
-            for field in Features.ATTR_ASTYPE:
+            for field in obj.INTERFACE:
 
-                delegate_obj = getattr(InterfaceAsType, field)
-                delegate_reference = f'{InterfaceAsType.__name__}.{field}'
-
-                # signature = f'{name}[]' if field == cls.GETITEM else f'{name}()'
+                delegate_obj = getattr(obj, field)
+                delegate_reference = f'{obj.__class__.__name__}.{field}'
 
                 if field == Features.GETITEM:
                     # the cls.getitem version returns a FrameAsType
@@ -487,7 +479,7 @@ class InterfaceRecord(tp.NamedTuple):
                 reference,
                 use_signature=True,
                 is_attr=True,
-                signature_no_args=signature
+                signature_no_args=signature_no_args
                 )
 
 
@@ -531,7 +523,7 @@ class InterfaceRecord(tp.NamedTuple):
                     is_attr=True,
                     delegate_reference=delegate_reference,
                     delegate_is_attr=delegate_is_attr,
-                    signature_no_args=signature
+                    signature_no_args=signature_no_args
                     )
 
 
@@ -554,10 +546,8 @@ class InterfaceRecord(tp.NamedTuple):
 
             # will be either SeriesAssign or FrameAssign
             terminus_obj = obj.delegate.__call__
-            terminus_reference = f'{terminus_obj.__name__}.__call__'
+            terminus_reference = f'{obj.delegate.__name__}.__call__'
             terminus_doc = Features.scrub_doc(terminus_obj.__doc__)
-
-            # TODO: combine doc?
 
             # use the delegate to get the root signature, as the root is just a property that returns an InterfaceAssignTrio or similar
             if field != Features.GETITEM:
@@ -578,17 +568,51 @@ class InterfaceRecord(tp.NamedTuple):
                         )
 
             yield InterfaceRecord(cls_name,
-                    InterfaceGroup.Selector,
+                    InterfaceGroup.Assignment,
                     signature,
-                    delegate_doc,
+                    terminus_doc,
                     reference,
                     use_signature=True,
-                    is_attr=True,
-                    delegate_reference=delegate_reference,
-                    delegate_is_attr=delegate_is_attr,
-                    signature_no_args=signature
+                    is_attr=False,
+                    delegate_reference=terminus_reference,
+                    signature_no_args=signature_no_args
                     )
 
+    @classmethod
+    def from_method(cls, *,
+            cls_name,
+            name,
+            obj,
+            reference,
+            doc
+            ) -> tp.Iterator['InterfaceRecord']:
+
+        signature, signature_no_args = _get_signatures(name, obj)
+
+        if name in _UFUNC_UNARY_OPERATORS:
+            yield InterfaceRecord(cls_name,
+                    InterfaceGroup.OperatorUnary,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
+        elif name in _UFUNC_BINARY_OPERATORS or name in _RIGHT_OPERATOR_MAP:
+            yield InterfaceRecord(cls_name,
+                    InterfaceGroup.OperatorBinary,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
+        else:
+            yield InterfaceRecord(cls_name,
+                    InterfaceGroup.Method,
+                    signature,
+                    doc,
+                    reference,
+                    signature_no_args=signature_no_args
+                    )
 
 
 #-------------------------------------------------------------------------------
@@ -604,7 +628,6 @@ class InterfaceSummary(Features):
         if field in cls.EXCLUDE_PRIVATE:
             return False
         return True
-
 
 
     @classmethod
@@ -642,12 +665,24 @@ class InterfaceSummary(Features):
                 # getting interface off of the class will recurse
                 yield name_attr, None, ContainerBase.__class__.interface #type: ignore
 
-        for name_attr in dir(target):
+        # force tehse to be ordered at the bottom
+        selectors = ('__getitem__', 'iloc', 'loc')
+        selectors_found = set()
+
+        for name_attr in sorted(dir(target)):
             if name_attr == 'interface':
-                continue # skip, provided by class
+                continue # skip, provided by metaclass
             if not cls.is_public(name_attr):
                 continue
+            if name_attr in selectors:
+                selectors_found.add(name_attr)
+                continue
             yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
+
+
+        for name_attr in selectors:
+            if name_attr in selectors_found:
+                yield name_attr, getattr(instance, name_attr), getattr(target, name_attr)
 
 
     #---------------------------------------------------------------------------
@@ -656,7 +691,7 @@ class InterfaceSummary(Features):
             target: tp.Type[ContainerBase]
             ) -> tp.Iterator[InterfaceRecord]:
 
-        for name_attr, obj, obj_cls in sorted(cls.name_obj_iter(target)):
+        for name_attr, obj, obj_cls in cls.name_obj_iter(target):
             # properties resdie on the class
             doc = ''
             # reference = '' # reference attribute to use
@@ -674,123 +709,36 @@ class InterfaceSummary(Features):
             cls_name = target.__name__
             reference = f'{cls_name}.{name}'
 
+            kwargs = dict(
+                    cls_name=cls_name,
+                    name=name,
+                    obj=obj,
+                    reference=reference,
+                    doc=doc)
+
             if name in cls.DICT_LIKE:
-                yield from InterfaceRecord.from_dict_like(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_dict_like(**kwargs)
             elif name in cls.DISPLAY:
-                yield from InterfaceRecord.from_display(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_display(**kwargs)
             elif name == 'astype':
-                yield from InterfaceRecord.from_astype(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_astype(**kwargs)
             elif name.startswith('from_') or name == '__init__':
-                yield from InterfaceRecord.from_constructor(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_constructor(**kwargs)
             elif name.startswith('to_'):
-                yield from InterfaceRecord.from_exporter(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_exporter(**kwargs)
             elif name.startswith('iter_'):
-                yield from InterfaceRecord.from_iterator(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_iterator(**kwargs)
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
-                yield from InterfaceRecord.from_getitem(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc)
+                yield from InterfaceRecord.from_getitem(**kwargs)
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
-                yield from InterfaceRecord.from_selection(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc,
+                yield from InterfaceRecord.from_selection(**kwargs,
                         cls_interface=obj.__class__)
-
             elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
-                yield from InterfaceRecord.from_assignment(
-                        cls_name=cls_name,
-                        name=name,
-                        obj=obj,
-                        reference=reference,
-                        doc=doc,
+                yield from InterfaceRecord.from_assignment(**kwargs,
                         cls_interface=obj.__class__)
-                # for field in obj.__class__.INTERFACE:
-                #     if field != cls.GETITEM:
-                #         signature = f'{name}.{field}[]'
-                #         delegate_is_attr = True
-                #     else:
-                #         signature = f'{name}[]'
-                #         delegate_is_attr = False
-
-                #     delegate_reference = f'{InterfaceAssignQuartet.__name__}.{field}'
-                #     doc = cls.scrub_doc(getattr(InterfaceAssignQuartet, field).__doc__)
-                #     yield InterfaceRecord(cls_name,
-                #             InterfaceGroup.Selector,
-                #             signature,
-                #             doc,
-                #             reference,
-                #             use_signature=True,
-                #             is_attr=True,
-                #             delegate_reference=delegate_reference,
-                #             delegate_is_attr=delegate_is_attr,
-                #             signature_no_args=signature
-                #             )
-
             elif callable(obj): # general methods
-                signature = f'{name}()'
-                if name_attr in _UFUNC_UNARY_OPERATORS:
-                    yield InterfaceRecord(cls_name,
-                            InterfaceGroup.OperatorUnary,
-                            signature,
-                            doc,
-                            reference,
-                            signature_no_args=signature
-                            )
-                elif name_attr in _UFUNC_BINARY_OPERATORS or name_attr in _RIGHT_OPERATOR_MAP:
-                    yield InterfaceRecord(cls_name,
-                            InterfaceGroup.OperatorBinary,
-                            signature,
-                            doc,
-                            reference,
-                            signature_no_args=signature
-                            )
-                else:
-                    yield InterfaceRecord(cls_name,
-                            InterfaceGroup.Method,
-                            signature,
-                            doc,
-                            reference,
-                            signature_no_args=signature
-                            )
+                yield from InterfaceRecord.from_method(**kwargs)
             else: # attributes
-                if name == 'drop':
-                    import ipdb; ipdb.set_trace()
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
                         name,
@@ -809,7 +757,7 @@ class InterfaceSummary(Features):
         Reduce to key fields.
         '''
         f = Frame.from_records(cls.interrogate(target), name=target.__name__)
-        f = f.sort_values(('cls_name', 'group', 'signature'))
+        f = f.sort_values(('cls_name', 'group',))
         f = f.set_index('signature', drop=True)
         if minimized:
             return f[['cls_name', 'group', 'doc']] #type: ignore

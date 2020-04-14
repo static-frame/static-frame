@@ -100,7 +100,11 @@ from static_frame.core.iter_node import IterNodeDepthLevelAxis
 from static_frame.core.iter_node import IterNodeWindow
 
 
+from static_frame.core.selector_node import InterfaceSelectDuo
 from static_frame.core.selector_node import InterfaceSelectTrio
+from static_frame.core.selector_node import InterfaceSelectQuartet
+
+from static_frame.core.selector_node import InterfaceAssignTrio
 from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 

@@ -209,7 +209,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
 #-------------------------------------------------------------------------------
 
 class InterfaceAsType(Interface[TContainer]):
-    '''An instance to serve as an interface to __getitem__ extractors.
+    '''An instance to serve as an interface to __getitem__ extractors. Used by both :obj:`Frame` and :obj:`IndexHierarchy`.
     '''
 
     __slots__ = ('_func_getitem',)
