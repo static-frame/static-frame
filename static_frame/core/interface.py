@@ -28,18 +28,12 @@ from static_frame.core.display import Display
 from static_frame.core.frame import FrameAsType
 
 from static_frame.core.iter_node import IterNodeDelegate
-from static_frame.core.iter_node import IterNodeNoArg
-from static_frame.core.iter_node import IterNodeAxis
-from static_frame.core.iter_node import IterNodeGroup
-from static_frame.core.iter_node import IterNodeGroupAxis
-from static_frame.core.iter_node import IterNodeDepthLevel
-from static_frame.core.iter_node import IterNodeDepthLevelAxis
-from static_frame.core.iter_node import IterNodeWindow
 
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
+from static_frame.core.selector_node import TContainer
 from static_frame.core.selector_node import Interface
 from static_frame.core.selector_node import InterfaceSelectDuo
 from static_frame.core.selector_node import InterfaceSelectTrio
@@ -251,11 +245,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_dict_like(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
         if name == 'values':
             signature = signature_no_args = name
@@ -275,11 +269,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_display(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
         if name != 'interface':
             # signature = f'{name}()'
@@ -306,11 +300,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_astype(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
         # InterfaceAsType found on Frame, IndexHierarchy
         if isinstance(obj, InterfaceAsType):
@@ -357,11 +351,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_constructor(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
@@ -379,11 +373,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_exporter(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
@@ -401,17 +395,17 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_iterator(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
 
         is_attr = True
         signature, signature_no_args = _get_signatures(
                 name,
-                obj.__call__,
+                obj.__call__, #type: ignore
                 is_getitem=False
                 )
 
@@ -433,7 +427,7 @@ class InterfaceRecord(tp.NamedTuple):
 
             signature, signature_no_args = _get_signatures(
                     name,
-                    obj.__call__,
+                    obj.__call__, #type: ignore
                     is_getitem=False,
                     delegate_func=delegate_obj,
                     delegate_name=field
@@ -451,17 +445,17 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_getitem(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
         For root __getitem__ methods, as well as __getitem__ on InterfaceGetItem objects.
         '''
         if name != Features.GETITEM:
-            target = obj.__getitem__
+            target = obj.__getitem__ #type: ignore
         else:
             target = obj
             name = ''
@@ -490,7 +484,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface]
+            cls_interface: tp.Type[Interface[TContainer]]
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
@@ -531,10 +525,11 @@ class InterfaceRecord(tp.NamedTuple):
     def from_assignment(cls, *,
             cls_name: str,
             name: str,
-            obj: AnyCallable,
+            obj: tp.Union[InterfaceAssignTrio[TContainer],
+                    InterfaceAssignQuartet[TContainer]],
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface]
+            cls_interface: tp.Type[Interface[TContainer]]
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
@@ -580,11 +575,11 @@ class InterfaceRecord(tp.NamedTuple):
 
     @classmethod
     def from_method(cls, *,
-            cls_name,
-            name,
-            obj,
-            reference,
-            doc
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(name, obj)
@@ -731,11 +726,13 @@ class InterfaceSummary(Features):
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 yield from InterfaceRecord.from_getitem(**kwargs)
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
-                yield from InterfaceRecord.from_selection(**kwargs,
-                        cls_interface=obj.__class__)
+                yield from InterfaceRecord.from_selection(
+                        cls_interface=obj.__class__,
+                        **kwargs)
             elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
-                yield from InterfaceRecord.from_assignment(**kwargs,
-                        cls_interface=obj.__class__)
+                yield from InterfaceRecord.from_assignment(
+                        cls_interface=obj.__class__,
+                        **kwargs)
             elif callable(obj): # general methods
                 yield from InterfaceRecord.from_method(**kwargs)
             else: # attributes

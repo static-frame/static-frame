@@ -3,6 +3,13 @@
 What is New in Static Frame
 ===============================
 
+0.6.10
+----------
+
+Improvements to ``interface`` display, including in inclusion of function arguments and new "Assignment" category; improvements to API documentation.
+
+
+
 0.6.9
 ----------
 
