@@ -25,6 +25,9 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import KeyIterableTypes
+from static_frame.core.util import UFunc
+
 # from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
@@ -43,6 +46,8 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelectDuo
+from static_frame.core.selector_node import TContainer
+
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -74,6 +79,8 @@ from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
+    from static_frame import Series # pylint: disable=W0611 #pragma: no cover
+    from static_frame import IndexHierarchy # pylint: disable=W0611 #pragma: no cover
 
 
 I = tp.TypeVar('I', bound=IndexBase)
@@ -84,7 +91,7 @@ class ILocMeta(type):
     def __getitem__(cls,
             key: GetItemKeyType
             ) -> tp.Iterable[GetItemKeyType]:
-        return cls(key)
+        return cls(key) #type: ignore
 
 class ILoc(metaclass=ILocMeta):
     '''A wrapper for embedding ``iloc`` specificiations within a single axis argument of a ``loc`` selection.
@@ -105,7 +112,7 @@ class LocMap:
             key: slice,
             labels: tp.Optional[np.ndarray] = None,
             offset: tp.Optional[int] = 0
-            ) -> tp.Iterator[int]:
+            ) -> tp.Iterator[tp.Union[int, None]]:
         '''Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
 
         Args:
@@ -119,8 +126,8 @@ class LocMap:
                 yield None
             elif isinstance(attr, np.datetime64):
                 # if a datetime, we assume that the labels are ordered;
-                if attr.dtype == labels.dtype:
-                    pos = label_to_pos(attr)
+                if attr.dtype == labels.dtype: #type: ignore
+                    pos: int = label_to_pos(attr)
                     if pos is None:
                         # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
                         raise LocInvalid('Invalid loc given in a slice', attr, field)
@@ -130,7 +137,7 @@ class LocMap:
 
                 elif field == SLICE_START_ATTR:
                     # convert to the type of the atrs; this should get the relevant start
-                    pos = label_to_pos(attr.astype(labels.dtype))
+                    pos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
                         matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
                         if len(matches):
@@ -142,14 +149,14 @@ class LocMap:
                     # convert labels to the slice attr value, compare, then get last
                     # add one, as this is an inclusive stop
                     # pos = np.flatnonzero(labels.astype(attr.dtype) == attr)[-1] + 1
-                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr)
+                    matches = np.flatnonzero(labels.astype(attr.dtype) == attr) #type: ignore
                     if len(matches):
                         pos = matches[-1] + 1
                     else:
                         raise LocEmpty()
 
                 if offset_apply:
-                    pos += offset
+                    pos += offset #type: ignore
 
                 yield pos
 
@@ -170,7 +177,7 @@ class LocMap:
 
     @classmethod
     def loc_to_iloc(cls, *,
-            label_to_pos: tp.Dict,
+            label_to_pos: tp.Dict[tp.Hashable, int],
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
@@ -191,9 +198,9 @@ class LocMap:
         if isinstance(key, slice):
             if offset_apply and key == NULL_SLICE:
                 # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
-                return slice(offset, len(positions) + offset)
+                return slice(offset, len(positions) + offset) #type: ignore
             try:
-                return slice(*cls.map_slice_args(
+                return slice(*cls.map_slice_args( #type: ignore
                         label_to_pos.get,
                         key,
                         labels,
@@ -231,12 +238,12 @@ class LocMap:
             # map labels to integer positions
             # NOTE: we may miss the opportunity to get a reference from values when we have contiguous keys
             if offset_apply:
-                return [label_to_pos[x] + offset for x in key]
+                return [label_to_pos[x] + offset for x in key] #type: ignore
             return [label_to_pos[x] for x in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
         if offset_apply:
-            return label_to_pos[key] + offset
+            return label_to_pos[key] + offset #type: ignore
         return label_to_pos[key]
 
 
@@ -248,7 +255,10 @@ def immutable_index_filter(index: I) -> I:
     return index._IMMUTABLE_CONSTRUCTOR(index)
 
 
-def mutable_immutable_index_filter(target_static: bool, index: I) -> I:
+def mutable_immutable_index_filter(
+        target_static: bool,
+        index: I
+        ) -> I:
     if target_static:
         return immutable_index_filter(index)
     # target mutable
@@ -307,7 +317,7 @@ class Index(IndexBase):
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
-    _name: tp.Hashable
+    _name: tp.Optional[tp.Hashable]
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
@@ -335,15 +345,15 @@ class Index(IndexBase):
 
         if hasattr(labels, '__len__'): # not a generator, not an array
             # resolving the dtype is expensive, pass if possible
-            if len(labels) == 0:
+            if len(labels) == 0: #type: ignore
                 labels = EMPTY_ARRAY
             else:
                 labels, _ = iterable_to_array_1d(labels, dtype=dtype)
         else: # labels may be an expired generator, must use the mapping
-            if len(mapping) == 0:
+            if len(mapping) == 0: #type: ignore
                 labels = EMPTY_ARRAY
             else:
-                labels, _ = iterable_to_array_1d(mapping, dtype=dtype)
+                labels, _ = iterable_to_array_1d(mapping, dtype=dtype) #type: ignore
         # all arrays are immutable
         # assert labels.flags.writeable == False
         return labels
@@ -351,7 +361,8 @@ class Index(IndexBase):
     @staticmethod
     def _extract_positions(
             size: int,
-            positions: tp.Optional[tp.Sequence[int]]):
+            positions: tp.Optional[tp.Sequence[int]]
+            ) -> np.ndarray:
         # positions is either None or an ndarray
         if isinstance(positions, np.ndarray):
             return immutable_filter(positions)
@@ -361,15 +372,15 @@ class Index(IndexBase):
     # constructors
 
     @classmethod
-    def from_labels(cls,
+    def from_labels(cls: tp.Type[I],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
             name: tp.Optional[tp.Hashable] = None
-            ) -> 'Index':
+            ) -> I:
         '''
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
         '''
-        return cls(labels=labels, name=name)
+        return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -398,6 +409,7 @@ class Index(IndexBase):
         #-----------------------------------------------------------------------
         # handle all Index subclasses
         if issubclass(labels.__class__, IndexBase):
+            assert isinstance(labels, IndexBase) # for mypy
             if labels._recache:
                 labels._update_array_cache()
             if name is None and labels.name is not None:
@@ -437,10 +449,11 @@ class Index(IndexBase):
                 try:
                     self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
                 except ValueError:
-                    raise ErrorInitIndex(f'labels ({len(labels)}) have non-unique values ({len(set(labels))})')
+                    raise ErrorInitIndex(f'labels ({len(labels)}) have non-unique values ({len(set(labels))})') #type: ignore
                 size = len(self._map)
             else: # must assume labels are unique
-                size = len(labels)
+                size = len(labels) #type: ignore
+
                 if positions is None:
                     positions = PositionsAllocator.get(size)
         else: # map shared from another Index
@@ -456,7 +469,7 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state):
+    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
@@ -480,23 +493,27 @@ class Index(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem[TContainer]:
+        return InterfaceGetItem(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
-    def _iter_label(self, depth_level: DepthLevelSpecifier = 0):
+    def _iter_label(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Hashable]:
         yield from self._labels
 
-    def _iter_label_items(self, depth_level: DepthLevelSpecifier = 0):
+    def _iter_label_items(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
         yield from zip(self._positions, self._labels)
 
     @property
-    def iter_label(self) -> IterNodeDepthLevel:
+    def iter_label(self) -> IterNodeDepthLevel[TContainer]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._iter_label_items,
@@ -507,7 +524,7 @@ class Index(IndexBase):
 
 
     @property
-    def drop(self) -> InterfaceSelectDuo:
+    def drop(self) -> InterfaceSelectDuo[TContainer]:
         return InterfaceSelectDuo(
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
@@ -565,7 +582,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # core internal representation
 
-    @property
+    @property #type: ignore
     @doc_inject(selector='values_1d', class_name='Index')
     def values(self) -> np.ndarray:
         '''
@@ -583,8 +600,9 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
-
-    def values_at_depth(self, depth_level: DepthLevelSpecifier = 0):
+    def values_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
         '''
         Return an NP array for the `depth_level` specified.
         '''
@@ -612,7 +630,7 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        return self.__class__(labels=self, name=self._name)
+        return self.__class__(self, name=self._name)
 
     def relabel(self: I, mapper: CallableOrMapping) -> I:
         '''
@@ -693,7 +711,7 @@ class Index(IndexBase):
                 offset=offset
                 )
 
-    def _extract_iloc(self, key: GetItemKeyType) -> 'Index':
+    def _extract_iloc(self: I, key: GetItemKeyType) -> I:
         '''Extract a new index given an iloc key
         '''
         if self._recache:
@@ -712,12 +730,12 @@ class Index(IndexBase):
             # can select directly from _labels[key] if if key is a list
             labels = self._labels[key]
         else: # select a single label value
-            return self._labels[key]
+            return self._labels[key] #type: ignore
 
-        return self.__class__(labels=labels, name=self._name)
+        return self.__class__(labels=labels, name=self._name) #type: ignore
 
-    def _extract_loc(self, key: GetItemKeyType) -> 'Index':
-        return self._extract_iloc(self.loc_to_iloc(key))
+    def _extract_loc(self: I, key: GetItemKeyType) -> I:
+        return self._extract_iloc(self.loc_to_iloc(key)) #type: ignore
 
     def __getitem__(self: I, key: GetItemKeyType) -> I:
         '''Extract a new index given an iloc key.
@@ -727,7 +745,9 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: tp.Callable) -> np.ndarray:
+    def _ufunc_unary_operator(self,
+            operator: UFunc
+            ) -> np.ndarray:
         '''Always return an NP array.
         '''
         if self._recache:
@@ -737,7 +757,10 @@ class Index(IndexBase):
         array.flags.writeable = False
         return array
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
+    def _ufunc_binary_operator(self, *,
+            operator: UFunc,
+            other: tp.Any
+            ) -> np.ndarray:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
@@ -768,8 +791,8 @@ class Index(IndexBase):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc,
-            ufunc_skipna,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
@@ -814,14 +837,14 @@ class Index(IndexBase):
             self._update_array_cache()
         return reversed(self._labels)
 
-    def __contains__(self, value) -> bool:
+    def __contains__(self, value: tp.Any) -> bool:
         '''Return True if value in the labels.
         '''
         if self._map is None: # loc_is_iloc
             if isinstance(value, INT_TYPES):
-                return value >= 0 and value < len(self)
+                return value >= 0 and value < len(self) #type: ignore
             return False
-        return self._map.__contains__(value)
+        return self._map.__contains__(value) #type: ignore
 
 
     #---------------------------------------------------------------------------
@@ -908,10 +931,13 @@ class _IndexGOMixin:
     _labels_mutable: tp.List[tp.Hashable]
     _labels_mutable_dtype: np.dtype
     _positions_mutable_count: int
+    _positions: np.ndarray
+    _labels: np.ndarray
+
 
     def _extract_labels(self,
             mapping: tp.Optional[tp.Dict[tp.Hashable, int]],
-            labels: tp.Iterable[tp.Hashable],
+            labels: np.ndarray,
             dtype: tp.Optional[np.dtype] = None
             ) -> np.ndarray:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
@@ -927,14 +953,14 @@ class _IndexGOMixin:
     def _extract_positions(self,
             size: int,
             positions: tp.Optional[tp.Sequence[int]]
-            ) -> tp.Iterable[tp.Any]:
+            ) -> np.ndarray:
         '''Called in Index.__init__(). This creates and populates mutable storage. This creates and populates mutable storage as a side effect of array derivation.
         '''
         positions = Index._extract_positions(size, positions)
         self._positions_mutable_count = size
         return positions
 
-    def _update_array_cache(self):
+    def _update_array_cache(self) -> None:
 
         if self._labels_mutable_dtype is not None and len(self._labels):
             # only update if _labels_mutable_dtype has been set and _labels exist
@@ -953,7 +979,7 @@ class _IndexGOMixin:
     def append(self, value: tp.Hashable) -> None:
         '''append a value
         '''
-        if self.__contains__(value):
+        if self.__contains__(value): #type: ignore
             raise KeyError(f'duplicate key append attempted: {value}')
 
         # we might need to initialize map if not an increment that keeps loc_is_iloc relationship
@@ -980,7 +1006,7 @@ class _IndexGOMixin:
         self._positions_mutable_count += 1
         self._recache = True
 
-    def extend(self, values: KEY_ITERABLE_TYPES):
+    def extend(self, values: KeyIterableTypes) -> None:
         '''Append multiple values
         Args:
             values: can be a generator.
@@ -1007,7 +1033,9 @@ Index._MUTABLE_CONSTRUCTOR = IndexGO
 
 #-------------------------------------------------------------------------------
 
-def _index_initializer_needs_init(value) -> bool:
+def _index_initializer_needs_init(
+        value: tp.Optional[IndexInitializer]
+        ) -> bool:
     '''Determine if value is a non-empty index initializer. This could almost just be a truthy test, but ndarrays need to be handled in isolation. Generators should return True.
     '''
     if value is None:
@@ -1030,6 +1058,7 @@ def _requires_reindex(left: Index, right: Index) -> bool:
     # NOTE: NP raises a warning here if we go to scalar value
     ne = left.values != right.values
     if isinstance(ne, np.ndarray):
-        return ne.any() # if any not equal, require reindex
+        # if any not equal, require reindex
+        return ne.any() #type: ignore
     # assume we have a bool
     return ne # if not equal, require reindex

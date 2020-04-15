@@ -118,7 +118,7 @@ class BuildTestFrames:
 
     def _next_frame_dims(self,
             mixed_data_options: tp.Iterable[bool]
-            ) -> tp.Generator[tp.Tuple[int, int, int, bool], None, None]:
+            ) -> tp.Iterator[tp.Tuple[int, int, int, bool]]:
         for rows in self.dims:
             for cols in self.dims:
                 for groups in self.dims:
@@ -153,7 +153,7 @@ class BuildTestFrames:
 
     def next_frame(self,
             mixed_data_options: tp.Iterable[bool] = (True, False)
-            ) -> tp.Generator[Frame, None, None]:
+            ) -> tp.Iterator[Frame]:
         for rows, cols, groups, mixed_data in self._next_frame_dims(mixed_data_options):
             yield self.build_frame(rows, cols, groups, mixed_data)
 

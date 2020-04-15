@@ -246,7 +246,8 @@ class DisplayFormatHTMLTable(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Generator[str, None, None]:
+            header_depth: int
+            ) -> tp.Iterator[str]:
         yield '<tr>'
         for count, msg in enumerate(row):
             # header depth here refers potentially to a header that is the index
@@ -312,7 +313,7 @@ class DisplayFormatRST(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Generator[str, None, None]:
+            header_depth: int) -> tp.Iterator[str]:
 
         yield f"|{'|'.join(row)}|"
 
@@ -348,7 +349,7 @@ class DisplayFormatMarkdown(DisplayFormat):
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Generator[str, None, None]:
+            header_depth: int) -> tp.Iterator[str]:
         yield f"|{'|'.join(row)}|"
 
     @classmethod
@@ -372,7 +373,7 @@ class DisplayFormatLaTeX(DisplayFormat):
     @classmethod
     def markup_row(cls,
             row: tp.Iterable[str],
-            header_depth: int) -> tp.Generator[str, None, None]:
+            header_depth: int) -> tp.Iterator[str]:
         yield f'{cls._CELL_SEP.join(row)} \\\\' # need 2 backslashes
 
     @classmethod

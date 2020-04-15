@@ -101,12 +101,12 @@ class TestUnit(TestCase):
     def test_index_date_d(self) -> None:
         index = IndexDate.from_date_range('2017-12-15', '2018-03-15', 2)
         # selct by year and year month
-        self.assertAlmostEqualValues(index.loc['2017'].values,
+        self.assertAlmostEqualValues(index.loc['2017'].values, #type: ignore
                 np.array(['2017-12-15', '2017-12-17', '2017-12-19', '2017-12-21',
                '2017-12-23', '2017-12-25', '2017-12-27', '2017-12-29',
                '2017-12-31'], dtype='datetime64[D]'))
 
-        self.assertAlmostEqualValues(index.loc['2018-02'].values,
+        self.assertAlmostEqualValues(index.loc['2018-02'].values, #type: ignore
                 np.array(['2018-02-01', '2018-02-03', '2018-02-05', '2018-02-07',
                '2018-02-09', '2018-02-11', '2018-02-13', '2018-02-15',
                '2018-02-17', '2018-02-19', '2018-02-21', '2018-02-23',
@@ -138,8 +138,8 @@ class TestUnit(TestCase):
 
         post = index.loc['2018':'2018-01']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(len(post), 31)
-        self.assertEqual(post[0], np.datetime64('2018-01-01'))
-        self.assertEqual(post[-1], np.datetime64('2018-01-31'))
+        self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
 
 
     def test_index_date_h(self) -> None:
@@ -147,8 +147,8 @@ class TestUnit(TestCase):
 
         post = index.loc['2018':'2018-01-15']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(len(post), 15)
-        self.assertEqual(post[0], np.datetime64('2018-01-01'))
-        self.assertEqual(post[-1], np.datetime64('2018-01-15'))
+        self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-01-15')) #type: ignore
 
 
     def test_index_date_i(self) -> None:
@@ -156,8 +156,8 @@ class TestUnit(TestCase):
 
         post = index.loc['2017-12': '2018-01']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(len(post), 62)
-        self.assertEqual(post[0], np.datetime64('2017-12-01'))
-        self.assertEqual(post[-1], np.datetime64('2018-01-31'))
+        self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
 
 
     def test_index_date_j(self) -> None:
@@ -165,16 +165,16 @@ class TestUnit(TestCase):
 
         post = index.loc['2017-12': '2018']  # type: ignore  # https://github.com/python/typeshed/pull/3024
         self.assertEqual(len(post), 77)
-        self.assertEqual(post[0], np.datetime64('2017-12-01'))
-        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+        self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
 
 
     def test_index_date_k(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         post = index.loc[['2017-12-10', '2018-02-06']]
         self.assertEqual(len(post), 2)
-        self.assertEqual(post[0], np.datetime64('2017-12-10'))
-        self.assertEqual(post[-1], np.datetime64('2018-02-06'))
+        self.assertEqual(post[0], np.datetime64('2017-12-10')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-02-06')) #type: ignore
 
 
     def test_index_date_m(self) -> None:
@@ -182,18 +182,18 @@ class TestUnit(TestCase):
         # NOTE: this type of selection should possibly not be permitted
         post = index.loc[['2017', '2018']]
         self.assertEqual(len(post), 93)
-        self.assertEqual(post[0], np.datetime64('2017-11-15'))
-        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+        self.assertEqual(post[0], np.datetime64('2017-11-15')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
 
     def test_index_date_n(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         # NOTE: this type of selection should possibly not be permitted
         post = index.loc[['2017-12', '2018-02']]
         self.assertEqual(len(post), 46)
-        self.assertEqual(post[0], np.datetime64('2017-12-01'))
-        self.assertEqual(post[-1], np.datetime64('2018-02-15'))
+        self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
+        self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
         self.assertEqual(
-            set(post.values.astype('datetime64[M]')),
+            set(post.values.astype('datetime64[M]')), #type: ignore
             {np.datetime64('2018-02'), np.datetime64('2017-12')}
             )
 
@@ -284,14 +284,14 @@ class TestUnit(TestCase):
 
         post1 = idx1.loc[np.datetime64('2018-02'):]
         self.assertEqual(
-                post1.values.tolist(),
+                post1.values.tolist(), #type: ignore
                 [datetime.date(2018, 2, 1), datetime.date(2018, 3, 1), datetime.date(2018, 4, 1)]
                 )
 
         # a year datetime64
         post2 = idx1.loc[np.datetime64('2018'):]
         self.assertEqual(
-                post2.values.tolist(),
+                post2.values.tolist(), #type: ignore
                 [datetime.date(2018, 1, 1), datetime.date(2018, 2, 1), datetime.date(2018, 3, 1), datetime.date(2018, 4, 1)]
                 )
 
@@ -421,13 +421,13 @@ class TestUnit(TestCase):
                 np.array(['2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
        '2016-05-01T15:25:46.150'], dtype='datetime64[ms]'))
 
-        self.assertAlmostEqualValues(idx.loc['2016-05'].values,
+        self.assertAlmostEqualValues(idx.loc['2016-05'].values, #type: ignore
                 np.array(['2016-05-01T00:00:33.483', '2016-05-01T03:02:03.584',
                '2016-05-01T09:26:43.185', '2016-05-01T13:45:22.576',
                '2016-05-01T15:25:46.150'], dtype='datetime64[ms]')
                 )
 
-        self.assertEqual(idx.loc['2016-05-01T00'].values,
+        self.assertEqual(idx.loc['2016-05-01T00'].values, #type: ignore
                 np.array(['2016-05-01T00:00:33.483'], dtype='datetime64[ms]'))
 
 
@@ -519,11 +519,11 @@ class TestUnit(TestCase):
 
         idx1 = IndexMinute(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
 
-        self.assertEqual(idx1.loc['2019'].values.tolist(),
+        self.assertEqual(idx1.loc['2019'].values.tolist(), #type: ignore
                 [datetime.datetime(2019, 1, 2, 3, 45)]
                 )
 
-        self.assertEqual(idx1.loc['2018-01'].values.tolist(),
+        self.assertEqual(idx1.loc['2018-01'].values.tolist(), #type: ignore
                 [datetime.datetime(2018, 1, 1, 3, 30), datetime.datetime(2018, 1, 1, 3, 45)])
 
 

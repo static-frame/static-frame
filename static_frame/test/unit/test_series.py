@@ -116,7 +116,7 @@ class TestUnit(TestCase):
 
     def test_series_init_g(self) -> None:
         with self.assertRaises(RuntimeError):
-            s1 = Series(range(4), own_index=True, index=None)  # type: ignore
+            s1 = Series(range(4), own_index=True, index=None)
 
     def test_series_init_h(self) -> None:
         s1 = Series(range(4), index_constructor=IndexSecond)

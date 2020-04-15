@@ -57,7 +57,7 @@ class TestCase(unittest.TestCase):
     '''
 
     @staticmethod
-    def get_arrays_a() -> tp.Generator[np.ndarray, None , None]:
+    def get_arrays_a() -> tp.Iterator[np.ndarray]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Unique values required.
         '''
@@ -79,7 +79,7 @@ class TestCase(unittest.TestCase):
 
 
     @staticmethod
-    def get_arrays_b() -> tp.Generator[np.ndarray, None , None]:
+    def get_arrays_b() -> tp.Iterator[np.ndarray]:
         '''
         Return sample array suitable for TypeBlock creation, testing. Many NaNs.
         '''

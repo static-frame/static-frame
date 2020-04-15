@@ -134,6 +134,7 @@ INT_MAX_COERCIBLE_TO_FLOAT = 1_000_000_000_000_000
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
+KeyIterableTypes = tp.Union[tp.Iterable[tp.Any], np.ndarray]
 
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (slice, list, np.ndarray)
@@ -207,7 +208,7 @@ IndexInitializer = tp.Union[
         'IndexBase',
         tp.Iterable[tp.Hashable],
         tp.Iterable[tp.Sequence[tp.Hashable]], # only for IndexHierarhcy
-        tp.Generator[tp.Hashable, None, None]]
+        ]
 IndexConstructor = tp.Callable[..., 'IndexBase']
 
 IndexConstructors = tp.Sequence[IndexConstructor]

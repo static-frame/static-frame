@@ -339,8 +339,8 @@ class Series(ContainerOperand):
     def __init__(self,
             values: SeriesInitializer,
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            name: tp.Hashable = None,
+            index: tp.Union[IndexInitializer, IndexAutoFactoryType, None] = None,
+            name: tp.Optional[tp.Hashable] = None,
             dtype: DtypeSpecifier = None,
             index_constructor: IndexConstructor = None,
             own_index: bool = False

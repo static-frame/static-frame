@@ -621,21 +621,21 @@ class TestUnit(TestCase):
 
         idx = Index(('a', 'b', 'c', 'd'))
 
-        self.assertEqual(idx.drop.iloc[2].values.tolist(), ['a', 'b', 'd'])
-        self.assertEqual(idx.drop.iloc[2:].values.tolist(), ['a', 'b'])
+        self.assertEqual(idx.drop.iloc[2].values.tolist(), ['a', 'b', 'd']) #type: ignore
+        self.assertEqual(idx.drop.iloc[2:].values.tolist(), ['a', 'b']) #type: ignore
         self.assertEqual(
-                idx.drop.iloc[np.array([True, False, False, True])].values.tolist(),
+                idx.drop.iloc[np.array([True, False, False, True])].values.tolist(), #type: ignore
                 ['b', 'c'])
 
     def test_index_drop_c(self) -> None:
 
         idx = Index(('a', 'b', 'c', 'd'))
 
-        self.assertEqual(idx.drop.loc['c'].values.tolist(), ['a', 'b', 'd'])
+        self.assertEqual(idx.drop.loc['c'].values.tolist(), ['a', 'b', 'd']) #type: ignore
         self.assertEqual(idx.drop.loc['b':'c'].values.tolist(), ['a', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
         self.assertEqual(
-                idx.drop.loc[np.array([True, False, False, True])].values.tolist(),
+                idx.drop.loc[np.array([True, False, False, True])].values.tolist(), #type: ignore
                 ['b', 'c']
                 )
 

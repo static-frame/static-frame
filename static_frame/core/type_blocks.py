@@ -456,7 +456,7 @@ class TypeBlocks(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
-    def _reblock_signature(self) -> tp.Generator[tp.Tuple[np.dtype, int], None, None]:
+    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[np.dtype, int]]:
         '''For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
 
         This is a generator to permit lazy pairwise comparison.
@@ -544,7 +544,7 @@ class TypeBlocks(ContainerOperand):
 
     @classmethod
     def consolidate_blocks(cls,
-            raw_blocks: tp.Iterable[np.ndarray]) -> tp.Generator[np.ndarray, None, None]:
+            raw_blocks: tp.Iterable[np.ndarray]) -> tp.Iterator[np.ndarray]:
         '''
         Generator consumer, generator producer of np.ndarray, consolidating if types are exact matches.
         '''
@@ -1058,7 +1058,7 @@ class TypeBlocks(ContainerOperand):
     def _astype_blocks(self,
             column_key: GetItemKeyType,
             dtype: DtypeSpecifier
-            ) -> tp.Generator[np.ndarray, None, None]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator producer of np.ndarray.
         '''
@@ -1130,7 +1130,7 @@ class TypeBlocks(ContainerOperand):
     def _drop_blocks(self,
             row_key: GetItemKeyType = None,
             column_key: GetItemKeyType = None,
-            ) -> tp.Generator[np.ndarray, None, None]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator producer of np.ndarray. Note that this appraoch should be more efficient than using selection/extraction, as here we are only concerned with columns.
 
@@ -1225,7 +1225,7 @@ class TypeBlocks(ContainerOperand):
             column_shift: int = 0,
             wrap: bool = True,
             fill_value: object = np.nan
-            ) -> tp.Generator[np.ndarray, None, None]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Shift type blocks independently on rows or columns. When ``wrap`` is True, the operation is a roll-style shift; when ``wrap`` is False, shifted-out values are not replaced and are filled with ``fill_value``.
         '''

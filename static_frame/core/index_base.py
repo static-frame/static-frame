@@ -78,7 +78,7 @@ class IndexBase(ContainerOperand):
     __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
     __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
     __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __len__: tp.Callable[['IndexBase'], int]
+    # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
     _MUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
@@ -95,7 +95,7 @@ class IndexBase(ContainerOperand):
             ]
 
     #---------------------------------------------------------------------------
-    # base class interface, mostly for mpy
+    # base class interface, mostly for mypy
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -106,6 +106,9 @@ class IndexBase(ContainerOperand):
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
             ) -> np.ndarray:
+        raise NotImplementedError()
+
+    def _extract_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError()
 
     def _update_array_cache(self) -> None:
@@ -123,6 +126,19 @@ class IndexBase(ContainerOperand):
             *,
             name: tp.Optional[tp.Hashable] = None
             ) -> I:
+        raise NotImplementedError()
+
+    def __init__(self, initializer: tp.Any = None,
+            *,
+            name: tp.Optional[tp.Hashable] = None
+            ):
+        # trivial init for mypy; not called by derived class
+        pass
+
+    def __len__(self) -> int:
+        raise NotImplementedError()
+
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError()
 
 
@@ -331,7 +347,7 @@ class IndexBase(ContainerOperand):
 
         if id(labels) == id(self._labels):
             # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-            return cls(self) # type: ignore
+            return cls(self)
         return cls.from_labels(labels)
 
 

@@ -403,7 +403,7 @@ class Bus(ContainerBase):
             return Series(None, index=self._series._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
-            for label, f in zip(self._series._index, self._series.values): #type: ignore
+            for label, f in zip(self._series._index, self._series.values):
                 if f is FrameDeferred:
                     yield label, None
                 else:

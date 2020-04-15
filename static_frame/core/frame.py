@@ -3442,7 +3442,7 @@ class Frame(ContainerOperand):
             key,
             iloc_key,
             axis: int
-            ) -> tp.Generator[tp.Tuple[tp.Hashable, 'Frame'], None, None]:
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
