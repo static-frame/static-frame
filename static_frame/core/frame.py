@@ -94,7 +94,6 @@ from static_frame.core.container_util import pandas_to_numpy
 
 from static_frame.core.iter_node import IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType
-# from static_frame.core.iter_node import IterNode
 
 from static_frame.core.iter_node import IterNodeAxis
 from static_frame.core.iter_node import IterNodeDepthLevelAxis
@@ -1215,7 +1214,7 @@ class Frame(ContainerOperand):
         '''
         This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
 
-        Args:s
+        Args:
             items: an iterable of pairs of 2-tuples of row, column loc labels and values.
 
 
