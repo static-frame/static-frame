@@ -20,7 +20,7 @@ from static_frame.core.selector_node import InterfaceGetItem as InterfaceGetItem
 from static_frame.core.iter_node import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.iter_node import IterNodeType as IterNodeType
 from static_frame.core.iter_node import IterNodeDelegate as IterNodeDelegate
-from static_frame.core.iter_node import IterNode as IterNode
+# from static_frame.core.iter_node import IterNode as IterNode
 
 from static_frame.core.display import DisplayConfig as DisplayConfig
 from static_frame.core.display import DisplayConfigs as DisplayConfigs

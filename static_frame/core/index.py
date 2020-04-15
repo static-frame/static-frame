@@ -27,6 +27,7 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import UFunc
+from static_frame.core.util import NameType
 
 # from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
@@ -247,7 +248,7 @@ class LocMap:
         return label_to_pos[key]
 
 
-def immutable_index_filter(index: I) -> I:
+def immutable_index_filter(index: I) -> IndexBase:
     '''Return an immutable index. All index objects handle converting from mutable to immutable via the __init__ constructor; but need to use appropriate class between Index and IndexHierarchy.'''
 
     if index.STATIC:
@@ -258,7 +259,7 @@ def immutable_index_filter(index: I) -> I:
 def mutable_immutable_index_filter(
         target_static: bool,
         index: I
-        ) -> I:
+        ) -> IndexBase:
     if target_static:
         return immutable_index_filter(index)
     # target mutable
@@ -317,7 +318,7 @@ class Index(IndexBase):
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
-    _name: tp.Optional[tp.Hashable]
+    _name: NameType
 
     #---------------------------------------------------------------------------
     # methods used in __init__ that are customized in dervied classes; there, we need to mutate instance state, this these are instance methods
@@ -375,7 +376,7 @@ class Index(IndexBase):
     def from_labels(cls: tp.Type[I],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
-            name: tp.Optional[tp.Hashable] = None
+            name: NameType = None
             ) -> I:
         '''
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
@@ -387,7 +388,7 @@ class Index(IndexBase):
             labels: IndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: tp.Optional[tp.Hashable] = None,
+            name: NameType = None,
             dtype: DtypeSpecifier = None
             ) -> None:
 
@@ -513,7 +514,7 @@ class Index(IndexBase):
         yield from zip(self._positions, self._labels)
 
     @property
-    def iter_label(self) -> IterNodeDepthLevel[TContainer]:
+    def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._iter_label_items,
@@ -525,7 +526,7 @@ class Index(IndexBase):
 
     @property
     def drop(self) -> InterfaceSelectDuo[TContainer]:
-        return InterfaceSelectDuo(
+        return InterfaceSelectDuo( #type: ignore
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             )

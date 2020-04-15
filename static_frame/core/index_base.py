@@ -11,6 +11,7 @@ from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KeyTransformType
+from static_frame.core.util import NameType
 
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayActive
@@ -44,7 +45,7 @@ class IndexBase(ContainerOperand):
     _labels: np.ndarray
     _positions: np.ndarray
     _recache: bool
-    _name: tp.Hashable
+    _name: NameType
     values: np.ndarray
     depth: int
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
@@ -185,7 +186,7 @@ class IndexBase(ContainerOperand):
 
     @property #type: ignore
     @doc_inject()
-    def name(self) -> tp.Hashable:
+    def name(self) -> NameType:
         '''{}'''
         return self._name
 

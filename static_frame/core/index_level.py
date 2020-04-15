@@ -64,7 +64,7 @@ class IndexLevel:
         if own_index:
             self.index = index
         else:
-            self.index = mutable_immutable_index_filter(self.STATIC, index)
+            self.index = mutable_immutable_index_filter(self.STATIC, index) #type: ignore
 
         self.targets = targets
         self.offset = offset
@@ -82,7 +82,6 @@ class IndexLevel:
         cls = cls if cls else self.__class__
 
         index = mutable_immutable_index_filter(cls.STATIC, self.index)
-        # index = cls._INDEX_CONSTRUCTOR(self.index)
 
         if self.targets is not None:
             targets: tp.Optional[ArrayGO] = ArrayGO(
@@ -92,7 +91,7 @@ class IndexLevel:
             targets = None
 
         offset = self.offset if offset is None else offset
-        return cls(index=index, targets=targets, offset=offset)
+        return cls(index=index, targets=targets, offset=offset) #type: ignore
 
     def __len__(self) -> int:
         '''

@@ -165,7 +165,7 @@ GetItemKeyTypeCompound = tp.Union[
         np.ndarray]
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
-
+NameType = tp.Optional[tp.Hashable]
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]

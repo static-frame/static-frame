@@ -27,6 +27,7 @@ if tp.TYPE_CHECKING:
 
 
 FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')
+# FrameSeriesIndex = tp.TypeVar('FrameSeriesIndex', 'Frame', 'Series', 'Index')
 
 
 class IterNodeApplyType(Enum):
@@ -389,7 +390,6 @@ class IterNode(tp.Generic[FrameOrSeries]):
         '''
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
-        from static_frame.core.frame import Index
 
         func_values = partial(self._func_values, *args, **kwargs)
         func_items = partial(self._func_items, *args, **kwargs)
