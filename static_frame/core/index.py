@@ -396,12 +396,13 @@ class Index(IndexBase):
         self._map: tp.Optional[FrozenAutoMap] = None
 
         positions = None
+        is_typed = self._DTYPE is not None
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
         if dtype is None:
             dtype_extract = self._DTYPE # set in some specialized Index classes
         else: # passed dtype is not None
-            if self._DTYPE is not None and dtype != self._DTYPE:
+            if is_typed and dtype != self._DTYPE:
                 # NOTE: should never get to this branch, as derived Index classes that set _DTYPE remove dtype from __init__
                 raise ErrorInitIndex('invalid dtype argument for this Index', dtype, self._DTYPE) #pragma: no cover
             # self._DTYPE is None, passed dtype is not None, use dtype
@@ -409,16 +410,19 @@ class Index(IndexBase):
 
         #-----------------------------------------------------------------------
         # handle all Index subclasses
-        if issubclass(labels.__class__, IndexBase):
-            assert isinstance(labels, IndexBase) # for mypy
+        if isinstance(labels, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
             if labels.depth == 1: # not an IndexHierarchy
-                if labels.STATIC and self.STATIC: # can take the map
+                if (labels.STATIC
+                        and self.STATIC
+                        and is_typed
+                        and self._DTYPE == labels.dtype):
+                    # can take the map; must check if dtypes match, otherwise we might
                     self._map = labels._map
-                # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date
+                # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date; for datetime64 indices, we might need to translate to a different type
                 positions = labels._positions
                 loc_is_iloc = labels._map is None
                 labels = labels._labels
@@ -435,13 +439,15 @@ class Index(IndexBase):
         # else: assume an iterable suitable for labels usage
 
         #-----------------------------------------------------------------------
-        if self._DTYPE is not None:
+        if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
             if not isinstance(labels, np.ndarray):
                 # for now, assume that if _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)
-            else: # coerce to target type
+            # coerce to target type
+            elif labels.dtype != dtype_extract:
                 labels = labels.astype(dtype_extract)
+                labels.flags.writeable = False
 
         self._name = name if name is None else name_filter(name)
 
@@ -454,7 +460,6 @@ class Index(IndexBase):
                 size = len(self._map)
             else: # must assume labels are unique
                 size = len(labels) #type: ignore
-
                 if positions is None:
                     positions = PositionsAllocator.get(size)
         else: # map shared from another Index

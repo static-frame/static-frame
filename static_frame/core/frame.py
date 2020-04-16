@@ -2048,11 +2048,11 @@ class Frame(ContainerOperand):
             # row count might be 0 for an empty DF
             raise ErrorInitFrame(
                 f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})'
-            )
+                )
         if self._blocks.shape[1] != col_count:
             raise ErrorInitFrame(
                 f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})'
-            )
+                )
 
     #---------------------------------------------------------------------------
     # name interface

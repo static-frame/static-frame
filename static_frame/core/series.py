@@ -155,7 +155,6 @@ class Series(ContainerOperand):
                 fill_value=element,
                 dtype=dtype)
         array.flags.writeable = False
-
         return cls(array,
                 index=index_final,
                 name=name,
@@ -378,9 +377,10 @@ class Series(ContainerOperand):
         else: # is numpy array
             if dtype is not None and dtype != values.dtype:
                 raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
+
             if values.shape == (): # handle special case of NP element
-                def values_constructor(shape): #pylint: disable=E0102
-                    self.values = np.repeat(values, shape)
+                def values_constructor(count): #pylint: disable=E0102
+                    self.values = np.repeat(values, count)
                     self.values.flags.writeable = False
             else:
                 self.values = immutable_filter(values)
@@ -391,14 +391,13 @@ class Series(ContainerOperand):
         if own_index:
             self._index = index
         elif index is None or index is IndexAutoFactory:
-            # if a values constructor is defined, self.values is not yet defined, and we have a single element or string; if index is None or empty, we auto-supply a shape of 1; otherwise, take len of self.values
+            # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
             if values_constructor:
-                shape = 1
+                value_count = 1
             else:
-                shape = len(self.values)
-
+                value_count = len(self.values)
             self._index = IndexAutoFactory.from_optional_constructor(
-                    shape,
+                    value_count,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
@@ -407,19 +406,25 @@ class Series(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
+        index_count = self._index.__len__()
 
         if not self._index.STATIC:
             raise ErrorInitSeries('non-static index cannot be assigned to Series')
 
         if values_constructor:
-            values_constructor(self._index.__len__()) # updates self.values
+            values_constructor(index_count) # updates self.values
+            # must update after calling values constructor
+        value_count = len(self.values)
 
         #-----------------------------------------------------------------------
         # final evaluation
 
         if self.values.ndim != self._NDIM:
             raise ErrorInitSeries('dimensionality of final values not supported')
-
+        if value_count != index_count:
+            raise ErrorInitSeries(
+                f'Index has incorrect size (got {index_count}, expected {value_count})'
+                )
 
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:

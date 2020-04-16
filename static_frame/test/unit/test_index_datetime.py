@@ -1,10 +1,8 @@
 
 import unittest
 import numpy as np
-# import pickle
 import datetime
-# import typing as tp
-# from io import StringIO
+from  itertools import product
 
 from static_frame import Index
 
@@ -42,6 +40,8 @@ from static_frame.core.index import _INDEX_GO_SLOTS
 from static_frame.test.test_case import TestCase
 # from static_frame.core.index import _requires_reindex
 from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ErrorInitIndex
 
 
 class TestUnit(TestCase):
@@ -591,6 +591,27 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
                 )
 
+
+    def test_index_datetime_relabel_a(self) -> None:
+        dates1 = [datetime.date(*x) for x in product((2017,), (4,5,6), range(1, 6))]
+        values = [84.16, 23.91, 71.46, 50.99, 31.22, 87.62]
+
+        with self.assertRaises(ErrorInitSeries):
+            # dates as the wrong size
+            s1 = Series(values, index=IndexDate(dates1))
+
+        dates2 = [datetime.date(*x) for x in product((2017,), (4,5,), range(1, 4))]
+        s2 = Series(values, index=IndexDate(dates2))
+
+        with self.assertRaises(ErrorInitIndex):
+            index = IndexYearMonth(s2.index)
+        # import ipdb; ipdb.set_trace()
+
+        # s3 = s2.relabel(index=IndexYearMonth(s2.index))
+
+
+        # s1['2017-04']
+        # s2['2017-04']
 
 
 if __name__ == '__main__':

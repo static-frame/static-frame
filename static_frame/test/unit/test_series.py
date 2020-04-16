@@ -1720,12 +1720,12 @@ class TestUnit(TestCase):
         self.assertEqual(s1.any(), True)
 
     def test_series_all_i(self) -> None:
-        s1 = Series(['sdf', 'wer'], index=('a', 'b', 'c'))
+        s1 = Series(['sdf', 'wer'], index=('a', 'b'))
         self.assertEqual(s1.all(), True)
         self.assertEqual(s1.any(), True)
 
     def test_series_all_j(self) -> None:
-        s1 = Series(['', 'sdf', 'wer', 30], index=('a', 'b', 'c'))
+        s1 = Series(['', 'sdf', 'wer', 30], index=('a', 'b', 'c', 'd'))
         self.assertEqual(s1.all(), False)
         self.assertEqual(s1.any(), True)
 
