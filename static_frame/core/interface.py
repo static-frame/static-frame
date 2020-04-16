@@ -52,7 +52,12 @@ def _get_parameters(
         max_args: int = 3,
         ) -> str:
     # might need special handling for methods on built-ins
-    sig = inspect.signature(func)
+    try:
+        sig = inspect.signature(func)
+    except ValueError:
+        # on Python 3.6, this error happens:
+        # ValueError: no signature found for builtin <built-in function abs>
+        return '[]' if is_getitem else '()'
 
     positional = []
     kwarg_only = ['*'] # preload
