@@ -41,7 +41,6 @@ from static_frame.core.index import _INDEX_GO_SLOTS
 from static_frame.test.test_case import TestCase
 # from static_frame.core.index import _requires_reindex
 from static_frame.core.exception import LocInvalid
-from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import ErrorInitIndex
 
 
