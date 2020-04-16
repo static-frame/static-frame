@@ -5,6 +5,7 @@ import datetime
 from  itertools import product
 
 from static_frame import Index
+from static_frame import IndexGO
 
 # from static_frame import IndexHierarchy
 from static_frame import Series
@@ -227,6 +228,48 @@ class TestUnit(TestCase):
         # a range beyond the observed values cannot determine a match,
         self.assertEqual(s1[:'2019'].shape, (0,)) # type: ignore
         self.assertEqual(s1['2016':].shape, (0,)) # type: ignore
+
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_init_a(self) -> None:
+
+        dates = [datetime.date(*x) for x in product((2017,), (4,5,), range(1, 4))]
+        s1 = Series(range(len(dates)), index=IndexDate(dates))
+
+        with self.assertRaises(ErrorInitIndex):
+            index = IndexYearMonth(s1.index)
+
+        with self.assertRaises(ErrorInitIndex):
+            index = IndexYear(s1.index)
+
+        # can reuse the map if going from dt64 index to normal index
+        idx2 = Index(s1.index)
+        self.assertTrue(id(idx2._map) == id(s1.index._map))
+
+        idx3 = IndexDate(idx2)
+        self.assertTrue(id(idx3._map) == id(s1.index._map))
+
+        with self.assertRaises(ErrorInitIndex):
+            index = IndexYear(idx3)
+
+        # from a date to a finer resolution has to create a new map
+        idx4 = IndexMinute(idx3)
+        self.assertTrue(id(idx4._map) != id(s1.index._map))
+
+        # a GO has to create a new map
+        idx5 = IndexGO(s1.index)
+        self.assertTrue(id(idx4._map) != id(s1.index._map))
+
+        # supplying a dtype to coerce the labels
+        with self.assertRaises(ErrorInitIndex):
+            idx6 = Index(s1.index, dtype='datetime64[Y]')
+
+        with self.assertRaises(ErrorInitIndex):
+            idx7 = Index(s1.index.values.astype('datetime64[Y]'))
+
+        # final resolution from a normal index
+        idx8 = IndexMinute(idx2)
+        self.assertTrue(id(idx8._map) != id(idx2._map))
 
 
     #---------------------------------------------------------------------------
@@ -592,26 +635,6 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_index_datetime_relabel_a(self) -> None:
-        dates1 = [datetime.date(*x) for x in product((2017,), (4,5,6), range(1, 6))]
-        values = [84.16, 23.91, 71.46, 50.99, 31.22, 87.62]
-
-        with self.assertRaises(ErrorInitSeries):
-            # dates as the wrong size
-            s1 = Series(values, index=IndexDate(dates1))
-
-        dates2 = [datetime.date(*x) for x in product((2017,), (4,5,), range(1, 4))]
-        s2 = Series(values, index=IndexDate(dates2))
-
-        with self.assertRaises(ErrorInitIndex):
-            index = IndexYearMonth(s2.index)
-        # import ipdb; ipdb.set_trace()
-
-        # s3 = s2.relabel(index=IndexYearMonth(s2.index))
-
-
-        # s1['2017-04']
-        # s2['2017-04']
 
 
 if __name__ == '__main__':

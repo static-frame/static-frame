@@ -341,7 +341,7 @@ class Index(IndexBase):
         # pre-fetching labels for faster get_item construction
         if isinstance(labels, np.ndarray):
             if dtype is not None and dtype != labels.dtype:
-                raise RuntimeError('invalid label dtype for this Index')
+                raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
 
         if hasattr(labels, '__len__'): # not a generator, not an array
@@ -416,12 +416,10 @@ class Index(IndexBase):
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
             if labels.depth == 1: # not an IndexHierarchy
-                if (labels.STATIC
-                        and self.STATIC
-                        and is_typed
-                        and self._DTYPE == labels.dtype):
-                    # can take the map; must check if dtypes match, otherwise we might
-                    self._map = labels._map
+                if (labels.STATIC and self.STATIC and dtype is None):
+                    if not is_typed or (is_typed and self._DTYPE == labels.dtype):
+                        # can take the map if static and if types in the dict are the same as those in the labels (or to become the labels after conversion)
+                        self._map = labels._map
                 # get a reference to the immutable arrays, even if this is an IndexGO index, we can take the cached arrays, assuming they are up to date; for datetime64 indices, we might need to translate to a different type
                 positions = labels._positions
                 loc_is_iloc = labels._map is None

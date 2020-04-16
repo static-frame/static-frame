@@ -226,19 +226,38 @@ class TestUnit(TestCase):
         self.assertTrue(id(s1.values) == id(s4.values))
 
 
+    def test_series_init_u(self) -> None:
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series(('a', 'b', 'c'), index=(10, 30))
+
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series(('a', 'b', 'c'), index=())
+
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series(('a', 'b', 'c'), index=(10, 20, 30, 40))
+
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series(range(3), index=range(2))
+
+        with self.assertRaises(ErrorInitSeries):
+            s1 = Series(range(3), index=Index(range(2)), own_index=True)
+
+
+        s1 = Series(np.array(3), index=(10, 20, 30, 40))
+        self.assertEqual(s1.to_pairs(),
+                ((10, 3), (20, 3), (30, 3), (40, 3))
+                )
+        s2 = Series(np.array(3))
+        self.assertEqual(s2.to_pairs(), ((0, 3),))
 
 
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
         # create a series from a single value
-        # s0 = Series(3, index=('a',))
 
         # generator based construction of values and index
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-
-        # self.assertEqual(s1['b'], 1)
-        # self.assertEqual(s1['d'], 3)
 
         s2 = s1['a':'c']   # type: ignore  # https://github.com/python/typeshed/pull/3024  # with Pandas this is inclusive
         self.assertEqual(s2.values.tolist(), [0, 1, 2])

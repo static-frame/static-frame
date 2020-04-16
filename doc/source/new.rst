@@ -8,7 +8,7 @@ What is New in Static Frame
 
 Improvements to ``interface`` display, including in inclusion of function arguments and new "Assignment" category; improvements to API documentation.
 
-Fixed potential issue in mismatched size between index and values on Series initialization.
+Fixed issue in not handling mismatched size between index and values on ``Series`` initialization.
 
 Fixed issue creating a datetime64 Index from another datetime64 Index when their dtypes differ.
 
