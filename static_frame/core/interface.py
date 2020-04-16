@@ -107,10 +107,11 @@ def _get_signatures(
         is_getitem: bool = False,
         delegate_func: tp.Optional[AnyCallable] = None,
         delegate_name: str = '',
+        max_args: int = 3,
         ) -> tp.Tuple[str, str]:
 
     if delegate_func:
-        delegate = _get_parameters(delegate_func)
+        delegate = _get_parameters(delegate_func, max_args=max_args)
         if delegate_name:
             delegate = f'.{delegate_name}{delegate}'
         # delegate is always assumed to not be a cls.getitem- style call sig
@@ -119,7 +120,7 @@ def _get_signatures(
         delegate = ''
         delegate_no_args = ''
 
-    signature = f'{name}{_get_parameters(func, is_getitem)}{delegate}'
+    signature = f'{name}{_get_parameters(func, is_getitem, max_args=max_args)}{delegate}'
 
     if is_getitem:
         signature_no_args = f'{name}[]{delegate_no_args}'
