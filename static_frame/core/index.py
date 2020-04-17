@@ -443,7 +443,7 @@ class Index(IndexBase):
             # coerce to target type
             elif labels.dtype != dtype_extract:
                 labels = labels.astype(dtype_extract)
-                labels.flags.writeable = False
+                labels.flags.writeable = False #type: ignore
 
         self._name = name if name is None else name_filter(name)
 

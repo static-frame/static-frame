@@ -239,7 +239,7 @@ class TestUnit(TestCase):
             index = IndexYearMonth(s1.index)
 
         with self.assertRaises(ErrorInitIndex):
-            index = IndexYear(s1.index)
+            index = IndexYear(s1.index) #type: ignore
 
         # can reuse the map if going from dt64 index to normal index
         idx2 = Index(s1.index)
@@ -249,7 +249,7 @@ class TestUnit(TestCase):
         self.assertTrue(id(idx3._map) == id(s1.index._map))
 
         with self.assertRaises(ErrorInitIndex):
-            index = IndexYear(idx3)
+            index = IndexYear(idx3) #type: ignore
 
         # from a date to a finer resolution has to create a new map
         idx4 = IndexMinute(idx3)
