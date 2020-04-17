@@ -10,6 +10,8 @@ Added ``IndexHour`` and ``IndexHourGO`` indices.
 
 Added ``IndexMicrosecond`` and ``IndexMicrosecondGO`` indices.
 
+``Index.astype`` now returns specialized ``datetime64`` ``Index`` objects when given an appropriate dtype.
+
 
 0.6.10
 ----------
