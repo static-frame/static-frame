@@ -12,6 +12,8 @@ Fixed issue in not handling mismatched size between index and values on ``Series
 
 Fixed issue creating a datetime64 ``Index`` from another datetime64 ``Index`` when their dtypes differ.
 
+Fixed an issue when passing an immutable ``Index`` as ``columns`` in ``FrameGO.reindex``.
+
 
 0.6.9
 ----------
