@@ -11,7 +11,6 @@ from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
 
-
 from static_frame import IndexYear
 from static_frame import IndexYearGO
 
@@ -24,11 +23,17 @@ from static_frame import IndexDateGO
 from static_frame import IndexSecond
 from static_frame import IndexSecondGO
 
+from static_frame import IndexHour
+from static_frame import IndexHourGO
+
 from static_frame import IndexMinute
 from static_frame import IndexMinuteGO
 
 from static_frame import IndexMillisecond
 from static_frame import IndexMillisecondGO
+
+from static_frame import IndexMicrosecond
+from static_frame import IndexMicrosecondGO
 
 from static_frame import IndexNanosecond
 from static_frame import IndexNanosecondGO
@@ -37,6 +42,7 @@ from static_frame import IndexNanosecondGO
 # from static_frame import ILoc
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
+from static_frame.core.index_datetime import _dtype_to_index_cls
 
 from static_frame.test.test_case import TestCase
 # from static_frame.core.index import _requires_reindex
@@ -632,6 +638,111 @@ class TestUnit(TestCase):
                 index2.values.tolist(),
                 [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
                 )
+
+
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_hour_a(self) -> None:
+        index1 = IndexHour(('2020-01-01', '2020-02-01'))
+        self.assertEqual(index1.dtype, np.dtype('<M8[h]'))
+        index2 = IndexYearMonth(index1)
+        self.assertEqual(
+                index2.values.tolist(),
+                [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
+                )
+
+    def test_index_datetime_hour_b(self) -> None:
+        index1 = IndexHourGO(('2020-01-01', '2020-02-01'))
+        index1.append('2020-03-01')
+        index2 = IndexYearMonth(index1)
+        self.assertEqual(
+                index2.values.tolist(),
+                [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1), datetime.date(2020, 3, 1)]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_microsecond_a(self) -> None:
+        index1 = IndexMicrosecond(('2020-01-01', '2020-02-01'))
+        self.assertEqual(index1.dtype, np.dtype('<M8[us]'))
+        index2 = IndexYearMonth(index1)
+        self.assertEqual(
+                index2.values.tolist(),
+                [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1)]
+                )
+
+    def test_index_datetime_microsecond_b(self) -> None:
+        index1 = IndexMicrosecondGO(('2020-01-01', '2020-02-01'))
+        index1.append('2020-03-01')
+        self.assertEqual(index1.dtype, np.dtype('<M8[us]'))
+        index2 = IndexYearMonth(index1)
+        self.assertEqual(
+                index2.values.tolist(),
+                [datetime.date(2020, 1, 1), datetime.date(2020, 2, 1), datetime.date(2020, 3, 1)]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_dtype_to_index_cls_a(self) -> None:
+        t1 = _dtype_to_index_cls(True, np.dtype('datetime64[D]'))
+        self.assertEqual(t1, IndexDate)
+
+        t2 = _dtype_to_index_cls(False, np.dtype('datetime64[D]'))
+        self.assertEqual(t2, IndexDateGO)
+
+        t3 = _dtype_to_index_cls(True, np.dtype('datetime64[s]'))
+        self.assertEqual(t3, IndexSecond)
+
+        t4 = _dtype_to_index_cls(False, np.dtype('datetime64[s]'))
+        self.assertEqual(t4, IndexSecondGO)
+
+        t5 = _dtype_to_index_cls(True, np.dtype('datetime64[Y]'))
+        self.assertEqual(t5, IndexYear)
+
+        t6 = _dtype_to_index_cls(False, np.dtype('datetime64[Y]'))
+        self.assertEqual(t6, IndexYearGO)
+
+    def test_dtype_to_index_cls_b(self) -> None:
+        t1 = _dtype_to_index_cls(True, np.dtype(str))
+        self.assertEqual(t1, Index)
+
+        t2 = _dtype_to_index_cls(False, np.dtype(str))
+        self.assertEqual(t2, IndexGO)
+
+        t3 = _dtype_to_index_cls(True, np.dtype(float))
+        self.assertEqual(t3, Index)
+
+        t4 = _dtype_to_index_cls(False, np.dtype(float))
+        self.assertEqual(t4, IndexGO)
+
+
+    #---------------------------------------------------------------------------
+    def test_index_datetime_astype_a(self) -> None:
+
+        idx1 = IndexDate(('2020-01-01', '2022-05-10'))
+
+        self.assertEqual(
+            idx1.astype('datetime64[ns]').__class__, IndexNanosecond
+            )
+
+        self.assertEqual(
+            idx1.astype('datetime64[Y]').__class__, IndexYear
+            )
+        self.assertEqual(
+            idx1.astype(str).__class__, Index
+            )
+
+    def test_index_datetime_astype_b(self) -> None:
+
+        idx1 = IndexDateGO(('2020-01-01', '2022-05-10'))
+
+        self.assertEqual(
+            idx1.astype('datetime64[ns]').__class__, IndexNanosecondGO
+            )
+        self.assertEqual(
+            idx1.astype('datetime64[Y]').__class__, IndexYearGO
+            )
+        self.assertEqual(
+            idx1.astype(str).__class__, IndexGO
+            )
 
 
 

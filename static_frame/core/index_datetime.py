@@ -19,28 +19,29 @@ from static_frame.core.util import YearInitializer
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 
-from static_frame.core.util import _DT64_YEAR
-from static_frame.core.util import _DT64_MONTH
-from static_frame.core.util import _DT64_DAY
-from static_frame.core.util import _DT64_M
-from static_frame.core.util import _DT64_S
-from static_frame.core.util import _DT64_MS
-from static_frame.core.util import _DT64_NS
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import DT64_DAY
+from static_frame.core.util import DT64_M
+from static_frame.core.util import DT64_H
+from static_frame.core.util import DT64_S
+from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_US
+from static_frame.core.util import DT64_NS
 
-from static_frame.core.util import _TD64_DAY
-from static_frame.core.util import _TD64_MONTH
-from static_frame.core.util import _TD64_YEAR
-# from static_frame.core.util import _TD64_S
-# from static_frame.core.util import _TD64_MS
+from static_frame.core.util import TD64_DAY
+from static_frame.core.util import TD64_MONTH
+from static_frame.core.util import TD64_YEAR
 
-# from static_frame.core.util import KEY_ITERABLE_TYPES
-# from static_frame.core.util import resolve_dtype
-# from static_frame.core.index import PositionsAllocator
+from static_frame.core.index_base import IndexBase
+
 from static_frame.core.index import _IndexGOMixin
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
 
 from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+
 from static_frame.core.doc_str import doc_inject
 
 
@@ -157,7 +158,7 @@ class IndexYear(IndexDatetime):
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_YEAR
+    _DTYPE = DT64_YEAR
     __slots__ = _INDEX_SLOTS
 
     @classmethod
@@ -171,10 +172,10 @@ class IndexYear(IndexDatetime):
         Get an IndexYearMonth instance over a range of dates, where start and stop are inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_DAY),
-                to_datetime64(stop, _DT64_DAY).astype(_DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, DT64_DAY),
+                to_datetime64(stop, DT64_DAY).astype(DT64_YEAR) + TD64_YEAR,
                 np.timedelta64(step, 'Y'),
-                dtype=_DT64_YEAR)
+                dtype=DT64_YEAR)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -191,10 +192,10 @@ class IndexYear(IndexDatetime):
         '''
 
         labels = np.arange(
-                to_datetime64(start, _DT64_MONTH),
-                to_datetime64(stop, _DT64_MONTH).astype(_DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, DT64_MONTH),
+                to_datetime64(stop, DT64_MONTH).astype(DT64_YEAR) + TD64_YEAR,
                 np.timedelta64(step, 'Y'),
-                dtype=_DT64_YEAR)
+                dtype=DT64_YEAR)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -211,8 +212,8 @@ class IndexYear(IndexDatetime):
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_YEAR),
-                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, DT64_YEAR),
+                to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'Y'),
                 )
         labels.flags.writeable = False
@@ -240,7 +241,7 @@ class IndexYearMonth(IndexDatetime):
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_MONTH
+    _DTYPE = DT64_MONTH
     __slots__ = _INDEX_SLOTS
 
     @classmethod
@@ -255,10 +256,10 @@ class IndexYearMonth(IndexDatetime):
         Get an IndexYearMonth instance over a range of dates, where start and stop is inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_DAY),
-                to_datetime64(stop, _DT64_DAY).astype(_DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, DT64_DAY),
+                to_datetime64(stop, DT64_DAY).astype(DT64_MONTH) + TD64_MONTH,
                 np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
+                dtype=DT64_MONTH)
 
         labels.flags.writeable = False
         return cls(labels, name=name)
@@ -276,10 +277,10 @@ class IndexYearMonth(IndexDatetime):
         '''
 
         labels = np.arange(
-                to_datetime64(start, _DT64_MONTH),
-                to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, DT64_MONTH),
+                to_datetime64(stop, DT64_MONTH) + TD64_MONTH,
                 np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
+                dtype=DT64_MONTH)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -296,10 +297,10 @@ class IndexYearMonth(IndexDatetime):
         Get an IndexYearMonth instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_YEAR),
-                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, DT64_YEAR),
+                to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'M'),
-                dtype=_DT64_MONTH)
+                dtype=DT64_MONTH)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -326,7 +327,7 @@ class IndexDate(IndexDatetime):
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_DAY
+    _DTYPE = DT64_DAY
     __slots__ = _INDEX_SLOTS
 
     @classmethod
@@ -341,8 +342,8 @@ class IndexDate(IndexDatetime):
         Get an IndexDate instance over a range of dates, where start and stop is inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_DAY),
-                to_datetime64(stop, _DT64_DAY) + _TD64_DAY,
+                to_datetime64(start, DT64_DAY),
+                to_datetime64(stop, DT64_DAY) + TD64_DAY,
                 np.timedelta64(step, 'D'))
         labels.flags.writeable = False
         return cls(labels, name=name)
@@ -358,10 +359,10 @@ class IndexDate(IndexDatetime):
         Get an IndexDate instance over a range of months, where start and end are inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_MONTH),
-                to_datetime64(stop, _DT64_MONTH) + _TD64_MONTH,
+                to_datetime64(start, DT64_MONTH),
+                to_datetime64(stop, DT64_MONTH) + TD64_MONTH,
                 step=np.timedelta64(step, 'D'),
-                dtype=_DT64_DAY)
+                dtype=DT64_DAY)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -377,10 +378,10 @@ class IndexDate(IndexDatetime):
         Get an IndexDate instance over a range of years, where start and end are inclusive.
         '''
         labels = np.arange(
-                to_datetime64(start, _DT64_YEAR),
-                to_datetime64(stop, _DT64_YEAR) + _TD64_YEAR,
+                to_datetime64(start, DT64_YEAR),
+                to_datetime64(stop, DT64_YEAR) + TD64_YEAR,
                 step=np.timedelta64(step, 'D'),
-                dtype=_DT64_DAY)
+                dtype=DT64_DAY)
         labels.flags.writeable = False
         return cls(labels, name=name)
 
@@ -394,13 +395,31 @@ IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
 #-------------------------------------------------------------------------------
 @doc_inject(selector='index_date_time_init')
-class IndexMinute(IndexDatetime):
-    '''A mapping of time stamps at the resolution of seconds (via NumPy datetime64[s]) to positions, immutable and of fixed size.
+class IndexHour(IndexDatetime):
+    '''A mapping of time stamps at the resolution of minutes (via NumPy datetime64[m]) to positions, immutable and of fixed size.
 
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_M
+    _DTYPE = DT64_H
+    __slots__ = _INDEX_SLOTS
+
+class IndexHourGO(_IndexDatetimeGOMixin, IndexHour):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexHour
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
+
+#-------------------------------------------------------------------------------
+@doc_inject(selector='index_date_time_init')
+class IndexMinute(IndexDatetime):
+    '''A mapping of time stamps at the resolution of minutes (via NumPy datetime64[m]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = DT64_M
     __slots__ = _INDEX_SLOTS
 
 class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
@@ -419,7 +438,7 @@ class IndexSecond(IndexDatetime):
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_S
+    _DTYPE = DT64_S
     __slots__ = _INDEX_SLOTS
 
 class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
@@ -433,12 +452,12 @@ IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 
 @doc_inject(selector='index_date_time_init')
 class IndexMillisecond(IndexDatetime):
-    '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ms]) to positions, immutable and of fixed size.
+    '''A mapping of time stamps at the resolution of milliseconds (via NumPy datetime64[ms]) to positions, immutable and of fixed size.
 
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_MS
+    _DTYPE = DT64_MS
     __slots__ = _INDEX_SLOTS
 
 class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
@@ -448,17 +467,35 @@ class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
 
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 
+#-------------------------------------------------------------------------------
+
+@doc_inject(selector='index_date_time_init')
+class IndexMicrosecond(IndexDatetime):
+    '''A mapping of time stamps at the resolution of microseconds (via NumPy datetime64[us]) to positions, immutable and of fixed size.
+
+    {args}
+    '''
+    STATIC = True
+    _DTYPE = DT64_US
+    __slots__ = _INDEX_SLOTS
+
+class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
+
+    _IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
+    __slots__ = _INDEX_GO_SLOTS
+
+IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 
 #-------------------------------------------------------------------------------
 
 @doc_inject(selector='index_date_time_init')
 class IndexNanosecond(IndexDatetime):
-    '''A mapping of time stamps at the resolutoin of milliseconds (via NumPy datetime64[ns]) to positions, immutable and of fixed size.
+    '''A mapping of time stamps at the resolution of nanoseconds (via NumPy datetime64[ns]) to positions, immutable and of fixed size.
 
     {args}
     '''
     STATIC = True
-    _DTYPE = _DT64_NS
+    _DTYPE = DT64_NS
     __slots__ = _INDEX_SLOTS
 
 class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
@@ -467,3 +504,33 @@ class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
     __slots__ = _INDEX_GO_SLOTS
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
+
+
+
+#-------------------------------------------------------------------------------
+_DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
+        IndexYear,
+        IndexYearMonth,
+        IndexDate,
+        IndexHour,
+        IndexMinute,
+        IndexSecond,
+        IndexMillisecond,
+        IndexMicrosecond,
+        IndexNanosecond
+        )}
+
+def _dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
+    '''
+    Given an the clazss of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
+    '''
+
+    resolved_static = _DTYPE_TO_CLASS.get(dtype)
+    if resolved_static is not None:
+        if static:
+            return resolved_static
+        return resolved_static._MUTABLE_CONSTRUCTOR #type: ignore
+    # if origin is a dt64, and dtype is not a dt64, we can go to Index or IndexGO
+    if static:
+        return Index
+    return IndexGO

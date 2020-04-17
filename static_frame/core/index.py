@@ -543,8 +543,11 @@ class Index(IndexBase):
         Args:
             {dtype}
         '''
-        return self.__class__(
-                self.values.astype(dtype),
+        from static_frame.core.index_datetime import _dtype_to_index_cls
+        array = self.values.astype(dtype)
+        cls = _dtype_to_index_cls(self.STATIC, array.dtype)
+        return cls(
+                array,
                 name=self._name
                 )
 
@@ -1066,3 +1069,5 @@ def _requires_reindex(left: Index, right: Index) -> bool:
         return ne.any() #type: ignore
     # assume we have a bool
     return ne # if not equal, require reindex
+
+

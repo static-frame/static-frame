@@ -44,11 +44,17 @@ from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
 from static_frame.core.index_datetime import IndexMinute as IndexMinute
 from static_frame.core.index_datetime import IndexMinuteGO as IndexMinuteGO
 
+from static_frame.core.index_datetime import IndexHour as IndexHour
+from static_frame.core.index_datetime import IndexHourGO as IndexHourGO
+
 from static_frame.core.index_datetime import IndexSecond as IndexSecond
 from static_frame.core.index_datetime import IndexSecondGO as IndexSecondGO
 
 from static_frame.core.index_datetime import IndexMillisecond as IndexMillisecond
 from static_frame.core.index_datetime import IndexMillisecondGO as IndexMillisecondGO
+
+from static_frame.core.index_datetime import IndexMicrosecond as IndexMicrosecond
+from static_frame.core.index_datetime import IndexMicrosecondGO as IndexMicrosecondGO
 
 from static_frame.core.index_datetime import IndexNanosecond as IndexNanosecond
 from static_frame.core.index_datetime import IndexNanosecondGO as IndexNanosecondGO

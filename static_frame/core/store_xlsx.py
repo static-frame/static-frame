@@ -15,8 +15,8 @@ from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import NUMERIC_TYPES
 
-from static_frame.core.util import _DT64_S
-from static_frame.core.util import _DT64_DAY
+from static_frame.core.util import DT64_S
+from static_frame.core.util import DT64_DAY
 from static_frame.core.util import AnyCallable
 
 
@@ -62,7 +62,7 @@ class StoreXLSX(Store):
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
         '''
         kind = dtype.kind
-        if dtype == _DT64_S or dtype == _DT64_DAY:
+        if dtype == DT64_S or dtype == DT64_DAY:
             return 'write_datetime', True
         elif dtype == DTYPE_BOOL:
             return 'write_boolean', False

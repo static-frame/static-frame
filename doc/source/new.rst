@@ -3,6 +3,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.11
+----------
+
+Added ``IndexHour`` and ``IndexHourGO`` indices.
+
+Added ``IndexMicrosecond`` and ``IndexMicrosecondGO`` indices.
+
+
 0.6.10
 ----------
 

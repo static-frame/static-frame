@@ -45,8 +45,8 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 
 from static_frame.core.util import to_datetime64
-from static_frame.core.util import _DT64_YEAR
-from static_frame.core.util import _DT64_DAY
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DT64_DAY
 
 from static_frame.core.util import resolve_type_iter
 
@@ -1418,11 +1418,11 @@ class TestUnit(TestCase):
 
     def test_to_datetime64_b(self) -> None:
 
-        dt = to_datetime64(2019, _DT64_YEAR)
+        dt = to_datetime64(2019, DT64_YEAR)
         self.assertEqual(dt, np.datetime64('2019'))
 
         with self.assertRaises(RuntimeError):
-            _ = to_datetime64(2019, _DT64_DAY)
+            _ = to_datetime64(2019, DT64_DAY)
 
 
 

@@ -10,7 +10,7 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
 
-from static_frame.core.util import _DT64_S
+from static_frame.core.util import DT64_S
 from static_frame.core.util import AnyCallable
 
 from static_frame.core.container import ContainerBase
@@ -645,7 +645,7 @@ class InterfaceSummary(Features):
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
-                instance = target(np.array((0,), dtype=_DT64_S))
+                instance = target(np.array((0,), dtype=DT64_S))
             elif target in (ContainerOperand, ContainerBase, IndexBase):
                 instance = target()
             elif issubclass(target, Frame):

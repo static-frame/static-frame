@@ -943,23 +943,27 @@ def slice_to_inclusive_slice(key: slice) -> slice:
 #-------------------------------------------------------------------------------
 # dates
 
-_DT64_DAY = np.dtype('datetime64[D]')
-_DT64_MONTH = np.dtype('datetime64[M]')
-_DT64_YEAR = np.dtype('datetime64[Y]')
-_DT64_M = np.dtype('datetime64[m]')
-_DT64_S = np.dtype('datetime64[s]')
-_DT64_MS = np.dtype('datetime64[ms]')
-_DT64_NS = np.dtype('datetime64[ns]')
+DT64_YEAR = np.dtype('datetime64[Y]')
+DT64_MONTH = np.dtype('datetime64[M]')
+DT64_DAY = np.dtype('datetime64[D]')
+DT64_H = np.dtype('datetime64[h]')
+DT64_M = np.dtype('datetime64[m]')
+DT64_S = np.dtype('datetime64[s]')
+DT64_MS = np.dtype('datetime64[ms]')
+DT64_US = np.dtype('datetime64[us]')
+DT64_NS = np.dtype('datetime64[ns]')
 
-_TD64_DAY = np.timedelta64(1, 'D')
-_TD64_MONTH = np.timedelta64(1, 'M')
-_TD64_YEAR = np.timedelta64(1, 'Y')
-_TD64_M = np.timedelta64(1, 'm')
-_TD64_S = np.timedelta64(1, 's')
-_TD64_MS = np.timedelta64(1, 'ms')
-_TD64_NS = np.timedelta64(1, 'ns')
+TD64_YEAR = np.timedelta64(1, 'Y')
+TD64_MONTH = np.timedelta64(1, 'M')
+TD64_DAY = np.timedelta64(1, 'D')
+TD64_H = np.timedelta64(1, 'h')
+TD64_M = np.timedelta64(1, 'm')
+TD64_S = np.timedelta64(1, 's')
+TD64_MS = np.timedelta64(1, 'ms')
+TD64_US = np.timedelta64(1, 'us')
+TD64_NS = np.timedelta64(1, 'ns')
 
-_DT_NOT_FROM_INT = (_DT64_DAY, _DT64_MONTH)
+_DT_NOT_FROM_INT = (DT64_DAY, DT64_MONTH)
 
 def to_datetime64(
         value: DateInitializer,
@@ -976,7 +980,7 @@ def to_datetime64(
         else: # assume value is single value;
             # note that integers will be converted to units from epoch
             if isinstance(value, int):
-                if dtype == _DT64_YEAR:
+                if dtype == DT64_YEAR:
                     # convert to string as that is likely what is wanted
                     value = str(value)
                 elif dtype in _DT_NOT_FROM_INT:
