@@ -29,10 +29,8 @@ from static_frame.core.util import KeyIterableTypes
 from static_frame.core.util import UFunc
 from static_frame.core.util import NameType
 
-# from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import DepthLevelSpecifier
-# from static_frame.core.util import mloc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import isin
@@ -453,7 +451,9 @@ class Index(IndexBase):
             if not loc_is_iloc:
                 try:
                     self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
-                except ValueError:
+                except ValueError: # Automap will raise ValueError of non-unique values are encountered
+                    pass
+                if self._map is None:
                     raise ErrorInitIndex(f'labels ({len(labels)}) have non-unique values ({len(set(labels))})') #type: ignore
                 size = len(self._map)
             else: # must assume labels are unique

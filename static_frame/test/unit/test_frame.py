@@ -2281,6 +2281,13 @@ class TestUnit(TestCase):
                 (('p', (('x', 100), ('y', 30))), ('q', (('x', 20), ('y', 300))))
                 )
 
+    def test_frame_assign_bloc_f(self) -> None:
+        f = sf.Frame.from_records(np.arange(9).reshape(3,3))
+        fgo = f.to_frame_go()
+        f1 = f.assign.bloc[f % 2 == 0](-f)
+        f2 = f.assign.bloc[f % 2 == 0](-fgo)
+
+        self.assertTrue((f1.values == f2.values).all())
 
 
     #---------------------------------------------------------------------------

@@ -2372,40 +2372,25 @@ class Frame(ContainerOperand):
             raise RuntimeError('must specify one of index or columns')
 
         if index is not None:
-            if isinstance(index, IndexBase):
-                if not own_index:
-                    # always use the Index constructor for safe reuse when poss[ible
-                    if not index.STATIC:
-                        index = index._IMMUTABLE_CONSTRUCTOR(index)
-                    else:
-                        index = index.__class__(index)
-            else: # create the Index if not already an index, assume 1D
-                index = Index(index)
+            if not own_index:
+                index = index_from_optional_constructor(index,
+                        default_constructor=Index)
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)
-            own_index_frame = True
         else:
             index = self._index
             index_ic = None
-            # cannot own self._index, need a new index on Frame construction
-            own_index_frame = False
+        # index can always be owned by this point, as self._index is STATIC, or  we have created a new Index, or we have bbeen given own_index
+        own_index_frame = True
 
         if columns is not None:
-            if isinstance(columns, IndexBase):
-                # always use the Index constructor for safe reuse when possible
-                if not own_columns:
-                    if columns.STATIC != self._COLUMNS_CONSTRUCTOR.STATIC:
-                        columns_constructor = columns._IMMUTABLE_CONSTRUCTOR
-                    else:
-                        columns_constructor = columns.__class__
-                    columns = columns_constructor(columns)
-            else: # create the Index if not already an columns, assume 1D
-                columns = self._COLUMNS_CONSTRUCTOR(columns)
+            if not own_columns:
+                columns = index_from_optional_constructor(columns,
+                        default_constructor=self._COLUMNS_CONSTRUCTOR)
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
             own_columns_frame = True
         else:
             columns = self._columns
             columns_ic = None
-            # if static, can own
             own_columns_frame = self._COLUMNS_CONSTRUCTOR.STATIC
 
         return self.__class__(

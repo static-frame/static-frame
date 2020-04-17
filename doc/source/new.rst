@@ -10,7 +10,7 @@ Improvements to ``interface`` display, including in inclusion of function argume
 
 Fixed issue in not handling mismatched size between index and values on ``Series`` initialization.
 
-Fixed issue creating a datetime64 Index from another datetime64 Index when their dtypes differ.
+Fixed issue creating a datetime64 ``Index`` from another datetime64 ``Index`` when their dtypes differ.
 
 
 0.6.9

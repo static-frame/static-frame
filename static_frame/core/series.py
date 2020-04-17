@@ -670,12 +670,9 @@ class Series(ContainerOperand):
             {fill_value}
             {own_index}
         '''
-        if isinstance(index, IndexBase):
-            if not own_index:
-                # use the Index constructor for safe reuse when possible
-                index = index.__class__(index)
-        else: # create the Index if not already an index, assume 1D
-            index = Index(index)
+        if not own_index:
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index)
 
         ic = IndexCorrespondence.from_correspondence(self.index, index)
 
@@ -686,13 +683,11 @@ class Series(ContainerOperand):
                     name=self._name)
 
         values = full_for_fill(self.values.dtype, len(index), fill_value)
-
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src]
-
-        # make immutable so a copy is not made
         values.flags.writeable = False
+
         return self.__class__(values,
                 index=index,
                 own_index=True,
