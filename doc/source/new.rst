@@ -12,6 +12,14 @@ Added ``IndexMicrosecond`` and ``IndexMicrosecondGO`` indices.
 
 ``Index.astype`` now returns specialized ``datetime64`` ``Index`` objects when given an appropriate dtype.
 
+Fixed flaw in ``IndexHierarchy.label_widths_at_depth``.
+
+Added ``IndexLevels.dtypes_at_depth()`` and ``IndexLevels.dtype_per_depth()`` to capture resolved dtypes per depth.
+
+Added ``IndexLevels.values_at_depth()`` to capture resolved typed arrays per depth.
+
+Updated ``IndexHierarchy.display()`` to display proper types per depth.
+
 
 0.6.10
 ----------

@@ -485,10 +485,10 @@ class IndexHierarchy(IndexBase):
 
 
     def _iter_label(self, depth_level: int = 0):
-        yield from self._levels.iter(depth_level=depth_level)
+        yield from self._levels.label_nodes_at_depth(depth_level=depth_level)
 
     def _iter_label_items(self, depth_level: int = 0):
-        yield from enumerate(self._levels.iter(depth_level=depth_level))
+        yield from enumerate(self._levels.label_nodes_at_depth(depth_level=depth_level))
 
     @property
     def iter_label(self) -> IterNodeDepthLevel:
@@ -544,18 +544,12 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        # render display rows just of columns
-        # sub_config_type = DisplayConfig(**config.to_dict(type_show=False))
-        # sub_config_no_type = DisplayConfig(**config.to_dict(type_show=False))
         sub_config = config
         sub_display = None
 
         for d in range(self._depth):
             # as a slice this is far more efficient as no copy is made
-            col = self._labels[:, d]
-            # repeats = col == np.roll(col, 1)
-            # repeats[0] = False
-            # col[repeats] = '.' # TODO: spacer may not be best
+            col = self._levels.values_at_depth(d)
             if sub_display is None: # the first
                 sub_display = Display.from_values(
                         col,
@@ -634,7 +628,7 @@ class IndexHierarchy(IndexBase):
             labels = self._name
         else:
             labels = None
-        return Series(self._levels.dtypes(), index=labels)
+        return Series(self._levels.dtype_per_depth(), index=labels)
 
 
     @property

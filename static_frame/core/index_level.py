@@ -44,7 +44,6 @@ class IndexLevel:
     offset: int
 
     STATIC: bool = True
-    # _INDEX_CONSTRUCTOR = Index
 
     def __init__(self,
             index: Index,
@@ -59,8 +58,6 @@ class IndexLevel:
             targets: None, or an ArrayGO of IndexLevel objects
             own_index: Boolean to determine whether the Index can be owned by this IndexLevel; if False, a static index will be reused if appropriate for this IndexLevel class.
         '''
-        # if self.STATIC != index.STATIC:
-        #     raise ErrorInitIndexLevel('incorrect static state in supplied index')
         if not isinstance(index, Index) or index.depth > 1:
             # all derived Index should be depth == 1
             raise ErrorInitIndexLevel('cannot create an IndexLevel from a higher-dimensional Index.')
@@ -134,8 +131,10 @@ class IndexLevel:
                         zip_longest(index, targets[1:], fillvalue=None)
                         ):
                     if level_next is not None:
+                        # print(label, level_next.offset, transversed)
                         yield label, level_next.offset - transversed
-                        transversed += level_next.offset
+                        # get only the incremental addition for this label
+                        transversed += (level_next.offset - transversed)
                     else:
                         # we cannot use offset; must to more expensive length of component Levels
                         yield label, len(targets[i])
@@ -151,26 +150,38 @@ class IndexLevel:
                 levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
-
     def labels_at_depth(self,
             depth_level: int = 0
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator of arrays found at a depth level.
         '''
-        # given a: 1, 2, b: 1, 2, return ('a', 2), ('b', 2)
-
         levels = deque(((self, 0),))
         while levels:
             level, depth = levels.popleft()
             if depth == depth_level:
                 yield level.index.values
-                # yield from get_labels(level.index, level.targets)
                 continue # do not need to descend
             if level.targets is not None: # terminus
                 next_depth = depth + 1
                 levels.extend([(lvl, next_depth) for lvl in level.targets])
 
+
+    def label_nodes_at_depth(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
+        '''Given a depth position, iterate over label nodes at that depth. Only nodes will be provided, which for outer depths may not be of length equal to the entir index.
+        '''
+        if depth_level == 0:
+            yield from self.index
+        else:
+            levels = deque(((self, 0),))
+            while levels:
+                level, depth = levels.popleft()
+                if depth == depth_level:
+                    yield from level.index
+                    continue # do not need to descend
+                if level.targets is not None: # terminus
+                    next_depth = depth + 1
+                    levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
     def depths(self) -> tp.Iterator[int]:
@@ -187,7 +198,8 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    def dtypes_all(self) -> tp.Iterator[np.dtype]:
+    # TODO: consider a different name; was dtypes()
+    def dtypes_iter(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of all dtypes from every depth level.'''
         if self.targets is None:
             yield self.index.values.dtype
@@ -199,23 +211,27 @@ class IndexLevel:
                 if level.targets is not None: # not terminus
                     levels.extend(level.targets)
 
-    def dtypes(self) -> tp.Iterator[np.dtype]:
-        '''Return an iterator of reprsentative dtypes, one from each depth level.'''
-        if self.targets is None:
-            yield self.index.values.dtype
-        else:
-            levels = [self]
-            while levels:
-                level = levels.pop()
-                yield level.index.values.dtype
-                if level.targets is not None: # not terminus
-                    levels.append(level.targets[0])
-                else:
-                    break
 
-    # TODO
-    # def dtypes_at_depth():
-    #     pass
+    def dtypes_at_depth(self, depth_level: int) -> tp.Iterator[np.dtype]:
+        '''
+        Return all dtypes found on a depth.
+        '''
+        levels = deque(((self, 0),))
+        while levels:
+            level, depth = levels.popleft()
+            if depth == depth_level:
+                yield level.index.dtype
+                continue # do not need to descend
+            if level.targets is not None: # terminus
+                next_depth = depth + 1
+                levels.extend([(lvl, next_depth) for lvl in level.targets])
+
+    def dtype_per_depth(self) -> tp.Iterator[np.dtype]:
+        '''Return a tuple of resolved dtypes, one from each depth level.'''
+        depth_count = next(self.depths())
+        for d in range(depth_count):
+            yield resolve_dtype_iter(self.dtypes_at_depth(d))
+
 
     def index_types(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of reprsentative Index classes, one from each depth level.'''
@@ -247,23 +263,6 @@ class IndexLevel:
             return True # if above does not raise
 
         return False
-
-    def iter(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
-        '''Given a depth position, return labels at that depth.
-        '''
-        if depth_level == 0:
-            yield from self.index
-        else:
-            levels = deque(((self, 0),))
-            while levels:
-                level, depth = levels.popleft()
-                if depth == depth_level:
-                    yield from level.index
-                    continue # do not need to descend
-                if level.targets is not None: # terminus
-                    next_depth = depth + 1
-                    levels.extend([(lvl, next_depth) for lvl in level.targets])
-
 
     def leaf_loc_to_iloc(self,
             key: tp.Union[tp.Iterable[tp.Hashable], tp.Type[ILoc], tp.Type[HLoc]]
@@ -373,15 +372,17 @@ class IndexLevel:
                 iloc_flat.extend(part)
         return iloc_flat
 
+    #---------------------------------------------------------------------------
+    # NOTE: might be renamed get_values to imply it is a contiguous array
     def get_labels(self) -> np.ndarray:
         '''
-        Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coercie types.
+        Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coerce types.
         '''
         # assume uniform depths
         depth_count = next(self.depths())
         shape = self.__len__(), depth_count
 
-        dtype = resolve_dtype_iter(self.dtypes_all())
+        dtype = resolve_dtype_iter(self.dtypes_iter())
         labels = np.empty(shape, dtype=dtype)
         row_count = 0
 
@@ -421,25 +422,27 @@ class IndexLevel:
         # NOTE: not yet accepting a depth_level as an iterable of ints
 
         depth_count = next(self.depths())
-
-        # TODO: replace usage with dtypes_at_depth(), otherwise might truncate strings
-        dtypes = tuple(self.dtypes())
-        # arrays = [] # can be sized
+        dtypes = tuple(self.dtype_per_depth())
+        length = self.__len__()
+        # pre allocate array to ensure we use a resovled type
+        array = np.empty(length, dtype=dtypes[depth_level])
 
         if depth_level == depth_count - 1:
             # at maximal depth, can concat underlying arrays
-            array = np.concatenate(tuple(self.labels_at_depth(depth_level)))
+            np.concatenate(
+                    tuple(self.labels_at_depth(depth_level)),
+                    out=array
+                    )
             array.flags.writeable = False
             return array
 
         # for other dpeths, we cannot reuse the array stored in each index, as it does not represent the "width" it needs to cover "under" it
-
         def gen() -> tp.Iterator[np.ndarray]:
             for value, size in self.label_widths_at_depth(
                     depth_level=depth_level):
                 yield np.full(size, value, dtype=dtypes[depth_level])
 
-        array = np.concatenate(tuple(gen()))
+        np.concatenate(tuple(gen()), out=array)
         array.flags.writeable = False
         return array
 

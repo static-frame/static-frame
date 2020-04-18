@@ -1841,7 +1841,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(1)),
-                ((np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 0), (np.datetime64('2019-01-08'), 2), (np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 0), (np.datetime64('2019-01-08'), 2))
+                ((np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 2), (np.datetime64('2019-01-08'), 2), (np.datetime64('2019-01-05'), 2), (np.datetime64('2019-01-06'), 2), (np.datetime64('2019-01-07'), 2), (np.datetime64('2019-01-08'), 2))
                 )
 
         self.assertEqual(tuple(hidx.label_widths_at_depth(2)),
