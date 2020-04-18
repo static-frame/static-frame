@@ -57,11 +57,11 @@ class TestUnit(TestCase):
             _ = IndexLevel(('A', 'B')) #type: ignore
 
 
-    def test_index_level_dtypes_all_a(self) -> None:
-        level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
-        post = tuple(level0.dtypes_all())
-        self.assertEqual(post[0], np.dtype('<U1'))
-        self.assertEqual(len(post), 1)
+    # def test_index_level_dtypes_all_a(self) -> None:
+    #     level0 = IndexLevel(index=Index(('a', 'b')), targets=None)
+    #     post = tuple(level0.dtypes_all())
+    #     self.assertEqual(post[0], np.dtype('<U1'))
+    #     self.assertEqual(len(post), 1)
 
     #---------------------------------------------------------------------------
 

@@ -331,105 +331,6 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors
                 ), name=name)
 
-
-# NOTE: this alternative implementation works, but is shown to be slower than the implementation used above
-    # @classmethod
-    # def from_labels(cls,
-    #         labels: tp.Iterable[tp.Sequence[tp.Hashable]]) -> 'IndexHierarchy':
-    #     '''
-    #     From an iterable of labels, each constituting the components of each label, construct an index hierarcy.
-
-    #     Args:
-    #         labels: an iterator or generator of tuples.
-    #     '''
-    #     labels_iter = iter(labels)
-    #     first = next(labels_iter)
-
-    #     # minimum permitted depth is 2
-    #     depth = len(first)
-    #     assert depth >= 2
-    #     depth_max = depth - 1
-
-    #     pending_labels = [[] for _ in range(depth)]
-    #     pending_targets = [[] for _ in range(depth)]
-    #     previous_label = [None] * depth
-    #     previous_level_length = [0] * depth
-
-    #     active_position = [-1] * depth
-    #     change = [False] * depth
-
-    #     # but first back in front
-    #     for offset, label in enumerate(chain((first,), labels_iter)):
-    #         depth_label_pairs = list(enumerate(label))
-
-    #         # iterate once through label to build change record; we do this here as, when iterating inner to outer below, we need to observe parent change
-    #         for d, v in depth_label_pairs:
-    #             assert v is not None # none is used as initial sentinalhs
-    #             change[d] = previous_label[d] != v
-    #             previous_label[d] = v
-
-    #         # iterate again in reverse order, max depth first
-    #         for d, v in reversed(depth_label_pairs):
-    #             depth_parent = d - 1
-    #             # from 0 to parent_depth, inclusive, gets all levels higher than this one
-    #             if depth_parent >= 0:
-    #                 is_change_parent = any(change[d_sub] for d_sub in range(depth_parent + 1))
-    #             else:
-    #                 is_change_parent = False
-
-    #             if is_change_parent:
-    #                 if offset > 0:
-    #                     index = cls._INDEX_CONSTRUCTOR(pending_labels[d])
-    #                     pending_labels[d] = [] #.clear()
-
-    #                     if d == depth_max:
-    #                         targets = None
-    #                     else:
-    #                         targets = np.array(pending_targets[d])
-    #                         pending_targets[d] = [] #.clear()
-
-    #                     level = cls._LEVEL_CONSTRUCTOR(
-    #                             index=index,
-    #                             targets=targets,
-    #                             offset=previous_level_length[d])
-
-    #                     previous_level_length[d] = len(level)
-    #                     # after setting an upper level, all lower levels go to zero
-    #                     for d_sub in range(d + 1, depth):
-    #                         previous_level_length[d_sub] = 0
-
-    #                     pending_targets[depth_parent].append(level)
-    #                     # print('adding to pending targets', level, offset, len(level))
-
-    #             if change[d] or is_change_parent:
-    #                 # only update if changed, or parnet hc
-    #                 pending_labels[d].append(v)
-
-    #         # print(offset, label, change)
-
-    #     # always one left to handle for all depths
-    #     for d, v in reversed(depth_label_pairs):
-    #         depth_parent = d - 1
-
-    #         index = cls._INDEX_CONSTRUCTOR(pending_labels[d])
-    #         if d == depth_max:
-    #             targets = None
-    #         else:
-    #             targets = np.array(pending_targets[d])
-    #             # pending_targets[d] = [] #.clear()
-
-    #         level = cls._LEVEL_CONSTRUCTOR(
-    #                 index=index,
-    #                 targets=targets,
-    #                 offset=previous_level_length[d])
-    #         # assign it to pending unless we are at the top-most
-    #         if depth_parent >= 0:
-    #             pending_targets[depth_parent].append(level)
-
-    #     # import ipdb; ipdb.set_trace()
-    #     return cls(levels=level)
-
-
     @classmethod
     def from_index_items(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
@@ -701,8 +602,9 @@ class IndexHierarchy(IndexBase):
             sel = depth_level
         else:
             sel = list(depth_level)
-        # NOTE: thes values could have different types if we concatenate the values from each of the composed arrays, but outer layers would have to be multiplied
-        return self.values[:, sel]
+        # by going to TypeBlocks, we preserve types as best as possible when doing selection of values
+        tb = self._levels.to_type_blocks()
+        return tb._extract_array(column_key=sel)
 
 
     @doc_inject()
@@ -714,8 +616,6 @@ class IndexHierarchy(IndexBase):
             sel = depth_level
         else:
             raise NotImplementedError('selection from iterables is not implemented')
-            # sel = list(depth_level)
-
         yield from self._levels.label_widths_at_depth(depth_level=depth_level)
 
 
@@ -871,10 +771,11 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
 
     def _extract_getitem_astype(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
+        '''Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
+        '''
         # key is an iloc key
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
-        # iloc_key = self.loc_to_iloc(key)
         return IndexHierarchyAsType(self, key=key)
 
 
@@ -1173,13 +1074,6 @@ class IndexHierarchyGO(IndexHierarchy):
             '_name'
             )
 
-    # @classmethod
-    # def from_pandas(cls, value) -> 'IndexHierarchyGO':
-    #     '''
-    #     Given a Pandas index, return the appropriate IndexBase derived class.
-    #     '''
-    #     return IndexBase.from_pandas(value, is_static=False)
-
     def append(self, value: tuple):
         '''
         Append a single label to this index.
@@ -1222,9 +1116,19 @@ class IndexHierarchyAsType:
 
     def __call__(self, dtype) -> 'IndexHierarchy':
 
+        from static_frame.core.index_datetime import _dtype_to_index_cls
+
         if self.key == NULL_SLICE:
             labels = self.container.values.astype(dtype)
-            return self.container.__class__.from_labels(labels)
+            cls = _dtype_to_index_cls(self.container.STATIC, labels.dtype)
+            index_constructors = [cls for _ in range(self.container.depth)]
+            return self.container.__class__.from_labels(
+                    labels,
+                    index_constructors=index_constructors)
+
+        # TODO
+        # use TB instance to create hierarchy while preserving types
+        # tb = self._levels.to_type_blocks()
 
         def gen():
             for row in self.container.values:

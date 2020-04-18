@@ -26,6 +26,10 @@ from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.type_blocks import TypeBlocks
+
+
 class IndexLevel:
     '''
     A nestable representation of an Index, where labels in that index optionally point to other Index objects.
@@ -44,7 +48,7 @@ class IndexLevel:
 
     def __init__(self,
             index: Index,
-            targets: tp.Optional[ArrayGO] = None, # np.ndarray[IndexLevel]
+            targets: tp.Optional[ArrayGO] = None,
             offset: int = 0,
             own_index: bool = False
             ):
@@ -148,6 +152,27 @@ class IndexLevel:
 
 
 
+    def labels_at_depth(self,
+            depth_level: int = 0
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
+        '''
+        Generator of arrays found at a depth level.
+        '''
+        # given a: 1, 2, b: 1, 2, return ('a', 2), ('b', 2)
+
+        levels = deque(((self, 0),))
+        while levels:
+            level, depth = levels.popleft()
+            if depth == depth_level:
+                yield level.index.values
+                # yield from get_labels(level.index, level.targets)
+                continue # do not need to descend
+            if level.targets is not None: # terminus
+                next_depth = depth + 1
+                levels.extend([(lvl, next_depth) for lvl in level.targets])
+
+
+
     def depths(self) -> tp.Iterator[int]:
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None:
@@ -188,6 +213,10 @@ class IndexLevel:
                 else:
                     break
 
+    # TODO
+    # def dtypes_at_depth():
+    #     pass
+
     def index_types(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of reprsentative Index classes, one from each depth level.'''
         if self.targets is None:
@@ -201,7 +230,6 @@ class IndexLevel:
                     levels.append(level.targets[0])
                 else:
                     break
-
 
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
@@ -302,7 +330,6 @@ class IndexLevel:
             next_offset = offset + level.offset
 
             # print(level, depth, offset, depth_key, next_offset)
-
             if level.targets is None:
                 try:
                     ilocs.append(level.index.loc_to_iloc(depth_key, offset=next_offset))
@@ -348,7 +375,7 @@ class IndexLevel:
 
     def get_labels(self) -> np.ndarray:
         '''
-        Return an immutable NumPy 2D array of all labels found in this IndexLevels instance.
+        Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coercie types.
         '''
         # assume uniform depths
         depth_count = next(self.depths())
@@ -385,32 +412,49 @@ class IndexLevel:
         return labels
 
 
-    # def values_at_depth(self,
-    #         depth_level: int
-    #         ) -> np.ndarray:
-    #     # NOTE: not yet accepting a depth_level as an iterable of ints
-    #     # NOTE: this only concatenates found values in stored indicies, meaning that the length of the array will differ based on the depth level
-          # NOTE: use label_widths_at_depth() to build arrays not at max depth
+    def values_at_depth(self,
+            depth_level: int
+            ) -> np.ndarray:
+        '''
+        For the given depth, return a correctly typed immutable array of length equal to the number of rows in the cosolidate values presentation.
+        '''
+        # NOTE: not yet accepting a depth_level as an iterable of ints
+
+        depth_count = next(self.depths())
+
+        # TODO: replace usage with dtypes_at_depth(), otherwise might truncate strings
+        dtypes = tuple(self.dtypes())
+        # arrays = [] # can be sized
+
+        if depth_level == depth_count - 1:
+            # at maximal depth, can concat underlying arrays
+            array = np.concatenate(tuple(self.labels_at_depth(depth_level)))
+            array.flags.writeable = False
+            return array
+
+        # for other dpeths, we cannot reuse the array stored in each index, as it does not represent the "width" it needs to cover "under" it
+
+        def gen() -> tp.Iterator[np.ndarray]:
+            for value, size in self.label_widths_at_depth(
+                    depth_level=depth_level):
+                yield np.full(size, value, dtype=dtypes[depth_level])
+
+        array = np.concatenate(tuple(gen()))
+        array.flags.writeable = False
+        return array
 
 
-    #     if depth_level == 0:
-    #         return self.index.values
-    #     else:
-    #         def gen():
-    #             levels = deque(((self, 0),))
-    #             while levels:
-    #                 level, depth = levels.popleft()
-    #                 if depth == depth_level:
-    #                     yield level.index.values
-    #                     continue # do not need to descend
-    #                 if level.targets is not None: # terminus
-    #                     next_depth = depth + 1
-    #                     levels.extend([(lvl, next_depth) for lvl in level.targets])
+    def to_type_blocks(self) -> 'TypeBlocks':
+        '''
+        Provide a correctly typed TypeBlocks version
+        '''
+        from static_frame.core.type_blocks import TypeBlocks
+        depth_count = next(self.depths())
+        return TypeBlocks.from_blocks(
+                self.values_at_depth(d) for d in range(depth_count)
+                )
 
-    #         return np.concatenate(tuple(gen()))
-
-
-
+#-------------------------------------------------------------------------------
 class IndexLevelGO(IndexLevel):
     '''Grow only variant of IndexLevel
     '''

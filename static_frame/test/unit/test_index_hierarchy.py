@@ -19,13 +19,17 @@ from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
+from static_frame import IndexYearMonth
+
 # from static_frame import IndexLevelGO
 from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
+from static_frame.core.exception import ErrorInitIndex
 
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
-from static_frame.core.exception import ErrorInitIndex
+from static_frame.test.test_case import skip_win
+
 
 class TestUnit(TestCase):
 
@@ -1877,6 +1881,42 @@ class TestUnit(TestCase):
                 [np.dtype('float64'), np.dtype('float64')])
 
 
+    def test_index_hierarchy_astype_c(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+
+        self.assertEqual(
+                ih1.astype[[0, 1]](float).dtypes.to_pairs(),
+                ((0, np.dtype('float64')), (1, np.dtype('float64')), (2, np.dtype('<U7')))
+                )
+
+
+    def test_index_hierarchy_astype_d(self) -> None:
+        ih1 = IndexHierarchy.from_product(
+            ('1945-01-02', '1843-07-07'), ('2020-01', '2020-03'))
+
+        self.assertEqual(
+                ih1.astype('datetime64[M]').index_types.to_pairs(),
+                ((0, IndexYearMonth),
+                (1, IndexYearMonth))
+                )
+
+    # def test_index_hierarchy_astype_e(self) -> None:
+    #     ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+
+    #     ih2 = ih1.astype[[0, 1]](float).dtypes.to_pairs()
+    #     #TODO
+
+    #---------------------------------------------------------------------------
+
+    @skip_win #type: ignore
+    def test_index_hierarchy_values_at_depth_a(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+        post = ih1.values_at_depth([0, 1])
+        self.assertEqual(post.shape, (8, 2))
+        self.assertEqual(post.dtype, np.dtype(int))
+        self.assertEqual(ih1.values_at_depth(2).dtype, np.dtype('<U7'))
+
+
     #---------------------------------------------------------------------------
 
     def test_index_hierarchy_head_a(self) -> None:
@@ -1894,6 +1934,8 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.tail().values.tolist(),
             [[1, 'b', 5], [2, 'a', 2], [2, 'a', 5], [2, 'b', 2], [2, 'b', 5]]
             )
+
+    #---------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
