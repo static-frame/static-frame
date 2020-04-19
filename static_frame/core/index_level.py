@@ -27,7 +27,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.type_blocks import TypeBlocks
+    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
 
 
 class IndexLevel:

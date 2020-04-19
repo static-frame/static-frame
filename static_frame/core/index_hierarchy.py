@@ -413,7 +413,6 @@ class IndexHierarchy(IndexBase):
 
         Args:
             blocks: a TypeBlocks instance
-            continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
             :obj:`IndexHierarchy`
@@ -449,7 +448,7 @@ class IndexHierarchy(IndexBase):
                 else:
                     # can only fetch this node (and not create a new node) if this is the sequential predecessor
                     if v != observed_last[d]:
-                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
+                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} cannot follow {observed_last[d]} when {v} has already been defined.')
                 current = current[v]
                 observed_last[d] = v
             elif d < depth_max: # premax means inner values are a list
@@ -458,14 +457,14 @@ class IndexHierarchy(IndexBase):
                 else:
                     # cannot just fetch this list if it is not the predecessor
                     if v != observed_last[d]:
-                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
+                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} cannot follow {observed_last[d]} when {v} has already been defined.')
                 current = current[v]
                 observed_last[d] = v
             elif d == depth_max: # at depth max
                 # if there are redundancies here they will be caught in index creation
                 current.append(v)
             else:
-                raise ErrorInitIndex('label exceeded expected depth', label)
+                raise ErrorInitIndex('label exceeded expected depth', v)
 
         return cls(levels=cls._tree_to_index_level(
                 tree,

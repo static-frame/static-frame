@@ -33,8 +33,6 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 
-from static_frame.core.index_base import IndexBase
-
 from static_frame.core.index import _IndexGOMixin
 from static_frame.core.index import _INDEX_SLOTS
 from static_frame.core.index import _INDEX_GO_SLOTS
