@@ -45,6 +45,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import rehierarch_and_map
 
 from static_frame.core.array_go import ArrayGO
+from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
@@ -107,6 +108,7 @@ class IndexHierarchy(IndexBase):
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
     _UFUNC_DIFFERENCE = setdiff2d
+
 
     #---------------------------------------------------------------------------
     # constructors
@@ -172,7 +174,7 @@ class IndexHierarchy(IndexBase):
         # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
 
         def get_index(labels, depth: int):
-            if index_constructors:
+            if index_constructors is not None:
                 explicit_constructor = index_constructors[depth]
             else:
                 explicit_constructor = None
@@ -300,11 +302,7 @@ class IndexHierarchy(IndexBase):
                     else:
                         # can only fetch this node (and not create a new node) if this is the sequential predecessor
                         if v != observed_last[d]:
-                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
-                                    v,
-                                    label,
-                                    observed_last[d],
-                                    v))
+                            raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
                     current = current[v]
                     observed_last[d] = v
                 elif d < depth_max:
@@ -313,11 +311,7 @@ class IndexHierarchy(IndexBase):
                     else:
                         # cannot just fetch this list if it is not the predecessor
                         if v != observed_last[d]:
-                            raise ErrorInitIndex('invalid tree-form for IndexHierarchy: {} in {} cannot follow {} when {} has already been defined.'.format(
-                                    v,
-                                    label,
-                                    observed_last[d],
-                                    v))
+                            raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
                     current = current[v]
                     observed_last[d] = v
                 elif d == depth_max: # at depth max
@@ -405,6 +399,80 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 index_constructors=index_constructors
                 )
+
+
+    @classmethod
+    def _from_type_blocks(cls: tp.Type[IH],
+            blocks: TypeBlocks,
+            *,
+            name: tp.Optional[tp.Hashable] = None,
+            index_constructors: tp.Optional[IndexConstructors] = None,
+            ) -> IH:
+        '''
+        Construct an ``IndexHierarhcy`` from a TypeBlocks instance.
+
+        Args:
+            blocks: a TypeBlocks instance
+            continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
+
+        Returns:
+            :obj:`IndexHierarchy`
+        '''
+
+        depth = blocks.shape[1]
+
+        # minimum permitted depth is 2
+        if depth < 2:
+            raise ErrorInitIndex('cannot create an IndexHierarchy from only one level.')
+        if index_constructors is not None and len(index_constructors) != depth:
+            raise ErrorInitIndex('if providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
+
+        depth_max = depth - 1
+        depth_pre_max = depth - 2
+
+        token = object()
+        observed_last = [token for _ in range(depth)]
+        range_depth = range(depth)
+
+        tree = dict() # order assumed and necessary
+
+        idx_row_last = -1
+        for (idx_row, d), v in blocks.element_items():
+            if idx_row_last != idx_row:
+                # for each row, we re-set current to the outermost reference
+                current = tree
+                idx_row_last = idx_row
+
+            if d < depth_pre_max:
+                if v not in current:
+                    current[v] = dict() # order necessary
+                else:
+                    # can only fetch this node (and not create a new node) if this is the sequential predecessor
+                    if v != observed_last[d]:
+                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
+                current = current[v]
+                observed_last[d] = v
+            elif d < depth_max: # premax means inner values are a list
+                if v not in current:
+                    current[v] = list()
+                else:
+                    # cannot just fetch this list if it is not the predecessor
+                    if v != observed_last[d]:
+                        raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
+                current = current[v]
+                observed_last[d] = v
+            elif d == depth_max: # at depth max
+                # if there are redundancies here they will be caught in index creation
+                current.append(v)
+            else:
+                raise ErrorInitIndex('label exceeded expected depth', label)
+
+        return cls(levels=cls._tree_to_index_level(
+                tree,
+                index_constructors=index_constructors
+                ), name=name)
+
+
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -729,6 +797,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        #NOTE: consider implementing with TypeBlocks
+
         if key is None:
             labels = self._labels
         elif isinstance(key, slice):
@@ -747,6 +817,7 @@ class IndexHierarchy(IndexBase):
             raise NotImplementedError(
                     'unhandled key type extracted a 2D array from labels') #pragma: no cover
 
+        # TODO: propagate index_constructors
         return self.__class__.from_labels(labels=labels, name=self._name)
 
     def _extract_loc(self,
@@ -930,6 +1001,7 @@ class IndexHierarchy(IndexBase):
     def roll(self, shift: int) -> 'IndexHierarchy':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
         '''
+        # TODO: implement with TypeBlocks from IndexLevels
         if self._recache:
             self._update_array_cache()
 
@@ -942,6 +1014,8 @@ class IndexHierarchy(IndexBase):
                     axis=0,
                     wrap=True)
             values.flags.writeable = False
+
+        # TODO: propagate index_constructors
         return self.__class__.from_labels(values, name=self._name)
 
     #---------------------------------------------------------------------------
@@ -950,11 +1024,14 @@ class IndexHierarchy(IndexBase):
     def _to_frame(self,
             constructor: tp.Type[ContainerOperand]
             ) -> 'Frame':
-        # NOTE: this should be done by column to preserve types per depth
+        # NOTE: do not have to update array cache
+        tb = self._levels.to_type_blocks()
         return constructor(
-                self.values,
-                columns=range(self._depth),
-                index=None)
+                tb,
+                columns=None,
+                index=None,
+                own_data=True
+                )
 
     def to_frame(self) -> 'Frame':
         '''
@@ -1112,26 +1189,26 @@ class IndexHierarchyAsType:
 
         from static_frame.core.index_datetime import _dtype_to_index_cls
 
-        if self.key == NULL_SLICE:
-            labels = self.container.values.astype(dtype)
-            cls = _dtype_to_index_cls(self.container.STATIC, labels.dtype)
-            index_constructors = [cls for _ in range(self.container.depth)]
-            return self.container.__class__.from_labels(
-                    labels,
-                    index_constructors=index_constructors)
+        # use TypeBlocks in both situations to avoid double casting
+        tb = self.container._levels.to_type_blocks()
+        tb = TypeBlocks.from_blocks(tb._astype_blocks(column_key=self.key, dtype=dtype))
 
-        # TODO
-        # use TB instance to create hierarchy while preserving types
-        # tb = self._levels.to_type_blocks()
+        # avoid coercion of datetime64 arrays that were not targetted in the selection
+        index_constructors = self.container.index_types.values.copy()
+        dtype_post = tb.dtypes[self.key] # can select element or array
+        if isinstance(dtype_post, np.dtype):
+            index_constructors[self.key] = _dtype_to_index_cls(
+                    self.container.STATIC,
+                    dtype_post)
+        else: # assign iterable
+            index_constructors[self.key] = [
+                    _dtype_to_index_cls(self.container.STATIC, dt)
+                    for dt in dtype_post]
 
-        def gen():
-            for row in self.container.values:
-                row = row.copy() # remove immutable reference
-                # convert each column once per row; this is not optimal
-                row[self.key] = row[self.key].astype(dtype)
-                yield row
-
-        return self.container.__class__.from_labels(gen())
+        # import ipdb; ipdb.set_trace()
+        return self.container.__class__._from_type_blocks(
+                tb,
+                index_constructors=index_constructors)
 
 
 

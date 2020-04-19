@@ -1528,6 +1528,14 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_hierarchy_to_frame_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(list('ab'), [10.1, 20.2], name='q')
+        f1 = ih1.to_frame()
+        self.assertEqual(f1.dtypes.to_pairs(),
+                ((0, np.dtype('<U1')), (1, np.dtype('float64')))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_to_html_datatables(self) -> None:
@@ -1900,11 +1908,32 @@ class TestUnit(TestCase):
                 (1, IndexYearMonth))
                 )
 
-    # def test_index_hierarchy_astype_e(self) -> None:
-    #     ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
+    @skip_win
+    def test_index_hierarchy_astype_e(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 
-    #     ih2 = ih1.astype[[0, 1]](float).dtypes.to_pairs()
-    #     #TODO
+        self.assertEqual(
+                ih1.astype[[0, 1]](float).dtypes.to_pairs(),
+                ((0, np.dtype('float64')), (1, np.dtype('float64')), (2, np.dtype('<U7')))
+                )
+
+        ih2 = ih1.astype[2]('datetime64[M]')
+
+        self.assertEqual(
+                ih2.dtypes.to_pairs(),
+                ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('<M8[M]')))
+                )
+
+        self.assertEqual(ih2.index_types.to_pairs(),
+                ((0, Index), (1, Index), (2, IndexYearMonth))
+                )
+
+        post = ih2.loc[HLoc[:, 200, '2020-03']]
+        self.assertEqual(post.shape, (2, 3))
+
+        #TODO: datetime64 has goen to object
+        # import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
