@@ -420,6 +420,50 @@ class TestUnit(TestCase):
         self.assertEqual(post2, ((True, 1), (False, 1), (True, 1), (False, 1)))
 
 
+    def test_index_level_label_widths_at_depth_c(self) -> None:
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 2),
+                ('II', 'C', 3),
+                ('II', 'C', 4),
+                )
+        ih = IndexHierarchy.from_labels(labels)
+        lavels = ih._levels
+
+        self.assertEqual(tuple(lavels.label_widths_at_depth(0)),
+                (('I', 2), ('II', 2))
+        )
+        self.assertEqual(tuple(lavels.label_widths_at_depth(1)),
+                (('A', 1), ('B', 1), ('C', 2))
+        )
+        self.assertEqual(tuple(lavels.label_widths_at_depth(2)),
+                ((1, 1), (2, 1), (3, 1), (4, 1))
+        )
+
+    def test_index_level_label_widths_at_depth_d(self) -> None:
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 2),
+                ('I', 'B', 3),
+                ('II', 'C', 3),
+                ('II', 'C', 4),
+                )
+        ih = IndexHierarchy.from_labels(labels)
+        lavels = ih._levels
+
+        self.assertEqual(tuple(lavels.label_widths_at_depth(0)),
+                (('I', 3), ('II', 2))
+        )
+        self.assertEqual(tuple(lavels.label_widths_at_depth(1)),
+                (('A', 1), ('B', 2), ('C', 2))
+        )
+        self.assertEqual(tuple(lavels.label_widths_at_depth(2)),
+                ((1, 1), (2, 1), (3, 1), (3, 1), (4, 1))
+        )
+
+
+        # import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     unittest.main()

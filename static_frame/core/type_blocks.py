@@ -1542,7 +1542,8 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     def _slice_blocks(self,
             row_key: tp.Optional[GetItemKeyTypeCompound] = None,
-            column_key: tp.Optional[GetItemKeyTypeCompound] = None) -> tp.Iterator[np.ndarray]:
+            column_key: tp.Optional[GetItemKeyTypeCompound] = None
+            ) -> tp.Iterator[np.ndarray]:
         '''
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.

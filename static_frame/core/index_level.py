@@ -20,14 +20,16 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import GetItemKeyTypeCompound
 
+from static_frame.core.type_blocks import TypeBlocks
+
 # from static_frame.core.index_base import IndexBase
 
 from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel
 
-if tp.TYPE_CHECKING:
-    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
+# if tp.TYPE_CHECKING:
+#     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
 
 
 class IndexLevel:
@@ -132,9 +134,14 @@ class IndexLevel:
                         ):
                     if level_next is not None:
                         # print(label, level_next.offset, transversed)
-                        yield label, level_next.offset - transversed
+                        # if the next offset is zero, we are moving to a component that is under a fresh hierarchy
+                        if level_next.offset > 0:
+                            delta = level_next.offset - transversed
+                        else:
+                            delta = len(targets[i])
+                        yield label, delta
                         # get only the incremental addition for this label
-                        transversed += (level_next.offset - transversed)
+                        transversed += delta
                     else:
                         # we cannot use offset; must to more expensive length of component Levels
                         yield label, len(targets[i])
@@ -232,7 +239,7 @@ class IndexLevel:
         for d in range(depth_count):
             yield resolve_dtype_iter(self.dtypes_at_depth(d))
 
-
+    # consider renaming index_types_per_depth
     def index_types(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of reprsentative Index classes, one from each depth level.'''
         if self.targets is None:
@@ -437,22 +444,32 @@ class IndexLevel:
             return array
 
         # for other dpeths, we cannot reuse the array stored in each index, as it does not represent the "width" it needs to cover "under" it
-        def gen() -> tp.Iterator[np.ndarray]:
-            for value, size in self.label_widths_at_depth(
-                    depth_level=depth_level):
-                yield np.full(size, value, dtype=dtypes[depth_level])
+        # def gen() -> tp.Iterator[np.ndarray]:
+        #     for value, size in self.label_widths_at_depth(
+        #             depth_level=depth_level):
+        #         yield np.full(size, value, dtype=dtypes[depth_level])
 
-        np.concatenate(tuple(gen()), out=array)
+        # np.concatenate(tuple(gen()), out=array)
+        start = 0
+        for value, size in self.label_widths_at_depth(depth_level):
+            end = start + size
+            array[start: end] = value
+            start = end
+
         array.flags.writeable = False
         return array
 
 
-    def to_type_blocks(self) -> 'TypeBlocks':
+    def to_type_blocks(self) -> TypeBlocks:
         '''
         Provide a correctly typed TypeBlocks version
         '''
-        from static_frame.core.type_blocks import TypeBlocks
-        depth_count = next(self.depths())
+        try:
+            depth_count = next(self.depths())
+        except StopIteration:
+            # assume we have no depth or length
+            return TypeBlocks.from_zero_size_shape()
+
         return TypeBlocks.from_blocks(
                 self.values_at_depth(d) for d in range(depth_count)
                 )

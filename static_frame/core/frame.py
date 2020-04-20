@@ -3047,14 +3047,12 @@ class Frame(ContainerOperand):
         iloc_column_key = self._columns.loc_to_iloc(key)
         return None, iloc_column_key
 
-
     def _extract_loc(self, key: GetItemKeyTypeCompound) -> 'Frame':
         iloc_row_key, iloc_column_key = self._compound_loc_to_iloc(key)
         return self._extract(
                 row_key=iloc_row_key,
                 column_key=iloc_column_key
                 )
-
 
     def _extract_bloc(self, key: Bloc2DKeyType) -> Series:
         '''
@@ -3063,13 +3061,11 @@ class Frame(ContainerOperand):
         bloc_key = bloc_key_normalize(key=key, container=self)
         values = self.values[bloc_key]
         values.flags.writeable = False
-
         index = Index(
                 (self._index[x], self._columns[y])
                 for x, y in zip(*np.nonzero(bloc_key))
                 )
         return Series(values, index=index, own_index=True)
-
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> tp.Union['Frame', Series]:
@@ -3361,10 +3357,8 @@ class Frame(ContainerOperand):
         '''
         if axis == 1:
             Tuple = get_tuple_constructor(self._columns.values)
-            # Tuple = namedtuple('Axis', self._columns.values)
         elif axis == 0:
             Tuple = get_tuple_constructor(self._index.values)
-            # Tuple = namedtuple('Axis', self._index.values)
         else:
             raise NotImplementedError()
 

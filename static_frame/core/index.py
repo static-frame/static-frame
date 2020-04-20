@@ -52,6 +52,7 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import mloc
 
 from static_frame.core.util import resolve_dtype
 from static_frame.core.container import ContainerOperand
@@ -424,7 +425,7 @@ class Index(IndexBase):
                 labels = labels._labels
             else: # IndexHierarchy
                 # will be a generator of tuples; already updated caches
-                labels = array2d_to_tuples(labels._labels)
+                labels = array2d_to_tuples(labels.__iter__())
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
             array = labels.values
@@ -525,6 +526,115 @@ class Index(IndexBase):
                 yield_type=IterNodeType.VALUES,
                 apply_type=IterNodeApplyType.INDEX_LABELS
                 )
+
+
+    #---------------------------------------------------------------------------
+    # common attributes from the numpy array
+
+    @property # type: ignore
+    @doc_inject()
+    def mloc(self) -> int:
+        '''{doc_int}
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return mloc(self._labels)
+
+    @property
+    def dtype(self) -> np.dtype:
+        '''
+        Return the dtype of the underlying NumPy array.
+
+        Returns:
+            :obj:`numpy.dtype`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._labels.dtype
+
+    @property
+    def shape(self) -> tp.Tuple[int, ...]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :obj:`tp.Tuple[int]`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return tp.cast(tp.Tuple[int, ...], self._labels.shape)
+
+    @property
+    def ndim(self) -> int:
+        '''
+        Return the number of dimensions.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return tp.cast(int, self._labels.ndim)
+
+    @property
+    def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return tp.cast(int, self._labels.size)
+
+    @property
+    def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return tp.cast(int, self._labels.nbytes)
+
+    def __bool__(self) -> bool:
+        '''
+        True if this container has size.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return bool(self._labels.size)
+
+    #---------------------------------------------------------------------------
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if key is None:
+            if self.STATIC: # immutable, no selection, can return self
+                return self
+            labels = self._labels # already immutable
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
+            # can use labels, as we already recached
+            # use Boolean area to select indices from positions, as np.delete does not work with arrays
+            labels = np.delete(self._labels, self._positions[key], axis=0)
+            labels.flags.writeable = False
+        else:
+            labels = np.delete(self._labels, key, axis=0)
+            labels.flags.writeable = False
+
+        # from labels will work with both Index and IndexHierarchy
+        return self.__class__.from_labels(labels, name=self._name)
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
 
 
     @property

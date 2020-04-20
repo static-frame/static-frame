@@ -41,9 +41,6 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # type defs
 
-    _map: tp.Optional[FrozenAutoMap]
-    _labels: np.ndarray
-    _positions: np.ndarray
     _recache: bool
     _name: NameType
     values: np.ndarray
@@ -216,86 +213,6 @@ class IndexBase(ContainerOperand):
         return names
 
     #---------------------------------------------------------------------------
-    # common attributes from the numpy array
-
-    @property # type: ignore
-    @doc_inject()
-    def mloc(self) -> int:
-        '''{doc_int}
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return mloc(self._labels)
-
-    @property
-    def dtype(self) -> np.dtype:
-        '''
-        Return the dtype of the underlying NumPy array.
-
-        Returns:
-            :obj:`numpy.dtype`
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return self._labels.dtype
-
-    @property
-    def shape(self) -> tp.Tuple[int, ...]:
-        '''
-        Return a tuple describing the shape of the underlying NumPy array.
-
-        Returns:
-            :obj:`tp.Tuple[int]`
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return tp.cast(tp.Tuple[int, ...], self.values.shape)
-
-    @property
-    def ndim(self) -> int:
-        '''
-        Return the number of dimensions.
-
-        Returns:
-            :obj:`int`
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return tp.cast(int, self._labels.ndim)
-
-    @property
-    def size(self) -> int:
-        '''
-        Return the size of the underlying NumPy array.
-
-        Returns:
-            :obj:`int`
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return tp.cast(int, self._labels.size)
-
-    @property
-    def nbytes(self) -> int:
-        '''
-        Return the total bytes of the underlying NumPy array.
-
-        Returns:
-            :obj:`int`
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return tp.cast(int, self._labels.nbytes)
-
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        if self._recache:
-            self._update_array_cache()
-        return bool(self._labels.size)
-
-    #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
 
     @doc_inject(selector='head', class_name='Index')
@@ -344,9 +261,9 @@ class IndexBase(ContainerOperand):
         cls = self.__class__
 
         # using assume_unique will permit retaining order when opperands are identical
-        labels = func(self._labels, opperand, assume_unique=assume_unique) # type: ignore
+        labels = func(self.values, opperand, assume_unique=assume_unique) # type: ignore
 
-        if id(labels) == id(self._labels):
+        if id(labels) == id(self.values):
             # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
             return cls(self)
         return cls.from_labels(labels)
@@ -376,37 +293,6 @@ class IndexBase(ContainerOperand):
         return self._ufunc_set(
                 self.__class__._UFUNC_DIFFERENCE,
                 other)
-
-    #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
-        '''Create a new index after removing the values specified by the loc key.
-
-        This can be applied to both Index and IndexHierarchy, as in both cases we are doing an axis 0 operation. We never drop columns from the underlying array in an IndexHierarchy.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        if key is None:
-            if self.STATIC: # immutable, no selection, can return self
-                return self
-            labels = self._labels # already immutable
-        elif isinstance(key, np.ndarray) and key.dtype == bool:
-            # can use labels, as we already recached
-            # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(self._labels, self._positions[key], axis=0)
-            labels.flags.writeable = False
-        else:
-            labels = np.delete(self._labels, key, axis=0)
-            labels.flags.writeable = False
-
-        # from labels will work with both Index and IndexHierarchy
-        return self.__class__.from_labels(labels, name=self._name)
-
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
-        '''Create a new index after removing the values specified by the loc key.
-        '''
-        return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
-
 
 
     #---------------------------------------------------------------------------

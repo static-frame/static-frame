@@ -1690,7 +1690,7 @@ class TestUnit(TestCase):
             index_new = pickle.loads(pbytes)
 
             for v in index: # iter labels (arrays here)
-                self.assertFalse(index_new._labels.flags.writeable)
+                self.assertFalse(index_new.values.flags.writeable)
                 self.assertEqual(index_new.loc[tuple(v)], index.loc[tuple(v)])
 
 
@@ -1930,9 +1930,9 @@ class TestUnit(TestCase):
 
         post = ih2.loc[HLoc[:, 200, '2020-03']]
         self.assertEqual(post.shape, (2, 3))
-
-        #TODO: datetime64 has goen to object
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(post.dtypes.to_pairs(),
+                ((0, np.dtype('int64')), (1, np.dtype('int64')), (2, np.dtype('<M8[M]')))
+                )
 
 
     #---------------------------------------------------------------------------

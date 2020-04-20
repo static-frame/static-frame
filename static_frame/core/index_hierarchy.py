@@ -28,6 +28,8 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NameType
 
 
 from static_frame.core.selector_node import InterfaceGetItem
@@ -56,6 +58,8 @@ from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeApplyType
 
+from static_frame.core.type_blocks import TypeBlocks
+
 from static_frame.core.hloc import HLoc
 
 from static_frame.core.index_level import IndexLevel
@@ -82,17 +86,19 @@ class IndexHierarchy(IndexBase):
     '''
     __slots__ = (
             '_levels',
-            '_labels',
+            '_blocks',
             '_depth',
+            '_length',
             '_recache',
-            '_name'
+            '_name',
             )
     _levels: IndexLevel
-    _lables: np.ndarray
-    _depth: int
-    _keys: KeysView
+    _blocks: TypeBlocks
+    _depth: tp.Optional[int]
+    _length: tp.Optional[int]
     _recache: bool
     _name: tp.Hashable
+    _keys: KeysView
 
     # Temporary type overrides, until indices are generic.
     __getitem__: tp.Callable[['IndexHierarchy', tp.Hashable], tp.Tuple[tp.Hashable, ...]]
@@ -109,6 +115,8 @@ class IndexHierarchy(IndexBase):
     _UFUNC_INTERSECTION = intersect2d
     _UFUNC_DIFFERENCE = setdiff2d
 
+    _NDIM: int = 2
+
 
     #---------------------------------------------------------------------------
     # constructors
@@ -116,8 +124,8 @@ class IndexHierarchy(IndexBase):
     @classmethod
     def from_product(cls: tp.Type[IH],
             *levels,
-            name: tp.Hashable = None
-            ) -> IH: # tp.Iterable[tp.Hashable]
+            name: NameType = None
+            ) -> IH:
         '''
         Given groups of iterables, return an ``IndexHierarchy`` made of the product of a values in those groups, where the first group is the top-most hierarchy.
 
@@ -232,7 +240,7 @@ class IndexHierarchy(IndexBase):
     def from_labels(cls: tp.Type[IH],
             labels: tp.Iterable[tp.Sequence[tp.Hashable]],
             *,
-            name: tp.Optional[tp.Hashable] = None,
+            name: NameType = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
@@ -371,7 +379,7 @@ class IndexHierarchy(IndexBase):
             labels: tp.Iterable[str],
             *,
             delimiter: str = ' ',
-            name: tp.Hashable = None,
+            name: NameType = None,
             index_constructors: tp.Optional[IndexConstructors] = None,
             ) -> IH:
         '''
@@ -405,7 +413,7 @@ class IndexHierarchy(IndexBase):
     def _from_type_blocks(cls: tp.Type[IH],
             blocks: TypeBlocks,
             *,
-            name: tp.Optional[tp.Hashable] = None,
+            name: NameType = None,
             index_constructors: tp.Optional[IndexConstructors] = None,
             ) -> IH:
         '''
@@ -466,18 +474,19 @@ class IndexHierarchy(IndexBase):
             else:
                 raise ErrorInitIndex('label exceeded expected depth', v)
 
+        # TODO: should find a way to explicitly pass dtypes per depth
+        # TODO: reuse type blocks
         return cls(levels=cls._tree_to_index_level(
                 tree,
                 index_constructors=index_constructors
                 ), name=name)
 
 
-
     #---------------------------------------------------------------------------
     def __init__(self,
             levels: tp.Union[IndexLevel, 'IndexHierarchy'],
             *,
-            name: tp.Hashable = None
+            name: NameType = None
             ):
         '''
         Args:
@@ -485,47 +494,43 @@ class IndexHierarchy(IndexBase):
             labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
         '''
 
-        if issubclass(levels.__class__, IndexHierarchy):
+        if isinstance(levels, IndexHierarchy):
             # handle construction from another IndexHierarchy
+            if levels._recache:
+                levels._update_array_cache()
+
+            # must deepcopy labels if not static;
             if self.STATIC and levels.STATIC:
                 self._levels = levels._levels
             else:
-                # must deepcopy labels if not static; passing level constructor ensures we get a mutable if the parent is mutable
+                # passing level constructor ensures we get a mutable if the parent is mutable
                 self._levels = levels._levels.to_index_level(
                         cls=self._LEVEL_CONSTRUCTOR
                         )
-
-            self._labels = levels.values
+            # as the TypeBlocks managed by IndexHierarchy is never mutated in place, we could potentially share a reference here; perhaps a reason for distinct TypeBlocksGO
+            self._blocks = levels._blocks.copy() # cache is up to date
             self._depth = levels.depth
+            self._length = levels.__len__()
             self._recache = False
 
+            # transfer name if not given as arg
             if name is None and levels.name is not None:
                 name = levels.name
 
         elif isinstance(levels, IndexLevel):
             # always assume ownership of passed in IndexLevel
             self._levels = levels
-            # vlaues derived from levels are deferred
-            self._labels = None
+            self._blocks = None
             self._depth = None
+            self._length = None
             self._recache = True
 
         else:
             raise NotImplementedError(f'no handling for creation from {levels}')
 
+        # always delay creation of _blocks
         self._name = name if name is None else name_filter(name)
 
-
-    #---------------------------------------------------------------------------
-    def __setstate__(self, state):
-        '''
-        Ensure that reanimated NP arrays are set not writeable.
-        '''
-        for key, value in state[1].items():
-            setattr(self, key, value)
-        if self._labels is not None:
-            # might not yet have been created
-            self._labels.flags.writeable = False
 
     #---------------------------------------------------------------------------
     # name interface
@@ -580,22 +585,96 @@ class IndexHierarchy(IndexBase):
         '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
-
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self):
-        # extract all features from self._levels
-        self._depth = next(self._levels.depths())
-        self._labels = self._levels.get_labels()
+        self._blocks = self._levels.to_type_blocks()
+        self._length, self._depth = self._blocks.shape
         self._recache = False
+
+    #---------------------------------------------------------------------------
+
+    @property # type: ignore
+    @doc_inject()
+    def mloc(self) -> int:
+        '''{doc_int}
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._blocks.mloc
+
+    @property
+    def dtypes(self) -> np.ndarray:
+        '''
+        Return the dtypes of the underlying NumPy array.
+
+        Returns:
+            np.ndarray
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._blocks.dtypes
+
+    @property
+    def shape(self) -> tp.Tuple[int, ...]:
+        '''
+        Return a tuple describing the shape of the underlying NumPy array.
+
+        Returns:
+            :obj:`tp.Tuple[int]`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._blocks._shape
+
+    @property
+    def ndim(self) -> int:
+        '''
+        Return the number of dimensions.
+
+        Returns:
+            :obj:`int`
+        '''
+        return self._NDIM
+
+    @property
+    def size(self) -> int:
+        '''
+        Return the size of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._blocks.size
+
+    @property
+    def nbytes(self) -> int:
+        '''
+        Return the total bytes of the underlying NumPy array.
+
+        Returns:
+            :obj:`int`
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return self._blocks.nbytes
+
+    def __bool__(self) -> bool:
+        '''
+        True if this container has size.
+        '''
+        if self._recache:
+            self._update_array_cache()
+        return bool(self._blocks.size)
 
     #---------------------------------------------------------------------------
 
     def __len__(self) -> int:
         if self._recache:
-            # faster to just get from levels instead of recaching
-            return self._levels.__len__()
-        return len(self._labels)
+            self._update_array_cache()
+        return self._length
 
     @doc_inject()
     def display(self,
@@ -632,6 +711,38 @@ class IndexHierarchy(IndexBase):
 
 
     #---------------------------------------------------------------------------
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        #TODO: implement with TypeBlocks
+        values = self._blocks.values
+
+        if key is None:
+            if self.STATIC: # immutable, no selection, can return self
+                return self
+            labels = values # already immutable
+        elif isinstance(key, np.ndarray) and key.dtype == bool:
+            # can use labels, as we already recached
+            # use Boolean area to select indices from positions, as np.delete does not work with arrays
+            labels = np.delete(values, self._positions[key], axis=0)
+            labels.flags.writeable = False
+        else:
+            labels = np.delete(values, key, axis=0)
+            labels.flags.writeable = False
+
+        # from labels will work with both Index and IndexHierarchy
+        return self.__class__.from_labels(labels, name=self._name)
+
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+        '''Create a new index after removing the values specified by the loc key.
+        '''
+        return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
+
+
+    #---------------------------------------------------------------------------
 
     @property
     @doc_inject(selector='values_2d', class_name='IndexHierarchy')
@@ -641,13 +752,12 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels
+        return self._blocks.values
 
     @property
     def depth(self) -> int:
         if self._recache:
-            return next(self._levels.depths())
-            # self._update_array_cache()
+            self._update_array_cache()
         return self._depth
 
     def values_at_depth(self,
@@ -659,13 +769,14 @@ class IndexHierarchy(IndexBase):
         Args:
             depth_level: a single depth level, or iterable depth of depth levels.
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if isinstance(depth_level, int):
             sel = depth_level
         else:
             sel = list(depth_level)
-        # by going to TypeBlocks, we preserve types as best as possible when doing selection of values
-        tb = self._levels.to_type_blocks()
-        return tb._extract_array(column_key=sel)
+        return self._blocks._extract_array(column_key=sel)
 
 
     @doc_inject()
@@ -729,17 +840,19 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        values = self._blocks.values
         if not callable(mapper):
-            # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable, and self._labels is an np.ndarray, need to convert lookups to tuples
+            # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable,
+            # TODO: refactor with TB
             getitem = getattr(mapper, '__getitem__')
-            labels = (tuple(x) for x in self._labels)
+            labels = (tuple(x) for x in values)
             return self.__class__.from_labels(
                     (getitem(x) if x in mapper else x for x in labels),
                     name=self._name
                     )
 
         return self.__class__.from_labels(
-                (mapper(x) for x in self._labels),
+                (mapper(x) for x in values),
                 name=self._name
                 )
 
@@ -749,6 +862,7 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new `IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
+        # TODO: refactor with TypeBlocks
         index, _ = rehierarch_and_map(
                 labels=self.values,
                 index_constructor=self.__class__.from_labels,
@@ -796,28 +910,37 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        #NOTE: consider implementing with TypeBlocks
+        if isinstance(key, INT_TYPES):
+            # return a tuple if selecting a single row
+            return tuple(self._blocks._extract_array(row_key=key))
 
-        if key is None:
-            labels = self._labels
-        elif isinstance(key, slice):
-            if key == NULL_SLICE:
-                labels = self._labels
-            else:
-                labels = self._labels[key]
-        elif isinstance(key, KEY_ITERABLE_TYPES):
-            # we assume Booleans have been normalized to integers here
-            # can select directly from _labels[key] if if key is a list
-            labels = self._labels[key]
-        else: # select a single label value: NOTE: convert array to tuple
-            values = self._labels[key]
-            if values.ndim == 1:
-                return tuple(values)
-            raise NotImplementedError(
-                    'unhandled key type extracted a 2D array from labels') #pragma: no cover
+        index_constructors = tuple(self._levels.index_types())
+        tb = self._blocks._extract(row_key=key)
 
-        # TODO: propagate index_constructors
-        return self.__class__.from_labels(labels=labels, name=self._name)
+        return self.__class__._from_type_blocks(tb,
+                name=self._name,
+                index_constructors=index_constructors
+                )
+
+        # values = self._blocks.values
+        # if key is None:
+        #     labels = values
+        # elif isinstance(key, slice):
+        #     if key == NULL_SLICE:
+        #         labels = values
+        #     else:
+        #         labels = values[key]
+        # elif isinstance(key, KEY_ITERABLE_TYPES):
+        #     # we assume Booleans have been normalized to integers here
+        #     # can select directly from _blocks[key] if if key is a list
+        #     labels = values[key]
+        # else: # select a single label value: NOTE: convert array to tuple
+        #     values = values[key]
+        #     if values.ndim == 1:
+        #         return tuple(values)
+        #     raise NotImplementedError(
+        #             'unhandled key type extracted a 2D array from labels') #pragma: no cover
+        # return self.__class__.from_labels(labels=labels, name=self._name)
 
     def _extract_loc(self,
             key: GetItemKeyType
@@ -853,7 +976,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        array = operator(self._labels)
+        values = self._blocks.values
+        array = operator(values)
         array.flags.writeable = False
         return array
 
@@ -863,6 +987,7 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
+        values = self._blocks.values
 
         if isinstance(other, Index):
             # if this is a 1D index, must rotate labels before using an operator
@@ -872,11 +997,11 @@ class IndexHierarchy(IndexBase):
             other = other.values # operate on labels to labels
 
         if operator.__name__ == 'matmul':
-            return matmul(self._labels, other)
+            return matmul(values, other)
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, self._labels)
+            return matmul(other, values)
 
-        array = operator(self._labels, other)
+        array = operator(values, other)
         array.flags.writeable = False
         return array
 
@@ -898,11 +1023,12 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         dtype = None if not dtypes else dtypes[0]
+        values = self._blocks.values
 
         if skipna:
-            post = ufunc_skipna(self._labels, axis=axis, dtype=dtype)
+            post = ufunc_skipna(values, axis=axis, dtype=dtype)
         else:
-            post = ufunc(self._labels, axis=axis, dtype=dtype)
+            post = ufunc(values, axis=axis, dtype=dtype)
 
         post.flags.writeable = False
         return post
@@ -922,7 +1048,11 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        return tp.cast(tp.Iterator[tp.Hashable], array2d_to_tuples(self._labels.__iter__()))
+        for axis_values in self._blocks.axis_values(1):
+            yield tuple(axis_values)
+
+        # values = self._blocks.values
+        # return tp.cast(tp.Iterator[tp.Hashable], array2d_to_tuples(values.__iter__()))
 
     def __reversed__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''
@@ -930,7 +1060,12 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-        return array2d_to_tuples(reversed(self._labels))
+
+        for axis_values in self._blocks.axis_values(1, reverse=True):
+            yield tuple(axis_values)
+
+        # values = self._blocks.values
+        # return array2d_to_tuples(reversed(values))
 
 
     def __contains__(self, value) -> bool:
@@ -940,14 +1075,6 @@ class IndexHierarchy(IndexBase):
         return self._levels.__contains__(value)
 
 
-    # def get(self, key: tp.Hashable, default: tp.Any = None) -> tp.Any:
-    #     '''
-    #     Return the value found at the index key, else the default if the key is not found.
-    #     '''
-    #     try:
-    #         return self._levels.leaf_loc_to_iloc(key)
-    #     except KeyError:
-    #         return default
 
     #---------------------------------------------------------------------------
     # utility functions
@@ -963,7 +1090,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        v = self._labels
+        # refactor with TypeBlocks
+        v = self._blocks.values
         order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
 
         if not ascending:
@@ -1004,7 +1132,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        values = self._labels
+        # TODO: implement witht TypeBlocks
+        values = self._blocks.values
 
         if shift % len(values):
             values = array_shift(
@@ -1017,16 +1146,20 @@ class IndexHierarchy(IndexBase):
         # TODO: propagate index_constructors
         return self.__class__.from_labels(values, name=self._name)
 
+
+
     #---------------------------------------------------------------------------
     # export
 
     def _to_frame(self,
             constructor: tp.Type[ContainerOperand]
             ) -> 'Frame':
-        # NOTE: do not have to update array cache
-        tb = self._levels.to_type_blocks()
+
+        if self._recache:
+            self._update_array_cache()
+
         return constructor(
-                tb,
+                self._blocks.copy(), # TypeBlocks
                 columns=None,
                 index=None,
                 own_data=True
@@ -1045,7 +1178,6 @@ class IndexHierarchy(IndexBase):
         '''
         from static_frame import FrameGO
         return self._to_frame(FrameGO)
-
 
     def to_pandas(self) -> 'DataFrame':
         '''Return a Pandas MultiIndex.
@@ -1136,7 +1268,7 @@ class IndexHierarchyGO(IndexHierarchy):
 
     __slots__ = (
             '_levels', # IndexLevel
-            '_labels',
+            '_blocks',
             '_depth',
             '_keys',
             '_length',
