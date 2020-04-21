@@ -419,6 +419,7 @@ class IndexHierarchy(IndexBase):
             *,
             name: NameType = None,
             index_constructors: tp.Optional[IndexConstructors] = None,
+            own_blocks: bool = False,
             ) -> IH:
         '''
         Construct an ``IndexHierarhcy`` from a TypeBlocks instance.
@@ -483,7 +484,7 @@ class IndexHierarchy(IndexBase):
                 tree,
                 index_constructors=index_constructors
                 )
-        return cls(levels=levels, name=name, blocks=blocks)
+        return cls(levels=levels, name=name, blocks=blocks, own_blocks=own_blocks)
 
 
     #---------------------------------------------------------------------------
@@ -1331,13 +1332,18 @@ class IndexHierarchyAsType:
 
         from static_frame.core.index_datetime import _dtype_to_index_cls
 
+        if self.container._recache:
+            self.container._update_array_cache()
+
         # use TypeBlocks in both situations to avoid double casting
-        tb = self.container._levels.to_type_blocks()
-        tb = TypeBlocks.from_blocks(tb._astype_blocks(column_key=self.key, dtype=dtype))
+        blocks = TypeBlocks.from_blocks(
+                self.container._blocks._astype_blocks(column_key=self.key, dtype=dtype)
+                )
 
         # avoid coercion of datetime64 arrays that were not targetted in the selection
         index_constructors = self.container.index_types.values.copy()
-        dtype_post = tb.dtypes[self.key] # can select element or array
+
+        dtype_post = blocks.dtypes[self.key] # can select element or array
         if isinstance(dtype_post, np.dtype):
             index_constructors[self.key] = _dtype_to_index_cls(
                     self.container.STATIC,
@@ -1347,10 +1353,11 @@ class IndexHierarchyAsType:
                     _dtype_to_index_cls(self.container.STATIC, dt)
                     for dt in dtype_post]
 
-        # import ipdb; ipdb.set_trace()
         return self.container.__class__._from_type_blocks(
-                tb,
-                index_constructors=index_constructors)
+                blocks,
+                index_constructors=index_constructors,
+                own_blocks=True
+                )
 
 
 
