@@ -729,24 +729,32 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        #TODO: implement with TypeBlocks
-        values = self._blocks.values
+        blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
+        index_constructors = tuple(self._levels.index_types())
 
-        if key is None:
-            if self.STATIC: # immutable, no selection, can return self
-                return self
-            labels = values # already immutable
-        elif isinstance(key, np.ndarray) and key.dtype == bool:
-            # can use labels, as we already recached
-            # use Boolean area to select indices from positions, as np.delete does not work with arrays
-            labels = np.delete(values, self._positions[key], axis=0)
-            labels.flags.writeable = False
-        else:
-            labels = np.delete(values, key, axis=0)
-            labels.flags.writeable = False
+        return self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
 
-        # from labels will work with both Index and IndexHierarchy
-        return self.__class__.from_labels(labels, name=self._name)
+        # values = self._blocks.values
+
+        # if key is None:
+        #     if self.STATIC: # immutable, no selection, can return self
+        #         return self
+        #     labels = values # already immutable
+        # elif isinstance(key, np.ndarray) and key.dtype == bool:
+        #     # can use labels, as we already recached
+        #     # use Boolean area to select indices from positions, as np.delete does not work with arrays
+        #     labels = np.delete(values, self._positions[key], axis=0)
+        #     labels.flags.writeable = False
+        # else:
+        #     labels = np.delete(values, key, axis=0)
+        #     labels.flags.writeable = False
+
+        # # from labels will work with both Index and IndexHierarchy
+        # return self.__class__.from_labels(labels, name=self._name)
 
     def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
