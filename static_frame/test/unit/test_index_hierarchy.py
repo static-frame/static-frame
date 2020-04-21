@@ -1908,7 +1908,7 @@ class TestUnit(TestCase):
                 (1, IndexYearMonth))
                 )
 
-    @skip_win
+    @skip_win #type: ignore
     def test_index_hierarchy_astype_e(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (100, 200), ('2020-01', '2020-03'))
 

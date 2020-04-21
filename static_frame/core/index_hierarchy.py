@@ -422,7 +422,7 @@ class IndexHierarchy(IndexBase):
             own_blocks: bool = False,
             ) -> IH:
         '''
-        Construct an ``IndexHierarhcy`` from a TypeBlocks instance.
+        Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
 
         Args:
             blocks: a TypeBlocks instance
@@ -860,21 +860,46 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        values = self._blocks.values
+        index_constructors = tuple(self._levels.index_types())
+
         if not callable(mapper):
-            # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable,
-            # TODO: refactor with TB
-            getitem = getattr(mapper, '__getitem__')
-            labels = (tuple(x) for x in values)
-            return self.__class__.from_labels(
-                    (getitem(x) if x in mapper else x for x in labels),
-                    name=self._name
+            # if a mapper, it must support both __getitem__ and __contains__
+            getitem = getattr(mapper, 'get')
+
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
+                for array in self._blocks.axis_values(axis=1):
+                    # as np.ndarray are not hashable, must tuplize
+                    label = tuple(array)
+                    yield getitem(label, label)
+
+            return self.__class__.from_labels(gen(),
+                    name=self._name,
+                    index_constructors=index_constructors,
                     )
 
         return self.__class__.from_labels(
-                (mapper(x) for x in values),
-                name=self._name
+                (mapper(x) for x in self._blocks.axis_values(axis=1)),
+                name=self._name,
+                index_constructors=index_constructors,
                 )
+
+        # values = self._blocks.values
+
+        # if not callable(mapper):
+        #     # if a mapper, it must support both __getitem__ and __contains__; as np.ndarray are not hashable,
+        #     # TODO: refactor with TB
+        #     getitem = getattr(mapper, '__getitem__')
+
+        #     labels = (tuple(x) for x in values)
+        #     return self.__class__.from_labels(
+        #             (getitem(x) if x in mapper else x for x in labels),
+        #             name=self._name
+        #             )
+
+        # return self.__class__.from_labels(
+        #         (mapper(x) for x in values),
+        #         name=self._name
+        #         )
 
     def rehierarch(self,
             depth_map: tp.Iterable[int]
@@ -1110,16 +1135,24 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        # refactor with TypeBlocks
         v = self._blocks.values
         order = np.lexsort([v[:, i] for i in range(v.shape[1]-1, -1, -1)])
 
         if not ascending:
             order = order[::-1]
 
-        values = v[order]
-        values.flags.writeable = False
-        return self.__class__.from_labels(values, name=self._name)
+        blocks = self._blocks._extract(row_key=order)
+        index_constructors = tuple(self._levels.index_types())
+
+        return self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
+
+        # values = v[order]
+        # values.flags.writeable = False
+        # return self.__class__.from_labels(values, name=self._name)
 
 
     def isin(self, other: tp.Iterable[tp.Iterable[tp.Hashable]]) -> np.ndarray:
@@ -1339,29 +1372,30 @@ class IndexHierarchyAsType:
     def __call__(self, dtype) -> 'IndexHierarchy':
 
         from static_frame.core.index_datetime import _dtype_to_index_cls
+        container = self.container
 
-        if self.container._recache:
-            self.container._update_array_cache()
+        if container._recache:
+            container._update_array_cache()
 
         # use TypeBlocks in both situations to avoid double casting
         blocks = TypeBlocks.from_blocks(
-                self.container._blocks._astype_blocks(column_key=self.key, dtype=dtype)
+                container._blocks._astype_blocks(column_key=self.key, dtype=dtype)
                 )
 
         # avoid coercion of datetime64 arrays that were not targetted in the selection
-        index_constructors = self.container.index_types.values.copy()
+        index_constructors = container.index_types.values.copy()
 
         dtype_post = blocks.dtypes[self.key] # can select element or array
         if isinstance(dtype_post, np.dtype):
             index_constructors[self.key] = _dtype_to_index_cls(
-                    self.container.STATIC,
+                    container.STATIC,
                     dtype_post)
         else: # assign iterable
             index_constructors[self.key] = [
-                    _dtype_to_index_cls(self.container.STATIC, dt)
+                    _dtype_to_index_cls(container.STATIC, dt)
                     for dt in dtype_post]
 
-        return self.container.__class__._from_type_blocks(
+        return container.__class__._from_type_blocks(
                 blocks,
                 index_constructors=index_constructors,
                 own_blocks=True

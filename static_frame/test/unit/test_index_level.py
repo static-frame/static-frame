@@ -97,7 +97,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 1)
 
     #---------------------------------------------------------------------------
-    @skip_win
+    @skip_win #type: ignore
     def test_index_level_dtypes_per_depth_a(self) -> None:
         hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
         lvl = hidx._levels
@@ -121,7 +121,7 @@ class TestUnit(TestCase):
 
     def test_index_level_values_at_depth_b(self) -> None:
 
-        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None)))
+        hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 2, None))) #type: ignore
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', None])
 

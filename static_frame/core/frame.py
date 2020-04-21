@@ -3754,7 +3754,7 @@ class Frame(ContainerOperand):
                     column_values,
                     name=self._columns._name
                     )
-            blocks = self._blocks[order]
+            blocks = self._blocks[order] # order columns
             return self.__class__(blocks,
                     index=self._index,
                     columns=columns,
