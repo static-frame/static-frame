@@ -20,11 +20,9 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import intersect2d
 from static_frame.core.util import union2d
 from static_frame.core.util import setdiff2d
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import name_filter
 from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_2d
@@ -36,10 +34,8 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceAsType
 
 
-from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import array_shift
 
 
 from static_frame.core.container_util import matmul
@@ -57,8 +53,6 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeApplyType
-
-from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.hloc import HLoc
 

@@ -1,9 +1,7 @@
 import typing as tp
 import numpy as np
 
-from automap import FrozenAutoMap  # pylint: disable = E0611
 
-from static_frame.core.util import mloc
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import write_optional_file
 # from static_frame.core.util import IndexInitializer
