@@ -87,15 +87,11 @@ class IndexHierarchy(IndexBase):
     __slots__ = (
             '_levels',
             '_blocks',
-            '_depth',
-            '_length',
             '_recache',
             '_name',
             )
     _levels: IndexLevel
     _blocks: TypeBlocks
-    _depth: tp.Optional[int]
-    _length: tp.Optional[int]
     _recache: bool
     _name: tp.Hashable
     _keys: KeysView
@@ -535,11 +531,11 @@ class IndexHierarchy(IndexBase):
             raise NotImplementedError(f'no handling for creation from {levels}')
 
         if self._blocks is not None:
-            self._length, self._depth = self._blocks.shape
+            # self._length, self._depth = self._blocks.shape
             self._recache = False
         else:
-            self._depth = None
-            self._length = None
+            # self._depth = None
+            # self._length = None
             self._recache = True
         self._name = name if name is None else name_filter(name)
 
@@ -601,7 +597,7 @@ class IndexHierarchy(IndexBase):
 
     def _update_array_cache(self):
         self._blocks = self._levels.to_type_blocks()
-        self._length, self._depth = self._blocks.shape
+        # self._length, self._depth = self._blocks.shape
         self._recache = False
 
     #---------------------------------------------------------------------------
@@ -686,7 +682,7 @@ class IndexHierarchy(IndexBase):
     def __len__(self) -> int:
         if self._recache:
             self._update_array_cache()
-        return self._length
+        return self._blocks.__len__()
 
     @doc_inject()
     def display(self,
@@ -705,7 +701,7 @@ class IndexHierarchy(IndexBase):
         sub_config = config
         sub_display = None
 
-        for d in range(self._depth):
+        for d in range(self._blocks.shape[1]):
             # as a slice this is far more efficient as no copy is made
             col = self._levels.values_at_depth(d)
             if sub_display is None: # the first
@@ -778,7 +774,7 @@ class IndexHierarchy(IndexBase):
     def depth(self) -> int:
         if self._recache:
             self._update_array_cache()
-        return self._depth
+        return self._blocks.shape[1]
 
     def values_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
@@ -826,6 +822,8 @@ class IndexHierarchy(IndexBase):
             labels = self._name
         else:
             labels = None
+
+        # NOTE: can get from _blocks
         return Series(self._levels.dtype_per_depth(), index=labels)
 
 
@@ -838,10 +836,13 @@ class IndexHierarchy(IndexBase):
             :obj:`static_frame.Series`
         '''
         from static_frame.core.series import Series
+
         if self._name and len(self._name) == self.depth:
             labels = self._name
         else:
             labels = None
+
+        # NOTE: consider caching index_types
         return Series(self._levels.index_types(), index=labels)
 
     #---------------------------------------------------------------------------
@@ -850,7 +851,16 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''
-        return self.__class__(levels=self._levels, name=self._name)
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.copy()
+        return self.__class__(
+                levels=self._levels,
+                name=self._name,
+                blocks=blocks,
+                own_blocks=True
+                )
 
 
     def relabel(self, mapper: CallableOrMapping) -> 'IndexHierarchy':
@@ -1181,23 +1191,33 @@ class IndexHierarchy(IndexBase):
     def roll(self, shift: int) -> 'IndexHierarchy':
         '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
         '''
-        # TODO: implement with TypeBlocks from IndexLevels
         if self._recache:
             self._update_array_cache()
 
-        # TODO: implement witht TypeBlocks
-        values = self._blocks.values
+        blocks = TypeBlocks.from_blocks(
+                self._blocks._shift_blocks(row_shift=shift, wrap=True)
+                )
+        index_constructors = tuple(self._levels.index_types())
 
-        if shift % len(values):
-            values = array_shift(
-                    array=values,
-                    shift=shift,
-                    axis=0,
-                    wrap=True)
-            values.flags.writeable = False
+        return self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
 
-        # TODO: propagate index_constructors
-        return self.__class__.from_labels(values, name=self._name)
+
+        # values = self._blocks.values
+
+        # if shift % len(values):
+        #     values = array_shift(
+        #             array=values,
+        #             shift=shift,
+        #             axis=0,
+        #             wrap=True)
+        #     values.flags.writeable = False
+
+        # # TODO: propagate index_constructors
+        # return self.__class__.from_labels(values, name=self._name)
 
 
 
@@ -1236,7 +1256,14 @@ class IndexHierarchy(IndexBase):
         '''Return a Pandas MultiIndex.
         '''
         import pandas
-        mi = pandas.MultiIndex.from_tuples(self.__iter__())
+
+        if self._recache:
+            self._update_array_cache()
+
+        # must copy to get a mutable array
+        arrays = tuple(a.copy() for a in self._blocks.axis_values(axis=0))
+        mi = pandas.MultiIndex.from_arrays(arrays)
+
         mi.name = self._name
         mi.names = self.names
         return mi
@@ -1253,17 +1280,21 @@ class IndexHierarchy(IndexBase):
             levels_src = self._levels
         else:
             levels_src = self._levels.to_index_level()
+
         levels = self._LEVEL_CONSTRUCTOR(
                 index=self._INDEX_CONSTRUCTOR((level,)),
                 targets=ArrayGO([levels_src], own_iterable=True),
                 offset=0,
                 own_index=True
                 )
+
+        # NOTE: can transfrom TypeBlocks appropriately and pass to constructor
         return self.__class__(levels, name=self._name)
 
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
         '''
+        # NOTE: can transfrom TypeBlocks appropriately and pass to constructor
 
         if count < 0:
             levels = self._levels.to_index_level()
@@ -1322,9 +1353,7 @@ class IndexHierarchyGO(IndexHierarchy):
     __slots__ = (
             '_levels', # IndexLevel
             '_blocks',
-            '_depth',
             '_keys',
-            '_length',
             '_recache',
             '_name'
             )
@@ -1347,9 +1376,15 @@ class IndexHierarchyGO(IndexHierarchy):
         '''
         Return a new IndexHierarchy. This is not a deep copy.
         '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.copy()
         return self.__class__(
                 levels=self._levels.to_index_level(),
-                name=self._name
+                name=self._name,
+                blocks=blocks,
+                own_blocks=True,
                 )
 
 
