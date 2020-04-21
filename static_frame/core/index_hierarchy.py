@@ -609,19 +609,41 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
+
         return self._blocks.mloc
 
+    # @property
+    # def dtypes(self) -> np.ndarray:
+    #     '''
+    #     Return the dtypes of the underlying NumPy array.
+
+    #     Returns:
+    #         np.ndarray
+    #     '''
+    #     if self._recache:
+    #         self._update_array_cache()
+    #     return self._blocks.dtypes
+
     @property
-    def dtypes(self) -> np.ndarray:
+    def dtypes(self) -> 'Series':
         '''
-        Return the dtypes of the underlying NumPy array.
+        Return a Series of dytpes for each index depth.
 
         Returns:
-            np.ndarray
+            :obj:`static_frame.Series`
         '''
+        from static_frame.core.series import Series
+
         if self._recache:
             self._update_array_cache()
-        return self._blocks.dtypes
+
+        if self._name and len(self._name) == self.depth:
+            labels = self._name
+        else:
+            labels = None
+
+        return Series(self._blocks.dtypes, index=labels)
+
 
     @property
     def shape(self) -> tp.Tuple[int, ...]:
@@ -805,26 +827,6 @@ class IndexHierarchy(IndexBase):
         else:
             raise NotImplementedError('selection from iterables is not implemented')
         yield from self._levels.label_widths_at_depth(depth_level=depth_level)
-
-
-
-    @property
-    def dtypes(self) -> 'Series':
-        '''
-        Return a Series of dytpes for each index depth.
-
-        Returns:
-            :obj:`static_frame.Series`
-        '''
-        from static_frame.core.series import Series
-
-        if self._name and len(self._name) == self.depth:
-            labels = self._name
-        else:
-            labels = None
-
-        # NOTE: can get from _blocks
-        return Series(self._levels.dtype_per_depth(), index=labels)
 
 
     @property
