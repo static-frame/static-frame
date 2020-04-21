@@ -443,13 +443,6 @@ class IndexLevel:
             array.flags.writeable = False
             return array
 
-        # for other dpeths, we cannot reuse the array stored in each index, as it does not represent the "width" it needs to cover "under" it
-        # def gen() -> tp.Iterator[np.ndarray]:
-        #     for value, size in self.label_widths_at_depth(
-        #             depth_level=depth_level):
-        #         yield np.full(size, value, dtype=dtypes[depth_level])
-
-        # np.concatenate(tuple(gen()), out=array)
         start = 0
         for value, size in self.label_widths_at_depth(depth_level):
             end = start + size

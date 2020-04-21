@@ -11,3 +11,4 @@ Beyond Pandas __repr__: Consistent, Configurable, & Modular Display in StaticFra
 
 
 
+How To Modify an Immutable Frame/Series.
