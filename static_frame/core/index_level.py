@@ -31,19 +31,24 @@ from static_frame.core.exception import ErrorInitIndexLevel
 # if tp.TYPE_CHECKING:
 #     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
 
+INDEX_LEVEL_SLOTS = (
+            'index',
+            'targets',
+            'offset',
+            '_depth',
+            '_length',
+            )
 
 class IndexLevel:
     '''
     A nestable representation of an Index, where labels in that index optionally point to other Index objects.
     '''
-    __slots__ = (
-            'index',
-            'targets',
-            'offset'
-            )
+    __slots__ = INDEX_LEVEL_SLOTS
     index: Index
     targets: tp.Optional[ArrayGO]
     offset: int
+    _depth: tp.Optional[int]
+    _length: tp.Optional[int]
 
     STATIC: bool = True
 
@@ -71,6 +76,8 @@ class IndexLevel:
 
         self.targets = targets
         self.offset = offset
+        self._depth = None
+        self._length = None
 
     #---------------------------------------------------------------------------
     def depths(self) -> tp.Iterator[int]:
@@ -90,8 +97,7 @@ class IndexLevel:
                     next_depth = depth + 1
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-    @property
-    def depth(self) -> int:
+    def _get_depth(self) -> int:
         '''
         Assuming all depths are uniform, can get the depth without storing levels list. Could store a depth attribute, but all nested components with provide overlapping depth descriptions that are never examined.
         '''
@@ -103,11 +109,13 @@ class IndexLevel:
                 return depth
             level, depth = level.targets[0], depth + 1
 
+    @property
+    def depth(self) -> int:
+        if self._depth is None:
+            self._depth = self._get_depth()
+        return self._depth
 
-    def __len__(self) -> int:
-        '''
-        The length is the sum of all leaves
-        '''
+    def _get_length(self) -> int:
         if self.targets is None:
             return self.index.__len__()
 
@@ -120,6 +128,14 @@ class IndexLevel:
             else:
                 levels.extend(level.targets)
         return count
+
+    def __len__(self) -> int:
+        '''
+        The length is the sum of all leaves
+        '''
+        if self._length is None:
+            self._length = self._get_length()
+        return self._length
 
     #---------------------------------------------------------------------------
     def label_widths_at_depth(self,
@@ -492,16 +508,13 @@ class IndexLevel:
 class IndexLevelGO(IndexLevel):
     '''Grow only variant of IndexLevel
     '''
-    __slots__ = (
-            'index',
-            'targets',
-            'offset'
-            )
+    __slots__ = INDEX_LEVEL_SLOTS
     index: IndexGO
     targets: tp.Optional[np.ndarray]
     offset: int
+    _depth: tp.Optional[int]
+    _length: tp.Optional[int]
 
-    # _INDEX_CONSTRUCTOR = IndexGO
     STATIC: bool = False
 
     #---------------------------------------------------------------------------
@@ -525,7 +538,7 @@ class IndexLevelGO(IndexLevel):
 
         def target_gen() -> tp.Iterator[GetItemKeyType]:
             offset_prior = self.__len__()
-            for t in level.targets: #type: ignore # should be able to figure out level.targets is not None
+            for t in level.targets: #type: ignore
                 # only need to update offsets at this level, as lower levels are relative to this
                 target = t.to_index_level(offset_prior, cls=self.__class__)
                 offset_prior += len(target)
@@ -535,6 +548,9 @@ class IndexLevelGO(IndexLevel):
             raise RuntimeError('found IndexLevel with None as targets')
 
         self.targets.extend(target_gen())
+
+        # defer calculation be setting _length to None
+        self._length = None
 
     def append(self, key: tp.Sequence[tp.Hashable]) -> None:
         '''Add a single, full-depth leaf loc.
@@ -568,22 +584,18 @@ class IndexLevelGO(IndexLevel):
         for depth in range(depth_count - 1, depth_not_found - 1, -1):
             node = edge_nodes[depth]
             k = key[depth]
-            # print('key', k, 'current edge index', node.index.values)
 
             if depth == depth_not_found:
                 # when at the the depth not found, we always update the index
                 node.index.append(k)
-
                 # if we have targets, must update them
                 if node.targets is not None:
                     assert level_previous is not None
                     level_previous.offset = node.__len__()
                     node.targets.append(level_previous)
-
             else: # depth not found is higher up
                 # NOTE: do not need to use index_from_optional_constructor, as no explicit constructor is being supplied, and we can expect that the existing types must be valid
                 index_constructor = index_types[depth]
-
                 if node.targets is None:
                     # we are at the max depth; will need to create a LevelGO to append in the next level
                     level_previous = IndexLevelGO(
@@ -592,10 +604,12 @@ class IndexLevelGO(IndexLevel):
                             targets=None
                             )
                 else:
-                    # targets = np.empty(1, dtype=object)
                     targets = ArrayGO([level_previous,], own_iterable=True)
                     level_previous = IndexLevelGO(
                             index=index_constructor((k,)),
                             offset=0,
                             targets=targets
                             )
+        # defer calculation be setting _length to None for all edge levels
+        for node in edge_nodes:
+            node._length = None

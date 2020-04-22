@@ -491,46 +491,35 @@ class IndexHierarchy(IndexBase):
             labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
         '''
 
+        self._blocks = None
+
         if isinstance(levels, IndexHierarchy):
             if not blocks is None:
                 raise ErrorInitIndex('cannot provide blocks when initializing with IndexHierarchy')
-            # handle construction from another IndexHierarchy
-            if levels._recache:
-                levels._update_array_cache()
-
-            # must deepcopy labels if not static;
-            if self.STATIC and levels.STATIC:
-                self._levels = levels._levels
-            else:
-                # passing level constructor ensures we get a mutable if the parent is mutable
-                self._levels = levels._levels.to_index_level(
-                        cls=self._LEVEL_CONSTRUCTOR
-                        )
-            # as the TypeBlocks managed by IndexHierarchy is never mutated in place, we could potentially share a reference here; perhaps a reason for distinct TypeBlocksGO
-            self._blocks = levels._blocks.copy() # cache is up to date
-
+            index_level = levels._levels
+            # if cache is updated, can get blocks
+            if not levels._recache:
+                self._blocks = levels._blocks.copy()
             # transfer name if not given as arg
             if name is None and levels.name is not None:
                 name = levels.name
 
         elif isinstance(levels, IndexLevel):
-            # NOTE: perhaps better to use an own_levels parameter
-            # always assume ownership of passed in IndexLevel
-            self._levels = levels
-            if blocks is not None:
+            index_level = levels
+            if not blocks is None:
                 self._blocks = blocks if own_blocks else blocks.copy()
-            else:
-                self._blocks = None
+
         else:
             raise NotImplementedError(f'no handling for creation from {levels}')
 
-        if self._blocks is not None:
-            # self._length, self._depth = self._blocks.shape
-            self._recache = False
-        else:
-            # self._depth = None
-            # self._length = None
-            self._recache = True
+        if self.STATIC and index_level.STATIC:
+            self._levels = index_level
+        else: # must deepcopy IndexLevels if not IndexHierarchy not static
+            self._levels = index_level.to_index_level(
+                    cls=self._LEVEL_CONSTRUCTOR
+                    )
+
+        self._recache = self._blocks is None
         self._name = name if name is None else name_filter(name)
 
 
@@ -541,8 +530,7 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new Frame with an updated name attribute.
         '''
-        if self._recache:
-            self._update_array_cache()
+        # do not need to recache
         # let the constructor handle reuse
         return self.__class__(self, name=name)
 
@@ -606,18 +594,6 @@ class IndexHierarchy(IndexBase):
 
         return self._blocks.mloc
 
-    # @property
-    # def dtypes(self) -> np.ndarray:
-    #     '''
-    #     Return the dtypes of the underlying NumPy array.
-
-    #     Returns:
-    #         np.ndarray
-    #     '''
-    #     if self._recache:
-    #         self._update_array_cache()
-    #     return self._blocks.dtypes
-
     @property
     def dtypes(self) -> 'Series':
         '''
@@ -629,6 +605,7 @@ class IndexHierarchy(IndexBase):
         from static_frame.core.series import Series
 
         if self._recache:
+            # might use self._levels.dtype_per_depth
             self._update_array_cache()
 
         if self._name and len(self._name) == self.depth:
@@ -648,7 +625,7 @@ class IndexHierarchy(IndexBase):
             :obj:`tp.Tuple[int]`
         '''
         if self._recache:
-            self._update_array_cache()
+            return self._levels.__len__(), self._levels.depth
         return self._blocks._shape
 
     @property
@@ -670,7 +647,7 @@ class IndexHierarchy(IndexBase):
             :obj:`int`
         '''
         if self._recache:
-            self._update_array_cache()
+            return self._levels.__len__() * self._levels.depth
         return self._blocks.size
 
     @property
@@ -690,7 +667,7 @@ class IndexHierarchy(IndexBase):
         True if this container has size.
         '''
         if self._recache:
-            self._update_array_cache()
+            return bool(self._levels.__len__()) and bool(self._levels.depth)
         return bool(self._blocks.size)
 
     #---------------------------------------------------------------------------
