@@ -717,9 +717,8 @@ class IndexHierarchy(IndexBase):
         sub_config = config
         sub_display = None
 
-        for d in range(self._blocks.shape[1]):
+        for col in self._blocks.axis_values(0):
             # as a slice this is far more efficient as no copy is made
-            col = self._levels.values_at_depth(d)
             if sub_display is None: # the first
                 sub_display = Display.from_values(
                         col,
