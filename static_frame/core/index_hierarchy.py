@@ -941,6 +941,7 @@ class IndexHierarchy(IndexBase):
 
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
+            # NOTE: if extracting a single row, should be able to get it from IndeLevel without forcing a complete recache
             return tuple(self._blocks._extract_array(row_key=key))
 
         index_constructors = tuple(self._levels.index_types())
@@ -983,9 +984,7 @@ class IndexHierarchy(IndexBase):
         '''
         return self._extract_iloc(key)
 
-
     #---------------------------------------------------------------------------
-
     def _extract_getitem_astype(self, key: GetItemKeyType) -> 'IndexHierarchyAsType':
         '''Given an iloc key (using integer positions for columns) return a configured IndexHierarchyAsType instance.
         '''
@@ -993,7 +992,6 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
         return IndexHierarchyAsType(self, key=key)
-
 
 
     #---------------------------------------------------------------------------
@@ -1070,15 +1068,14 @@ class IndexHierarchy(IndexBase):
 
     # NOTE: we intentionally exclude keys(), items(), and get() from Index classes, as they return inconsistent result when thought of as a dictionary
 
-
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''Iterate over labels.
         '''
         if self._recache:
             self._update_array_cache()
 
-        for axis_values in self._blocks.axis_values(1):
-            yield tuple(axis_values)
+        for array in self._blocks.axis_values(1):
+            yield tuple(array)
 
         # values = self._blocks.values
         # return tp.cast(tp.Iterator[tp.Hashable], array2d_to_tuples(values.__iter__()))
@@ -1090,8 +1087,8 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        for axis_values in self._blocks.axis_values(1, reverse=True):
-            yield tuple(axis_values)
+        for array in self._blocks.axis_values(1, reverse=True):
+            yield tuple(array)
 
         # values = self._blocks.values
         # return array2d_to_tuples(reversed(values))

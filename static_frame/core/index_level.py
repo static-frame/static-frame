@@ -464,7 +464,9 @@ class IndexLevel:
         array.flags.writeable = False
         return array
 
-    #-------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
+    # exporters
+
     def to_index_level(self,
             offset: tp.Optional[int] = 0,
             cls: tp.Optional[tp.Type['IndexLevel']] = None,
