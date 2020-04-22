@@ -46,13 +46,15 @@ class TestUnit(TestCase):
 
         level0.extend(level2)
 
-        self.assertEqual(len(level0.get_labels()), 10)
-        self.assertEqual(len(level1.get_labels()), 4)
-        self.assertEqual(len(level2.get_labels()), 6)
+        self.assertEqual(len(level0.values), 10)
+        self.assertEqual(len(level1.values), 4)
+        self.assertEqual(len(level2.values), 6)
 
         assert level0.targets is not None
 
         self.assertEqual([lvl.offset for lvl in level0.targets], [0, 2, 4, 7])
+
+        self.assertEqual(level2.depth, next(level2.depths()))
 
 
     def test_index_level_b(self) -> None:
@@ -65,6 +67,8 @@ class TestUnit(TestCase):
         post = tuple(level0.dtypes_iter())
         self.assertEqual(post[0], np.dtype('<U1'))
         self.assertEqual(len(post), 1)
+        self.assertEqual(level0.depth, next(level0.depths()))
+
 
     #---------------------------------------------------------------------------
 
@@ -118,6 +122,7 @@ class TestUnit(TestCase):
         hidx = IndexHierarchy.from_labels((('a', 1, 'x'), ('a', 2, 'y'), ('b', 1, 'foo'), ('b', 1, 'bar')))
         lvl = hidx._levels
         self.assertEqual(lvl.values_at_depth(2).tolist(), ['x', 'y', 'foo', 'bar'])
+        self.assertEqual(lvl.depth, next(lvl.depths()))
 
     def test_index_level_values_at_depth_b(self) -> None:
 
@@ -133,9 +138,11 @@ class TestUnit(TestCase):
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))
         hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+        lvl = hidx._levels
         self.assertEqual(
-                [it.__name__ for it in hidx._levels.index_types()],
+                [it.__name__ for it in lvl.index_types()],
                 ['Index', 'IndexDate', 'Index'])
+        self.assertEqual(lvl.depth, next(lvl.depths()))
 
 
     def test_index_level_index_types_b(self) -> None:
@@ -172,17 +179,17 @@ class TestUnit(TestCase):
 
         level0 = IndexLevelGO(index=groups, targets=targets)
 
-        self.assertEqual(level0.get_labels().tolist(),
+        self.assertEqual(level0.values.tolist(),
                 [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y']])
 
-        self.assertEqual(level0.get_labels().dtype.kind, 'U')
+        self.assertEqual(level0.values.dtype.kind, 'U')
 
         groups = IndexGO((1, 2))
         observations = IndexGO((10, 20))
         targets = ArrayGO(
                 (IndexLevelGO(index=observations), IndexLevelGO(observations, offset=2)))
         level1 = IndexLevelGO(index=groups, targets=targets)
-        self.assertEqual(level1.get_labels().dtype.kind, 'i')
+        self.assertEqual(level1.values.dtype.kind, 'i')
 
     #---------------------------------------------------------------------------
 
@@ -305,22 +312,22 @@ class TestUnit(TestCase):
 
         lvl0.append(('II', 'B', 'z')) # depth not found is 2
         self.assertEqual(
-                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.values],
                 list(range(9)))
 
         lvl0.append(('II', 'C', 'a')) # depth not found is 1
         self.assertEqual(
-                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.values],
                 list(range(10)))
 
         lvl0.append(('III', 'A', 'a')) # 0
 
         self.assertEqual(
-                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.get_labels()],
+                [lvl0.loc_to_iloc(tuple(x)) for x in lvl0.values],
                 list(range(11)))
 
         self.assertEqual(
-                lvl0.get_labels().tolist(),
+                lvl0.values.tolist(),
                 [['I', 'A', 'x'], ['I', 'A', 'y'], ['I', 'B', 'x'], ['I', 'B', 'y'], ['II', 'A', 'x'], ['II', 'A', 'y'], ['II', 'B', 'x'], ['II', 'B', 'y'], ['II', 'B', 'z'], ['II', 'C', 'a'], ['III', 'A', 'a']])
 
     def test_index_level_append_b(self) -> None:
@@ -338,14 +345,12 @@ class TestUnit(TestCase):
             lvl1a.append((1, 2, 3))
 
         lvl1a.append((1, 2))
-        self.assertEqual(lvl1a.get_labels().tolist(),
+        self.assertEqual(lvl1a.values.tolist(),
                 [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y'], [1, 2]])
 
 
 
     #---------------------------------------------------------------------------
-
-
 
     def test_index_level_iter_a(self) -> None:
         OD = OrderedDict
@@ -370,9 +375,6 @@ class TestUnit(TestCase):
 
         post = list(levels.label_nodes_at_depth(2))
         self.assertEqual(post, [1, 2, 1, 2, 3, 2, 3, 1, 2, 3, 1])
-
-
-
 
 
     def test_index_level_label_widths_at_depth_a(self) -> None:
@@ -462,7 +464,6 @@ class TestUnit(TestCase):
         )
 
 
-        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':

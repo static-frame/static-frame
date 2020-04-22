@@ -72,29 +72,37 @@ class IndexLevel:
         self.targets = targets
         self.offset = offset
 
-    def to_index_level(self,
-            offset: tp.Optional[int] = 0,
-            cls: tp.Optional[tp.Type['IndexLevel']] = None,
-            ) -> 'IndexLevel':
+    #---------------------------------------------------------------------------
+    def depths(self) -> tp.Iterator[int]:
         '''
-        A deepcopy with optional adjustments, such as a different offset and possibly a different class. The supplied class will be used to construct the IndexLevel instance (as well as internal indices), permitting the production of an IndexLevelGO.
-
-        Args:
-            offset: optionally provide a new offset for the copy. This is not applied recursively
+        Get the depth of all leaves (which should all be the same). Mostly for integrity validation.
         '''
-        cls = cls if cls else self.__class__
-
-        index = mutable_immutable_index_filter(cls.STATIC, self.index)
-
-        if self.targets is not None:
-            targets: tp.Optional[ArrayGO] = ArrayGO(
-                [t.to_index_level(offset=None, cls=cls) for t in self.targets],
-                own_iterable=True)
+        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
+        if self.targets is None:
+            yield 1
         else:
-            targets = None
+            levels = [(self, 0)]
+            while levels:
+                level, depth = levels.pop()
+                if level.targets is None: # terminus
+                    yield depth + 1
+                else:
+                    next_depth = depth + 1
+                    levels.extend([(lvl, next_depth) for lvl in level.targets])
 
-        offset = self.offset if offset is None else offset
-        return cls(index=index, targets=targets, offset=offset) #type: ignore
+    @property
+    def depth(self) -> int:
+        '''
+        Assuming all depths are uniform, can get the depth without storing levels list. Could store a depth attribute, but all nested components with provide overlapping depth descriptions that are never examined.
+        '''
+        if self.targets is None:
+            return 1
+        level, depth = self, 1
+        while True:
+            if level.targets is None: # terminus
+                return depth
+            level, depth = level.targets[0], depth + 1
+
 
     def __len__(self) -> int:
         '''
@@ -113,6 +121,7 @@ class IndexLevel:
                 levels.extend(level.targets)
         return count
 
+    #---------------------------------------------------------------------------
     def label_widths_at_depth(self,
             depth_level: int = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
@@ -191,20 +200,6 @@ class IndexLevel:
                     levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
-    def depths(self) -> tp.Iterator[int]:
-        # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
-        if self.targets is None:
-            yield 1
-        else:
-            levels = [(self, 0)]
-            while levels:
-                level, depth = levels.pop()
-                if level.targets is None: # terminus
-                    yield depth + 1
-                else:
-                    next_depth = depth + 1
-                    levels.extend([(lvl, next_depth) for lvl in level.targets])
-
     # TODO: consider a different name; was dtypes()
     def dtypes_iter(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of all dtypes from every depth level.'''
@@ -235,7 +230,7 @@ class IndexLevel:
 
     def dtype_per_depth(self) -> tp.Iterator[np.dtype]:
         '''Return a tuple of resolved dtypes, one from each depth level.'''
-        depth_count = next(self.depths())
+        depth_count = self.depth
         for d in range(depth_count):
             yield resolve_dtype_iter(self.dtypes_at_depth(d))
 
@@ -254,6 +249,7 @@ class IndexLevel:
                 else:
                     break
 
+    #---------------------------------------------------------------------------
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
         '''
@@ -300,7 +296,7 @@ class IndexLevel:
                     return pos + offset
                 break # return exception below if key_depth not max depth
 
-        raise KeyError(f'Invalid key length {key_depth_max + 1}; must be length {next(self.depths())}.')
+        raise KeyError(f'Invalid key length {key_depth_max + 1}; must be length {self.depth}.')
 
     def loc_to_iloc(self, key: GetItemKeyTypeCompound) -> GetItemKeyType:
         '''
@@ -380,13 +376,13 @@ class IndexLevel:
         return iloc_flat
 
     #---------------------------------------------------------------------------
-    # NOTE: might be renamed get_values to imply it is a contiguous array
-    def get_labels(self) -> np.ndarray:
+    @property
+    def values(self) -> np.ndarray:
         '''
         Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coerce types.
         '''
         # assume uniform depths
-        depth_count = next(self.depths())
+        depth_count = self.depth
         shape = self.__len__(), depth_count
 
         dtype = resolve_dtype_iter(self.dtypes_iter())
@@ -428,7 +424,7 @@ class IndexLevel:
         '''
         # NOTE: not yet accepting a depth_level as an iterable of ints
 
-        depth_count = next(self.depths())
+        depth_count = self.depth
         dtypes = tuple(self.dtype_per_depth())
         length = self.__len__()
         # pre allocate array to ensure we use a resovled type
@@ -452,13 +448,38 @@ class IndexLevel:
         array.flags.writeable = False
         return array
 
+    #-------------------------------------------------------------------------------
+    def to_index_level(self,
+            offset: tp.Optional[int] = 0,
+            cls: tp.Optional[tp.Type['IndexLevel']] = None,
+            ) -> 'IndexLevel':
+        '''
+        A deepcopy with optional adjustments, such as a different offset and possibly a different class. The supplied class will be used to construct the IndexLevel instance (as well as internal indices), permitting the production of an IndexLevelGO.
+
+        Args:
+            offset: optionally provide a new offset for the copy. This is not applied recursively
+        '''
+        cls = cls if cls else self.__class__
+
+        index = mutable_immutable_index_filter(cls.STATIC, self.index)
+
+        if self.targets is not None:
+            targets: tp.Optional[ArrayGO] = ArrayGO(
+                [t.to_index_level(offset=None, cls=cls) for t in self.targets],
+                own_iterable=True)
+        else:
+            targets = None
+
+        offset = self.offset if offset is None else offset
+        return cls(index=index, targets=targets, offset=offset) #type: ignore
+
 
     def to_type_blocks(self) -> TypeBlocks:
         '''
-        Provide a correctly typed TypeBlocks version
+        Provide a correctly typed TypeBlocks representation.
         '''
         try:
-            depth_count = next(self.depths())
+            depth_count = self.depth
         except StopIteration:
             # assume we have no depth or length
             return TypeBlocks.from_zero_size_shape()
@@ -485,16 +506,16 @@ class IndexLevelGO(IndexLevel):
 
     #---------------------------------------------------------------------------
     # grow only mutation
+    # depth cannot change over the life of IndexLevel
 
     def extend(self, level: IndexLevel) -> None:
         '''Extend this IndexLevel with another IndexLevel, assuming that it has compatible depth and Index types.
         '''
-
-        depth = next(self.depths())
+        depth = self.depth
 
         if level.targets is None:
             raise RuntimeError('found IndexLevel with None as targets')
-        if depth != next(level.depths()):
+        if depth != level.depth:
             raise RuntimeError('level for extension does not have necessary levels.')
         if tuple(self.index_types()) != tuple(level.index_types()):
             raise RuntimeError('level for extension does not have corresponding types.')
@@ -519,7 +540,7 @@ class IndexLevelGO(IndexLevel):
         '''Add a single, full-depth leaf loc.
         '''
         # find fist depth that does not contain key
-        depth_count = next(self.depths())
+        depth_count = self.depth
         index_types = tuple(self.index_types())
 
         if len(key) != depth_count:

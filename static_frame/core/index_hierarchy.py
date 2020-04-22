@@ -697,7 +697,8 @@ class IndexHierarchy(IndexBase):
 
     def __len__(self) -> int:
         if self._recache:
-            self._update_array_cache()
+            # avoid full recache to get depth
+            return self._levels.__len__()
         return self._blocks.__len__()
 
     @doc_inject()
@@ -788,7 +789,8 @@ class IndexHierarchy(IndexBase):
     @property
     def depth(self) -> int:
         if self._recache:
-            self._update_array_cache()
+            # avoid full recache to get depth
+            return self._levels.depth
         return self._blocks.shape[1]
 
     def values_at_depth(self,
@@ -1399,7 +1401,7 @@ class IndexHierarchyAsType:
         self.container = container
         self.key = key
 
-    def __call__(self, dtype) -> 'IndexHierarchy':
+    def __call__(self, dtype) -> IndexHierarchy:
 
         from static_frame.core.index_datetime import _dtype_to_index_cls
         container = self.container
