@@ -401,6 +401,7 @@ class IndexLevel:
         depth_count = self.depth
         shape = self.__len__(), depth_count
 
+        # need to get a compatible dtype for all dtypes
         dtype = resolve_dtype_iter(self.dtypes_iter())
         labels = np.empty(shape, dtype=dtype)
         row_count = 0
