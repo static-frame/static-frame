@@ -294,7 +294,7 @@ def shape_filter(array: np.ndarray) -> tp.Tuple[int, int]:
     '''
     if array.ndim == 1:
         return array.shape[0], 1
-    return tp.cast(tp.Tuple[int, int], array.shape)
+    return array.shape #type: ignore
 
 def column_2d_filter(array: np.ndarray) -> np.ndarray:
     '''Reshape a flat ndim 1 array into a 2D array with one columns and rows of length. This is used (a) for getting string representations and (b) for using np.concatenate and np binary operators on 1D arrays.
@@ -763,7 +763,8 @@ def resolve_type_iter(
         if resolved != object:
             value_type = type(v)
 
-            if value_type == tuple or value_type == list:
+            # need to get tuple subclasses, like NamedTuple
+            if isinstance(v, (tuple, list)):
                 has_tuple = True
             elif value_type == str or value_type == np.str_:
                 # must compare to both sring types
@@ -789,7 +790,7 @@ def resolve_type_iter(
     if copy_values:
         return resolved, has_tuple, values_post
 
-    return resolved, has_tuple, tp.cast(tp.Sequence[tp.Any], values)
+    return resolved, has_tuple, values #type: ignore
 
 
 
@@ -836,7 +837,7 @@ def iterable_to_array_1d(
             # we have to realize into sequence for numpy creation
             values_for_construct = tuple(values)
         else:
-            values_for_construct = tp.cast(tp.Sequence[tp.Any], values)
+            values_for_construct = values #type: ignore
 
         if len(values_for_construct) == 0:
             # dtype was given, return an empty array with that dtype
@@ -1047,7 +1048,7 @@ def key_to_datetime_key(
         return np.array(key, dtype=dtype)
 
     if hasattr(key, '__next__'): # a generator-like
-        return np.array(tuple(tp.cast(tp.Iterator[tp.Any], key)), dtype=dtype)
+        return np.array(tuple(key), dtype=dtype) #type: ignore
 
     # for now, return key unaltered
     return key
@@ -1081,11 +1082,11 @@ def isna_element(value: tp.Any) -> bool:
     '''Return Boolean if value is an NA. This does not yet handle pd.NA
     '''
     try:
-        return tp.cast(bool, np.isnan(value))
+        return np.isnan(value) #type: ignore
     except TypeError:
         pass
     try:
-        return tp.cast(bool, np.isnat(value))
+        return np.isnat(value) #type: ignore
     except TypeError:
         pass
     return value is None

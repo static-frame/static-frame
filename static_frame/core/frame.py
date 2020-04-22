@@ -638,7 +638,7 @@ class Frame(ContainerOperand):
             # this is possible to support ragged lists, but it noticeably reduces performance
             return (row[col_key] for row in rows_iter)
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over final column order, yielding 1D arrays
             for col_idx in range(col_count):
                 if column_name_getter: # append as side effect of generator!

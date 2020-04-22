@@ -592,31 +592,33 @@ def array_from_value_iter(
         key: hashable for looking up field in `get_value_iter`.
         idx: integer position to extract from dtypes
     '''
-    # for each column, try to get a column_type, or None
+    # for each column, try to get a dtype, or None
     if get_col_dtype is None:
-        column_type = None
-    else: # column_type returned here can be None.
-        column_type = get_col_dtype(idx)
+        dtype = None
+    else: # dtype returned here can be None.
+        dtype = get_col_dtype(idx)
         # if this value is None we cannot tell if it was explicitly None or just was not specified
 
+    # NOTE: shown to be faster to try fromiter in some performance tests
+    # values, _ = iterable_to_array_1d(get_value_iter(key), dtype=dtype)
+
     values = None
-    if column_type is not None:
+    if dtype is not None:
         try:
             values = np.fromiter(
                     get_value_iter(key),
                     count=row_count,
-                    dtype=column_type)
+                    dtype=dtype)
             values.flags.writeable = False
         except (ValueError, TypeError):
-            # the column_type may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
+            # the dtype may not be compatible, so must fall back on using np.array to determine the type, i.e., ValueError: cannot convert float NaN to integer
             pass
     if values is None:
         # returns an immutable array
         values, _ = iterable_to_array_1d(
                 get_value_iter(key),
-                dtype=column_type
+                dtype=dtype
                 )
-
     return values
 
 

@@ -6702,6 +6702,34 @@ class TestUnit(TestCase):
                 ((0, ((0, 'x'), (1, 'x'), (2, 'x'), (3, 'x'), (4, 'x'), (5, 'x'), (6, 'x'), (7, 'x'), (8, 'x'), (9, 'x'), (10, 1))), (1, ((0, 't'), (1, 't'), (2, 't'), (3, 't'), (4, 't'), (5, 't'), (6, 't'), (7, 't'), (8, 't'), (9, 't'), (10, 2))))
                 )
 
+    def test_frame_from_records_q(self) -> None:
+
+        Y: tp.Type[tp.NamedTuple]
+
+        class Y(tp.NamedTuple):
+            x: str
+            y: int
+
+        f0 = Frame.from_records([(Y("foo", 1), 1, 2)])
+        f1 = Frame.from_records([(1, 2, Y("foo", 1))])
+        f2 = Frame.from_records([(1, 2, ("foo", 1))])
+
+        self.assertEqual(f0.shape, f1.shape)
+        self.assertEqual(f0.shape, f2.shape)
+
+        self.assertEqual(f0.to_pairs(0),
+                ((0, ((0, Y(x='foo', y=1)),)), (1, ((0, 1),)), (2, ((0, 2),)))
+                )
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, Y(x='foo', y=1)),)))
+                )
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
+                )
+
+
+
+
 
     #---------------------------------------------------------------------------
 
