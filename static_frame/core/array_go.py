@@ -74,19 +74,16 @@ class ArrayGO:
     def __iter__(self) -> tp.Iterator[tp.Any]:
         if self._recache:
             self._update_array_cache()
-        assert self._array is not None
         return iter(self._array)
 
     def __getitem__(self, key: tp.Any) -> tp.Any:
         if self._recache:
             self._update_array_cache()
-        assert self._array is not None
         return self._array.__getitem__(key)
 
     def __len__(self) -> int:
         if self._recache:
             self._update_array_cache()
-        assert self._array is not None
         return len(self._array)
 
     def append(self, value: tp.Iterable[object]) -> None:
