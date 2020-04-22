@@ -933,7 +933,9 @@ class IndexHierarchy(IndexBase):
         # if an HLoc, will pass on to loc_to_iloc
         return self._levels.loc_to_iloc(key)
 
-    def _extract_iloc(self, key) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
+    def _extract_iloc(self,
+            key
+            ) -> tp.Union['IndexHierarchy', tp.Tuple[tp.Hashable]]:
         '''Extract a new index given an iloc key
         '''
         if self._recache:

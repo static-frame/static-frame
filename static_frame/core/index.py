@@ -414,7 +414,7 @@ class Index(IndexBase):
                 labels._update_array_cache()
             if name is None and labels.name is not None:
                 name = labels.name # immutable, so no copy necessary
-            if labels.depth == 1: # not an IndexHierarchy
+            if isinstance(labels, Index): # not an IndexHierarchy
                 if (labels.STATIC and self.STATIC and dtype is None):
                     if not is_typed or (is_typed and self._DTYPE == labels.dtype):
                         # can take the map if static and if types in the dict are the same as those in the labels (or to become the labels after conversion)
@@ -634,7 +634,7 @@ class Index(IndexBase):
     def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''
-        return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
+        return self._drop_iloc(self.loc_to_iloc(key))
 
 
     @property
@@ -749,7 +749,7 @@ class Index(IndexBase):
 
         return self.__class__(self, name=self._name)
 
-    def relabel(self: I, mapper: CallableOrMapping) -> I:
+    def relabel(self, mapper: CallableOrMapping) -> 'Index':
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -828,7 +828,9 @@ class Index(IndexBase):
                 offset=offset
                 )
 
-    def _extract_iloc(self: I, key: GetItemKeyType) -> I:
+    def _extract_iloc(self,
+            key: GetItemKeyType
+            ) -> tp.Union['Index', tp.Hashable]:
         '''Extract a new index given an iloc key
         '''
         if self._recache:
@@ -849,12 +851,16 @@ class Index(IndexBase):
         else: # select a single label value
             return self._labels[key] #type: ignore
 
-        return self.__class__(labels=labels, name=self._name) #type: ignore
+        return self.__class__(labels=labels, name=self._name)
 
-    def _extract_loc(self: I, key: GetItemKeyType) -> I:
+    def _extract_loc(self: I,
+            key: GetItemKeyType
+            ) -> tp.Union['Index', tp.Hashable]:
         return self._extract_iloc(self.loc_to_iloc(key)) #type: ignore
 
-    def __getitem__(self: I, key: GetItemKeyType) -> I:
+    def __getitem__(self: I,
+            key: GetItemKeyType
+            ) -> tp.Union['Index', tp.Hashable]:
         '''Extract a new index given an iloc key.
         '''
         return self._extract_iloc(key)

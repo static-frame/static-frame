@@ -13,7 +13,7 @@ class TestUnit(TestCase):
 
         idx1 = IndexAutoFactory.from_optional_constructor(4,
                 default_constructor=Index)
-        self.assertEqual(idx1._map is None, True)
+        self.assertEqual(idx1._map is None, True) #type: ignore
         self.assertEqual(len(idx1), 4)
         self.assertEqual(idx1.STATIC, True)
 
@@ -21,7 +21,7 @@ class TestUnit(TestCase):
 
         idx1 = IndexAutoFactory.from_optional_constructor(8,
                 default_constructor=IndexGO)
-        self.assertEqual(idx1._map is None, True)
+        self.assertEqual(idx1._map is None, True) #type: ignore
         self.assertEqual(len(idx1), 8)
         self.assertEqual(idx1.STATIC, False)
 
@@ -38,7 +38,7 @@ class TestUnit(TestCase):
                 default_constructor=IndexGO,
                 explicit_constructor=Index)
         # when using an alternate constructor, loc_is_iloc will not be set
-        self.assertEqual(idx1._map is None, False)
+        self.assertEqual(idx1._map is None, False) #type: ignore
         self.assertEqual(len(idx1), 5)
         self.assertEqual(idx1.STATIC, True)
 

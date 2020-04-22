@@ -74,17 +74,17 @@ class ArrayGO:
     def __iter__(self) -> tp.Iterator[tp.Any]:
         if self._recache:
             self._update_array_cache()
-        return iter(self._array)
+        return iter(self._array) #type: ignore
 
     def __getitem__(self, key: tp.Any) -> tp.Any:
         if self._recache:
             self._update_array_cache()
-        return self._array.__getitem__(key)
+        return self._array.__getitem__(key) #type: ignore
 
     def __len__(self) -> int:
         if self._recache:
             self._update_array_cache()
-        return len(self._array)
+        return len(self._array) #type: ignore
 
     def append(self, value: tp.Iterable[object]) -> None:
         if self._array_mutable is None:

@@ -1122,14 +1122,14 @@ class TestUnit(TestCase):
         self.assertEqual(f1.iloc[[0,1,3], [0,2]].values.tolist(),
                 [[0, 2], [4, 6], [12, 14]])
 
-        self.assertTrue(f1._index._map is None)
-        self.assertTrue(f1._columns._map is None)
+        self.assertTrue(f1._index._map is None) #type: ignore
+        self.assertTrue(f1._columns._map is None) #type: ignore
 
         f1[4] = list(range(5))
-        self.assertTrue(f1._columns._map is None)
+        self.assertTrue(f1._columns._map is None) #type: ignore
 
         f1[20] = list(range(5))
-        self.assertFalse(f1._columns._map is None)
+        self.assertFalse(f1._columns._map is None) #type: ignore
 
         self.assertEqual(f1.values.tolist(),
                 [[0, 1, 2, 3, 0, 0],

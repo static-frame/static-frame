@@ -135,12 +135,12 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
-        self.assertTrue(idx.mloc == idx[:2].mloc)
+        self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
 
     def test_index_mloc_b(self) -> None:
         idx = IndexGO(('a', 'b', 'c', 'd'))
         idx.append('e')
-        self.assertTrue(idx.mloc == idx[:2].mloc)
+        self.assertTrue(idx.mloc == idx[:2].mloc) #type: ignore
 
 
     def test_index_dtype_a(self) -> None:
@@ -219,7 +219,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.values.tolist(), ['a', 'b', 'c', 'd'])
 
-        self.assertEqual(idx[2:].values.tolist(), ['c', 'd'])
+        self.assertEqual(idx[2:].values.tolist(), ['c', 'd']) #type: ignore
 
         self.assertEqual(idx.loc['b':].values.tolist(), ['b', 'c', 'd'])  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
@@ -391,9 +391,9 @@ class TestUnit(TestCase):
         self.assertEqual(len(index), 7)
 
         index3 = index[2:]
-        index3.append('i')
+        index3.append('i') #type: ignore
 
-        self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i'])
+        self.assertEqual(index3.values.tolist(), ['c', 'd', 'e', 'f', 'h', 'i']) #type: ignore
         self.assertEqual(index.values.tolist(), ['a', 'b', 'c', 'd', 'e', 'f', 'h'])
 
 
@@ -565,7 +565,7 @@ class TestUnit(TestCase):
         idx = IndexGO(('a', 'b', 'c', 'd'))
         idx.append('e')
         post = idx._extract_iloc(slice(None))
-        self.assertEqual(post.values.tolist(),
+        self.assertEqual(post.values.tolist(), #type: ignore
                 ['a', 'b', 'c', 'd', 'e'])
 
 

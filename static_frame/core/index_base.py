@@ -104,7 +104,7 @@ class IndexBase(ContainerOperand):
             ) -> np.ndarray:
         raise NotImplementedError()
 
-    def _extract_iloc(self: I, key: GetItemKeyType) -> I:
+    def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError()
 
     def _update_array_cache(self) -> None:
