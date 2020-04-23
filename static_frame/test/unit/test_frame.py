@@ -6706,7 +6706,7 @@ class TestUnit(TestCase):
 
         Y: tp.Type[tp.NamedTuple]
 
-        class Y(tp.NamedTuple):
+        class Y(tp.NamedTuple): # pylint: disable=E0102
             x: str
             y: int
 
@@ -6718,10 +6718,10 @@ class TestUnit(TestCase):
         self.assertEqual(f0.shape, f2.shape)
 
         self.assertEqual(f0.to_pairs(0),
-                ((0, ((0, Y(x='foo', y=1)),)), (1, ((0, 1),)), (2, ((0, 2),)))
+                ((0, ((0, Y(x='foo', y=1)),)), (1, ((0, 1),)), (2, ((0, 2),))) #pylint: disable=E1120
                 )
         self.assertEqual(f1.to_pairs(0),
-                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, Y(x='foo', y=1)),)))
+                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, Y(x='foo', y=1)),))) #pylint: disable=E1120
                 )
         self.assertEqual(f2.to_pairs(0),
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
