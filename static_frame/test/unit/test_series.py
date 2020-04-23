@@ -2908,7 +2908,7 @@ class TestUnit(TestCase):
         s1 = Series(np.arange(8) + .001)
         s2 = round(s1)
 
-        self.assertEqual(s2.to_pairs(),
+        self.assertEqual(s2.to_pairs(), #type: ignore
                 ((0, 0.0), (1, 1.0), (2, 2.0), (3, 3.0), (4, 4.0), (5, 5.0), (6, 6.0), (7, 7.0)))
 
 
