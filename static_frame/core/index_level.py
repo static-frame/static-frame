@@ -22,8 +22,6 @@ from static_frame.core.util import GetItemKeyTypeCompound
 
 from static_frame.core.type_blocks import TypeBlocks
 
-# from static_frame.core.index_base import IndexBase
-
 from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel
@@ -337,7 +335,6 @@ class IndexLevel:
             return self.leaf_loc_to_iloc(key)
 
         # everything after this is an HLoc
-
         # collect all ilocs for all leaf indices matching HLoc patterns
         ilocs = []
         levels = deque(((self, 0, 0),)) # order matters
@@ -431,7 +428,6 @@ class IndexLevel:
 
         labels.flags.writeable = False
         return labels
-
 
     def values_at_depth(self,
             depth_level: int
@@ -616,3 +612,6 @@ class IndexLevelGO(IndexLevel):
         # defer calculation be setting _length to None for all edge levels
         for node in edge_nodes:
             node._length = None
+
+
+
