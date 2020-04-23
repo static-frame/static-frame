@@ -1,22 +1,13 @@
-
 import typing as tp
 from collections.abc import KeysView
 from itertools import chain
 from ast import literal_eval
-
 
 import numpy as np
 
 from static_frame.core.container import ContainerOperand
 
 from static_frame.core.util import DEFAULT_SORT_KIND
-
-from static_frame.core.index_base import IndexBase
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index import _requires_reindex
-from static_frame.core.index import mutable_immutable_index_filter
-
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import GetItemKeyType
@@ -28,46 +19,39 @@ from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
-
-
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceAsType
-
-
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+from static_frame.core.index import _requires_reindex
+from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index_level import IndexLevel
+from static_frame.core.index_level import IndexLevelGO
 
+from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import rehierarch_and_map
-
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.type_blocks import TypeBlocks
-
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
-
 from static_frame.core.iter_node import IterNodeType
 from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeApplyType
-
 from static_frame.core.hloc import HLoc
-
-from static_frame.core.index_level import IndexLevel
-
-from static_frame.core.index_level import IndexLevelGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
-
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO #pylint: disable=W0611 #pragma: no cover
-
 
 IH = tp.TypeVar('IH', bound='IndexHierarchy')
 
@@ -87,26 +71,20 @@ class IndexHierarchy(IndexBase):
     _levels: IndexLevel
     _blocks: TypeBlocks
     _recache: bool
-    _name: tp.Hashable
-    _keys: KeysView
+    _name: NameType
 
     # Temporary type overrides, until indices are generic.
     __getitem__: tp.Callable[['IndexHierarchy', tp.Hashable], tp.Tuple[tp.Hashable, ...]]
-    # __iter__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
-    # __reversed__: tp.Callable[['IndexHierarchy'], tp.Iterator[tp.Tuple[tp.Hashable, ...]]]
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
     _INDEX_CONSTRUCTOR = Index
     _LEVEL_CONSTRUCTOR = IndexLevel
-
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
     _UFUNC_DIFFERENCE = setdiff2d
-
     _NDIM: int = 2
-
     #---------------------------------------------------------------------------
     # constructors
 
@@ -217,7 +195,7 @@ class IndexHierarchy(IndexBase):
     def from_tree(cls: tp.Type[IH],
             tree,
             *,
-            name: tp.Hashable = None
+            name: NameType = None
             ) -> IH:
         '''
         Convert into a ``IndexHierarchy`` a dictionary defining keys to either iterables or nested dictionaries of the same.
@@ -468,7 +446,6 @@ class IndexHierarchy(IndexBase):
             else:
                 raise ErrorInitIndex('label exceeded expected depth', v)
 
-        # TODO: should find a way to explicitly pass dtypes per depth
         levels = cls._tree_to_index_level(
                 tree,
                 index_constructors=index_constructors
@@ -728,7 +705,6 @@ class IndexHierarchy(IndexBase):
         '''
         return self._drop_iloc(self.loc_to_iloc(key)) #type: ignore
 
-
     #---------------------------------------------------------------------------
 
     @property
@@ -759,7 +735,6 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-
         if isinstance(depth_level, int):
             sel = depth_level
         else:
@@ -791,8 +766,6 @@ class IndexHierarchy(IndexBase):
             labels = self._name
         else:
             labels = None
-
-        # NOTE: consider caching index_types
         return Series(self._levels.index_types(), index=labels)
 
     #---------------------------------------------------------------------------
@@ -1014,9 +987,6 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1):
             yield tuple(array)
 
-        # values = self._blocks.values
-        # return tp.cast(tp.Iterator[tp.Hashable], array2d_to_tuples(values.__iter__()))
-
     def __reversed__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''
         Returns a reverse iterator on the index labels.
@@ -1026,10 +996,6 @@ class IndexHierarchy(IndexBase):
 
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
-
-        # values = self._blocks.values
-        # return array2d_to_tuples(reversed(values))
-
 
     def __contains__(self, value) -> bool:
         '''Determine if a leaf loc is contained in this Index.
@@ -1116,7 +1082,7 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         return constructor(
-                self._blocks.copy(), # TypeBlocks
+                self._blocks.copy(),
                 columns=None,
                 index=None,
                 own_data=True
@@ -1235,7 +1201,6 @@ class IndexHierarchyGO(IndexHierarchy):
     __slots__ = (
             '_levels', # IndexLevel
             '_blocks',
-            '_keys',
             '_recache',
             '_name'
             )

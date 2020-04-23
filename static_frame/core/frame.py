@@ -3042,8 +3042,6 @@ class Frame(ContainerOperand):
             key: GetItemKeyTypeCompound) -> tp.Tuple[GetItemKeyType, GetItemKeyType]:
         '''Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted.
         '''
-        # if isinstance(key, tuple) and self._columns.depth == 1:
-        #     raise KeyError('__getitem__ does not support multiple indexers on a 1D Index')
         iloc_column_key = self._columns.loc_to_iloc(key)
         return None, iloc_column_key
 
@@ -3061,6 +3059,7 @@ class Frame(ContainerOperand):
         bloc_key = bloc_key_normalize(key=key, container=self)
         values = self.values[bloc_key]
         values.flags.writeable = False
+
         index = Index(
                 (self._index[x], self._columns[y])
                 for x, y in zip(*np.nonzero(bloc_key))
