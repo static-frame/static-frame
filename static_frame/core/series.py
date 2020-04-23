@@ -1687,7 +1687,7 @@ class Series(ContainerOperand):
             {dtype}
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return self.__class__(
                 self.values.astype(dtype),
@@ -1695,6 +1695,22 @@ class Series(ContainerOperand):
                 name=self._name
                 )
 
+
+    def __round__(self, decimals: int = 0):
+        '''
+        Return a Series rounded to the given decimals.
+
+        Args:
+            decimals: number of decimals to round to.
+
+        Returns:
+            :obj:`Series`
+        '''
+        return self.__class__(
+                np.round(self.values, decimals),
+                index=self._index,
+                name=self._name
+                )
 
     def roll(self,
             shift: int,
