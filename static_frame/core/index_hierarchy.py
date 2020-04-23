@@ -1,5 +1,4 @@
 import typing as tp
-from collections.abc import KeysView
 from itertools import chain
 from ast import literal_eval
 
@@ -766,6 +765,8 @@ class IndexHierarchy(IndexBase):
             labels = self._name
         else:
             labels = None
+
+        # NOTE: consider caching index_types
         return Series(self._levels.index_types(), index=labels)
 
     #---------------------------------------------------------------------------
@@ -983,7 +984,6 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-
         for array in self._blocks.axis_values(1):
             yield tuple(array)
 
@@ -993,7 +993,6 @@ class IndexHierarchy(IndexBase):
         '''
         if self._recache:
             self._update_array_cache()
-
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
@@ -1002,7 +1001,6 @@ class IndexHierarchy(IndexBase):
         '''
         # levels only, no need to recache as this is what has been mutated
         return self._levels.__contains__(value)
-
     #---------------------------------------------------------------------------
     # utility functions
 
