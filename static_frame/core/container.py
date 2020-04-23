@@ -376,10 +376,14 @@ class ContainerOperandMeta(ContainerMeta):
     '''
 
     @staticmethod
-    def create_ufunc_operator(func_name: str,
+    def create_ufunc_operator(
+            func_name: str,
             opperand_count: int = 1,
             reverse: bool = False,
             ) -> tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]:
+        '''
+        Given a func_name, derive the method to live on the Container.
+        '''
         # operator module defines alias to funcs with names like __add__, etc
         if not reverse:
             operator_func = getattr(operator_mod, func_name)
