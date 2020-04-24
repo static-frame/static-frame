@@ -188,26 +188,26 @@ class IndexBase(ContainerOperand):
     @property
     def names(self) -> tp.Tuple[str, ...]:
         '''
-        Provide a suitable iterable of names for usage in output formats that require a field name for the index.
+        Provide a suitable iterable of names for usage in output formats that require a field name as string for the index.
         '''
         template = '__index{}__' # arrow does __index_level_0__
+        depth = self.depth
+        name = self._name
 
         def gen() -> tp.Iterator[str]:
-            if self._name and isinstance(self._name, tuple):
-                for name in self._name:
-                    yield name
+            if name and depth == 1:
+                yield name
+            # try to use name only if it is a tuple of the right size
+            elif name and isinstance(name, tuple) and len(name) == depth:
+                for n in name:
+                    yield n # convert to string?
             else:
-                start = 0
-                if self._name:
-                    # If self._name is defined, try to use it as the first label
-                    yield str(self._name) # might be other hashable
-                    start = 1
-                for i in range(start, self.depth):
+                for i in range(depth):
                     yield template.format(i)
 
         names = tuple(gen())
-        if len(names) != self.depth:
-            raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {self.depth}')
+        # if len(names) != depth:
+        #     raise RuntimeError(f'unexpected names formation: {names}, does not meet depth {depth}')
         return names
 
     #---------------------------------------------------------------------------

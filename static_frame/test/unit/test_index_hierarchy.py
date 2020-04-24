@@ -164,8 +164,8 @@ class TestUnit(TestCase):
 
         # can access as a .name, but not a .names
         self.assertEqual(ih1.name, ('a', 'b', 'c'))
-        with self.assertRaises(RuntimeError):
-            _ = ih1.names # unexpected names formation: ('a', 'b', 'c'), does not meet depth 2
+        # names does not use name as it is the wrong size
+        self.assertEqual(ih1.names, ('__index0__', '__index1__'))
 
 
     #---------------------------------------------------------------------------
@@ -1500,6 +1500,20 @@ class TestUnit(TestCase):
                 idx2.values.tolist(),
                 [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['x', 'x']]
                 )
+
+    def test_hierarchy_name_b(self) -> None:
+
+        idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
+        idx2 = idx1.rename(('a', 'b', 'c'))
+
+        # since the name attr is the wrong size, names use the generic from
+        self.assertEqual(idx2.names, ('__index0__', '__index1__'))
+
+    def test_hierarchy_name_a(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
+        self.assertEqual(idx1.name, 'q')
+
 
     def test_hierarchy_display_b(self) -> None:
 
