@@ -452,11 +452,19 @@ class IndexLevel:
             array.flags.writeable = False
             return array
 
-        start = 0
-        for value, size in self.label_widths_at_depth(depth_level):
-            end = start + size
-            array[start: end] = value
-            start = end
+        # TEMP ALTERNATAIVE
+        def gen() -> tp.Iterator[np.ndarray]:
+            for value, size in self.label_widths_at_depth(
+                    depth_level=depth_level):
+                yield np.full(size, value, dtype=dtypes[depth_level])
+
+        np.concatenate(tuple(gen()), out=array)
+
+        # start = 0
+        # for value, size in self.label_widths_at_depth(depth_level):
+        #     end = start + size
+        #     array[start: end] = value
+        #     start = end
 
         array.flags.writeable = False
         return array
