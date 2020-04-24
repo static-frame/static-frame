@@ -435,8 +435,6 @@ class IndexLevel:
         '''
         For the given depth, return a correctly typed immutable array of length equal to the number of rows in the cosolidate values presentation.
         '''
-        # NOTE: not yet accepting a depth_level as an iterable of ints
-
         depth_count = self.depth
         dtypes = tuple(self.dtype_per_depth())
         length = self.__len__()
@@ -449,22 +447,20 @@ class IndexLevel:
                     tuple(self.labels_at_depth(depth_level)),
                     out=array
                     )
-            array.flags.writeable = False
-            return array
+        else:
+            def gen() -> tp.Iterator[np.ndarray]:
+                for value, size in self.label_widths_at_depth(
+                        depth_level=depth_level):
+                    yield np.full(size, value, dtype=dtypes[depth_level])
 
-        # TEMP ALTERNATAIVE
-        # def gen() -> tp.Iterator[np.ndarray]:
-        #     for value, size in self.label_widths_at_depth(
-        #             depth_level=depth_level):
-        #         yield np.full(size, value, dtype=dtypes[depth_level])
+            np.concatenate(tuple(gen()), out=array)
 
-        # np.concatenate(tuple(gen()), out=array)
-
-        start = 0
-        for value, size in self.label_widths_at_depth(depth_level):
-            end = start + size
-            array[start: end] = value
-            start = end
+            #NOTE: This alternative form produced a unicode error only on Windows up ot NP 1.17 for some tests
+            # start = 0
+            # for value, size in self.label_widths_at_depth(depth_level):
+            #     end = start + size
+            #     array[start: end] = value
+            #     start = end
 
         array.flags.writeable = False
         return array

@@ -10,6 +10,8 @@ Added ``IndexHour`` and ``IndexHourGO`` indices.
 
 Added ``IndexMicrosecond`` and ``IndexMicrosecondGO`` indices.
 
+Added support for ``round()`` on ``Series``.
+
 ``Index.astype`` now returns specialized ``datetime64`` ``Index`` objects when given an appropriate dtype.
 
 ``IndexHierarchy.astype`` now produces an ``IndexHierarchy`` with specialized ``datetime64`` ``Index`` objects when given an appropriate dtype.
@@ -27,6 +29,8 @@ Refactored ``IndexHierarchy`` to store a ``TypeBlocks`` instance instead of 2D a
 Fixed flaw in ``IndexHierarchy.label_widths_at_depth``.
 
 Fixed flaw in ``Frame.from_records`` and related routines whereby a ``NamedTuple`` in an iterable of length 1 was converted to a single-row, two-dimensional array.
+
+Fixed flaw in ``Frame`` function application on iterators for some ``Index`` type configurations.
 
 
 0.6.10

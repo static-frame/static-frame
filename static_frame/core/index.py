@@ -455,9 +455,10 @@ class Index(IndexBase):
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
                     pass
                 if self._map is None:
-                    raise ErrorInitIndex(f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})') #type: ignore
+                    raise ErrorInitIndex(f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})')
                 size = len(self._map)
             else: # must assume labels are unique
+                # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore
                 if positions is None:
                     positions = PositionsAllocator.get(size)
