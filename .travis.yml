@@ -79,14 +79,14 @@ matrix:
       script: pylint static_frame
 
 
-    - name: forward compatibility NumPy 1.18.2
+    - name: forward compatibility NumPy 1.18.3
       language: python
       os: linux
       dist: xenial
       python: 3.7.4
       install:
         - pip install -r requirements-test.txt
-        - pip install numpy==1.18.2
+        - pip install numpy==1.18.3
 
     - name: forward compatibility Pandas 1.0.3
       language: python

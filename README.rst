@@ -69,7 +69,7 @@ Dependencies
 Core StaticFrame requires the following:
 
 - Python >= 3.6
-- NumPy >= 1.16.6
+- NumPy >= 1.17.5
 
 For extended input and output, the following packages are required:
 

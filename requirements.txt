@@ -1,2 +1,2 @@
 automap>=0.4.8
-numpy>=1.16.6
+numpy>=1.17.5
