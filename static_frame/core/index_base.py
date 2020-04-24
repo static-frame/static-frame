@@ -196,11 +196,11 @@ class IndexBase(ContainerOperand):
 
         def gen() -> tp.Iterator[str]:
             if name and depth == 1:
-                yield name
+                yield str(name)
             # try to use name only if it is a tuple of the right size
             elif name and isinstance(name, tuple) and len(name) == depth:
                 for n in name:
-                    yield n # convert to string?
+                    yield str(n)
             else:
                 for i in range(depth):
                     yield template.format(i)

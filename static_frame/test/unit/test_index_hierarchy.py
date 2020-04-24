@@ -1477,7 +1477,7 @@ class TestUnit(TestCase):
         idx2 = idx1.rename('w')
         self.assertEqual(idx2.name, 'w')
         # will provide one for each level
-        self.assertEqual(idx2.names, ('w', '__index1__'))
+        self.assertEqual(idx2.names, ('__index0__', '__index1__'))
 
 
     def test_hierarchy_name_b(self) -> None:
@@ -1501,7 +1501,7 @@ class TestUnit(TestCase):
                 [['a', 'x'], ['a', 'y'], ['b', 'x'], ['b', 'y'], ['x', 'x']]
                 )
 
-    def test_hierarchy_name_b(self) -> None:
+    def test_hierarchy_name_c(self) -> None:
 
         idx1 = IndexHierarchyGO.from_product(list('ab'), list('xy'), name='q')
         idx2 = idx1.rename(('a', 'b', 'c'))
@@ -1509,7 +1509,7 @@ class TestUnit(TestCase):
         # since the name attr is the wrong size, names use the generic from
         self.assertEqual(idx2.names, ('__index0__', '__index1__'))
 
-    def test_hierarchy_name_a(self) -> None:
+    def test_hierarchy_name_d(self) -> None:
 
         idx1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
         self.assertEqual(idx1.name, 'q')

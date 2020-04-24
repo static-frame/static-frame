@@ -3,6 +3,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.12
+----------
+
+Refined behavior of ``names`` attribute on ``IndexBase`` to ensure that an appropriately sized iterable of labels is always returned.
+
 0.6.11
 ----------
 
