@@ -391,16 +391,22 @@ class IterNode(tp.Generic[FrameOrSeries]):
         from static_frame.core.series import Series
         from static_frame.core.frame import Frame
 
-        func_values = partial(self._func_values, *args, **kwargs)
-        func_items = partial(self._func_items, *args, **kwargs)
+        assert not args # force all kwarg
+
+        func_values = partial(self._func_values, **kwargs)
+        func_items = partial(self._func_items, **kwargs)
 
         apply_constructor: tp.Callable[..., tp.Union[Frame, Series]]
 
         if self._apply_type is IterNodeApplyType.SERIES_ITEMS:
+            if isinstance(self._container, Frame) and kwargs['axis'] == 0:
+                index_constructor = self._container._columns.from_labels
+            else:
+                index_constructor = self._container._index.from_labels
             # always return a Series
             apply_constructor = partial(
                     Series.from_items,
-                    index_constructor=self._container.index.from_labels
+                    index_constructor=index_constructor
                     )
         elif self._apply_type is IterNodeApplyType.SERIES_ITEMS_FLAT:
             # use default index constructor

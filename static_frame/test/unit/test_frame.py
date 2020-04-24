@@ -1239,7 +1239,28 @@ class TestUnit(TestCase):
         self.assertTrue(post.dtype == float)
 
 
+    def test_frame_iter_array_f(self) -> None:
 
+        f = sf.Frame(np.arange(12).reshape(3,4),
+                index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
+
+        f.iter_array(0).apply(np.sum)
+
+        self.assertEqual(
+                f.iter_array(0).apply(np.sum).to_pairs(),
+                ((0, 12), (1, 15), (2, 18), (3, 21))
+                )
+
+        self.assertEqual(
+                f.iter_array(1).apply(np.sum).to_pairs(),
+                ((np.datetime64('2020-01-01'), 6), (np.datetime64('2020-01-02'), 22), (np.datetime64('2020-01-03'), 38))
+                )
+
+
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_iter_tuple_a(self) -> None:
         post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=0))
         self.assertEqual(post, ((0, 1, 2, 3, 4),))

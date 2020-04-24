@@ -455,7 +455,7 @@ class Index(IndexBase):
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
                     pass
                 if self._map is None:
-                    raise ErrorInitIndex(f'labels ({len(labels)}) have non-unique values ({len(set(labels))})') #type: ignore
+                    raise ErrorInitIndex(f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})') #type: ignore
                 size = len(self._map)
             else: # must assume labels are unique
                 size = len(labels) #type: ignore
