@@ -6,6 +6,8 @@ from static_frame.core.interface import InterfaceSummary
 from static_frame.core.series import Series
 from static_frame.core.frame import FrameGO
 
+from static_frame.core.interface import _get_signatures
+
 
 
 from static_frame.test.test_case import TestCase
@@ -38,6 +40,22 @@ class TestUnit(TestCase):
         counts_cls = s.__class__.interface.iter_group('group').apply(len)
 
         self.assertTrue((counts == counts_cls).all())
+
+
+    def test_interface_get_signatures_a(self) -> None:
+
+        sig, signa = _get_signatures('__init__', Series.__init__)
+
+        self.assertEqual(sig, '__init__(values, *, index, name, ...)')
+        self.assertEqual(signa, '__init__()')
+
+    def test_interface_get_signatures_b(self) -> None:
+
+        sig, signa = _get_signatures('__init__', Series.__init__, max_args=99)
+
+        self.assertEqual(sig, '__init__(values, *, index, name, dtype, index_constructor, own_index)')
+        self.assertEqual(signa, '__init__()')
+
 
 
 if __name__ == '__main__':

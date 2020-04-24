@@ -46,10 +46,12 @@ from static_frame.core.selector_node import InterfaceGetItem
 #-------------------------------------------------------------------------------
 # function inspection utilities
 
+MAX_ARGS = 3
+
 def _get_parameters(
         func: AnyCallable,
         is_getitem: bool = False,
-        max_args: int = 3,
+        max_args: int = MAX_ARGS,
         ) -> str:
     # might need special handling for methods on built-ins
     try:
@@ -107,7 +109,7 @@ def _get_signatures(
         is_getitem: bool = False,
         delegate_func: tp.Optional[AnyCallable] = None,
         delegate_name: str = '',
-        max_args: int = 3,
+        max_args: int = MAX_ARGS,
         ) -> tp.Tuple[str, str]:
 
     if delegate_func:
@@ -256,6 +258,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
         if name == 'values':
             signature = signature_no_args = name
@@ -263,7 +266,8 @@ class InterfaceRecord(tp.NamedTuple):
             signature, signature_no_arg_get_signatures = _get_signatures(
                     name,
                     obj,
-                    is_getitem=False
+                    is_getitem=False,
+                    max_args=max_args,
                     )
         yield cls(cls_name,
                 InterfaceGroup.DictLike,
@@ -280,13 +284,15 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
         if name != 'interface':
             # signature = f'{name}()'
             signature, signature_no_args = _get_signatures(
                     name,
                     obj,
-                    is_getitem=False
+                    is_getitem=False,
+                    max_args=max_args,
                     )
             yield cls(cls_name,
                     InterfaceGroup.Display,
@@ -311,6 +317,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
         # InterfaceAsType found on Frame, IndexHierarchy
         if isinstance(obj, InterfaceAsType):
@@ -325,13 +332,15 @@ class InterfaceRecord(tp.NamedTuple):
                             name,
                             delegate_obj,
                             is_getitem=True,
-                            delegate_func=FrameAsType.__call__
+                            delegate_func=FrameAsType.__call__,
+                            max_args=max_args,
                             )
                 else:
                     signature, signature_no_args = _get_signatures(
                             name,
                             delegate_obj,
-                            is_getitem=False
+                            is_getitem=False,
+                            max_args=max_args,
                             )
                 doc = Features.scrub_doc(getattr(InterfaceAsType, field).__doc__)
                 yield cls(cls_name,
@@ -345,7 +354,7 @@ class InterfaceRecord(tp.NamedTuple):
                         signature_no_args=signature_no_args
                         )
         else: # Series, Index, astype is just a method
-            signature, signature_no_args = _get_signatures(name, obj)
+            signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
             yield cls(cls_name,
                     InterfaceGroup.Method,
                     signature,
@@ -362,12 +371,14 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
                 name,
                 obj,
-                is_getitem=False
+                is_getitem=False,
+                max_args=max_args,
                 )
         yield cls(cls_name,
                 InterfaceGroup.Constructor,
@@ -384,12 +395,14 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         signature, signature_no_args = _get_signatures(
                 name,
                 obj,
-                is_getitem=False
+                is_getitem=False,
+                max_args=max_args,
                 )
         yield cls(cls_name,
                 InterfaceGroup.Exporter,
@@ -406,13 +419,15 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         is_attr = True
         signature, signature_no_args = _get_signatures(
                 name,
                 obj.__call__, #type: ignore
-                is_getitem=False
+                is_getitem=False,
+                max_args=max_args,
                 )
 
         yield cls(cls_name,
@@ -436,7 +451,8 @@ class InterfaceRecord(tp.NamedTuple):
                     obj.__call__, #type: ignore
                     is_getitem=False,
                     delegate_func=delegate_obj,
-                    delegate_name=field
+                    delegate_name=field,
+                    max_args=max_args,
                     )
             yield cls(cls_name,
                     InterfaceGroup.Iterator,
@@ -456,6 +472,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
         '''
         For root __getitem__ methods, as well as __getitem__ on InterfaceGetItem objects.
@@ -469,7 +486,8 @@ class InterfaceRecord(tp.NamedTuple):
         signature, signature_no_args = _get_signatures(
                 name,
                 target,
-                is_getitem=True
+                is_getitem=True,
+                max_args=max_args,
                 )
 
         yield InterfaceRecord(cls_name,
@@ -490,7 +508,8 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]]
+            cls_interface: tp.Type[Interface[TContainer]],
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
@@ -505,6 +524,7 @@ class InterfaceRecord(tp.NamedTuple):
                         f'{name}.{field}', # make compound interface
                         delegate_obj.__getitem__,
                         is_getitem=True,
+                        max_args=max_args,
                         )
             else: # is getitem
                 delegate_is_attr = False
@@ -512,6 +532,7 @@ class InterfaceRecord(tp.NamedTuple):
                         name, # on the root, no change necessary
                         delegate_obj,
                         is_getitem=True,
+                        max_args=max_args,
                         )
 
             yield InterfaceRecord(cls_name,
@@ -535,7 +556,8 @@ class InterfaceRecord(tp.NamedTuple):
                     InterfaceAssignQuartet[TContainer]],
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TContainer]]
+            cls_interface: tp.Type[Interface[TContainer]],
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
         for field in cls_interface.INTERFACE:
@@ -557,7 +579,8 @@ class InterfaceRecord(tp.NamedTuple):
                         f'{name}.{field}', # make compound interface
                         delegate_obj.__getitem__,
                         is_getitem=True,
-                        delegate_func=terminus_obj
+                        delegate_func=terminus_obj,
+                        max_args=max_args,
                         )
             else: # is getitem
                 delegate_is_attr = False
@@ -565,7 +588,8 @@ class InterfaceRecord(tp.NamedTuple):
                         name, # on the root, no change necessary
                         delegate_obj,
                         is_getitem=True,
-                        delegate_func=terminus_obj
+                        delegate_func=terminus_obj,
+                        max_args=max_args,
                         )
 
             yield InterfaceRecord(cls_name,
@@ -586,9 +610,10 @@ class InterfaceRecord(tp.NamedTuple):
             obj: AnyCallable,
             reference: str,
             doc: str,
+            max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        signature, signature_no_args = _get_signatures(name, obj)
+        signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
 
         if name in _UFUNC_UNARY_OPERATORS:
             yield InterfaceRecord(cls_name,
@@ -689,7 +714,9 @@ class InterfaceSummary(Features):
     #---------------------------------------------------------------------------
     @classmethod
     def interrogate(cls,
-            target: tp.Type[ContainerBase]
+            target: tp.Type[ContainerBase],
+            *,
+            max_args: int = MAX_ARGS
             ) -> tp.Iterator[InterfaceRecord]:
 
         for name_attr, obj, obj_cls in cls.name_obj_iter(target):
@@ -715,7 +742,9 @@ class InterfaceSummary(Features):
                     name=name,
                     obj=obj,
                     reference=reference,
-                    doc=doc)
+                    doc=doc,
+                    max_args=max_args,
+                    )
 
             if name in cls.DICT_LIKE:
                 yield from InterfaceRecord.from_dict_like(**kwargs)
