@@ -784,11 +784,15 @@ class InterfaceSummary(Features):
             target: tp.Type[ContainerBase],
             *,
             minimized: bool = True,
+            max_args: int = MAX_ARGS,
             ) -> Frame:
         '''
         Reduce to key fields.
         '''
-        f = Frame.from_records(cls.interrogate(target), name=target.__name__)
+        f = Frame.from_records(
+                cls.interrogate(target, max_args=max_args),
+                name=target.__name__
+                )
         f = f.sort_values(('cls_name', 'group',))
         f = f.set_index('signature', drop=True)
         if minimized:

@@ -32,6 +32,8 @@ Fixed flaw in ``Frame.from_records`` and related routines whereby a ``NamedTuple
 
 Fixed flaw in ``Frame`` function application on iterators for some ``Index`` type configurations.
 
+API documentation now shows full signatures for all functions.
+
 
 0.6.10
 ----------

@@ -96,7 +96,10 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
         post['interface'].append((
                 target.__name__,
                 target,
-                InterfaceSummary.to_frame(target, minimized=False) #type: ignore
+                InterfaceSummary.to_frame(target, #type: ignore
+                        minimized=False,
+                        max_args=99, # +inf, but keep as int
+                        )
                 ))
     return post
 
