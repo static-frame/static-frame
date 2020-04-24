@@ -114,5 +114,5 @@ from static_frame.core.selector_node import InterfaceAssignTrio
 from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 
-__version__ = '0.6.11' # use -dev for new version in development
+__version__ = '0.6.12' # use -dev for new version in development
 
