@@ -66,6 +66,7 @@ class IndexLevel:
         if not isinstance(index, Index) or index.depth > 1:
             # all derived Index should be depth == 1
             raise ErrorInitIndexLevel('cannot create an IndexLevel from a higher-dimensional Index.')
+        # NOTE: indices that conatain tuples will take additional work to support; we are not at this time checking for them, though values_at_depth will fail
 
         if own_index:
             self.index = index
@@ -436,10 +437,10 @@ class IndexLevel:
         For the given depth, return a correctly typed immutable array of length equal to the number of rows in the cosolidate values presentation.
         '''
         depth_count = self.depth
-        dtypes = tuple(self.dtype_per_depth())
+        dtype = tuple(self.dtype_per_depth())[depth_level]
         length = self.__len__()
         # pre allocate array to ensure we use a resovled type
-        array = np.empty(length, dtype=dtypes[depth_level])
+        array = np.empty(length, dtype=dtype)
 
         if depth_level == depth_count - 1:
             # at maximal depth, can concat underlying arrays
@@ -451,7 +452,14 @@ class IndexLevel:
             def gen() -> tp.Iterator[np.ndarray]:
                 for value, size in self.label_widths_at_depth(
                         depth_level=depth_level):
-                    yield np.full(size, value, dtype=dtypes[depth_level])
+                    if dtype.kind == 'O' and isinstance(value, tuple):
+                        # this appears to the only way to do this:
+                        part = np.empty(size, dtype=dtype)
+                        for i in range(size):
+                            part[i] = value
+                        yield part
+                    else:
+                        yield np.full(size, value, dtype=dtype)
 
             np.concatenate(tuple(gen()), out=array)
 

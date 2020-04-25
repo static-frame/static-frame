@@ -464,6 +464,23 @@ class TestUnit(TestCase):
         )
 
 
+    def test_index_levels_with_tuple_a(self) -> None:
+        OD = OrderedDict
+        tree = OD([
+                (('I', 'I'), OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                (('II', 'II'), OD([
+                        ('A', (1,)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels = IndexHierarchy._tree_to_index_level(tree)
+        self.assertEqual(levels.depth, 3)
+        self.assertEqual(levels.loc_to_iloc((('II', 'II'), 'B', 1)), 8)
+
 
 
 if __name__ == '__main__':

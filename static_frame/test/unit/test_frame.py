@@ -6467,6 +6467,41 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             f1 = Frame.from_concat_items(dict(A=s1, B=s2).items(), axis=2) # type: ignore
 
+
+    def test_frame_from_concat_items_e(self) -> None:
+        records1 = (
+                (2, 2, False),
+                (30, 34, False),
+                )
+        f1 = Frame.from_records(records1,
+                columns=('p', 'q', 't'),
+                index=('x', 'a'))
+
+        records2 = (
+                ('c', False),
+                ('d', True),
+                )
+        f2 = Frame.from_records(records2,
+                columns=('r', 's',),
+                index=('x', 'a'))
+
+        # this produces an IH with an outer level of
+        f3 = Frame.from_concat_items({('a', 'b'):f1, ('x', 'y'):f2}.items(), axis=1)
+
+        self.assertEqual(f3.shape, (2, 5))
+        self.assertEqual(f3.columns.shape, (5, 2))
+        self.assertEqual(f3.T.index.shape, (5, 2))
+
+        self.assertEqual(f3.to_pairs(0),
+                (((('a', 'b'), 'p'), (('x', 2), ('a', 30))), ((('a', 'b'), 'q'), (('x', 2), ('a', 34))), ((('a', 'b'), 't'), (('x', False), ('a', False))), ((('x', 'y'), 'r'), (('x', 'c'), ('a', 'd'))), ((('x', 'y'), 's'), (('x', False), ('a', True))))
+                )
+
+        self.assertEqual(
+                f3.columns._levels.values.tolist(),
+                [[('a', 'b'), 'p'], [('a', 'b'), 'q'], [('a', 'b'), 't'], [('x', 'y'), 'r'], [('x', 'y'), 's']]
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_set_index_a(self) -> None:

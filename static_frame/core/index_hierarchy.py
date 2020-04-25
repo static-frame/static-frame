@@ -322,7 +322,6 @@ class IndexHierarchy(IndexBase):
         offset = 0
         for label, index in items:
             labels.append(label)
-
             index = mutable_immutable_index_filter(cls.STATIC, index)
             index_levels.append(cls._LEVEL_CONSTRUCTOR(
                     index,
@@ -336,12 +335,13 @@ class IndexHierarchy(IndexBase):
         index_outer = index_from_optional_constructor(labels,
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructor)
-
-        return cls(cls._LEVEL_CONSTRUCTOR(
+        levels = cls._LEVEL_CONSTRUCTOR(
                 index=index_outer,
                 targets=targets,
                 own_index=True
-                ))
+                )
+        # import ipdb; ipdb.set_trace()
+        return cls(levels)
 
 
     @classmethod
