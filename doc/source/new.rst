@@ -5,7 +5,7 @@ What is New in Static Frame
 0.6.13
 ----------
 
-Refined behavior of ``Frame.from_concat_items`` is given tuples as labels; implemented support for tuples as labels in ``IndexLevels.values_at_depth``.
+Refined behavior of ``Frame.from_concat_items`` when given tuples as labels; implemented support for tuples as labels in ``IndexLevels.values_at_depth``.
 
 
 0.6.12
