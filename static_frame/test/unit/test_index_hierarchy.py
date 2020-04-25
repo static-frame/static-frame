@@ -1302,6 +1302,28 @@ class TestUnit(TestCase):
                 [[True, True], [True, True]]
                 )
 
+    def test_hierarchy_binary_operators_h(self) -> None:
+
+        labels1 = (
+                (1, 1),
+                (2, 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels1)
+
+        labels2 = (
+                (1, 1, 1),
+                (2, 2, 2),
+                )
+        ih2 = IndexHierarchy.from_labels(labels2)
+
+        # for now, this returns na array of the shape of the left-hand opperatnd
+        post1 = ih1 != ih2
+        self.assertEqual(post1.shape, (2, 2))
+        self.assertEqual(post1.all(), True)
+
+        post2 = ih1 == ih2
+        self.assertEqual(post2.shape, (2, 2))
+        self.assertEqual(post2.any(), False)
 
 
     #---------------------------------------------------------------------------

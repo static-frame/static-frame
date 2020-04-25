@@ -20,6 +20,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import BOOL_TYPES
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
@@ -921,12 +922,18 @@ class IndexHierarchy(IndexBase):
         array.flags.writeable = False
         return array
 
-    def _ufunc_binary_operator(self, *, operator: tp.Callable, other) -> np.ndarray:
+    def _ufunc_binary_operator(self, *,
+            operator: tp.Callable,
+            other,
+            ) -> np.ndarray:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
         if self._recache:
             self._update_array_cache()
+
+        # NOTE: might use TypeBlocks._ufunc_binary_operator
+
         values = self._blocks.values
 
         if isinstance(other, Index):
@@ -941,9 +948,18 @@ class IndexHierarchy(IndexBase):
         elif operator.__name__ == 'rmatmul':
             return matmul(other, values)
 
-        array = operator(values, other)
-        array.flags.writeable = False
-        return array
+        result = operator(values, other)
+
+        # addd for mixed size comparisons; these are often necessary for index objects
+        if not isinstance(result, np.ndarray):
+            # see Series._ufunc_binary_operator for notes on why
+            if isinstance(result, BOOL_TYPES):
+                result = np.full(self.shape, result)
+            else:
+                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
+
+        result.flags.writeable = False
+        return result
 
     def _ufunc_axis_skipna(self, *,
             axis,

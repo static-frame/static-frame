@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.14
+----------
+
+Added explicit handling for binary operators applied to differently-sized ``IndexHierarchy``.
+
 
 0.6.13
 ----------
