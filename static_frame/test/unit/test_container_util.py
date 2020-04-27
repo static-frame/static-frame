@@ -317,7 +317,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             bloc_key_normalize(np.arange(4).reshape(2, 2), f1)
 
-        post1 = bloc_key_normalize(f1['a':] >= 5, f1)
+        post1 = bloc_key_normalize(f1['a':] >= 5, f1) #type: ignore
         self.assertEqual(post1.tolist(), [[False, True], [False, True]])
 
         post2 = bloc_key_normalize(f1 < 5, f1)

@@ -698,7 +698,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_hierarchy_from_type_blocks_a(self):
+    def test_hierarchy_from_type_blocks_a(self) -> None:
         f1 = Frame.from_element('a', index=range(3), columns=('a',))
         f2 = Frame.from_items((('a', tuple('AABB')), ('b', (1, 2, 1, 2))))
         f3 = Frame.from_items((('a', tuple('AABA')), ('b', (1, 2, 1, 2))))

@@ -395,7 +395,6 @@ class IndexLevel:
         '''
         Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coerce types.
         '''
-        # assume uniform depths
         depth_count = self.depth
         shape = self.__len__(), depth_count
 
@@ -429,6 +428,38 @@ class IndexLevel:
 
         labels.flags.writeable = False
         return labels
+
+    # def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashasble, ...]]:
+    #     depth_count = self.depth
+    #     shape = self.__len__(), depth_count
+
+    #     # need to get a compatible dtype for all dtypes
+    #     dtype = resolve_dtype_iter(self.dtypes_iter())
+    #     labels = np.empty(shape, dtype=dtype)
+    #     row_count = 0
+
+    #     levels = deque(((self, 0, None),)) # order matters
+
+    #     while levels:
+    #         level, depth, row_previous = levels.popleft()
+
+    #         if level.targets is None:
+    #             rows = len(level.index.values)
+    #             row_slice = slice(row_count, row_count + rows)
+    #             labels[row_slice, :] = row_previous
+    #             labels[row_slice, depth] = level.index.values
+    #             row_count += rows
+
+    #         else: # target is iterable np.ndaarray
+    #             depth_next = depth + 1
+    #             for label, level_target in zip(level.index.values, level.targets):
+    #                 if row_previous is None:
+    #                     # shown to be faster to allocate entire row width
+    #                     row = np.empty(depth_count, dtype=dtype)
+    #                 else:
+    #                     row = row_previous.copy()
+    #                 row[depth] = label
+    #                 levels.append((level_target, depth_next, row))
 
     def values_at_depth(self,
             depth_level: int
