@@ -240,6 +240,8 @@ class TestUnit(TestCase):
                 ((0, (('w', 11), ('x', 14), ('y', 17), ('z', 20))), (1, (('w', 23), ('x', 30), ('y', 37), ('z', 44))), (2, (('w', 35), ('x', 46), ('y', 57), ('z', 68))))
                 )
 
+        with self.assertRaises(RuntimeError):
+            matmul(f1, np.arange(25).reshape(5, 5))
 
 
     def test_matmul_i(self) -> None:
