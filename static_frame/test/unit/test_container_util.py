@@ -281,6 +281,11 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.values.tolist(), ['a', 'b']) # type: ignore
 
 
+    def test_key_to_ascending_key_b(self) -> None:
+
+        with self.assertRaises(RuntimeError):
+            key_to_ascending_key(dict(a=3), size=3)
+
     def test_pandas_to_numpy_a(self) -> None:
         import pandas as pd
         pdvu1 = pandas_version_under_1()

@@ -445,6 +445,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             IndexHierarchy.from_product((1, 2))
 
+    #--------------------------------------------------------------------------
 
     def test_hierarchy_from_tree_a(self) -> None:
 
@@ -694,6 +695,25 @@ class TestUnit(TestCase):
         self.assertEqual(ih.values.tolist(),
                 [['I', 'A', 0], ['I', 'A', 1], ['I', 'B', 0], ['I', 'B', 1], ['II', 'A', 0]]
                 )
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_from_type_blocks_a(self):
+        f1 = Frame.from_element('a', index=range(3), columns=('a',))
+        f2 = Frame.from_items((('a', tuple('AABB')), ('b', (1, 2, 1, 2))))
+        f3 = Frame.from_items((('a', tuple('AABA')), ('b', (1, 2, 1, 2))))
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy._from_type_blocks(f1._blocks)
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_type_blocks(f2._blocks, index_constructors=(IndexDate,))
+
+        with self.assertRaises(ErrorInitIndex):
+            IndexHierarchy._from_type_blocks(f3._blocks)
+
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_contains_a(self) -> None:
         labels = (('I', 'A'),

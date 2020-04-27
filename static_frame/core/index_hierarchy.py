@@ -274,11 +274,12 @@ class IndexHierarchy(IndexBase):
                     if v == continuation_token:
                         # might check that observed_last[d] != token
                         v = observed_last[d]
+
+                # shared implementation with from_labels -----------------------
                 if d < depth_pre_max:
                     if v not in current:
                         current[v] = dict() # order necessary
-                    else:
-                        # can only fetch this node (and not create a new node) if this is the sequential predecessor
+                    else: # can only fetch this node (and not create a new node) if this is the sequential predecessor
                         if v != observed_last[d]:
                             raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
                     current = current[v]
@@ -286,17 +287,17 @@ class IndexHierarchy(IndexBase):
                 elif d < depth_max:
                     if v not in current:
                         current[v] = list()
-                    else:
-                        # cannot just fetch this list if it is not the predecessor
+                    else: # cannot just fetch this list if it is not the predecessor
                         if v != observed_last[d]:
                             raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} in {label} cannot follow {observed_last[d]} when {v} has already been defined.')
                     current = current[v]
                     observed_last[d] = v
-                elif d == depth_max: # at depth max
+                elif d == depth_max:
                     # if there are redundancies here they will be caught in index creation
                     current.append(v)
                 else:
                     raise ErrorInitIndex('label exceeded expected depth', label)
+                # shared implementation with _from_type_blocks -----------------
 
         levels = cls._tree_to_index_level(
                 tree,
@@ -411,7 +412,7 @@ class IndexHierarchy(IndexBase):
 
         token = object()
         observed_last = [token for _ in range(depth)]
-        range_depth = range(depth)
+        # range_depth = range(depth)
 
         tree = dict() # order assumed and necessary
 
@@ -422,11 +423,11 @@ class IndexHierarchy(IndexBase):
                 current = tree
                 idx_row_last = idx_row
 
+            # shared implementation with from_labels ---------------------------
             if d < depth_pre_max:
                 if v not in current:
                     current[v] = dict() # order necessary
-                else:
-                    # can only fetch this node (and not create a new node) if this is the sequential predecessor
+                else: # can only fetch this node (and not create a new node) if this is the sequential predecessor
                     if v != observed_last[d]:
                         raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} cannot follow {observed_last[d]} when {v} has already been defined.')
                 current = current[v]
@@ -434,17 +435,18 @@ class IndexHierarchy(IndexBase):
             elif d < depth_max: # premax means inner values are a list
                 if v not in current:
                     current[v] = list()
-                else:
-                    # cannot just fetch this list if it is not the predecessor
+                else: # cannot just fetch this list if it is not the predecessor
                     if v != observed_last[d]:
                         raise ErrorInitIndex(f'invalid tree-form for IndexHierarchy: {v} cannot follow {observed_last[d]} when {v} has already been defined.')
                 current = current[v]
                 observed_last[d] = v
-            elif d == depth_max: # at depth max
+            elif d == depth_max:
                 # if there are redundancies here they will be caught in index creation
                 current.append(v)
             else:
-                raise ErrorInitIndex('label exceeded expected depth', v)
+                # cannot happen with TypeBlocks
+                raise ErrorInitIndex('label exceeded expected depth', v) #pragma: no cover
+            # shared implementation with from_labels ---------------------------
 
         levels = cls._tree_to_index_level(
                 tree,
@@ -998,6 +1000,7 @@ class IndexHierarchy(IndexBase):
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''Iterate over labels.
         '''
+        # can we iterate directly from IndexLevel without recaching?
         if self._recache:
             self._update_array_cache()
         for array in self._blocks.axis_values(1):

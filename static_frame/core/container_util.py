@@ -527,7 +527,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     raise RuntimeError(f'unhandled key {key}')
 
 
-
+# TODO: refactor for TypeBlocks
 def rehierarch_and_map(*,
         labels: np.ndarray,
         depth_map: tp.Sequence[int],
