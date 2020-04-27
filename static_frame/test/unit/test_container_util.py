@@ -168,6 +168,8 @@ class TestUnit(TestCase):
         self.assertEqual(matmul(f1, s1.values).to_pairs(),
                 (('x', 43), ('y', 64), ('z', 85)))
 
+        with self.assertRaises(RuntimeError):
+            matmul(f1, np.arange(20).reshape(5, 4))
 
 
     def test_matmul_d(self) -> None:
