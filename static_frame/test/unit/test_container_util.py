@@ -219,6 +219,9 @@ class TestUnit(TestCase):
         self.assertEqual(matmul([10, 11, 12], s1.values), 98)
         self.assertEqual(matmul([10, 11, 12], s1), 98)
 
+        with self.assertRaises(RuntimeError):
+            self.assertEqual(matmul(s1, [10, 11]), 98)
+
 
     def test_matmul_h(self) -> None:
         # lhs: array 2D, rhs: array 2D, Frame

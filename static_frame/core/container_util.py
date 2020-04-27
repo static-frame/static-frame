@@ -241,7 +241,7 @@ def matmul(
             aligned = lhs._index.union(rhs._index)
             # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
             if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
-                raise RuntimeError('shapes not alignable for matrix multiplication')
+                raise RuntimeError('shapes not alignable for matrix multiplication') #pragma: no cover
 
         if lhs_type == Series:
             if rhs_type == np.ndarray:
@@ -254,13 +254,10 @@ def matmul(
                     index = None # force auto increment integer
                     own_index = False
                     constructor = lhs.__class__
-                # else:
-                #     index = lhs.index
             elif rhs_type == Series:
                 ndim = 0
                 left = lhs.reindex(aligned).values
                 right = rhs.reindex(aligned).values
-                # index = aligned
             else: # rhs is Frame
                 ndim = 1
                 left = lhs.reindex(aligned).values
