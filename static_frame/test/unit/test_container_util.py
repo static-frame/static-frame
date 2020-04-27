@@ -10,6 +10,7 @@ from static_frame.core.container_util import key_to_ascending_key
 
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import bloc_key_normalize
 
 
 from static_frame import Series
@@ -303,6 +304,20 @@ class TestUnit(TestCase):
 
             a4 = pandas_to_numpy(s2[:2], own_data=False)
             self.assertEqual(a4.dtype, np.dtype('bool'))
+
+
+    def test_bloc_key_normalize_a(self) -> None:
+        f1 = Frame.from_dict(dict(b=(1, 2), a=(5, 6)), index=tuple('yz'))
+
+        with self.assertRaises(RuntimeError):
+            bloc_key_normalize(np.arange(4).reshape(2, 2), f1)
+
+        post1 = bloc_key_normalize(f1['a':] >= 5, f1)
+        self.assertEqual(post1.tolist(), [[False, True], [False, True]])
+
+        post2 = bloc_key_normalize(f1 < 5, f1)
+        self.assertEqual(post2.tolist(), [[True, False], [True, False]])
+
 
 
 if __name__ == '__main__':
