@@ -52,7 +52,10 @@ def get_sample_series_objstr(size: int = 10000) -> tp.Tuple[pd.Series, sf.Series
 # frame generators
 
 
-def get_sample_frame_float_string_index(size: int = 10000, columns: int = 100) -> tp.Tuple[pd.DataFrame, sf.Frame, np.ndarray]:
+def get_sample_frame_float_string_index(
+        size: int = 10000,
+        columns: int = 100
+        ) -> tp.Tuple[pd.DataFrame, sf.Frame, np.ndarray]:
     a1 = (np.arange(size * columns)).reshape((size, columns)) * .001
     # insert random nan in very other columns
     for col in range(0, 100, 2):
@@ -370,6 +373,45 @@ class IndexHierarchy4d_from_labels_str(PerfTest):
     @classmethod
     def sf(cls) -> None:
         ih = sf.IndexHierarchy.from_labels(SampleData.get('label_tuple4_str'))
+
+
+
+
+
+
+
+class IndexHierarchy2d_iter(PerfTest):
+    NUMBER = 20
+
+    @staticmethod
+    def pd() -> None:
+        post = SampleData.get('pds_float_h2d_str_index').index
+        tuple(post)
+
+    @staticmethod
+    def sf() -> None:
+        post = SampleData.get('sfs_float_h2d_str_index').index
+        tuple(post)
+
+
+class IndexHierarchy3d_iter(PerfTest):
+    NUMBER = 10
+
+    @staticmethod
+    def pd() -> None:
+        post = SampleData.get('pds_float_h3d_str_index').index
+        tuple(post)
+
+    @staticmethod
+    def sf() -> None:
+        post = SampleData.get('sfs_float_h3d_str_index').index
+        tuple(post)
+
+
+
+
+
+
 
 
 #-------------------------------------------------------------------------------
@@ -734,6 +776,7 @@ class SeriesFloatH3DString_loc_slice_slice_target(PerfTest):
         post = SampleData.get('sfs_float_h3d_str_index').loc[
                 sf.HLoc[:, :, 'abcl']]
         assert len(post) == 1000
+
 
 
 class SeriesIntObj_isin(PerfTest):

@@ -29,6 +29,22 @@ from static_frame.core.exception import ErrorInitIndexLevel
 # if tp.TYPE_CHECKING:
 #     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
 
+# def _iter_recurse(
+#         level: 'IndexLevel',
+#         part: tp.List[tp.Hashable],
+#         depth: int
+#         ):
+#     if level.targets is None:
+#         for v in level.index.values:
+#             part[depth] = v
+#             yield tuple(part)
+#     else:
+#         for label, level_target in zip(level.index.values, level.targets):
+#             part[depth] = label
+#             yield from _iter_recurse(level_target, part, depth + 1)
+
+
+
 INDEX_LEVEL_SLOTS = (
             'index',
             'targets',
@@ -429,37 +445,32 @@ class IndexLevel:
         labels.flags.writeable = False
         return labels
 
-    # def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashasble, ...]]:
-    #     depth_count = self.depth
-    #     shape = self.__len__(), depth_count
+    def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
+        # NOTE: this implementation shown to be faster than a recursive purely recursive implementation.
+        depth_count = self.depth
+        levels = deque(((self, 0, None),)) # order matters
+        while levels:
+            level, depth, row_previous = levels.popleft()
 
-    #     # need to get a compatible dtype for all dtypes
-    #     dtype = resolve_dtype_iter(self.dtypes_iter())
-    #     labels = np.empty(shape, dtype=dtype)
-    #     row_count = 0
+            if level.targets is None:
+                for v in level.index.values:
+                    row_previous[depth] = v
+                    yield tuple(row_previous)
+            else: # target is iterable np.ndaarray
+                depth_next = depth + 1
+                for label, level_target in zip(level.index.values, level.targets):
+                    if row_previous is None:
+                        # shown to be faster to allocate entire row width
+                        row = [None] * depth_count
+                    else:
+                        row = row_previous.copy()
+                    row[depth] = label
+                    levels.append((level_target, depth_next, row))
 
-    #     levels = deque(((self, 0, None),)) # order matters
 
-    #     while levels:
-    #         level, depth, row_previous = levels.popleft()
-
-    #         if level.targets is None:
-    #             rows = len(level.index.values)
-    #             row_slice = slice(row_count, row_count + rows)
-    #             labels[row_slice, :] = row_previous
-    #             labels[row_slice, depth] = level.index.values
-    #             row_count += rows
-
-    #         else: # target is iterable np.ndaarray
-    #             depth_next = depth + 1
-    #             for label, level_target in zip(level.index.values, level.targets):
-    #                 if row_previous is None:
-    #                     # shown to be faster to allocate entire row width
-    #                     row = np.empty(depth_count, dtype=dtype)
-    #                 else:
-    #                     row = row_previous.copy()
-    #                 row[depth] = label
-    #                 levels.append((level_target, depth_next, row))
+    # def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
+    #     part = [None] * self.depth
+    #     yield from _iter_recurse(self, part, 0)
 
     def values_at_depth(self,
             depth_level: int
