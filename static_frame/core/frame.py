@@ -4066,6 +4066,24 @@ class Frame(ContainerOperand):
                 own_data=True,
                 )
 
+    def __round__(self, decimals: int = 0) -> 'Frame':
+        '''
+        Return a :obj:``Frame`` rounded to the given decimals. Negative decimals round to the left of the decimal point.
+
+        Args:
+            decimals: number of decimals to round to.
+
+        Returns:
+            :obj:`Frame`
+        '''
+        return self.__class__(
+                self._blocks.__round__(decimals=decimals),
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_data=True,
+                own_index=True,
+                )
 
     def roll(self,
             index: int = 0,

@@ -2527,7 +2527,24 @@ class TestUnit(TestCase):
             [[1, 2, 3, -300.0, -400, False, True], [4, -800, 6, -1000.0, True, False, -1300], [0, 0, 1, 5.5, True, -1900, True]]
             )
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_round_a(self) -> None:
 
+        a1 = np.full(4, .33333, )
+        a2 = np.full((4, 2), .88888, )
+        a3 = np.full(4, .55555)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = round(tb1, 3) #type: ignore
+        self.assertEqual(
+                tb2.values.tolist(),
+                [[0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556], [0.333, 0.889, 0.889, 0.556]]
+                )
+        tb3 = round(tb1, 1) #type: ignore
+        self.assertEqual(
+                tb3.values.tolist(),
+                [[0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6]]
+                )
 
 if __name__ == '__main__':
     unittest.main()

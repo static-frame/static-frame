@@ -1695,10 +1695,9 @@ class Series(ContainerOperand):
                 name=self._name
                 )
 
-
-    def __round__(self, decimals: int = 0):
+    def __round__(self, decimals: int = 0) -> 'Series':
         '''
-        Return a Series rounded to the given decimals.
+        Return a Series rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
         Args:
             decimals: number of decimals to round to.

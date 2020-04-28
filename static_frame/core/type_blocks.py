@@ -219,6 +219,8 @@ class TypeBlocks(ContainerOperand):
             shape: tp.Tuple[int, int]
             ) -> None:
         '''
+        Default constructor. We own all lists passed in to this constructor.
+
         Args:
             blocks: A list of one or two-dimensional NumPy arrays
             dtypes: list of dtypes per external column
@@ -863,6 +865,19 @@ class TypeBlocks(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
+    def __round__(self, decimals: int = 0) -> 'TypeBlocks':
+        '''
+        Return a TypeBlocks rounded to the given decimals. Negative decimals round to the left of the decimal point.
+        '''
+        func = partial(np.round, decimals=decimals)
+        # for now, we do not expose application of rounding on a subset of blocks, but is doable by setting the column_key
+        return self.__class__(
+                blocks=list(self._ufunc_blocks(column_key=NULL_SLICE, func=func)),
+                dtypes=self._dtypes.copy(), # list
+                index=self._index.copy(),
+                shape=self._shape
+                )
+
     def __len__(self) -> int:
         '''Length, as with NumPy and Pandas, is the number of rows. Note that A shape of (3, 0) will return a length of 3, even though there is no data.
         '''
@@ -1125,6 +1140,78 @@ class TypeBlocks(ContainerOperand):
                 yield b # no change for this block
             else:
                 yield from parts
+
+
+    def _ufunc_blocks(self,
+            column_key: GetItemKeyType,
+            func: UFunc
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Return a new blocks after processing each columnar block with the passed ufunc. It is assumed the ufunc will retain the shape of the input 1D or 2D array. All blocks must be processed, which is different than _astype_blocks, which can check the type and skip procesing some blocks.
+
+        Generator producer of np.ndarray.
+        '''
+        # block slices must be in ascending order, not key order
+        block_slices = iter(self._key_to_block_slices(
+                column_key,
+                retain_key_order=False))
+
+        target_slice: tp.Optional[tp.Union[slice, int]]
+
+        target_block_idx = target_slice = None
+        targets_remain = True
+
+        for block_idx, b in enumerate(self._blocks):
+            parts = []
+            part_start_last = 0
+
+            while targets_remain:
+                # get target block and slice
+                if target_block_idx is None: # can be zero
+                    try:
+                        target_block_idx, target_slice = next(block_slices)
+                    except StopIteration:
+                        targets_remain = False
+                        break
+
+                if block_idx != target_block_idx:
+                    break # need to advance blocks
+
+                if b.ndim == 1: # given 1D array, our row key is all we need
+                    parts.append(func(b))
+                    part_start_last = 1
+                    target_block_idx = target_slice = None
+                    break
+
+                assert target_slice is not None
+                # target_slice can be a slice or an integer
+                if isinstance(target_slice, slice):
+                    target_start = target_slice.start
+                    target_stop = target_slice.stop
+                else: # it is an integer
+                    target_start = target_slice
+                    target_stop = target_slice + 1
+
+                assert target_start is not None and target_stop is not None
+                if target_start > part_start_last:
+                    # yield un changed components before and after
+                    parts.append(b[:, slice(part_start_last, target_start)])
+
+                # apply func
+                parts.append(func(b[:, target_slice]))
+                part_start_last = target_stop
+
+                target_block_idx = target_slice = None
+
+            # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
+            if b.ndim != 1 and part_start_last < b.shape[1]:
+                parts.append(b[:, slice(part_start_last, None)])
+
+            if not parts:
+                yield b # no change for this block
+            else:
+                yield from parts
+
 
 
     def _drop_blocks(self,
