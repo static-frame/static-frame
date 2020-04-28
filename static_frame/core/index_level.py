@@ -449,13 +449,18 @@ class IndexLevel:
         # NOTE: this implementation shown to be faster than a recursive purely recursive implementation.
         depth_count = self.depth
         levels = deque(((self, 0, None),)) # order matters
+
+        # level: IndexLevel
+        # depth: int
+        # row_previous: tp.Optional[tp.List[tp.Hashable]]
+
         while levels:
             level, depth, row_previous = levels.popleft()
 
             if level.targets is None:
                 for v in level.index.values:
-                    row_previous[depth] = v
-                    yield tuple(row_previous)
+                    row_previous[depth] = v #type: ignore
+                    yield tuple(row_previous) #type: ignore
             else: # target is iterable np.ndaarray
                 depth_next = depth + 1
                 for label, level_target in zip(level.index.values, level.targets):
@@ -465,8 +470,7 @@ class IndexLevel:
                     else:
                         row = row_previous.copy()
                     row[depth] = label
-                    levels.append((level_target, depth_next, row))
-
+                    levels.append((level_target, depth_next, row)) #type: ignore
 
     # def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
     #     part = [None] * self.depth
