@@ -225,6 +225,10 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(id(s1.values) == id(s4.values))
 
+        with self.assertRaises(ErrorInitSeries):
+            Series(s1, dtype=float)
+
+
 
     def test_series_init_u(self) -> None:
         with self.assertRaises(ErrorInitSeries):
