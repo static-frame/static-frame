@@ -779,8 +779,7 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchyGO.from_tree(tree)
 
-        # NOTE: for now, __iter__ return arrays, so we have convert to a tuple
-        self.assertEqual([tuple(k) in ih for k in ih], #pylint: disable=E1133
+        self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
                 [True, True, True, True, True, True, True, True]
                 )
 

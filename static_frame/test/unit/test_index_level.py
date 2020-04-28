@@ -392,12 +392,10 @@ class TestUnit(TestCase):
 
         levels = IndexHierarchy._tree_to_index_level(tree)
         tuples = tuple(levels)
-        # import ipdb; ipdb.set_trace()
         self.assertEqual(
                 tuples,
                 (('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('I', 'B', 3), ('I', 'C', 2), ('I', 'C', 3), ('II', 'A', 1), ('II', 'A', 2), ('II', 'A', 3), ('II', 'B', 1))
                 )
-
 
 
     def test_index_level_label_widths_at_depth_a(self) -> None:
