@@ -1,6 +1,7 @@
 
 import unittest
 
+import numpy as np
 
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.series import Series
@@ -56,6 +57,19 @@ class TestUnit(TestCase):
         self.assertEqual(sig, '__init__(values, *, index, name, dtype, index_constructor, own_index)')
         self.assertEqual(signa, '__init__()')
 
+    def test_interface_get_frame_a(self) -> None:
+
+        f1 = InterfaceSummary.to_frame(Series)
+        f2 = InterfaceSummary.to_frame(Series, minimized=False, max_args=np.inf)
+        self.assertTrue(len(f1) == len(f2))
+
+        self.assertEqual(f1.columns.values.tolist(),
+                ['cls_name', 'group', 'doc']
+                )
+        self.assertEqual(
+                f2.columns.values.tolist(),
+                ['cls_name', 'group', 'doc', 'reference', 'use_signature', 'is_attr', 'delegate_reference', 'delegate_is_attr', 'signature_no_args']
+                )
 
 
 if __name__ == '__main__':
