@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.15
+----------
+
+Added support for ``round()`` on ``Frame``.
+
+
 0.6.14
 ----------
 
