@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added support for ``round()`` on ``Frame``.
 
+Performance improvements to iterating tuples from ``IndexHierarchy``.
+
 
 0.6.14
 ----------
