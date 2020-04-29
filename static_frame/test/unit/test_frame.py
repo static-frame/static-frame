@@ -1244,7 +1244,8 @@ class TestUnit(TestCase):
         f = sf.Frame(np.arange(12).reshape(3,4),
                 index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
 
-        f.iter_array(0).apply(np.sum)
+        post = f.iter_array(0).apply(np.sum, name='foo')
+        self.assertEqual(post.name, 'foo')
 
         self.assertEqual(
                 f.iter_array(0).apply(np.sum).to_pairs(),

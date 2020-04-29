@@ -1332,8 +1332,9 @@ class TestUnit(TestCase):
         s1 = Series((10, 3, 15, 21, 28, 50),
                 index=IndexHierarchy.from_product(tuple('ab'), tuple('xyz')),
                 dtype=object)
-        s2 = s1.iter_element().apply(str)
+        s2 = s1.iter_element().apply(str, name='foo')
         self.assertEqual(s2.index.__class__, IndexHierarchy)
+        self.assertEqual(s2.name, 'foo')
 
         self.assertEqual(s2.to_pairs(),
                 ((('a', 'x'), '10'), (('a', 'y'), '3'), (('a', 'z'), '15'), (('b', 'x'), '21'), (('b', 'y'), '28'), (('b', 'z'), '50')))

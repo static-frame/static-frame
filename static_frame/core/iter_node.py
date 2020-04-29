@@ -15,6 +15,7 @@ import numpy as np
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import Mapping
+from static_frame.core.util import NameType
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -141,7 +142,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_any(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -152,7 +154,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         return self._apply_constructor(
                 self.map_any_iter_items(mapping),
-                dtype=dtype)
+                dtype=dtype,
+                name=name,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -195,7 +199,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -207,7 +212,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         return self._apply_constructor(
                 self.map_fill_iter_items(mapping, fill_value=fill_value),
-                dtype=dtype)
+                dtype=dtype,
+                name=name,
+                )
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_all')
@@ -243,7 +250,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_all(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -254,7 +262,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
         '''
         return self._apply_constructor(
                 self.map_all_iter_items(mapping),
-                dtype=dtype)
+                dtype=dtype,
+                name=name,
+                )
 
 
     #---------------------------------------------------------------------------
@@ -289,7 +299,8 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def apply(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
             ) -> FrameOrSeries:
         '''
         {doc} Returns a new container.
@@ -303,13 +314,16 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
 
         return self._apply_constructor(
                 self.apply_iter_items(func),
-                dtype=dtype)
+                dtype=dtype,
+                name=name,
+                )
 
     @doc_inject(selector='apply')
     def apply_pool(self,
             func: AnyCallable,
             *,
             dtype: DtypeSpecifier = None,
+            name: NameType = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False
@@ -330,7 +344,9 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
                         max_workers=max_workers,
                         chunksize=chunksize,
                         use_threads=use_threads),
-                dtype=dtype)
+                dtype=dtype,
+                name=name,
+                )
 
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],

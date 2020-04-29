@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added support for ``round()`` on ``Frame``.
 
+Added ``name`` parameter to all methods of ``IterNodeDelegate`` that produce a new container, including ``map_any()``, ``map_fill()``, ``map_all()``, ``apply()``, and ``apply_pool()``.
+
 Performance improvements to iterating tuples from ``IndexHierarchy``.
 
 
