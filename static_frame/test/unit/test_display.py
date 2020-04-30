@@ -13,6 +13,7 @@ from static_frame.test.test_case import skip_win
 import static_frame as sf
 # assuming located in the same directory
 from static_frame import Index
+from static_frame import IndexHierarchy
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -151,8 +152,16 @@ class TestUnit(TestCase):
 
     @skip_win  # type: ignore
     def test_display_type_show_a(self) -> None:
-        config_type_show_true = sf.DisplayConfig.from_default(type_show=True, type_color=False)
-        config_type_show_false = sf.DisplayConfig.from_default(type_show=False, type_color=False)
+        config_type = sf.DisplayConfig.from_default(
+                type_show=True,
+                type_color=False)
+        config_type_no = sf.DisplayConfig.from_default(
+                type_show=False,
+                type_color=False)
+        config_type_no_index_no = sf.DisplayConfig.from_default(
+                type_show=False,
+                type_color=False,
+                include_index=False)
 
         records = (
                 (2, 2, 'a', False, False),
@@ -164,8 +173,7 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y'))
 
-
-        self.assertEqual(f1.display(config_type_show_false).to_rows(),
+        self.assertEqual(f1.display(config_type_no).to_rows(),
                 ['  p  q  r s     t',
                  'w 2  2  a False False',
                  'x 30 34 b True  False',
@@ -173,7 +181,16 @@ class TestUnit(TestCase):
                  ]
                  )
 
-        self.assertEqual(f1.display(config_type_show_true).to_rows(),
+        self.assertEqual(f1.display(config_type_no_index_no).to_rows(),
+                ['p  q  r s     t',
+                 '2  2  a False False',
+                 '30 34 b True  False',
+                 '2  95 c False False'
+                 ]
+                 )
+
+
+        self.assertEqual(f1.display(config_type).to_rows(),
                 ['<Frame>',
                 '<Index> p       q       r     s      t      <<U1>',
                 '<Index>',
@@ -183,6 +200,43 @@ class TestUnit(TestCase):
                 '<<U1>   <int64> <int64> <<U1> <bool> <bool>'])
 
 
+    @skip_win  # type: ignore
+    def test_display_type_show_b(self) -> None:
+        config_type = sf.DisplayConfig.from_default(
+                type_show=True,
+                type_color=False)
+        config_type_no = sf.DisplayConfig.from_default(
+                type_show=False,
+                type_color=False)
+        config_type_no_index_no = sf.DisplayConfig.from_default(
+                type_show=False,
+                type_color=False,
+                include_index=False)
+
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (300, -4, 'x', False, False),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=IndexHierarchy.from_labels((('A', 1, 2), ('A', 1, 3), ('B', 1, 2), ('B', 1, 3), )))
+
+        self.assertEqual(
+                f1.display(config_type_no).to_rows(),
+                ['      p   q  r s     t',
+                'A 1 2 2   2  a False False',
+                'A 1 3 30  34 b True  False',
+                'B 1 2 2   95 c False False',
+                'B 1 3 300 -4 x False False']
+                 )
+
+        self.assertEqual(
+                f1.display(config_type_no_index_no).to_rows(),
+                ['p   q  r s     t', '2   2  a False False', '30  34 b True  False', '2   95 c False False', '300 -4 x False False']
+                )
 
     @skip_win #type: ignore
     def test_display_cell_fill_width_a(self) -> None:
@@ -716,7 +770,17 @@ class TestUnit(TestCase):
     def test_display_include_index_a(self) -> None:
 
         f1 = Frame.from_element('b', index=range(3), columns=range(2))
-        # import ipdb; ipdb.set_trace()
+
+        with self.assertRaises(RuntimeError):
+            DisplayConfig(include_index=False, type_show=True)
+
+
+        config = DisplayConfig(include_index=False, type_show=False)
+        d = f1.display(config)
+        self.assertEqual(str(d), '0 1\nb b\nb b\nb b')
+
+
+
 
 
     #---------------------------------------------------------------------------

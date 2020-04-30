@@ -667,21 +667,29 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
 
-        sub_config = config
         sub_display = None
+
+        if config.type_show:
+            header = DisplayHeader(self.__class__, self._name)
+            header_depth = 1
+            header_sub = '' # need spacer
+        else:
+            header = None
+            header_depth = 0
+            header_sub = None
 
         for col in self._blocks.axis_values(0):
             # as a slice this is far more efficient as no copy is made
             if sub_display is None: # the first
                 sub_display = Display.from_values(
                         col,
-                        header=DisplayHeader(self.__class__, self._name),
-                        config=sub_config,
+                        header=header,
+                        config=config,
                         outermost=True,
                         index_depth=0,
-                        header_depth=1)
+                        header_depth=header_depth)
             else:
-                sub_display.extend_iterable(col, header='')
+                sub_display.extend_iterable(col, header=header_sub)
 
         return sub_display
 

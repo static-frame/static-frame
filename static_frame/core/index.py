@@ -689,12 +689,19 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        if config.type_show:
+            header = DisplayHeader(self.__class__, self._name)
+            header_depth = 1
+        else:
+            header = None
+            header_depth = 0
+
         return Display.from_values(self.values,
-                header=DisplayHeader(self.__class__, self._name),
+                header=header,
                 config=config,
                 outermost=True,
                 index_depth=0,
-                header_depth=1
+                header_depth=header_depth,
                 )
 
     #---------------------------------------------------------------------------

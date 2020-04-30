@@ -333,7 +333,6 @@ class DisplayFormatRST(DisplayFormat):
         # body lines add boundary lines below
         def lines() -> tp.Iterator[str]:
             for line in msg.split(cls.LINE_SEP):
-                # import ipdb; ipdb.set_trace()
                 yield line
                 yield cls._RE_NOT_PIPE.sub('-', line).replace('|', '+')
 
@@ -584,6 +583,14 @@ class DisplayConfig:
         self.cell_max_width = cell_max_width
         self.cell_max_width_leftmost = cell_max_width_leftmost
         self.cell_align_left = cell_align_left
+
+        #-----------------------------------------------------------------------
+        # handle any inter-dependent configurations
+
+        if not self.include_columns or not self.include_index:
+            if self.type_show:
+                raise RuntimeError('cannot show types if not including columns or index.')
+
 
     def write(self, fp: str) -> None:
         '''Write a JSON file.
@@ -878,6 +885,7 @@ class Display:
         # create a list of lists, always starting with the header
         rows = []
         if header is not None:
+            # NOTE: controlling if the header is applied with type_show is moving to display() methods; this approach will no longer be needed
             # assume that all headers are SF types; skip if type_show is False
             if config.type_show:
                 rows.append([cls.to_cell(header, config=config)])
@@ -1075,15 +1083,6 @@ class Display:
 
         return rows
 
-        # post = []
-        # for row_idx, row in enumerate(rows):
-        #     # make sure the entire row is marked as head if row index less than column depth
-        #     added_depth = col_count_src if row_idx < columns_depth else 0
-                # rstrip to remove extra white space on last column
-        #     post.append(''.join(dfc.markup_row(row,
-        #             header_depth=index_depth + added_depth)).rstrip()
-        #             )
-        # return post
 
     @staticmethod
     def _row_empty(line: tp.Iterable[str]) -> bool:
@@ -1137,7 +1136,7 @@ class Display:
                     body.append(row)
             header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
-            # NOTE: this function might take additional arguments (like identifier and caption); presently there is now way to get these args here via container display methods; likely best option is to take a new / specialzied confiig. Using the same config would be akward, as that config is for all outputs, not just one table's output.
+            # NOTE: this function might take additional arguments (like identifier and caption); presently there is no way to get these args here via container display methods; likely best option is to take a new / specialzied config. Using the same config would be akward, as that config is for all outputs, not just one table's output.
             return dfc.markup_outermost(header_str + dfc.LINE_SEP + body_str)
 
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
@@ -1242,14 +1241,15 @@ class Display:
         rows.extend(self._rows[insert_index:])
         self._rows = rows
 
-    def append_row(self, row: tp.List[DisplayCell]) -> None:
-        '''
-        Append a row at the bottom of existing rows.
-        '''
-        self._rows.append(row)
+    # def drop_row(self, index: int = 0) -> None:
+    #     '''Remove a row in place.
+    #     '''
+    #     self._rows = self._rows[:index] + self._rows[index+1:]
+
 
     #---------------------------------------------------------------------------
     # return a new display
+
 
     def flatten(self) -> 'Display':
         '''

@@ -2746,16 +2746,20 @@ class Frame(ContainerOperand):
         '''
         config = config or DisplayActive.get()
 
+        index_depth = self._index.depth if config.include_index else 0
         # create an empty display, then populate with index
-        d = Display([[]],
+        d = Display([list() for _ in range(len(self._index))],
                 config=config,
                 outermost=True,
-                index_depth=self._index.depth,
+                index_depth=index_depth,
                 header_depth=self._columns.depth + 2)
 
         if config.include_index:
             display_index = self._index.display(config=config)
             d.extend_display(display_index)
+            column_header = '' if config.type_show else None
+        else:
+            column_header = None
 
         if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
@@ -2776,27 +2780,37 @@ class Frame(ContainerOperand):
             if column is Display.ELLIPSIS_CENTER_SENTINEL:
                 d.extend_ellipsis()
             else:
-                d.extend_iterable(column, header='')
+                d.extend_iterable(column, header=column_header)
 
         #-----------------------------------------------------------------------
         # prepare columns display
         config_transpose = config.to_transpose()
-        display_cls = Display.from_values((),
-                header=DisplayHeader(self.__class__, self._name),
-                config=config_transpose)
-
         # need to apply the column config such that it truncates it based on the the max columns, not the max rows
         display_columns = self._columns.display(
                 config=config_transpose)
 
+        if config.type_show:
+            index_depth_extend = self._index.depth - 1
+            spacer_insert_index = 1 # after the first, the name
+        elif not config.type_show and config.include_index:
+            index_depth_extend = self._index.depth
+            spacer_insert_index = 0
+        elif not config.include_index:
+            # type_show must be False
+            index_depth_extend = 0
+            spacer_insert_index = 0
+
         # add spacers to from of columns when we have a hierarchical index
-        for _ in range(self._index.depth - 1):
+        for _ in range(index_depth_extend):
             # will need a width equal to the column depth
             row = [Display.to_cell('', config=config)
                     for _ in range(self._columns.depth)]
             spacer = Display([row])
+            # add a row above
             display_columns.insert_displays(spacer,
-                    insert_index=1) # after the first, the name
+                    insert_index=spacer_insert_index)
+
+        # import ipdb; ipdb.set_trace()
 
         if self._columns.depth > 1:
             display_columns_horizontal = display_columns.transform()
@@ -2804,6 +2818,11 @@ class Frame(ContainerOperand):
             display_columns_horizontal = display_columns.flatten()
 
         #-----------------------------------------------------------------------
+        # prepare header display of container class
+        display_cls = Display.from_values((),
+                header=DisplayHeader(self.__class__, self._name),
+                config=config_transpose)
+
         d.insert_displays(
                 display_cls.flatten(),
                 display_columns_horizontal,
