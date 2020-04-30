@@ -482,6 +482,9 @@ class DisplayConfig:
             'display_columns',
             'display_rows',
 
+            'include_columns',
+            'include_index',
+
             'cell_max_width',
             'cell_max_width_leftmost',
             'cell_align_left',
@@ -538,9 +541,11 @@ class DisplayConfig:
             display_columns: int = 12,
             display_rows: int = 36,
 
+            include_columns: bool = True,
+            include_index: bool = True,
+
             cell_max_width: int = 20,
             cell_max_width_leftmost: int = 36,
-
             cell_align_left: bool = True
             ) -> None:
 
@@ -570,13 +575,14 @@ class DisplayConfig:
         self.value_format_complex_scientific = value_format_complex_scientific
 
         self.display_format = display_format
-
         self.display_columns = display_columns
         self.display_rows = display_rows
 
+        self.include_columns = include_columns
+        self.include_index = include_index
+
         self.cell_max_width = cell_max_width
         self.cell_max_width_leftmost = cell_max_width_leftmost
-
         self.cell_align_left = cell_align_left
 
     def write(self, fp: str) -> None:
@@ -700,8 +706,6 @@ class DisplayActive:
 
 
 #-------------------------------------------------------------------------------
-
-
 class DisplayHeader:
     '''
     Wraper for passing in display header that have a name attribute.
@@ -815,7 +819,7 @@ class Display:
             config: DisplayConfig,
             is_dtype: bool = False) -> DisplayCell:
         '''
-        Given a raw value, retrun a DisplayCell, which is defined as a pair of the string representation and the character width without any formatting markup.
+        Given a raw value, return a :obj:`DisplayCell`.
         '''
         if is_dtype or inspect.isclass(value) or isinstance(value, DisplayHeader):
             type_str_raw, type_category = cls.type_attributes(
@@ -1269,3 +1273,5 @@ class Display:
             for idx, cell in enumerate(r):
                 rows[idx].append(cell)
         return self.__class__(rows, config=self._config)
+
+

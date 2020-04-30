@@ -2753,8 +2753,9 @@ class Frame(ContainerOperand):
                 index_depth=self._index.depth,
                 header_depth=self._columns.depth + 2)
 
-        display_index = self._index.display(config=config)
-        d.extend_display(display_index)
+        if config.include_index:
+            display_index = self._index.display(config=config)
+            d.extend_display(display_index)
 
         if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
@@ -2809,16 +2810,6 @@ class Frame(ContainerOperand):
                 )
         return d
 
-    def _repr_html_(self):
-        '''
-        Provide HTML representation for Jupyter Notebooks.
-        '''
-        # modify the active display to be for HTML
-        config = DisplayActive.get(
-                display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
-                )
-        return repr(self.display(config))
 
     #---------------------------------------------------------------------------
     # accessors

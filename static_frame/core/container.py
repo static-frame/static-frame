@@ -29,8 +29,8 @@ from static_frame.core.doc_str import DOC_TEMPLATE
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayConfig
-# from static_frame.core.display import DisplayConfigs
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayFormats
 
 from static_frame.core.doc_str import doc_inject
 
@@ -654,3 +654,18 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     def cumprod(self, axis: int = 0, skipna: bool = True) -> tp.Any:
         raise NotImplementedError() # pragma: no cover
 
+
+    def _repr_html_(self) -> str:
+        '''
+        Provide HTML representation for Jupyter Notebooks.
+        '''
+        # NOTE: We observe that Jupyter will window big content into scrollable component, so do not limit output and introduce ellipsis.
+
+        config = DisplayActive.get(
+                display_format=DisplayFormats.HTML_TABLE,
+                type_show=False,
+                display_columns=np.inf,
+                display_rows=np.inf,
+                )
+        # modify the active display to be for HTML
+        return repr(self.display(config))

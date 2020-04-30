@@ -322,19 +322,6 @@ class IndexBase(ContainerOperand):
                 )
 
 
-    #---------------------------------------------------------------------------
-    # common display
-
-    def _repr_html_(self) -> str:
-        '''
-        Provide HTML representation for Jupyter Notebooks.
-        '''
-        # modify the active display to be force HTML
-        config = DisplayActive.get(
-                display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
-                )
-        return repr(self.display(config))
 
     #---------------------------------------------------------------------------
     # exporters

@@ -713,6 +713,11 @@ class TestUnit(TestCase):
 
 
 
+    def test_display_include_index_a(self) -> None:
+
+        f1 = Frame.from_element('b', index=range(3), columns=range(2))
+        # import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
@@ -799,10 +804,6 @@ class TestUnit(TestCase):
                 columns=columns,
                 dtype=str)
 
-        # s = Series(('', chr(0x265C), '', chr(0x265A)), index=tuple('efgh'))
-
-        # s = Series.from_items((('f', chr(0x265C)), ('h', chr(0x265A)))).reindex(tuple('efgh'), fill_value='')
-
         s1 = Series.from_items((('f', chr(0x265C)), ('g', chr(0x265A))))
 
         f.assign.loc[8, :](s1, fill_value='')
@@ -810,15 +811,4 @@ class TestUnit(TestCase):
 
 
 if __name__ == '__main__':
-
-    # records = (
-    #         (2, 'a', False),
-    #         (30, 'b', False),
-    #         )
-    # f = Frame.from_records(records,
-    #         columns=('p', 'q', 'r'),
-    #         index=('w', 'x'))
-    # f = f.relabel_add_level(columns='I', index='J')
-    # import ipdb; ipdb.set_trace()
-
     unittest.main()

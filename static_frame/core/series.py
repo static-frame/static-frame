@@ -1147,17 +1147,6 @@ class Series(ContainerOperand):
         d.insert_displays(display_cls.flatten())
         return d
 
-    def _repr_html_(self):
-        '''
-        Provide HTML representation for Jupyter Notebooks.
-        '''
-        # modify the active display to be fore HTML
-        config = DisplayActive.get(
-                display_format=DisplayFormats.HTML_TABLE,
-                type_show=False
-                )
-        return repr(self.display(config))
-
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
