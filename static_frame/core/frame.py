@@ -2753,7 +2753,7 @@ class Frame(ContainerOperand):
         display_index = self._index.display(config=config)
 
         # header depth useod for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
-        header_depth = self._columns.depth + (2 * config.type_show)
+        header_depth = (self._columns.depth * config.include_columns) + (2 * config.type_show)
 
         # create an empty display based on index display
         d = Display([list() for _ in range(len(display_index))],
@@ -2813,8 +2813,7 @@ class Frame(ContainerOperand):
             elif not config.type_show and config.include_index:
                 index_depth_extend = self._index.depth
                 spacer_insert_index = 0
-            elif not config.include_index:
-                # type_show must be False
+            elif not config.include_index: # type_show must be False
                 index_depth_extend = 0
                 spacer_insert_index = 0
 

@@ -598,6 +598,26 @@ class TestUnit(TestCase):
         self.assertEqual(html3.strip(), str(expected3).strip())
 
 
+        expected4 = f.display(sf.DisplayConfig(
+                display_format='html_table', type_color=False, type_show=False, include_columns=False))
+
+        html4 = '''<table border="1"><thead></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        '''
+        self.assertEqual(html4.strip(), str(expected4).strip())
+
+
+        expected5 = f.display(sf.DisplayConfig(
+                display_format='html_table',
+                type_color=False,
+                type_show=False,
+                include_index=False,
+                include_columns=False))
+
+        html5 = '''<table border="1"><thead></thead><tbody><tr><td>1</td><td>True</td><td>q</td></tr><tr><td>2</td><td>False</td><td>r</td></tr><tr><td>3</td><td>True</td><td>s</td></tr><tr><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        '''
+        self.assertEqual(html5.strip(), str(expected5).strip())
+
+
 
 
     def test_display_html_table_b(self) -> None:
