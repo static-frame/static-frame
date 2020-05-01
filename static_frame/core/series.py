@@ -1126,25 +1126,37 @@ class Series(ContainerOperand):
             {config}
         '''
         config = config or DisplayActive.get()
+        index_depth = self._index.depth if config.include_index else 0
+        display_index = self._index.display(config=config)
 
-        d = Display([],
+        # When showing types on a Frame, we need 2: one for the Series type, the other for the index type.
+        header_depth = 2 * config.type_show
+
+        # create an empty display based on index display
+        d = Display([list() for _ in range(len(display_index))],
                 config=config,
                 outermost=True,
-                index_depth=1,
-                header_depth=2) # series and index header
+                index_depth=index_depth,
+                header_depth=header_depth
+                )
 
-        display_index = self._index.display(config=config)
-        d.extend_display(display_index)
+        if config.include_index:
+            d.extend_display(display_index)
+            header_values = '' if config.type_show else None
+        else:
+            header_values = None
 
         d.extend_display(Display.from_values(
                 self.values,
-                header='',
+                header=header_values,
                 config=config))
 
-        display_cls = Display.from_values((),
-                header=DisplayHeader(self.__class__, self._name),
-                config=config)
-        d.insert_displays(display_cls.flatten())
+        if config.type_show:
+            display_cls = Display.from_values((),
+                    header=DisplayHeader(self.__class__, self._name),
+                    config=config)
+            d.insert_displays(display_cls.flatten())
+
         return d
 
     #---------------------------------------------------------------------------

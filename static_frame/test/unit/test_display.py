@@ -576,14 +576,28 @@ class TestUnit(TestCase):
         f = f.relabel_add_level(columns='I')
         f = f.relabel_add_level(columns='J')
 
-        expected = f.display(sf.DisplayConfig(
+        expected1 = f.display(sf.DisplayConfig(
                 display_format='html_table', type_color=False))
 
-        html = '''
-<table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy: (&#x27;a&#x27;, &#x27;b&#x27;)&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;int64&gt;</th><th>&lt;bool&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
+        html1 = '''<table border="1"><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy: (&#x27;a&#x27;, &#x27;b&#x27;)&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;int64&gt;</th><th>&lt;bool&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
         '''
+        self.assertEqual(html1.strip(), str(expected1).strip())
 
-        self.assertEqual(html.strip(), str(expected).strip())
+        expected2 = f.display(sf.DisplayConfig(
+                display_format='html_table', type_color=False, type_show=False))
+
+        html2 = '''<table border="1"><thead><tr><th></th><th></th><th>J</th><th>J</th><th>J</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        '''
+        self.assertEqual(html2.strip(), str(expected2).strip())
+
+        expected3 = f.display(sf.DisplayConfig(
+                display_format='html_table', type_color=False, type_show=False, include_index=False))
+
+        html3 = '''<table border="1"><thead><tr><th>J</th><th>J</th><th>J</th></tr><tr><th>I</th><th>I</th><th>I</th></tr><tr><th>a</th><th>b</th><th>c</th></tr></thead><tbody><tr><td>1</td><td>True</td><td>q</td></tr><tr><td>2</td><td>False</td><td>r</td></tr><tr><td>3</td><td>True</td><td>s</td></tr><tr><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        '''
+        self.assertEqual(html3.strip(), str(expected3).strip())
+
+
 
 
     def test_display_html_table_b(self) -> None:

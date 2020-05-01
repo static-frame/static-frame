@@ -2750,19 +2750,22 @@ class Frame(ContainerOperand):
         # always get the index Display (even if we are not going to use it) to dettermine how many rows we need (which may include types, as well as truncation with elipsis).
         display_index = self._index.display(config=config)
 
-        # create an empty display, then populate with index
+        # header depth useod for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
+        header_depth = self._columns.depth + (2 * config.type_show)
+
+        # create an empty display based on index display
         d = Display([list() for _ in range(len(display_index))],
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
-                header_depth=self._columns.depth + 2)
+                header_depth=header_depth)
 
         if config.include_index:
             # this will add more rows to accomodate the index if it is bigger due to types
             d.extend_display(display_index)
-            column_header = '' if config.type_show else None
+            header_column = '' if config.type_show else None
         else:
-            column_header = None
+            header_column = None
 
         if self._blocks._shape[1] > config.display_columns:
             # columns as they will look after application of truncation and insertion of ellipsis
@@ -2782,7 +2785,7 @@ class Frame(ContainerOperand):
             if column is Display.ELLIPSIS_CENTER_SENTINEL:
                 d.extend_ellipsis()
             else:
-                d.extend_iterable(column, header=column_header)
+                d.extend_iterable(column, header=header_column)
 
         #-----------------------------------------------------------------------
         # prepare columns display
@@ -2812,8 +2815,6 @@ class Frame(ContainerOperand):
             display_columns.insert_displays(spacer,
                     insert_index=spacer_insert_index)
 
-        # import ipdb; ipdb.set_trace()
-
         if self._columns.depth > 1:
             display_columns_horizontal = display_columns.transform()
         else: # can just flatten a single column into one row
@@ -2821,14 +2822,18 @@ class Frame(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # prepare header display of container class
-        display_cls = Display.from_values((),
-                header=DisplayHeader(self.__class__, self._name),
-                config=config_transpose)
+        header_displays = []
+        if config.type_show:
+            display_cls = Display.from_values((),
+                    header=DisplayHeader(self.__class__, self._name),
+                    config=config_transpose)
+            header_displays.append(display_cls.flatten())
+        if config.include_columns:
+            header_displays.append(display_columns_horizontal)
 
-        d.insert_displays(
-                display_cls.flatten(),
-                display_columns_horizontal,
-                )
+        if header_displays:
+            d.insert_displays(*header_displays)
+
         return d
 
 
