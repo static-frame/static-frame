@@ -788,10 +788,19 @@ class TestUnit(TestCase):
             DisplayConfig(include_index=False, type_show=True)
 
 
-        config = DisplayConfig(include_index=False, type_show=False)
-        d = f1.display(config)
-        self.assertEqual(str(d), '0 1\nb b\nb b\nb b')
+        config1 = DisplayConfig(include_index=False, type_show=False)
+        d1 = f1.display(config1)
+        self.assertEqual(d1.to_rows(),
+                ['0 1', 'b b', 'b b', 'b b']
+                )
 
+        config2 = DisplayConfig(include_index=False,
+                type_show=False,
+                include_columns=False)
+        d2 = f1.display(config2)
+        self.assertEqual(d2.to_rows(),
+                ['b b', 'b b', 'b b']
+                )
 
 
 
