@@ -892,6 +892,8 @@ class TypeBlocks(ContainerOperand):
         Args:
             {config}
         '''
+        # NOTE: the TypeBlocks Display is not composed into other Displays
+
         config = config or DisplayActive.get()
         d = None
         outermost = True # only for the first
@@ -912,12 +914,10 @@ class TypeBlocks(ContainerOperand):
                 outermost = False
             else:
                 d.extend_display(display)
-
             # explicitly enumerate so as to not count no-width blocks
             idx += 1
 
-        assert d is not None
-
+        assert d is not None # for mypy
         return d
 
 

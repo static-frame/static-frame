@@ -689,6 +689,8 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        header: tp.Optional[DisplayHeader]
+
         if config.type_show:
             header = DisplayHeader(self.__class__, self._name)
             header_depth = 1

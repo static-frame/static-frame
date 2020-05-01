@@ -1116,20 +1116,17 @@ class Series(ContainerOperand):
         '''
         return self.values.__len__()
 
-    @doc_inject()
-    def display(self,
-            config: tp.Optional[DisplayConfig] = None
+    def _display(self,
+            config: DisplayConfig,
+            display_cls: Display,
             ) -> Display:
-        '''{doc}
-
-        Args:
-            {config}
         '''
-        config = config or DisplayActive.get()
+        Private display interface to be shared by Bus and Series.
+        '''
         index_depth = self._index.depth if config.include_index else 0
         display_index = self._index.display(config=config)
 
-        # When showing types on a Frame, we need 2: one for the Series type, the other for the index type.
+        # When showing type we need 2: one for the Series type, the other for the index type.
         header_depth = 2 * config.type_show
 
         # create an empty display based on index display
@@ -1152,12 +1149,58 @@ class Series(ContainerOperand):
                 config=config))
 
         if config.type_show:
-            display_cls = Display.from_values((),
-                    header=DisplayHeader(self.__class__, self._name),
-                    config=config)
             d.insert_displays(display_cls.flatten())
 
         return d
+
+    @doc_inject()
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        '''{doc}
+
+        Args:
+            {config}
+        '''
+        config = config or DisplayActive.get()
+        display_cls = Display.from_values((),
+                header=DisplayHeader(self.__class__, self._name),
+                config=config)
+        return self._display(config, display_cls)
+
+        # config = config or DisplayActive.get()
+        # index_depth = self._index.depth if config.include_index else 0
+        # display_index = self._index.display(config=config)
+
+        # # When showing type we need 2: one for the Series type, the other for the index type.
+        # header_depth = 2 * config.type_show
+
+        # # create an empty display based on index display
+        # d = Display([list() for _ in range(len(display_index))],
+        #         config=config,
+        #         outermost=True,
+        #         index_depth=index_depth,
+        #         header_depth=header_depth
+        #         )
+
+        # if config.include_index:
+        #     d.extend_display(display_index)
+        #     header_values = '' if config.type_show else None
+        # else:
+        #     header_values = None
+
+        # d.extend_display(Display.from_values(
+        #         self.values,
+        #         header=header_values,
+        #         config=config))
+
+        # if config.type_show:
+        #     display_cls = Display.from_values((),
+        #             header=DisplayHeader(self.__class__, self._name),
+        #             config=config)
+        #     d.insert_displays(display_cls.flatten())
+
+        # return d
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

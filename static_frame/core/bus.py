@@ -368,29 +368,13 @@ class Bus(ContainerBase):
         Args:
             {config}
         '''
-        # NOTE: the key change is providing the Bus as the displayed class
-
+        # NOTE: the key change over serires is providing the Bus as the displayed class
         config = config or DisplayActive.get()
-
-        d = Display([],
-                config=config,
-                outermost=True,
-                index_depth=1,
-                header_depth=2) # series and index header
-
-        display_index = self._index.display(config=config)
-        d.extend_display(display_index)
-
-        d.extend_display(Display.from_values(
-                self._series.values, # do not force loading with self.values
-                header='',
-                config=config))
-
         display_cls = Display.from_values((),
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
-        d.insert_displays(display_cls.flatten())
-        return d
+        return self._series._display(config, display_cls)
+
 
     #---------------------------------------------------------------------------
     # extended disciptors

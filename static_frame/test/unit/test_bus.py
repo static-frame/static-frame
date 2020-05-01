@@ -373,6 +373,19 @@ class TestUnit(TestCase):
                 'f3      Frame',
                 '<<U2>   <object>'])
 
+        rows1 = b1.display(config=DisplayConfig(
+                type_color=False,
+                type_show=False)).to_rows()
+        self.assertEqual(rows1, ['f1 Frame', 'f2 Frame', 'f3 Frame'])
+
+        rows2 = b1.display(config=DisplayConfig(
+                type_color=False,
+                type_show=False,
+                include_index=False)).to_rows()
+        self.assertEqual(rows2, ['Frame', 'Frame', 'Frame'])
+
+
+
     #---------------------------------------------------------------------------
     def test_bus_iloc_a(self) -> None:
         f1 = Frame.from_dict(
