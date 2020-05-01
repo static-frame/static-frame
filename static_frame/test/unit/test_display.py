@@ -740,7 +740,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(f.display_tall().to_rows()), 44)
         self.assertEqual(len(f.display_wide().to_rows()), 39)
 
-
     #---------------------------------------------------------------------------
     def test_display_format_latex_a(self) -> None:
 

@@ -2745,17 +2745,20 @@ class Frame(ContainerOperand):
             {config}
         '''
         config = config or DisplayActive.get()
-
         index_depth = self._index.depth if config.include_index else 0
+
+        # always get the index Display (even if we are not going to use it) to dettermine how many rows we need (which may include types, as well as truncation with elipsis).
+        display_index = self._index.display(config=config)
+
         # create an empty display, then populate with index
-        d = Display([list() for _ in range(len(self._index))],
+        d = Display([list() for _ in range(len(display_index))],
                 config=config,
                 outermost=True,
                 index_depth=index_depth,
                 header_depth=self._columns.depth + 2)
 
         if config.include_index:
-            display_index = self._index.display(config=config)
+            # this will add more rows to accomodate the index if it is bigger due to types
             d.extend_display(display_index)
             column_header = '' if config.type_show else None
         else:
@@ -2765,7 +2768,6 @@ class Frame(ContainerOperand):
             # columns as they will look after application of truncation and insertion of ellipsis
             data_half_count = Display.truncate_half_count(
                     config.display_columns)
-
             column_gen = partial(_gen_skip_middle,
                     forward_iter=partial(self._blocks.axis_values, axis=0),
                     forward_count=data_half_count,
