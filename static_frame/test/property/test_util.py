@@ -328,8 +328,12 @@ class TestUnit(TestCase):
                 assume_unique=False)
         self.assertTrue(post.ndim == 1)
 
-        # nan values in complex numbers make direct comparison tricky
-        self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
+        if post.dtype.kind in ('f', 'c', 'i', 'u'):
+            # Compare directly to numpy behavior for number values.
+            self.assertTrue(len(post) == len(np.setdiff1d(arrays[0], arrays[1], assume_unique=False)))
+        else:
+            # nan values in complex numbers make direct comparison tricky
+            self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
 
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):
