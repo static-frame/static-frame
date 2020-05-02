@@ -2762,6 +2762,7 @@ class Frame(ContainerOperand):
                 index_depth=index_depth,
                 header_depth=header_depth)
 
+
         if config.include_index:
             # this will add more rows to accomodate the index if it is bigger due to types
             d.extend_display(display_index)
@@ -2837,7 +2838,6 @@ class Frame(ContainerOperand):
             d.insert_displays(*header_displays)
 
         return d
-
 
     #---------------------------------------------------------------------------
     # accessors

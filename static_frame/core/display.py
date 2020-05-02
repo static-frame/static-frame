@@ -1083,15 +1083,6 @@ class Display:
 
         return rows
 
-
-    @staticmethod
-    def _row_empty(line: tp.Iterable[str]) -> bool:
-        for cell in line:
-            if cell.strip() != '':
-                return False
-        return True
-
-
     #---------------------------------------------------------------------------
     def __init__(self,
             rows: tp.List[tp.List[DisplayCell]],
@@ -1116,8 +1107,6 @@ class Display:
     def __repr__(self) -> str:
         rows = self._to_rows_cells(self,
                 self._config,
-                # index_depth=self._index_depth,
-                # header_depth=self._header_depth
                 )
 
         if self._outermost:
@@ -1126,18 +1115,24 @@ class Display:
             body = []
             for idx, row in enumerate(rows):
                 if idx < self._header_depth:
-                    # if we find an empty header, it is due to setting type_show to False; we can skip them here
-                    if self._row_empty(row):
-                        continue
-                    row = ''.join(dfc.markup_row(row, header_depth=np.inf)).rstrip()
+                    row = ''.join(dfc.markup_row(row,
+                            header_depth=np.inf
+                            )).rstrip()
                     header.append(row)
                 else:
-                    row = ''.join(dfc.markup_row(row, header_depth=self._index_depth)).rstrip()
+                    row = ''.join(dfc.markup_row(row,
+                            header_depth=self._index_depth
+                            )).rstrip()
                     body.append(row)
-            header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
+
+            outermost = []
+            if header:
+                header_str = dfc.markup_header(dfc.LINE_SEP.join(header))
+                outermost.append(header_str)
+
             body_str = dfc.markup_body(dfc.LINE_SEP.join(body))
-            # NOTE: this function might take additional arguments (like identifier and caption); presently there is no way to get these args here via container display methods; likely best option is to take a new / specialzied config. Using the same config would be akward, as that config is for all outputs, not just one table's output.
-            return dfc.markup_outermost(header_str + dfc.LINE_SEP + body_str)
+            outermost.append(body_str)
+            return dfc.markup_outermost(dfc.LINE_SEP.join(outermost))
 
         return dfc.LINE_SEP.join(''.join(r) for r in rows)
 

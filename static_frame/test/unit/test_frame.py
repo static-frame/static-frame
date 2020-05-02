@@ -5376,8 +5376,12 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
         post = f1.to_html()
+
         self.assertEqual(post, '<table border="1"><thead><tr><th></th><th>r</th><th>s</th><th>t</th></tr></thead><tbody><tr><th>w</th><td>2</td><td>a</td><td>False</td></tr><tr><th>x</th><td>3</td><td>b</td><td>False</td></tr></tbody></table>'
         )
+
+        msg = str(f1.display(sf.DisplayConfig(type_show=False, include_columns=False)))
+        self.assertEqual(msg, 'w 2 a False\nx 3 b False')
 
 
     def test_frame_to_html_datatables_a(self) -> None:
@@ -7461,6 +7465,11 @@ class TestUnit(TestCase):
                 index=Index(('x', 'y'), name='bar'),
                 columns=Index(('a', 'b'), name='rig')
                 )
+
+        d1 = f1.display(DisplayConfig(
+                type_color=False,
+                type_show=False,
+                include_columns=False))
 
         match = tuple(f1.display(DisplayConfig(type_color=False)))
 

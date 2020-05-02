@@ -601,7 +601,7 @@ class TestUnit(TestCase):
         expected4 = f.display(sf.DisplayConfig(
                 display_format='html_table', type_color=False, type_show=False, include_columns=False))
 
-        html4 = '''<table border="1"><thead></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        html4 = '''<table border="1"><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td></tr></tbody></table>
         '''
         self.assertEqual(html4.strip(), str(expected4).strip())
 
@@ -613,7 +613,7 @@ class TestUnit(TestCase):
                 include_index=False,
                 include_columns=False))
 
-        html5 = '''<table border="1"><thead></thead><tbody><tr><td>1</td><td>True</td><td>q</td></tr><tr><td>2</td><td>False</td><td>r</td></tr><tr><td>3</td><td>True</td><td>s</td></tr><tr><td>4</td><td>False</td><td>t</td></tr></tbody></table>
+        html5 = '''<table border="1"><tbody><tr><td>1</td><td>True</td><td>q</td></tr><tr><td>2</td><td>False</td><td>r</td></tr><tr><td>3</td><td>True</td><td>s</td></tr><tr><td>4</td><td>False</td><td>t</td></tr></tbody></table>
         '''
         self.assertEqual(html5.strip(), str(expected5).strip())
 
@@ -642,7 +642,7 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
 
         self.assertEqual(f['q']._repr_html_(),
-            '<table border="1"><thead></thead><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
+            '<table border="1"><tbody><tr><th>w</th><td>a</td></tr><tr><th>x</th><td>b</td></tr></tbody></table>')
 
     def test_display_html_index_a(self) -> None:
         records = (
@@ -654,11 +654,11 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
 
         self.assertEqual(f.index._repr_html_(),
-                '<table border="1"><thead></thead><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
+                '<table border="1"><tbody><tr><td>w</td></tr><tr><td>x</td></tr></tbody></table>')
 
         f1 = f.set_index_hierarchy(('p', 'q'))
         self.assertEqual(f1.index._repr_html_(),
-                '<table border="1"><thead></thead><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
+                '<table border="1"><tbody><tr><td>2</td><td>a</td></tr><tr><td>30</td><td>b</td></tr></tbody></table>'
                 )
 
     def test_display_html_index_b(self) -> None:

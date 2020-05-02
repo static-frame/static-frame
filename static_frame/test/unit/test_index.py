@@ -920,7 +920,7 @@ class TestUnit(TestCase):
 
         idx1 = IndexGO(('a', 'b', 'c'))
         self.assertEqual(idx1.to_html(),
-                '<table border="1"><thead></thead><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
+                '<table border="1"><tbody><tr><td>a</td></tr><tr><td>b</td></tr><tr><td>c</td></tr></tbody></table>')
 
     def test_index_to_html_datatables_a(self) -> None:
 

@@ -8,6 +8,8 @@ Added support for ``round()`` on ``Frame``.
 
 Added ``name`` parameter to all methods of ``IterNodeDelegate`` that produce a new container, including ``map_any()``, ``map_fill()``, ``map_all()``, ``apply()``, and ``apply_pool()``.
 
+Support for ``include_index`` and ``include_columns`` in ``DisplayConfig`` instances and ``Display`` output.
+
 Performance improvements to iterating tuples from ``IndexHierarchy``.
 
 
