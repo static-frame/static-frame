@@ -21,6 +21,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
@@ -1172,11 +1173,12 @@ class IndexHierarchy(IndexBase):
         return self.__class__(levels, name=self._name)
 
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
-        '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the index if the resulting levels are not unique.
-        '''
-        # NOTE: can transfrom TypeBlocks appropriately and pass to constructor
+        '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
-        if count < 0:
+        Args:
+            count: A positive value is the number of depths to remove from the root (outer) side of the hierarhcy; a negative values is the number of depths to remove from the leaf (inner) side of the hierarchy.
+        '''
+        if count < 0: # remove from inner
             levels = self._levels.to_index_level()
             for _ in range(abs(count)):
                 levels_stack = [levels]
@@ -1187,33 +1189,46 @@ class IndexHierarchy(IndexBase):
                         level.targets = None
                     else:
                         levels_stack.extend(level.targets)
-                if levels.targets is None:
-                    # if our root level has no targets, we are at the root
+                if levels.targets is None:  # if no targets, at the root
                     break
-            if levels.targets is None:
-                # fall back to 1D index
+            if levels.targets is None: # fall back to 1D index
                 return levels.index
+
+            # if we have TypeBlocks and levels is the same length
+            if not self._recache and levels.__len__() == self.__len__():
+                blocks = self._blocks.iloc[NULL_SLICE, :count]
+                return self.__class__(levels,
+                        name=self._name,
+                        blocks=blocks,
+                        own_blocks=True
+                        )
             return self.__class__(levels, name=self._name)
 
-        elif count > 0:
-            level = self._levels.to_index_level()
+        elif count > 0: # remove from outer
+            levels = self._levels.to_index_level()
             for _ in range(count):
-                # NOTE: do not need this check as we look ahead, below
-                # if level.targets is None:
-                #     return level.index
                 targets = []
                 labels = []
-                for target in level.targets:
+                for target in levels.targets:
                     labels.extend(target.index)
                     if target.targets is not None:
                         targets.extend(target.targets)
-                index = level.index.__class__(labels)
+                index = levels.index.__class__(labels)
                 if not targets:
                     return index
-                level = level.__class__(index=index, targets=targets)
-            return self.__class__(level, name=self._name)
-        else:
-            raise NotImplementedError('no handling for a 0 count drop level.')
+                levels = levels.__class__(index=index, targets=targets)
+
+            # if we have TypeBlocks and levels is the same length
+            if not self._recache and levels.__len__() == self.__len__():
+                blocks = self._blocks.iloc[NULL_SLICE, count:]
+                return self.__class__(levels,
+                        name=self._name,
+                        blocks=blocks,
+                        own_blocks=True
+                        )
+            return self.__class__(levels, name=self._name)
+
+        raise NotImplementedError('no handling for a 0 count drop level.')
 
 
 class IndexHierarchyGO(IndexHierarchy):

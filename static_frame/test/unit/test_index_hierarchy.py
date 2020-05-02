@@ -1436,7 +1436,6 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
 
 
-
     def test_hierarchy_drop_level_b(self) -> None:
 
         labels = (
@@ -1503,6 +1502,34 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
         with self.assertRaises(NotImplementedError):
             _ = ih.drop_level(0)
+
+
+    def test_hierarchy_drop_level_h(self) -> None:
+
+        labels = (
+                ('I', 'A', 1, False),
+                ('I', 'B', 2, True),
+                ('II', 'C', 3, False),
+                ('II', 'C', 4, True),
+                )
+
+        ih = IndexHierarchy.from_labels(labels)
+
+        part = ih.iloc[1:] # force TB creation
+
+        post1 = ih.drop_level(-1)
+        assert isinstance(post1, IndexHierarchy) # mypy
+        self.assertEqual(ih._blocks.mloc[:-1].tolist(), post1._blocks.mloc.tolist())
+        # we changed shape after dropping two depths
+        self.assertEqual(ih.drop_level(-2).shape, (3, 2))
+
+        post2 = ih.drop_level(1)
+        assert isinstance(post2, IndexHierarchy) # mypy
+        self.assertEqual(ih._blocks.mloc[1:].tolist(), post2._blocks.mloc.tolist())
+
+        post3 = ih.drop_level(2)
+        assert isinstance(post3, IndexHierarchy) # mypy
+        self.assertEqual(ih._blocks.mloc[2:].tolist(), post3._blocks.mloc.tolist())
 
 
 
