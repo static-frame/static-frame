@@ -7,6 +7,7 @@ import numpy as np
 
 from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
+from hypothesis import reproduce_failure
 
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.test.property.strategies import DTGroup
@@ -319,7 +320,6 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
-
     @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff1d(
@@ -328,8 +328,12 @@ class TestUnit(TestCase):
                 assume_unique=False)
         self.assertTrue(post.ndim == 1)
 
-        # nan values in complex numbers make direct comparison tricky
-        self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
+        if post.dtype.kind in ('f', 'c', 'i', 'u'):
+            # Compare directly to numpy behavior for number values.
+            self.assertTrue(len(post) == len(np.setdiff1d(arrays[0], arrays[1], assume_unique=False)))
+        else:
+            # nan values in complex numbers make direct comparison tricky
+            self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
 
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):
