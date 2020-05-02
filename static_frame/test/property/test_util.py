@@ -319,6 +319,7 @@ class TestUnit(TestCase):
                 and not np.isnan(post).any()):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
+
     @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff1d(
