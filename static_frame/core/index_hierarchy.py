@@ -187,9 +187,7 @@ class IndexHierarchy(IndexBase):
                     offset=offset,
                     targets=targets,
                     )
-
         return get_level(tree)
-
 
     @classmethod
     def from_tree(cls: tp.Type[IH],
@@ -204,7 +202,6 @@ class IndexHierarchy(IndexBase):
             :obj:`static_frame.IndexHierarchy`
         '''
         return cls(cls._tree_to_index_level(tree), name=name)
-
 
     @classmethod
     def from_labels(cls: tp.Type[IH],
@@ -345,7 +342,6 @@ class IndexHierarchy(IndexBase):
         # import ipdb; ipdb.set_trace()
         return cls(levels)
 
-
     @classmethod
     def from_labels_delimited(cls: tp.Type[IH],
             labels: tp.Iterable[str],
@@ -379,7 +375,6 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 index_constructors=index_constructors
                 )
-
 
     @classmethod
     def _from_type_blocks(cls: tp.Type[IH],
@@ -1151,7 +1146,7 @@ class IndexHierarchy(IndexBase):
         return self._INDEX_CONSTRUCTOR(self.__iter__())
 
     def add_level(self, level: tp.Hashable):
-        '''Return an IndexHierarchy with a new root level added.
+        '''Return an IndexHierarchy with a new root (outer) level added.
         '''
         if self.STATIC: # can reuse levels
             levels_src = self._levels
@@ -1164,8 +1159,16 @@ class IndexHierarchy(IndexBase):
                 offset=0,
                 own_index=True
                 )
+        # can transfrom TypeBlocks appropriately and pass to constructor
+        if not self._recache: # if we have TypeBlocks
+            array = np.full(self.__len__(), level)
+            array.flags.writeable = False
+            blocks = TypeBlocks.from_blocks(chain((array,), self._blocks._blocks))
+            return self.__class__(levels,
+                    name=self._name,
+                    blocks=blocks,
+                    own_blocks=True)
 
-        # NOTE: can transfrom TypeBlocks appropriately and pass to constructor
         return self.__class__(levels, name=self._name)
 
     def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:

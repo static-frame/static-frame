@@ -1399,7 +1399,26 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['x', 'I', 'A'], ['x', 'I', 'B'], ['x', 'II', 'A'], ['x', 'II', 'B'], ['x', 'III', 'A']])
 
-    #
+
+    def test_hierarchy_add_level_c(self) -> None:
+
+        labels = (
+                (1, 'A'),
+                (1, 'B'),
+                (2, 'A'),
+                (2, 'B'),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        # force TB creation
+        part = ih1.iloc[1:]
+        ih2 = ih1.add_level('x')
+        # proove we reused the underlying block arrays
+        self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
+
+
+
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_drop_level_a(self) -> None:
 
