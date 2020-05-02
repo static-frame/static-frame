@@ -7,7 +7,6 @@ import numpy as np
 
 from hypothesis import strategies as st
 from hypothesis import given  # type: ignore
-from hypothesis import reproduce_failure
 
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.test.property.strategies import DTGroup
