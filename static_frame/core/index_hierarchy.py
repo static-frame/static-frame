@@ -557,7 +557,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def _update_array_cache(self):
+    def _update_array_cache(self) -> None:
         self._blocks = self._levels.to_type_blocks()
         self._recache = False
 

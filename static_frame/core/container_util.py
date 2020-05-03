@@ -576,7 +576,7 @@ def rehierarch_and_map_from_index_hierarchy(*,
         depth_map: tp.Sequence[int],
         index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Optional[tp.Hashable] = None,
-        ):
+        ) -> tp.Tuple['IndexBase', np.ndarray]:
 
     if labels._recache:
         labels._update_array_cache()
