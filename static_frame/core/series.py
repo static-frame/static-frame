@@ -78,7 +78,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import axis_window_items
-from static_frame.core.container_util import rehierarch_and_map_from_index_hierarchy
+from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import pandas_to_numpy
 
@@ -766,7 +766,7 @@ class Series(ContainerOperand):
         if self.index.depth == 1:
             raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
-        index, iloc_map = rehierarch_and_map_from_index_hierarchy(
+        index, iloc_map = rehierarch_from_index_hierarchy(
                 labels=self._index,
                 depth_map=depth_map,
                 name=self._index.name,

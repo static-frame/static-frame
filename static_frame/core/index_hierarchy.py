@@ -34,7 +34,7 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import rehierarch_and_map
+from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.display import DisplayConfig
@@ -230,7 +230,7 @@ class IndexHierarchy(IndexBase):
             from static_frame import Frame
             index_labels = Frame.from_records(labels)._blocks
             # this will reorder and create the index using this smae method, passed as cls.from_labels
-            index, _ = rehierarch_and_map(
+            index, _ = rehierarch_from_type_blocks(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
                     index_cls=cls,
@@ -449,7 +449,7 @@ class IndexHierarchy(IndexBase):
                 index_constructors=index_constructors
                 )
 
-        if index_constructors:
+        if index_constructors is not None:
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(levels.dtype_per_depth()):
                 blocks = None
@@ -841,7 +841,7 @@ class IndexHierarchy(IndexBase):
 
         index_constructors = tuple(self._levels.index_types())
 
-        index, _ = rehierarch_and_map(
+        index, _ = rehierarch_from_type_blocks(
                 labels=self._blocks,
                 index_cls=self.__class__,
                 index_constructors=index_constructors,

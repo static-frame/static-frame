@@ -523,7 +523,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     raise RuntimeError(f'unhandled key {key}')
 
 
-def rehierarch_and_map(*,
+def rehierarch_from_type_blocks(*,
         labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
         index_cls: tp.Type['IndexHierarchy'],
@@ -544,7 +544,7 @@ def rehierarch_and_map(*,
     if set(range(depth)) != set(depth_map):
         raise RuntimeError('all depths must be specified')
 
-    labels_post = labels.iloc[NULL_SLICE, list(depth_map)]
+    labels_post = labels._extract(row_key=NULL_SLICE, column_key=list(depth_map))
     labels_sort = np.full(labels_post.shape, 0)
 
     # get ordering of values found in each level
@@ -561,7 +561,7 @@ def rehierarch_and_map(*,
     order_lex = np.lexsort(
             [labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
 
-    labels_post = labels_post.iloc[order_lex]
+    labels_post = labels_post._extract(row_key=order_lex)
 
     index = index_cls._from_type_blocks(
             blocks=labels_post,
@@ -571,7 +571,7 @@ def rehierarch_and_map(*,
             )
     return index, order_lex
 
-def rehierarch_and_map_from_index_hierarchy(*,
+def rehierarch_from_index_hierarchy(*,
         labels: 'IndexHierarchy',
         depth_map: tp.Sequence[int],
         index_constructors: tp.Optional[IndexConstructors] = None,
@@ -581,7 +581,7 @@ def rehierarch_and_map_from_index_hierarchy(*,
     if labels._recache:
         labels._update_array_cache()
 
-    return rehierarch_and_map(
+    return rehierarch_from_type_blocks(
             labels=labels._blocks,
             depth_map=depth_map,
             index_cls=labels.__class__,

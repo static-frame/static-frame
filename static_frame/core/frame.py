@@ -84,8 +84,8 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import rehierarch_and_map
-from static_frame.core.container_util import rehierarch_and_map_from_index_hierarchy
+from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import key_to_ascending_key
@@ -2545,7 +2545,7 @@ class Frame(ContainerOperand):
             raise RuntimeError('cannot rehierarch on columns when there is no hierarchy')
 
         if index:
-            index, index_iloc = rehierarch_and_map_from_index_hierarchy(
+            index, index_iloc = rehierarch_from_index_hierarchy(
                     labels=self._index,
                     depth_map=index,
                     name=self._index.name
@@ -2555,7 +2555,7 @@ class Frame(ContainerOperand):
             index_iloc = None
 
         if columns:
-            columns, columns_iloc = rehierarch_and_map_from_index_hierarchy(
+            columns, columns_iloc = rehierarch_from_index_hierarchy(
                     labels=self._columns,
                     depth_map=columns,
                     name=self._columns.name
@@ -4010,7 +4010,7 @@ class Frame(ContainerOperand):
         index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
-            index, order_lex = rehierarch_and_map(
+            index, order_lex = rehierarch_from_type_blocks(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
                     index_cls=IndexHierarchy,
