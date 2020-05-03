@@ -577,7 +577,9 @@ def rehierarch_from_index_hierarchy(*,
         index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
-
+    '''
+    Alternate interface that updates IndexHierarchy cache before rehierarch.
+    '''
     if labels._recache:
         labels._update_array_cache()
 

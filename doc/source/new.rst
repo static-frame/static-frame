@@ -12,7 +12,7 @@ Support for ``include_index`` and ``include_columns`` in ``DisplayConfig`` insta
 
 Performance improvements to iterating tuples from ``IndexHierarchy``.
 
-Performance improvements for ``IndexHierarchy`` transforamtions, including adding or dropping levels and rehierarch.
+Performance improvements for ``IndexHierarchy`` transformations, including adding or dropping levels and rehierarch.
 
 
 0.6.14
