@@ -85,6 +85,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import rehierarch_and_map
+from static_frame.core.container_util import rehierarch_and_map_from_index_hierarchy
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import key_to_ascending_key
@@ -2544,10 +2545,9 @@ class Frame(ContainerOperand):
             raise RuntimeError('cannot rehierarch on columns when there is no hierarchy')
 
         if index:
-            index, index_iloc = rehierarch_and_map(
-                    labels=self._index.values,
+            index, index_iloc = rehierarch_and_map_from_index_hierarchy(
+                    labels=self._index,
                     depth_map=index,
-                    index_constructor=self._index.from_labels,
                     name=self._index.name
                     )
         else:
@@ -2555,10 +2555,9 @@ class Frame(ContainerOperand):
             index_iloc = None
 
         if columns:
-            columns, columns_iloc = rehierarch_and_map(
-                    labels=self._columns.values,
+            columns, columns_iloc = rehierarch_and_map_from_index_hierarchy(
+                    labels=self._columns,
                     depth_map=columns,
-                    index_constructor=self._columns.from_labels,
                     name=self._columns.name
                     )
             own_columns = True
@@ -4007,21 +4006,24 @@ class Frame(ContainerOperand):
         if column_name is None:
             column_name = tuple(self._columns.values[column_iloc])
 
-        index_labels = self._blocks._extract_array(column_key=column_iloc)
+        # index_labels = self._blocks._extract_array(column_key=column_iloc)
+        index_labels = self._blocks._extract(column_key=column_iloc)
 
         if reorder_for_hierarchy:
             index, order_lex = rehierarch_and_map(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
-                    index_constructor=IndexHierarchy.from_labels,
+                    index_cls=IndexHierarchy,
                     index_constructors=index_constructors,
                     name=column_name,
                     )
             blocks_src = self._blocks._extract(row_key=order_lex)
         else:
-            index = IndexHierarchy.from_labels(index_labels,
+            index = IndexHierarchy._from_type_blocks(
+                    index_labels,
                     index_constructors=index_constructors,
                     name=column_name,
+                    own_blocks=True,
                     )
             blocks_src = self._blocks
 

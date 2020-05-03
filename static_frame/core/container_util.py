@@ -9,6 +9,7 @@ import typing as tp
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
@@ -138,11 +139,6 @@ def pandas_to_numpy(
 
     array.flags.writeable = False
     return array
-
-
-
-
-
 
 
 
@@ -527,16 +523,18 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
     raise RuntimeError(f'unhandled key {key}')
 
 
-# TODO: refactor for TypeBlocks
 def rehierarch_and_map(*,
-        labels: np.ndarray,
+        labels: 'TypeBlocks',
         depth_map: tp.Sequence[int],
-        index_constructor: IndexConstructor,
+        index_cls: tp.Type['IndexHierarchy'],
         index_constructors: tp.Optional[IndexConstructors] = None,
         name: tp.Optional[tp.Hashable] = None,
         ) -> tp.Tuple['IndexBase', np.ndarray]:
     '''
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
+
+    Args:
+        index_cls: provide a class, form which the constructor will be called.
     '''
 
     depth = labels.shape[1] # number of columns
@@ -546,32 +544,50 @@ def rehierarch_and_map(*,
     if set(range(depth)) != set(depth_map):
         raise RuntimeError('all depths must be specified')
 
-    labels_post = labels[NULL_SLICE, list(depth_map)]
+    labels_post = labels.iloc[NULL_SLICE, list(depth_map)]
     labels_sort = np.full(labels_post.shape, 0)
 
-    # get ordering of vlues found in each level
+    # get ordering of values found in each level
     order: tp.List[tp.Dict[tp.Hashable, int]] = [defaultdict(int) for _ in range(depth)]
 
-    for idx_row, label in enumerate(labels):
-        label = tuple(label)
-        for idx_col in range(depth):
-            if label[idx_col] not in order[idx_col]:
-                # Map label to an integer representing the observed order.
-                order[idx_col][label[idx_col]] = len(order[idx_col])
-            # Fill array for sorting based on observed order.
-            labels_sort[idx_row, idx_col] = order[idx_col][label[idx_col]]
+    for (idx_row, idx_col), label in labels.element_items():
+        if label not in order[idx_col]:
+            # Map label to an integer representing the observed order.
+            order[idx_col][label] = len(order[idx_col])
+        # Fill array for sorting based on observed order.
+        labels_sort[idx_row, idx_col] = order[idx_col][label]
 
     # Reverse depth_map for lexical sorting, which sorts by rightmost column first.
-    order_lex = np.lexsort([labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
-    labels_post = labels_post[order_lex]
-    labels_post.flags.writeable = False
-    index = index_constructor(labels_post,
+    order_lex = np.lexsort(
+            [labels_sort[NULL_SLICE, i] for i in reversed(depth_map)])
+
+    labels_post = labels_post.iloc[order_lex]
+
+    index = index_cls._from_type_blocks(
+            blocks=labels_post,
             index_constructors=index_constructors,
             name=name,
+            own_blocks=True,
             )
     return index, order_lex
 
+def rehierarch_and_map_from_index_hierarchy(*,
+        labels: 'IndexHierarchy',
+        depth_map: tp.Sequence[int],
+        index_constructors: tp.Optional[IndexConstructors] = None,
+        name: tp.Optional[tp.Hashable] = None,
+        ):
 
+    if labels._recache:
+        labels._update_array_cache()
+
+    return rehierarch_and_map(
+            labels=labels._blocks,
+            depth_map=depth_map,
+            index_cls=labels.__class__,
+            index_constructors=index_constructors,
+            name=name,
+            )
 
 def array_from_value_iter(
         key: tp.Hashable,

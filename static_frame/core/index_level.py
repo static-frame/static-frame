@@ -116,6 +116,9 @@ class IndexLevel:
         '''
         Assuming all depths are uniform, can get the depth without storing levels list. Could store a depth attribute, but all nested components with provide overlapping depth descriptions that are never examined.
         '''
+        if not len(self.index): # if zero sized, depth is zero
+            # TODO: need a way to represent 0-length IndexLevels with non-zero depth
+            return 1
         if self.targets is None:
             return 1
         level, depth = self, 1

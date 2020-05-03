@@ -446,7 +446,7 @@ class TypeBlocks(ContainerOperand):
 
     def element_items(self) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
         '''
-        Generator of pairs of iloc locations, values accross entire TypeBlock. Used in creating a IndexHierarchy instance from a TypeBlocks.
+        Generator of pairs of iloc locations, values across entire TypeBlock. Used in creating a IndexHierarchy instance from a TypeBlocks.
         '''
         for iloc in np.ndindex(self._shape):
             block_idx, column = self._index[iloc[1]]

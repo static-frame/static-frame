@@ -15,7 +15,6 @@ from static_frame.core.util import union2d
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import name_filter
 from static_frame.core.util import isin
-from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import CallableOrMapping
@@ -227,13 +226,14 @@ class IndexHierarchy(IndexBase):
         if reorder_for_hierarchy:
             if continuation_token != CONTINUATION_TOKEN_INACTIVE:
                 raise RuntimeError('continuation_token not supported when reorder_for_hiearchy')
-            # we need a single numpy array to use rehierarch_and_map
-            index_labels = iterable_to_array_2d(labels)
+            # use from_records to ensure approprate columnar types
+            from static_frame import Frame
+            index_labels = Frame.from_records(labels)._blocks
             # this will reorder and create the index using this smae method, passed as cls.from_labels
             index, _ = rehierarch_and_map(
                     labels=index_labels,
                     depth_map=range(index_labels.shape[1]), # keep order
-                    index_constructor=cls.from_labels,
+                    index_cls=cls,
                     index_constructors=index_constructors,
                     name=name,
                     )
@@ -448,6 +448,13 @@ class IndexHierarchy(IndexBase):
                 tree,
                 index_constructors=index_constructors
                 )
+
+        if index_constructors:
+            # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
+            if tuple(blocks.dtypes) != tuple(levels.dtype_per_depth()):
+                blocks = None
+                own_blocks = False
+
         return cls(levels=levels, name=name, blocks=blocks, own_blocks=own_blocks)
 
 
@@ -829,10 +836,15 @@ class IndexHierarchy(IndexBase):
         '''
         Return a new `IndexHierarchy` that conforms to the new depth assignments given be `depth_map`.
         '''
-        # TODO: refactor with TypeBlocks
+        if self._recache:
+            self._update_array_cache()
+
+        index_constructors = tuple(self._levels.index_types())
+
         index, _ = rehierarch_and_map(
-                labels=self.values,
-                index_constructor=self.__class__.from_labels,
+                labels=self._blocks,
+                index_cls=self.__class__,
+                index_constructors=index_constructors,
                 depth_map=depth_map,
                 )
         return index

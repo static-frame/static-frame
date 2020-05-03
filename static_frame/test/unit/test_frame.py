@@ -7139,6 +7139,9 @@ class TestUnit(TestCase):
         f2 = f1.set_index_hierarchy(['q', 'r'])
         self.assertEqual(f2.index.name, ('q', 'r'))
 
+        # we reuse the same block data
+        self.assertTrue((f2.index._blocks.mloc == f1._blocks[[1, 2]].mloc).all())
+
         self.assertEqual(f2.to_pairs(0),
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('q', (((2, 'a'), 2), ((2, 'b'), 2), ((50, 'a'), 50), ((50, 'b'), 50))), ('r', (((2, 'a'), 'a'), ((2, 'b'), 'b'), ((50, 'a'), 'a'), ((50, 'b'), 'b'))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False)))))
 
@@ -7181,6 +7184,9 @@ class TestUnit(TestCase):
                 [2]
                 )
 
+        # we reuse the block arrays in the Index
+        self.assertTrue((fh.index._blocks.mloc == f._blocks[:2].mloc).all())
+
         self.assertEqual( fh.to_pairs(0),
                 ((2, (((1, 1), 'a'), ((1, 2), 'b'), ((1, 3), 'c'), ((2, 1), 'd'), ((2, 2), 'e'), ((2, 3), 'f'), ((3, 1), 'g'), ((3, 2), 'h'), ((3, 3), 'i'))),))
 
@@ -7220,6 +7226,8 @@ class TestUnit(TestCase):
         self.assertEqual(fh.loc[HLoc[:, '2018']].to_pairs(0),
                 ((2, (((1, datetime.date(2018, 12, 1)), 10), ((2, datetime.date(2018, 12, 1)), 40))),))
 
+        # because we passed index_constructors, we may not be able to reuse blocks
+        self.assertTrue((fh.index._blocks.mloc != f._blocks[:2].mloc).all())
 
 
     def test_frame_set_index_hierarchy_f(self) -> None:
@@ -7241,7 +7249,6 @@ class TestUnit(TestCase):
         self.assertEqual(fh.to_pairs(0),
                 ((2, (((1, 'a'), 10), ((1, 'c'), 30), ((1, 'b'), 20), ((2, 'a'), 40), ((2, 'c'), 60), ((2, 'b'), 50))),)
                 )
-
 
     #---------------------------------------------------------------------------
 
@@ -7334,6 +7341,9 @@ class TestUnit(TestCase):
         f5 = f1.drop[:]
         self.assertEqual(f5.shape, (2, 0))
 
+        # Check that we can represent the IndexHierarchy
+        d = f5.display(DisplayConfig(type_color=False))
+        self.assertEqual(tuple(d), (['<Frame>'], ['<IndexHierarchy>', '<float64>'], ['<Index>'], ['0'], ['1'], ['<int64>']))
 
     #---------------------------------------------------------------------------
 
