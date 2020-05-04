@@ -2912,5 +2912,163 @@ class TestUnit(TestCase):
                 ((0, 0.0), (1, 1.0), (2, 2.0), (3, 3.0), (4, 4.0), (5, 5.0), (6, 6.0), (7, 7.0)))
 
 
+    #---------------------------------------------------------------------------
+    def test_series_str_capitalize_a(self) -> None:
+        s1 = Series(('foo', 'bar'), index=('x', 'y'))
+        s2 = s1.str.capitalize()
+
+        self.assertEqual(s2.to_pairs(),
+            (('x', 'Foo'), ('y', 'Bar'))
+            )
+
+        s3 = Series((20, 30), index=('x', 'y'))
+        s4 = s3.str.capitalize()
+
+        self.assertEqual(s4.to_pairs(),
+            (('x', '20'), ('y', '30'))
+            )
+
+    def test_series_str_center_a(self) -> None:
+        s1 = Series(('foo', 'bar'), index=('x', 'y'))
+        s2 = s1.str.center(9, '-')
+
+        self.assertEqual(s2.to_pairs(),
+            (('x', '---foo---'), ('y', '---bar---'))
+            )
+
+        s3 = Series((20, 30), index=('x', 'y'))
+        s4 = s3.str.center(4)
+
+        self.assertEqual(s4.to_pairs(),
+            (('x', ' 20 '), ('y', ' 30 '))
+            )
+
+    def test_series_str_encode_a(self) -> None:
+        s1 = Series(('foo', 'bar'), index=('x', 'y'))
+
+        s2 = s1.str.encode('ascii')
+
+        self.assertEqual(s2.to_pairs(),
+            (('x', b'foo'), ('y', b'bar'))
+            )
+        s3 = s2.str.decode('utf-8')
+
+        self.assertEqual(s3.to_pairs(),
+            (('x', 'foo'), ('y', 'bar'))
+            )
+
+    def test_series_str_ljust_a(self) -> None:
+        s1 = Series(('foo', 'bar'), index=('x', 'y'))
+        s2 = s1.str.ljust(9, '-')
+
+        self.assertEqual(s2.to_pairs(),
+            (('x', 'foo------'), ('y', 'bar------'))
+            )
+
+        s3 = Series((20, 30), index=('x', 'y'))
+        s4 = s3.str.ljust(4)
+
+        self.assertEqual(s4.to_pairs(),
+            (('x', '20  '), ('y', '30  '))
+            )
+
+
+    def test_series_str_replace_a(self) -> None:
+        s1 = Series(('*foo*', '*bar*'), index=('x', 'y'))
+        s2 = s1.str.replace('*', '!')
+
+        self.assertEqual(s2.to_pairs(),
+                (('x', '!foo!'), ('y', '!bar!')))
+
+
+    def test_series_str_rjust_a(self) -> None:
+        s1 = Series(('foo', 'bar'), index=('x', 'y'))
+        s2 = s1.str.rjust(9, '-')
+
+        self.assertEqual(s2.to_pairs(),
+            (('x', '------foo'), ('y', '------bar'))
+            )
+
+        s3 = Series((20, 30), index=('x', 'y'))
+        s4 = s3.str.rjust(4)
+
+        self.assertEqual(s4.to_pairs(),
+            (('x', '  20'), ('y', '  30'))
+            )
+
+
+    def test_series_str_rsplit_a(self) -> None:
+        s1 = Series(('f*oo', 'b*ar'), index=('x', 'y'))
+        s2 = s1.str.rsplit('*')
+
+        self.assertEqual(s2.to_pairs(),
+                (('x', ('f', 'oo')), ('y', ('b', 'ar'))))
+
+
+    def test_series_str_rstrip_a(self) -> None:
+        s1 = Series((' foo  ', ' bar  '), index=('x', 'y'))
+        s2 = s1.str.rstrip()
+        self.assertEqual(s2.to_pairs(),
+                (('x', ' foo'), ('y', ' bar')))
+
+
+    def test_series_str_split_a(self) -> None:
+        s1 = Series(('f*oo', 'b*ar'), index=('x', 'y'))
+        s2 = s1.str.split('*')
+
+        self.assertEqual(s2.to_pairs(),
+                (('x', ('f', 'oo')), ('y', ('b', 'ar'))))
+
+    def test_series_str_strip_a(self) -> None:
+        s1 = Series(('*foo*', '*bar*'), index=('x', 'y'))
+        s2 = s1.str.strip('*')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'foo'), ('y', 'bar')))
+
+
+    def test_series_str_swapcase_a(self) -> None:
+        s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
+        s2 = s1.str.swapcase()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'Foo'), ('y', 'Bar')))
+
+    def test_series_str_title_a(self) -> None:
+        s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
+        s2 = s1.str.title()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'Foo'), ('y', 'Bar')))
+
+    def test_series_str_upper_a(self) -> None:
+        s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
+        s2 = s1.str.upper()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'FOO'), ('y', 'BAR')))
+
+
+    def test_series_str_zfill_a(self) -> None:
+        s1 = Series(('3', '40'), index=('x', 'y'))
+        s2 = s1.str.zfill(4)
+        self.assertEqual(s2.to_pairs(),
+                (('x', '0003'), ('y', '0040')))
+
+    #---------------------------------------------------------------------------
+    def test_series_str_upper_a(self) -> None:
+        s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
+        s2 = s1.str.count('foo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 1), ('y', 2)))
+
+    def test_series_str_endswith_a(self) -> None:
+        s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
+        s2 = s1.str.endswith('bar')
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', True)))
+
+    def test_series_str_startswith_a(self) -> None:
+        s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
+        s2 = s1.str.startswith('foo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', True)))
+
 if __name__ == '__main__':
     unittest.main()

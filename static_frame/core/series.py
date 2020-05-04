@@ -31,6 +31,7 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import isin
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import CallableOrMapping
@@ -42,14 +43,13 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import dtype_to_na
+from static_frame.core.util import argmin_1d
+from static_frame.core.util import argmax_1d
+from static_frame.core.util import intersect1d
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceAssignTrio
 from static_frame.core.selector_node import InterfaceSelectTrio
-
-from static_frame.core.util import argmin_1d
-from static_frame.core.util import argmax_1d
-from static_frame.core.util import intersect1d
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
@@ -61,19 +61,19 @@ from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayHeader
 
 from static_frame.core.iter_node import IterNodeType
-# from static_frame.core.iter_node import IterNode
 from static_frame.core.iter_node import IterNodeGroup
 from static_frame.core.iter_node import IterNodeDepthLevel
 from static_frame.core.iter_node import IterNodeWindow
 from static_frame.core.iter_node import IterNodeNoArg
-
 from static_frame.core.iter_node import IterNodeApplyType
 
-from static_frame.core.index import Index
+from static_frame.core.node_str import InterfaceStr
 
-# from static_frame.core.index_hierarchy import HLoc
+from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
@@ -81,9 +81,6 @@ from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import pandas_to_numpy
-
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
 
 from static_frame.core.assign import Assign
 
@@ -526,6 +523,29 @@ class Series(ContainerOperand):
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign,
                 delegate=SeriesAssign
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def str(self) -> InterfaceStr['Series']:
+
+        #NOTE: bytes might be encodeed as an integer
+
+        if self.values.dtype.kind not in DTYPE_STR_KIND:
+            # not sure if this is the best default typ
+            func_to_array = partial(self.values.astype, str)
+        else:
+            func_to_array = partial(getattr, self, 'values')
+
+        func_to_container = partial(self.__class__,
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )
+
+        return InterfaceStr(
+                func_to_array=func_to_array,
+                func_to_container=func_to_container,
                 )
 
     #---------------------------------------------------------------------------

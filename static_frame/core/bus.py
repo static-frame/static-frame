@@ -58,7 +58,7 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     '''
 
 #-------------------------------------------------------------------------------
-class Bus(ContainerBase):
+class Bus(ContainerBase): # not a ContainerOperand
 
     __slots__ = (
         '_loaded',
