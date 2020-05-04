@@ -1,7 +1,7 @@
 
 import typing as tp
 import numpy as np
-from numpy import char as npc #type: ignore
+from numpy import char as npc
 
 if tp.TYPE_CHECKING:
 

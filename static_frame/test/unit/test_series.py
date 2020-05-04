@@ -3052,7 +3052,7 @@ class TestUnit(TestCase):
                 (('x', '0003'), ('y', '0040')))
 
     #---------------------------------------------------------------------------
-    def test_series_str_upper_a(self) -> None:
+    def test_series_str_count_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
         s2 = s1.str.count('foo')
         self.assertEqual(s2.to_pairs(),
