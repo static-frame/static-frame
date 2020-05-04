@@ -4089,7 +4089,7 @@ class Frame(ContainerOperand):
 
     def __round__(self, decimals: int = 0) -> 'Frame':
         '''
-        Return a :obj:``Frame`` rounded to the given decimals. Negative decimals round to the left of the decimal point.
+        Return a :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
         Args:
             decimals: number of decimals to round to.
