@@ -15,6 +15,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -76,6 +77,7 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelectTrio
 from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.node_str import InterfaceStr
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
@@ -2136,6 +2138,38 @@ class Frame(ContainerOperand):
         '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
+    #---------------------------------------------------------------------------
+    @property
+    def string(self) -> InterfaceStr['Frame']:
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
+        #NOTE: temp name
+
+        all_str_kind = all(d.kind in DTYPE_STR_KIND for d in self._blocks.dtypes)
+
+        if all_str_kind:
+            func_to_array = partial(getattr, self, 'values')
+        else:
+            # NOTE: might use blocks
+            # not sure if this is the best default type
+            func_to_array = partial(self.values.astype, str)
+
+        func_to_container = partial(
+                self.__class__,
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_index=True,
+                )
+
+        return InterfaceStr(
+                func_to_array=func_to_array,
+                func_to_container=func_to_container,
+                )
+
+
+    #---------------------------------------------------------------------------
     # generators
     @property
     def iter_array(self) -> IterNodeAxis:

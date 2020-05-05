@@ -528,16 +528,17 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def str(self) -> InterfaceStr['Series']:
-
-        #NOTE: bytes might be encodeed as an integer
-
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
         if self.values.dtype.kind not in DTYPE_STR_KIND:
             # not sure if this is the best default typ
             func_to_array = partial(self.values.astype, str)
         else:
             func_to_array = partial(getattr, self, 'values')
 
-        func_to_container = partial(self.__class__,
+        func_to_container = partial(
+                self.__class__,
                 index=self._index,
                 name=self._name,
                 own_index=True,

@@ -8449,6 +8449,19 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_str_capitalize_a(self) -> None:
+
+        f1 = Frame(np.array([['foo', 'bar'], ['baz', 'baz']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.string.capitalize()
+
+        self.assertEqual(f2.to_pairs(0),
+            (('x', (('a', 'Foo'), ('b', 'Baz'))), ('y', (('a', 'Bar'), ('b', 'Baz'))))
+            )
+
 
 
 if __name__ == '__main__':
