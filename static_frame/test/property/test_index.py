@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 # from hypothesis import strategies as st
-from hypothesis import given  # type: ignore
+from hypothesis import given
 # from hypothesis import reproduce_failure  # type: ignore
 
 from static_frame.test.property.strategies import get_labels
@@ -26,7 +26,7 @@ from static_frame import IndexGO
 class TestUnit(TestCase):
 
 
-    @given(get_labels())  # type: ignore
+    @given(get_labels())
     def test_index_values_len(self, values: tp.Sequence[tp.Hashable]) -> None:
 
         def property_values(cls: tp.Type[Index], values: tp.Sequence[tp.Hashable]) -> None:
@@ -38,7 +38,7 @@ class TestUnit(TestCase):
         property_values(Index, values)
         property_values(IndexGO, values)
 
-    @given(get_labels())  # type: ignore
+    @given(get_labels())
     def test_index_values_list(self, values: tp.Sequence[tp.Hashable]) -> None:
 
         def property_values(cls: tp.Type[Index], values: tp.Iterable[tp.Hashable]) -> None:
@@ -50,7 +50,7 @@ class TestUnit(TestCase):
         property_values(IndexGO, values)
 
 
-    @given(get_labels())  # type: ignore
+    @given(get_labels())
     def test_index_loc_to_iloc_element(self, values: tp.Sequence[tp.Hashable]) -> None:
 
         def property_loc_to_iloc_element(cls: tp.Type[Index], values: tp.Iterable[tp.Hashable]) -> None:
@@ -61,7 +61,7 @@ class TestUnit(TestCase):
         property_loc_to_iloc_element(Index, values)
         property_loc_to_iloc_element(IndexGO, values)
 
-    @given(get_labels(min_size=1))  # type: ignore
+    @given(get_labels(min_size=1))
     def test_index_loc_to_iloc_slice(self, values: tp.Sequence[tp.Hashable]) -> None:
 
         def property_loc_to_iloc_slice(cls: tp.Type[Index], values: tp.Iterable[tp.Hashable]) -> None:
@@ -72,14 +72,14 @@ class TestUnit(TestCase):
                 if v is None:
                     self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(None))
                 else:
-                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))  # type: ignore  # https://github.com/python/typeshed/pull/3024
+                    self.assertEqual(index.loc_to_iloc(slice(v, None)), slice(i, None))
 
         property_loc_to_iloc_slice(Index, values)
         property_loc_to_iloc_slice(IndexGO, values)
 
 
 
-    @given(get_labels(min_size=2))  # type: ignore
+    @given(get_labels(min_size=2))
     def test_index_go_append(self, values: tp.Sequence[tp.Hashable]) -> None:
 
         index = IndexGO(values[:-1])
@@ -89,7 +89,7 @@ class TestUnit(TestCase):
         self.assertEqual(length_start + 1, length_end)
 
 
-    @given(get_labels(min_size=1)) # type: ignore
+    @given(get_labels(min_size=1))
     def test_index_isin(self, labels: tp.Sequence[tp.Hashable]) -> None:
         index = Index(labels)
         self.assertTrue(index.isin((labels[0],))[0])

@@ -5,7 +5,7 @@ import operator
 # import numpy as np
 
 # from hypothesis import strategies as st
-from hypothesis import given  # type: ignore
+from hypothesis import given
 
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
@@ -23,7 +23,7 @@ from static_frame import Series
 class TestUnit(TestCase):
 
 
-    @given(sfst.get_series())  # type: ignore
+    @given(sfst.get_series())
     def test_basic_attributes(self, s1: Series) -> None:
 
         self.assertEqual(s1.dtype, s1.values.dtype)
@@ -35,7 +35,7 @@ class TestUnit(TestCase):
             self.assertTrue(s1.nbytes > 0)
 
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))  # type: ignore
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))
     def test_unary_operators_numeric(self, s1: Series) -> None:
         for op in _UFUNC_UNARY_OPERATORS:
             if op == '__invert__': # invalid on non Boolean
@@ -46,7 +46,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL, min_size=1))  # type: ignore
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL, min_size=1))
     def test_unary_operators_boolean(self, s1: Series) -> None:
         for op in _UFUNC_UNARY_OPERATORS:
             if op != '__invert__': # valid on Boolean
@@ -58,7 +58,7 @@ class TestUnit(TestCase):
 
 
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC))  # type: ignore
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC))
     def test_binary_operators_numeric(self, s1: Series) -> None:
         for op in _UFUNC_BINARY_OPERATORS:
             if op in {
@@ -78,7 +78,7 @@ class TestUnit(TestCase):
             b = func(values, values)
             self.assertAlmostEqualArray(a, b)
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, s1: Series) -> None:
         for op in _UFUNC_BINARY_OPERATORS:
             if op not in {
@@ -94,7 +94,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))  # type: ignore
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC, min_size=1))
     def test_ufunc_axis(self, s1: Series) -> None:
         for attr, attrs in UFUNC_AXIS_SKIPNA.items():
             a = getattr(s1, attr)()
@@ -102,7 +102,7 @@ class TestUnit(TestCase):
             b = func(s1.values)
             self.assertEqualWithNaN(a, b)
 
-    @given(sfst.get_series(min_size=1)) # type: ignore
+    @given(sfst.get_series(min_size=1))
     def test_isin(self, s1: Series) -> None:
 
         value = s1.iloc[0]

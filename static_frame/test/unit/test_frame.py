@@ -3797,11 +3797,11 @@ class TestUnit(TestCase):
 
         # Index
         groups = list(frame.iter_group_items('w', axis=1))
-        expected_pairs = [ # type: ignore
-                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),),
-                (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))),
+        expected_pairs = [
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),), #type: ignore
+                (('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2))), #type: ignore
                  ('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2)))),
-                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),)]
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),)] #type: ignore
 
         self.assertEqual([0, 1, 3], [group[0] for group in groups])
         self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
@@ -3838,10 +3838,10 @@ class TestUnit(TestCase):
 
         # Index
         groups = list(frame.iter_group_items(['x', 'y'], axis=1))
-        expected_pairs = [ # type: ignore
-                (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),),
-                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),),
-                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))),
+        expected_pairs = [
+                (('c', (('w', 1), ('x', 2), ('y', 1), ('z', 2))),), #type: ignore
+                (('d', (('w', 3), ('x', 3), ('y', 3), ('z', 4))),), #type: ignore
+                (('a', (('w', 0), ('x', 3), ('y', 5), ('z', 7))), #type: ignore
                  ('b', (('w', 1), ('x', 3), ('y', 5), ('z', 2)))),
         ]
 
@@ -3876,7 +3876,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                tuple(k for k, v in f.iter_group_items(slice('s','t'))), #type: ignore
+                tuple(k for k, v in f.iter_group_items(slice('s','t'))),
                 ((False, False), (True, False), (True, True))
                 )
 
@@ -3888,7 +3888,7 @@ class TestUnit(TestCase):
         f = sf.Frame.from_records(data, columns=tuple('abc'))
 
         post1 = {k: v for k, v in f.iter_group_items('c')}
-        post2 = {k[0]: v for k, v in f.iter_group_items(['c'])} #as a list, this gets a multiple key
+        post2 = {k[0]: v for k, v in f.iter_group_items(['c'])} # as a list, this gets a multiple key
 
         self.assertEqual(len(post1), 2)
         self.assertEqual(len(post1), len(post2))
@@ -6766,7 +6766,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_records_q(self) -> None:
 
-        Y: tp.Type[tp.NamedTuple]
+        # Y: tp.Type[tp.NamedTuple]
 
         class Y(tp.NamedTuple): # pylint: disable=E0102
             x: str
@@ -7152,7 +7152,7 @@ class TestUnit(TestCase):
                 (('p', (((2, 'a'), 1), ((2, 'b'), 30), ((50, 'a'), 30), ((50, 'b'), 30))), ('s', (((2, 'a'), False), ((2, 'b'), True), ((50, 'a'), True), ((50, 'b'), True))), ('t', (((2, 'a'), True), ((2, 'b'), False), ((50, 'a'), False), ((50, 'b'), False))))
                 )
 
-        f4 = f1.set_index_hierarchy(slice('q', 'r'), drop=True)  # type: ignore
+        f4 = f1.set_index_hierarchy(slice('q', 'r'), drop=True)
         self.assertEqual(f4.index.name, ('q', 'r'))
 
         self.assertEqual(f4.to_pairs(0),

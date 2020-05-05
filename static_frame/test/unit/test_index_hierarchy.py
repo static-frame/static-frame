@@ -214,14 +214,14 @@ class TestUnit(TestCase):
 
         post = ih.loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04'),  # type: ignore
+                slice('2018-01-01', '2018-01-04'),
                 ['x', 'y']])
         # this will break if we recognize this can be a slice
         self.assertEqual(post, list(range(len(ih))))
 
         post = ih.loc_to_iloc(HLoc[
                 ['A', 'B', 'C'],
-                slice('2018-01-01', '2018-01-04'),  # type: ignore
+                slice('2018-01-01', '2018-01-04'),
                 'x'])
 
         self.assertEqual(post, list(range(0, len(ih), 2)))

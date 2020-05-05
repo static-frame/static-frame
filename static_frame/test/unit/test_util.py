@@ -1089,7 +1089,7 @@ class TestUnit(TestCase):
 
     def test_key_to_datetime_key_a(self) -> None:
 
-        post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        post = key_to_datetime_key(slice('2018-01-01', '2019-01-01'))
         self.assertEqual(post,
                 slice(np.datetime64('2018-01-01'),
                 np.datetime64('2019-01-01'), None))

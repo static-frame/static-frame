@@ -1229,7 +1229,7 @@ class TypeBlocks(ContainerOperand):
             block_slices: tp.Iterator[tp.Tuple[int, tp.Union[slice, int]]] = iter(())
         else:
             if not self._blocks:
-                raise IndexError(f'cannot drop columns from zero-blocks')
+                raise IndexError('cannot drop columns from zero-blocks')
             # block slices must be in ascending order, not key order
             block_slices = iter(self._key_to_block_slices(
                     column_key,
@@ -1480,8 +1480,8 @@ class TypeBlocks(ContainerOperand):
                         # reassign remainder for next iteration
                     else: # value is 1D array or tuple
                         # we assume we assigning into a horizontal position
-                        value_piece = value[value_piece_column_key]
-                        value = value[slice(v_width, None)]
+                        value_piece = value[value_piece_column_key] #type: ignore
+                        value = value[slice(v_width, None)] #type: ignore
                 else: # not sliceable; this can be a single column
                     value_piece = value
 
@@ -1557,7 +1557,7 @@ class TypeBlocks(ContainerOperand):
                 # update target to valid values
                 value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
                 target &= value_valid_part
-                value_part = value[NULL_SLICE, value_slice][target]
+                value_part = value[NULL_SLICE, value_slice][target] #type: ignore
                 start = end # always update start
             else:
                 value_part = value
@@ -1880,11 +1880,11 @@ class TypeBlocks(ContainerOperand):
             elif self._shape == other._shape:
                 # if the result of reblock does not result in compatible shapes, we have to use .values as operands; the dtypes can be different so we only have to check that they columns sizes, the second element of the signature, all match.
                 if not self.reblock_compatible(other):
-                    self_operands = (self.values,)
-                    other_operands = (other.values,)
+                    self_operands = (self.values,) #type: ignore
+                    other_operands = (other.values,) #type: ignore
                 else:
-                    self_operands = self._reblock()
-                    other_operands = other._reblock()
+                    self_operands = self._reblock() #type: ignore
+                    other_operands = other._reblock() #type: ignore
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
 
@@ -1906,11 +1906,11 @@ class TypeBlocks(ContainerOperand):
             # handle dimensions
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
-                other_operands = (other for _ in range(len(self._blocks)))
+                other_operands = (other for _ in range(len(self._blocks))) #type: ignore
             elif other.ndim == 1 and len(other) == self._shape[1]:
                 # if given a 1d array
                 # one dimensional array of same size: chop to block width
-                other_operands = (other[s] for s in self._block_shape_slices())
+                other_operands = (other[s] for s in self._block_shape_slices()) #type: ignore
             else:
                 raise NotImplementedError('cannot apply binary operators to arbitrary np arrays.')
 
@@ -2032,7 +2032,7 @@ class TypeBlocks(ContainerOperand):
                     sel_nonzeros = ((0, sel),)
                 else:
                     # only collect columns for sided NaNs
-                    sel_nonzeros = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j)
+                    sel_nonzeros = ((i, sel[:, i]) for i, j in enumerate(sel[sided_index]) if j) #type: ignore
 
                 for idx, sel_nonzero in sel_nonzeros:
                     # indices of not-nan values, per column
@@ -2074,7 +2074,7 @@ class TypeBlocks(ContainerOperand):
         sided_index = 0 if sided_leading else -1
 
         # will need to re-reverse blocks coming out of this
-        block_iter = blocks if sided_leading else reversed(blocks)
+        block_iter = blocks if sided_leading else reversed(blocks) #type: ignore
 
         isna_exit_previous = None
 

@@ -93,8 +93,8 @@ class TestUnit(TestCase):
         mapping = {x:x for x in range(3)}
 
         with self.assertRaises(RuntimeError):
-            _ = Index._extract_labels( #type: ignore
-                    mapping=mapping,
+            _ = Index._extract_labels(
+                    mapping=mapping, #type: ignore
                     labels=labels,
                     dtype=float
                     )
@@ -122,8 +122,8 @@ class TestUnit(TestCase):
                 tp.cast(np.ndarray, idx.loc_to_iloc(np.array([True, False, True, False]))).tolist(),
                 [0, 2])
 
-        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))  # type: ignore
-        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))  # type: ignore
+        self.assertEqual(idx.loc_to_iloc(slice('c',)), slice(None, 3, None))
+        self.assertEqual(idx.loc_to_iloc(slice('b','d')), slice(1, 4, None))
         self.assertEqual(idx.loc_to_iloc('d'), 3)
 
 
@@ -548,7 +548,7 @@ class TestUnit(TestCase):
         self.assertEqual(index._drop_loc(['a', 'g']).values.tolist(),
                 ['b', 'c', 'd', 'e', 'f'])
 
-        self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),  # type: ignore
+        self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),
                 ['a'])
 
 
@@ -672,10 +672,10 @@ class TestUnit(TestCase):
     def test_name_b(self) -> None:
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name=['x', 'y'])
+            Index(('a', 'b', 'c', 'd'), name=['x', 'y']) #type: ignore
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name={'x', 'y'})
+            Index(('a', 'b', 'c', 'd'), name={'x', 'y'}) #type: ignore
 
 
     def test_index_name_c(self) -> None:

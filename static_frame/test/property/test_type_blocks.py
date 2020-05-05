@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from hypothesis import strategies as st
-from hypothesis import given  # type: ignore
+from hypothesis import given
 
 from static_frame.test.property import strategies as sfst
 
@@ -21,7 +21,7 @@ from static_frame import TypeBlocks
 class TestUnit(TestCase):
 
 
-    @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1)) # type: ignore
+    @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
     def test_from_element_items(self,
             shapes: tp.List[tp.Tuple[int, int]],
             labels: tp.Sequence[tp.Hashable]
@@ -38,7 +38,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, shape)
 
 
-    @given(st.integers(max_value=sfst.MAX_COLUMNS)) # type: ignore
+    @given(st.integers(max_value=sfst.MAX_COLUMNS))
     def test_from_zero_size_shape(self, value: int) -> None:
 
         for shape in ((0, value), (value, 0)):
@@ -46,7 +46,7 @@ class TestUnit(TestCase):
             self.assertEqual(post.shape, shape)
 
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_basic_attributes(self, tb: TypeBlocks) -> None:
         self.assertEqual(len(tb.dtypes), tb.shape[1])
         self.assertEqual(len(tb.shapes), len(tb.mloc))
@@ -63,14 +63,14 @@ class TestUnit(TestCase):
 
 
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_values(self, tb: TypeBlocks) -> None:
         values = tb.values
         self.assertEqual(values.shape, tb.shape)
         self.assertEqual(values.dtype, tb._row_dtype)
 
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_axis_values(self, tb: TypeBlocks) -> None:
         # this test found a flaw in axis_values when dealing with axis 1 and unified,  1D type blocks
         for axis in (0, 1):
@@ -87,7 +87,7 @@ class TestUnit(TestCase):
                         self.assertTrue(array.dtype.kind == tb._row_dtype.kind)
 
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_element_items(self, tb: TypeBlocks) -> None:
         # NOTE: this found a flaw in _extract_iloc where we tried to optimize selection with a unified array
         count = 0
@@ -97,7 +97,7 @@ class TestUnit(TestCase):
             self.assertEqualWithNaN(v, v_extract)
         self.assertEqual(count, tb.size)
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_reblock_signature(self, tb: TypeBlocks) -> None:
         post = tuple(tb._reblock_signature())
         unique_dtypes = np.unique(tb.dtypes)
@@ -107,7 +107,7 @@ class TestUnit(TestCase):
         self.assertTrue(sum(p[1] for p in post), tb.shape[1])
 
 
-    @given(sfst.get_type_blocks(), sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_block_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
 
         for axis in (None, 0, 1):
@@ -120,7 +120,7 @@ class TestUnit(TestCase):
                 self.assertFalse(post1)
 
 
-    @given(sfst.get_type_blocks(), sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_reblock_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
 
         post1 = tb1.reblock_compatible(tb2)
@@ -135,20 +135,20 @@ class TestUnit(TestCase):
     def test_concatenate_blocks(self) -> None:
         pass
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_consolidate_blocks(self, tb: TypeBlocks) -> None:
 
         tb_post = TypeBlocks.from_blocks(tb.consolidate_blocks(tb._blocks))
         self.assertEqual(tb_post.shape, tb.shape)
         self.assertTrue((tb_post.dtypes == tb.dtypes).all())
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_reblock(self, tb: TypeBlocks) -> None:
         tb_post = TypeBlocks.from_blocks(tb._reblock())
         self.assertEqual(tb_post.shape, tb.shape)
         self.assertTrue((tb_post.dtypes == tb.dtypes).all())
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_consolidate(self, tb: TypeBlocks) -> None:
         tb_post = tb.consolidate()
         self.assertEqual(tb_post.shape, tb.shape)
@@ -166,7 +166,7 @@ class TestUnit(TestCase):
     def test_ufunc_axis_skipna(self) -> None:
         pass
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_display(self, tb: TypeBlocks) -> None:
         post = tb.display()
         self.assertTrue(len(post) > 0)
@@ -199,7 +199,7 @@ class TestUnit(TestCase):
     def test_shift_blocks(self) -> None:
         pass
 
-    @given(sfst.get_type_blocks())  # type: ignore
+    @given(sfst.get_type_blocks())
     def test_assign_blocks_from_keys(self, tb1: TypeBlocks) -> None:
 
         # assigning a single value from a list of column keys
@@ -254,7 +254,7 @@ class TestUnit(TestCase):
     def test_extract_iloc_assign(self) -> None:
         pass
 
-    @given(sfst.get_type_blocks(min_rows=1, min_columns=1))  # type: ignore
+    @given(sfst.get_type_blocks(min_rows=1, min_columns=1))
     def test_drop(self, tb: TypeBlocks) -> None:
 
         for row in range(tb.shape[0]):
@@ -330,7 +330,7 @@ class TestUnit(TestCase):
         pass
 
 
-    @given(sfst.get_type_blocks_aligned_array())  # type: ignore
+    @given(sfst.get_type_blocks_aligned_array())
     def test_append(self, tb_aligned_array: tp.Tuple[TypeBlocks, np.ndarray]) -> None:
         tb, aa = tb_aligned_array
         shape_original = tb.shape
@@ -340,7 +340,7 @@ class TestUnit(TestCase):
         else:
             self.assertEqual(tb.shape[1], shape_original[1] + aa.shape[1])
 
-    @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))  # type: ignore
+    @given(sfst.get_type_blocks_aligned_type_blocks(min_size=2, max_size=2))
     def test_extend(self, tbs: tp.Sequence[TypeBlocks]) -> None:
         front = tbs[0]
         back = tbs[1]

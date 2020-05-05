@@ -1481,7 +1481,7 @@ def _ufunc_set_1d(
 
     if is_union:
         return func(array, other)
-    return func(array, other, assume_unique=assume_unique) # type: ignore (Callable doesn't support optional kwargs)
+    return func(array, other, assume_unique=assume_unique) #type: ignore
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],

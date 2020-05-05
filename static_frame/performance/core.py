@@ -1214,7 +1214,7 @@ class FrameFloat_H2D_add_series_partial(PerfTest):
                 list(string.ascii_lowercase))
         f1 = sf.FrameGO(index=index)
         for col in range(100):
-            s = sf.Series.from_element(col * .1, index=index[col: col+6]) #pylint: disable=E1136
+            s = sf.Series.from_element(col * .1, index=index[col: col+6]) #type: ignore #pylint: disable=E1136
             f1[col] = s
         assert f1.sum().sum() == 2970.0
 

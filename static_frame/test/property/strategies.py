@@ -8,8 +8,8 @@ from itertools import repeat
 
 from hypothesis import strategies as st
 from hypothesis.extra import numpy as hypo_np
-from hypothesis import settings as hypo_settings  # type: ignore
-from hypothesis import HealthCheck  # type: ignore
+from hypothesis import settings as hypo_settings
+from hypothesis import HealthCheck
 
 
 import numpy as np
@@ -189,7 +189,7 @@ class DTGroup(Enum):
 
     # derived
 
-    BASIC = NUMERIC + BOOL + STRING # type: ignore
+    BASIC = NUMERIC + BOOL + STRING
     NUMERIC_REAL = (
             hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,

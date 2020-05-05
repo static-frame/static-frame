@@ -6,7 +6,7 @@ import fractions
 import numpy as np
 
 from hypothesis import strategies as st
-from hypothesis import given  # type: ignore
+from hypothesis import given
 
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.test.property.strategies import DTGroup
@@ -36,30 +36,30 @@ from static_frame.core import util
 class TestUnit(TestCase):
 
 
-    @given(get_array_1d2d())  # type: ignore
+    @given(get_array_1d2d())
     def test_mloc(self, array: np.ndarray) -> None:
 
         x = util.mloc(array)
         self.assertTrue(isinstance(x, int))
 
 
-    @given(get_array_1d2d())  # type: ignore
+    @given(get_array_1d2d())
     def test_shape_filter(self, shape: np.ndarray) -> None:
         self.assertTrue(len(util.shape_filter(shape)), 2)
 
-    @given(get_dtype_pairs())  # type: ignore
+    @given(get_dtype_pairs())
     def test_resolve_dtype(self, dtype_pair: tp.Tuple[np.dtype, np.dtype]) -> None:
 
         x = util.resolve_dtype(*dtype_pair)
         self.assertTrue(isinstance(x, np.dtype))
 
-    @given(get_dtypes(min_size=1))  # type: ignore
+    @given(get_dtypes(min_size=1))
     def test_resolve_dtype_iter(self, dtypes: tp.Iterable[np.dtype]) -> None:
 
         x = util.resolve_dtype_iter(dtypes)
         self.assertTrue(isinstance(x, np.dtype))
 
-    @given(get_labels(min_size=1))  # type: ignore
+    @given(get_labels(min_size=1))
     def test_resolve_type_iter(self, objects: tp.Iterable[object]) -> None:
 
         known_types = set((
@@ -80,19 +80,19 @@ class TestUnit(TestCase):
 
 
 
-    @given(get_arrays_2d_aligned_columns())  # type: ignore
+    @given(get_arrays_2d_aligned_columns())
     def test_concat_resolved_axis_0(self, arrays: tp.List[np.ndarray]) -> None:
         array = util.concat_resolved(arrays, axis=0)
         self.assertEqual(array.ndim, 2)
         self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
 
-    @given(get_arrays_2d_aligned_rows())  # type: ignore
+    @given(get_arrays_2d_aligned_rows())
     def test_concat_resolved_axis_1(self, arrays: tp.List[np.ndarray]) -> None:
         array = util.concat_resolved(arrays, axis=1)
         self.assertEqual(array.ndim, 2)
         self.assertEqual(array.dtype, util.resolve_dtype_iter((x.dtype for x in arrays)))
 
-    @given(get_dtype(), get_shape_1d2d(), get_value())  # type: ignore
+    @given(get_dtype(), get_shape_1d2d(), get_value())
     def test_full_or_fill(self,
             dtype: np.dtype,
             shape: tp.Union[tp.Tuple[int], tp.Tuple[int, int]],
@@ -104,13 +104,13 @@ class TestUnit(TestCase):
         else:
             self.assertTrue(value in array)
 
-    @given(get_dtype())  # type: ignore
+    @given(get_dtype())
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
         post = util.dtype_to_na(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 
 
-    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC)) # type: ignore
+    @given(get_array_1d2d(dtype_group=DTGroup.NUMERIC))
     def test_ufunc_axis_skipna(self, array: np.ndarray) -> None:
 
         has_na = util.isna_array(array).any()
@@ -134,18 +134,18 @@ class TestUnit(TestCase):
                 if array.ndim == 2:
                     self.assertTrue(post.ndim == 1)
 
-    @given(get_array_1d2d()) # type: ignore
+    @given(get_array_1d2d())
     def test_ufunc_unique(self, array: np.ndarray) -> None:
         post = util.ufunc_unique(array, axis=0)
         self.assertTrue(len(post) <= array.shape[0])
 
-    @given(get_array_1d(min_size=1), st.integers()) # type: ignore
+    @given(get_array_1d(min_size=1), st.integers())
     def test_roll_1d(self, array: np.ndarray, shift: int) -> None:
         post = util.roll_1d(array, shift)
         self.assertEqual(len(post), len(array))
         self.assertEqualWithNaN(array[-(shift % len(array))], post[0])
 
-    @given(get_array_2d(min_rows=1, min_columns=1), st.integers()) # type: ignore
+    @given(get_array_2d(min_rows=1, min_columns=1), st.integers())
     def test_roll_2d(self, array: np.ndarray, shift: int) -> None:
         for axis in (0, 1):
             post = util.roll_2d(array, shift=shift, axis=axis)
@@ -164,7 +164,7 @@ class TestUnit(TestCase):
 
 
 
-    @given(get_array_1d(dtype_group=DTGroup.OBJECT)) # type: ignore
+    @given(get_array_1d(dtype_group=DTGroup.OBJECT))
     def test_iterable_to_array_a(self, array: np.ndarray) -> None:
         values = array.tolist()
         post, _ = util.iterable_to_array_1d(values)
@@ -175,14 +175,14 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(post, values)
 
 
-    @given(get_labels()) # type: ignore
+    @given(get_labels())
     def test_iterable_to_array_b(self, labels: tp.Iterable[tp.Any]) -> None:
         post, _ = util.iterable_to_array_1d(labels)
         self.assertAlmostEqualValues(post, labels)
         self.assertTrue(isinstance(post, np.ndarray))
 
 
-    @given(st.slices(10)) # type: ignore #pylint: disable=E1120
+    @given(st.slices(10))  #pylint: disable=E1120
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
         post_key = util.slice_to_ascending_slice(key, size=10)
@@ -195,7 +195,7 @@ class TestUnit(TestCase):
 # to_timedelta64
 # key_to_datetime_key
 
-    @given(get_array_1d2d()) # type: ignore
+    @given(get_array_1d2d())
     def test_array_to_groups_and_locations(self, array: np.ndarray) -> None:
 
         groups, locations = util.array_to_groups_and_locations(array, 0)
@@ -208,7 +208,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(np.unique(locations)) == len(groups))
 
 
-    @given(get_array_1d2d()) # type: ignore
+    @given(get_array_1d2d())
     def test_isna_array(self, array: np.ndarray) -> None:
 
         post = util.isna_array(array)
@@ -220,7 +220,7 @@ class TestUnit(TestCase):
         self.assertTrue(np.ravel(post).sum() == count_na)
 
 
-    @given(get_array_1d(dtype_group=DTGroup.BOOL)) # type: ignore
+    @given(get_array_1d(dtype_group=DTGroup.BOOL))
     def test_binary_transition(self, array: np.ndarray) -> None:
         post = util.binary_transition(array)
 
@@ -238,7 +238,7 @@ class TestUnit(TestCase):
             self.assertTrue(array[post].sum() == 0)
 
 
-    @given(get_array_1d2d()) # type: ignore
+    @given(get_array_1d2d())
     def test_array_to_duplicated(self, array: np.ndarray) -> None:
         if array.ndim == 2:
             for axis in (0, 1):
@@ -259,7 +259,7 @@ class TestUnit(TestCase):
 
         self.assertTrue(post.dtype == bool)
 
-    @given(get_array_1d2d()) # type: ignore
+    @given(get_array_1d2d())
     def test_array_shift(self, array: np.ndarray) -> None:
 
         for shift in (-1, 1):
@@ -289,7 +289,7 @@ class TestUnit(TestCase):
                         self.assertTrue(array.dtype == post.dtype)
 
 
-    @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
+    @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_union1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union1d(
                 arrays[0],
@@ -305,7 +305,7 @@ class TestUnit(TestCase):
             self.assertSetEqual(set(post), (set(arrays[0]) | set(arrays[1])))
 
 
-    @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
+    @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_intersect1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect1d(
                 arrays[0],
@@ -320,7 +320,7 @@ class TestUnit(TestCase):
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
 
-    @given(st.lists(get_array_1d(), min_size=2, max_size=2)) # type: ignore
+    @given(st.lists(get_array_1d(), min_size=2, max_size=2))
     def test_setdiff1d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff1d(
                 arrays[0],
@@ -340,7 +340,7 @@ class TestUnit(TestCase):
             self.assertSetEqual(set(post), (set(arrays[0]).difference(set(arrays[1]))))
 
 
-    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2)) # type: ignore
+    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
         if post.dtype == object:
@@ -354,7 +354,7 @@ class TestUnit(TestCase):
                 )
 
 
-    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2)) # type: ignore
+    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         if post.dtype == object:
@@ -367,7 +367,7 @@ class TestUnit(TestCase):
                 & set(util.array2d_to_tuples(arrays[1])))
                 )
 
-    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2)) # type: ignore
+    @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         if post.dtype == object:
@@ -380,7 +380,7 @@ class TestUnit(TestCase):
                 set(util.array2d_to_tuples(arrays[1]))))
                 )
 
-    @given(get_arrays_2d_aligned_columns()) # type: ignore
+    @given(get_arrays_2d_aligned_columns())
     def test_array_set_ufunc_many(self, arrays: tp.Sequence[np.ndarray]) -> None:
 
         for union in (True, False):
@@ -391,7 +391,7 @@ class TestUnit(TestCase):
             else:
                 self.assertTrue(post.ndim == 2)
 
-    @given(get_array_1d2d(min_rows=1, min_columns=1)) # type: ignore
+    @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
         container_factory = (list, set, np.array)

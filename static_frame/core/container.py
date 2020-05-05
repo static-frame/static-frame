@@ -479,11 +479,11 @@ class ContainerOperandMeta(ContainerMeta):
         return func
 
 
-    def __new__(mcs,
+    def __new__(mcs, #type: ignore
             name: str,
             bases: tp.Tuple[type, ...],
             attrs: tp.Dict[str, object
-            ]) -> type:
+            ]) -> type: #must return a subtype of "ContainerOperandMeta"
         '''
         Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
         '''
@@ -584,6 +584,7 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     __slots__ = EMPTY_TUPLE
 
     interface: 'Frame' # property that returns a Frame
+    values: np.ndarray
 
     __pos__: tp.Callable[[T], T]
     __neg__: tp.Callable[[T], T]

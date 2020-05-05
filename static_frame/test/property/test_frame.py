@@ -8,7 +8,7 @@ import sqlite3
 import numpy as np
 
 # from hypothesis import strategies as st
-from hypothesis import given  # type: ignore
+from hypothesis import given
 
 
 from static_frame.core.frame import Frame
@@ -31,7 +31,7 @@ from static_frame.test.test_case import skip_win
 class TestUnit(TestCase):
 
 
-    @given(sfst.get_frame_or_frame_go())  # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_basic_attributes(self, f1: Frame) -> None:
 
         self.assertEqual(len(f1.dtypes), f1.shape[1])
@@ -47,7 +47,7 @@ class TestUnit(TestCase):
             self.assertTrue(f1.nbytes == 0)
 
 
-    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))  # type: ignore
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_unary_operators_numeric(self, f1: Frame) -> None:
         for op in _UFUNC_UNARY_OPERATORS:
             if op == '__invert__': # invalid on non Boolean
@@ -60,7 +60,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_unary_operators_boolean(self, f1: Frame) -> None:
         for op in _UFUNC_UNARY_OPERATORS:
             if op != '__invert__': # valid on Boolean
@@ -71,7 +71,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))  # type: ignore
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_binary_operators_numeric(self, f1: Frame) -> None:
         for op in _UFUNC_BINARY_OPERATORS:
             if op in {
@@ -94,7 +94,7 @@ class TestUnit(TestCase):
             self.assertAlmostEqualArray(a, b)
 
 
-    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))  # type: ignore
+    @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, f1: Frame) -> None:
         for op in _UFUNC_BINARY_OPERATORS:
             if op not in {
@@ -109,7 +109,7 @@ class TestUnit(TestCase):
             b = func(values, values)
             self.assertAlmostEqualArray(a, b)
 
-    @given(sfst.get_frame_or_frame_go(  # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.NUMERIC,
             index_dtype_group=sfst.DTGroup.STRING,
             min_rows=3,
@@ -127,7 +127,7 @@ class TestUnit(TestCase):
 
     # from hypothesis import reproduce_failure
     # NOTE: was able to improve many of these, but continued to get compliated type cases, and complications
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.NUMERIC_REAL,
             min_rows=1,
             min_columns=1))
@@ -154,7 +154,7 @@ class TestUnit(TestCase):
     #                 import ipdb; ipdb.set_trace()
     #                 raise
 
-    @given(sfst.get_frame()) # type: ignore
+    @given(sfst.get_frame())
     def test_frame_isin(self, f1: Frame) -> None:
         value = f1.iloc[0, 0]
         if (not isna_element(value) and
@@ -168,7 +168,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    @given(sfst.get_frame_go(), sfst.get_label())  # type: ignore
+    @given(sfst.get_frame_go(), sfst.get_label())
     def test_frame_go_setitem(self, f1: Frame, label: tp.Hashable) -> None:
 
         shape = f1.shape
@@ -176,7 +176,7 @@ class TestUnit(TestCase):
         self.assertEqual(shape[1] + 1, f1.shape[1])
 
 
-    @given(sfst.get_arrays_2d_aligned_rows(min_size=2, max_size=2))  # type: ignore
+    @given(sfst.get_arrays_2d_aligned_rows(min_size=2, max_size=2))
     def test_frame_go_extend(self, arrays: tp.Sequence[np.ndarray]) -> None:
         f1 = FrameGO(arrays[0], columns=self.get_letters(arrays[0].shape[1]))
         shape = f1.shape
@@ -185,7 +185,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape[1], shape[1] + f2.shape[1])
 
 
-    @given(sfst.get_arrays_2d_aligned_rows(min_size=3))  # type: ignore
+    @given(sfst.get_arrays_2d_aligned_rows(min_size=3))
     def test_frame_go_extend_items(self, arrays: tp.Sequence[np.ndarray]) -> None:
         frame_array = arrays[0]
         # just take first columm form 2d arrays
@@ -209,7 +209,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     # exporters
 
-    @given(sfst.get_frame_or_frame_go())  # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_pairs(self, f1: Frame) -> None:
         for i in range(0, 1):
             post = f1.to_pairs(i)
@@ -220,7 +220,7 @@ class TestUnit(TestCase):
             self.assertTrue(isinstance(post, tuple))
 
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -231,7 +231,7 @@ class TestUnit(TestCase):
             self.assertTrue((post.values == f1.values).all())
 
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -245,7 +245,7 @@ class TestUnit(TestCase):
                 # could be Byte-swapped arrays not supported
                 pass
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -254,7 +254,7 @@ class TestUnit(TestCase):
         self.assertTrue(tuple(xa.keys()) == tuple(f1.columns))
 
 
-    @given(sfst.get_frame( # type: ignore
+    @given(sfst.get_frame(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC,
             ))
@@ -264,7 +264,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(f2.columns) == len(f1.columns) + 1)
 
     @skip_win  # type: ignore # get UnicodeEncodeError: 'charmap' codec can't encode character '\u0162' in position 0: character maps to <undefined>
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_csv(self, f1: Frame) -> None:
@@ -279,7 +279,7 @@ class TestUnit(TestCase):
 
 
     @skip_win  # type: ignore # UnicodeEncodeError
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_tsv(self, f1: Frame) -> None:
@@ -288,7 +288,7 @@ class TestUnit(TestCase):
             self.assertTrue(os.stat(fp).st_size > 0)
 
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_xlsx(self, f1: Frame) -> None:
@@ -296,7 +296,7 @@ class TestUnit(TestCase):
             f1.to_xlsx(fp)
             self.assertTrue(os.stat(fp).st_size > 0)
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_sqlite(self, f1: Frame) -> None:
@@ -312,7 +312,7 @@ class TestUnit(TestCase):
                 pass
 
 
-    @given(sfst.get_frame_or_frame_go( # type: ignore
+    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             columns_dtype_group=sfst.DTGroup.STRING,
             index_dtype_group=sfst.DTGroup.STRING
@@ -329,28 +329,28 @@ class TestUnit(TestCase):
                 pass
 
 
-    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_html(self, f1: Frame) -> None:
         post = f1.to_html()
         self.assertTrue(len(post) > 0)
 
     @skip_win  # type: ignore # UnicodeEncodeError
-    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_html_datatables(self, f1: Frame) -> None:
         post = f1.to_html_datatables(show=False)
         self.assertTrue(len(post) > 0)
 
-    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_rst(self, f1: Frame) -> None:
         post = f1.to_rst()
         self.assertTrue(len(post) > 0)
 
-    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_markdown(self, f1: Frame) -> None:
         post = f1.to_markdown()
         self.assertTrue(len(post) > 0)
 
-    @given(sfst.get_frame_or_frame_go()) # type: ignore
+    @given(sfst.get_frame_or_frame_go())
     def test_frame_to_latex(self, f1: Frame) -> None:
         post = f1.to_latex()
         self.assertTrue(len(post) > 0)

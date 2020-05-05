@@ -167,7 +167,7 @@ class LocMap:
                     raise LocInvalid('Invalid loc given in a slice', attr, field)
 
                 if offset_apply:
-                    pos += offset
+                    pos += offset #type: ignore
 
                 if field is SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
@@ -200,8 +200,8 @@ class LocMap:
                 # when offset is defined (even if it is zero), null slice is not sufficiently specific; need to convert to an explict slice relative to the offset
                 return slice(offset, len(positions) + offset) #type: ignore
             try:
-                return slice(*cls.map_slice_args( #type: ignore
-                        label_to_pos.get,
+                return slice(*cls.map_slice_args(
+                        label_to_pos.get, #type: ignore
                         key,
                         labels,
                         offset)
@@ -1194,6 +1194,6 @@ def _requires_reindex(left: Index, right: Index) -> bool:
         # if any not equal, require reindex
         return ne.any() #type: ignore
     # assume we have a bool
-    return ne # if not equal, require reindex
+    return ne #type: ignore  #if not equal, require reindex
 
 

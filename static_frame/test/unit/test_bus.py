@@ -27,7 +27,7 @@ class TestUnit(TestCase):
 
     def test_frame_deferred_a(self) -> None:
 
-        self.assertEqual(str(FrameDeferred), f'<FrameDeferred>')
+        self.assertEqual(str(FrameDeferred), '<FrameDeferred>')
 
     def test_bus_slotted_a(self) -> None:
 

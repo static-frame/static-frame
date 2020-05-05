@@ -273,7 +273,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         values = self._series.values[key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            return values
+            return values #type: ignore
         series = Series(
                 values,
                 index=self._series._index.iloc[key],
@@ -298,7 +298,7 @@ class Bus(ContainerBase): # not a ContainerOperand
                 values = np.array(values)
                 values.flags.writeable = False
             else:
-                return values
+                return values #type: ignore
 
         series = Series(values,
                 index=self._series._index.iloc[iloc_key],

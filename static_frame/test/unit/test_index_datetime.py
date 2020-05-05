@@ -439,7 +439,7 @@ class TestUnit(TestCase):
         self.assertEqual(index.loc_to_iloc('2018-02-11'), 41)
 
         self.assertEqual(
-                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),  # type: ignore
+                index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
                 slice(41, 55, None))
 
 
