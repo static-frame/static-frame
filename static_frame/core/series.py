@@ -68,6 +68,7 @@ from static_frame.core.iter_node import IterNodeNoArg
 from static_frame.core.iter_node import IterNodeApplyType
 
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_dt import InterfaceDatetime
 
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -547,6 +548,26 @@ class Series(ContainerOperand):
         return InterfaceString(
                 func_to_array=func_to_array,
                 func_to_container=func_to_container,
+                )
+
+    @property
+    def as_dt(self) -> InterfaceDatetime['Series']:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        func_to_blocks = lambda: (self.values,)
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            return self.__class__(
+                next(blocks), # assume only one
+                index=self._index,
+                name=self._name,
+                own_index=True,
+                )
+
+        return InterfaceDatetime(
+                func_to_blocks=func_to_blocks,
+                func_to_container=blocks_to_container,
                 )
 
     #---------------------------------------------------------------------------

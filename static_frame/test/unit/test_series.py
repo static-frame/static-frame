@@ -3070,5 +3070,18 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('x', True), ('y', True)))
 
+
+    #---------------------------------------------------------------------------
+    def test_series_as_dt_year_a(self) -> None:
+
+        s1 = Series(('2014', '2013'), index=('x', 'y'))
+
+        s2 = s1.as_dt.year
+
+        self.assertEqual(
+                s2.to_pairs(),
+                (('x', np.datetime64('2014')), ('y', np.datetime64('2013')))
+                )
+
 if __name__ == '__main__':
     unittest.main()

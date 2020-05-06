@@ -2172,16 +2172,8 @@ class Frame(ContainerOperand):
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        def block_to_dt(array: np.ndarray) -> np.ndarray:
-            if array.dtype.kind == DTYPE_DATETIME_KIND:
-                return array
-            return array.astype(np.datetime64)
 
-        func_to_blocks = partial(
-                self._blocks._ufunc_blocks,
-                NULL_SLICE,
-                block_to_dt
-                )
+        func_to_blocks = self._blocks._datetime_blocks
 
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
             tb = TypeBlocks.from_blocks(blocks)

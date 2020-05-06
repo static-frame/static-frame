@@ -40,6 +40,7 @@ class InterfaceDatetime(tp.Generic[TContainer]):
     def year(self) -> TContainer:
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._func_to_blocks():
+                # NOTE: need same special handling for integers the Index construciton uses
                 yield block.astype(DT64_YEAR)
 
         return self._func_to_container(blocks())
