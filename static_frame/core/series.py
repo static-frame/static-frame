@@ -527,7 +527,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def str(self) -> InterfaceStr['Series']:
+    def as_str(self) -> InterfaceStr['Series']:
         '''
         Interface for applying string methods to elements in this container.
         '''

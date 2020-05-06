@@ -8456,12 +8456,22 @@ class TestUnit(TestCase):
                 index=('a', 'b'),
                 columns=('x', 'y')
                 )
-        f2 = f1.string.capitalize()
+        f2 = f1.as_str.capitalize()
 
         self.assertEqual(f2.to_pairs(0),
             (('x', (('a', 'Foo'), ('b', 'Baz'))), ('y', (('a', 'Bar'), ('b', 'Baz'))))
             )
 
+    def test_frame_str_center_a(self) -> None:
+
+        f1 = Frame.from_records(
+                [['p', 0, True, 'foo'], ['q', 20, None, 'bar']],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.as_str.center(8, '-').to_pairs(0),
+                (('w', (('a', '---p----'), ('b', '---q----'))), ('x', (('a', '---0----'), ('b', '---20---'))), ('y', (('a', '--True--'), ('b', '--None--'))), ('z', (('a', '--foo---'), ('b', '--bar---')))))
 
 
 if __name__ == '__main__':

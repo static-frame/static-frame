@@ -346,7 +346,7 @@ class TypeBlocks(ContainerOperand):
                 return column_2d_filter(blocks[0])
 
         # get empty array and fill parts
-        # NOTE: row_dtype may be None if a unfillable array; defaults to NP default
+        # NOTE: row_dtype may be None if an unfillable array; defaults to NP default
         if not row_multiple:
             # return 1 row TypeBlock as a 1D array with length equal to the number of columns
             array = np.empty(shape[1], dtype=row_dtype)

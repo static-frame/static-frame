@@ -141,6 +141,9 @@ from static_frame.core.exception import AxisInvalid
 
 from static_frame.core.doc_str import doc_inject
 
+# Alias str for type annotations so as to not get confused with str property on
+String = str
+
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover
@@ -2140,20 +2143,14 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def string(self) -> InterfaceStr['Frame']:
+    def as_str(self) -> InterfaceStr['Frame']:
         '''
         Interface for applying string methods to elements in this container.
         '''
-        #NOTE: temp name
-
-        all_str_kind = all(d.kind in DTYPE_STR_KIND for d in self._blocks.dtypes)
-
-        if all_str_kind:
-            func_to_array = partial(getattr, self, 'values')
-        else:
-            # NOTE: might use blocks
-            # not sure if this is the best default type
-            func_to_array = partial(self.values.astype, str)
+        def func_to_array():
+            # only convert blocks that are not already string
+            tb = TypeBlocks.from_blocks(self._blocks._astype_blocks(NULL_SLICE, str))
+            return tb.values
 
         func_to_container = partial(
                 self.__class__,

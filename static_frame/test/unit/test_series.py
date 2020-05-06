@@ -2915,14 +2915,14 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_series_str_capitalize_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
-        s2 = s1.str.capitalize()
+        s2 = s1.as_str.capitalize()
 
         self.assertEqual(s2.to_pairs(),
             (('x', 'Foo'), ('y', 'Bar'))
             )
 
         s3 = Series((20, 30), index=('x', 'y'))
-        s4 = s3.str.capitalize()
+        s4 = s3.as_str.capitalize()
 
         self.assertEqual(s4.to_pairs(),
             (('x', '20'), ('y', '30'))
@@ -2930,14 +2930,14 @@ class TestUnit(TestCase):
 
     def test_series_str_center_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
-        s2 = s1.str.center(9, '-')
+        s2 = s1.as_str.center(9, '-')
 
         self.assertEqual(s2.to_pairs(),
             (('x', '---foo---'), ('y', '---bar---'))
             )
 
         s3 = Series((20, 30), index=('x', 'y'))
-        s4 = s3.str.center(4)
+        s4 = s3.as_str.center(4)
 
         self.assertEqual(s4.to_pairs(),
             (('x', ' 20 '), ('y', ' 30 '))
@@ -2946,12 +2946,12 @@ class TestUnit(TestCase):
     def test_series_str_encode_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
 
-        s2 = s1.str.encode('ascii')
+        s2 = s1.as_str.encode('ascii')
 
         self.assertEqual(s2.to_pairs(),
             (('x', b'foo'), ('y', b'bar'))
             )
-        s3 = s2.str.decode('utf-8')
+        s3 = s2.as_str.decode('utf-8')
 
         self.assertEqual(s3.to_pairs(),
             (('x', 'foo'), ('y', 'bar'))
@@ -2959,14 +2959,14 @@ class TestUnit(TestCase):
 
     def test_series_str_ljust_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
-        s2 = s1.str.ljust(9, '-')
+        s2 = s1.as_str.ljust(9, '-')
 
         self.assertEqual(s2.to_pairs(),
             (('x', 'foo------'), ('y', 'bar------'))
             )
 
         s3 = Series((20, 30), index=('x', 'y'))
-        s4 = s3.str.ljust(4)
+        s4 = s3.as_str.ljust(4)
 
         self.assertEqual(s4.to_pairs(),
             (('x', '20  '), ('y', '30  '))
@@ -2975,7 +2975,7 @@ class TestUnit(TestCase):
 
     def test_series_str_replace_a(self) -> None:
         s1 = Series(('*foo*', '*bar*'), index=('x', 'y'))
-        s2 = s1.str.replace('*', '!')
+        s2 = s1.as_str.replace('*', '!')
 
         self.assertEqual(s2.to_pairs(),
                 (('x', '!foo!'), ('y', '!bar!')))
@@ -2983,14 +2983,14 @@ class TestUnit(TestCase):
 
     def test_series_str_rjust_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
-        s2 = s1.str.rjust(9, '-')
+        s2 = s1.as_str.rjust(9, '-')
 
         self.assertEqual(s2.to_pairs(),
             (('x', '------foo'), ('y', '------bar'))
             )
 
         s3 = Series((20, 30), index=('x', 'y'))
-        s4 = s3.str.rjust(4)
+        s4 = s3.as_str.rjust(4)
 
         self.assertEqual(s4.to_pairs(),
             (('x', '  20'), ('y', '  30'))
@@ -2999,7 +2999,7 @@ class TestUnit(TestCase):
 
     def test_series_str_rsplit_a(self) -> None:
         s1 = Series(('f*oo', 'b*ar'), index=('x', 'y'))
-        s2 = s1.str.rsplit('*')
+        s2 = s1.as_str.rsplit('*')
 
         self.assertEqual(s2.to_pairs(),
                 (('x', ('f', 'oo')), ('y', ('b', 'ar'))))
@@ -3007,66 +3007,66 @@ class TestUnit(TestCase):
 
     def test_series_str_rstrip_a(self) -> None:
         s1 = Series((' foo  ', ' bar  '), index=('x', 'y'))
-        s2 = s1.str.rstrip()
+        s2 = s1.as_str.rstrip()
         self.assertEqual(s2.to_pairs(),
                 (('x', ' foo'), ('y', ' bar')))
 
 
     def test_series_str_split_a(self) -> None:
         s1 = Series(('f*oo', 'b*ar'), index=('x', 'y'))
-        s2 = s1.str.split('*')
+        s2 = s1.as_str.split('*')
 
         self.assertEqual(s2.to_pairs(),
                 (('x', ('f', 'oo')), ('y', ('b', 'ar'))))
 
     def test_series_str_strip_a(self) -> None:
         s1 = Series(('*foo*', '*bar*'), index=('x', 'y'))
-        s2 = s1.str.strip('*')
+        s2 = s1.as_str.strip('*')
         self.assertEqual(s2.to_pairs(),
                 (('x', 'foo'), ('y', 'bar')))
 
 
     def test_series_str_swapcase_a(self) -> None:
         s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
-        s2 = s1.str.swapcase()
+        s2 = s1.as_str.swapcase()
         self.assertEqual(s2.to_pairs(),
                 (('x', 'Foo'), ('y', 'Bar')))
 
     def test_series_str_title_a(self) -> None:
         s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
-        s2 = s1.str.title()
+        s2 = s1.as_str.title()
         self.assertEqual(s2.to_pairs(),
                 (('x', 'Foo'), ('y', 'Bar')))
 
     def test_series_str_upper_a(self) -> None:
         s1 = Series(('fOO', 'bAR'), index=('x', 'y'))
-        s2 = s1.str.upper()
+        s2 = s1.as_str.upper()
         self.assertEqual(s2.to_pairs(),
                 (('x', 'FOO'), ('y', 'BAR')))
 
 
     def test_series_str_zfill_a(self) -> None:
         s1 = Series(('3', '40'), index=('x', 'y'))
-        s2 = s1.str.zfill(4)
+        s2 = s1.as_str.zfill(4)
         self.assertEqual(s2.to_pairs(),
                 (('x', '0003'), ('y', '0040')))
 
     #---------------------------------------------------------------------------
     def test_series_str_count_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
-        s2 = s1.str.count('foo')
+        s2 = s1.as_str.count('foo')
         self.assertEqual(s2.to_pairs(),
                 (('x', 1), ('y', 2)))
 
     def test_series_str_endswith_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
-        s2 = s1.str.endswith('bar')
+        s2 = s1.as_str.endswith('bar')
         self.assertEqual(s2.to_pairs(),
                 (('x', False), ('y', True)))
 
     def test_series_str_startswith_a(self) -> None:
         s1 = Series(('foo', 'foo foo bar'), index=('x', 'y'))
-        s2 = s1.str.startswith('foo')
+        s2 = s1.as_str.startswith('foo')
         self.assertEqual(s2.to_pairs(),
                 (('x', True), ('y', True)))
 
