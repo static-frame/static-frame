@@ -18,7 +18,7 @@ ToArrayType = tp.Callable[[], np.ndarray]
 ToContainerType = tp.Callable[[np.ndarray], TContainer]
 
 
-class InterfaceStr(tp.Generic[TContainer]):
+class InterfaceString(tp.Generic[TContainer]):
 
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 

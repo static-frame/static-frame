@@ -67,7 +67,7 @@ from static_frame.core.iter_node import IterNodeWindow
 from static_frame.core.iter_node import IterNodeNoArg
 from static_frame.core.iter_node import IterNodeApplyType
 
-from static_frame.core.node_str import InterfaceStr
+from static_frame.core.node_str import InterfaceString
 
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -527,7 +527,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def as_str(self) -> InterfaceStr['Series']:
+    def as_str(self) -> InterfaceString['Series']:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -544,7 +544,7 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-        return InterfaceStr(
+        return InterfaceString(
                 func_to_array=func_to_array,
                 func_to_container=func_to_container,
                 )

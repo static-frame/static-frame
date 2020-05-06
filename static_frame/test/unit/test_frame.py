@@ -8474,5 +8474,25 @@ class TestUnit(TestCase):
                 (('w', (('a', '---p----'), ('b', '---q----'))), ('x', (('a', '---0----'), ('b', '---20---'))), ('y', (('a', '--True--'), ('b', '--None--'))), ('z', (('a', '--foo---'), ('b', '--bar---')))))
 
 
+
+
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_as_dt_year_a(self):
+
+        f1 = Frame.from_records(
+                [['2012', datetime.date(2012,4,5)], ['2013', datetime.date(2014,1,1)]],
+                index=('a', 'b'),
+                columns=('w', 'x')
+                )
+
+        f2 = f1.as_dt.year
+
+        self.assertEqual(f2.to_pairs(0),
+                (('w', (('a', np.datetime64('2012')), ('b', np.datetime64('2013')))), ('x', (('a', np.datetime64('2012')), ('b', np.datetime64('2014')))))
+                )
+
+
 if __name__ == '__main__':
     unittest.main()

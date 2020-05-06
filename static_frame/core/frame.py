@@ -38,6 +38,7 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
+from static_frame.core.util import DTYPE_DATETIME_KIND
 
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
@@ -77,7 +78,8 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelectTrio
 from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
-from static_frame.core.node_str import InterfaceStr
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_dt import InterfaceDatetime
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand
@@ -2143,7 +2145,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def as_str(self) -> InterfaceStr['Frame']:
+    def as_str(self) -> InterfaceString['Frame']:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -2160,11 +2162,42 @@ class Frame(ContainerOperand):
                 own_index=True,
                 )
 
-        return InterfaceStr(
+        return InterfaceString(
                 func_to_array=func_to_array,
                 func_to_container=func_to_container,
                 )
 
+    @property
+    def as_dt(self) -> InterfaceDatetime['Frame']:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        def block_to_dt(array: np.ndarray) -> np.ndarray:
+            if array.dtype.kind == DTYPE_DATETIME_KIND:
+                return array
+            return array.astype(np.datetime64)
+
+        func_to_blocks = partial(
+                self._blocks._ufunc_blocks,
+                NULL_SLICE,
+                block_to_dt
+                )
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            tb = TypeBlocks.from_blocks(blocks)
+            return self.__class__(
+                tb,
+                index=self._index,
+                columns=self._columns,
+                name=self._name,
+                own_index=True,
+                own_data=True,
+                )
+
+        return InterfaceDatetime(
+                func_to_blocks=func_to_blocks,
+                func_to_container=blocks_to_container,
+                )
 
     #---------------------------------------------------------------------------
     # generators
