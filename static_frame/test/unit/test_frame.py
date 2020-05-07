@@ -8456,7 +8456,7 @@ class TestUnit(TestCase):
                 index=('a', 'b'),
                 columns=('x', 'y')
                 )
-        f2 = f1.as_str.capitalize()
+        f2 = f1.via_str.capitalize()
 
         self.assertEqual(f2.to_pairs(0),
             (('x', (('a', 'Foo'), ('b', 'Baz'))), ('y', (('a', 'Bar'), ('b', 'Baz'))))
@@ -8470,7 +8470,7 @@ class TestUnit(TestCase):
                 columns=('w', 'x', 'y', 'z')
                 )
 
-        self.assertEqual(f1.as_str.center(8, '-').to_pairs(0),
+        self.assertEqual(f1.via_str.center(8, '-').to_pairs(0),
                 (('w', (('a', '---p----'), ('b', '---q----'))), ('x', (('a', '---0----'), ('b', '---20---'))), ('y', (('a', '--True--'), ('b', '--None--'))), ('z', (('a', '--foo---'), ('b', '--bar---')))))
 
 
@@ -8481,18 +8481,101 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_frame_as_dt_year_a(self):
 
+        dt64 = np.datetime64
+
         f1 = Frame.from_records(
-                [['2012', datetime.date(2012,4,5)], ['2013', datetime.date(2014,1,1)]],
+                [['2012', datetime.date(2012,4,5), dt64('2020-05')],
+                ['2013', datetime.date(2014,1,1), dt64('1919-03')]],
                 index=('a', 'b'),
-                columns=('w', 'x')
+                columns=('w', 'x', 'y')
                 )
 
-        f2 = f1.as_dt.year
+        with self.assertRaises(RuntimeError):
+            f2 = f1.via_dt.year
 
+        self.assertEqual(
+                f1['x':].via_dt.year.to_pairs(0),
+                (('x', (('a', np.datetime64('2012')), ('b', np.datetime64('2014')))), ('y', (('a', np.datetime64('2020')), ('b', np.datetime64('1919')))))
+                )
+
+
+    def test_frame_as_dt_month_b(self):
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+
+        f2 = f1.via_dt.month
         self.assertEqual(f2.to_pairs(0),
-                (('w', (('a', np.datetime64('2012')), ('b', np.datetime64('2013')))), ('x', (('a', np.datetime64('2012')), ('b', np.datetime64('2014')))))
+                (('w', (('a', 4), ('b', 1))), ('x', (('a', 4), ('b', 4))), ('y', (('a', 5), ('b', 1))), ('z', (('a', 5), ('b', 3))))
                 )
 
+
+    def test_frame_as_dt_weekday_a(self):
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [['2012', datetime.date(2012,4,5), dt64('2020-05-03')],
+                ['2013', datetime.date(2014,1,1), dt64('1919-03-02')]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y')
+                )
+
+        with self.assertRaises(RuntimeError):
+            f2 = f1.via_dt.weekday()
+
+        self.assertEqual(
+                f1['x':].via_dt.weekday().to_pairs(0),
+                (('x', (('a', 3), ('b', 2))), ('y', (('a', 6), ('b', 6))))
+                )
+
+
+    def test_frame_as_dt_weekday_b(self):
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [['2012', datetime.date(2012,4,5), datetime.date(2012,4,2)],
+                ['2013', datetime.date(2014,1,1), datetime.date(2012,4,1)]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y'),
+                consolidate_blocks=True
+                )
+
+        self.assertEqual(
+                f1['x':].via_dt.weekday().to_pairs(0),
+                (('x', (('a', 3), ('b', 2))), ('y', (('a', 0), ('b', 6))))
+                )
+
+
+
+
+    # def test_frame_as_dt_weekday_b(self):
+
+    #     f1 = Frame.from_records(
+    #             [['2012', datetime.date(2012,4,5)], ['2013', datetime.date(2014,12,1)]],
+    #             index=('a', 'b'),
+    #             columns=('w', 'x')
+    #             )
+
+    #     post = f1.via_dt.weekday()
+
+    #     import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

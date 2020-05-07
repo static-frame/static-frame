@@ -1213,18 +1213,18 @@ class TypeBlocks(ContainerOperand):
             else:
                 yield from parts
 
-    def _datetime_blocks(self,
-            column_key: GetItemKeyType = NULL_SLICE,
-            ) -> tp.Iterator[np.ndarray]:
-        '''
-        Iterator or blocks, where blocks are converted to value-derived datetime64 arrays if they are not already a datetime64 kind.
-        '''
-        def block_to_dt(array: np.ndarray) -> np.ndarray:
-            if array.dtype.kind == DTYPE_DATETIME_KIND:
-                return array
-            return array.astype(np.datetime64)
+    # def _datetime_blocks(self,
+    #         column_key: GetItemKeyType = NULL_SLICE,
+    #         ) -> tp.Iterator[np.ndarray]:
+    #     '''
+    #     Iterator or blocks, where blocks are converted to value-derived datetime64 arrays if they are not already a datetime64 kind.
+    #     '''
+    #     def block_to_dt(array: np.ndarray) -> np.ndarray:
+    #         if array.dtype.kind == DTYPE_DATETIME_KIND:
+    #             return array
+    #         return array.astype(np.datetime64)
 
-        yield from self._ufunc_blocks(column_key, block_to_dt)
+    #     yield from self._ufunc_blocks(column_key, block_to_dt)
 
     def _drop_blocks(self,
             row_key: GetItemKeyType = None,

@@ -2145,7 +2145,7 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def as_str(self) -> InterfaceString['Frame']:
+    def via_str(self) -> InterfaceString['Frame']:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -2168,26 +2168,26 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def as_dt(self) -> InterfaceDatetime['Frame']:
+    def via_dt(self) -> InterfaceDatetime['Frame']:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
 
-        func_to_blocks = self._blocks._datetime_blocks
+        # NOTE: we only process object dt64 types; strings have to be converted explicitly
 
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
             tb = TypeBlocks.from_blocks(blocks)
             return self.__class__(
-                tb,
-                index=self._index,
-                columns=self._columns,
-                name=self._name,
-                own_index=True,
-                own_data=True,
-                )
+                    tb,
+                    index=self._index,
+                    columns=self._columns,
+                    name=self._name,
+                    own_index=True,
+                    own_data=True,
+                    )
 
         return InterfaceDatetime(
-                func_to_blocks=func_to_blocks,
+                blocks=self._blocks._blocks,
                 func_to_container=blocks_to_container,
                 )
 

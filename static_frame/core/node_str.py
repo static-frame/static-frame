@@ -24,7 +24,7 @@ class InterfaceString(tp.Generic[TContainer]):
 
     __slots__ = (
         '_func_to_array', # function that returns array of strings
-        '_func_to_container', # partialed function that will return a new container
+        '_blocks_to_container', # partialed function that will return a new container
         )
 
     def __init__(self,
@@ -32,13 +32,13 @@ class InterfaceString(tp.Generic[TContainer]):
             func_to_container: ToContainerType[TContainer]
             ) -> None:
         self._func_to_array: ToArrayType = func_to_array
-        self._func_to_container: ToContainerType[TContainer] = func_to_container
+        self._blocks_to_container: ToContainerType[TContainer] = func_to_container
 
     def capitalize(self) -> TContainer:
         '''
         Return a container with only the first character of each element capitalized.
         '''
-        return self._func_to_container(npc.capitalize(self._func_to_array()))
+        return self._blocks_to_container(npc.capitalize(self._func_to_array()))
 
     def center(self,
             width: int,
@@ -53,7 +53,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 fillchar=fillchar,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def decode(self,
             encoding: tp.Optional[str] = None,
@@ -68,7 +68,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 errors=errors,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def encode(self,
             encoding: tp.Optional[str] = None,
@@ -83,7 +83,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 errors=errors,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     # join: processes two arrays
 
@@ -100,7 +100,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 fillchar=fillchar,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     # partition: np returns a 2D array; could return a Series of tuples
 
@@ -119,7 +119,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 count=count,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def rjust(self,
             width: int,
@@ -134,7 +134,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 fillchar=fillchar,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     # rpartition
 
@@ -155,7 +155,7 @@ class InterfaceString(tp.Generic[TContainer]):
             dst[idx] = tuple(src[idx].rsplit(sep, maxsplit))
 
         dst.flags.writeable = False
-        return self._func_to_container(dst)
+        return self._blocks_to_container(dst)
 
     def rstrip(self,
             chars: tp.Optional[str] = None,
@@ -168,7 +168,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 chars=chars,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def split(self,
             sep: str,
@@ -189,7 +189,7 @@ class InterfaceString(tp.Generic[TContainer]):
             dst[idx] = tuple(src[idx].split(sep, maxsplit))
 
         dst.flags.writeable = False
-        return self._func_to_container(dst)
+        return self._blocks_to_container(dst)
 
     def strip(self,
             chars: tp.Optional[str] = None,
@@ -202,7 +202,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 chars=chars,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def swapcase(self) -> TContainer:
         '''
@@ -210,7 +210,7 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         array = npc.swapcase(self._func_to_array())
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def title(self) -> TContainer:
         '''
@@ -218,7 +218,7 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         array = npc.title(self._func_to_array())
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     # translate: akward input
 
@@ -228,7 +228,7 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         array = npc.upper(self._func_to_array())
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def zfill(self,
             width: int,
@@ -241,7 +241,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 width=width,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     #---------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 end=end,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     def endswith(self,
             suffix: str,
@@ -277,7 +277,7 @@ class InterfaceString(tp.Generic[TContainer]):
                 end=end,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)
 
     # find
     # index
@@ -308,4 +308,4 @@ class InterfaceString(tp.Generic[TContainer]):
                 end=end,
                 )
         array.flags.writeable = False
-        return self._func_to_container(array)
+        return self._blocks_to_container(array)

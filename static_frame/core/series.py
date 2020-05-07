@@ -528,7 +528,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def as_str(self) -> InterfaceString['Series']:
+    def via_str(self) -> InterfaceString['Series']:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -551,11 +551,11 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def as_dt(self) -> InterfaceDatetime['Series']:
+    def via_dt(self) -> InterfaceDatetime['Series']:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
-        func_to_blocks = lambda: (self.values,)
+        blocks = (self.values,)
 
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
             return self.__class__(
@@ -566,7 +566,7 @@ class Series(ContainerOperand):
                 )
 
         return InterfaceDatetime(
-                func_to_blocks=func_to_blocks,
+                blocks=blocks,
                 func_to_container=blocks_to_container,
                 )
 
