@@ -47,6 +47,9 @@ from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceSelectDuo
 from static_frame.core.selector_node import TContainer
 
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_dt import InterfaceDatetime
+
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -661,6 +664,45 @@ class Index(IndexBase):
                 array,
                 name=self._name
                 )
+
+
+    #---------------------------------------------------------------------------
+    @property
+    def via_str(self) -> InterfaceString[np.ndarray]:
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = (self._labels,)
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return next(blocks) # assume only one
+
+        return InterfaceString(
+                blocks=blocks,
+                blocks_to_container=blocks_to_container,
+                )
+
+    @property
+    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = (self.values,)
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return next(blocks) # assume only one
+
+        return InterfaceDatetime(
+                blocks=blocks,
+                blocks_to_container=blocks_to_container,
+                )
+
 
     #---------------------------------------------------------------------------
 
