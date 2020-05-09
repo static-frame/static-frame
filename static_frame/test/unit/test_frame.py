@@ -8474,9 +8474,34 @@ class TestUnit(TestCase):
                 (('w', (('a', '---p----'), ('b', '---q----'))), ('x', (('a', '---0----'), ('b', '---20---'))), ('y', (('a', '--True--'), ('b', '--None--'))), ('z', (('a', '--foo---'), ('b', '--bar---')))))
 
 
+    def test_frame_str_partition_a(self) -> None:
 
+        f1 = Frame(np.array([['aoc', 'bar'], ['baz', 'baq']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str.partition('a')
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', ('', 'a', 'oc')), ('b', ('b', 'a', 'z')))), ('y', (('a', ('b', 'a', 'r')), ('b', ('b', 'a', 'q'))))))
 
+    def test_frame_str_islower_a(self) -> None:
 
+        f1 = Frame(np.array([['aoc', 'BAR'], ['baz', 'BAQ']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str.islower()
+        self.assertEqual(f2.to_pairs(0),
+                (('x', (('a', True), ('b', True))), ('y', (('a', False), ('b', False)))))
+
+    def test_frame_str_count_a(self) -> None:
+
+        f1 = Frame(np.array([['aoc', 'BAR'], ['baz', 'BAQ']]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str.count('BA')
+        self.assertEqual(f2.to_pairs(0), (('x', (('a', 0), ('b', 0))), ('y', (('a', 1), ('b', 1)))))
 
     #---------------------------------------------------------------------------
     def test_frame_as_dt_year_a(self) -> None:
