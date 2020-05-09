@@ -11,6 +11,10 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import EMPTY_TUPLE
 
+from static_frame.core.util import array_from_element_attr
+from static_frame.core.util import array_from_element_method
+
+
 if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -23,7 +27,7 @@ if tp.TYPE_CHECKING:
 TContainer = tp.TypeVar('TContainer', 'Index', 'IndexHierarchy', 'Series', 'Frame', 'TypeBlocks')
 
 BlocksType = tp.Iterable[np.ndarray]
-ToContainerType = tp.Callable[[np.ndarray], TContainer]
+ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 
 class InterfaceDatetime(tp.Generic[TContainer]):
@@ -38,10 +42,10 @@ class InterfaceDatetime(tp.Generic[TContainer]):
 
     def __init__(self,
             blocks: BlocksType,
-            func_to_container: ToContainerType[TContainer]
+            blocks_to_container: ToContainerType[TContainer]
             ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TContainer] = func_to_container
+        self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
 
     @staticmethod
     def _validate_dtype(
@@ -54,50 +58,6 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                 ):
             return
         raise RuntimeError(f'invalid dtype ({dtype}) for date operation')
-
-    @staticmethod
-    def _array_from_dt_attr(
-            array: np.ndarray,
-            attr_name: str,
-            dtype: np.dtype
-            ) -> np.array:
-        '''
-        Handle element-wise attribute acesss on arrays of Python date/datetime objects.
-        '''
-        if array.ndim == 1:
-            post = np.fromiter(
-                    (getattr(d, attr_name) for d in array),
-                    count=len(array),
-                    dtype=dtype,
-                    )
-        else:
-            post = np.empty(shape=array.shape, dtype=dtype)
-            for iloc, e in np.ndenumerate(array):
-                post[iloc] = getattr(e, attr_name)
-        return post
-
-    @staticmethod
-    def _array_from_dt_method(
-            array: np.ndarray,
-            method_name: str,
-            args: tp.Tuple[tp.Any, ...],
-            dtype: np.dtype
-            ) -> np.array:
-        '''
-        Handle element-wise method calling on arrays of Python date/datetime objects.
-        '''
-        if array.ndim == 1:
-            post = np.fromiter(
-                    (getattr(d, method_name)(*args) for d in array),
-                    count=len(array),
-                    dtype=dtype,
-                    )
-        else:
-            post = np.empty(shape=array.shape, dtype=dtype)
-            for iloc, e in np.ndenumerate(array):
-                post[iloc] = getattr(e, method_name)(*args)
-
-        return post
 
     #---------------------------------------------------------------------------
 
@@ -122,12 +82,12 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                         )
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(int) % 12 + 1
+                    array.flags.writeable = False
                 else: # must be object type
-                    array = self._array_from_dt_attr(
-                            block,
-                            'month',
-                            DTYPE_INT_DEFAULT)
-                array.flags.writeable = False
+                    array = self.array_from_element_attr(
+                            array=block,
+                            attr_name='month',
+                            dtype=DTYPE_INT_DEFAULT)
                 yield array
 
         return self._blocks_to_container(blocks())
@@ -150,13 +110,13 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                     block = block.astype(DTYPE_OBJECT)
                 # all object arrays by this point
 
-                array = self._array_from_dt_method(
-                        block,
-                        'weekday',
-                        EMPTY_TUPLE,
-                        DTYPE_INT_DEFAULT
+                # returns an immutable array
+                array = self.array_from_element_method(
+                        array=block,
+                        method_name='weekday',
+                        args=EMPTY_TUPLE,
+                        dtype=DTYPE_INT_DEFAULT
                         )
-                array.flags.writeable = False
                 yield array
 
         return self._blocks_to_container(blocks())

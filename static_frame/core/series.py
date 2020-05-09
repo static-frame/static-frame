@@ -478,8 +478,6 @@ class Series(ContainerOperand):
         '''
         return InterfaceGetItem(self._extract_iloc)
 
-    # NOTE: this could be ExtractInterfacd1D, but are consistent with what is done on the base name space: loc and getitem duplicate each other.
-
     @property
     def drop(self) -> InterfaceSelectTrio:
         '''
@@ -532,22 +530,32 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        if self.values.dtype.kind not in DTYPE_STR_KIND:
-            # not sure if this is the best default typ
-            func_to_array = partial(self.values.astype, str)
-        else:
-            func_to_array = partial(getattr, self, 'values')
+        # if self.values.dtype.kind not in DTYPE_STR_KIND:
+        #     # not sure if this is the best default typ
+        #     blocks = partial(self.values.astype, str)
+        # else:
+        #     blocks = partial(getattr, self, 'values')
 
-        func_to_container = partial(
-                self.__class__,
+        # blocks_to_container = partial(
+        #         self.__class__,
+        #         index=self._index,
+        #         name=self._name,
+        #         own_index=True,
+        #         )
+
+        blocks = (self.values,)
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            return self.__class__(
+                next(blocks), # assume only one
                 index=self._index,
                 name=self._name,
                 own_index=True,
                 )
 
         return InterfaceString(
-                func_to_array=func_to_array,
-                func_to_container=func_to_container,
+                blocks=blocks,
+                blocks_to_container=blocks_to_container,
                 )
 
     @property
@@ -567,7 +575,7 @@ class Series(ContainerOperand):
 
         return InterfaceDatetime(
                 blocks=blocks,
-                func_to_container=blocks_to_container,
+                blocks_to_container=blocks_to_container,
                 )
 
     #---------------------------------------------------------------------------

@@ -2149,22 +2149,20 @@ class Frame(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        def func_to_array():
-            # only convert blocks that are not already string
-            tb = TypeBlocks.from_blocks(self._blocks._astype_blocks(NULL_SLICE, str))
-            return tb.values
-
-        func_to_container = partial(
-                self.__class__,
-                index=self._index,
-                columns=self._columns,
-                name=self._name,
-                own_index=True,
-                )
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+            tb = TypeBlocks.from_blocks(blocks)
+            return self.__class__(
+                    tb,
+                    index=self._index,
+                    columns=self._columns,
+                    name=self._name,
+                    own_index=True,
+                    own_data=True,
+                    )
 
         return InterfaceString(
-                func_to_array=func_to_array,
-                func_to_container=func_to_container,
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
                 )
 
     @property
@@ -2188,7 +2186,7 @@ class Frame(ContainerOperand):
 
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
-                func_to_container=blocks_to_container,
+                blocks_to_container=blocks_to_container,
                 )
 
     #---------------------------------------------------------------------------

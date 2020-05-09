@@ -2951,9 +2951,12 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
             (('x', b'foo'), ('y', b'bar'))
             )
-        s3 = s2.via_str.decode('utf-8')
 
-        self.assertEqual(s3.to_pairs(),
+    def test_series_str_decode_a(self) -> None:
+        s1 = Series((b'foo', b'bar'), index=('x', 'y'))
+
+        s2 = s1.via_str.decode('utf-8')
+        self.assertEqual(s2.to_pairs(),
             (('x', 'foo'), ('y', 'bar'))
             )
 
@@ -3073,14 +3076,19 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_series_as_dt_year_a(self) -> None:
+        dt64 = np.datetime64
 
         s1 = Series(('2014', '2013'), index=('x', 'y'))
 
-        s2 = s1.via_dt.year
+        with self.assertRaises(RuntimeError):
+            s1.via_dt.year
+
+        s2 = Series((dt64('2014-02'), dt64('2013-11')), index=('x', 'y')).via_dt.year
+
 
         self.assertEqual(
                 s2.to_pairs(),
-                (('x', np.datetime64('2014')), ('y', np.datetime64('2013')))
+                (('x', dt64('2014')), ('y', dt64('2013')))
                 )
 
 if __name__ == '__main__':

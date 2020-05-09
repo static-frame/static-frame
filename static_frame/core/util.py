@@ -1810,6 +1810,70 @@ def isin(
     result.flags.writeable = False
     return result
 
+#-------------------------------------------------------------------------------
+
+
+def array_from_element_attr(*,
+        array: np.ndarray,
+        attr_name: str,
+        dtype: np.dtype
+        ) -> np.array:
+    '''
+    Handle element-wise attribute acesss on arrays of Python date/datetime objects.
+    '''
+    if array.ndim == 1:
+        post = np.fromiter(
+                (getattr(d, attr_name) for d in array),
+                count=len(array),
+                dtype=dtype,
+                )
+    else:
+        post = np.empty(shape=array.shape, dtype=dtype)
+        for iloc, e in np.ndenumerate(array):
+            post[iloc] = getattr(e, attr_name)
+
+    post.flags.writeable = False
+    return post
+
+
+def array_from_element_method(*,
+        array: np.ndarray,
+        method_name: str,
+        args: tp.Tuple[tp.Any, ...],
+        dtype: np.dtype,
+        pre_insert: tp.Optional[AnyCallable] = None,
+        ) -> np.array:
+    '''
+    Handle element-wise method calling on arrays of Python date/datetime objects.
+    '''
+    if array.ndim == 1 and dtype != DTYPE_OBJECT:
+        # NOTE: can I get the method off the clas and pass self
+        if pre_insert:
+            post = np.fromiter(
+                    (pre_insert(getattr(d, method_name)(*args)) for d in array),
+                    count=len(array),
+                    dtype=dtype,
+                    )
+        else:
+            post = np.fromiter(
+                    (getattr(d, method_name)(*args) for d in array),
+                    count=len(array),
+                    dtype=dtype,
+                    )
+    else:
+        post = np.empty(shape=array.shape, dtype=dtype)
+        if pre_insert:
+            for iloc, e in np.ndenumerate(array):
+                post[iloc] = pre_insert(getattr(e, method_name)(*args))
+        else:
+            for iloc, e in np.ndenumerate(array):
+                post[iloc] = getattr(e, method_name)(*args)
+
+    post.flags.writeable = False
+    return post
+
+
+
 
 #-------------------------------------------------------------------------------
 

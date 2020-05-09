@@ -3,6 +3,16 @@ import typing as tp
 import numpy as np
 from numpy import char as npc
 
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR
+from static_frame.core.util import UFunc
+
+from static_frame.core.util import array_from_element_attr
+from static_frame.core.util import array_from_element_method
+
+
 if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -14,8 +24,8 @@ if tp.TYPE_CHECKING:
 # only ContainerOperand subclasses
 TContainer = tp.TypeVar('TContainer', 'Index', 'IndexHierarchy', 'Series', 'Frame', 'TypeBlocks')
 
-ToArrayType = tp.Callable[[], np.ndarray]
-ToContainerType = tp.Callable[[np.ndarray], TContainer]
+BlocksType = tp.Iterable[np.ndarray]
+ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 
 class InterfaceString(tp.Generic[TContainer]):
@@ -23,22 +33,63 @@ class InterfaceString(tp.Generic[TContainer]):
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 
     __slots__ = (
-        '_func_to_array', # function that returns array of strings
+        '_blocks', # function that returns array of strings
         '_blocks_to_container', # partialed function that will return a new container
         )
 
     def __init__(self,
-            func_to_array: ToArrayType,
-            func_to_container: ToContainerType[TContainer]
+            blocks: BlocksType,
+            blocks_to_container: ToContainerType[TContainer]
             ) -> None:
-        self._func_to_array: ToArrayType = func_to_array
-        self._blocks_to_container: ToContainerType[TContainer] = func_to_container
+        self._blocks: BlocksType = blocks
+        self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
 
+
+    @staticmethod
+    def _process_blocks(
+            blocks: BlocksType,
+            func: UFunc,
+            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            astype_str: bool = True,
+            ) -> tp.Iterator[np.ndarray]:
+
+        for block in blocks:
+            if astype_str and block.dtype not in DTYPE_STR_KIND:
+                block = block.astype(DTYPE_STR)
+            array = func(block, *args)
+            array.flags.writeable = False
+            yield array
+
+    @staticmethod
+    def _process_tuple_blocks(*,
+            blocks: BlocksType,
+            method_name: str,
+            dtype: np.dtype,
+            args: tp.Tuple[tp.Any, ...] = EMPTY_TUPLE,
+            ) -> tp.Iterator[np.ndarray]:
+
+        for block in blocks:
+            if block.dtype not in DTYPE_STR_KIND:
+                block = block.astype(DTYPE_STR)
+
+            # resultant array is immutable
+            array = array_from_element_method(
+                    array=block,
+                    method_name=method_name,
+                    args=args,
+                    dtype=dtype,
+                    pre_insert=tuple,
+                    )
+            yield array
+
+    #---------------------------------------------------------------------------
     def capitalize(self) -> TContainer:
         '''
         Return a container with only the first character of each element capitalized.
         '''
-        return self._blocks_to_container(npc.capitalize(self._func_to_array()))
+        # return self._blocks_to_container(npc.capitalize(self._blocks()))
+        block_gen = self._process_blocks(self._blocks, npc.capitalize)
+        return self._blocks_to_container(block_gen)
 
     def center(self,
             width: int,
@@ -47,13 +98,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return a container with its elements centered in a string of length ``width``.
         '''
-        array = npc.center(
-                self._func_to_array(),
-                width=width,
-                fillchar=fillchar,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.center, (width, fillchar))
+        return self._blocks_to_container(block_gen)
 
     def decode(self,
             encoding: tp.Optional[str] = None,
@@ -62,13 +108,13 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Apply str.decode() to each element. Elements must be bytes.
         '''
-        array = npc.decode(
-                self._func_to_array(),
-                encoding=encoding,
-                errors=errors,
+        block_gen = self._process_blocks(
+                blocks=self._blocks,
+                func=npc.decode,
+                args=(encoding, errors),
+                astype_str=False, # needs to be bytes
                 )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        return self._blocks_to_container(block_gen)
 
     def encode(self,
             encoding: tp.Optional[str] = None,
@@ -77,15 +123,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Apply str.encode() to each element. Elements must be strings.
         '''
-        array = npc.encode(
-                self._func_to_array(),
-                encoding=encoding,
-                errors=errors,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
-
-    # join: processes two arrays
+        block_gen = self._process_blocks(self._blocks, npc.encode, (encoding, errors))
+        return self._blocks_to_container(block_gen)
 
     def ljust(self,
             width: int,
@@ -94,15 +133,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return a container with its elements ljusted in a string of length ``width``.
         '''
-        array = npc.ljust(
-                self._func_to_array(),
-                width=width,
-                fillchar=fillchar,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
-
-    # partition: np returns a 2D array; could return a Series of tuples
+        block_gen = self._process_blocks(self._blocks, npc.ljust, (width, fillchar))
+        return self._blocks_to_container(block_gen)
 
     def replace(self,
             old: str,
@@ -112,14 +144,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return a container with its elements replaced in a string of length ``width``.
         '''
-        array = npc.replace(
-                self._func_to_array(),
-                old=old,
-                new=new,
-                count=count,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.replace, (old, new, count))
+        return self._blocks_to_container(block_gen)
 
     def rjust(self,
             width: int,
@@ -128,15 +154,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return a container with its elements rjusted in a string of length ``width``.
         '''
-        array = npc.rjust(
-                self._func_to_array(),
-                width=width,
-                fillchar=fillchar,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
-
-    # rpartition
+        block_gen = self._process_blocks(self._blocks, npc.rjust, (width, fillchar))
+        return self._blocks_to_container(block_gen)
 
     def rsplit(self,
             sep: str,
@@ -146,16 +165,13 @@ class InterfaceString(tp.Generic[TContainer]):
         For each element, return a tuple of the words in the string, using sep as the delimiter string.
         '''
         # NOTE: npc.rsplit gives an array of lists, so implement our own routine to get an array of tuples.
-
-        # convert lists to tuples
-        src = self._func_to_array()
-        size = len(src)
-        dst = np.empty(size, dtype=object)
-        for idx in range(size):
-            dst[idx] = tuple(src[idx].rsplit(sep, maxsplit))
-
-        dst.flags.writeable = False
-        return self._blocks_to_container(dst)
+        block_gen = self._process_tuple_blocks(
+                blocks=self._blocks,
+                method_name='rsplit',
+                args=(sep, maxsplit),
+                dtype=object
+                )
+        return self._blocks_to_container(block_gen)
 
     def rstrip(self,
             chars: tp.Optional[str] = None,
@@ -163,12 +179,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         For each element, return a copy with the trailing characters removed.
         '''
-        array = npc.rstrip(
-                self._func_to_array(),
-                chars=chars,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.rstrip, (chars,))
+        return self._blocks_to_container(block_gen)
 
     def split(self,
             sep: str,
@@ -178,18 +190,13 @@ class InterfaceString(tp.Generic[TContainer]):
         For each element, return a tuple of the words in the string, using sep as the delimiter string.
         '''
         # NOTE: npc.split gives an array of lists, so implement our own routine to get an array of tuples.
-
-        # convert lists to tuples
-        src = self._func_to_array()
-
-        # if src.shape is 2D, will need a different implementation
-        size = len(src)
-        dst = np.empty(size, dtype=object)
-        for idx in range(size):
-            dst[idx] = tuple(src[idx].split(sep, maxsplit))
-
-        dst.flags.writeable = False
-        return self._blocks_to_container(dst)
+        block_gen = self._process_tuple_blocks(
+                blocks=self._blocks,
+                method_name='split',
+                args=(sep, maxsplit),
+                dtype=object
+                )
+        return self._blocks_to_container(block_gen)
 
     def strip(self,
             chars: tp.Optional[str] = None,
@@ -197,28 +204,22 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         For each element, return a copy with the leading and trailing characters removed.
         '''
-        array = npc.strip(
-                self._func_to_array(),
-                chars=chars,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.strip, (chars,))
+        return self._blocks_to_container(block_gen)
 
     def swapcase(self) -> TContainer:
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
-        array = npc.swapcase(self._func_to_array())
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.swapcase)
+        return self._blocks_to_container(block_gen)
 
     def title(self) -> TContainer:
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
-        array = npc.title(self._func_to_array())
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.title)
+        return self._blocks_to_container(block_gen)
 
     # translate: akward input
 
@@ -226,9 +227,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return a container with uppercase characters converted to lowercase and vice versa.
         '''
-        array = npc.upper(self._func_to_array())
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.upper)
+        return self._blocks_to_container(block_gen)
 
     def zfill(self,
             width: int,
@@ -236,12 +236,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Return the string left-filled with zeros.
         '''
-        array = npc.zfill(
-                self._func_to_array(),
-                width=width,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.zfill, (width,))
+        return self._blocks_to_container(block_gen)
 
     #---------------------------------------------------------------------------
 
@@ -253,14 +249,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
-        array = npc.count(
-                self._func_to_array(),
-                sub=sub,
-                start=start,
-                end=end,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.count, (sub, start, end))
+        return self._blocks_to_container(block_gen)
 
     def endswith(self,
             suffix: str,
@@ -270,14 +260,8 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
-        array = npc.endswith(
-                self._func_to_array(),
-                suffix=suffix,
-                start=start,
-                end=end,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.endswith, (suffix, start, end))
+        return self._blocks_to_container(block_gen)
 
     # find
     # index
@@ -301,11 +285,6 @@ class InterfaceString(tp.Generic[TContainer]):
         '''
         Returns a container with the number of non-overlapping occurrences of substring sub in the optional range ``start``, ``end``.
         '''
-        array = npc.startswith(
-                self._func_to_array(),
-                prefix=prefix,
-                start=start,
-                end=end,
-                )
-        array.flags.writeable = False
-        return self._blocks_to_container(array)
+        block_gen = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
+        return self._blocks_to_container(block_gen)
+
