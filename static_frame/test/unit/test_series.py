@@ -3073,7 +3073,119 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('x', True), ('y', True)))
 
+    def test_series_str_find_a(self) -> None:
+        s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
+        s2 = s1.via_str.find('oo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 1), ('y', 5)))
 
+
+    def test_series_str_index_a(self) -> None:
+        s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
+        with self.assertRaises(ValueError):
+            _ = s1.via_str.index('aaa')
+        s2 = s1.via_str.index('oo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 1), ('y', 5)))
+
+
+    def test_series_str_isalnum_a(self) -> None:
+        s1 = Series(('foo', '3234', '@#$'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isalnum()
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', True), ('z', False)))
+
+    def test_series_str_isalpha_a(self) -> None:
+        s1 = Series(('foo', '3234', '@#$'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isalpha()
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', False), ('z', False)))
+
+    def test_series_str_isdecimal_a(self) -> None:
+        s1 = Series(('foo', '3234', '@#$'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isdecimal()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', True), ('z', False)))
+
+    def test_series_str_isdigit_a(self) -> None:
+        s1 = Series(('foo', '3234', '@#$'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isdigit()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', True), ('z', False)))
+
+    def test_series_str_islower_a(self) -> None:
+        s1 = Series(('foo', '3234', 'AAA'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.islower()
+        self.assertEqual(s2.to_pairs(),
+                (('x', True), ('y', False), ('z', False)))
+
+    def test_series_str_isnumeric_a(self) -> None:
+        s1 = Series(('foo', '3234', 'AAA'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isnumeric()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', True), ('z', False)))
+
+    def test_series_str_isspace_a(self) -> None:
+        s1 = Series(('foo', '   ', 'AAA'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isspace()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', True), ('z', False)))
+
+    def test_series_str_istitle_a(self) -> None:
+        s1 = Series(('foo', '   ', 'Aaa'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.istitle()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', False), ('z', True)))
+
+    def test_series_str_isupper_a(self) -> None:
+        s1 = Series(('foo', '   ', 'AAA'), index=('x', 'y', 'z'))
+        s2 = s1.via_str.isupper()
+        self.assertEqual(s2.to_pairs(),
+                (('x', False), ('y', False), ('z', True)))
+
+
+    def test_series_str_rfind_a(self) -> None:
+        s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
+        s2 = s1.via_str.rfind('oo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 1), ('y', 5)))
+
+
+    def test_series_str_rindex_a(self) -> None:
+        s1 = Series(('foo', 'bar foo bar'), index=('x', 'y'))
+        with self.assertRaises(ValueError):
+            _ = s1.via_str.rindex('aaa')
+        s2 = s1.via_str.rindex('oo')
+        self.assertEqual(s2.to_pairs(),
+                (('x', 1), ('y', 5)))
+
+    def test_series_str_lower_a(self) -> None:
+        s1 = Series(('foO', 'AAA'), index=('x', 'y'))
+        s2 = s1.via_str.lower()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'foo'), ('y', 'aaa')))
+
+    def test_series_str_lstrip_a(self) -> None:
+        s1 = Series(('  foo', ' aaa'), index=('x', 'y'))
+        s2 = s1.via_str.lstrip()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 'foo'), ('y', 'aaa')))
+
+    def test_series_str_partition_a(self) -> None:
+        s1 = Series(('f*oo', 'b*ar'), index=('x', 'y'))
+        s2 = s1.via_str.partition('*')
+
+        self.assertEqual(s2.to_pairs(),
+                (('x', ('f', '*', 'oo')), ('y', ('b', '*', 'ar'))))
+
+    def test_series_str_rpartition_a(self) -> None:
+        s1 = Series(('f*o*o', 'b*a*r'), index=('x', 'y'))
+        s2 = s1.via_str.rpartition('*')
+
+        self.assertEqual(s2.to_pairs(),
+                (('x', ('f*o', '*', 'o')), ('y', ('b*a', '*', 'r'))))
+
+        # import ipdb; ipdb.set_trace()
     #---------------------------------------------------------------------------
     def test_series_as_dt_year_a(self) -> None:
         dt64 = np.datetime64
