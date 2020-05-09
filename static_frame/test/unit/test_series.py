@@ -3197,11 +3197,28 @@ class TestUnit(TestCase):
 
         s2 = Series((dt64('2014-02'), dt64('2013-11')), index=('x', 'y')).via_dt.year
 
-
         self.assertEqual(
                 s2.to_pairs(),
-                (('x', dt64('2014')), ('y', dt64('2013')))
-                )
+                (('x', 2014)), ('y', 2013))
+
+
+
+    def test_series_as_dt_day_a(self) -> None:
+        dt64 = np.datetime64
+
+        s1 = Series(('2014', '2013'), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            _ = s1.via_dt.day
+
+        s2 = Series((dt64('2014-02'), dt64('2013-11')), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            _ = s2.via_dt.day
+
+        s3 = Series((dt64('2014-02-12'), dt64('2013-11-28')), index=('x', 'y'))
+
+        import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

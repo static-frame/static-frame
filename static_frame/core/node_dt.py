@@ -28,6 +28,7 @@ TContainer = tp.TypeVar('TContainer', 'Index', 'IndexHierarchy', 'Series', 'Fram
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
+#https://docs.python.org/3/library/datetime.html
 
 class InterfaceDatetime(tp.Generic[TContainer]):
 
@@ -62,23 +63,34 @@ class InterfaceDatetime(tp.Generic[TContainer]):
 
     @property
     def year(self) -> TContainer:
+        'Return the year of each element.'
+
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
                 self._validate_dtype(block.dtype)
-                array = block.astype(DT64_YEAR)
-                array.flags.writeable = False
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    array = block.astype(DT64_YEAR).astype(int) + 1970
+                    array.flags.writeable = False
+                else: # must be object type
+                    array = array_from_element_attr(
+                            array=block,
+                            attr_name='year',
+                            dtype=DTYPE_INT_DEFAULT)
                 yield array
 
         return self._blocks_to_container(blocks())
 
     @property
     def month(self) -> TContainer:
+        '''
+        Return the month of each element, between 1 and 12 inclusive.
+        '''
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype,
-                        exclude=self.DT64_EXCLUDE_YEAR
-                        )
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
+
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(int) % 12 + 1
                     array.flags.writeable = False
@@ -93,18 +105,40 @@ class InterfaceDatetime(tp.Generic[TContainer]):
 
     @property
     def day(self) -> TContainer:
-        pass
+        '''
+        Return the day of each element, between 1 and the number of days in the given month of the given year.
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    if block.dtype != DT64_DAY:
+                        block = block.astype(DT64_DAY)
+                    array = block - block.astype(DT64_MONTH) + 1
+                    array.flags.writeable = False
+                else: # must be object type
+                    array = array_from_element_attr(
+                            array=block,
+                            attr_name='day',
+                            dtype=DTYPE_INT_DEFAULT)
+
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+    #---------------------------------------------------------------------------
 
     def weekday(self) -> TContainer:
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype,
-                        exclude=self.DT64_EXCLUDE_YEAR_MONTH
-                        )
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
-                    if block.dtype != DT64_DAY:
-                        # go to day first, then object
+                    if block.dtype != DT64_DAY: # go to day first, then object
                         block = block.astype(DT64_DAY)
                     block = block.astype(DTYPE_OBJECT)
                 # all object arrays by this point
