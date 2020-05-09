@@ -4,6 +4,7 @@ from collections import OrderedDict
 from io import StringIO
 import string
 import pickle
+import datetime
 import typing as tp
 
 import numpy as np
@@ -3199,8 +3200,8 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 s2.to_pairs(),
-                (('x', 2014)), ('y', 2013))
-
+                (('x', 2014), ('y', 2013))
+                )
 
 
     def test_series_as_dt_day_a(self) -> None:
@@ -3218,7 +3219,22 @@ class TestUnit(TestCase):
 
         s3 = Series((dt64('2014-02-12'), dt64('2013-11-28')), index=('x', 'y'))
 
-        import ipdb; ipdb.set_trace()
+        post = s3.via_dt.day
+        self.assertEqual(post.to_pairs(),
+                (('x', 12), ('y', 28))
+                )
+
+        todt = datetime.date.fromisoformat
+
+        s4 = Series((todt('2014-02-12'), todt('2013-11-28')), index=('x', 'y'))
+
+        post = s4.via_dt.day
+        self.assertEqual(post.to_pairs(),
+                (('x', 12), ('y', 28))
+                )
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

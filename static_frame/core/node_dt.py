@@ -116,7 +116,8 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)
-                    array = block - block.astype(DT64_MONTH) + 1
+                    # subtract the first of the month, then shfit
+                    array = (block - block.astype(DT64_MONTH)).astype(DTYPE_INT_DEFAULT) + 1
                     array.flags.writeable = False
                 else: # must be object type
                     array = array_from_element_attr(
@@ -131,7 +132,12 @@ class InterfaceDatetime(tp.Generic[TContainer]):
 
     #---------------------------------------------------------------------------
 
+    # replace: akward to implement, as cannot provide None for the parameters that you do not want to set
+
     def weekday(self) -> TContainer:
+        '''
+        Return the day of the week as an integer, where Monday is 0 and Sunday is 6.
+        '''
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
@@ -153,3 +159,32 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                 yield array
 
         return self._blocks_to_container(blocks())
+
+    def timetuple(self) -> TContainer:
+        '''
+        Return a ``time.struct_time`` such as returned by time.localtime().
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+
+                # NOTE: nanosecond and lower will return integers; should exclud
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    block = block.astype(DTYPE_OBJECT)
+                # all object arrays by this point
+
+                # returns an immutable array
+                array = array_from_element_method(
+                        array=block,
+                        method_name='timetuple',
+                        args=EMPTY_TUPLE,
+                        dtype=DTYPE_OBJECT
+                        )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+    #TODO: isoformat, strftime

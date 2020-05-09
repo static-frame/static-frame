@@ -8518,9 +8518,10 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f2 = f1.via_dt.year
 
+        f3 = f1['x':].via_dt.year #type: ignore
         self.assertEqual(
-                f1['x':].via_dt.year.to_pairs(0), #type: ignore
-                (('x', (('a', np.datetime64('2012')), ('b', np.datetime64('2014')))), ('y', (('a', np.datetime64('2020')), ('b', np.datetime64('1919')))))
+                f3.to_pairs(0),
+                (('x', (('a', 2012), ('b', 2014))), ('y', (('a', 2020), ('b', 1919))))
                 )
 
 
@@ -8586,6 +8587,61 @@ class TestUnit(TestCase):
                 f1['x':].via_dt.weekday().to_pairs(0), #type: ignore
                 (('x', (('a', 3), ('b', 2))), ('y', (('a', 0), ('b', 6))))
                 )
+
+    def test_frame_as_dt_day_a(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+
+        f2 = f1.via_dt.day
+
+        self.assertEqual(f2.to_pairs(0),
+                (('w', (('a', 5), ('b', 1))), ('x', (('a', 2), ('b', 1))), ('y', (('a', 3), ('b', 3))), ('z', (('a', 2), ('b', 2))))
+                )
+
+    def test_frame_as_dt_timetuple_a(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+
+        import time
+        tots = lambda *args: time.struct_time(args)
+
+        self.assertEqual(f1.via_dt.timetuple().values.tolist(),
+                [[tots(2012, 4, 5, 0, 0, 0, 3, 96, -1), tots(2012, 4, 2, 0, 0, 0, 0, 93, -1), tots(2020, 5, 3, 20, 30, 0, 6, 124, -1), tots(2017, 5, 2, 5, 55, 0, 1, 122, -1)], [tots(2014, 1, 1, 0, 0, 0, 2, 1, -1), tots(2012, 4, 1, 0, 0, 0, 6, 92, -1), tots(2020, 1, 3, 20, 30, 0, 4, 3, -1), tots(2025, 3, 2, 3, 20, 0, 6, 61, -1)]] #type: ignore
+                )
+
+
 
 
 
