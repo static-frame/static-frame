@@ -3081,7 +3081,7 @@ class TestUnit(TestCase):
         s1 = Series(('2014', '2013'), index=('x', 'y'))
 
         with self.assertRaises(RuntimeError):
-            s1.via_dt.year
+            _ = s1.via_dt.year
 
         s2 = Series((dt64('2014-02'), dt64('2013-11')), index=('x', 'y')).via_dt.year
 

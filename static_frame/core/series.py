@@ -31,7 +31,6 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import isin
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import CallableOrMapping
@@ -530,19 +529,6 @@ class Series(ContainerOperand):
         '''
         Interface for applying string methods to elements in this container.
         '''
-        # if self.values.dtype.kind not in DTYPE_STR_KIND:
-        #     # not sure if this is the best default typ
-        #     blocks = partial(self.values.astype, str)
-        # else:
-        #     blocks = partial(getattr, self, 'values')
-
-        # blocks_to_container = partial(
-        #         self.__class__,
-        #         index=self._index,
-        #         name=self._name,
-        #         own_index=True,
-        #         )
-
         blocks = (self.values,)
 
         def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':

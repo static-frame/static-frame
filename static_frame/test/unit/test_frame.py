@@ -8479,7 +8479,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_frame_as_dt_year_a(self):
+    def test_frame_as_dt_year_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -8494,12 +8494,12 @@ class TestUnit(TestCase):
             f2 = f1.via_dt.year
 
         self.assertEqual(
-                f1['x':].via_dt.year.to_pairs(0),
+                f1['x':].via_dt.year.to_pairs(0), #type: ignore
                 (('x', (('a', np.datetime64('2012')), ('b', np.datetime64('2014')))), ('y', (('a', np.datetime64('2020')), ('b', np.datetime64('1919')))))
                 )
 
 
-    def test_frame_as_dt_month_b(self):
+    def test_frame_as_dt_month_b(self) -> None:
 
         dt64 = np.datetime64
 
@@ -8525,7 +8525,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_as_dt_weekday_a(self):
+    def test_frame_as_dt_weekday_a(self) -> None:
 
         dt64 = np.datetime64
 
@@ -8540,12 +8540,12 @@ class TestUnit(TestCase):
             f2 = f1.via_dt.weekday()
 
         self.assertEqual(
-                f1['x':].via_dt.weekday().to_pairs(0),
+                f1['x':].via_dt.weekday().to_pairs(0), #type: ignore
                 (('x', (('a', 3), ('b', 2))), ('y', (('a', 6), ('b', 6))))
                 )
 
 
-    def test_frame_as_dt_weekday_b(self):
+    def test_frame_as_dt_weekday_b(self) -> None:
 
         dt64 = np.datetime64
 
@@ -8558,24 +8558,11 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(
-                f1['x':].via_dt.weekday().to_pairs(0),
+                f1['x':].via_dt.weekday().to_pairs(0), #type: ignore
                 (('x', (('a', 3), ('b', 2))), ('y', (('a', 0), ('b', 6))))
                 )
 
 
-
-
-    # def test_frame_as_dt_weekday_b(self):
-
-    #     f1 = Frame.from_records(
-    #             [['2012', datetime.date(2012,4,5)], ['2013', datetime.date(2014,12,1)]],
-    #             index=('a', 'b'),
-    #             columns=('w', 'x')
-    #             )
-
-    #     post = f1.via_dt.weekday()
-
-    #     import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

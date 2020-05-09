@@ -4,12 +4,10 @@ import numpy as np
 from numpy import char as npc
 
 from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import UFunc
 
-from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
 
 

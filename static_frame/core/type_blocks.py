@@ -20,7 +20,6 @@ from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 # from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_DATETIME_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound

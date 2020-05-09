@@ -15,7 +15,6 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import KEY_MULTIPLE_TYPES
@@ -38,7 +37,6 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
-from static_frame.core.util import DTYPE_DATETIME_KIND
 
 from static_frame.core.util import FrameInitializer
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT

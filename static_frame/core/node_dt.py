@@ -1,7 +1,6 @@
 
 import typing as tp
 import numpy as np
-from numpy import char as npc
 
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DT64_MONTH
@@ -84,7 +83,7 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                     array = block.astype(DT64_MONTH).astype(int) % 12 + 1
                     array.flags.writeable = False
                 else: # must be object type
-                    array = self.array_from_element_attr(
+                    array = array_from_element_attr(
                             array=block,
                             attr_name='month',
                             dtype=DTYPE_INT_DEFAULT)
@@ -111,7 +110,7 @@ class InterfaceDatetime(tp.Generic[TContainer]):
                 # all object arrays by this point
 
                 # returns an immutable array
-                array = self.array_from_element_method(
+                array = array_from_element_method(
                         array=block,
                         method_name='weekday',
                         args=EMPTY_TUPLE,
