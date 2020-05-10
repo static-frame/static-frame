@@ -3224,7 +3224,8 @@ class TestUnit(TestCase):
                 (('x', 12), ('y', 28))
                 )
 
-        todt = lambda date_str: datetime.date(*(int(x) for x in date_str.split('-')))
+        def todt(date_str: str) -> datetime.date:
+            return datetime.date(*(int(x) for x in date_str.split('-')))
 
         s4 = Series((todt('2014-02-12'), todt('2013-11-28')), index=('x', 'y'))
 
