@@ -34,9 +34,18 @@ ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 class InterfaceDatetime(tp.Generic[TContainer]):
 
     __slots__ = (
-        '_blocks', # function that returns iterable of arrays
-        '_blocks_to_container', # partialed function that will return a new container
-        )
+            '_blocks', # function that returns iterable of arrays
+            '_blocks_to_container', # partialed function that will return a new container
+            )
+    INTERFACE = (
+            'year',
+            'month',
+            'day',
+            'weekday',
+            'timetuple',
+            'isoformat',
+            'strftime',
+            )
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)

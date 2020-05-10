@@ -36,9 +36,47 @@ class InterfaceString(tp.Generic[TContainer]):
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 
     __slots__ = (
-        '_blocks', # function that returns array of strings
-        '_blocks_to_container', # partialed function that will return a new container
-        )
+            '_blocks', # function that returns array of strings
+            '_blocks_to_container', # partialed function that will return a new container
+            )
+    INTERFACE = (
+            'capitalize',
+            'center',
+            'count',
+            'decode',
+            'encode',
+            'endswith',
+            'find',
+            'index',
+            'isalnum',
+            'isalpha',
+            'isdecimal',
+            'isdigit',
+            'islower',
+            'isnumeric',
+            'isspace',
+            'istitle',
+            'isupper',
+            'ljust',
+            'lower',
+            'lstrip',
+            'partition',
+            'replace',
+            'rfind',
+            'rindex',
+            'rjust',
+            'rpartition',
+            'rsplit',
+            'rstrip',
+            'split',
+            'startswith',
+            'strip',
+            'swapcase',
+            'title',
+            'upper',
+            'zfill',
+    )
+
 
     def __init__(self,
             blocks: BlocksType,
