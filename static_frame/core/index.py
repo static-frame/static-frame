@@ -49,7 +49,6 @@ from static_frame.core.selector_node import TContainer
 
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime
-
 from static_frame.core.util import union1d
 from static_frame.core.util import intersect1d
 from static_frame.core.util import setdiff1d
@@ -668,7 +667,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     @property
-    def via_str(self) -> InterfaceString[np.ndarray]:
+    def via_str(self) -> InterfaceString['Index']:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -676,9 +675,13 @@ class Index(IndexBase):
             self._update_array_cache()
 
         blocks = (self._labels,)
+        cls = Index if self.STATIC else IndexGO
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
-            return next(blocks) # assume only one
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Index':
+            return cls(
+                next(blocks), # assume only one
+                name=self._name,
+                )
 
         return InterfaceString(
                 blocks=blocks,
@@ -686,7 +689,7 @@ class Index(IndexBase):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
+    def via_dt(self) -> InterfaceDatetime['Index']:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -694,9 +697,13 @@ class Index(IndexBase):
             self._update_array_cache()
 
         blocks = (self.values,)
+        cls = Index if self.STATIC else IndexGO
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
-            return next(blocks) # assume only one
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Index':
+            return cls(
+                next(blocks), # assume only one
+                name=self._name,
+                )
 
         return InterfaceDatetime(
                 blocks=blocks,

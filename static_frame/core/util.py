@@ -1846,28 +1846,47 @@ def array_from_element_method(*,
     '''
     Handle element-wise method calling on arrays of Python date/datetime objects.
     '''
-    if array.ndim == 1 and dtype != DTYPE_OBJECT:
-        # NOTE: can I get the method off the clas and pass self
-        if pre_insert:
-            post = np.fromiter(
-                    (pre_insert(getattr(d, method_name)(*args)) for d in array),
-                    count=len(array),
-                    dtype=dtype,
-                    )
+    if dtype == DTYPE_STR:
+        # build into a list first, then construct array to determine size
+        if array.ndim == 1:
+            if pre_insert:
+                proto = [pre_insert(getattr(d, method_name)(*args)) for d in array]
+            else:
+                proto = [getattr(d, method_name)(*args) for d in array]
         else:
-            post = np.fromiter(
-                    (getattr(d, method_name)(*args) for d in array),
-                    count=len(array),
-                    dtype=dtype,
-                    )
+            proto = [[None for _ in range(array.shape[1])]
+                    for _ in range(array.shape[0])]
+            if pre_insert:
+                for (y, x), e in np.ndenumerate(array):
+                    proto[y][x] = pre_insert(getattr(e, method_name)(*args))
+            else:
+                for (y, x), e in np.ndenumerate(array):
+                    proto[y][x] = getattr(e, method_name)(*args)
+        post = np.array(proto, dtype=dtype)
+
     else:
-        post = np.empty(shape=array.shape, dtype=dtype)
-        if pre_insert:
-            for iloc, e in np.ndenumerate(array):
-                post[iloc] = pre_insert(getattr(e, method_name)(*args))
+        if array.ndim == 1 and dtype != DTYPE_OBJECT:
+            # NOTE: can I get the method off the clas and pass self
+            if pre_insert:
+                post = np.fromiter(
+                        (pre_insert(getattr(d, method_name)(*args)) for d in array),
+                        count=len(array),
+                        dtype=dtype,
+                        )
+            else:
+                post = np.fromiter(
+                        (getattr(d, method_name)(*args) for d in array),
+                        count=len(array),
+                        dtype=dtype,
+                        )
         else:
-            for iloc, e in np.ndenumerate(array):
-                post[iloc] = getattr(e, method_name)(*args)
+            post = np.empty(shape=array.shape, dtype=dtype)
+            if pre_insert:
+                for iloc, e in np.ndenumerate(array):
+                    post[iloc] = pre_insert(getattr(e, method_name)(*args))
+            else:
+                for iloc, e in np.ndenumerate(array):
+                    post[iloc] = getattr(e, method_name)(*args)
 
     post.flags.writeable = False
     return post

@@ -8642,7 +8642,35 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_as_dt_strftime_a(self) -> None:
 
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+
+        f2 = f1.via_dt.strftime('%y|%m|%d')
+
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('<U8'), np.dtype('<U8'), np.dtype('<U8'), np.dtype('<U8')]
+                )
+
+        self.assertEqual(f2.to_pairs(0),
+                (('w', (('a', '12|04|05'), ('b', '14|01|01'))), ('x', (('a', '12|04|02'), ('b', '12|04|01'))), ('y', (('a', '20|05|03'), ('b', '20|01|03'))), ('z', (('a', '17|05|02'), ('b', '25|03|02'))))
+                )
 
 
 if __name__ == '__main__':

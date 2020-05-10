@@ -534,7 +534,7 @@ class TypeBlocks(ContainerOperand):
             group: tp.Iterable[np.ndarray],
             dtype: DtypeSpecifier = None,
             ) -> np.array:
-        '''This will always return a 2D array.
+        '''Join blocks on axis 1, assuming the they have an appropriate dtype. This will always return a 2D array.
         '''
         # NOTE: if len(group) is 1, can return
         post = np.concatenate([column_2d_filter(x) for x in group], axis=1)

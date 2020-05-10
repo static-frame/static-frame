@@ -2068,6 +2068,67 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_index_hierarchy_via_str_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('i', 'ii'), ('a', 'b'))
+        ih2 = ih1.via_str.upper()
+
+        self.assertEqual(ih2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
+                )
+
+    def test_index_hierarchy_via_dt_a(self) -> None:
+        index_constructors = (IndexYearMonth, IndexDate)
+
+        labels = (
+            ('2020-01', '2019-01-01'),
+            ('2020-01', '2019-02-01'),
+            ('2019-02', '2019-01-01'),
+            ('2019-02', '2019-02-01'),
+        )
+
+        ih1 = IndexHierarchy.from_labels(labels, index_constructors=index_constructors)
+        ih2 = ih1.via_dt.month
+
+        self.assertEqual(
+                ih2.values.tolist(),
+                [[1, 1], [1, 2], [2, 1], [2, 2]]
+                )
+
+
+    def test_index_hierarchy_via_dt_b(self) -> None:
+        index_constructors = (IndexDate, IndexDate)
+
+        labels = (
+            ('2020-01-03', '2019-01-01'),
+            ('2020-01-03', '2019-02-01'),
+            ('2019-02-05', '2019-01-01'),
+            ('2019-02-05', '2019-02-01'),
+        )
+
+        ih1 = IndexHierarchy.from_labels(labels, index_constructors=index_constructors)
+        ih2 = ih1.via_dt.isoformat()
+
+        self.assertEqual(
+            ih2.dtypes.values.tolist(),
+            [np.dtype('<U10'), np.dtype('<U10')]
+            )
+        self.assertEqual(
+                ih2.values.tolist(),
+                [['2020-01-03', '2019-01-01'], ['2020-01-03', '2019-02-01'], ['2019-02-05', '2019-01-01'], ['2019-02-05', '2019-02-01']]
+                )
+
+        ih3 = ih1.via_dt.strftime('%y|%m|%d')
+        self.assertEqual(
+            ih3.dtypes.values.tolist(),
+            [np.dtype('<U8'), np.dtype('<U8')]
+            )
+
+        self.assertEqual(
+            ih3.values.tolist(),
+            [['20|01|03', '19|01|01'], ['20|01|03', '19|02|01'], ['19|02|05', '19|01|01'], ['19|02|05', '19|02|01']]
+            )
+
 
 if __name__ == '__main__':
     unittest.main()

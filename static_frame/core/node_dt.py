@@ -9,6 +9,7 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_STR
 
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
@@ -186,5 +187,77 @@ class InterfaceDatetime(tp.Generic[TContainer]):
 
         return self._blocks_to_container(blocks())
 
+    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> TContainer:
+        '''
+        Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
+        '''
 
-    #TODO: isoformat, strftime
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+
+                # NOTE: nanosecond and lower will return integers; should exclud
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    block = block.astype(DTYPE_OBJECT)
+                # all object arrays by this point
+
+                # returns an immutable array
+                array = array_from_element_method(
+                        array=block,
+                        method_name='isoformat',
+                        args=EMPTY_TUPLE,
+                        dtype=DTYPE_STR,
+                        )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+    def strftime(self, format: str) -> TContainer:
+        '''
+        Return a string representing the date, controlled by an explicit format string.
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+
+                # NOTE: nanosecond and lower will return integers; should exclud
+                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+
+                if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    block = block.astype(DTYPE_OBJECT)
+                # all object arrays by this point
+
+                # returns an immutable array
+                array = array_from_element_method(
+                        array=block,
+                        method_name='strftime',
+                        args=(format,),
+                        dtype=DTYPE_STR,
+                        )
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

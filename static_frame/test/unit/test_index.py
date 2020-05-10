@@ -1028,20 +1028,21 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
 
-        self.assertEqual(a1.tolist(),
+        self.assertEqual(a1.values.tolist(),
                 ['A', 'B', 'C', 'D', 'E']
                 )
 
 
     def test_index_via_dt_a(self) -> None:
 
-        idx1 = IndexDate.from_date_range('2020-01', '2020-02')
-        self.assertEqual(idx1.via_dt.day.tolist(),
-                [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 1]
+        idx1 = IndexDate(('2020-01-01', '2021-02-05', '2019-03-17'))
+
+        self.assertEqual(idx1.via_dt.day.values.tolist(),
+                [1, 5, 17]
                 )
 
-        self.assertEqual(idx1.via_dt.weekday().tolist(),
-                [2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5]
+        self.assertEqual(idx1.via_dt.weekday().values.tolist(),
+                [2, 4, 6]
                 )
 
 if __name__ == '__main__':

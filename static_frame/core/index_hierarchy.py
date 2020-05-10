@@ -32,6 +32,9 @@ from static_frame.core.index_level import IndexLevelGO
 
 from static_frame.core.selector_node import InterfaceGetItem
 from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_dt import InterfaceDatetime
+
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -554,6 +557,60 @@ class IndexHierarchy(IndexBase):
             {dtype}
         '''
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
+
+    #---------------------------------------------------------------------------
+    @property
+    def via_str(self) -> InterfaceString['IndexHierarchy']:
+        '''
+        Interface for applying string methods to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
+
+        # NOTE: for now, not passing on index_constructors
+        # index_constructors = tuple(self._levels.index_types())
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'IndexHierarchy':
+            tb = TypeBlocks.from_blocks(blocks)
+            return cls._from_type_blocks(
+                tb,
+                name=self._name,
+                own_blocks=True,
+                )
+
+        return InterfaceString(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                )
+
+    @property
+    def via_dt(self) -> InterfaceDatetime['IndexHierarchy']:
+        '''
+        Interface for applying datetime properties and methods to elements in this container.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
+
+        # NOTE: for now, not passing on index_constructors
+        # index_constructors = tuple(self._levels.index_types())
+
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'IndexHierarchy':
+            tb = TypeBlocks.from_blocks(blocks)
+            return cls._from_type_blocks(
+                tb,
+                name=self._name,
+                own_blocks=True,
+                )
+
+        return InterfaceDatetime(
+                blocks=self._blocks._blocks,
+                blocks_to_container=blocks_to_container,
+                )
+
 
     #---------------------------------------------------------------------------
 
