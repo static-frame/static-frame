@@ -26,7 +26,7 @@ def doc(context):
 
 @invoke.task
 def performance(context):
-    '''Run mypy static analysis
+    '''Run performance tests.
     '''
     # NOTE: we do not get to see incremental output when running this
     cmd = 'python static_frame/performance/main.py --performance "*"'
@@ -35,6 +35,9 @@ def performance(context):
 
 @invoke.task
 def interface(context, container=None):
+    '''
+    Optionally select a container type to discover what API endpoints have examples.
+    '''
     from static_frame.core.container import ContainerBase
     import static_frame as sf
 

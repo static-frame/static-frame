@@ -55,6 +55,22 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             '_apply_constructor'
             )
 
+    INTERFACE = (
+            'apply',
+            'apply_iter',
+            'apply_iter_items',
+            'apply_pool',
+            'map_all',
+            'map_all_iter',
+            'map_all_iter_items',
+            'map_any',
+            'map_any_iter',
+            'map_any_iter_items',
+            'map_fill',
+            'map_fill_iter',
+            'map_fill_iter_items',
+            )
+
     def __init__(self,
             func_values: tp.Callable[..., tp.Iterable[tp.Any]],
             func_items: tp.Callable[..., tp.Iterable[tp.Tuple[tp.Any, tp.Any]]],

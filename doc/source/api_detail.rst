@@ -40,11 +40,15 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
         {{ row.doc }}
 
-    {% elif row.use_signature %}
+    {% elif row.use_signature and not row.is_attr %}
 
     .. py:method:: {{ name }}.{{ signature }}
 
-    {% elif group == 'Attribute' or signature in ('interface', 'values') or row.is_attr %}
+    {% elif row.use_signature and row.is_attr %}
+
+    .. py:attribute:: {{ name }}.{{ signature }}
+
+    {% elif group == 'Attribute' or signature == 'values' or row.is_attr %}
 
     .. autoattribute:: static_frame.{{ row.reference }}
 

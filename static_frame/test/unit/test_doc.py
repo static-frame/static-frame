@@ -78,6 +78,125 @@ Neptune  11
 #-------------------------------------------------------------------------------
 # series
 
+#start_Series-via_str.capitalize()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.capitalize()
+<Series>
+<Index>
+muon     Lepton
+tau      Lepton
+strange  Quark
+<<U7>    <<U6>
+
+#end_Series-via_str.capitalize()
+
+
+#start_Series-via_str.center()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.center(20, '-')
+<Series>
+<Index>
+muon     -------lepton-------
+tau      -------lepton-------
+strange  -------quark--------
+<<U7>    <<U20>
+
+#end_Series-via_str.center()
+
+
+#start_Series-via_str.endswith()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.endswith('ton')
+<Series>
+<Index>
+muon     True
+tau      True
+strange  False
+<<U7>    <bool>
+
+#end_Series-via_str.endswith()
+
+
+#start_Series-via_str.isdigit()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.isdigit()
+<Series>
+<Index>
+muon     False
+tau      False
+strange  False
+<<U7>    <bool>
+
+#end_Series-via_str.isdigit()
+
+
+#start_Series-via_str.ljust()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.ljust(10, '-')
+<Series>
+<Index>
+muon     lepton----
+tau      lepton----
+strange  quark-----
+<<U7>    <<U10>
+
+#end_Series-via_str.ljust()
+
+
+#start_Series-via_str.rjust()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.rjust(10, '-')
+<Series>
+<Index>
+muon     ----lepton
+tau      ----lepton
+strange  -----quark
+<<U7>    <<U10>
+
+#end_Series-via_str.rjust()
+
+
+#start_Series-via_str.startswith()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.startswith('lep')
+<Series>
+<Index>
+muon     True
+tau      True
+strange  False
+<<U7>    <bool>
+
+#end_Series-via_str.startswith()
+
+
+#start_Series-via_str.title()
+>>> s.via_str.title()
+<Series>
+<Index>
+muon     Lepton
+tau      Lepton
+strange  Quark
+<<U7>    <<U6>
+
+#end_Series-via_str.title()
+
+
+
+#start_Series-via_str.upper()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.upper()
+<Series>
+<Index>
+muon     LEPTON
+tau      LEPTON
+strange  QUARK
+<<U7>    <<U6>
+
+#end_Series-via_str.upper()
+
+
+
+
 #start_Series-from_dict()
 >>> sf.Series.from_dict(dict(Mercury=167, Neptune=-200), dtype=np.int64)
 <Series>
@@ -410,7 +529,7 @@ Venus    0
 #end_Series-iter_group_items()
 
 
-#start_Series-assign[]
+#start_Series-assign[]()
 >>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
 >>> s
 <Series>
@@ -434,10 +553,10 @@ Earth    0.0
 Saturn   0.0
 <<U6>    <float64>
 
-#end_Series-assign[]
+#end_Series-assign[]()
 
 
-#start_Series-assign.loc[]
+#start_Series-assign.loc[]()
 >>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
 >>> s.assign.loc[s < 150](0)
 <Series>
@@ -447,10 +566,10 @@ Earth    0.0
 Saturn   1433.5
 <<U6>    <float64>
 
-#end_Series-assign.loc[]
+#end_Series-assign.loc[]()
 
 
-#start_Series-assign.iloc[]
+#start_Series-assign.iloc[]()
 >>> s = sf.Series.from_items((('Venus', 108.2), ('Earth', 149.6), ('Saturn', 1433.5)))
 >>> s.assign.iloc[-1](0)
 <Series>
@@ -460,7 +579,7 @@ Earth    149.6
 Saturn   0.0
 <<U6>    <float64>
 
-#end_Series-assign.iloc[]
+#end_Series-assign.iloc[]()
 
 
 #start_Series-drop[]
@@ -1120,7 +1239,7 @@ Venus   4.87      0
 
 
 
-#start_Frame-assign[]
+#start_Frame-assign[]()
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 >>> f
 <Frame>
@@ -1140,10 +1259,10 @@ Mars    6792     0.000642
 Jupiter 142984   1.8980000000000001
 <<U7>   <int64>  <float64>
 
-#end_Frame-assign[]
+#end_Frame-assign[]()
 
 
-#start_Frame-assign.loc[]
+#start_Frame-assign.loc[]()
 >>> f = sf.Frame.from_dict(dict(diameter=(12756, 6792, 142984), mass=(5.97, 0.642, 1898)), index=('Earth', 'Mars', 'Jupiter'), dtypes=dict(diameter=np.int64))
 
 >>> f.assign.loc['Mars', 'mass'](0)
@@ -1173,7 +1292,7 @@ Mars    6792     0.642
 Jupiter 142984   0.0
 <<U7>   <int64>  <float64>
 
-#end_Frame-assign.loc[]
+#end_Frame-assign.loc[]()
 
 
 #start_Frame-drop[]

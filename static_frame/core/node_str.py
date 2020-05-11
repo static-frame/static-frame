@@ -10,6 +10,8 @@ from static_frame.core.util import UFunc
 
 from static_frame.core.util import array_from_element_method
 
+from static_frame.core.selector_node import Interface
+from static_frame.core.selector_node import TContainer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -19,19 +21,19 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
 
 # only ContainerOperand subclasses
-TContainer = tp.TypeVar('TContainer',
-        'Index',
-        'IndexHierarchy',
-        'Series',
-        'Frame',
-        'TypeBlocks'
-        )
+# TContainer = tp.TypeVar('TContainer',
+#         'Index',
+#         'IndexHierarchy',
+#         'Series',
+#         'Frame',
+#         'TypeBlocks'
+#         )
 
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]
 
 
-class InterfaceString(tp.Generic[TContainer]):
+class InterfaceString(Interface[TContainer]):
 
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 

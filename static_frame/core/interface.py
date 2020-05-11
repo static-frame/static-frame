@@ -43,6 +43,10 @@ from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 from static_frame.core.selector_node import InterfaceGetItem
 
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_str import InterfaceString
+
+
 #-------------------------------------------------------------------------------
 # function inspection utilities
 
@@ -115,9 +119,11 @@ def _get_signatures(
     if delegate_func:
         delegate = _get_parameters(delegate_func, max_args=max_args)
         if delegate_name:
+            # prefix with name
             delegate = f'.{delegate_name}{delegate}'
-        # delegate is always assumed to not be a cls.getitem- style call sig
-        delegate_no_args = '()'
+            delegate_no_args = f'.{delegate_name}()'
+        else:
+            delegate_no_args = '()'
     else:
         delegate = ''
         delegate_no_args = ''
@@ -190,23 +196,6 @@ class Features:
         }
 
 
-    ATTR_ITER_NODE = (
-        'apply',
-        'apply_iter',
-        'apply_iter_items',
-        'apply_pool',
-        'map_all',
-        'map_all_iter',
-        'map_all_iter_items',
-        'map_any',
-        'map_any_iter',
-        'map_any_iter_items',
-        'map_fill',
-        'map_fill_iter',
-        'map_fill_iter_items',
-        )
-
-
     @classmethod
     def scrub_doc(cls, doc: tp.Optional[str]) -> str:
         if not doc:
@@ -236,6 +225,8 @@ class InterfaceGroup:
     OperatorUnary = 'Operator Unary'
     Selector = 'Selector'
     Assignment = 'Assignment'
+    AccessorString = 'Accessor String'
+    AccessorDatetime = 'Accessor Datetime'
 
 
 class InterfaceRecord(tp.NamedTuple):
@@ -263,7 +254,7 @@ class InterfaceRecord(tp.NamedTuple):
         if name == 'values':
             signature = signature_no_args = name
         else:
-            signature, signature_no_arg_get_signatures = _get_signatures(
+            signature, signature_no_args = _get_signatures(
                     name,
                     obj,
                     is_getitem=False,
@@ -274,7 +265,7 @@ class InterfaceRecord(tp.NamedTuple):
                 signature,
                 doc,
                 reference,
-                signature_no_args=signature
+                signature_no_args=signature_no_args
                 )
 
     @classmethod
@@ -422,7 +413,6 @@ class InterfaceRecord(tp.NamedTuple):
             max_args: int,
             ) -> tp.Iterator['InterfaceRecord']:
 
-        is_attr = True
         signature, signature_no_args = _get_signatures(
                 name,
                 obj.__call__, #type: ignore
@@ -440,8 +430,7 @@ class InterfaceRecord(tp.NamedTuple):
                 signature_no_args=signature_no_args,
                 )
 
-        for field in Features.ATTR_ITER_NODE: # apply, map, etc
-
+        for field in IterNodeDelegate.INTERFACE: # apply, map, etc
             delegate_obj = getattr(IterNodeDelegate, field)
             delegate_reference = f'{IterNodeDelegate.__name__}.{field}'
             doc = Features.scrub_doc(delegate_obj.__doc__)
@@ -464,6 +453,58 @@ class InterfaceRecord(tp.NamedTuple):
                     delegate_reference=delegate_reference,
                     signature_no_args=signature_no_args
                     )
+
+    @classmethod
+    def from_accessor(cls, *,
+            cls_name: str,
+            name: str,
+            obj: AnyCallable,
+            reference: str,
+            doc: str,
+            cls_interface: tp.Type[Interface[TContainer]],
+            max_args: int,
+            ) -> tp.Iterator['InterfaceRecord']:
+
+        group = (InterfaceGroup.AccessorString
+                if cls_interface is InterfaceString
+                else InterfaceGroup.AccessorDatetime)
+
+        for field in cls_interface.INTERFACE: # apply, map, etc
+            delegate_obj = getattr(cls_interface, field)
+            delegate_reference = f'{cls_interface.__name__}.{field}'
+            doc = Features.scrub_doc(delegate_obj.__doc__)
+
+            terminus_name = f'{name}.{field}'
+
+            if isinstance(delegate_obj, property):
+                # some date tools are properties
+                yield InterfaceRecord(cls_name,
+                        group,
+                        terminus_name,
+                        doc,
+                        reference,
+                        is_attr=True,
+                        use_signature=True,
+                        delegate_reference=delegate_reference,
+                        delegate_is_attr=True,
+                        signature_no_args=terminus_name
+                        )
+            else:
+                signature, signature_no_args = _get_signatures(
+                        terminus_name,
+                        delegate_obj,
+                        max_args=max_args,
+                        )
+                yield cls(cls_name,
+                        group,
+                        signature,
+                        doc,
+                        reference,
+                        is_attr=False,
+                        use_signature=True,
+                        delegate_reference=delegate_reference,
+                        signature_no_args=signature_no_args
+                        )
 
     @classmethod
     def from_getitem(cls, *,
@@ -760,6 +801,16 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.from_iterator(**kwargs)
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 yield from InterfaceRecord.from_getitem(**kwargs)
+            elif isinstance(obj, InterfaceString):
+                yield from InterfaceRecord.from_accessor(
+                            cls_interface=InterfaceString,
+                            **kwargs,
+                            )
+            elif isinstance(obj, InterfaceDatetime):
+                yield from InterfaceRecord.from_accessor(
+                            cls_interface=InterfaceDatetime,
+                            **kwargs,
+                            )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
                 yield from InterfaceRecord.from_selection(
                         cls_interface=obj.__class__,

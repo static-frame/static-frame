@@ -114,5 +114,9 @@ from static_frame.core.selector_node import InterfaceAssignTrio
 from static_frame.core.selector_node import InterfaceAssignQuartet
 from static_frame.core.selector_node import InterfaceAsType
 
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_dt import InterfaceDatetime
+
+
 __version__ = '0.6.15' # use -dev for new version in development
 
