@@ -1,0 +1,21 @@
+Number,Name,Orbital Period,Perihelion Date,Perihelion Distance,Semi-Major Axis,Orbital Eccentricity,Orbital Inclination,Absolute Magnitude
+1P,Halley,76.1 yrs.,1986-02-09,0.587 AU,17.94 AU,0.967,162.2 deg.,5.5
+2P,Encke,3.30 yrs.,2003-12-28,0.340 AU,2.21 AU,0.847,11.8 deg.,9.8
+6P,d'Arrest,6.51 yrs.,2008-08-01,1.346 AU,3.49 AU,0.614,19.5 deg.,8.5
+9P,Tempel 1,5.51 yrs.,2005-07-05,1.500 AU,3.12 AU,0.519,10.5 deg.,12
+19P,Borrelly,6.86 yrs.,2001-09-14,1.358 AU,3.61 AU,0.624,30.3 deg.,11.9
+21P,Giacobini-Zinner,6.52 yrs.,1998-11-21,0.996 AU,3.52 AU,0.706,31.8 deg.,9
+26P,Grigg-Skjellerup,5.09 yrs.,1992-07-22,0.989 AU,2.96 AU,0.664,21.1 deg.,12.5
+27P,Crommelin,27.89 yrs.,1984-09-01,0.743 AU,9.20 AU,0.919,29.0 deg.,12
+45P,Honda-Mrkos-Pajdusakova,5.29 yrs.,1995-12-25,0.528 AU,3.02 AU,0.825,4.3 deg.,13.5
+46P,Wirtanen,5.46 yrs.,2013-10-21,1.063 AU,3.12 AU,0.652,11.7 deg.,9
+55P,Tempel-Tuttle,32.92 yrs.,1998-02-28,0.982 AU,10.33 AU,0.906,162.5 deg.,9
+67P,Churyumov-Gerasimenko,6.57 yrs.,2002-08-18,1.292 AU,3.51 AU,0.632,7.1 deg., 
+73P,Schwassmann-Wachmann 3,5.36 yrs.,2006-06-02,0.937 AU,3.06 AU,0.694,11.4 deg.,11.7
+75P,Kohoutek,6.24 yrs.,1973-12-28,1.571 AU,3.4 AU,0.537,5.4 deg.,12.1
+76P,West-Kohoutek-Ikemura,6.46 yrs.,2000-06-01,1.596 AU,3.45 AU,0.54,30.5 deg.,10.6
+81P,Wild 2,6.39 yrs.,2003-09-25,1.583 AU,3.44 AU,0.54,3.2 deg.,6.5
+95P,Chiron,50.7 yrs.,1996-02-14,8.46 AU,13.7 AU,0.383,7 deg., 
+107P,Wilson-Harrington,4.29 yrs.,2001-03-26,1.000 AU,2.64 AU,0.623,2.8 deg.,9
+ ,Hale-Bopp,4000. yrs.,1997-03-31,0.914 AU,250. AU,0.995,89.4 deg.,-1
+ ,Hyakutake,~40000. yrs.,1996-05-01,0.230 AU,~1165. AU,0.9998,124.9 deg., 
