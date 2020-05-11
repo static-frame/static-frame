@@ -78,6 +78,144 @@ Neptune  11
 #-------------------------------------------------------------------------------
 # series
 
+#start_Series-via_dt.year
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.year
+<Series: Perihelion Date>
+<Index>
+Halley                    1986
+Encke                     2003
+d'Arrest                  2008
+Tempel 1                  2005
+<<U8>                     <int64>
+
+#end_Series-via_dt.year
+
+
+#start_Series-via_dt.month
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.month
+<Series: Perihelion Date>
+<Index>
+Halley                    2
+Encke                     12
+d'Arrest                  8
+Tempel 1                  7
+<<U8>                     <int64>
+
+#end_Series-via_dt.month
+
+
+#start_Series-via_dt.day
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.day
+<Series: Perihelion Date>
+<Index>
+Halley                    9
+Encke                     28
+d'Arrest                  1
+Tempel 1                  5
+<<U8>                     <int64>
+
+#end_Series-via_dt.day
+
+#start_Series-via_dt.weekday()
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.weekday()
+<Series: Perihelion Date>
+<Index>
+Halley                    6
+Encke                     6
+d'Arrest                  4
+Tempel 1                  1
+<<U8>                     <int64>
+
+#end_Series-via_dt.weekday()
+
+
+
+#start_Series-via_dt.isoformat()
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.isoformat()
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <<U10>
+
+#end_Series-via_dt.isoformat()
+
+
+#start_Series-via_dt.strftime()
+>>> s = sf.Series.from_dict({'Halley': '1986-02-09', 'Encke': '2003-12-28', "d'Arrest": '2008-08-01', 'Tempel 1': '2005-07-05'}, name='Perihelion Date', dtype=np.datetime64)
+>>> s
+<Series: Perihelion Date>
+<Index>
+Halley                    1986-02-09
+Encke                     2003-12-28
+d'Arrest                  2008-08-01
+Tempel 1                  2005-07-05
+<<U8>                     <datetime64[D]>
+>>> s.via_dt.strftime('%m/%d/%y')
+<Series: Perihelion Date>
+<Index>
+Halley                    02/09/86
+Encke                     12/28/03
+d'Arrest                  08/01/08
+Tempel 1                  07/05/05
+<<U8>                     <<U8>
+
+#end_Series-via_dt.strftime()
+
+
+
+
+
 #start_Series-via_str.capitalize()
 >>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
 >>> s.via_str.capitalize()
