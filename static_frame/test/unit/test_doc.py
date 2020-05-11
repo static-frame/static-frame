@@ -605,6 +605,20 @@ dtype('int64')
 #end_Series-dtype
 
 
+
+
+#start_Series-interface
+>>> sf.Series.interface.loc[sf.Series.interface.index.to_series().via_str.startswith('sort')]
+<Frame: Series>
+<Index>                         cls_name group  doc                  <<U18>
+<Index: signature>
+sort_index(*, ascending, kind)  Series   Method Return a new Seri...
+sort_values(*, ascending, kind) Series   Method Return a new Seri...
+<<U94>                          <<U6>    <<U17> <<U83>
+
+#end_Series-interface
+
+
 #start_Series-iter_element()
 >>> s = sf.Series((1, 2, 67, 62, 27, 14), index=('Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'))
 >>> [x for x in s.iter_element()]
@@ -838,6 +852,19 @@ Neptune  14
 
 #-------------------------------------------------------------------------------
 # Frame
+
+#start_Frame-interface
+>>> sf.Frame.interface.loc[sf.Frame.interface.index.to_series().via_str.startswith('sort')]
+<Frame: Frame>
+<Index>                              cls_name group  doc                  <<U18>
+<Index: signature>
+sort_columns(*, ascending, kind)     Frame    Method Return a new Fram...
+sort_index(*, ascending, kind)       Frame    Method Return a new Fram...
+sort_values(key, *, ascending, ax... Frame    Method Return a new Fram...
+<<U94>                               <<U5>    <<U17> <<U83>
+
+#end_Frame-interface
+
 
 
 #start_Frame-from_dict()
@@ -1725,11 +1752,58 @@ Mars                  -65
 
 #end_Frame-iloc[]
 
+#-------------------------------------------------------------------------------
+# FrameGO
+
+#start_FrameGO-interface
+>>> sf.FrameGO.interface.loc[sf.FrameGO.interface.index.to_series().via_str.startswith('drop')]
+<Frame: FrameGO>
+<Index>                              cls_name group    doc                  <<U18>
+<Index: signature>
+drop_duplicated(*, axis, exclude_... FrameGO  Method   Return a Frame wi...
+dropna(axis, condition)              FrameGO  Method   Return a new Fram...
+drop[key]                            FrameGO  Selector Label-based selec...
+drop.iloc[key]                       FrameGO  Selector
+drop.loc[key]                        FrameGO  Selector
+<<U94>                               <<U7>    <<U17>   <<U83>
+
+#end_FrameGO-interface
+
+
+#-------------------------------------------------------------------------------
+# Bus
+
+#start_Bus-interface
+<Frame: Bus>
+<Index>                   cls_name group    doc    <<U18>
+<Index: signature>
+to_hdf5(fp, config)       Bus      Exporter
+to_sqlite(fp, config)     Bus      Exporter
+to_xlsx(fp, config)       Bus      Exporter
+to_zip_csv(fp, config)    Bus      Exporter
+to_zip_pickle(fp, config) Bus      Exporter
+to_zip_tsv(fp, config)    Bus      Exporter
+<<U34>                    <<U3>    <<U15>   <<U83>
+
+#end_Bus-interface
+
 
 
 
 #-------------------------------------------------------------------------------
-# index
+# Index
+
+#start_Index-interface
+>>> sf.Index.interface.loc[sf.Index.interface.index.to_series().via_str.startswith('re')]
+<Frame: Index>
+<Index>            cls_name group  doc                  <<U18>
+<Index: signature>
+relabel(mapper)    Index    Method Return a new Inde...
+rename(name)       Index    Method Return a new Fram...
+<<U68>             <<U5>    <<U17> <<U83>
+
+#end_Index-interface
+
 
 #start_Index-__init__()
 >>> sf.Index(('Mercury', 'Mars'), dtype=object)
@@ -1745,19 +1819,6 @@ MA
 <<U2>
 
 #end_Index-__init__()
-
-
-#start_IndexGO-append()
->>> a = sf.IndexGO(('Uranus', 'Neptune'))
->>> a.append('Pluto')
->>> a
-<IndexGO>
-Uranus
-Neptune
-Pluto
-<<U7>
-
-#end_IndexGO-append()
 
 
 #start_Index-relabel()
@@ -1785,6 +1846,179 @@ NE
 <<U2>
 
 #end_Index-relabel()
+
+
+#-------------------------------------------------------------------------------
+# IndexGO
+
+#start_IndexGO-interface
+>>> sf.IndexGO.interface.loc[sf.IndexGO.interface.index.to_series().via_str.startswith('to_')]
+<Frame: IndexGO>
+<Index>                              cls_name group    doc                  <<U18>
+<Index: signature>
+to_html(config)                      IndexGO  Exporter Return an HTML ta...
+to_html_datatables(fp, *, show, c... IndexGO  Exporter Return a complete...
+to_pandas()                          IndexGO  Exporter Return a Pandas I...
+to_series()                          IndexGO  Exporter Return a Series w...
+<<U68>                               <<U7>    <<U17>   <<U83>
+
+#end_IndexGO-interface
+
+
+#start_IndexGO-append()
+>>> a = sf.IndexGO(('Uranus', 'Neptune'))
+>>> a.append('Pluto')
+>>> a
+<IndexGO>
+Uranus
+Neptune
+Pluto
+<<U7>
+
+#end_IndexGO-append()
+
+#-------------------------------------------------------------------------------
+# IndexHierarchy
+
+#start_IndexHierarchy-interface
+>>> sf.IndexHierarchy.interface.loc[sf.IndexHierarchy.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexHierarchy>
+<Index>                              cls_name       group       doc                  <<U18>
+<Index: signature>
+from_index_items(items, *, index_... IndexHierarchy Constructor Given an iterable...
+from_labels(labels, *, name, reor... IndexHierarchy Constructor Construct an Inde...
+from_labels_delimited(labels, *, ... IndexHierarchy Constructor Construct an Inde...
+from_pandas(value)                   IndexHierarchy Constructor Given a Pandas in...
+from_product(*, name, *levels)       IndexHierarchy Constructor Given groups of i...
+from_tree(tree, *, name)             IndexHierarchy Constructor Convert into a In...
+<<U68>                               <<U14>         <<U17>      <<U83>
+
+#end_IndexHierarchy-interface
+
+
+
+#-------------------------------------------------------------------------------
+# IndexHierarchyGO
+
+#start_IndexHierarchyGO-interface
+>>> sf.IndexHierarchyGO.interface.loc[sf.IndexHierarchyGO.interface.index.to_series().via_str.startswith('re')]
+<Frame: IndexHierarchyGO>
+<Index>                   cls_name         group  doc                  <<U18>
+<Index: signature>
+rehierarch(depth_map)     IndexHierarchyGO Method Return a new Inde...
+relabel(mapper)           IndexHierarchyGO Method Return a new Inde...
+rename(name)              IndexHierarchyGO Method Return a new Fram...
+<<U68>                    <<U16>           <<U17> <<U83>
+
+#end_IndexHierarchyGO-interface
+
+
+#-------------------------------------------------------------------------------
+# IndexYear
+
+#start_IndexYear-interface
+>>> sf.IndexYear.interface.loc[sf.IndexYear.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexYear>
+<Index>                              cls_name  group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexYear Constructor Get an IndexYearM...
+from_labels(labels, *, name)         IndexYear Constructor Construct an Inde...
+from_pandas(value)                   IndexYear Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexYear Constructor Get an IndexYearM...
+from_year_range(start, stop, step... IndexYear Constructor Get an IndexDate ...
+<<U68>                               <<U9>     <<U17>      <<U83>
+
+#end_IndexYear-interface
+
+#-------------------------------------------------------------------------------
+# IndexYearGO
+
+#start_IndexYearGO-interface
+>>> sf.IndexYearGO.interface.loc[sf.IndexYearGO.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexYearGO>
+<Index>                              cls_name    group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexYearGO Constructor Get an IndexYearM...
+from_labels(labels, *, name)         IndexYearGO Constructor Construct an Inde...
+from_pandas(value)                   IndexYearGO Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexYearGO Constructor Get an IndexYearM...
+from_year_range(start, stop, step... IndexYearGO Constructor Get an IndexDate ...
+<<U68>                               <<U11>      <<U17>      <<U83>
+
+#end_IndexYearGO-interface
+
+
+#-------------------------------------------------------------------------------
+# IndexYearMonth
+
+#start_IndexYearMonth-interface
+>>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexYearMonthGO>
+<Index>                              cls_name         group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYearM...
+from_labels(labels, *, name)         IndexYearMonthGO Constructor Construct an Inde...
+from_pandas(value)                   IndexYearMonthGO Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexYearMonthGO Constructor Get an IndexYearM...
+from_year_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYearM...
+<<U68>                               <<U16>           <<U17>      <<U83>
+
+#end_IndexYearMonth-interface
+
+
+#-------------------------------------------------------------------------------
+# IndexYearMonthGO
+
+#start_IndexYearMonthGO-interface
+>>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexYearMonthGO>
+<Index>                              cls_name         group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYearM...
+from_labels(labels, *, name)         IndexYearMonthGO Constructor Construct an Inde...
+from_pandas(value)                   IndexYearMonthGO Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexYearMonthGO Constructor Get an IndexYearM...
+from_year_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYearM...
+<<U68>                               <<U16>           <<U17>      <<U83>
+
+#end_IndexYearMonthGO-interface
+
+
+#-------------------------------------------------------------------------------
+# IndexDate
+
+#start_IndexDate-interface
+>>> sf.IndexDate.interface.loc[sf.IndexDate.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexDate>
+<Index>                              cls_name  group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexDate Constructor Get an IndexDate ...
+from_labels(labels, *, name)         IndexDate Constructor Construct an Inde...
+from_pandas(value)                   IndexDate Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexDate Constructor Get an IndexDate ...
+from_year_range(start, stop, step... IndexDate Constructor Get an IndexDate ...
+<<U68>
+
+#end_IndexDate-interface
+
+
+#-------------------------------------------------------------------------------
+# IndexDateGO
+
+#start_IndexDateGO-interface
+>>> sf.IndexDateGO.interface.loc[sf.IndexDateGO.interface.index.to_series().via_str.startswith('from_')]
+<Frame: IndexDateGO>
+<Index>                              cls_name    group       doc                  <<U18>
+<Index: signature>
+from_date_range(start, stop, step... IndexDateGO Constructor Get an IndexDate ...
+from_labels(labels, *, name)         IndexDateGO Constructor Construct an Inde...
+from_pandas(value)                   IndexDateGO Constructor Given a Pandas in...
+from_year_month_range(start, stop... IndexDateGO Constructor Get an IndexDate ...
+from_year_range(start, stop, step... IndexDateGO Constructor Get an IndexDate ...
+<<U68>                               <<U11>      <<U17>      <<U83>
+
+#end_IndexDateGO-interface
+
 
 
 

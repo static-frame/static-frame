@@ -28,10 +28,11 @@ class TestUnit(TestCase):
 
         post = FrameGO.interface
         counts = post.iter_group('group').apply(len)
+
         self.assertEqual(
             counts.to_pairs(),
-            (('Assignment', 4), ('Attribute', 13), ('Constructor', 27), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 224), ('Method', 55), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
-            )
+            (('Accessor Datetime', 7), ('Accessor String', 35), ('Assignment', 4), ('Attribute', 11), ('Constructor', 27), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 18), ('Iterator', 224), ('Method', 55), ('Operator Binary', 24), ('Operator Unary', 4), ('Selector', 13))
+        )
 
     def test_interface_summary_c(self) -> None:
         s = Series(['a', 'b', 'c'])

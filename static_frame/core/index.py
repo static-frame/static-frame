@@ -1073,9 +1073,8 @@ class Index(IndexBase):
     def to_series(self) -> 'Series':
         '''Return a Series with values from this Index's labels.
         '''
-        # not sure if index should be self here
         from static_frame import Series
-        return Series(self.values, index=None, name=self._name)
+        return Series(self.values, index=self, name=self._name)
 
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarhcy with an added root level.

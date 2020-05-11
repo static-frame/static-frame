@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.16
+----------
+
+Implemented ``via_str`` and ``via_dt`` accesors on all ``ContainerOperand``.
+
+Refined behavior of ``Index.to_series`` to return a ``Series`` that has the originating ``Index`` as the index.
+
+
 0.6.15
 ----------
 
