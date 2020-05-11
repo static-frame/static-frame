@@ -130,6 +130,19 @@ strange  False
 #end_Series-via_str.isdigit()
 
 
+#start_Series-via_str.islower()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.islower()
+<Series>
+<Index>
+muon     True
+tau      True
+strange  True
+<<U7>    <bool>
+
+#end_Series-via_str.islower()
+
+
 #start_Series-via_str.ljust()
 >>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
 >>> s.via_str.ljust(10, '-')
@@ -141,6 +154,19 @@ strange  quark-----
 <<U7>    <<U10>
 
 #end_Series-via_str.ljust()
+
+
+#start_Series-via_str.isupper()
+>>> s = sf.Series(('lepton', 'lepton', 'quark'), index=('muon', 'tau', 'strange'))
+>>> s.via_str.isupper()
+<Series>
+<Index>
+muon     False
+tau      False
+strange  False
+<<U7>    <bool>
+
+#end_Series-via_str.isupper()
 
 
 #start_Series-via_str.rjust()
