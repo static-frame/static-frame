@@ -702,7 +702,7 @@ class TestUnit(TestCase):
         s1 = idx1.to_series()
         self.assertFalse(s1.values.flags.writeable)
         self.assertEqual(s1.to_pairs(),
-                ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))
+                (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'))
                 )
 
 
