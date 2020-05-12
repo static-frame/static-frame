@@ -46,6 +46,8 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
 
 
+MAX_XLSX_ROWS = 1048576
+MAX_XLSX_COLUMNS = 16384 #1024 on libre office
 
 
 class StoreXLSX(Store):
@@ -145,6 +147,15 @@ class StoreXLSX(Store):
 
         columns_depth = frame._columns.depth
         columns_depth_effective = 0 if not include_columns else columns_depth
+
+        columns_total = frame.shape[1] + index_depth_effective
+        rows_total = frame.shape[0] + columns_depth_effective
+
+        if rows_total > MAX_XLSX_ROWS:
+            raise RuntimeError(f'Frame rows do not fit into XLSX sheet ({rows_total} > {MAX_XLSX_ROWS})')
+        if columns_total > MAX_XLSX_COLUMNS:
+            raise RuntimeError(f'Frame columns do not fit into XLSX sheet ({columns_total} > {MAX_XLSX_COLUMNS})')
+
         if include_columns:
             columns_values = frame._columns.values
             if store_filter:
