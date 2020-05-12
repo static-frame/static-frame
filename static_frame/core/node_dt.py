@@ -12,6 +12,9 @@ from static_frame.core.util import DT64_S
 from static_frame.core.util import DT64_MS
 from static_frame.core.util import DT64_US
 from static_frame.core.util import DT64_NS
+from static_frame.core.util import DT64_PS
+from static_frame.core.util import DT64_FS
+from static_frame.core.util import DT64_AS
 
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -59,7 +62,26 @@ class InterfaceDatetime(Interface[TContainer]):
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
-    DT64_TIME = {DT64_H, DT64_M, DT64_S, DT64_MS, DT64_US, DT64_NS}
+    DT64_TIME = {
+            DT64_H,
+            DT64_M,
+            DT64_S,
+            DT64_MS,
+            DT64_US,
+            DT64_NS,
+            DT64_PS,
+            DT64_FS,
+            DT64_AS,
+            }
+
+    DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO = {
+            DT64_YEAR,
+            DT64_MONTH,
+            DT64_NS,
+            DT64_PS,
+            DT64_FS,
+            DT64_AS,
+            }
 
     def __init__(self,
             blocks: BlocksType,
@@ -181,6 +203,10 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
+
+    #---------------------------------------------------------------------------
+    # time methods
+
     def timetuple(self) -> TContainer:
         '''
         Return a ``time.struct_time`` such as returned by time.localtime().
@@ -190,7 +216,8 @@ class InterfaceDatetime(Interface[TContainer]):
             for block in self._blocks:
 
                 # NOTE: nanosecond and lower will return integers; should exclud
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+                self._validate_dtype(block.dtype,
+                        exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     block = block.astype(DTYPE_OBJECT)
@@ -215,8 +242,8 @@ class InterfaceDatetime(Interface[TContainer]):
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
 
-                # NOTE: nanosecond and lower will return integers; should exclud
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+                self._validate_dtype(block.dtype,
+                        exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 args = EMPTY_TUPLE
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
@@ -226,7 +253,7 @@ class InterfaceDatetime(Interface[TContainer]):
                     block = block.astype(DTYPE_OBJECT)
 
                 # all object arrays by this point
-                # NOTE: we cannot determine if an Object array has date or datetime objects, so we cannot be sure if we need to pass args or not.
+                # NOTE: we cannot determine if an Object array has date or datetime objects with a full iteration, so we cannot be sure if we need to pass args or not.
 
                 # returns an immutable array
                 array = array_from_element_method(
@@ -248,7 +275,8 @@ class InterfaceDatetime(Interface[TContainer]):
             for block in self._blocks:
 
                 # NOTE: nanosecond and lower will return integers; should exclud
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+                self._validate_dtype(block.dtype,
+                        exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     block = block.astype(DTYPE_OBJECT)

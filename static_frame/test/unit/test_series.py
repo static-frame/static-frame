@@ -3246,6 +3246,19 @@ class TestUnit(TestCase):
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
 
+    def test_series_as_dt_weekday_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
+                index=('x', 'y'),
+                dtype='datetime64[ns]'
+                )
+        self.assertEqual(s1.via_dt.weekday().to_pairs(),
+                (('x', 3), ('y', 1)))
+
+        # we do not permit nanosecond to got microsecond
+        with self.assertRaises(RuntimeError):
+            s1.via_dt.isoformat()
+
 
 
 if __name__ == '__main__':
