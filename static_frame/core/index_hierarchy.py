@@ -560,25 +560,15 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
     @property
-    def via_str(self) -> InterfaceString['IndexHierarchy']:
+    def via_str(self) -> InterfaceString[np.ndarray]:
         '''
         Interface for applying string methods to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-
-        # NOTE: for now, not passing on index_constructors
-        # index_constructors = tuple(self._levels.index_types())
-
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'IndexHierarchy':
-            tb = TypeBlocks.from_blocks(blocks)
-            return cls._from_type_blocks(
-                tb,
-                name=self._name,
-                own_blocks=True,
-                )
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return TypeBlocks.from_blocks(blocks).values
 
         return InterfaceString(
                 blocks=self._blocks._blocks,
@@ -586,25 +576,15 @@ class IndexHierarchy(IndexBase):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime['IndexHierarchy']:
+    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
         if self._recache:
             self._update_array_cache()
 
-        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-
-        # NOTE: for now, not passing on index_constructors
-        # index_constructors = tuple(self._levels.index_types())
-
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'IndexHierarchy':
-            tb = TypeBlocks.from_blocks(blocks)
-            return cls._from_type_blocks(
-                tb,
-                name=self._name,
-                own_blocks=True,
-                )
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return TypeBlocks.from_blocks(blocks).values
 
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,

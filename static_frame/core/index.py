@@ -667,7 +667,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     @property
-    def via_str(self) -> InterfaceString['Index']:
+    def via_str(self) -> InterfaceString[np.ndarray]:
         '''
         Interface for applying string methods to elements in this container.
         '''
@@ -677,11 +677,8 @@ class Index(IndexBase):
         blocks = (self._labels,)
         cls = Index if self.STATIC else IndexGO
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Index':
-            return cls(
-                next(blocks), # assume only one
-                name=self._name,
-                )
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return next(blocks)
 
         return InterfaceString(
                 blocks=blocks,
@@ -689,7 +686,7 @@ class Index(IndexBase):
                 )
 
     @property
-    def via_dt(self) -> InterfaceDatetime['Index']:
+    def via_dt(self) -> InterfaceDatetime[np.ndarray]:
         '''
         Interface for applying datetime properties and methods to elements in this container.
         '''
@@ -699,11 +696,8 @@ class Index(IndexBase):
         blocks = (self.values,)
         cls = Index if self.STATIC else IndexGO
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Index':
-            return cls(
-                next(blocks), # assume only one
-                name=self._name,
-                )
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> np.ndarray:
+            return next(blocks)
 
         return InterfaceDatetime(
                 blocks=blocks,
@@ -1073,8 +1067,9 @@ class Index(IndexBase):
     def to_series(self) -> 'Series':
         '''Return a Series with values from this Index's labels.
         '''
+        # NOTE: while we might re-use the index on the index returned from this Series, such an approach will not work with IndexHierarchy.to_frame, as we do not know if the index should be on the index or columns; thus, returning an unindexed Series is appropriate
         from static_frame import Series
-        return Series(self.values, index=self, name=self._name)
+        return Series(self.values, name=self._name)
 
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarhcy with an added root level.

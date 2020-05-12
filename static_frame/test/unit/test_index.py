@@ -702,7 +702,7 @@ class TestUnit(TestCase):
         s1 = idx1.to_series()
         self.assertFalse(s1.values.flags.writeable)
         self.assertEqual(s1.to_pairs(),
-                (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'))
+                ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))
                 )
 
 
@@ -1028,7 +1028,7 @@ class TestUnit(TestCase):
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
         a1 = idx1.via_str.upper()
 
-        self.assertEqual(a1.values.tolist(),
+        self.assertEqual(a1.tolist(),
                 ['A', 'B', 'C', 'D', 'E']
                 )
 
@@ -1037,11 +1037,11 @@ class TestUnit(TestCase):
 
         idx1 = IndexDate(('2020-01-01', '2021-02-05', '2019-03-17'))
 
-        self.assertEqual(idx1.via_dt.day.values.tolist(),
+        self.assertEqual(idx1.via_dt.day.tolist(),
                 [1, 5, 17]
                 )
 
-        self.assertEqual(idx1.via_dt.weekday().values.tolist(),
+        self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6]
                 )
 

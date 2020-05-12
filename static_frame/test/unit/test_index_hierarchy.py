@@ -2073,7 +2073,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product(('i', 'ii'), ('a', 'b'))
         ih2 = ih1.via_str.upper()
 
-        self.assertEqual(ih2.values.tolist(),
+        self.assertEqual(ih2.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']]
                 )
 
@@ -2091,7 +2091,7 @@ class TestUnit(TestCase):
         ih2 = ih1.via_dt.month
 
         self.assertEqual(
-                ih2.values.tolist(),
+                ih2.tolist(),
                 [[1, 1], [1, 2], [2, 1], [2, 2]]
                 )
 
@@ -2110,22 +2110,20 @@ class TestUnit(TestCase):
         ih2 = ih1.via_dt.isoformat()
 
         self.assertEqual(
-            ih2.dtypes.values.tolist(),
-            [np.dtype('<U10'), np.dtype('<U10')]
+            ih2.dtype, np.dtype('<U10'),
             )
         self.assertEqual(
-                ih2.values.tolist(),
+                ih2.tolist(),
                 [['2020-01-03', '2019-01-01'], ['2020-01-03', '2019-02-01'], ['2019-02-05', '2019-01-01'], ['2019-02-05', '2019-02-01']]
                 )
 
         ih3 = ih1.via_dt.strftime('%y|%m|%d')
         self.assertEqual(
-            ih3.dtypes.values.tolist(),
-            [np.dtype('<U8'), np.dtype('<U8')]
+            ih3.dtype, np.dtype('<U8'),
             )
 
         self.assertEqual(
-            ih3.values.tolist(),
+            ih3.tolist(),
             [['20|01|03', '19|01|01'], ['20|01|03', '19|02|01'], ['19|02|05', '19|01|01'], ['19|02|05', '19|02|01']]
             )
 

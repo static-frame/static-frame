@@ -608,7 +608,7 @@ dtype('int64')
 
 
 #start_Series-interface
->>> sf.Series.interface.loc[sf.Series.interface.index.to_series().via_str.startswith('sort')]
+>>> sf.Series.interface.loc[sf.Series.interface.index.via_str.startswith('sort')]
 <Frame: Series>
 <Index>                         cls_name group  doc                  <<U18>
 <Index: signature>
@@ -854,7 +854,7 @@ Neptune  14
 # Frame
 
 #start_Frame-interface
->>> sf.Frame.interface.loc[sf.Frame.interface.index.to_series().via_str.startswith('sort')]
+>>> sf.Frame.interface.loc[sf.Frame.interface.index.via_str.startswith('sort')]
 <Frame: Frame>
 <Index>                              cls_name group  doc                  <<U18>
 <Index: signature>
@@ -1756,7 +1756,7 @@ Mars                  -65
 # FrameGO
 
 #start_FrameGO-interface
->>> sf.FrameGO.interface.loc[sf.FrameGO.interface.index.to_series().via_str.startswith('drop')]
+>>> sf.FrameGO.interface.loc[sf.FrameGO.interface.index.via_str.startswith('drop')]
 <Frame: FrameGO>
 <Index>                              cls_name group    doc                  <<U18>
 <Index: signature>
@@ -1794,7 +1794,7 @@ to_zip_tsv(fp, config)    Bus      Exporter
 # Index
 
 #start_Index-interface
->>> sf.Index.interface.loc[sf.Index.interface.index.to_series().via_str.startswith('re')]
+>>> sf.Index.interface.loc[sf.Index.interface.index.via_str.startswith('re')]
 <Frame: Index>
 <Index>            cls_name group  doc                  <<U18>
 <Index: signature>
@@ -1852,7 +1852,7 @@ NE
 # IndexGO
 
 #start_IndexGO-interface
->>> sf.IndexGO.interface.loc[sf.IndexGO.interface.index.to_series().via_str.startswith('to_')]
+>>> sf.IndexGO.interface.loc[sf.IndexGO.interface.index.via_str.startswith('to_')]
 <Frame: IndexGO>
 <Index>                              cls_name group    doc                  <<U18>
 <Index: signature>
@@ -1881,7 +1881,7 @@ Pluto
 # IndexHierarchy
 
 #start_IndexHierarchy-interface
->>> sf.IndexHierarchy.interface.loc[sf.IndexHierarchy.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexHierarchy.interface.loc[sf.IndexHierarchy.interface.index.via_str.startswith('from_')]
 <Frame: IndexHierarchy>
 <Index>                              cls_name       group       doc                  <<U18>
 <Index: signature>
@@ -1901,7 +1901,7 @@ from_tree(tree, *, name)             IndexHierarchy Constructor Convert into a I
 # IndexHierarchyGO
 
 #start_IndexHierarchyGO-interface
->>> sf.IndexHierarchyGO.interface.loc[sf.IndexHierarchyGO.interface.index.to_series().via_str.startswith('re')]
+>>> sf.IndexHierarchyGO.interface.loc[sf.IndexHierarchyGO.interface.index.via_str.startswith('re')]
 <Frame: IndexHierarchyGO>
 <Index>                   cls_name         group  doc                  <<U18>
 <Index: signature>
@@ -1917,7 +1917,7 @@ rename(name)              IndexHierarchyGO Method Return a new Fram...
 # IndexYear
 
 #start_IndexYear-interface
->>> sf.IndexYear.interface.loc[sf.IndexYear.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexYear.interface.loc[sf.IndexYear.interface.index.via_str.startswith('from_')]
 <Frame: IndexYear>
 <Index>                              cls_name  group       doc                  <<U18>
 <Index: signature>
@@ -1934,7 +1934,7 @@ from_year_range(start, stop, step... IndexYear Constructor Get an IndexDate ...
 # IndexYearGO
 
 #start_IndexYearGO-interface
->>> sf.IndexYearGO.interface.loc[sf.IndexYearGO.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexYearGO.interface.loc[sf.IndexYearGO.interface.index.via_str.startswith('from_')]
 <Frame: IndexYearGO>
 <Index>                              cls_name    group       doc                  <<U18>
 <Index: signature>
@@ -1952,7 +1952,7 @@ from_year_range(start, stop, step... IndexYearGO Constructor Get an IndexDate ..
 # IndexYearMonth
 
 #start_IndexYearMonth-interface
->>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.via_str.startswith('from_')]
 <Frame: IndexYearMonthGO>
 <Index>                              cls_name         group       doc                  <<U18>
 <Index: signature>
@@ -1970,7 +1970,7 @@ from_year_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYe
 # IndexYearMonthGO
 
 #start_IndexYearMonthGO-interface
->>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexYearMonthGO.interface.loc[sf.IndexYearMonthGO.interface.index.via_str.startswith('from_')]
 <Frame: IndexYearMonthGO>
 <Index>                              cls_name         group       doc                  <<U18>
 <Index: signature>
@@ -1988,7 +1988,7 @@ from_year_range(start, stop, step... IndexYearMonthGO Constructor Get an IndexYe
 # IndexDate
 
 #start_IndexDate-interface
->>> sf.IndexDate.interface.loc[sf.IndexDate.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexDate.interface.loc[sf.IndexDate.interface.index.via_str.startswith('from_')]
 <Frame: IndexDate>
 <Index>                              cls_name  group       doc                  <<U18>
 <Index: signature>
@@ -2006,7 +2006,7 @@ from_year_range(start, stop, step... IndexDate Constructor Get an IndexDate ...
 # IndexDateGO
 
 #start_IndexDateGO-interface
->>> sf.IndexDateGO.interface.loc[sf.IndexDateGO.interface.index.to_series().via_str.startswith('from_')]
+>>> sf.IndexDateGO.interface.loc[sf.IndexDateGO.interface.index.via_str.startswith('from_')]
 <Frame: IndexDateGO>
 <Index>                              cls_name    group       doc                  <<U18>
 <Index: signature>
