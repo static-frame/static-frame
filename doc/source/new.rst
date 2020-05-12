@@ -8,6 +8,8 @@ Implemented ``via_str`` and ``via_dt`` accesors on all ``ContainerOperand``.
 
 Refined behavior of ``Index.to_series`` to return a ``Series`` that has the originating ``Index`` as the index.
 
+When writing to XLSX, the shape of the ``Frame`` is validated to fit within the limits of XLSX sheets.
+
 
 0.6.15
 ----------
