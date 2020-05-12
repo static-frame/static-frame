@@ -5,6 +5,14 @@ import numpy as np
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_DAY
+
+from static_frame.core.util import DT64_H
+from static_frame.core.util import DT64_M
+from static_frame.core.util import DT64_S
+from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_US
+from static_frame.core.util import DT64_NS
+
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -51,6 +59,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
+    DT64_TIME = {DT64_H, DT64_M, DT64_S, DT64_MS, DT64_US, DT64_NS}
 
     def __init__(self,
             blocks: BlocksType,
@@ -209,15 +218,21 @@ class InterfaceDatetime(Interface[TContainer]):
                 # NOTE: nanosecond and lower will return integers; should exclud
                 self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
+                args = EMPTY_TUPLE
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
+                    if block.dtype in self.DT64_TIME:
+                        # if we know this is a time type, we can pass args
+                        args = (sep, timespec)
                     block = block.astype(DTYPE_OBJECT)
+
                 # all object arrays by this point
+                # NOTE: we cannot determine if an Object array has date or datetime objects, so we cannot be sure if we need to pass args or not.
 
                 # returns an immutable array
                 array = array_from_element_method(
                         array=block,
                         method_name='isoformat',
-                        args=EMPTY_TUPLE,
+                        args=args,
                         dtype=DTYPE_STR,
                         )
                 yield array

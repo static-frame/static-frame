@@ -3235,6 +3235,17 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_series_as_dt_isoformat_a(self) -> None:
+
+        s1 = Series(('2014-01-02T05:02', '2013-02-05T16:55'),
+                index=('x', 'y'),
+                dtype=np.datetime64
+                )
+        post = s1.via_dt.isoformat('*')
+        self.assertEqual(post.to_pairs(),
+                (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
+                )
+
 
 
 if __name__ == '__main__':
