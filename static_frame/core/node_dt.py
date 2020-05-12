@@ -113,7 +113,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 self._validate_dtype(block.dtype)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
-                    array = block.astype(DT64_YEAR).astype(int) + 1970
+                    array = block.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
                     array.flags.writeable = False
                 else: # must be object type
                     array = array_from_element_attr(
@@ -135,7 +135,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
-                    array = block.astype(DT64_MONTH).astype(int) % 12 + 1
+                    array = block.astype(DT64_MONTH).astype(DTYPE_INT_DEFAULT) % 12 + 1
                     array.flags.writeable = False
                 else: # must be object type
                     array = array_from_element_attr(
