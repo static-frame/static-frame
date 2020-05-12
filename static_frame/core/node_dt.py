@@ -249,7 +249,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype in self.DT64_TIME:
                         # if we know this is a time type, we can pass args
-                        args = (sep, timespec)
+                        args = (sep, timespec) #type: ignore
                     block = block.astype(DTYPE_OBJECT)
 
                 # all object arrays by this point
