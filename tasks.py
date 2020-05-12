@@ -61,6 +61,9 @@ def interface(context, container=None):
 
 @invoke.task
 def example(context, container=None):
+    '''
+    Discover API members that have a code example.
+    '''
     from static_frame.test.unit.test_doc import api_example_str
     from static_frame.core.display_color import HexColor
     from doc.source.conf import get_jinja_contexts
@@ -107,7 +110,7 @@ def example(context, container=None):
 
 @invoke.task
 def test(context, unit=False, filename=None):
-    '''Run tests
+    '''Run tests.
     '''
     if unit:
         fp = 'static_frame/test/unit'
@@ -124,6 +127,9 @@ def test(context, unit=False, filename=None):
 
 @invoke.task
 def coverage(context):
+    '''
+    Perform code coverage, and open report HTML.
+    '''
     cmd = 'pytest -s --color no --disable-pytest-warnings --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
@@ -133,19 +139,19 @@ def coverage(context):
 
 @invoke.task
 def mypy(context):
-    '''Run mypy static analysis
+    '''Run mypy static analysis.
     '''
     context.run('mypy --strict')
 
 @invoke.task
 def lint(context):
-    '''Run pylint static analysis
+    '''Run pylint static analysis.
     '''
     context.run('pylint static_frame')
 
 @invoke.task(pre=(test, mypy, lint))
 def integrate(context):
-    '''Perform all continuous integration
+    '''Perform all continuous integration.
     '''
 
 #-------------------------------------------------------------------------------

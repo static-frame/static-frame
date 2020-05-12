@@ -853,6 +853,258 @@ Neptune  14
 #-------------------------------------------------------------------------------
 # Frame
 
+
+#start_Frame-via_str.center()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.center(18, '-')
+<Frame>
+<Index>  Orbital Period     Perihelion Distance <<U19>
+<Index>
+Halley   ----76.1 yrs.----- -----0.587 AU-----
+Encke    ----3.30 yrs.----- -----0.340 AU-----
+d'Arrest ----6.51 yrs.----- -----1.346 AU-----
+<<U8>    <<U18>             <<U18>
+
+#end_Frame-via_str.center()
+
+
+#start_Frame-via_str.count()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.count('3')
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   0              0
+Encke    2              1
+d'Arrest 0              1
+<<U8>    <int64>        <int64>
+
+#end_Frame-via_str.count()
+
+
+
+
+#start_Frame-via_str.endswith()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.endswith('AU')
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   False          True
+Encke    False          True
+d'Arrest False          True
+<<U8>    <bool>         <bool>
+
+#end_Frame-via_str.endswith()
+
+
+
+#start_Frame-via_str.find()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.find('.')
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   2              1
+Encke    1              1
+d'Arrest 1              1
+<<U8>    <int64>        <int64>
+
+#end_Frame-via_str.find()
+
+
+
+#start_Frame-via_str.partition()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.partition(' ').display_wide()
+<Frame>
+<Index>  Orbital Period        Perihelion Distance  <<U19>
+<Index>
+Halley   ('76.1', ' ', 'yrs.') ('0.587', ' ', 'AU')
+Encke    ('3.30', ' ', 'yrs.') ('0.340', ' ', 'AU')
+d'Arrest ('6.51', ' ', 'yrs.') ('1.346', ' ', 'AU')
+<<U8>    <object>              <object>
+
+#end_Frame-via_str.partition()
+
+
+#start_Frame-via_str.rfind()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.rfind('.')
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   8              1
+Encke    8              1
+d'Arrest 8              1
+<<U8>    <int64>        <int64>
+
+#end_Frame-via_str.rfind()
+
+
+#start_Frame-via_str.ljust()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.ljust(20, '.')
+<Frame>
+<Index>  Orbital Period       Perihelion Distance  <<U19>
+<Index>
+Halley   76.1 yrs............ 0.587 AU............
+Encke    3.30 yrs............ 0.340 AU............
+d'Arrest 6.51 yrs............ 1.346 AU............
+<<U8>    <<U20>               <<U20>
+
+#end_Frame-via_str.ljust()
+
+
+#start_Frame-via_str.rjust()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.rjust(20, '.')
+<Frame>
+<Index>  Orbital Period       Perihelion Distance  <<U19>
+<Index>
+Halley   ...........76.1 yrs. ............0.587 AU
+Encke    ...........3.30 yrs. ............0.340 AU
+d'Arrest ...........6.51 yrs. ............1.346 AU
+<<U8>    <<U20>               <<U20>
+
+#end_Frame-via_str.rjust()
+
+
+
+
+#start_Frame-via_str.split()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.split(' ')
+<Frame>
+<Index>  Orbital Period   Perihelion Distance <<U19>
+<Index>
+Halley   ('76.1', 'yrs.') ('0.587', 'AU')
+Encke    ('3.30', 'yrs.') ('0.340', 'AU')
+d'Arrest ('6.51', 'yrs.') ('1.346', 'AU')
+<<U8>    <object>         <object>
+
+#end_Frame-via_str.split()
+
+
+
+
+#start_Frame-via_str.startswith()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.startswith('0.')
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   False          True
+Encke    False          True
+d'Arrest False          False
+<<U8>    <bool>         <bool>
+
+#end_Frame-via_str.startswith()
+
+
+
+#start_Frame-via_str.replace()
+>>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
+>>> f
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1 yrs.      0.587 AU
+Encke    3.30 yrs.      0.340 AU
+d'Arrest 6.51 yrs.      1.346 AU
+<<U8>    <<U9>          <<U8>
+>>> f.via_str.replace(' AU', '').via_str.replace(' yrs.', '').astype(float)
+<Frame>
+<Index>  Orbital Period Perihelion Distance <<U19>
+<Index>
+Halley   76.1           0.587
+Encke    3.3            0.34
+d'Arrest 6.51           1.346
+<<U8>    <float64>      <float64>
+
+#end_Frame-via_str.replace()
+
+
 #start_Frame-interface
 >>> sf.Frame.interface.loc[sf.Frame.interface.index.via_str.startswith('sort')]
 <Frame: Frame>
