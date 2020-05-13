@@ -118,5 +118,5 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime
 
 
-__version__ = '0.6.15' # use -dev for new version in development
+__version__ = '0.6.16' # use -dev for new version in development
 
