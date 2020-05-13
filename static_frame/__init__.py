@@ -17,10 +17,10 @@ from static_frame.core.util import mloc as mloc
 
 from static_frame.core.selector_node import InterfaceGetItem as InterfaceGetItem
 
-from static_frame.core.iter_node import IterNodeApplyType as IterNodeApplyType
-from static_frame.core.iter_node import IterNodeType as IterNodeType
-from static_frame.core.iter_node import IterNodeDelegate as IterNodeDelegate
-# from static_frame.core.iter_node import IterNode as IterNode
+from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
+from static_frame.core.node_iter import IterNodeType as IterNodeType
+from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
+# from static_frame.core.node_iter import IterNode as IterNode
 
 from static_frame.core.display import DisplayConfig as DisplayConfig
 from static_frame.core.display import DisplayConfigs as DisplayConfigs
@@ -97,13 +97,13 @@ from static_frame.core.exception import LocInvalid
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import StoreFileMutation
 
-from static_frame.core.iter_node import IterNodeNoArg
-from static_frame.core.iter_node import IterNodeAxis
-from static_frame.core.iter_node import IterNodeGroup
-from static_frame.core.iter_node import IterNodeGroupAxis
-from static_frame.core.iter_node import IterNodeDepthLevel
-from static_frame.core.iter_node import IterNodeDepthLevelAxis
-from static_frame.core.iter_node import IterNodeWindow
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeDepthLevelAxis
+from static_frame.core.node_iter import IterNodeWindow
 
 
 from static_frame.core.selector_node import InterfaceSelectDuo

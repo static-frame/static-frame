@@ -44,9 +44,9 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayHeader
-from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNodeDepthLevel
-from static_frame.core.iter_node import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.hloc import HLoc
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.doc_str import doc_inject

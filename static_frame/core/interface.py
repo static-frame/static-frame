@@ -27,7 +27,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import Display
 from static_frame.core.frame import FrameAsType
 
-from static_frame.core.iter_node import IterNodeDelegate
+from static_frame.core.node_iter import IterNodeDelegate
 
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP

@@ -95,14 +95,14 @@ from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import pandas_to_numpy
 
-from static_frame.core.iter_node import IterNodeApplyType
-from static_frame.core.iter_node import IterNodeType
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeType
 
-from static_frame.core.iter_node import IterNodeAxis
-from static_frame.core.iter_node import IterNodeDepthLevelAxis
-from static_frame.core.iter_node import IterNodeWindow
-from static_frame.core.iter_node import IterNodeGroupAxis
-from static_frame.core.iter_node import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeDepthLevelAxis
+from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeNoArg
 
 
 from static_frame.core.display import DisplayConfig

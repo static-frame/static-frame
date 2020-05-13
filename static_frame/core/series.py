@@ -59,12 +59,12 @@ from static_frame.core.display import Display
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayHeader
 
-from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNodeGroup
-from static_frame.core.iter_node import IterNodeDepthLevel
-from static_frame.core.iter_node import IterNodeWindow
-from static_frame.core.iter_node import IterNodeNoArg
-from static_frame.core.iter_node import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeApplyType
 
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime

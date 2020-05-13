@@ -63,10 +63,10 @@ from static_frame.core.container_util import matmul
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.index_base import IndexBase
-# from static_frame.core.iter_node import IterNode
-from static_frame.core.iter_node import IterNodeDepthLevel
-from static_frame.core.iter_node import IterNodeType
-from static_frame.core.iter_node import IterNodeApplyType
+# from static_frame.core.node_iter import IterNode
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeApplyType
 
 
 from static_frame.core.display import DisplayConfig
