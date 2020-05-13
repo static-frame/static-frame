@@ -2283,8 +2283,9 @@ from_year_range(start, stop, step... IndexDateGO Constructor Get an IndexDate ..
 
 
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_win
 
-
+@skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
 
     @staticmethod
