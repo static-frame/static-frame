@@ -15,6 +15,10 @@ def clean(context):
     context.run('rm -rf build')
     context.run('rm -rf dist')
     context.run('rm -rf *.egg-info')
+    context.run('rm -rf .mypy_cache')
+    context.run('rm -rf .pytest_cache')
+    context.run('rm -rf .hypothesis')
+    context.run('rm -rf .ipynb_checkpoints')
 
 
 @invoke.task()
