@@ -25,8 +25,8 @@ from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import array_from_element_attr
 from static_frame.core.util import array_from_element_method
 
-from static_frame.core.selector_node import Interface
-from static_frame.core.selector_node import TContainer
+from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import TContainer
 
 if tp.TYPE_CHECKING:
 

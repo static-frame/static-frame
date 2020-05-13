@@ -46,9 +46,9 @@ from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmax_1d
 from static_frame.core.util import intersect1d
 
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceAssignTrio
-from static_frame.core.selector_node import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceSelectTrio
 
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.container import ContainerOperand

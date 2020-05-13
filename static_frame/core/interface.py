@@ -33,15 +33,15 @@ from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 
-from static_frame.core.selector_node import TContainer
-from static_frame.core.selector_node import Interface
-from static_frame.core.selector_node import InterfaceSelectDuo
-from static_frame.core.selector_node import InterfaceSelectTrio
-from static_frame.core.selector_node import InterfaceAssignTrio
-from static_frame.core.selector_node import InterfaceAssignQuartet
+from static_frame.core.node_selector import TContainer
+from static_frame.core.node_selector import Interface
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceAssignQuartet
 
-from static_frame.core.selector_node import InterfaceAsType
-from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
 
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_str import InterfaceString

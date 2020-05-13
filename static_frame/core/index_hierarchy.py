@@ -30,8 +30,8 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
 
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime
 

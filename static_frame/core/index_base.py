@@ -18,8 +18,8 @@ from static_frame.core.display import Display
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.container import ContainerOperand
-# from static_frame.core.selector_node import InterfaceGetItem
-# from static_frame.core.selector_node import TContainer
+# from static_frame.core.node_selector import InterfaceGetItem
+# from static_frame.core.node_selector import TContainer
 # from static_frame.core.exception import ErrorInitIndex
 
 if tp.TYPE_CHECKING:

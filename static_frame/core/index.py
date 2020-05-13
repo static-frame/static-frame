@@ -43,9 +43,9 @@ from static_frame.core.util import slice_to_inclusive_slice
 
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelectDuo
-from static_frame.core.selector_node import TContainer
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import TContainer
 
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime

@@ -15,7 +15,7 @@ from static_frame.core.util import SeriesInitializer as SeriesInitializer
 from static_frame.core.util import FrameInitializer as FrameInitializer
 from static_frame.core.util import mloc as mloc
 
-from static_frame.core.selector_node import InterfaceGetItem as InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItem as InterfaceGetItem
 
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeType as IterNodeType
@@ -106,13 +106,13 @@ from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeWindow
 
 
-from static_frame.core.selector_node import InterfaceSelectDuo
-from static_frame.core.selector_node import InterfaceSelectTrio
-from static_frame.core.selector_node import InterfaceSelectQuartet
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceSelectQuartet
 
-from static_frame.core.selector_node import InterfaceAssignTrio
-from static_frame.core.selector_node import InterfaceAssignQuartet
-from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceAssignQuartet
+from static_frame.core.node_selector import InterfaceAsType
 
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime

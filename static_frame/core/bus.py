@@ -31,7 +31,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
 # from static_frame.core.util import DtypesSpecifier
 
-from static_frame.core.selector_node import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceGetItem
 
 from static_frame.core.hloc import HLoc
 
@@ -44,7 +44,7 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.container import ContainerBase
 
-from static_frame.core.selector_node import TContainer
+from static_frame.core.node_selector import TContainer
 
 
 #-------------------------------------------------------------------------------

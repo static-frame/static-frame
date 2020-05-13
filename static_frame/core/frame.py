@@ -72,10 +72,10 @@ from static_frame.core.util import dtype_to_na
 from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
 
-from static_frame.core.selector_node import InterfaceGetItem
-from static_frame.core.selector_node import InterfaceSelectTrio
-from static_frame.core.selector_node import InterfaceAssignQuartet
-from static_frame.core.selector_node import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceAssignQuartet
+from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime
 
