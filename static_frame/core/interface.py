@@ -243,7 +243,7 @@ class InterfaceRecord(tp.NamedTuple):
     signature_no_args: str = ''
 
     @classmethod
-    def from_dict_like(cls, *,
+    def gen_from_dict_like(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -269,7 +269,7 @@ class InterfaceRecord(tp.NamedTuple):
                 )
 
     @classmethod
-    def from_display(cls, *,
+    def gen_from_display(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -302,7 +302,7 @@ class InterfaceRecord(tp.NamedTuple):
                     )
 
     @classmethod
-    def from_astype(cls, *,
+    def gen_from_astype(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -356,7 +356,7 @@ class InterfaceRecord(tp.NamedTuple):
 
 
     @classmethod
-    def from_constructor(cls, *,
+    def gen_from_constructor(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -380,7 +380,7 @@ class InterfaceRecord(tp.NamedTuple):
                 )
 
     @classmethod
-    def from_exporter(cls, *,
+    def gen_from_exporter(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -404,7 +404,7 @@ class InterfaceRecord(tp.NamedTuple):
                 )
 
     @classmethod
-    def from_iterator(cls, *,
+    def gen_from_iterator(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -455,7 +455,7 @@ class InterfaceRecord(tp.NamedTuple):
                     )
 
     @classmethod
-    def from_accessor(cls, *,
+    def gen_from_accessor(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -543,7 +543,7 @@ class InterfaceRecord(tp.NamedTuple):
 
 
     @classmethod
-    def from_selection(cls, *,
+    def gen_from_selection(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -590,7 +590,7 @@ class InterfaceRecord(tp.NamedTuple):
 
 
     @classmethod
-    def from_assignment(cls, *,
+    def gen_from_assignment(cls, *,
             cls_name: str,
             name: str,
             obj: tp.Union[InterfaceAssignTrio[TContainer],
@@ -645,7 +645,7 @@ class InterfaceRecord(tp.NamedTuple):
                     )
 
     @classmethod
-    def from_method(cls, *,
+    def gen_from_method(cls, *,
             cls_name: str,
             name: str,
             obj: AnyCallable,
@@ -788,39 +788,39 @@ class InterfaceSummary(Features):
                     )
 
             if name in cls.DICT_LIKE:
-                yield from InterfaceRecord.from_dict_like(**kwargs)
+                yield from InterfaceRecord.gen_from_dict_like(**kwargs)
             elif name in cls.DISPLAY:
-                yield from InterfaceRecord.from_display(**kwargs)
+                yield from InterfaceRecord.gen_from_display(**kwargs)
             elif name == 'astype':
-                yield from InterfaceRecord.from_astype(**kwargs)
+                yield from InterfaceRecord.gen_from_astype(**kwargs)
             elif name.startswith('from_') or name == '__init__':
-                yield from InterfaceRecord.from_constructor(**kwargs)
+                yield from InterfaceRecord.gen_from_constructor(**kwargs)
             elif name.startswith('to_'):
-                yield from InterfaceRecord.from_exporter(**kwargs)
+                yield from InterfaceRecord.gen_from_exporter(**kwargs)
             elif name.startswith('iter_'):
-                yield from InterfaceRecord.from_iterator(**kwargs)
+                yield from InterfaceRecord.gen_from_iterator(**kwargs)
             elif isinstance(obj, InterfaceGetItem) or name == cls.GETITEM:
                 yield from InterfaceRecord.from_getitem(**kwargs)
             elif isinstance(obj, InterfaceString):
-                yield from InterfaceRecord.from_accessor(
+                yield from InterfaceRecord.gen_from_accessor(
                             cls_interface=InterfaceString,
                             **kwargs,
                             )
             elif isinstance(obj, InterfaceDatetime):
-                yield from InterfaceRecord.from_accessor(
+                yield from InterfaceRecord.gen_from_accessor(
                             cls_interface=InterfaceDatetime,
                             **kwargs,
                             )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
-                yield from InterfaceRecord.from_selection(
+                yield from InterfaceRecord.gen_from_selection(
                         cls_interface=obj.__class__,
                         **kwargs)
             elif obj.__class__ in (InterfaceAssignTrio, InterfaceAssignQuartet):
-                yield from InterfaceRecord.from_assignment(
+                yield from InterfaceRecord.gen_from_assignment(
                         cls_interface=obj.__class__,
                         **kwargs)
             elif callable(obj): # general methods
-                yield from InterfaceRecord.from_method(**kwargs)
+                yield from InterfaceRecord.gen_from_method(**kwargs)
             else: # attributes
                 yield InterfaceRecord(cls_name,
                         InterfaceGroup.Attribute,
