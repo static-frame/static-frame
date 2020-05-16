@@ -2585,6 +2585,22 @@ class TestUnit(TestCase):
                 [[0, 0, 0], [1, 2, 1], [2, 4, 2]])
 
 
+    def test_type_blocks_ufunc_blocks_c(self) -> None:
+
+        a1 = np.arange(3)
+        a2 = np.arange(6).reshape(3, 2)
+        a3 = np.arange(3)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        ufunc = lambda x: x * 2
+        tb2 = TypeBlocks.from_blocks(tb1._ufunc_blocks(NULL_SLICE, ufunc))
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 0, 2, 0], [2, 4, 6, 2], [4, 8, 10, 4]])
+
+        tb3 = TypeBlocks.from_blocks(tb1._ufunc_blocks(slice(2,4), ufunc))
+        self.assertEqual(tb3.values.tolist(),
+                [[0, 0, 2, 0], [1, 2, 6, 2], [2, 4, 10, 4]])
+
 
 if __name__ == '__main__':
     unittest.main()
