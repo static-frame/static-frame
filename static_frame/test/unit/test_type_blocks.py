@@ -17,6 +17,8 @@ from static_frame import mloc
 
 
 from static_frame.core.util import immutable_filter
+from static_frame.core.util import NULL_SLICE
+
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -2545,6 +2547,44 @@ class TestUnit(TestCase):
                 tb3.values.tolist(),
                 [[0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6], [0.3, 0.9, 0.9, 0.6]]
                 )
+
+
+    #---------------------------------------------------------------------------
+
+    def test_type_blocks_ufunc_blocks_a(self) -> None:
+
+        a1 = np.arange(8).reshape(2, 4)
+        tb1 = TypeBlocks.from_blocks(a1)
+
+        ufunc = lambda x: x * 2
+        tb2 = TypeBlocks.from_blocks(tb1._ufunc_blocks(NULL_SLICE, ufunc))
+
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 2, 4, 6], [8, 10, 12, 14]])
+
+        tb3 = TypeBlocks.from_blocks(tb1._ufunc_blocks(1, ufunc))
+        self.assertEqual(tb3.values.tolist(),
+                [[0, 2, 2, 3], [4, 10, 6, 7]])
+
+
+    def test_type_blocks_ufunc_blocks_b(self) -> None:
+
+        a1 = np.arange(3)
+        a2 = np.arange(3)
+        a3 = np.arange(3)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        ufunc = lambda x: x * 2
+        tb2 = TypeBlocks.from_blocks(tb1._ufunc_blocks(NULL_SLICE, ufunc))
+
+        self.assertEqual(tb2.values.tolist(),
+                [[0, 0, 0], [2, 2, 2], [4, 4, 4]])
+
+        tb3 = TypeBlocks.from_blocks(tb1._ufunc_blocks(1, ufunc))
+        self.assertEqual(tb3.values.tolist(),
+                [[0, 0, 0], [1, 2, 1], [2, 4, 2]])
+
+
 
 if __name__ == '__main__':
     unittest.main()
