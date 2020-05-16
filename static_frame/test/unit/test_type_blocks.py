@@ -356,6 +356,7 @@ class TestUnit(TestCase):
                 ['od', 'oe', True]],
                 match_dtype=object)
 
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_extract_array_a(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -371,6 +372,34 @@ class TestUnit(TestCase):
         self.assertEqual(a5.tolist(),
                 [True, True, True])
 
+
+    def test_type_blocks_extract_array_b(self) -> None:
+
+        a1 = np.arange(10).reshape(2, 5)
+        tb1 = TypeBlocks.from_blocks(a1)
+
+        a2 = tb1._extract_array(1, 4)
+        self.assertEqual(a2, 9)
+
+        a2 = tb1._extract_array(NULL_SLICE, 4)
+        self.assertEqual(a2.tolist(), [4, 9])
+
+
+    def test_type_blocks_extract_array_c(self) -> None:
+
+        a1 = np.arange(4)
+        a2 = np.arange(10, 14)
+        a3 = np.arange(20, 24)
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        a2 = tb1._extract_array(1, 2)
+        self.assertEqual(a2, 21)
+
+        a2 = tb1._extract_array(NULL_SLICE, 1)
+        self.assertEqual(a2.tolist(), [10, 11, 12, 13])
+
+    #---------------------------------------------------------------------------
 
     def test_immutable_filter(self) -> None:
         a1 = np.array([3, 4, 5])
