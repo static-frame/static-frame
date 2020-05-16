@@ -1045,6 +1045,30 @@ class TestUnit(TestCase):
                 [2, 4, 6]
                 )
 
+    #---------------------------------------------------------------------------
+
+    def test_index_equals_a(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        idx2 = Index(('a', 'b', 'c', 'd', 'e'))
+        idx3 = IndexGO(('a', 'b', 'c', 'd', 'e'), name='foo')
+        idx4 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+        idx5 = IndexGO(('a', 'b', 'c', 'd'))
+
+        self.assertEqual(idx1.equals(3), False)
+        self.assertEqual(idx1.equals(False), False)
+        self.assertEqual(idx1.equals([3, 4, 5]), False)
+
+        self.assertEqual(idx1.equals(idx2), False)
+        self.assertEqual(idx1.equals(idx3), False)
+        self.assertEqual(idx1.equals(idx5), False)
+
+
+        self.assertEqual(idx1.equals(idx1), True)
+        self.assertEqual(idx1.equals(idx4), True)
+
+
+
 if __name__ == '__main__':
     unittest.main()
 
