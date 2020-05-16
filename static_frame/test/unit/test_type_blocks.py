@@ -2631,5 +2631,16 @@ class TestUnit(TestCase):
                 [[0, 0, 2, 0], [1, 2, 6, 2], [2, 4, 10, 4]])
 
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_getitem_a(self) -> None:
+
+        a1 = np.arange(3)
+        a2 = np.arange(10, 16).reshape(3, 2)
+        a3 = np.arange(20, 23)
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     unittest.main()
