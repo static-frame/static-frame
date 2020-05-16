@@ -2639,7 +2639,16 @@ class TestUnit(TestCase):
         a3 = np.arange(20, 23)
         tb1 = TypeBlocks.from_blocks((a1, a2, a3))
 
-        import ipdb; ipdb.set_trace()
+        self.assertEqual(tb1[2].values.tolist(),
+                [[11], [13], [15]])
+
+        with self.assertRaises(KeyError):
+            _ = tb1[2, 2]
+
+        self.assertEqual(
+                tb1[2:].values.tolist(),
+                [[11, 20], [13, 21], [15, 22]]
+                )
 
 
 if __name__ == '__main__':
