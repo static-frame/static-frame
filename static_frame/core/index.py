@@ -1028,7 +1028,7 @@ class Index(IndexBase):
 
     def equals(self, other: tp.Any) -> bool:
         '''
-        Return a Boolean from comparison to any other object. ``Index`` must match every attribute and value to return True.
+        Return a Boolean from comparison to any other object. An ``Index`` must match every attribute and value to return True.
         '''
         if id(other) == id(self):
             return True
@@ -1044,8 +1044,6 @@ class Index(IndexBase):
         if not (self.values == other.values).all():
             return False
         return True
-
-
 
     def sort(self,
             ascending: bool = True,

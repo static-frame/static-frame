@@ -1063,7 +1063,6 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.equals(idx3), False)
         self.assertEqual(idx1.equals(idx5), False)
 
-
         self.assertEqual(idx1.equals(idx1), True)
         self.assertEqual(idx1.equals(idx4), True)
 

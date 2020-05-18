@@ -1093,8 +1093,14 @@ class IndexHierarchy(IndexBase):
             return False
         if self.name != other.name:
             return False
-        #TODO: compare _blocks
-        return True
+
+        # NOTE: there could be an optimized way to do the comparison on IndexLevels using component Index.equals()
+        if self._recache:
+            self._update_array_cache()
+        if other._recache:
+            other._update_array_cache()
+
+        return self._blocks.equals(other._blocks)
 
 
     def sort(self,

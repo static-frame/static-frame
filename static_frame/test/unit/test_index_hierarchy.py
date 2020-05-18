@@ -2127,6 +2127,21 @@ class TestUnit(TestCase):
             [['20|01|03', '19|01|01'], ['20|01|03', '19|02|01'], ['19|02|05', '19|01|01'], ['19|02|05', '19|02|01']]
             )
 
+    #---------------------------------------------------------------------------
+
+    def test_index_hierarchy_equals_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        ih3 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 4))
+
+        self.assertTrue(ih1.equals(ih1))
+        self.assertTrue(ih1.equals(ih2))
+        self.assertTrue(ih2.equals(ih1))
+
+        self.assertFalse(ih1.equals(ih3))
+        self.assertFalse(ih3.equals(ih1))
+
 
 if __name__ == '__main__':
     unittest.main()
