@@ -1078,6 +1078,25 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # utility functions
 
+    def equals(self, other: tp.Any) -> bool:
+        '''
+        Return a Boolean from comparison to any other object. An ``IndexHierarchy`` must match every attribute and value to return True.
+        '''
+        if id(other) == id(self):
+            return True
+        if not isinstance(other, self.__class__):
+            return False
+        if self.__class__ != other.__class__:
+            return False
+        # same type from here
+        if self.shape != other.shape:
+            return False
+        if self.name != other.name:
+            return False
+        #TODO: compare _blocks
+        return True
+
+
     def sort(self,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Index':

@@ -2650,6 +2650,30 @@ class TestUnit(TestCase):
                 [[11, 20], [13, 21], [15, 22]]
                 )
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_equal_a(self) -> None:
+
+        a1 = np.array([[1, 10], [2, 20], [3, 30]])
+        a2 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        a3 = np.array([1, 2, 3])
+        a4 = np.array([10, 20, 30])
+        a5 = np.array([False, True, False])
+        tb2 = TypeBlocks.from_blocks((a3, a4, a5))
+
+        self.assertTrue(tb1.equals(tb2))
+        self.assertTrue(tb2.equals(tb1))
+        self.assertTrue(tb1.equals(tb1))
+
+        a6 = np.array([1, 2, 3])
+        a7 = np.array([10, 21, 30])
+        a8 = np.array([False, True, False])
+        tb3 = TypeBlocks.from_blocks((a6, a7, a8))
+
+        self.assertFalse(tb1.equals(tb3))
+        self.assertFalse(tb3.equals(tb1))
+
 
 if __name__ == '__main__':
     unittest.main()

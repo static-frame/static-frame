@@ -521,14 +521,6 @@ class TypeBlocks(ContainerOperand):
                 self._reblock_signature(),
                 other._reblock_signature()))
 
-    # def unblock_dtype_compatible(self, other: 'TypeBlocks') -> bool:
-    #     '''
-    #     If, when reduced to single dytpes per column, the blocks are compatible.
-    #     '''
-    #     compare = resolve_dtype(a, b) in zip(self.dtypes, other.dtypes):
-
-
-
     @classmethod
     def _concatenate_blocks(cls,
             group: tp.Iterable[np.ndarray],
@@ -1832,7 +1824,7 @@ class TypeBlocks(ContainerOperand):
         '''
         Returns a column, or a column slice.
         '''
-        # NOTE: if key is a tuple it means that multiple indices are being provided; this should probably raise an error
+        # NOTE: if key is a tuple it means that multiple indices are being provided
         if isinstance(key, tuple):
             raise KeyError('__getitem__ does not support multiple indexers')
         return self._extract(row_key=None, column_key=key)
@@ -2511,6 +2503,27 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
+    def equals(self, other: tp.Any) -> bool:
+        '''
+        Return a Boolean from comparison to any other object. Underlying block structure is not considered in determining equality.
+        '''
+        if id(other) == id(self):
+            return True
+        if not isinstance(other, self.__class__):
+            return False
+        if self.__class__ != other.__class__:
+            return False
+        # same type from here
+        if self._shape != other._shape:
+            return False
+        if self._dtypes != other._dtypes: # these are lists
+            return False
+        eq = self == other # returns a Boolean TypeBlocks instance
+        for block in eq._blocks:
+            # permit short circuiting on iteration
+            if not block.all():
+                return False
+        return True
 
     #---------------------------------------------------------------------------
     # mutate
