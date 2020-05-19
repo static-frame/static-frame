@@ -504,6 +504,60 @@ class TestUnit(TestCase):
 
 
 
+    #---------------------------------------------------------------------------
+    def test_index_levels_equals_a(self) -> None:
+        OD = OrderedDict
+        tree1 = OD([
+                (('I', 'I'), OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                (('II', 'II'), OD([
+                        ('A', (1,)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels1 = IndexHierarchy._tree_to_index_level(tree1)
+
+        tree2 = OD([
+                (('I', 'I'), OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                (('II', 'II'), OD([
+                        ('A', (1,)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels2 = IndexHierarchy._tree_to_index_level(tree2)
+
+        tree3 = OD([
+                (('I', 'I'), OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                (('II', 'II'), OD([
+                        ('A', (1,)), ('B', (0,)) # diff
+                        ])
+                ),
+                ])
+
+        levels3 = IndexHierarchy._tree_to_index_level(tree3)
+
+
+
+        self.assertTrue(levels1.equals(levels1))
+        self.assertTrue(levels1.equals(levels2))
+        self.assertTrue(levels2.equals(levels1))
+
+        self.assertFalse(levels2.equals(levels3))
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

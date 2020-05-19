@@ -523,6 +523,50 @@ class IndexLevel:
         return array
 
     #---------------------------------------------------------------------------
+    def equals(self, other: tp.Any) -> bool:
+        '''
+        Return a Boolean from comparison to any other object.
+        '''
+        if id(other) == id(self):
+            return True
+        if self.__class__ != other.__class__:
+            return False
+        # same type from here
+        if self.__len__() != other.__len__():
+            return False
+        if self.depth != other.depth:
+            return False
+        # same length and depth, can traverse trees; can store tuple of object ids to note those that have already been examine.
+        equal_pairs = set()
+
+        if self.targets is None and other.targets is None:
+            return self.index.equals(other.index)
+        else:
+            levels_self = [self]
+            levels_other = [other]
+            while levels_self and levels_other:
+                level_self = levels_self.pop()
+                level_other = levels_other.pop()
+
+                pair = (id(level_self.index), id(level_other.index))
+                if not pair in equal_pairs and not level_self.index.equals(level_other.index):
+                    return False
+                equal_pairs.add(pair)
+
+                if level_self.targets is not None and level_other.targets is not None: # not terminus
+                    levels_self.extend(level_self.targets)
+                    levels_other.extend(level_other.targets)
+                if level_self.targets is None and level_other.targets is None: # not terminus
+                    continue
+                if level_self.targets is None or level_other.targets is None: # not terminus
+                    # at least one is at a terminus, but maybe both
+                    return False
+
+        if not levels_self and not levels_other:
+            return True # both exhausted
+        return False # one excited early
+
+    #---------------------------------------------------------------------------
     # exporters
 
     def to_index_level(self,

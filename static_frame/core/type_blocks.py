@@ -2509,8 +2509,6 @@ class TypeBlocks(ContainerOperand):
         '''
         if id(other) == id(self):
             return True
-        if not isinstance(other, self.__class__):
-            return False
         if self.__class__ != other.__class__:
             return False
         # same type from here

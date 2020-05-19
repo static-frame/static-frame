@@ -144,6 +144,7 @@ class IndexHierarchy(IndexBase):
         level = cls._LEVEL_CONSTRUCTOR(index=index_up, targets=targets_previous)
         return cls(level, name=name)
 
+    # NOTE: this should be a constructor on IndexLevel
     @classmethod
     def _tree_to_index_level(cls,
             tree,
@@ -1084,8 +1085,6 @@ class IndexHierarchy(IndexBase):
         '''
         if id(other) == id(self):
             return True
-        if not isinstance(other, self.__class__):
-            return False
         if self.__class__ != other.__class__:
             return False
         # same type from here
