@@ -1025,19 +1025,35 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     # utility functions
-
-    def equals(self, other: tp.Any) -> bool:
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            include_name=True,
+            include_dtype=True,
+            include_class=True,
+            ) -> bool:
         '''
-        Return a Boolean from comparison to any other object. An ``Index`` must match every attribute and value to return True.
+        {doc}
+
+        Args:
+            {include_name}
+            {include_dtype}
+            {include_class}
         '''
         if id(other) == id(self):
             return True
-        if self.__class__ != other.__class__:
+        if include_class and self.__class__ != other.__class__:
             return False
+        else: # must be an Index subclass
+            if not isinstance(other, Index):
+                return False
         # same type from here
         if len(self) != len(other):
             return False
-        if self.name != other.name:
+        if include_name and self.name != other.name:
+            return False
+        if include_dtype and self.dtype != other.dtype:
             return False
         if not (self.values == other.values).all():
             return False

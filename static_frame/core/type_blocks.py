@@ -2503,18 +2503,26 @@ class TypeBlocks(ContainerOperand):
                         )
                 )
 
-    def equals(self, other: tp.Any) -> bool:
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            include_dtype=True,
+            ) -> bool:
         '''
-        Return a Boolean from comparison to any other object. Underlying block structure is not considered in determining equality.
+        {doc} Underlying block structure is not considered in determining equality.
+
+        Args:
+            {include_dtype}
         '''
         if id(other) == id(self):
             return True
-        if self.__class__ != other.__class__:
+        if self.__class__ != other.__class__: #NOTE: no derived classes expected
             return False
         # same type from here
         if self._shape != other._shape:
             return False
-        if self._dtypes != other._dtypes: # these are lists
+        if include_dtype and self._dtypes != other._dtypes: # these are lists
             return False
         eq = self == other # returns a Boolean TypeBlocks instance
         for block in eq._blocks:

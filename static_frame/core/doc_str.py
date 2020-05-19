@@ -91,9 +91,55 @@ class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
     # dict entries
-    selector = dict(
-            key_loc=LOC_SELECTOR,
-            key_iloc=ILOC_SELECTOR,
+
+    apply = dict(
+            doc='Apply a function to each value.',
+            func='func: A function that takes a value.',
+            dtype=DTYPE_SPECIFIER
+            )
+    argminmax = dict(
+            skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
+            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+    )
+
+    astype = dict(
+            dtype=DTYPE_SPECIFIER
+            )
+
+
+
+    container_init = dict(
+            index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
+            columns='''columns: Optional column initializer. If provided in addition to data values, lengths must be compatible.
+            ''',
+            own_index=OWN_INDEX,
+            own_data=OWN_DATA,
+            own_columns=OWN_COLUMNS
+            )
+
+    constructor_frame = dict(
+            dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
+            ''',
+            name='name: A hashable object to name the Frame.',
+            consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+    )
+
+    duplicated = dict(
+            exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
+            exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
+            axis=AXIS,
+            )
+
+    display = dict(
+            doc='Return a :obj:`static_frame.Display`, capable of providing a string representation.',
+            config='config: A :obj:`static_frame.DisplayConfig` instance. If not provided, the :obj:`static_frame.DisplayActive` will be used.'
+            )
+
+    equals = dict(
+            doc='Return a :obj:`bool` from comparison to any other object.',
+            include_name="include_name: Include equality of the container's name in the evaluation.",
+            include_dtype="include_dtype: Include equality of the container's dtype in the evaluation.",
+            include_class="include_class: Include equality of the container's class in the evaluation.",
             )
 
     reindex = dict(
@@ -128,6 +174,10 @@ class DOC_TEMPLATE:
             doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
+            )
+    selector = dict(
+            key_loc=LOC_SELECTOR,
+            key_iloc=ILOC_SELECTOR,
             )
 
     head = dict(
@@ -166,21 +216,6 @@ class DOC_TEMPLATE:
             own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
             )
 
-    container_init = dict(
-            index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
-            columns='''columns: Optional column initializer. If provided in addition to data values, lengths must be compatible.
-            ''',
-            own_index=OWN_INDEX,
-            own_data=OWN_DATA,
-            own_columns=OWN_COLUMNS
-            )
-
-    constructor_frame = dict(
-            dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
-            ''',
-            name='name: A hashable object to name the Frame.',
-            consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
-    )
 
     fillna = dict(
             limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
@@ -189,10 +224,6 @@ class DOC_TEMPLATE:
     )
 
 
-    argminmax = dict(
-            skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
-            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
-    )
 
     mloc = dict(
             doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
@@ -217,27 +248,6 @@ class DOC_TEMPLATE:
             doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
             mapping='mapping: A mapping type, such as a dictionary or Series.',
             dtype=DTYPE_SPECIFIER
-            )
-
-    apply = dict(
-            doc='Apply a function to each value.',
-            func='func: A function that takes a value.',
-            dtype=DTYPE_SPECIFIER
-            )
-
-    astype = dict(
-            dtype=DTYPE_SPECIFIER
-            )
-
-    duplicated = dict(
-            exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
-            exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
-            axis=AXIS,
-            )
-
-    display = dict(
-            doc='Return a :obj:`static_frame.Display`, capable of providing a string representation.',
-            config='config: A :obj:`static_frame.DisplayConfig` instance. If not provided, the :obj:`static_frame.DisplayActive` will be used.'
             )
 
 

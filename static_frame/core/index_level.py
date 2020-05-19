@@ -26,24 +26,11 @@ from static_frame.core.index import LocMap
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.exception import ErrorInitIndexLevel
 
+from static_frame.core.doc_str import doc_inject
+
+
 # if tp.TYPE_CHECKING:
 #     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
-
-# def _iter_recurse(
-#         level: 'IndexLevel',
-#         part: tp.List[tp.Hashable],
-#         depth: int
-#         ):
-#     if level.targets is None:
-#         for v in level.index.values:
-#             part[depth] = v
-#             yield tuple(part)
-#     else:
-#         for label, level_target in zip(level.index.values, level.targets):
-#             part[depth] = label
-#             yield from _iter_recurse(level_target, part, depth + 1)
-
-
 
 INDEX_LEVEL_SLOTS = (
             'index',
@@ -523,9 +510,21 @@ class IndexLevel:
         return array
 
     #---------------------------------------------------------------------------
-    def equals(self, other: tp.Any) -> bool:
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            include_name=True,
+            include_dtype=True,
+            include_class=True,
+            ) -> bool:
         '''
-        Return a Boolean from comparison to any other object.
+        {doc}
+
+        Args:
+            {include_name}
+            {include_dtype}
+            {include_class}
         '''
         if id(other) == id(self):
             return True
@@ -536,35 +535,43 @@ class IndexLevel:
             return False
         if self.depth != other.depth:
             return False
-        # same length and depth, can traverse trees; can store tuple of object ids to note those that have already been examine.
-        equal_pairs = set()
+        # same length and depth, can traverse trees
+
+        kwargs = dict(
+                include_name=include_name,
+                include_dtype=include_dtype,
+                include_class=include_class,
+                )
 
         if self.targets is None and other.targets is None:
-            return self.index.equals(other.index)
-        else:
-            levels_self = [self]
-            levels_other = [other]
-            while levels_self and levels_other:
-                level_self = levels_self.pop()
-                level_other = levels_other.pop()
+            return self.index.equals(other.index, **kwargs)
 
-                pair = (id(level_self.index), id(level_other.index))
-                if not pair in equal_pairs and not level_self.index.equals(level_other.index):
-                    return False
-                equal_pairs.add(pair)
+        # can store tuple of object ids to note those that have already been examine.
+        equal_pairs = set()
 
-                if level_self.targets is not None and level_other.targets is not None: # not terminus
-                    levels_self.extend(level_self.targets)
-                    levels_other.extend(level_other.targets)
-                if level_self.targets is None and level_other.targets is None: # not terminus
-                    continue
-                if level_self.targets is None or level_other.targets is None: # not terminus
-                    # at least one is at a terminus, but maybe both
-                    return False
+        levels_self = [self]
+        levels_other = [other]
+        while levels_self and levels_other:
+            level_self = levels_self.pop()
+            level_other = levels_other.pop()
+
+            pair = (id(level_self.index), id(level_other.index))
+            if not pair in equal_pairs and not level_self.index.equals(level_other.index, **kwargs):
+                return False
+            equal_pairs.add(pair)
+
+            if level_self.targets is not None and level_other.targets is not None: # not terminus
+                levels_self.extend(level_self.targets)
+                levels_other.extend(level_other.targets)
+            if level_self.targets is None and level_other.targets is None: # not terminus
+                continue
+            if level_self.targets is None or level_other.targets is None: # not terminus
+                # at least one is at a terminus, but maybe both
+                return False
 
         if not levels_self and not levels_other:
             return True # both exhausted
-        return False # one excited early
+        return False # one excited early: will we ever get here?
 
     #---------------------------------------------------------------------------
     # exporters

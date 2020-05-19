@@ -1079,7 +1079,13 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # utility functions
 
-    def equals(self, other: tp.Any) -> bool:
+    def equals(self,
+            other: tp.Any,
+            *,
+            include_name=True,
+            include_dtype=True,
+            include_class=True,
+            ) -> bool:
         '''
         Return a Boolean from comparison to any other object. An ``IndexHierarchy`` must match every attribute and value to return True.
         '''
