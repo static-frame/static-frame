@@ -1079,6 +1079,7 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # utility functions
 
+    @doc_inject()
     def equals(self,
             other: tp.Any,
             *,
@@ -1091,21 +1092,22 @@ class IndexHierarchy(IndexBase):
         '''
         if id(other) == id(self):
             return True
+
+        # there is only one IndexHierarchy class, so compare_class is not used here; but should be used for IndexLevel comparison
         if self.__class__ != other.__class__:
             return False
+
         # same type from here
         if self.shape != other.shape:
             return False
-        if self.name != other.name:
+        if compare_name and self.name != other.name:
             return False
 
-        # NOTE: there could be an optimized way to do the comparison on IndexLevels using component Index.equals()
-        if self._recache:
-            self._update_array_cache()
-        if other._recache:
-            other._update_array_cache()
-
-        return self._blocks.equals(other._blocks)
+        return self._levels.equals(other._levels,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                )
 
 
     def sort(self,

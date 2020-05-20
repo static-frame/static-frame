@@ -1025,6 +1025,7 @@ class Index(IndexBase):
 
     #---------------------------------------------------------------------------
     # utility functions
+
     @doc_inject()
     def equals(self,
             other: tp.Any,
