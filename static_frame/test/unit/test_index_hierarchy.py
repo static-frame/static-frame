@@ -2164,5 +2164,14 @@ class TestUnit(TestCase):
         self.assertFalse(ih1.equals(ih2))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
+    def test_index_hierarchy_equals_d(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
+        ih2 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, 5))
+
+        self.assertFalse(ih1.equals(ih2))
+        self.assertTrue(ih1.equals(ih2, compare_class=False))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -2508,6 +2508,7 @@ class TypeBlocks(ContainerOperand):
             other: tp.Any,
             *,
             compare_dtype: bool = True,
+            compare_class: bool = True,
             ) -> bool:
         '''
         {doc} Underlying block structure is not considered in determining equality.
@@ -2517,8 +2518,13 @@ class TypeBlocks(ContainerOperand):
         '''
         if id(other) == id(self):
             return True
-        if self.__class__ != other.__class__: #NOTE: no derived classes expected
+
+        # NOTE: there is only one TypeBlocks class, but better to be consistent
+        if compare_class and self.__class__ != other.__class__:
             return False
+        elif not isinstance(other, TypeBlocks):
+            return False
+
         # same type from here
         if self._shape != other._shape:
             return False

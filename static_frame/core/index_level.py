@@ -528,14 +528,17 @@ class IndexLevel:
         '''
         if id(other) == id(self):
             return True
-        if self.__class__ != other.__class__:
+
+        if compare_class and self.__class__ != other.__class__:
             return False
+        elif not isinstance(other, IndexLevel):
+            return False
+
         # same type from here
         if self.__len__() != other.__len__():
             return False
         if self.depth != other.depth:
             return False
-        # same length and depth, can traverse trees
 
         kwargs = dict(
                 compare_name=compare_name,
@@ -546,6 +549,7 @@ class IndexLevel:
         if self.targets is None and other.targets is None:
             return self.index.equals(other.index, **kwargs) #type: ignore
 
+        # same length and depth, can traverse trees
         # can store tuple of object ids to note those that have already been examine.
         equal_pairs = set()
 

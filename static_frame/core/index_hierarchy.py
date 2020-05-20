@@ -1098,8 +1098,9 @@ class IndexHierarchy(IndexBase):
         if id(other) == id(self):
             return True
 
-        # there is only one IndexHierarchy class, so compare_class is not used here; but should be used for IndexLevel comparison
-        if self.__class__ != other.__class__:
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, IndexHierarchy):
             return False
 
         # same type from here

@@ -1857,6 +1857,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality
+
     @doc_inject(selector='head', class_name='Series')
     def head(self, count: int = 5) -> 'Series':
         '''{doc}
@@ -1950,7 +1951,7 @@ class Series(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    # utility function to numpy array
+    # utility function to numpy array or other types
 
     def unique(self) -> np.ndarray:
         '''
@@ -1960,6 +1961,49 @@ class Series(ContainerOperand):
             :obj:`numpy.ndarray`
         '''
         return ufunc_unique(self.values)
+
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            compare_name: bool = True,
+            compare_dtype: bool = True,
+            compare_class: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+        '''
+        if id(other) == id(self):
+            return True
+
+        # NOTE: there are presently no Series subclasses, but better to be consistent
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Series):
+            return False
+
+        if len(self) != len(other):
+            return False
+        if compare_name and self.name != other.name:
+            return False
+        if compare_dtype and self.values.dtype != other.values.dtype:
+            return False
+
+        if not (self.values == other.values).all():
+            return False
+
+        return self._index.equals(other._index,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                )
+
+
 
     #---------------------------------------------------------------------------
     # export
