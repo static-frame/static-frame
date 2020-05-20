@@ -2507,7 +2507,7 @@ class TypeBlocks(ContainerOperand):
     def equals(self,
             other: tp.Any,
             *,
-            compare_dtype=True,
+            compare_dtype: bool = True,
             ) -> bool:
         '''
         {doc} Underlying block structure is not considered in determining equality.

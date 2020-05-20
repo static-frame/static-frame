@@ -1088,7 +1088,12 @@ class IndexHierarchy(IndexBase):
             compare_class=True,
             ) -> bool:
         '''
-        Return a Boolean from comparison to any other object. An ``IndexHierarchy`` must match every attribute and value to return True.
+        {doc}
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
         '''
         if id(other) == id(self):
             return True

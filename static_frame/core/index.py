@@ -1030,9 +1030,9 @@ class Index(IndexBase):
     def equals(self,
             other: tp.Any,
             *,
-            compare_name=True,
-            compare_dtype=True,
-            compare_class=True,
+            compare_name: bool = True,
+            compare_dtype: bool = True,
+            compare_class: bool = True,
             ) -> bool:
         '''
         {doc}
