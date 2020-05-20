@@ -1082,9 +1082,9 @@ class IndexHierarchy(IndexBase):
     def equals(self,
             other: tp.Any,
             *,
-            include_name=True,
-            include_dtype=True,
-            include_class=True,
+            compare_name=True,
+            compare_dtype=True,
+            compare_class=True,
             ) -> bool:
         '''
         Return a Boolean from comparison to any other object. An ``IndexHierarchy`` must match every attribute and value to return True.

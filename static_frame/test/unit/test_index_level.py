@@ -554,6 +554,18 @@ class TestUnit(TestCase):
 
         self.assertFalse(levels2.equals(levels3))
 
+    def test_index_levels_equals_b(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', 'd', 'e'))
+        idx2 = Index(range(10))
+        levels1 = IndexHierarchy.from_product(idx1, idx2)._levels
+
+        idx3 = Index(('a', 'b', 'c', 'd', 'e'))
+        idx4 = Index(range(10))
+        levels2 = IndexHierarchy.from_product(idx3, idx4)._levels
+
+        self.assertTrue(levels1.equals(levels2))
+
 
 
 

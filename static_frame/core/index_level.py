@@ -514,17 +514,17 @@ class IndexLevel:
     def equals(self,
             other: tp.Any,
             *,
-            include_name=True,
-            include_dtype=True,
-            include_class=True,
+            compare_name=True,
+            compare_dtype=True,
+            compare_class=True,
             ) -> bool:
         '''
         {doc}
 
         Args:
-            {include_name}
-            {include_dtype}
-            {include_class}
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
         '''
         if id(other) == id(self):
             return True
@@ -538,9 +538,9 @@ class IndexLevel:
         # same length and depth, can traverse trees
 
         kwargs = dict(
-                include_name=include_name,
-                include_dtype=include_dtype,
-                include_class=include_class,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
                 )
 
         if self.targets is None and other.targets is None:
@@ -556,9 +556,13 @@ class IndexLevel:
             level_other = levels_other.pop()
 
             pair = (id(level_self.index), id(level_other.index))
-            if not pair in equal_pairs and not level_self.index.equals(level_other.index, **kwargs):
+            pair_found = pair in equal_pairs
+
+            if not pair_found and not level_self.index.equals(level_other.index, **kwargs):
                 return False
-            equal_pairs.add(pair)
+
+            if not pair_found: # but we know it is equal
+                equal_pairs.add(pair)
 
             if level_self.targets is not None and level_other.targets is not None: # not terminus
                 levels_self.extend(level_self.targets)

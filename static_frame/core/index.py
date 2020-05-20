@@ -1029,31 +1029,32 @@ class Index(IndexBase):
     def equals(self,
             other: tp.Any,
             *,
-            include_name=True,
-            include_dtype=True,
-            include_class=True,
+            compare_name=True,
+            compare_dtype=True,
+            compare_class=True,
             ) -> bool:
         '''
         {doc}
 
         Args:
-            {include_name}
-            {include_dtype}
-            {include_class}
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
         '''
         if id(other) == id(self):
             return True
-        if include_class and self.__class__ != other.__class__:
+
+        if compare_class and self.__class__ != other.__class__:
             return False
-        else: # must be an Index subclass
-            if not isinstance(other, Index):
-                return False
+        elif not isinstance(other, Index):
+            return False
+
         # same type from here
         if len(self) != len(other):
             return False
-        if include_name and self.name != other.name:
+        if compare_name and self.name != other.name:
             return False
-        if include_dtype and self.dtype != other.dtype:
+        if compare_dtype and self.dtype != other.dtype:
             return False
         if not (self.values == other.values).all():
             return False

@@ -137,9 +137,9 @@ class DOC_TEMPLATE:
 
     equals = dict(
             doc='Return a :obj:`bool` from comparison to any other object.',
-            include_name="include_name: Include equality of the container's name in the evaluation.",
-            include_dtype="include_dtype: Include equality of the container's dtype in the evaluation.",
-            include_class="include_class: Include equality of the container's class in the evaluation.",
+            compare_name="compare_name: Include equality of the container's name in the evaluation.",
+            compare_dtype="compare_dtype: Include equality of the container's dtype in the evaluation.",
+            compare_class="compare_class: Include equality of the container's class in the evaluation.",
             )
 
     reindex = dict(

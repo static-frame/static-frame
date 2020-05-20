@@ -2507,13 +2507,13 @@ class TypeBlocks(ContainerOperand):
     def equals(self,
             other: tp.Any,
             *,
-            include_dtype=True,
+            compare_dtype=True,
             ) -> bool:
         '''
         {doc} Underlying block structure is not considered in determining equality.
 
         Args:
-            {include_dtype}
+            {compare_dtype}
         '''
         if id(other) == id(self):
             return True
@@ -2522,7 +2522,7 @@ class TypeBlocks(ContainerOperand):
         # same type from here
         if self._shape != other._shape:
             return False
-        if include_dtype and self._dtypes != other._dtypes: # these are lists
+        if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
         eq = self == other # returns a Boolean TypeBlocks instance
         for block in eq._blocks:

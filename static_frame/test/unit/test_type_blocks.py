@@ -2689,5 +2689,19 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(dict(a=30, b=40)))
 
 
+    def test_type_blocks_equal_c(self) -> None:
+
+        a1 = np.array([False, True, False])
+        a2 = np.array([10, 20, 30], dtype=np.int64)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        a3 = np.array([False, True, False])
+        a4 = np.array([10, 20, 30], dtype=np.int32)
+        tb2 = TypeBlocks.from_blocks((a3, a4))
+
+        self.assertFalse(tb1.equals(tb2))
+        self.assertTrue(tb1.equals(tb2, compare_dtype=False))
+
+
 if __name__ == '__main__':
     unittest.main()

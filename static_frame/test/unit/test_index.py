@@ -1060,10 +1060,10 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.equals([3, 4, 5]), False)
 
         self.assertEqual(idx1.equals(idx2), False)
-        self.assertEqual(idx1.equals(idx2, include_class=False), True)
+        self.assertEqual(idx1.equals(idx2, compare_class=False), True)
 
         self.assertEqual(idx1.equals(idx3), False)
-        self.assertEqual(idx1.equals(idx3, include_name=False), True)
+        self.assertEqual(idx1.equals(idx3, compare_name=False), True)
         self.assertEqual(idx1.equals(idx5), False)
 
         self.assertEqual(idx1.equals(idx1), True)
@@ -1076,7 +1076,7 @@ class TestUnit(TestCase):
         idx2 = Index((5, 3, 20), dtype=np.int32)
 
         self.assertFalse(idx1.equals(idx2))
-        self.assertTrue(idx1.equals(idx2, include_dtype=False))
+        self.assertTrue(idx1.equals(idx2, compare_dtype=False))
 
 
     def test_index_equals_c(self) -> None:
@@ -1085,7 +1085,7 @@ class TestUnit(TestCase):
         idx2 = Index(idx1.values)
 
         self.assertFalse(idx1.equals(idx2))
-        self.assertTrue(idx1.equals(idx2, include_class=False),)
+        self.assertTrue(idx1.equals(idx2, compare_class=False),)
 
 
 if __name__ == '__main__':
