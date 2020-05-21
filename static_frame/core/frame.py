@@ -4971,10 +4971,13 @@ class FrameGO(Frame):
         if isinstance(value, Series):
             # select only the values matching our index
             block = value.reindex(self.index, fill_value=fill_value).values
-
+        elif isinstance(value, Frame):
+            raise RuntimeError(f'cannot use setitem for 2D structures; use Frame.extend()')
         elif isinstance(value, np.ndarray): # is numpy array
             # this permits unaligned assignment as no index is used, possibly remove
-            if value.ndim != 1 or len(value) != row_count:
+            if value.ndim != 1:
+                raise RuntimeError(f'cannot use setitem for 2D structures; use Frame.extend()')
+            if len(value) != row_count:
                 # block may have zero shape if created without columns
                 raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
             block = value # NOTE: could own_data here with additional argument
