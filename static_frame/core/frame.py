@@ -4973,12 +4973,12 @@ class FrameGO(Frame):
             block = value.reindex(self.index, fill_value=fill_value).values
         elif isinstance(value, Frame):
             raise RuntimeError(
-                    f'cannot use setitem with 2D containers; use {self.__class__.__name__}.extend()')
+                    f'cannot use setitem with a Frame; use {self.__class__.__name__}.extend()')
         elif isinstance(value, np.ndarray): # is numpy array
             # this permits unaligned assignment as no index is used, possibly remove
             if value.ndim != 1:
                 raise RuntimeError(
-                        f'can only use setitem with 1D containers; use {self.__class__.__name__}.extend()')
+                        f'can only use setitem with 1D containers')
             if len(value) != row_count:
                 # block may have zero shape if created without columns
                 raise RuntimeError(f'incorrectly sized unindexed value: {len(value)} != {row_count}')
