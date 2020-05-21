@@ -679,6 +679,63 @@ class TestUnit(TestCase):
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
 
+    #---------------------------------------------------------------------------
+
+
+    def test_bus_equals_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        f4 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f5 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f6 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        f7 = Frame.from_dict(
+                dict(d=(10,20), b=(50,61)),
+                index=('p', 'q'),
+                name='f3')
+
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f1, f2, f3))
+        b3 = Bus.from_frames((f4, f5, f6))
+        b4 = Bus.from_frames((f4, f5, f7))
+        b5 = Bus.from_frames((f4, f5))
+        b6 = Bus.from_frames((f3, f2, f1))
+
+        self.assertTrue(b1.equals(b2))
+        self.assertTrue(b1.equals(b3))
+
+        self.assertFalse(b1.equals(b4))
+        self.assertFalse(b1.equals(b5))
+        self.assertFalse(b1.equals(b6))
+
+
+
+
+
 
 if __name__ == '__main__':
+
     unittest.main()
+

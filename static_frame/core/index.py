@@ -1042,8 +1042,6 @@ class Index(IndexBase):
             {compare_dtype}
             {compare_class}
         '''
-        if self._recache:
-            self._update_array_cache()
 
         if id(other) == id(self):
             return True
@@ -1052,6 +1050,10 @@ class Index(IndexBase):
             return False
         elif not isinstance(other, Index):
             return False
+
+        # defer updating cache
+        if self._recache:
+            self._update_array_cache()
 
         # same type from here
         if len(self) != len(other):

@@ -277,7 +277,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         series = Series(
                 values,
                 index=self._series._index.iloc[key],
-                name=self._name)
+                name=self._series._name)
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
@@ -303,7 +303,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         series = Series(values,
                 index=self._series._index.iloc[iloc_key],
                 own_index=True,
-                name=self._name)
+                name=self._series._name)
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
@@ -448,6 +448,62 @@ class Bus(ContainerBase): # not a ContainerOperand
                 yield Series(values, index=self._series._index, dtype=dtype, name=attr)
 
         return tp.cast(Frame, Frame.from_concat(gen(), axis=1))
+
+    #---------------------------------------------------------------------------
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            compare_name: bool = True,
+            compare_dtype: bool = True,
+            compare_class: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+        '''
+
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Bus):
+            return False
+
+        # defer updating cache
+        self._update_series_cache_all()
+
+        if len(self._series) != len(other._series):
+            return False
+
+        if compare_name and self._series._name != other._series._name:
+            return False
+
+        # NOTE: dtype self._series is always object
+
+        # can zip because length of Series already match
+        for ((label_self, frame_self), (label_other, frame_other)) in zip(
+                self._series.items(), other._series.items()
+                ):
+            if label_self != label_other:
+                return False
+
+            if not frame_self.equals(frame_other,
+                    compare_name=compare_name,
+                    compare_dtype=compare_dtype,
+                    compare_class=compare_class,
+                    ):
+                return False
+
+        return True
+
+
+
 
 
     #---------------------------------------------------------------------------
