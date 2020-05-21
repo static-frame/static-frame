@@ -3261,5 +3261,44 @@ class TestUnit(TestCase):
 
 
 
+    #---------------------------------------------------------------------------
+
+    def test_series_equals_a(self) -> None:
+
+        s1 = Series(range(1, 21), index=self.get_letters(20))
+        s2 = Series(range(1, 21), index=self.get_letters(20))
+        s3 = Series(range(1, 21), index=self.get_letters(20), name='foo')
+        s4 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int32)
+        s5 = Series(range(0, 20), index=self.get_letters(20))
+        s6 = Series(range(1, 21))
+
+        self.assertTrue(s1.equals(s1))
+        self.assertTrue(s1.equals(s2))
+        self.assertTrue(s1.equals(s2, compare_class=False))
+
+        self.assertFalse(s1.equals(s3))
+        self.assertTrue(s1.equals(s3, compare_name=False))
+
+        self.assertFalse(s1.equals(s4))
+        self.assertTrue(s1.equals(s4, compare_dtype=False))
+
+        self.assertFalse(s1.equals(s5))
+        self.assertFalse(s1.equals(s6))
+
+    def test_series_equals_b(self) -> None:
+
+        ih1 = IndexHierarchy.from_product(('a', 'b'), range(10))
+        ih2 = IndexHierarchy.from_product(('a', 'b'), range(10))
+        ih3 = IndexHierarchy.from_product(('a', 'c'), range(10))
+
+        s1 = Series(range(1, 21), index=ih1)
+        s2 = Series(range(1, 21), index=ih2)
+        s3 = Series(range(1, 21), index=ih3)
+
+        self.assertTrue(s1.equals(s2))
+        self.assertFalse(s1.equals(s3))
+
+
+
 if __name__ == '__main__':
     unittest.main()
