@@ -4478,10 +4478,61 @@ class Frame(ContainerOperand):
                 own_columns=True
                 )
 
-
-
     #---------------------------------------------------------------------------
-    # utility function to numpy array
+    # utility function to numpy array or other types
+
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
+            *,
+            compare_name: bool = True,
+            compare_dtype: bool = True,
+            compare_class: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+        '''
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Frame):
+            return False
+
+        if self._blocks.shape != other._blocks.shape:
+            return False
+        if compare_name and self._name != other._name:
+            return False
+
+        # dtype check will happen in TypeBlocks
+        if not self._blocks.equals(other._blocks,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                ):
+            return False
+
+        if not self._index.equals(other._index,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                ):
+            return False
+
+        if not self._columns.equals(other._columns,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                ):
+            return False
+
+        return True
+
 
     def unique(self, axis: tp.Optional[int] = None) -> np.ndarray:
         '''

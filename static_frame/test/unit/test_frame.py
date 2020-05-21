@@ -8682,5 +8682,86 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_equals_a(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        idx2 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
+        f2 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx2)
+        f3 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx2, name='foo')
+        f4 = FrameGO(np.arange(16, dtype=np.int32).reshape(8, 2), index=idx2)
+        f5 = Frame(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx2)
+
+        self.assertTrue(f1.equals(f1))
+        self.assertTrue(f1.equals(f2))
+
+        self.assertFalse(f1.equals(f3))
+        self.assertTrue(f1.equals(f3, compare_name=False))
+
+        self.assertFalse(f1.equals(f4))
+        self.assertTrue(f1.equals(f4, compare_dtype=False))
+
+        self.assertFalse(f1.equals(f5))
+        self.assertTrue(f1.equals(f5, compare_class=False))
+
+
+    def test_frame_equals_b(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        idx2 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'q')
+                )
+        f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
+        f2 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx2)
+
+        self.assertFalse(f1.equals(f2))
+        self.assertTrue(f1.equals(f2, compare_name=False))
+
+
+    def test_frame_equals_c(self) -> None:
+
+        idx1 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        idx2 = IndexHierarchy.from_product(
+                ('far', 20), (None, 'down'), (False, 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
+        f2 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2),
+                index=idx2,
+                columns=('a', 'b')
+                )
+        f3 = FrameGO(np.arange(24, dtype=np.int64).reshape(8, 3), index=idx2)
+
+        self.assertFalse(f1.equals(f2))
+        self.assertFalse(f1.equals(f3))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
+

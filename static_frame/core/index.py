@@ -1042,6 +1042,9 @@ class Index(IndexBase):
             {compare_dtype}
             {compare_class}
         '''
+        if self._recache:
+            self._update_array_cache()
+
         if id(other) == id(self):
             return True
 

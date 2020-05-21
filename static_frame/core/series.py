@@ -1987,9 +1987,9 @@ class Series(ContainerOperand):
         elif not isinstance(other, Series):
             return False
 
-        if len(self) != len(other):
+        if len(self.values) != len(other.values):
             return False
-        if compare_name and self.name != other.name:
+        if compare_name and self._name != other._name:
             return False
         if compare_dtype and self.values.dtype != other.values.dtype:
             return False
@@ -2002,8 +2002,6 @@ class Series(ContainerOperand):
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
                 )
-
-
 
     #---------------------------------------------------------------------------
     # export
