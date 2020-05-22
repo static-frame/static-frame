@@ -9,7 +9,7 @@ from hypothesis import given
 # from hypothesis import reproduce_failure  # type: ignore
 
 from static_frame.test.property.strategies import get_labels
-# from static_frame.test.property.strategies import get_array_1d
+from static_frame.test.property.strategies import get_index_any
 
 from static_frame.test.test_case import TestCase
 
@@ -94,6 +94,24 @@ class TestUnit(TestCase):
         index = Index(labels)
         self.assertTrue(index.isin((labels[0],))[0])
 
+
+    #---------------------------------------------------------------------------
+    @given(get_index_any())
+    def test_index_display(self, index: Index):
+
+        d1 = index.display()
+        self.assertTrue(len(d1) > 0)
+
+        d2 = index.display_tall()
+        self.assertTrue(len(d2) > 0)
+
+        d3 = index.display_wide()
+        self.assertTrue(len(d3) > 0)
+
+    @given(get_index_any())
+    def test_index_to_series(self, index: Index):
+        s1 = index.to_series()
+        self.assertEqual(len(s1), len(index))
 
 if __name__ == '__main__':
     unittest.main()

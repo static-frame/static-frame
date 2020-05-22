@@ -19,18 +19,32 @@ from static_frame.core.util import DTYPE_BOOL
 # from static_frame.core.util import DTYPE_NAN_KIND
 
 from static_frame import TypeBlocks
-from static_frame import Index
 
-from static_frame import IndexDate
+from static_frame import Index
+from static_frame import IndexGO
 from static_frame import IndexYear
-# from static_frame import IndexYearMonth
-# from static_frame import IndexSecond
-# from static_frame import IndexMillisecond
+from static_frame import IndexYearGO
+from static_frame import IndexYearMonth
+from static_frame import IndexYearMonthGO
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexHour
+from static_frame import IndexHourGO
+from static_frame import IndexMinute
+from static_frame import IndexMinuteGO
+from static_frame import IndexMillisecond
+from static_frame import IndexMillisecondGO
+from static_frame import IndexMicrosecond
+from static_frame import IndexMicrosecondGO
+from static_frame import IndexNanosecond
+from static_frame import IndexNanosecondGO
+
+
 
 from static_frame import IndexHierarchy
 # from static_frame import IndexHierarchyGO
 
-from static_frame import IndexGO
+
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
@@ -81,14 +95,6 @@ def subset_contiguous_sum(target: int) -> tp.Tuple[tp.Tuple[int, ...], ...]:
 def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
     # generate permutations of the orderings of the integers
     return st.one_of((st.permutations(c) for c in subset_contiguous_sum(size)))
-
-
-# NOTE: this approach fails health check
-# def get_spacing(size: int = MAX_COLUMNS):
-#     return st.lists(st.integers(min_value=1, max_value=size),
-#             min_size=1,
-#             max_size=size,
-#             ).filter(lambda x: sum(x) == size)
 
 
 #-------------------------------------------------------------------------------
@@ -169,7 +175,9 @@ def get_labels(
 
 
 class DTGroup(Enum):
-    OBJECT = (partial(st.just, DTYPE_OBJECT),) # strategy constantly generating object dtype
+    # strategy constantly generating object dtype
+    # NOTE: we branch on this type in get_array_from_dtype_group
+    OBJECT = (partial(st.just, DTYPE_OBJECT),)
     ALL = (hypo_np.scalar_dtypes,)
 
     NUMERIC = (
@@ -181,19 +189,40 @@ class DTGroup(Enum):
     BOOL = (partial(st.just, DTYPE_BOOL),)
     STRING = (hypo_np.unicode_string_dtypes,)
 
-    DATE = (partial(hypo_np.datetime64_dtypes, min_period='D', max_period='D'),)
     YEAR = (partial(hypo_np.datetime64_dtypes, min_period='Y', max_period='Y'),)
     YEAR_MONTH = (partial(hypo_np.datetime64_dtypes, min_period='M', max_period='M'),)
+    DATE = (partial(hypo_np.datetime64_dtypes, min_period='D', max_period='D'),)
+    HOUR = (partial(hypo_np.datetime64_dtypes, min_period='h', max_period='h'),)
+    MINUTE = (partial(hypo_np.datetime64_dtypes, min_period='m', max_period='m'),)
     SECOND = (partial(hypo_np.datetime64_dtypes, min_period='s', max_period='s'),)
     MILLISECOND = (partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),)
+    MICROSECOND = (partial(hypo_np.datetime64_dtypes, min_period='us', max_period='us'),)
+    NANOSECOND = (partial(hypo_np.datetime64_dtypes, min_period='ns', max_period='ns'),)
 
     # derived
-
-    BASIC = NUMERIC + BOOL + STRING
     NUMERIC_REAL = (
             hypo_np.floating_dtypes,
             hypo_np.integer_dtypes,
             )
+    DATETIME = tuple(chain(
+            YEAR,
+            YEAR_MONTH,
+            DATE,
+            HOUR,
+            SECOND,
+            MILLISECOND,
+            MICROSECOND,
+            NANOSECOND,
+            ))
+
+    BASIC = NUMERIC + BOOL + STRING
+    CORE = tuple(chain(
+            # OBJECT, # object has to be handled with get_array_from_dtype_group
+            NUMERIC,
+            BOOL,
+            STRING,
+            DATETIME,
+            ))
 
 def get_dtype(dtype_group: DTGroup = DTGroup.ALL) -> st.SearchStrategy:
 
@@ -304,7 +333,7 @@ def get_array_from_dtype_group(
 
     if dtype_group == DTGroup.OBJECT:
         return array_object
-    if dtype_group == DTGroup.ALL:
+    if dtype_group in (DTGroup.ALL, DTGroup.CORE):
         return st.one_of(array_non_object, array_non_object, array_object)
     return array_non_object
 
@@ -584,6 +613,42 @@ get_index_year.__name__ = 'get_index_year'
 get_index_go: tp.Callable[..., st.SearchStrategy] = partial(get_index, cls=IndexGO)
 get_index_go.__name__ = 'get_index_go'
 
+def get_index_any(
+        min_size: int = 0,
+        max_size: int = MAX_ROWS,
+        ) -> st.SearchStrategy:
+
+    strategies = []
+    for cls, dtype_group in (
+            (Index, DTGroup.CORE),
+            (IndexGO, DTGroup.CORE),
+            (IndexYear, DTGroup.YEAR),
+            (IndexYearGO, DTGroup.YEAR),
+            (IndexYearMonth, DTGroup.YEAR_MONTH),
+            (IndexYearMonthGO, DTGroup.YEAR_MONTH),
+            (IndexDate, DTGroup.DATE),
+            (IndexDateGO, DTGroup.DATE),
+            (IndexHour, DTGroup.HOUR),
+            (IndexHourGO, DTGroup.HOUR),
+            (IndexMinute, DTGroup.MINUTE),
+            (IndexMinuteGO, DTGroup.MINUTE),
+            (IndexMillisecond, DTGroup.MILLISECOND),
+            (IndexMillisecondGO, DTGroup.MILLISECOND),
+            (IndexMicrosecond, DTGroup.MICROSECOND),
+            (IndexMicrosecondGO, DTGroup.MICROSECOND),
+            (IndexNanosecond, DTGroup.NANOSECOND),
+            (IndexNanosecondGO, DTGroup.NANOSECOND),
+            ):
+        st_index = get_index(
+                min_size=min_size,
+                max_size=max_size,
+                dtype_group=dtype_group,
+                cls=cls,
+                )
+        strategies.append(st_index)
+
+    return st.one_of(strategies)
+
 
 def get_index_hierarchy(
         min_size: int = 1,
@@ -651,6 +716,10 @@ def get_index_hierarchy(
             st.integers(min_value=min_depth, max_value=max_depth),
             st.integers(min_value=min_size, max_value=max_size)
             ).flatmap(get_labels_spacings)
+
+
+
+
 
 #-------------------------------------------------------------------------------
 # series objects
