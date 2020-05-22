@@ -744,7 +744,28 @@ class TestUnit(TestCase):
             idx1.astype(str).__class__, IndexGO
             )
 
+    #---------------------------------------------------------------------------
 
+    def test_index_datetime_from_year_month_range(self) -> None:
+
+        date_min, date_max = (np.datetime64('2007-02'), np.datetime64('2020-04'))
+
+        idx1 = IndexYearMonth.from_year_month_range(date_min, date_max)
+        self.assertEqual(len(idx1), 159)
+
+        idx2 = IndexYear.from_year_month_range(date_min, date_max)
+        self.assertEqual(len(idx2), 14)
+
+        idx3 = IndexDate.from_year_month_range(date_min, date_max)
+        self.assertEqual(len(idx3), 4838)
+
+    def test_index_datetime_from_date_range(self) -> None:
+
+        date_min, date_max = (np.datetime64('2007-02'), np.datetime64('2020-04'))
+
+        # we reject year-mos when calling from_date_range
+        with self.assertRaises(RuntimeError):
+            _ = IndexYearMonth.from_date_range(date_min, date_max)
 
 
 if __name__ == '__main__':
