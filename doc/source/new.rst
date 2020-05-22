@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.17
+----------
+
+Implemented ``equals()`` methods on all containers.
+
+
 0.6.16
 ----------
 
