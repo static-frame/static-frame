@@ -97,7 +97,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     @given(get_index_any())
-    def test_index_display(self, index: Index):
+    def test_index_display(self, index: Index) -> None:
 
         d1 = index.display()
         self.assertTrue(len(d1) > 0)
@@ -109,7 +109,7 @@ class TestUnit(TestCase):
         self.assertTrue(len(d3) > 0)
 
     @given(get_index_any())
-    def test_index_to_series(self, index: Index):
+    def test_index_to_series(self, index: Index) -> None:
         s1 = index.to_series()
         self.assertEqual(len(s1), len(index))
 
