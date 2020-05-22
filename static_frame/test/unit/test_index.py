@@ -1091,7 +1091,7 @@ class TestUnit(TestCase):
 
         idx1 = Index((5, 3, np.nan))
         idx2 = Index((5, 3, np.nan))
-        idx3 = Index((5, 3, None))
+        idx3 = Index((5, 3, None)) #type: ignore
 
         self.assertTrue(idx1.equals(idx2))
         self.assertFalse(idx1.equals(idx2, skipna=False))
