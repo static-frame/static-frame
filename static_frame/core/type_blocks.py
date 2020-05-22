@@ -2538,15 +2538,18 @@ class TypeBlocks(ContainerOperand):
             isna_self = self.isna() # return stype blocks
             isna_other = other.isna()
             isna_both = isna_self & isna_self
-            # this shoudl be true due to the application of abinary operator
-            assert(len(isna_both._blocks) == len(eq._blocks))
 
-        for idx, block in enumerate(eq._blocks):
+        start = 0
+        end = 0
+        for block in eq._blocks:
             # permit short circuiting on iteration
             if skipna:
+                end = start + block.shape[1]
+                target = isna_both._extract_array(column_key=slice(start, end))
+                start = end
                 # fill-in NaN values with True
                 block.flags.writeable = True
-                block[isna_both._blocks[idx]] = True
+                block[target] = True
 
             if not block.all():
                 return False
