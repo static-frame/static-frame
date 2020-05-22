@@ -2540,10 +2540,14 @@ class TypeBlocks(ContainerOperand):
             isna_both = isna_self & isna_self
             # this shoudl be true due to the application of abinary operator
             assert(len(isna_both._blocks) == len(eq._blocks))
-            import ipdb; ipdb.set_trace()
 
-        for block in eq._blocks:
+        for idx, block in enumerate(eq._blocks):
             # permit short circuiting on iteration
+            if skipna:
+                # fill-in NaN values with True
+                block.flags.writeable = True
+                block[isna_both._blocks[idx]] = True
+
             if not block.all():
                 return False
         return True
