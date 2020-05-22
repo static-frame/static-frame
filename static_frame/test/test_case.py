@@ -168,13 +168,15 @@ class TestCase(unittest.TestCase):
         # np.testing.assert_array_almost_equal(a1, a2, decimal=5)
 
     def assertTypeBlocksArrayEqual(self,
-            tb: TypeBlocks, match: tp.Iterable[object],
+            tb: TypeBlocks,
+            match: tp.Iterable[object],
             match_dtype: tp.Optional[tp.Union[type, np.dtype, str]] = None) -> None:
         '''
         Args:
             tb: a TypeBlocks instance
             match: can be anything that can be used to create an array.
         '''
+        # NOTE: this is comparing the potentially casted .values view, not each block
         # could use np.testing
         if not isinstance(match, np.ndarray):
             match = np.array(match, dtype=match_dtype)
@@ -206,6 +208,7 @@ class TestCase(unittest.TestCase):
         '''
         For comparing nested tuples returned by Frame.to_pairs()
         '''
+        # NOTE: this does not look at dtype or container classes
         for (k1, v1), (k2, v2) in zip_longest(pairs1, pairs2):
             self.assertEqual(k1, k2)
             self.assertAlmostEqualItems(v1, v2)
@@ -216,21 +219,25 @@ class TestCase(unittest.TestCase):
             f2: Frame,
             check_dtypes: bool = True
             ) -> None:
-        self.assertEqual(f1.shape, f2.shape)
-        self.assertEqual(f1.__class__, f2.__class__)
-        self.assertEqual(f1.name, f2.name)
 
-        self.assertEqual(f1.index.depth, f2.index.depth)
-        self.assertEqual(f1.index.__class__, f2.index.__class__)
 
-        self.assertEqual(f1.columns.depth, f2.columns.depth)
-        self.assertEqual(f1.columns.__class__, f2.columns.__class__)
+        self.assertTrue(f1.equals(f2, compare_dtype=check_dtypes))
 
-        # NOTE: this will not handle types
-        self.assertAlmostEqualFramePairs(f1.to_pairs(0), f2.to_pairs(0))
+        # self.assertEqual(f1.shape, f2.shape)
+        # self.assertEqual(f1.__class__, f2.__class__)
+        # self.assertEqual(f1.name, f2.name)
 
-        if check_dtypes:
-            self.assertTrue((f1.dtypes.values == f2.dtypes.values).all())
+        # self.assertEqual(f1.index.depth, f2.index.depth)
+        # self.assertEqual(f1.index.__class__, f2.index.__class__)
+
+        # self.assertEqual(f1.columns.depth, f2.columns.depth)
+        # self.assertEqual(f1.columns.__class__, f2.columns.__class__)
+
+        # # NOTE: this will not handle types
+        # self.assertAlmostEqualFramePairs(f1.to_pairs(0), f2.to_pairs(0))
+
+        # if check_dtypes:
+        #     self.assertTrue((f1.dtypes.values == f2.dtypes.values).all())
 
 
     def assertEqualLines(self, lines1: str, lines2: str) -> None:

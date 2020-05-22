@@ -2509,6 +2509,7 @@ class TypeBlocks(ContainerOperand):
             *,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc} Underlying block structure is not considered in determining equality.
@@ -2530,7 +2531,17 @@ class TypeBlocks(ContainerOperand):
             return False
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
+
         eq = self == other # returns a Boolean TypeBlocks instance
+
+        if skipna:
+            isna_self = self.isna() # return stype blocks
+            isna_other = other.isna()
+            isna_both = isna_self & isna_self
+            # this shoudl be true due to the application of abinary operator
+            assert(len(isna_both._blocks) == len(eq._blocks))
+            import ipdb; ipdb.set_trace()
+
         for block in eq._blocks:
             # permit short circuiting on iteration
             if not block.all():

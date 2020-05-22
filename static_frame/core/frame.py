@@ -4488,6 +4488,7 @@ class Frame(ContainerOperand):
             compare_name: bool = True,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -4514,6 +4515,7 @@ class Frame(ContainerOperand):
         if not self._blocks.equals(other._blocks,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 ):
             return False
 
