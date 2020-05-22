@@ -2516,6 +2516,8 @@ class TypeBlocks(ContainerOperand):
 
         Args:
             {compare_dtype}
+            {compare_class}
+            {skipna}
         '''
         if id(other) == id(self):
             return True

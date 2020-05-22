@@ -140,6 +140,7 @@ class DOC_TEMPLATE:
             compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
             compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
+            skipna="skipna: If True, comparisons between missing valeus are equal.",
             )
 
     reindex = dict(

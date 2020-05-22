@@ -1095,6 +1095,7 @@ class IndexHierarchy(IndexBase):
             {compare_name}
             {compare_dtype}
             {compare_class}
+            {skipna}
         '''
         # NOTE: do not need to udpate array cache, as can compare elemetns in levels
         if id(other) == id(self):

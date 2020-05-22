@@ -29,6 +29,8 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import isna_element
+
 # from static_frame.core.util import DtypesSpecifier
 
 from static_frame.core.node_selector import InterfaceGetItem
@@ -466,6 +468,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             {compare_name}
             {compare_dtype}
             {compare_class}
+            {skipna}
         '''
 
         if id(other) == id(self):
@@ -487,13 +490,18 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         # NOTE: dtype self._series is always object
 
-        # can zip because length of Series already match
-        for ((label_self, frame_self), (label_other, frame_other)) in zip(
-                self._series.items(), other._series.items()
-                ):
-            if label_self != label_other:
-                return False
 
+        if not self._series.index.equals(
+                other._series.index,
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        # can zip because length of Series already match
+        for (frame_self, frame_other) in zip(self._series.values, other._series.values):
             if not frame_self.equals(frame_other,
                     compare_name=compare_name,
                     compare_dtype=compare_dtype,

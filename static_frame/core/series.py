@@ -1978,6 +1978,7 @@ class Series(ContainerOperand):
             {compare_name}
             {compare_dtype}
             {compare_class}
+            {skipna}
         '''
         if id(other) == id(self):
             return True
