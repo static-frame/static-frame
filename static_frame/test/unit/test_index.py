@@ -1087,6 +1087,19 @@ class TestUnit(TestCase):
         self.assertFalse(idx1.equals(idx2))
         self.assertTrue(idx1.equals(idx2, compare_class=False),)
 
+    def test_index_equals_d(self) -> None:
+
+        idx1 = Index((5, 3, np.nan))
+        idx2 = Index((5, 3, np.nan))
+        idx3 = Index((5, 3, None))
+
+        self.assertTrue(idx1.equals(idx2))
+        self.assertFalse(idx1.equals(idx2, skipna=False))
+
+        # nan and None are treated equivalent
+        self.assertTrue(idx1.equals(idx3, compare_dtype=False))
+
+
 
 if __name__ == '__main__':
     unittest.main()

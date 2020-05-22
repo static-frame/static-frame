@@ -4523,6 +4523,7 @@ class Frame(ContainerOperand):
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 ):
             return False
 
@@ -4530,6 +4531,7 @@ class Frame(ContainerOperand):
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 ):
             return False
 

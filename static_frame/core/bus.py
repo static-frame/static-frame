@@ -457,6 +457,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             compare_name: bool = True,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -497,6 +498,7 @@ class Bus(ContainerBase): # not a ContainerOperand
                     compare_name=compare_name,
                     compare_dtype=compare_dtype,
                     compare_class=compare_class,
+                    skipna=skipna,
                     ):
                 return False
 

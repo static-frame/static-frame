@@ -2535,7 +2535,7 @@ class TypeBlocks(ContainerOperand):
         eq = self == other # returns a Boolean TypeBlocks instance
 
         if skipna:
-            isna_self = self.isna() # return stype blocks
+            isna_self = self.isna() # returns type blocks
             isna_other = other.isna()
             isna_both = isna_self & isna_self
 

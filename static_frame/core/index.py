@@ -40,6 +40,7 @@ from static_frame.core.util import name_filter
 from static_frame.core.util import array_shift
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import slice_to_inclusive_slice
+from static_frame.core.util import isna_array
 
 from static_frame.core.util import DTYPE_INT_DEFAULT
 
@@ -1033,6 +1034,7 @@ class Index(IndexBase):
             compare_name: bool = True,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -1062,7 +1064,14 @@ class Index(IndexBase):
             return False
         if compare_dtype and self.dtype != other.dtype:
             return False
-        if not (self.values == other.values).all():
+
+        eq = self.values == other.values
+
+        if skipna:
+            isna_both = isna_array(self.values) & isna_array(other.values)
+            eq[isna_both] = True
+
+        if not eq.all():
             return False
         return True
 

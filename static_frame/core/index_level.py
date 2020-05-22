@@ -517,6 +517,7 @@ class IndexLevel:
             compare_name: bool = True,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -544,6 +545,7 @@ class IndexLevel:
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 )
 
         if self.targets is None and other.targets is None:

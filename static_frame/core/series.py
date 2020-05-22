@@ -1969,6 +1969,7 @@ class Series(ContainerOperand):
             compare_name: bool = True,
             compare_dtype: bool = True,
             compare_class: bool = True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -1994,7 +1995,13 @@ class Series(ContainerOperand):
         if compare_dtype and self.values.dtype != other.values.dtype:
             return False
 
-        if not (self.values == other.values).all():
+        eq = self.values == other.values
+
+        if skipna:
+            isna_both = isna_array(self.values) & isna_array(other.values)
+            eq[isna_both] = True
+
+        if not eq.all():
             return False
 
         return self._index.equals(other._index,

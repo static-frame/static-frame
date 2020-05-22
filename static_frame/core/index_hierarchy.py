@@ -1086,6 +1086,7 @@ class IndexHierarchy(IndexBase):
             compare_name=True,
             compare_dtype=True,
             compare_class=True,
+            skipna: bool = True,
             ) -> bool:
         '''
         {doc}
@@ -1114,6 +1115,7 @@ class IndexHierarchy(IndexBase):
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 )
 
 
