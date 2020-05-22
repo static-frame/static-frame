@@ -42,7 +42,7 @@ from static_frame import IndexNanosecondGO
 
 
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
+from static_frame import IndexHierarchyGO
 
 
 from static_frame import Series
@@ -216,11 +216,13 @@ class DTGroup(Enum):
             ))
 
     BASIC = NUMERIC + BOOL + STRING
+
+    # NOTE: duplicate non-datetime to produce more balanced distribution
     CORE = tuple(chain(
             # OBJECT, # object has to be handled with get_array_from_dtype_group
-            NUMERIC,
-            BOOL,
-            STRING,
+            NUMERIC, NUMERIC, NUMERIC,
+            BOOL, BOOL, BOOL,
+            STRING, STRING, STRING,
             DATETIME,
             ))
 
@@ -718,6 +720,32 @@ def get_index_hierarchy(
             ).flatmap(get_labels_spacings)
 
 
+def get_index_hierarchy_any(
+        min_size: int = 1,
+        max_size: int = MAX_ROWS,
+        min_depth: int = 2,
+        max_depth: int = 5,
+        ) -> st.SearchStrategy:
+
+
+    def get_labels_spacings(depth_size: tp.Tuple[int, int]) -> st.SearchStrategy:
+        depth, size = depth_size
+        args = []
+        for _ in range(depth):
+            args.append(get_index_any(
+                    min_size=size,
+                    max_size=size,
+                    ))
+
+        return st.one_of(
+                st.builds(IndexHierarchy.from_product, *args),
+                st.builds(IndexHierarchyGO.from_product, *args),
+                )
+
+    return st.tuples(
+            st.integers(min_value=min_depth, max_value=max_depth),
+            st.integers(min_value=min_size, max_value=max_size)
+            ).flatmap(get_labels_spacings)
 
 
 
