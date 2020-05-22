@@ -3265,12 +3265,12 @@ class TestUnit(TestCase):
 
     def test_series_equals_a(self) -> None:
 
-        s1 = Series(range(1, 21), index=self.get_letters(20))
-        s2 = Series(range(1, 21), index=self.get_letters(20))
-        s3 = Series(range(1, 21), index=self.get_letters(20), name='foo')
+        s1 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64)
+        s2 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64)
+        s3 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64, name='foo')
         s4 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int32)
-        s5 = Series(range(0, 20), index=self.get_letters(20))
-        s6 = Series(range(1, 21))
+        s5 = Series(range(0, 20), index=self.get_letters(20), dtype=np.int64)
+        s6 = Series(range(1, 21), dtype=np.int64)
 
         self.assertTrue(s1.equals(s1))
         self.assertTrue(s1.equals(s2))
