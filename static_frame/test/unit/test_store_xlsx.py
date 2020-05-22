@@ -72,7 +72,7 @@ class TestUnit(TestCase):
                         columns_depth=f_src.columns.depth
                         )
                 f_loaded = st1.read(name, config=c)
-                self.assertEqualFrames(f_src, f_loaded, check_dtypes=False)
+                self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
 
 

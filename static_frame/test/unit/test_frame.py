@@ -803,7 +803,7 @@ class TestUnit(TestCase):
                 columns_depth=f1.columns.depth
                 )
         # String arrays will come in as objects
-        self.assertEqualFrames(f1, f2, check_dtypes=False)
+        self.assertEqualFrames(f1, f2, compare_dtype=False)
 
 
     def test_frame_from_arrow_b(self) -> None:
@@ -951,7 +951,7 @@ class TestUnit(TestCase):
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
 
-        self.assertEqualFrames(f1, f2, check_dtypes=False)
+        self.assertEqualFrames(f1, f2, compare_dtype=False)
 
 
     def test_frame_from_parquet_b(self) -> None:
@@ -5542,7 +5542,7 @@ class TestUnit(TestCase):
             f2 = Frame.from_xlsx(fp,
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
-            self.assertEqualFrames(f1, f2, check_dtypes=False)
+            self.assertEqualFrames(f1, f2, compare_dtype=False)
 
     @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:

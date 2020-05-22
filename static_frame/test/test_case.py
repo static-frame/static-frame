@@ -217,27 +217,15 @@ class TestCase(unittest.TestCase):
     def assertEqualFrames(self,
             f1: Frame,
             f2: Frame,
-            check_dtypes: bool = True
+            compare_dtype: bool = True
             ) -> None:
 
+        if not f1.equals(f2, compare_dtype=compare_dtype):
+            self.assertTrue(f1.index.equals(f2.index, compare_dtype=compare_dtype), 'index do not match')
+            self.assertTrue(f1.columns.equals(f2.columns, compare_dtype=compare_dtype), 'columns do not match')
+            self.assertTrue(f1._blocks.equals(f2._blocks, compare_dtype=compare_dtype), '_blocks do not match')
+            self.fail('class or name do not match')
 
-        self.assertTrue(f1.equals(f2, compare_dtype=check_dtypes))
-
-        # self.assertEqual(f1.shape, f2.shape)
-        # self.assertEqual(f1.__class__, f2.__class__)
-        # self.assertEqual(f1.name, f2.name)
-
-        # self.assertEqual(f1.index.depth, f2.index.depth)
-        # self.assertEqual(f1.index.__class__, f2.index.__class__)
-
-        # self.assertEqual(f1.columns.depth, f2.columns.depth)
-        # self.assertEqual(f1.columns.__class__, f2.columns.__class__)
-
-        # # NOTE: this will not handle types
-        # self.assertAlmostEqualFramePairs(f1.to_pairs(0), f2.to_pairs(0))
-
-        # if check_dtypes:
-        #     self.assertTrue((f1.dtypes.values == f2.dtypes.values).all())
 
 
     def assertEqualLines(self, lines1: str, lines2: str) -> None:
