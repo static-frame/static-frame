@@ -2008,6 +2008,7 @@ class Series(ContainerOperand):
                 compare_name=compare_name,
                 compare_dtype=compare_dtype,
                 compare_class=compare_class,
+                skipna=skipna,
                 )
 
     #---------------------------------------------------------------------------

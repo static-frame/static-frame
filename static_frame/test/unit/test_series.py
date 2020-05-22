@@ -3299,6 +3299,24 @@ class TestUnit(TestCase):
         self.assertFalse(s1.equals(s3))
 
 
+    def test_series_equals_c(self) -> None:
+
+        s1 = Series((1, 2, 5, np.nan), index=self.get_letters(4))
+        s2 = Series((1, 2, 5, np.nan), index=self.get_letters(4))
+
+        self.assertTrue(s1.equals(s2))
+        self.assertFalse(s1.equals(s2, skipna=False))
+
+    def test_series_equals_d(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', np.nan))
+        s2 = Series((1, 2, 5), index=('a', 'b', np.nan))
+
+        self.assertTrue(s1.equals(s2))
+        self.assertFalse(s1.equals(s2, skipna=False))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

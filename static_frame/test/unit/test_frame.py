@@ -8418,9 +8418,6 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z')
                 )
 
-
-        # import ipdb; ipdb.set_trace()
-
         with self.assertRaises(TypeError):
             self.assertEqual(f1.all(skipna=False).to_pairs(),
                     (('a', True), ('b', False)))
@@ -8749,6 +8746,50 @@ class TestUnit(TestCase):
         self.assertFalse(f1.equals(f2))
         self.assertFalse(f1.equals(f3))
 
+    def test_frame_equals_d(self) -> None:
+
+        records = (
+                (2, 2),
+                (np.nan, 0),
+                (np.nan, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        f2 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+
+        self.assertTrue(f1.equals(f2))
+        self.assertFalse(f1.equals(f2, skipna=False))
+
+
+
+    def test_frame_equals_e(self) -> None:
+
+        records = (
+                (2, 2),
+                (3, 0),
+                (5, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', np.nan)
+                )
+
+        f2 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', np.nan)
+                )
+
+
+        self.assertTrue(f1.equals(f2))
+        self.assertFalse(f1.equals(f2, skipna=False))
+
 
 
 
@@ -8764,4 +8805,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
 
