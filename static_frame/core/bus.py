@@ -29,7 +29,6 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import isna_element
 
 # from static_frame.core.util import DtypesSpecifier
 
