@@ -5143,7 +5143,9 @@ class TestUnit(TestCase):
 
     def test_frame_from_tsv_g(self) -> None:
 
-        f1 = sf.Frame.from_elements(['#', '*', '@'], columns=['a', '#', 'c'])
+        f1 = sf.Frame.from_elements(['#', '*', '@'],
+                columns=['a', '#', 'c'],
+                index=('q', 'r', 's'))
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp)
