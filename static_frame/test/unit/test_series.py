@@ -3340,7 +3340,7 @@ class TestUnit(TestCase):
         s1 = sf.Series(Bar, index=Bar)
 
         self.assertEqual(
-                s1[Bar.b:].to_pairs(),
+                s1[Bar.b:].to_pairs(), #type: ignore
                 ((Bar.b, Bar.b), (Bar.c, Bar.c))
                 )
 

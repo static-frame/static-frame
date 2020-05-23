@@ -8,6 +8,8 @@ Implemented ``equals()`` methods on all containers.
 
 Added defensive check against assigning a Pandas Series to a FrameGO as an unlabeled iterator.
 
+Added proper handling of types multiple-inherited from ``str`` (or any other type) and ``Enum``.
+
 
 0.6.16
 ----------
