@@ -10,6 +10,7 @@ from functools import reduce
 from itertools import chain
 from itertools import zip_longest
 from io import StringIO
+from enum import Enum
 import datetime
 from urllib import request
 import tempfile
@@ -750,6 +751,7 @@ def resolve_type_iter(
     resolved = None # None is valid specifier if the type is not ambiguous
     has_tuple = False
     has_str = False
+    has_enum = False
     has_non_str = False
     has_inexact = False
     has_big_int = False
@@ -766,6 +768,9 @@ def resolve_type_iter(
             # need to get tuple subclasses, like NamedTuple
             if isinstance(v, (tuple, list)):
                 has_tuple = True
+            elif isinstance(v, Enum):
+                # must check isinstance, as Enum types are alwyas derived from Enum
+                has_enum = True
             elif value_type == str or value_type == np.str_:
                 # must compare to both sring types
                 has_str = True
@@ -776,7 +781,7 @@ def resolve_type_iter(
                 elif value_type == int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
                     has_big_int = True
 
-            if has_tuple or (has_str and has_non_str):
+            if has_tuple or has_enum or (has_str and has_non_str):
                 resolved = object
             elif has_big_int and has_inexact:
                 resolved = object
@@ -807,7 +812,7 @@ def iterable_to_array_1d(
     '''
     if isinstance(values, np.ndarray):
         if dtype is not None and dtype != values.dtype:
-            raise RuntimeError(f'supplied dtype {dtype} not set on supplied array')
+            raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
         return values, len(values) <= 1
 
     if isinstance(values, range):
@@ -818,6 +823,9 @@ def iterable_to_array_1d(
                 dtype=dtype)
         array.flags.writeable = False
         return array, True
+
+    if hasattr(values, 'values') and hasattr(values, 'index'):
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to labeled, though labels are not being used. Convert to a Series.')
 
     values_for_construct: tp.Sequence[tp.Any]
 
@@ -831,7 +839,7 @@ def iterable_to_array_1d(
         dtype, has_tuple, values_for_construct = resolve_type_iter(values)
         if len(values_for_construct) == 0:
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
-    else: # dtype given, do not do full iteration
+    else:
         is_gen, copy_values = is_gen_copy_values(values)
         if copy_values:
             # we have to realize into sequence for numpy creation

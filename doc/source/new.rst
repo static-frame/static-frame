@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Implemented ``equals()`` methods on all containers.
 
+Added defensive check against assigning a Pandas Series to a FrameGO as an unlabeled iterator.
+
 
 0.6.16
 ----------

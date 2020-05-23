@@ -6,7 +6,7 @@ import string
 import pickle
 import datetime
 import typing as tp
-
+from enum import Enum
 import numpy as np
 
 from static_frame.test.test_case import TestCase
@@ -3315,6 +3315,34 @@ class TestUnit(TestCase):
         self.assertTrue(s1.equals(s2))
         self.assertFalse(s1.equals(s2, skipna=False))
 
+    #---------------------------------------------------------------------------
+    def test_series_enum_a(self) -> None:
+
+        class Bar(str, Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s1 = sf.Series([Bar.a, Bar.b, Bar.c])
+
+        self.assertEqual(s1.values.tolist(), [Bar.a, Bar.b, Bar.c])
+        self.assertEqual(s1[1], Bar.b)
+        self.assertEqual(s1[1:].values.tolist(), [Bar.b, Bar.c])
+
+
+    def test_series_enum_b(self) -> None:
+
+        class Bar(str, Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s1 = sf.Series(Bar, index=Bar)
+
+        self.assertEqual(
+                s1[Bar.b:].to_pairs(),
+                ((Bar.b, Bar.b), (Bar.c, Bar.c))
+                )
 
 
 

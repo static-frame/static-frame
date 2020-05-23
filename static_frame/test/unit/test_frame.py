@@ -1483,6 +1483,24 @@ class TestUnit(TestCase):
             f['s'] = f
 
 
+    def test_frame_setitem_o(self) -> None:
+        import pandas as pd
+
+        # insure that you cannot set a Pandas Series inot a Frame
+
+        pds = pd.Series(dict(a=2, b=3, c=4))
+
+        f = sf.FrameGO(index=('c', 'b', 'a'))
+        with self.assertRaises(RuntimeError):
+            f['x'] = pds
+
+        f['x'] = pds.values # can apply array out of ordewr
+        f['y'] = Series.from_pandas(pds)
+
+        self.assertEqual(f.to_pairs(0),
+                (('x', (('c', 2), ('b', 3), ('a', 4))), ('y', (('c', 4), ('b', 3), ('a', 2)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:

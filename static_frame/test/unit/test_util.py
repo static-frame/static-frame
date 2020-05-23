@@ -3,6 +3,7 @@
 import unittest
 import datetime
 import typing as tp
+from enum import Enum
 
 import numpy as np
 
@@ -1734,6 +1735,33 @@ class TestUnit(TestCase):
         self.assertEqual(post[0].dtype, object)
         self.assertEqual(post[0].tolist(), sample)
 
+
+    def test_iterable_to_array_i(self) -> None:
+
+        class Color(Enum):
+            RED = 1
+            GREEN = 2
+            BLUE = 3
+
+        a1, _ = iterable_to_array_1d((Color.GREEN, Color.RED, Color.BLUE))
+        self.assertEqual(a1.dtype, object)
+        self.assertEqual(a1.tolist(), [Color.GREEN, Color.RED, Color.BLUE])
+        self.assertTrue(Color.RED in a1)
+
+    def test_iterable_to_array_j(self) -> None:
+
+        from enum import auto
+
+        class FxISO(str, Enum):
+            CAD = auto()
+            CDF = auto()
+            CHF = auto()
+
+        a1, _ = iterable_to_array_1d((FxISO.CAD, FxISO.CDF, FxISO.CHF))
+        self.assertEqual(a1.dtype, object)
+        self.assertEqual(a1.tolist(), [FxISO.CAD, FxISO.CDF, FxISO.CHF])
+        self.assertTrue(a1[1] == FxISO.CDF)
+        # NOTE: in check does not work here
 
     #---------------------------------------------------------------------------
 
