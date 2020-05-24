@@ -988,14 +988,14 @@ class TestUnit(TestCase):
 
         with temp_file('.parquet') as fp:
 
-            f.to_parquet('/tmp/tmp.pq')
-            f1 = sf.Frame.from_parquet('/tmp/tmp.pq', index_depth=1, columns_depth=2)
+            f.to_parquet(fp)
+            f1 = sf.Frame.from_parquet(fp, index_depth=1, columns_depth=2)
             # strings come back as object
             self.assertTrue(f.equals(f1, compare_dtype=False, compare_class=False))
 
             # when index_depth is not provided an exception is raised
             with self.assertRaises(RuntimeError):
-                sf.Frame.from_parquet('/tmp/tmp.pq', columns_depth=2)
+                sf.Frame.from_parquet(fp, columns_depth=2)
 
 
     #---------------------------------------------------------------------------
