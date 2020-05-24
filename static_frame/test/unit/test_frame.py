@@ -980,6 +980,24 @@ class TestUnit(TestCase):
         self.assertTrue(f2.index._map is None)
 
 
+    def test_frame_from_parquet_c(self) -> None:
+        f = sf.FrameGO.from_element('a',
+                index=range(3),
+                columns=sf.IndexHierarchy.from_labels((('a', 'b'),))
+                )
+
+        with temp_file('.parquet') as fp:
+
+            f.to_parquet('/tmp/tmp.pq')
+            f1 = sf.Frame.from_parquet('/tmp/tmp.pq', index_depth=1, columns_depth=2)
+            # strings come back as object
+            self.assertTrue(f.equals(f1, compare_dtype=False, compare_class=False))
+
+            # when index_depth is not provided an exception is raised
+            with self.assertRaises(RuntimeError):
+                sf.Frame.from_parquet('/tmp/tmp.pq', columns_depth=2)
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_xarray_a(self) -> None:

@@ -364,22 +364,31 @@ class IndexHierarchy(IndexBase):
         Returns:
             :obj:`static_frame.IndexHierarchy`
         '''
-        def trim_outer(label: str) -> str:
-            start, stop = 0, len(label)
+
+
+        def to_label(label: str) -> tp.Tuple[tp.Hashable, ...]:
+
+            start, stop = None, None
             if label[0] in ('[', '('):
                 start = 1
             if label[-1] in (']', ')'):
                 stop = -1
-            return label[start: stop]
 
-        labels = (tuple(literal_eval(x)
-                for x in trim_outer(label).split(delimiter))
-                for label in labels
-                )
-        return cls.from_labels(labels,
+            if start is not None or stop is not None:
+                label = label[start: stop]
+
+            parts = label.split(delimiter)
+            if len(parts) <= 1:
+                raise RuntimeError(f'Could not not parse more than one label from delimited string: {label}')
+
+            return tuple(literal_eval(p) for p in parts)
+
+        return cls.from_labels(
+                (to_label(label) for label in labels),
                 name=name,
                 index_constructors=index_constructors
                 )
+
 
     @classmethod
     def _from_type_blocks(cls: tp.Type[IH],
