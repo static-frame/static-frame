@@ -309,6 +309,17 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.values @ idx2, idx1.values @ idx2.values)
         self.assertEqual(idx1.values.tolist() @ idx2, idx1.values @ idx2.values)
 
+    def test_index_binary_operators_f(self) -> None:
+        idx1 = Index(('a', 'b', 'c'))
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual((idx1 + '_').tolist(), ['a_', 'b_', 'c_'])
+        self.assertEqual(('_' + idx1).tolist(), ['_a', '_b', '_c'])
+        self.assertEqual((idx1 * 3).tolist(), ['aaa', 'bbb', 'ccc'])
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_index_ufunc_axis_a(self) -> None:

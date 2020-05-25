@@ -5,6 +5,7 @@ from itertools import zip_longest
 from functools import reduce
 
 import numpy as np
+from numpy import char as npc
 
 from automap import AutoMap
 from automap import FrozenAutoMap
@@ -20,6 +21,7 @@ from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KeyTransformType
@@ -944,20 +946,37 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        values = self._labels
+        other_is_array = False
+
         if issubclass(other.__class__, Index):
             other = other.values # operate on labels to labels
+            other_is_array = True
+        elif isinstance(other, np.ndarray):
+            other_is_array = True
 
         if operator.__name__ == 'matmul':
-            return matmul(self._labels, other)
+            return matmul(values, other)
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, self._labels)
+            return matmul(other, values)
 
-        result = operator(self._labels, other)
+        if (values.dtype.kind in DTYPE_STR_KIND or
+                (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+            if operator.__name__ == 'add':
+                result = npc.add(values, other)
+            elif operator.__name__ == 'radd':
+                result = npc.add(other, values)
+            elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
+                result = npc.multiply(values, other)
+            else:
+                result = operator(values, other)
+        else:
+            result = operator(values, other)
 
         if not isinstance(result, np.ndarray):
             # see Series._ufunc_binary_operator for notes on why
             if isinstance(result, BOOL_TYPES):
-                result = np.full(len(self._labels), result)
+                result = np.full(len(values), result)
             else:
                 raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
 
