@@ -973,12 +973,9 @@ class Index(IndexBase):
         else:
             result = operator(values, other)
 
-        if not isinstance(result, np.ndarray):
+        if result is False or result is True:
             # see Series._ufunc_binary_operator for notes on why
-            if isinstance(result, BOOL_TYPES):
-                result = np.full(len(values), result)
-            else:
-                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
+            result = np.full(len(values), result)
 
         result.flags.writeable = False
         return result

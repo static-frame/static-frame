@@ -47,8 +47,6 @@ class LocInvalid(RuntimeError):
 class AxisInvalid(RuntimeError):
     pass
 
-class NonArrayResult(RuntimeError):
-    pass
 
 
 #-------------------------------------------------------------------------------

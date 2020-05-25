@@ -3304,6 +3304,8 @@ class Frame(ContainerOperand):
         elif operator.__name__ == 'rmatmul':
             return matmul(other, self)
 
+        #TODO: use equals on columns, index before calling reindex
+
         if isinstance(other, Frame):
             # reindex both dimensions to union indices
             columns = self._columns.union(other._columns)
@@ -3311,7 +3313,8 @@ class Frame(ContainerOperand):
             self_tb = self.reindex(columns=columns, index=index)._blocks
             other_tb = other.reindex(columns=columns, index=index)._blocks
             return self.__class__(self_tb._ufunc_binary_operator(
-                    operator=operator, other=other_tb),
+                            operator=operator,
+                            other=other_tb),
                     index=index,
                     columns=columns,
                     own_data=True
@@ -3321,7 +3324,8 @@ class Frame(ContainerOperand):
             self_tb = self.reindex(columns=columns)._blocks
             other_array = other.reindex(columns).values
             return self.__class__(self_tb._ufunc_binary_operator(
-                    operator=operator, other=other_array),
+                            operator=operator,
+                            other=other_array),
                     index=self._index,
                     columns=columns,
                     own_data=True
@@ -3332,7 +3336,8 @@ class Frame(ContainerOperand):
 
         # assume we will keep dimensionality
         return self.__class__(self._blocks._ufunc_binary_operator(
-                operator=operator, other=other),
+                        operator=operator,
+                        other=other),
                 index=self._index,
                 columns=self._columns,
                 own_data=True

@@ -1101,13 +1101,10 @@ class Series(ContainerOperand):
         else:
             result = operator(values, other)
 
-        if not isinstance(result, np.ndarray):
+        if result is False or result is True:
             # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-            if isinstance(result, BOOL_TYPES):
-                # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
-                result = np.full(len(values), result)
-            else:
-                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
+            # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
+            result = np.full(len(values), result)
 
         result.flags.writeable = False
         return self.__class__(result, index=index)

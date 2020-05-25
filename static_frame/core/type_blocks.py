@@ -59,7 +59,6 @@ from static_frame.core.container import ContainerOperand
 
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import NonArrayResult
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -1885,8 +1884,8 @@ class TypeBlocks(ContainerOperand):
                         (column_2d_filter(op) for op in other_operands)
                         ):
                     result = operator(a, b)
-                    if result is False:
-                        raise NonArrayResult(result)
+                    if result is False or result is True:
+                        result = np.full(a.shape, result)
                     result.flags.writeable = False # own the data
                     yield result
         else:
@@ -1910,8 +1909,8 @@ class TypeBlocks(ContainerOperand):
             def operation() -> tp.Iterator[np.ndarray]:
                 for a, b in zip_longest(self_operands, other_operands):
                     result = operator(a, b)
-                    if result is False:
-                        raise NonArrayResult(result)
+                    if result is False or result is True:
+                        result = np.full(a.shape, result)
                     result.flags.writeable = False # own the data
                     yield result
 
@@ -2539,11 +2538,7 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
-        try:
-            eq = self == other # returns a Boolean TypeBlocks instance
-        except NonArrayResult:
-            # array comparison returned False
-            return False
+        eq = self == other # returns a Boolean TypeBlocks instance
 
         if skipna:
             isna_self = self.isna() # returns type blocks

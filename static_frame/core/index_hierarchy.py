@@ -1017,12 +1017,8 @@ class IndexHierarchy(IndexBase):
         result = operator(values, other)
 
         # addd for mixed size comparisons; these are often necessary for index objects
-        if not isinstance(result, np.ndarray):
-            # see Series._ufunc_binary_operator for notes on why
-            if isinstance(result, BOOL_TYPES):
-                result = np.full(self.shape, result)
-            else:
-                raise RuntimeError('unexpected branch from non-array result of operator application to array') #pragma: no cover
+        if result is False or result is True:
+            result = np.full(self.shape, result)
 
         result.flags.writeable = False
         return result
