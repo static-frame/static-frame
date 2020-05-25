@@ -3,13 +3,10 @@ from functools import partial
 
 import numpy as np
 from numpy.ma import MaskedArray
-from numpy import char as npc
 
 from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
@@ -82,6 +79,7 @@ from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import pandas_to_numpy
+from static_frame.core.container_util import apply_binary_operator
 
 from static_frame.core.assign import Assign
 
@@ -1072,7 +1070,9 @@ class Series(ContainerOperand):
             if not self.index.equals(other.index,
                     compare_class=False,
                     compare_dtype=False,
-                    compare_name=False):
+                    compare_name=False,
+                    skipna=False,
+                    ):
                 index = self.index.union(other.index)
                 # now need to reindex the Series
                 values = self.reindex(index).values
@@ -1086,27 +1086,33 @@ class Series(ContainerOperand):
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
 
-        # permit single elements in else
 
-        if (values.dtype.kind in DTYPE_STR_KIND or
-                (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
-            if operator.__name__ == 'add':
-                result = npc.add(values, other)
-            elif operator.__name__ == 'radd':
-                result = npc.add(other, values)
-            elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
-                result = npc.multiply(values, other)
-            else:
-                result = operator(values, other)
-        else:
-            result = operator(values, other)
+        # if (values.dtype.kind in DTYPE_STR_KIND or
+        #         (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+        #     if operator.__name__ == 'add':
+        #         result = npc.add(values, other)
+        #     elif operator.__name__ == 'radd':
+        #         result = npc.add(other, values)
+        #     elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
+        #         result = npc.multiply(values, other)
+        #     else:
+        #         result = operator(values, other)
+        # else:
+        #     result = operator(values, other)
 
-        if result is False or result is True:
-            # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-            # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
-            result = np.full(len(values), result)
+        # if result is False or result is True:
+        #     # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+        #     # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
+        #     result = np.full(len(values), result)
 
-        result.flags.writeable = False
+        # result.flags.writeable = False
+
+        result = apply_binary_operator(
+                values=values,
+                other=other,
+                other_is_array=other_is_array,
+                operator=operator,
+                )
         return self.__class__(result, index=index)
 
     def _ufunc_axis_skipna(self, *,
@@ -2011,8 +2017,9 @@ class Series(ContainerOperand):
 
         eq = self.values == other.values
 
+        # NOTE: will only be False, or an array
         if eq is False:
-            return False
+            return eq
 
         if skipna:
             isna_both = isna_array(self.values) & isna_array(other.values)

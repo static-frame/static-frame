@@ -56,6 +56,7 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import apply_binary_operator
 
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.exception import AxisInvalid
@@ -1883,11 +1884,12 @@ class TypeBlocks(ContainerOperand):
                         (column_2d_filter(op) for op in self_operands),
                         (column_2d_filter(op) for op in other_operands)
                         ):
-                    result = operator(a, b)
-                    if result is False or result is True:
-                        result = np.full(a.shape, result)
-                    result.flags.writeable = False # own the data
-                    yield result
+                    yield apply_binary_operator(
+                            values=a,
+                            other=b,
+                            other_is_array=True,
+                            operator=operator,
+                            )
         else:
             # process other as an array
             self_operands = self._blocks
@@ -1908,11 +1910,12 @@ class TypeBlocks(ContainerOperand):
 
             def operation() -> tp.Iterator[np.ndarray]:
                 for a, b in zip_longest(self_operands, other_operands):
-                    result = operator(a, b)
-                    if result is False or result is True:
-                        result = np.full(a.shape, result)
-                    result.flags.writeable = False # own the data
-                    yield result
+                    yield apply_binary_operator(
+                            values=a,
+                            other=b,
+                            other_is_array=True,
+                            operator=operator,
+                            )
 
         return self.from_blocks(operation())
 
@@ -2538,6 +2541,7 @@ class TypeBlocks(ContainerOperand):
         if compare_dtype and self._dtypes != other._dtypes: # these are lists
             return False
 
+        # NOTE: TypeBlocks handles array operations that return Boolean
         eq = self == other # returns a Boolean TypeBlocks instance
 
         if skipna:

@@ -19,7 +19,6 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import NULL_SLICE
 
 from static_frame.core.index_base import IndexBase
@@ -38,6 +37,8 @@ from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.container_util import apply_binary_operator
+
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.display import DisplayConfig
@@ -990,7 +991,7 @@ class IndexHierarchy(IndexBase):
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable,
-            other,
+            other: tp.Any,
             ) -> np.ndarray:
         '''
         Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
@@ -999,29 +1000,39 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         # NOTE: might use TypeBlocks._ufunc_binary_operator
-
         values = self._blocks.values
 
+        other_is_array = False
         if isinstance(other, Index):
             # if this is a 1D index, must rotate labels before using an operator
             other = other.values.reshape((len(other), 1)) # operate on labels to labels
+            other_is_array = True
         elif isinstance(other, IndexHierarchy):
             # already 2D
             other = other.values # operate on labels to labels
+            other_is_array = True
+        elif isinstance(other, np.ndarray):
+            other_is_array = True
 
         if operator.__name__ == 'matmul':
             return matmul(values, other)
         elif operator.__name__ == 'rmatmul':
             return matmul(other, values)
 
-        result = operator(values, other)
+        return apply_binary_operator(
+                values=values,
+                other=other,
+                other_is_array=other_is_array,
+                operator=operator,
+                )
 
+        # result = operator(values, other)
         # addd for mixed size comparisons; these are often necessary for index objects
-        if result is False or result is True:
-            result = np.full(self.shape, result)
+        # if result is False or result is True:
+        #     result = np.full(self.shape, result)
 
-        result.flags.writeable = False
-        return result
+        # result.flags.writeable = False
+        # return result
 
     def _ufunc_axis_skipna(self, *,
             axis,

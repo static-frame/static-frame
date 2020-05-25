@@ -3310,25 +3310,39 @@ class Frame(ContainerOperand):
             # reindex both dimensions to union indices
             columns = self._columns.union(other._columns)
             index = self._index.union(other._index)
-            self_tb = self.reindex(columns=columns, index=index)._blocks
-            other_tb = other.reindex(columns=columns, index=index)._blocks
+
+            # NOTE: always own column, index, as we will just extract Typeblocks
+            self_tb = self.reindex(
+                    columns=columns,
+                    index=index,
+                    own_index=True,
+                    own_columns=True)._blocks
+            # NOTE: we create columns from self._columns, and thus other can only own it if STATIC matches
+            own_columns = other.STATIC == self.STATIC
+            other_tb = other.reindex(
+                    columns=columns,
+                    index=index,
+                    own_index=True,
+                    own_columns=own_columns)._blocks
             return self.__class__(self_tb._ufunc_binary_operator(
                             operator=operator,
                             other=other_tb),
                     index=index,
                     columns=columns,
-                    own_data=True
+                    own_data=True,
+                    own_index=True,
                     )
         elif isinstance(other, Series):
             columns = self._columns.union(other._index)
-            self_tb = self.reindex(columns=columns)._blocks
-            other_array = other.reindex(columns).values
+            self_tb = self.reindex(columns=columns, own_columns=True)._blocks
+            other_array = other.reindex(columns, own_index=True).values
             return self.__class__(self_tb._ufunc_binary_operator(
                             operator=operator,
                             other=other_array),
                     index=self._index,
                     columns=columns,
-                    own_data=True
+                    own_data=True,
+                    own_index=True,
                     )
         # handle single values and lists that can be converted to appropriate arrays
         if not isinstance(other, np.ndarray) and hasattr(other, '__iter__'):
@@ -3340,7 +3354,8 @@ class Frame(ContainerOperand):
                         other=other),
                 index=self._index,
                 columns=self._columns,
-                own_data=True
+                own_data=True,
+                own_index=True,
                 )
 
     #---------------------------------------------------------------------------

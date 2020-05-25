@@ -3183,6 +3183,7 @@ class TestUnit(TestCase):
                 (('p', (('w', -3), ('x', -31), ('y', -3), ('z', -31))), ('q', (('w', -3), ('x', -35), ('y', -96), ('z', -74))), ('r', (('w', -4), ('x', -61), ('y', -2), ('z', -51))), ('s', (('w', True), ('x', False), ('y', False), ('z', True))), ('t', (('w', False), ('x', True), ('y', False), ('z', True)))))
 
 
+    #---------------------------------------------------------------------------
     def test_frame_binary_operator_a(self) -> None:
         # constants
 
@@ -3343,6 +3344,34 @@ class TestUnit(TestCase):
             ((0, ((0, True), (1, True), (2, True))),))
 
 
+    def test_frame_binary_operator_j(self) -> None:
+
+        f1 = sf.FrameGO.from_element('q', index=range(3), columns=('x', 'y'))
+
+        f1['z'] = 'foo'
+
+        f2 = f1 + '_'
+        self.assertEqual(f2.to_pairs(0),
+                (('x', ((0, 'q_'), (1, 'q_'), (2, 'q_'))), ('y', ((0, 'q_'), (1, 'q_'), (2, 'q_'))), ('z', ((0, 'foo_'), (1, 'foo_'), (2, 'foo_'))))
+                )
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('<U2'), np.dtype('<U2'), np.dtype('<U4')]
+                )
+
+        f3 = '_' + f1
+        self.assertEqual(f3.to_pairs(0),
+                (('x', ((0, '_q'), (1, '_q'), (2, '_q'))), ('y', ((0, '_q'), (1, '_q'), (2, '_q'))), ('z', ((0, '_foo'), (1, '_foo'), (2, '_foo'))))
+                )
+
+        f4 = f1 * 3
+        self.assertEqual(f4.to_pairs(0),
+                (('x', ((0, 'qqq'), (1, 'qqq'), (2, 'qqq'))), ('y', ((0, 'qqq'), (1, 'qqq'), (2, 'qqq'))), ('z', ((0, 'foofoofoo'), (1, 'foofoofoo'), (2, 'foofoofoo'))))
+                )
+        self.assertEqual(f4.dtypes.values.tolist(),
+                [np.dtype('<U3'), np.dtype('<U3'), np.dtype('<U9')])
+
+
+
     def test_frame_isin_a(self) -> None:
         # reindex both axis
         records = (
@@ -3364,6 +3393,9 @@ class TestUnit(TestCase):
         post = f1.isin(['a', 73, 30])
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', False), ('x', True), ('y', False), ('z', True))), ('q', (('w', False), ('x', False), ('y', False), ('z', True))), ('r', (('w', True), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
+
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_transpose_a(self) -> None:

@@ -5,7 +5,6 @@ from itertools import zip_longest
 from functools import reduce
 
 import numpy as np
-from numpy import char as npc
 
 from automap import AutoMap
 from automap import FrozenAutoMap
@@ -21,7 +20,6 @@ from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KeyTransformType
@@ -62,6 +60,7 @@ from static_frame.core.util import mloc
 from static_frame.core.util import resolve_dtype
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import apply_binary_operator
 
 
 from static_frame.core.doc_str import doc_inject
@@ -960,25 +959,32 @@ class Index(IndexBase):
         elif operator.__name__ == 'rmatmul':
             return matmul(other, values)
 
-        if (values.dtype.kind in DTYPE_STR_KIND or
-                (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
-            if operator.__name__ == 'add':
-                result = npc.add(values, other)
-            elif operator.__name__ == 'radd':
-                result = npc.add(other, values)
-            elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
-                result = npc.multiply(values, other)
-            else:
-                result = operator(values, other)
-        else:
-            result = operator(values, other)
+        return apply_binary_operator(
+                values=values,
+                other=other,
+                other_is_array=other_is_array,
+                operator=operator,
+                )
 
-        if result is False or result is True:
-            # see Series._ufunc_binary_operator for notes on why
-            result = np.full(len(values), result)
+        # if (values.dtype.kind in DTYPE_STR_KIND or
+        #         (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+        #     if operator.__name__ == 'add':
+        #         result = npc.add(values, other)
+        #     elif operator.__name__ == 'radd':
+        #         result = npc.add(other, values)
+        #     elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
+        #         result = npc.multiply(values, other)
+        #     else:
+        #         result = operator(values, other)
+        # else:
+        #     result = operator(values, other)
 
-        result.flags.writeable = False
-        return result
+        # if result is False or result is True:
+        #     # see Series._ufunc_binary_operator for notes on why
+        #     result = np.full(len(values), result)
+
+        # result.flags.writeable = False
+        # return result
 
 
     def _ufunc_axis_skipna(self, *,
@@ -1084,8 +1090,9 @@ class Index(IndexBase):
 
         eq = self.values == other.values
 
-        if eq is False: # may not be an arrray for some comparisons
-            return False
+        # NOTE: will only be False, or an array
+        if eq is False:
+            return eq
 
         if skipna:
             isna_both = isna_array(self.values) & isna_array(other.values)

@@ -5,6 +5,8 @@ This module us for utilty functions that take as input and / or return Container
 from collections import defaultdict
 
 import numpy as np
+from numpy import char as npc
+
 import typing as tp
 
 if tp.TYPE_CHECKING:
@@ -27,10 +29,12 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import UFunc
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.index_base import IndexBase
 
@@ -638,3 +642,35 @@ def array_from_value_iter(
 
 
 
+def apply_binary_operator(*,
+        values: np.ndarray,
+        other: tp.Any,
+        other_is_array: bool,
+        operator: UFunc,
+        ) -> np.ndarray:
+    '''
+    Utility to handle binary operator application.
+    '''
+
+    if (values.dtype.kind in DTYPE_STR_KIND or
+            (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+        operator_name = operator.__name__
+
+        if operator_name == 'add':
+            result = npc.add(values, other)
+        elif operator_name == 'radd':
+            result = npc.add(other, values)
+        elif operator_name == 'mul' or operator_name == 'rmul':
+            result = npc.multiply(values, other)
+        else:
+            result = operator(values, other)
+    else:
+        result = operator(values, other)
+
+    if result is False or result is True:
+        # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+        # if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
+        result = np.full(values.shape, result)
+
+    result.flags.writeable = False
+    return result
