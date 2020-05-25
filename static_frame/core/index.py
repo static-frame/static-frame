@@ -1068,6 +1068,9 @@ class Index(IndexBase):
 
         eq = self.values == other.values
 
+        if eq is False: # may not be an arrray for some comparisons
+            return False
+
         if skipna:
             isna_both = isna_array(self.values) & isna_array(other.values)
             eq[isna_both] = True

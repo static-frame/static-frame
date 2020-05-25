@@ -489,7 +489,6 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         # NOTE: dtype self._series is always object
 
-
         if not self._series.index.equals(
                 other._series.index,
                 compare_name=compare_name,

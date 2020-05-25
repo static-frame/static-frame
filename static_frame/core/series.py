@@ -2,13 +2,14 @@ import typing as tp
 from functools import partial
 
 import numpy as np
-
 from numpy.ma import MaskedArray
+from numpy import char as npc
 
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import DTYPE_STR_KIND
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
@@ -1064,11 +1065,14 @@ class Series(ContainerOperand):
 
         values = self.values
         index = self._index
+        other_is_array = False
 
         if isinstance(other, Series):
-            # if indices are the same, we can simply set other to values and fallback on NP
-            if len(self.index) != len(other.index) or (
-                    self.index != other.index).any():
+            other_is_array = True
+            if not self.index.equals(other.index,
+                    compare_class=False,
+                    compare_dtype=False,
+                    compare_name=False):
                 index = self.index.union(other.index)
                 # now need to reindex the Series
                 values = self.reindex(index).values
@@ -1078,12 +1082,24 @@ class Series(ContainerOperand):
 
         # if its an np array, we simply fall back on np behavior
         elif isinstance(other, np.ndarray):
+            other_is_array = True
             if other.ndim > 1:
-                raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension; it is not clear how such an array should be indexed.')
-        # permit single value constants; not sure about filtering other types
+                raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
 
-        # we want the dtype to be the result of applying the operator; this happends by default
-        result = operator(values, other)
+        # permit single elements in else
+
+        if (values.dtype.kind in DTYPE_STR_KIND or
+                (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+            if operator.__name__ == 'add':
+                result = npc.add(values, other)
+            elif operator.__name__ == 'radd':
+                result = npc.add(other, values)
+            elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
+                result = npc.multiply(values, other)
+            else:
+                result = operator(values, other)
+        else:
+            result = operator(values, other)
 
         if not isinstance(result, np.ndarray):
             # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
@@ -1997,6 +2013,9 @@ class Series(ContainerOperand):
             return False
 
         eq = self.values == other.values
+
+        if eq is False:
+            return False
 
         if skipna:
             isna_both = isna_array(self.values) & isna_array(other.values)

@@ -449,6 +449,30 @@ class TestUnit(TestCase):
             _ = s1 + np.arange(4).reshape((2, 2))
 
 
+    def test_series_binary_operator_k(self) -> None:
+
+
+        s3 = sf.Series.from_element('b', index=range(3))
+        s4 = 3 * s3
+
+        self.assertEqual(s4.to_pairs(),
+                ((0, 'bbb'), (1, 'bbb'), (2, 'bbb')))
+
+        self.assertEqual((s3 * 3).to_pairs(),
+                ((0, 'bbb'), (1, 'bbb'), (2, 'bbb')))
+
+
+        s5 = s3 + '_'
+        self.assertEqual(s5.to_pairs(),
+                ((0, 'b_'), (1, 'b_'), (2, 'b_'))
+                )
+
+        self.assertEqual(('_' + s3).to_pairs(),
+                ((0, '_b'), (1, '_b'), (2, '_b'))
+                )
+
+
+
 
     #---------------------------------------------------------------------------
 
@@ -3314,6 +3338,14 @@ class TestUnit(TestCase):
 
         self.assertTrue(s1.equals(s2))
         self.assertFalse(s1.equals(s2, skipna=False))
+
+
+    def test_series_equals_e(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series(('1', '2', '5'), index=('a', 'b', 'c'))
+
+        self.assertFalse(s1.equals(s2, compare_dtype=False))
 
     #---------------------------------------------------------------------------
     def test_series_enum_a(self) -> None:

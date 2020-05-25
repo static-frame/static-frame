@@ -8831,6 +8831,12 @@ class TestUnit(TestCase):
 
 
 
+    def test_frame_equals_f(self) -> None:
+
+        f1 = Frame.from_element('a', index=range(2), columns=range(2))
+        f2 = Frame.from_element(3, index=range(2), columns=range(2))
+
+        self.assertFalse(f1.equals(f2, compare_dtype=False))
 
 
 

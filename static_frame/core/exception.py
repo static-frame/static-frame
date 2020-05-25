@@ -47,6 +47,10 @@ class LocInvalid(RuntimeError):
 class AxisInvalid(RuntimeError):
     pass
 
+class NonArrayResult(RuntimeError):
+    pass
+
+
 #-------------------------------------------------------------------------------
 
 class StoreFileMutation(RuntimeError):
