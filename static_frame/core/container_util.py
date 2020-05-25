@@ -641,7 +641,6 @@ def array_from_value_iter(
     return values
 
 
-
 def apply_binary_operator(*,
         values: np.ndarray,
         other: tp.Any,

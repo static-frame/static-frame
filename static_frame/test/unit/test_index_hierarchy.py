@@ -1344,6 +1344,30 @@ class TestUnit(TestCase):
         self.assertEqual(post2.shape, (2, 2))
         self.assertEqual(post2.any(), False)
 
+    def test_hierarchy_binary_operators_i(self) -> None:
+
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        ih2 = ih1 + '_'
+        self.assertEqual(ih2.tolist(),
+            [['I_', 'A_'], ['I_', 'B_'], ['II_', 'A_'], ['II_', 'B_']])
+
+        ih3 = '_' + ih1
+        self.assertEqual(ih3.tolist(),
+            [['_I', '_A'], ['_I', '_B'], ['_II', '_A'], ['_II', '_B']])
+
+
+        ih4 = ih1 * 2
+        self.assertEqual(ih4.tolist(),
+            [['II', 'AA'], ['II', 'BB'], ['IIII', 'AA'], ['IIII', 'BB']])
+
 
     #---------------------------------------------------------------------------
     def test_hierarchy_flat_a(self) -> None:

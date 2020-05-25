@@ -1086,27 +1086,6 @@ class Series(ContainerOperand):
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
 
-
-        # if (values.dtype.kind in DTYPE_STR_KIND or
-        #         (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
-        #     if operator.__name__ == 'add':
-        #         result = npc.add(values, other)
-        #     elif operator.__name__ == 'radd':
-        #         result = npc.add(other, values)
-        #     elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
-        #         result = npc.multiply(values, other)
-        #     else:
-        #         result = operator(values, other)
-        # else:
-        #     result = operator(values, other)
-
-        # if result is False or result is True:
-        #     # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-        #     # return a Boolean at the same size as the original Series; this works, but means that we will mask that, if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
-        #     result = np.full(len(values), result)
-
-        # result.flags.writeable = False
-
         result = apply_binary_operator(
                 values=values,
                 other=other,

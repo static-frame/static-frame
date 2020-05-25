@@ -1026,14 +1026,6 @@ class IndexHierarchy(IndexBase):
                 operator=operator,
                 )
 
-        # result = operator(values, other)
-        # addd for mixed size comparisons; these are often necessary for index objects
-        # if result is False or result is True:
-        #     result = np.full(self.shape, result)
-
-        # result.flags.writeable = False
-        # return result
-
     def _ufunc_axis_skipna(self, *,
             axis,
             skipna,

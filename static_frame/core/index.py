@@ -966,27 +966,6 @@ class Index(IndexBase):
                 operator=operator,
                 )
 
-        # if (values.dtype.kind in DTYPE_STR_KIND or
-        #         (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
-        #     if operator.__name__ == 'add':
-        #         result = npc.add(values, other)
-        #     elif operator.__name__ == 'radd':
-        #         result = npc.add(other, values)
-        #     elif operator.__name__ == 'mul' or operator.__name__ == 'rmul':
-        #         result = npc.multiply(values, other)
-        #     else:
-        #         result = operator(values, other)
-        # else:
-        #     result = operator(values, other)
-
-        # if result is False or result is True:
-        #     # see Series._ufunc_binary_operator for notes on why
-        #     result = np.full(len(values), result)
-
-        # result.flags.writeable = False
-        # return result
-
-
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
