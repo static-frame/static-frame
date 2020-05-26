@@ -737,8 +737,7 @@ def resolve_type_iter(
     is_gen, copy_values = is_gen_copy_values(values)
 
     if not is_gen and len(values) == 0: #type: ignore
-        values = tp.cast(tp.Sequence[tp.Any], values)
-        return None, False, values
+        return None, False, values #type: ignore
 
     if restrict_copy:
         copy_values = False
