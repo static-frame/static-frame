@@ -103,8 +103,6 @@ class IndexCorrespondence:
             iloc_src = src_index.loc_to_iloc(common_labels)
             iloc_dst = dst_index.loc_to_iloc(common_labels)
 
-            # if iloc_src.dtype != int:
-            #     import ipdb; ipdb.set_trace()
             return cls(has_common=has_common,
                     is_subset=False,
                     iloc_src=iloc_src,
@@ -142,4 +140,4 @@ class IndexCorrespondence:
         '''
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
-        return [[x] for x in tp.cast(tp.Iterable[int], self.iloc_src)]
+        return [[x] for x in self.iloc_src] #type: ignore

@@ -712,7 +712,10 @@ class Series(ContainerOperand):
         ic = IndexCorrespondence.from_correspondence(self.index, index)
 
         if ic.is_subset: # must have some common
-            return self.__class__(self.values[ic.iloc_src],
+            values = self.values[ic.iloc_src]
+            values.flags.writeable = False
+            return self.__class__(
+                    values,
                     index=index,
                     own_index=True,
                     name=self._name)
