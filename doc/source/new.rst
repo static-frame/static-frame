@@ -10,6 +10,7 @@ Added defensive check against assigning a Pandas Series to a FrameGO as an unlab
 
 Added proper handling of types multiple-inherited from ``str`` (or any other type) and ``Enum``.
 
+Implemented support for operator overloading of addition and multiplication on string dtypes.
 
 0.6.16
 ----------
