@@ -693,6 +693,7 @@ class Series(ContainerOperand):
     @doc_inject(selector='reindex', class_name='Series')
     def reindex(self,
             index: IndexInitializer,
+            *,
             fill_value=np.nan,
             own_index: bool = False
             ) -> 'Series':
@@ -709,7 +710,16 @@ class Series(ContainerOperand):
             index = index_from_optional_constructor(index,
                     default_constructor=Index)
 
-        ic = IndexCorrespondence.from_correspondence(self.index, index)
+        # NOTE: it is assumed that the equals comparison is faster than continuing with this method
+        if self._index.equals(index):
+            # if labels are equal (even if a different Index subclass), simply re-use values
+            return self.__class__(
+                    self.values,
+                    index=index,
+                    own_index=True,
+                    name=self._name)
+
+        ic = IndexCorrespondence.from_correspondence(self._index, index)
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src]

@@ -109,6 +109,7 @@ class IndexCorrespondence:
                     iloc_dst=iloc_dst,
                     size=size)
 
+        # if no common values, nothing to transfer from src to dst
         return cls(has_common=has_common,
                 is_subset=False,
                 iloc_src=None,

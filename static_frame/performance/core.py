@@ -706,7 +706,33 @@ class SeriesIntObjStr_apply(PerfTest):
         post = SampleData.get('sfs_objstr_10k').iter_element().apply(str)
 
 
+class SeriesIntObjStr_reindex_identity(PerfTest):
 
+    NUMBER = 200
+
+    @staticmethod
+    def pd() -> None:
+        s1 = SampleData.get('pds_objstr_10k')
+        s2 = s1.reindex(s1.index)
+
+    @staticmethod
+    def sf() -> None:
+        s1 = SampleData.get('sfs_objstr_10k')
+        s2 = s1.reindex(s1.index)
+
+class SeriesIntObjStr_reindex_reverse(PerfTest):
+
+    NUMBER = 200
+
+    @staticmethod
+    def pd() -> None:
+        s1 = SampleData.get('pds_objstr_10k')
+        s2 = s1.reindex(reversed(s1.index))
+
+    @staticmethod
+    def sf() -> None:
+        s1 = SampleData.get('sfs_objstr_10k')
+        s2 = s1.reindex(reversed(s1.index))
 
 
 
@@ -997,7 +1023,7 @@ class FrameFloat_isna(PerfTest):
 
 class FrameFloat_apply_axis0(PerfTest):
 
-    NUMBER = 100
+    NUMBER = 50
 
     @staticmethod
     def pd() -> None:
@@ -1142,6 +1168,8 @@ class FrameMixed_slice_loc_index(PerfTest):
 
 
 class FrameMixed_slice_loc_columns(PerfTest):
+
+    NUMBER = 100
 
     @staticmethod
     def pd() -> None:

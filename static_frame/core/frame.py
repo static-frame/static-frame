@@ -2409,6 +2409,7 @@ class Frame(ContainerOperand):
     def reindex(self,
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
+            *,
             fill_value=np.nan,
             own_index: bool = False,
             own_columns: bool = False
