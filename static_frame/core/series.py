@@ -695,7 +695,7 @@ class Series(ContainerOperand):
             index: IndexInitializer,
             *,
             fill_value=np.nan,
-            own_index: bool = False
+            own_index: bool = False,
             ) -> 'Series':
         '''
         {doc}
@@ -1063,7 +1063,7 @@ class Series(ContainerOperand):
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable,
-            other
+            other: tp.Any,
             ) -> 'Series':
         '''
         For binary operations, the `name` attribute does not propagate.
@@ -1080,15 +1080,16 @@ class Series(ContainerOperand):
 
         if isinstance(other, Series):
             other_is_array = True
-            if not self.index.equals(other.index,
+            if not self._index.equals(other._index,
                     compare_class=False,
                     compare_dtype=False,
                     compare_name=False,
                     ):
-                index = self.index.union(other.index)
+                # if not equal, create a new Index by forming the union
+                index = self._index.union(other._index)
                 # now need to reindex the Series
-                values = self.reindex(index).values
-                other = other.reindex(index).values
+                values = self.reindex(index, own_index=True).values
+                other = other.reindex(index, own_index=True).values
             else:
                 other = other.values
 
