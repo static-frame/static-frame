@@ -2699,7 +2699,7 @@ class TestUnit(TestCase):
         a4 = np.array([10, 20, 30], dtype=np.int32)
         tb2 = TypeBlocks.from_blocks((a3, a4))
 
-        self.assertFalse(tb1.equals(tb2))
+        self.assertFalse(tb1.equals(tb2, compare_dtype=True))
         self.assertTrue(tb1.equals(tb2, compare_dtype=False))
 
 

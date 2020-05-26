@@ -8769,13 +8769,13 @@ class TestUnit(TestCase):
         self.assertTrue(f1.equals(f1))
         self.assertTrue(f1.equals(f2))
 
-        self.assertFalse(f1.equals(f3))
+        self.assertFalse(f1.equals(f3, compare_name=True))
         self.assertTrue(f1.equals(f3, compare_name=False))
 
-        self.assertFalse(f1.equals(f4))
+        self.assertFalse(f1.equals(f4, compare_dtype=True))
         self.assertTrue(f1.equals(f4, compare_dtype=False))
 
-        self.assertFalse(f1.equals(f5))
+        self.assertFalse(f1.equals(f5, compare_class=True))
         self.assertTrue(f1.equals(f5, compare_class=False))
 
 
@@ -8792,7 +8792,7 @@ class TestUnit(TestCase):
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
         f2 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx2)
 
-        self.assertFalse(f1.equals(f2))
+        self.assertFalse(f1.equals(f2, compare_name=True))
         self.assertTrue(f1.equals(f2, compare_name=False))
 
 

@@ -3297,13 +3297,13 @@ class TestUnit(TestCase):
         s6 = Series(range(1, 21), dtype=np.int64)
 
         self.assertTrue(s1.equals(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(s1.equals(s2, compare_class=True))
         self.assertTrue(s1.equals(s2, compare_class=False))
 
-        self.assertFalse(s1.equals(s3))
+        self.assertFalse(s1.equals(s3, compare_name=True))
         self.assertTrue(s1.equals(s3, compare_name=False))
 
-        self.assertFalse(s1.equals(s4))
+        self.assertFalse(s1.equals(s4, compare_dtype=True))
         self.assertTrue(s1.equals(s4, compare_dtype=False))
 
         self.assertFalse(s1.equals(s5))

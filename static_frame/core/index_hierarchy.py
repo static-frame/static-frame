@@ -1091,9 +1091,9 @@ class IndexHierarchy(IndexBase):
     def equals(self,
             other: tp.Any,
             *,
-            compare_name=True,
-            compare_dtype=True,
-            compare_class=True,
+            compare_name: bool = False,
+            compare_dtype: bool = False,
+            compare_class: bool = False,
             skipna: bool = True,
             ) -> bool:
         '''

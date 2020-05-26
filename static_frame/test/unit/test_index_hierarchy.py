@@ -2167,7 +2167,7 @@ class TestUnit(TestCase):
         self.assertFalse(ih1.equals(ih3))
         self.assertFalse(ih3.equals(ih1))
 
-        self.assertFalse(ih3.equals(ih4))
+        self.assertFalse(ih3.equals(ih4, compare_name=True))
         self.assertTrue(ih3.equals(ih4, compare_name=False))
 
     def test_index_hierarchy_equals_b(self) -> None:
@@ -2175,7 +2175,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index((2, 5), dtype=np.int64))
         ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index((2, 5), dtype=np.int32))
 
-        self.assertFalse(ih1.equals(ih2))
+        self.assertFalse(ih1.equals(ih2, compare_dtype=True))
         self.assertTrue(ih1.equals(ih2, compare_dtype=False))
 
     def test_index_hierarchy_equals_c(self) -> None:
@@ -2185,7 +2185,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), idx)
         ih2 = IndexHierarchy.from_product((1, 2), ('a', 'b'), Index(idx.values))
 
-        self.assertFalse(ih1.equals(ih2))
+        self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
     def test_index_hierarchy_equals_d(self) -> None:
@@ -2193,7 +2193,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, 5))
         ih2 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, 5))
 
-        self.assertFalse(ih1.equals(ih2))
+        self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
 

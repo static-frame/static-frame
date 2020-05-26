@@ -455,9 +455,9 @@ class Bus(ContainerBase): # not a ContainerOperand
     def equals(self,
             other: tp.Any,
             *,
-            compare_name: bool = True,
-            compare_dtype: bool = True,
-            compare_class: bool = True,
+            compare_name: bool = False,
+            compare_dtype: bool = False,
+            compare_class: bool = False,
             skipna: bool = True,
             ) -> bool:
         '''
