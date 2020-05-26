@@ -12,6 +12,7 @@ Added proper handling of types multiple-inherited from ``str`` (or any other typ
 
 Implemented support for operator overloading of addition and multiplication on string dtypes.
 
+
 0.6.16
 ----------
 
