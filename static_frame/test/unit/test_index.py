@@ -1106,8 +1106,8 @@ class TestUnit(TestCase):
         self.assertTrue(idx1.equals(idx2))
         self.assertFalse(idx1.equals(idx2, skipna=False))
 
-        # nan and None are treated equivalent
-        self.assertTrue(idx1.equals(idx3, compare_dtype=False))
+        # nan and None are not treated equivalent, even with skipna true
+        self.assertFalse(idx1.equals(idx3, compare_dtype=False, skipna=True))
 
 
 

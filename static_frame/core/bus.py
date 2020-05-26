@@ -499,7 +499,8 @@ class Bus(ContainerBase): # not a ContainerOperand
             return False
 
         # can zip because length of Series already match
-        for (frame_self, frame_other) in zip(self._series.values, other._series.values):
+        for (frame_self, frame_other) in zip(
+                self._series.values, other._series.values):
             if not frame_self.equals(frame_other,
                     compare_name=compare_name,
                     compare_dtype=compare_dtype,

@@ -1963,24 +1963,24 @@ class TypeBlocks(ContainerOperand):
         return self.from_blocks(a)
 
 
-    def isna(self) -> 'TypeBlocks':
+    def isna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is NaN or None.
         '''
         def blocks() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
-                bool_block = isna_array(b)
+                bool_block = isna_array(b, include_none)
                 bool_block.flags.writeable = False
                 yield bool_block
 
         return self.from_blocks(blocks())
 
 
-    def notna(self) -> 'TypeBlocks':
+    def notna(self, include_none: bool = True) -> 'TypeBlocks':
         '''Return a Boolean TypeBlocks where True is not NaN or None.
         '''
         def blocks() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
-                bool_block = np.logical_not(isna_array(b))
+                bool_block = np.logical_not(isna_array(b, include_none))
                 bool_block.flags.writeable = False
                 yield bool_block
 
@@ -2545,8 +2545,8 @@ class TypeBlocks(ContainerOperand):
         eq = self == other # returns a Boolean TypeBlocks instance
 
         if skipna:
-            isna_self = self.isna() # returns type blocks
-            isna_other = other.isna()
+            isna_self = self.isna(include_none=False) # returns type blocks
+            isna_other = other.isna(include_none=False)
             isna_both = isna_self & isna_self
 
         start = 0

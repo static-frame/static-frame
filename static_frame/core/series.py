@@ -1071,7 +1071,6 @@ class Series(ContainerOperand):
                     compare_class=False,
                     compare_dtype=False,
                     compare_name=False,
-                    skipna=False,
                     ):
                 index = self.index.union(other.index)
                 # now need to reindex the Series
@@ -2001,7 +2000,8 @@ class Series(ContainerOperand):
             return eq
 
         if skipna:
-            isna_both = isna_array(self.values) & isna_array(other.values)
+            isna_both = (isna_array(self.values, include_none=False) &
+                    isna_array(other.values, include_none=False))
             eq[isna_both] = True
 
         if not eq.all():

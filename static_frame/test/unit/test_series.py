@@ -3347,6 +3347,13 @@ class TestUnit(TestCase):
 
         self.assertFalse(s1.equals(s2, compare_dtype=False))
 
+    def test_series_equals_f(self) -> None:
+
+        s1 = Series((1, None, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+
+        self.assertFalse(s1.equals(s2, compare_dtype=False))
+
     #---------------------------------------------------------------------------
     def test_series_enum_a(self) -> None:
 

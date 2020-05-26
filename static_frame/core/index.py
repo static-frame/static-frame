@@ -1074,7 +1074,8 @@ class Index(IndexBase):
             return eq #type: ignore
 
         if skipna:
-            isna_both = isna_array(self.values) & isna_array(other.values)
+            isna_both = (isna_array(self.values, include_none=False)
+                    & isna_array(other.values, include_none=False))
             eq[isna_both] = True
 
         if not eq.all():

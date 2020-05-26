@@ -1103,7 +1103,9 @@ def isna_element(value: tp.Any) -> bool:
     return value is None
 
 
-def isna_array(array: np.ndarray) -> np.ndarray:
+def isna_array(array: np.ndarray,
+        include_none: bool = True,
+        ) -> np.ndarray:
     '''Given an np.ndarray, return a bolean array setting True for missing values.
 
     Note: the returned array is not made immutable.
@@ -1119,24 +1121,9 @@ def isna_array(array: np.ndarray) -> np.ndarray:
         return np.full(array.shape, False, dtype=bool)
     # only check for None if we have an object type
     # NOTE: this will not work for Frames contained within a Series
-    return np.not_equal(array, array) | np.equal(array, None)
-
-    # try: # this will only work for arrays that do not have strings
-    #     # astype: None gets converted to nan if possible
-    #     # cannot use can_cast to reliabily identify arrays with non-float-castable elements
-    #     return np.isnan(array.astype(float))
-    # except ValueError:
-    #     # this Exception means there was a character or something not castable to float
-    #     # this is a big perforamnce hit; problem is cannot find np.nan in numpy object array
-    #     if array.ndim == 1:
-    #         return np.fromiter((x is None or x is np.nan for x in array),
-    #                 count=array.size,
-    #                 dtype=bool)
-
-    #     return np.fromiter((x is None or x is np.nan for x in array.flat),
-    #             count=array.size,
-    #             dtype=bool).reshape(array.shape)
-
+    if include_none:
+        return np.not_equal(array, array) | np.equal(array, None)
+    return np.not_equal(array, array)
 
 
 def binary_transition(
