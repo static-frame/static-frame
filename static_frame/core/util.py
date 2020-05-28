@@ -824,7 +824,7 @@ def iterable_to_array_1d(
         return array, True
 
     if hasattr(values, 'values') and hasattr(values, 'index'):
-        raise RuntimeError(f'Supplied iterable {type(values)} appears to labeled, though labels are not being used. Convert to a Series.')
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are not being used. Convert to a Series.')
 
     values_for_construct: tp.Sequence[tp.Any]
 
