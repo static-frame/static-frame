@@ -4513,6 +4513,7 @@ class Frame(ContainerOperand):
             right_template: str = '{}',
             index_source: ..., # left, right, union, intersect
             func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
+            fill_value: tp.Any = np.nan,
             ):
         pass
 

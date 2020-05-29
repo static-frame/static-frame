@@ -682,7 +682,7 @@ class Series(ContainerOperand):
     def _reindex_other_like_iloc(self,
             value: 'Series',
             iloc_key: GetItemKeyType,
-            fill_value=np.nan) -> 'Series':
+            fill_value: tp.Any = np.nan) -> 'Series':
         '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
         '''
         return value.reindex(
@@ -1839,7 +1839,7 @@ class Series(ContainerOperand):
     def shift(self,
             shift: int,
             *,
-            fill_value=np.nan) -> 'Series':
+            fill_value: tp.Any = np.nan) -> 'Series':
         '''Return a Series with values shifted forward on the index (with a postive shift) or backward on the index (with a negative shift).
 
         Args:
@@ -2168,7 +2168,7 @@ class SeriesAssign(Assign):
 
     def __call__(self,
             value, # any possible assignment type
-            fill_value=np.nan
+            fill_value: tp.Any = np.nan
             ):
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
