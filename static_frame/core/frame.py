@@ -1,4 +1,4 @@
-import typing as tp
+*import typing as tp
 import sqlite3
 import csv
 import json
@@ -71,6 +71,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
+from static_frame.core.util import UFunc
 
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -4510,6 +4511,7 @@ class Frame(ContainerOperand):
             left_template: str = '{}',
             right_template: str = '{}',
             index_source: ..., # left, right, union, intersect
+            func: UFunc = None,
             ):
         pass
 
