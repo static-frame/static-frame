@@ -4499,6 +4499,21 @@ class Frame(ContainerOperand):
                 own_columns=True
                 )
 
+
+    def join(self,
+            other: 'Frame', # support a named Series as a 1D frame?
+            *,
+            left_depths: tp.Optional[DepthLevelSpecifier] = None,
+            left_columns: GetItemKeyType = None,
+            right_depth: tp.Optional[DepthLevelSpecifier] = None,
+            right_columns: GetItemKeyType = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            index_source: ..., # left, right, union, intersect
+            ):
+        pass
+
+
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
