@@ -1,10 +1,11 @@
-*import typing as tp
+import typing as tp
 import sqlite3
 import csv
 import json
 from functools import partial
 from itertools import chain
 from itertools import repeat
+import operator as operator_mod
 
 import numpy as np
 
@@ -4504,14 +4505,14 @@ class Frame(ContainerOperand):
     def join(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            left_depths: tp.Optional[DepthLevelSpecifier] = None,
+            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             left_columns: GetItemKeyType = None,
-            right_depth: tp.Optional[DepthLevelSpecifier] = None,
+            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
             index_source: ..., # left, right, union, intersect
-            func: UFunc = None,
+            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             ):
         pass
 
