@@ -696,6 +696,7 @@ class Series(ContainerOperand):
             *,
             fill_value=np.nan,
             own_index: bool = False,
+            check_equals: bool = True
             ) -> 'Series':
         '''
         {doc}
@@ -711,7 +712,7 @@ class Series(ContainerOperand):
                     default_constructor=Index)
 
         # NOTE: it is assumed that the equals comparison is faster than continuing with this method
-        if self._index.equals(index):
+        if check_equals and self._index.equals(index):
             # if labels are equal (even if a different Index subclass), simply re-use values
             return self.__class__(
                     self.values,
@@ -1080,16 +1081,12 @@ class Series(ContainerOperand):
 
         if isinstance(other, Series):
             other_is_array = True
-            if not self._index.equals(other._index,
-                    compare_class=False,
-                    compare_dtype=False,
-                    compare_name=False,
-                    ):
+            if not self._index.equals(other._index):
                 # if not equal, create a new Index by forming the union
                 index = self._index.union(other._index)
                 # now need to reindex the Series
-                values = self.reindex(index, own_index=True).values
-                other = other.reindex(index, own_index=True).values
+                values = self.reindex(index, own_index=True, check_equals=False).values
+                other = other.reindex(index, own_index=True, check_equals=False).values
             else:
                 other = other.values
 

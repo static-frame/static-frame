@@ -906,7 +906,10 @@ class Frame(ContainerOperand):
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
                     if not v.index.equals(index):
-                        v = v.reindex(index, fill_value=fill_value)
+                        v = v.reindex(index,
+                                fill_value=fill_value,
+                                check_equals=False,
+                                )
                     # return values array post reindexing
                     if column_type is not None:
                         yield v.values.astype(column_type)
@@ -2414,7 +2417,8 @@ class Frame(ContainerOperand):
             *,
             fill_value=np.nan,
             own_index: bool = False,
-            own_columns: bool = False
+            own_columns: bool = False,
+            check_equals: bool = True,
             ) -> 'Frame':
         '''
         {doc}
@@ -2433,6 +2437,9 @@ class Frame(ContainerOperand):
             if not own_index:
                 index = index_from_optional_constructor(index,
                         default_constructor=Index)
+
+            #TODO: implement check_equals
+
             index_ic = IndexCorrespondence.from_correspondence(self._index, index)
         else:
             index = self._index
@@ -2444,6 +2451,9 @@ class Frame(ContainerOperand):
             if not own_columns:
                 columns = index_from_optional_constructor(columns,
                         default_constructor=self._COLUMNS_CONSTRUCTOR)
+
+            #TODO: implement check_equals
+
             columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
             own_columns_frame = True
         else:
@@ -5180,7 +5190,10 @@ class FrameGO(Frame):
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
-            container = container.reindex(self._index, fill_value=fill_value)
+            container = container.reindex(self._index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    )
 
         if isinstance(container, Frame):
             if not len(container.columns):

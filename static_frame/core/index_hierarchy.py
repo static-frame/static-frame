@@ -920,7 +920,10 @@ class IndexHierarchy(IndexBase):
             if key.dtype == bool:
                 # if a Boolean series, sort and reindex
                 if not key.index.equals(self):
-                    key = key.reindex(self, fill_value=False).values
+                    key = key.reindex(self,
+                            fill_value=False,
+                            check_equals=False,
+                            ).values
                 else: # the index is equal
                     key = key.values
             else:

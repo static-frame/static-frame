@@ -865,7 +865,10 @@ class Index(IndexBase):
         elif isinstance(key, Series):
             if key.dtype == bool:
                 if not key.index.equals(self):
-                    key = key.reindex(self, fill_value=False).values
+                    key = key.reindex(self,
+                            fill_value=False,
+                            check_equals=False,
+                            ).values
                 else: # the index is equal
                     key = key.values
             else:
