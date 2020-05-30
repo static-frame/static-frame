@@ -1750,13 +1750,13 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)
-                elif isinstance(row_key, int):
+                elif isinstance(row_key, INT_TYPES):
                     return b[row_key] # return single item
                 return TypeBlocks.from_blocks(b[row_key])
 
             if row_key_null:
                 return TypeBlocks.from_blocks(b[:, column])
-            elif isinstance(row_key, int):
+            elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column] # return single item
             return TypeBlocks.from_blocks(b[row_key, column])
 

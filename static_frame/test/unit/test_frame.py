@@ -8861,8 +8861,6 @@ class TestUnit(TestCase):
         self.assertFalse(f1.equals(f2, skipna=False))
 
 
-
-
     def test_frame_equals_f(self) -> None:
 
         f1 = Frame.from_element('a', index=range(2), columns=range(2))
@@ -8871,15 +8869,50 @@ class TestUnit(TestCase):
         self.assertFalse(f1.equals(f2, compare_dtype=False))
 
 
+    #---------------------------------------------------------------------------
 
+    def test_frame_join_a(self) -> None:
 
+        from static_frame.core.util import Join
 
+        f1 = Frame.from_dict(
+                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
+                index=(0, 1, 2, 'foo', 'x'))
+        f2 = Frame.from_dict(
+                dict(c=('foo', 'bar'), d=(10, 20)),
+                index=('x', 'y'))
 
+        f3 = f1.join(f2, index_source=Join.INNER, left_depth_level=0, right_depth_level=0)
 
+        self.assertEqual(f3.to_pairs(0),
+                (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
+                )
 
+        f4 = f1.join(f2, index_source=Join.OUTER, left_depth_level=0, right_depth_level=0).fillna(None)
+
+        # NOTE: this indexes ordering after union is not stable, so do an explict selection before testing
+        locs4 = [0, 1, 2, 'foo', 'x', 'y']
+        f4 = f4.reindex(locs4)
+
+        self.assertEqual(f4.to_pairs(0),
+                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', None))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', None))))
+                )
+
+        f5 = f1.join(f2, index_source=Join.LEFT, left_depth_level=0, right_depth_level=0).fillna(None)
+
+        self.assertEqual(f5.to_pairs(0),
+                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
+                )
+
+        f6 = f1.join(f2, index_source=Join.RIGHT, left_depth_level=0, right_depth_level=0).fillna(None)
+
+        self.assertEqual(f6.to_pairs(0),
+                (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', None))), ('d', (('x', 10.0), ('y', None))))
+                )
 
 
 if __name__ == '__main__':
     unittest.main()
 
 
+        # import ipdb; ipdb.set_trace()

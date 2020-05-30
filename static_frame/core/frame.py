@@ -73,6 +73,8 @@ from static_frame.core.util import dtype_to_na
 from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
 
+from static_frame.core.util import Join
+
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterfaceAssignQuartet
@@ -4500,21 +4502,77 @@ class Frame(ContainerOperand):
                 own_columns=True
                 )
 
-
     def join(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
+            index_source: Join, # intersect, left, right, union,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             left_columns: GetItemKeyType = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            index_source: ..., # left, right, union, intersect
             func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
             ):
-        pass
+
+        left_index = self.index
+        right_index = other.index
+
+        def extract(source: 'Frame',
+                depth_level: tp.Optional[DepthLevelSpecifier],
+                columns: GetItemKeyType
+                ) -> tp.Iterator[np.ndarray]:
+            if depth_level is not None:
+                yield source.index.values_at_depth(depth_level)
+            if columns is not None:
+                yield from source._blocks._slice_blocks(column_key=columns)
+
+        # for now we reduce the targets to arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
+        target_left = TypeBlocks.from_blocks(extract(self, left_depth_level, left_columns)).values
+        target_right = TypeBlocks.from_blocks(extract(other, right_depth_level, right_columns)).values
+
+        if target_left.shape[1] != target_right.shape[1]:
+            raise RuntimeError('left and right selections must be the same width.')
+        # need to find matching pairs
+        mapping = {}
+        # if 1D, iterate values, if 2D, iterate rows
+        for idx_left, row_left in enumerate(target_left):
+            # got to a 1D vector showing full matches
+            eq = (row_left == target_right).all(axis=1)
+            if not eq.any():
+                continue
+
+            match = np.flatnonzero(eq)
+            # this should be one to one; what if it is one to many?
+            mapping[left_index[idx_left]] = match[0]
+
+
+        if index_source is Join.INNER:
+            final_index = left_index.intersection(right_index)
+        elif index_source is Join.LEFT:
+            final_index = left_index
+        elif index_source is Join.RIGHT:
+            final_index = right_index
+        elif index_source is Join.OUTER:
+            final_index = left_index.union(right_index)
+        else:
+            raise NotImplementedError(f'index source must be one of {tuple(Join)}')
+
+        final = FrameGO(index=final_index)
+        final.extend(self, fill_value=fill_value)
+
+        # build up a Series for each new column; probably best to one columns at at ime to avoid constructing by records
+        for idx_col, col in enumerate(other.columns):
+            values = []
+            for loc in final_index:
+                if loc in mapping:
+                    values.append(other.iloc[mapping[loc], idx_col])
+                else:
+                    values.append(fill_value)
+            final[col] = values
+
+        return final
 
 
     #---------------------------------------------------------------------------

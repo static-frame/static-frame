@@ -239,6 +239,14 @@ YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
 
+class Join(Enum):
+    INNER = 0
+    LEFT = 1
+    RIGHT = 2
+    OUTER = 3
+
+
+
 #-------------------------------------------------------------------------------
 
 def is_hashable(value: tp.Any) -> bool:
@@ -1477,6 +1485,11 @@ def _ufunc_set_1d(
             result = frozenset(array) & frozenset(other)
         else:
             result = frozenset(array).difference(frozenset(other))
+        # NOTE: try to sort, as set ordering is not stable
+        try:
+            result = sorted(result)
+        except TypeError:
+            pass
         v, _ = iterable_to_array_1d(result, dtype)
         return v
 
