@@ -72,7 +72,6 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
-from static_frame.core.util import UFunc
 
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
