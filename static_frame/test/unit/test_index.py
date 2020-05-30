@@ -21,7 +21,6 @@ from static_frame import ILoc
 
 
 from static_frame.test.test_case import TestCase
-from static_frame.core.index import _requires_reindex
 from static_frame.core.index import _index_initializer_needs_init
 
 from static_frame.core.exception import ErrorInitIndex
@@ -519,20 +518,6 @@ class TestUnit(TestCase):
         self.assertEqual(s2[[(1, 7), (1, 5), (1, 0)]].values.tolist(),
                 [7, 5, 0])
 
-
-
-    def test_requires_reindex(self) -> None:
-        a = Index([1, 2, 3])
-        b = Index([1, 2, 3])
-        c = Index([1, 3, 2])
-        d = Index([1, 2, 3, 4])
-        e = Index(['a', 2, 3])
-
-        self.assertFalse(_requires_reindex(a, b))
-        self.assertTrue(_requires_reindex(a, c))
-        self.assertTrue(_requires_reindex(a, c))
-        self.assertTrue(_requires_reindex(a, d))
-        self.assertTrue(_requires_reindex(a, e))
 
     def test_index_pickle_a(self) -> None:
         a = Index([('a','b'), ('b','c'), ('c','d')])
@@ -1108,6 +1093,21 @@ class TestUnit(TestCase):
 
         # nan and None are not treated equivalent, even with skipna true
         self.assertFalse(idx1.equals(idx3, compare_dtype=False, skipna=True))
+
+
+    def test_index_equals_e(self) -> None:
+        a = Index([1, 2, 3])
+        b = Index([1, 2, 3])
+        c = Index([1, 3, 2])
+        d = Index([1, 2, 3, 4])
+        e = Index(['a', 2, 3])
+
+        self.assertFalse(not a.equals(b))
+        self.assertTrue(not a.equals(c))
+        self.assertTrue(not a.equals(c))
+        self.assertTrue(not a.equals(d))
+        self.assertTrue(not a.equals(e))
+
 
 
 

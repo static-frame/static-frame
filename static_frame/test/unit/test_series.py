@@ -279,7 +279,7 @@ class TestUnit(TestCase):
     def test_series_slice_b(self) -> None:
 
         # using step sizes mixed with locs
-        s1 = sf.Series([1, 2, 3], index=['a', 'b', 'c'])['b'::-1]
+        s1 = sf.Series([1, 2, 3], index=['a', 'b', 'c'])['b'::-1] #type: ignore
 
         self.assertEqual(s1.to_pairs(),
                 (('b', 2), ('a', 1)))

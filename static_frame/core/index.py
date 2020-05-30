@@ -864,7 +864,7 @@ class Index(IndexBase):
             key = key.values
         elif isinstance(key, Series):
             if key.dtype == bool:
-                if _requires_reindex(key.index, self):
+                if not key.index.equals(self):
                     key = key.reindex(self, fill_value=False).values
                 else: # the index is equal
                     key = key.values
@@ -1288,22 +1288,4 @@ def _index_initializer_needs_init(
     if isinstance(value, np.ndarray):
         return bool(len(value))
     return bool(value)
-
-
-def _requires_reindex(left: Index, right: Index) -> bool:
-    '''
-    Given two Index objects, determine if we need to reindex
-    '''
-    if len(left) != len(right):
-        return True
-    # do not need a new Index object, so just compare arrays directly, which might return a single Boolean if the types are not compatible
-
-    # NOTE: NP raises a warning here if we go to scalar value
-    ne = left.values != right.values
-    if isinstance(ne, np.ndarray):
-        # if any not equal, require reindex
-        return ne.any() #type: ignore
-    # assume we have a bool
-    return ne #type: ignore  #if not equal, require reindex
-
 

@@ -24,7 +24,6 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import _requires_reindex
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
@@ -920,7 +919,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, Series):
             if key.dtype == bool:
                 # if a Boolean series, sort and reindex
-                if _requires_reindex(key.index, self):
+                if not key.index.equals(self):
                     key = key.reindex(self, fill_value=False).values
                 else: # the index is equal
                     key = key.values

@@ -1487,7 +1487,7 @@ def _ufunc_set_1d(
             result = frozenset(array).difference(frozenset(other))
         # NOTE: try to sort, as set ordering is not stable
         try:
-            result = sorted(result)
+            result = sorted(result) #type: ignore
         except TypeError:
             pass
         v, _ = iterable_to_array_1d(result, dtype)

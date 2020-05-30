@@ -123,7 +123,6 @@ from static_frame.core.index_base import IndexBase
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import _requires_reindex
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 
@@ -906,7 +905,7 @@ class Frame(ContainerOperand):
                     if index is None:
                         raise ErrorInitFrame('can only consume Series in Frame.from_items if an Index is provided.')
 
-                    if _requires_reindex(v.index, index):
+                    if not v.index.equals(index):
                         v = v.reindex(index, fill_value=fill_value)
                     # return values array post reindexing
                     if column_type is not None:
@@ -5180,7 +5179,7 @@ class FrameGO(Frame):
             return
 
         # self's index will never change; we only take what aligns in the passed container
-        if _requires_reindex(self._index, container._index):
+        if not self._index.equals(container._index):
             container = container.reindex(self._index, fill_value=fill_value)
 
         if isinstance(container, Frame):
