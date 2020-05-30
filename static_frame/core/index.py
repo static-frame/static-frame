@@ -16,6 +16,8 @@ from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
+from static_frame.core.util import SLICE_STEP_ATTR
+
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import EMPTY_ARRAY
@@ -128,13 +130,17 @@ class LocMap:
             attr = getattr(key, field)
             if attr is None:
                 yield None
+
             elif isinstance(attr, np.datetime64):
                 # if a datetime, we assume that the labels are ordered;
                 if attr.dtype == labels.dtype: #type: ignore
-                    pos: int = label_to_pos(attr)
-                    if pos is None:
-                        # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
-                        raise LocInvalid('Invalid loc given in a slice', attr, field)
+                    if field != SLICE_STEP_ATTR:
+                        pos: int = label_to_pos(attr)
+                        if pos is None:
+                            # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
+                            raise LocInvalid('Invalid loc given in a slice', attr, field)
+                    else: # step
+                        pos = attr # should be an integer
 
                     if field == SLICE_STOP_ATTR:
                         pos += 1 # stop is inclusive
@@ -159,25 +165,30 @@ class LocMap:
                     else:
                         raise LocEmpty()
 
-                if offset_apply:
+                elif field == SLICE_STEP_ATTR:
+                    pos = attr
+
+                if offset_apply and field != SLICE_STEP_ATTR:
                     pos += offset #type: ignore
 
                 yield pos
 
             else:
-                pos = label_to_pos(attr)
-                if pos is None:
-                    # NOTE: could raise LocEmpty() to silently handle this
-                    raise LocInvalid('Invalid loc given in a slice', attr, field)
+                if field != SLICE_STEP_ATTR:
+                    pos = label_to_pos(attr)
+                    if pos is None:
+                        # NOTE: could raise LocEmpty() to silently handle this
+                        raise LocInvalid('Invalid loc given in a slice', attr, field)
+                    if offset_apply:
+                        pos += offset #type: ignore
+                else: # step
+                    pos = attr # should be an integer
 
-                if offset_apply:
-                    pos += offset #type: ignore
-
-                if field is SLICE_STOP_ATTR:
+                if field == SLICE_STOP_ATTR:
                     # loc selections are inclusive, so iloc gets one more
-                    yield pos + 1
-                else:
-                    yield pos
+                    pos += 1
+
+                yield pos
 
     @classmethod
     def loc_to_iloc(cls, *,

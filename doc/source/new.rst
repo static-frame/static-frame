@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.18
+----------
+
+Extended support for step arguments in ``loc`` interfaces.
+
+
 0.6.17
 ----------
 

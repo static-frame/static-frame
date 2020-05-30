@@ -276,6 +276,27 @@ class TestUnit(TestCase):
 
         self.assertEqual(s1[['a', 'c']].values.tolist(), [0, 2])
 
+    def test_series_slice_b(self) -> None:
+
+        # using step sizes mixed with locs
+        s1 = sf.Series([1, 2, 3], index=['a', 'b', 'c'])['b'::-1]
+
+        self.assertEqual(s1.to_pairs(),
+                (('b', 2), ('a', 1)))
+
+    def test_series_slice_c(self) -> None:
+
+        # using step sizes mixed with locs
+        s1 = sf.Series(range(10), index=IndexDate.from_date_range('2019-12-30', '2020-01-08'))
+
+        s2 = s1.loc[np.datetime64('2020-01-07'): np.datetime64('2020-01-02'): -1]
+
+        self.assertEqual(s2.to_pairs(),
+                ((np.datetime64('2020-01-07'), 8), (np.datetime64('2020-01-06'), 7), (np.datetime64('2020-01-05'), 6), (np.datetime64('2020-01-04'), 5))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_series_keys_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))

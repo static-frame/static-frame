@@ -1027,12 +1027,16 @@ def _slice_to_datetime_slice_args(key: slice,
         value = getattr(key, attr)
         if value is None:
             yield None
+        elif attr == SLICE_STEP_ATTR:
+            # steps are never transformed
+            yield value
         else:
             yield to_datetime64(value, dtype=dtype)
 
 def key_to_datetime_key(
         key: GetItemKeyType,
-        dtype: np.dtype = np.datetime64) -> GetItemKeyType:
+        dtype: np.dtype = np.datetime64,
+        ) -> GetItemKeyType:
     '''
     Given an get item key for a Date index, convert it to np.datetime64 representation.
     '''
