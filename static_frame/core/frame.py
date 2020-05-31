@@ -4511,6 +4511,7 @@ class Frame(ContainerOperand):
                 own_columns=True
                 )
 
+    #---------------------------------------------------------------------------
     def join(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
@@ -4535,54 +4536,102 @@ class Frame(ContainerOperand):
             if depth_level is not None:
                 yield source.index.values_at_depth(depth_level)
             if columns is not None:
-                yield from source._blocks._slice_blocks(column_key=columns)
+                column_key = source.columns.loc_to_iloc(columns)
+                yield from source._blocks._slice_blocks(column_key=column_key)
 
         # for now we reduce the targets to arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-        target_left = TypeBlocks.from_blocks(extract(self, left_depth_level, left_columns)).values
-        target_right = TypeBlocks.from_blocks(extract(other, right_depth_level, right_columns)).values
+        target_left = TypeBlocks.from_blocks(
+                extract(self, left_depth_level, left_columns)).values
+        target_right = TypeBlocks.from_blocks(
+                extract(other, right_depth_level, right_columns)).values
 
         if target_left.shape[1] != target_right.shape[1]:
             raise RuntimeError('left and right selections must be the same width.')
-        # need to find matching pairs
+
+        index_bound = left_depth_level is not None or right_depth_level is not None
+
+        # Find matching pairs. Get iloc of left to iloc of right
         mapping = {}
-        # if 1D, iterate values, if 2D, iterate rows
         for idx_left, row_left in enumerate(target_left):
-            # got to a 1D vector showing full matches
-            eq = (row_left == target_right).all(axis=1)
-            if not eq.any():
+            # Get 1D vector showing matches along right's full heigh
+            matched = (row_left == target_right).all(axis=1)
+            if not matched.any():
                 continue
 
-            match = np.flatnonzero(eq)
+            matched_idx = np.flatnonzero(matched)
             # this should be one to one; what if it is one to many?
-            mapping[left_index[idx_left]] = match[0]
+            mapping[idx_left] = matched_idx[0]
 
-
-        if index_source is Join.INNER:
-            final_index = left_index.intersection(right_index)
-        elif index_source is Join.LEFT:
-            final_index = left_index
-        elif index_source is Join.RIGHT:
-            final_index = right_index
-        elif index_source is Join.OUTER:
-            final_index = left_index.union(right_index)
+        if index_bound:
+            if index_source is Join.INNER:
+                final_index = left_index.intersection(right_index)
+            elif index_source is Join.LEFT:
+                final_index = left_index
+            elif index_source is Join.RIGHT:
+                final_index = right_index
+            elif index_source is Join.OUTER:
+                final_index = left_index.union(right_index)
+            else:
+                raise NotImplementedError(f'index source must be one of {tuple(Join)}')
         else:
-            raise NotImplementedError(f'index source must be one of {tuple(Join)}')
+            left_loc = []
+            right_loc = []
+            for k, v in mapping.items():
+                left_loc.append(left_index[k])
+                right_loc.append(right_index[v])
+
+            if index_source is Join.INNER:
+                final_index = Index(left_loc) # always unique
+            elif index_source is Join.LEFT:
+                final_index = left_index
+            elif index_source is Join.RIGHT:
+                # A right outer join returns all the values from the right table and matched values from the left
+                right_loc_found = set(right_loc)
+                # should control the order rather than use a set; maybe create an AutoMap?
+                labels = dict()
+                for label in chain(left_loc,
+                        (loc for loc in right_index if loc not in right_loc_found)):
+                    labels[label] = None
+                final_index = Index(labels.keys())
+            elif index_source is Join.OUTER:
+                right_loc_found = set(right_loc)
+                # should control the order rather than use a set; maybe create an AutoMap?
+                labels = dict()
+                for label in chain(left_index, # start with all of left
+                        (loc for loc in right_index if loc not in right_loc_found)):
+                    labels[label] = None
+                final_index = Index(labels.keys())
+            else:
+                raise NotImplementedError(f'index source must be one of {tuple(Join)}')
 
         final = FrameGO(index=final_index)
-        final.extend(self, fill_value=fill_value)
+        left_columns = (left_template.format(c) for c in self.columns)
+        final.extend(self.relabel(columns=left_columns), fill_value=fill_value)
 
         # build up a Series for each new column; probably best to one columns at at ime to avoid constructing by records
         for idx_col, col in enumerate(other.columns):
             values = []
             for loc in final_index:
-                if loc in mapping:
-                    values.append(other.iloc[mapping[loc], idx_col])
+                if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
+                    values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
+                elif loc in right_index:
+                    values.append(other.loc[loc, col])
                 else:
                     values.append(fill_value)
-            final[col] = values
+            final[right_template.format(col)] = values
 
-        return final
+        return final.to_frame()
 
+
+
+    # def join_inner():
+    #     ...
+    # def join_left():
+    #     ...
+    # def join_right():
+    #     ...
+    # def join_outer():
+    #     ...
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types

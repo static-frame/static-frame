@@ -34,6 +34,8 @@ from static_frame import HLoc
 from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
 
+from static_frame.core.util import Join
+
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
 from static_frame.core.frame import FrameAssign
@@ -8873,7 +8875,6 @@ class TestUnit(TestCase):
 
     def test_frame_join_a(self) -> None:
 
-        from static_frame.core.util import Join
 
         f1 = Frame.from_dict(
                 dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
@@ -8895,7 +8896,7 @@ class TestUnit(TestCase):
         f4 = f4.reindex(locs4)
 
         self.assertEqual(f4.to_pairs(0),
-                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', None))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', None))))
+                (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', 'bar'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', 20.0))))
                 )
 
         f5 = f1.join(f2, index_source=Join.LEFT, left_depth_level=0, right_depth_level=0).fillna(None)
@@ -8905,11 +8906,77 @@ class TestUnit(TestCase):
                 )
 
         f6 = f1.join(f2, index_source=Join.RIGHT, left_depth_level=0, right_depth_level=0).fillna(None)
-
         self.assertEqual(f6.to_pairs(0),
-                (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', None))), ('d', (('x', 10.0), ('y', None))))
+                (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
                 )
 
+
+    def test_frame_join_b(self) -> None:
+
+        f1 = Frame.from_dict(
+            {
+            'LastName': ('Raf', 'Jon', 'Hei', 'Rob', 'Smi', 'Wil'),
+            'DepartmentID': (31, 33, 33, 34, 34, None),
+            },
+            index=tuple('abcdef'),
+            )
+
+        f2 = Frame.from_dict(
+            {
+            'DepartmentID': (31, 33, 34, 35),
+            'DepartmentName': ('Sales', 'Engineering', 'Clerical', 'Marketing'),
+            },
+            index=range(10, 14),
+            )
+
+        f3 = f1.join(f2,
+                index_source=Join.OUTER,
+                left_columns='DepartmentID',
+                left_template='Employee.{}',
+                right_columns='DepartmentID',
+                right_template='Department.{}',
+                )
+        self.assertEqual(f3.shape, (7, 4))
+        self.assertEqual(f3.fillna(None).to_pairs(0),
+                (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), ('f', 'Wil'), (13, None))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), ('f', None), (13, None))), ('Department.DepartmentID', (('a', 31.0), ('b', 33.0), ('c', 33.0), ('d', 34.0), ('e', 34.0), ('f', None), (13, 35.0))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), ('f', None), (13, 'Marketing'))))
+                )
+
+        f4 = f1.join(f2,
+                index_source=Join.INNER,
+                left_columns='DepartmentID',
+                left_template='Employee.{}',
+                right_columns='DepartmentID',
+                right_template='Department.{}',
+                )
+        self.assertEqual(f4.shape, (5, 4))
+
+        self.assertEqual(f4.fillna(None).to_pairs(0),
+                (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34))), ('Department.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'))))
+                )
+
+        f5 = f1.join(f2,
+                index_source=Join.LEFT,
+                left_columns='DepartmentID',
+                left_template='Employee.{}',
+                right_columns='DepartmentID',
+                right_template='Department.{}',
+                )
+        self.assertEqual(f5.shape, (6, 4))
+        self.assertEqual(f5.fillna(None).to_pairs(0),
+                (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), ('f', 'Wil'))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), ('f', None))), ('Department.DepartmentID', (('a', 31.0), ('b', 33.0), ('c', 33.0), ('d', 34.0), ('e', 34.0), ('f', None))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), ('f', None))))
+                )
+
+        f6 = f1.join(f2,
+                index_source=Join.RIGHT,
+                left_columns='DepartmentID',
+                left_template='Employee.{}',
+                right_columns='DepartmentID',
+                right_template='Department.{}',
+                )
+        self.assertEqual(f6.shape, (6, 4))
+        self.assertEqual(f6.fillna(None).to_pairs(0),
+                (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), (13, None))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), (13, None))), ('Department.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), (13, 35))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), (13, 'Marketing'))))
+                )
 
 if __name__ == '__main__':
     unittest.main()
