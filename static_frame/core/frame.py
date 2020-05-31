@@ -4554,7 +4554,10 @@ class Frame(ContainerOperand):
         mapping = {}
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            matched = (row_left == target_right).all(axis=1)
+            matched = (row_left == target_right)
+            if matched is False:
+               continue
+            matched = matched.all(axis=1)
             if not matched.any():
                 continue
 

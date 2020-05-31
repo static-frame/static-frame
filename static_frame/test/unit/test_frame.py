@@ -8978,8 +8978,25 @@ class TestUnit(TestCase):
                 (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), (13, None))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), (13, None))), ('Department.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), (13, 35))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), (13, 'Marketing'))))
                 )
 
+
+    def test_frame_join_c(self) -> None:
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
+        # import ipdb; ipdb.set_trace()
+
+        f1.join(f2, index_source=Join.INNER, left_columns='b', right_depth_level=0)
+        f1.join(f2, index_source=Join.LEFT, left_columns='b', right_depth_level=0)
+        f1.join(f2, index_source=Join.RIGHT, left_columns='b', right_depth_level=0)
+        f1.join(f2, index_source=Join.OUTER, left_columns='b', right_depth_level=0)
+
+        f2.join(f1, index_source=Join.LEFT, left_depth_level=0, right_depth_level=0)
+        f2.join(f1, index_source=Join.RIGHT, left_depth_level=0, right_depth_level=0)
+        f2.join(f1, index_source=Join.INNER, left_depth_level=0, right_depth_level=0)
+        f2.join(f1, index_source=Join.OUTER, left_depth_level=0, right_depth_level=0)
+
+
 if __name__ == '__main__':
     unittest.main()
 
 
-        # import ipdb; ipdb.set_trace()
