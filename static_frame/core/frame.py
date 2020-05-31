@@ -4548,6 +4548,7 @@ class Frame(ContainerOperand):
         if target_left.shape[1] != target_right.shape[1]:
             raise RuntimeError('left and right selections must be the same width.')
 
+        # NOTE: Pandas behavior is to make this AND, not OR
         index_bound = left_depth_level is not None or right_depth_level is not None
 
         # Find matching pairs. Get iloc of left to iloc of right
