@@ -4514,7 +4514,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    def join(self,
+    def _join(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
             index_source: Join, # intersect, left, right, union,
@@ -4557,7 +4557,7 @@ class Frame(ContainerOperand):
         mapping = {}
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            matched = (row_left == target_right)
+            matched = func(row_left, target_right)
             if matched is False:
                continue
             matched = matched.all(axis=1)
@@ -4630,14 +4630,101 @@ class Frame(ContainerOperand):
 
 
 
-    # def join_inner():
-    #     ...
-    # def join_left():
-    #     ...
-    # def join_right():
-    #     ...
-    # def join_outer():
-    #     ...
+    def join_inner(self,
+            other: 'Frame', # support a named Series as a 1D frame?
+            *,
+            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_columns: GetItemKeyType = None,
+            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_columns: GetItemKeyType = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._join(other=other,
+                index_source=Join.INNER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                func=func,
+                fill_value=fill_value,
+                )
+
+    def join_left(self,
+            other: 'Frame', # support a named Series as a 1D frame?
+            *,
+            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_columns: GetItemKeyType = None,
+            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_columns: GetItemKeyType = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._join(other=other,
+                index_source=Join.LEFT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                func=func,
+                fill_value=fill_value,
+                )
+
+    def join_right(self,
+            other: 'Frame', # support a named Series as a 1D frame?
+            *,
+            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_columns: GetItemKeyType = None,
+            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_columns: GetItemKeyType = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._join(other=other,
+                index_source=Join.RIGHT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                func=func,
+                fill_value=fill_value,
+                )
+
+    def join_outer(self,
+            other: 'Frame', # support a named Series as a 1D frame?
+            *,
+            left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            left_columns: GetItemKeyType = None,
+            right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
+            right_columns: GetItemKeyType = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
+            fill_value: tp.Any = np.nan,
+            ):
+        return self._join(other=other,
+                index_source=Join.OUTER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                func=func,
+                fill_value=fill_value,
+                )
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types

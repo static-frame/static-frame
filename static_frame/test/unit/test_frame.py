@@ -8875,6 +8875,7 @@ class TestUnit(TestCase):
 
     def test_frame_join_a(self) -> None:
 
+        # joiing index to index
 
         f1 = Frame.from_dict(
                 dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
@@ -8883,13 +8884,13 @@ class TestUnit(TestCase):
                 dict(c=('foo', 'bar'), d=(10, 20)),
                 index=('x', 'y'))
 
-        f3 = f1.join(f2, index_source=Join.INNER, left_depth_level=0, right_depth_level=0)
+        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0)
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
                 )
 
-        f4 = f1.join(f2, index_source=Join.OUTER, left_depth_level=0, right_depth_level=0).fillna(None)
+        f4 = f1.join_outer(f2, left_depth_level=0, right_depth_level=0).fillna(None)
 
         # NOTE: this indexes ordering after union is not stable, so do an explict selection before testing
         locs4 = [0, 1, 2, 'foo', 'x', 'y']
@@ -8899,19 +8900,21 @@ class TestUnit(TestCase):
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', 'bar'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', 20.0))))
                 )
 
-        f5 = f1.join(f2, index_source=Join.LEFT, left_depth_level=0, right_depth_level=0).fillna(None)
+        f5 = f1.join_left(f2, left_depth_level=0, right_depth_level=0).fillna(None)
 
         self.assertEqual(f5.to_pairs(0),
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
                 )
 
-        f6 = f1.join(f2, index_source=Join.RIGHT, left_depth_level=0, right_depth_level=0).fillna(None)
+        f6 = f1.join_right(f2, left_depth_level=0, right_depth_level=0).fillna(None)
         self.assertEqual(f6.to_pairs(0),
                 (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
                 )
 
 
     def test_frame_join_b(self) -> None:
+
+        # joining on column to column
 
         f1 = Frame.from_dict(
             {
@@ -8929,8 +8932,7 @@ class TestUnit(TestCase):
             index=range(10, 14),
             )
 
-        f3 = f1.join(f2,
-                index_source=Join.OUTER,
+        f3 = f1.join_outer(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
@@ -8941,8 +8943,7 @@ class TestUnit(TestCase):
                 (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), ('f', 'Wil'), (13, None))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), ('f', None), (13, None))), ('Department.DepartmentID', (('a', 31.0), ('b', 33.0), ('c', 33.0), ('d', 34.0), ('e', 34.0), ('f', None), (13, 35.0))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), ('f', None), (13, 'Marketing'))))
                 )
 
-        f4 = f1.join(f2,
-                index_source=Join.INNER,
+        f4 = f1.join_inner(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
@@ -8954,8 +8955,7 @@ class TestUnit(TestCase):
                 (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34))), ('Department.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'))))
                 )
 
-        f5 = f1.join(f2,
-                index_source=Join.LEFT,
+        f5 = f1.join_left(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
@@ -8966,8 +8966,7 @@ class TestUnit(TestCase):
                 (('Employee.LastName', (('a', 'Raf'), ('b', 'Jon'), ('c', 'Hei'), ('d', 'Rob'), ('e', 'Smi'), ('f', 'Wil'))), ('Employee.DepartmentID', (('a', 31), ('b', 33), ('c', 33), ('d', 34), ('e', 34), ('f', None))), ('Department.DepartmentID', (('a', 31.0), ('b', 33.0), ('c', 33.0), ('d', 34.0), ('e', 34.0), ('f', None))), ('Department.DepartmentName', (('a', 'Sales'), ('b', 'Engineering'), ('c', 'Engineering'), ('d', 'Clerical'), ('e', 'Clerical'), ('f', None))))
                 )
 
-        f6 = f1.join(f2,
-                index_source=Join.RIGHT,
+        f6 = f1.join_right(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
@@ -8985,15 +8984,19 @@ class TestUnit(TestCase):
 
         # import ipdb; ipdb.set_trace()
 
-        f1.join(f2, index_source=Join.INNER, left_columns='b', right_depth_level=0)
-        f1.join(f2, index_source=Join.LEFT, left_columns='b', right_depth_level=0)
-        f1.join(f2, index_source=Join.RIGHT, left_columns='b', right_depth_level=0)
-        f1.join(f2, index_source=Join.OUTER, left_columns='b', right_depth_level=0)
+        # joining on column to index
 
-        f2.join(f1, index_source=Join.LEFT, left_depth_level=0, right_depth_level=0)
-        f2.join(f1, index_source=Join.RIGHT, left_depth_level=0, right_depth_level=0)
-        f2.join(f1, index_source=Join.INNER, left_depth_level=0, right_depth_level=0)
-        f2.join(f1, index_source=Join.OUTER, left_depth_level=0, right_depth_level=0)
+        # NOTE: the result of these are still in flux, as the SF implementation as this time deviates from Panda due to how "index-bound" is determined
+
+        f1.join_inner(f2, left_columns='b', right_depth_level=0)
+        f1.join_left(f2, left_columns='b', right_depth_level=0)
+        f1.join_right(f2, left_columns='b', right_depth_level=0)
+        f1.join_outer(f2, left_columns='b', right_depth_level=0)
+
+        f2.join_inner(f1, left_depth_level=0, right_depth_level=0)
+        f2.join_right(f1, left_depth_level=0, right_depth_level=0)
+        f2.join_left(f1, left_depth_level=0, right_depth_level=0)
+        f2.join_outer(f1, left_depth_level=0, right_depth_level=0)
 
 
 if __name__ == '__main__':
