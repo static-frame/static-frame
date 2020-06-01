@@ -44,6 +44,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
@@ -9018,6 +9019,22 @@ class TestUnit(TestCase):
                 (('a', ((('A', datetime.date(2020, 5, 4)), 0), (('A', datetime.date(2020, 5, 5)), 1), (('A', datetime.date(2020, 5, 6)), 2), (('A', datetime.date(2020, 5, 7)), 3), (('A', datetime.date(2020, 5, 8)), 4), (('B', datetime.date(2020, 5, 4)), 5), (('B', datetime.date(2020, 5, 5)), 6), (('B', datetime.date(2020, 5, 6)), 7), (('B', datetime.date(2020, 5, 7)), 8), (('B', datetime.date(2020, 5, 8)), 9))), ('b', ((('A', datetime.date(2020, 5, 4)), 'p'), (('A', datetime.date(2020, 5, 5)), 'q'), (('A', datetime.date(2020, 5, 6)), 'r'), (('A', datetime.date(2020, 5, 7)), 's'), (('A', datetime.date(2020, 5, 8)), 't'), (('B', datetime.date(2020, 5, 4)), 'u'), (('B', datetime.date(2020, 5, 5)), 'v'), (('B', datetime.date(2020, 5, 6)), 'w'), (('B', datetime.date(2020, 5, 7)), 'x'), (('B', datetime.date(2020, 5, 8)), 'y'))), ('c', ((('A', datetime.date(2020, 5, 4)), 10), (('A', datetime.date(2020, 5, 5)), 11), (('A', datetime.date(2020, 5, 6)), 12), (('A', datetime.date(2020, 5, 7)), 13), (('A', datetime.date(2020, 5, 8)), 14), (('B', datetime.date(2020, 5, 4)), 10), (('B', datetime.date(2020, 5, 5)), 11), (('B', datetime.date(2020, 5, 6)), 12), (('B', datetime.date(2020, 5, 7)), 13), (('B', datetime.date(2020, 5, 8)), 14))), ('d', ((('A', datetime.date(2020, 5, 4)), 'f'), (('A', datetime.date(2020, 5, 5)), 'f'), (('A', datetime.date(2020, 5, 6)), 'f'), (('A', datetime.date(2020, 5, 7)), 'g'), (('A', datetime.date(2020, 5, 8)), 'g'), (('B', datetime.date(2020, 5, 4)), 'f'), (('B', datetime.date(2020, 5, 5)), 'f'), (('B', datetime.date(2020, 5, 6)), 'f'), (('B', datetime.date(2020, 5, 7)), 'g'), (('B', datetime.date(2020, 5, 8)), 'g'))))
                 )
 
+        # inner join returns now rows as there is now alignment on the index.
+        self.assertEqual(
+                f1.join_inner(f2, left_depth_level=1, right_depth_level=0).shape,
+                (0, 4))
+
+        # right join just returns the index from the right, with filled columns from f1
+        f4 = f1.join_right(f2, left_depth_level=1, right_depth_level=0, fill_value=None)
+
+        self.assertEqual(
+                f4.to_pairs(0),
+                (('a', ((np.datetime64('2020-05-04'), None), (np.datetime64('2020-05-05'), None), (np.datetime64('2020-05-06'), None), (np.datetime64('2020-05-07'), None), (np.datetime64('2020-05-08'), None))), ('b', ((np.datetime64('2020-05-04'), None), (np.datetime64('2020-05-05'), None), (np.datetime64('2020-05-06'), None), (np.datetime64('2020-05-07'), None), (np.datetime64('2020-05-08'), None))), ('c', ((np.datetime64('2020-05-04'), 10), (np.datetime64('2020-05-05'), 11), (np.datetime64('2020-05-06'), 12), (np.datetime64('2020-05-07'), 13), (np.datetime64('2020-05-08'), 14))), ('d', ((np.datetime64('2020-05-04'), 'f'), (np.datetime64('2020-05-05'), 'f'), (np.datetime64('2020-05-06'), 'f'), (np.datetime64('2020-05-07'), 'g'), (np.datetime64('2020-05-08'), 'g'))))
+                )
+
+        # this fails correctly as we cannot combine a 1D index with a 2D index
+        with self.assertRaises(ErrorInitIndex):
+            f1.join_outer(f2, left_depth_level=1, right_depth_level=0, fill_value=None)
 
 if __name__ == '__main__':
     unittest.main()

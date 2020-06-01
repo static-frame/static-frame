@@ -274,6 +274,9 @@ class IndexLevel:
     def __contains__(self, key: tp.Iterable[tp.Hashable]) -> bool:
         '''Given an iterable of single-element level keys (a leaf loc), return a bool.
         '''
+        if not hasattr(key, '__iter__') or isinstance(key, str):
+            return False
+
         node = self
         for k in key:
             if not node.index.__contains__(k):

@@ -4623,12 +4623,15 @@ class Frame(ContainerOperand):
         for idx_col, col in enumerate(other.columns):
             values = []
             for loc in final_index:
-                if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
-                    values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
-                elif loc in right_index:
-                    values.append(other.loc[loc, col])
-                else:
-                    values.append(fill_value)
+                try:
+                    if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
+                        values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
+                    elif loc in right_index:
+                        values.append(other.loc[loc, col])
+                    else:
+                        values.append(fill_value)
+                except:
+                    import ipdb; ipdb.set_trace()
             final[right_template.format(col)] = values
 
         return final.to_frame()
