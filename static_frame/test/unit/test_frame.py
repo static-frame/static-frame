@@ -8997,7 +8997,7 @@ class TestUnit(TestCase):
         f2.join_left(f1, left_depth_level=0, right_depth_level=0)
         f2.join_outer(f1, left_depth_level=0, right_depth_level=0)
 
-
+    @skip_win #type: ignore
     def test_frame_join_d(self) -> None:
         index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
         index2 = IndexHierarchy.from_product(('A', 'B'), index1)
