@@ -572,7 +572,15 @@ class TestUnit(TestCase):
         # we owned the index, so have the same instance
         self.assertEqual(id(s2.index), id(idx))
 
+    def test_series_reindex_f(self) -> None:
 
+        index = IndexDate.from_date_range('2020-03-05', '2020-03-10')
+
+        s1 = Series(range(6), index=index.values) # create an Index
+        s2 = s1.reindex(index) # same values, different class
+        self.assertTrue(s2.index.__class__, index.__class__)
+
+    #---------------------------------------------------------------------------
     def test_series_isnull_a(self) -> None:
 
         s1 = Series((234.3, 3.2, 6.4, np.nan), index=('a', 'b', 'c', 'd'))

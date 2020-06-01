@@ -713,7 +713,7 @@ class Series(ContainerOperand):
 
         # NOTE: it is assumed that the equals comparison is faster than continuing with this method
         if check_equals and self._index.equals(index):
-            # if labels are equal (even if a different Index subclass), simply re-use values
+            # if labels are equal (even if a different Index subclass), we can simply use the new Index
             return self.__class__(
                     self.values,
                     index=index,
