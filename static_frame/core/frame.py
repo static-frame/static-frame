@@ -2438,9 +2438,10 @@ class Frame(ContainerOperand):
                 index = index_from_optional_constructor(index,
                         default_constructor=Index)
 
-            #TODO: implement check_equals
-
-            index_ic = IndexCorrespondence.from_correspondence(self._index, index)
+            if check_equals and self._index.equals(index):
+                index_ic = None
+            else:
+                index_ic = IndexCorrespondence.from_correspondence(self._index, index)
         else:
             index = self._index
             index_ic = None
@@ -2452,9 +2453,10 @@ class Frame(ContainerOperand):
                 columns = index_from_optional_constructor(columns,
                         default_constructor=self._COLUMNS_CONSTRUCTOR)
 
-            #TODO: implement check_equals
-
-            columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
+            if check_equals and self._columns.equals(columns):
+                columns_ic = None
+            else:
+                columns_ic = IndexCorrespondence.from_correspondence(self._columns, columns)
             own_columns_frame = True
         else:
             columns = self._columns
