@@ -34,8 +34,6 @@ from static_frame import HLoc
 from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
 
-from static_frame.core.util import Join
-
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
 from static_frame.core.frame import FrameAssign

@@ -4564,7 +4564,7 @@ class Frame(ContainerOperand):
             # Get 1D vector showing matches along right's full heigh
             matched = func(row_left, target_right)
             if matched is False:
-               continue
+                continue
             matched = matched.all(axis=1)
             if not matched.any():
                 continue
@@ -4623,15 +4623,12 @@ class Frame(ContainerOperand):
         for idx_col, col in enumerate(other.columns):
             values = []
             for loc in final_index:
-                try:
-                    if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
-                        values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
-                    elif loc in right_index:
-                        values.append(other.loc[loc, col])
-                    else:
-                        values.append(fill_value)
-                except:
-                    import ipdb; ipdb.set_trace()
+                if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
+                    values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
+                elif loc in right_index:
+                    values.append(other.loc[loc, col])
+                else:
+                    values.append(fill_value)
             final[right_template.format(col)] = values
 
         return final.to_frame()
