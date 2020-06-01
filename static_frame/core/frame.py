@@ -4528,6 +4528,11 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             ):
 
+        # NOTE:
+        # consider adding removal of overlapping columns? this happens implicitly with index on index.
+        # should index-bound be optional?
+        #
+
         left_index = self.index
         right_index = other.index
 

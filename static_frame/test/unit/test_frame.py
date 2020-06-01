@@ -8999,6 +8999,26 @@ class TestUnit(TestCase):
         f2.join_outer(f1, left_depth_level=0, right_depth_level=0)
 
 
+    def test_frame_join_d(self) -> None:
+        index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
+        index2 = IndexHierarchy.from_product(('A', 'B'), index1)
+
+        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
+        f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
+
+        # NOTE: for now, only join_left works as we have a hierarchical index on one and non-hierarchical on the other
+        f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
+
+        self.assertEqual(f3.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64'), np.dtype('<U1')]
+                )
+
+        self.assertEqual(
+                f3.to_pairs(0),
+                (('a', ((('A', datetime.date(2020, 5, 4)), 0), (('A', datetime.date(2020, 5, 5)), 1), (('A', datetime.date(2020, 5, 6)), 2), (('A', datetime.date(2020, 5, 7)), 3), (('A', datetime.date(2020, 5, 8)), 4), (('B', datetime.date(2020, 5, 4)), 5), (('B', datetime.date(2020, 5, 5)), 6), (('B', datetime.date(2020, 5, 6)), 7), (('B', datetime.date(2020, 5, 7)), 8), (('B', datetime.date(2020, 5, 8)), 9))), ('b', ((('A', datetime.date(2020, 5, 4)), 'p'), (('A', datetime.date(2020, 5, 5)), 'q'), (('A', datetime.date(2020, 5, 6)), 'r'), (('A', datetime.date(2020, 5, 7)), 's'), (('A', datetime.date(2020, 5, 8)), 't'), (('B', datetime.date(2020, 5, 4)), 'u'), (('B', datetime.date(2020, 5, 5)), 'v'), (('B', datetime.date(2020, 5, 6)), 'w'), (('B', datetime.date(2020, 5, 7)), 'x'), (('B', datetime.date(2020, 5, 8)), 'y'))), ('c', ((('A', datetime.date(2020, 5, 4)), 10), (('A', datetime.date(2020, 5, 5)), 11), (('A', datetime.date(2020, 5, 6)), 12), (('A', datetime.date(2020, 5, 7)), 13), (('A', datetime.date(2020, 5, 8)), 14), (('B', datetime.date(2020, 5, 4)), 10), (('B', datetime.date(2020, 5, 5)), 11), (('B', datetime.date(2020, 5, 6)), 12), (('B', datetime.date(2020, 5, 7)), 13), (('B', datetime.date(2020, 5, 8)), 14))), ('d', ((('A', datetime.date(2020, 5, 4)), 'f'), (('A', datetime.date(2020, 5, 5)), 'f'), (('A', datetime.date(2020, 5, 6)), 'f'), (('A', datetime.date(2020, 5, 7)), 'g'), (('A', datetime.date(2020, 5, 8)), 'g'), (('B', datetime.date(2020, 5, 4)), 'f'), (('B', datetime.date(2020, 5, 5)), 'f'), (('B', datetime.date(2020, 5, 6)), 'f'), (('B', datetime.date(2020, 5, 7)), 'g'), (('B', datetime.date(2020, 5, 8)), 'g'))))
+                )
+
+
 if __name__ == '__main__':
     unittest.main()
 
