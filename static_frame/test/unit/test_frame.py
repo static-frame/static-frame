@@ -9035,8 +9035,53 @@ class TestUnit(TestCase):
             f1.join_outer(f2, left_depth_level=1, right_depth_level=0, fill_value=None)
 
 
+    def test_frame_join_e(self) -> None:
+
+        # matching on hierarchical indices
+
+        index1 = IndexHierarchy.from_product(('A', 'B'), (1, 2, 3, 4, 5))
+        index2 = IndexHierarchy.from_labels((('B', 3), ('B', 5), ('A', 2)))
+        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')),
+                index=index1)
+        f2 = Frame.from_dict(dict(c=tuple(range(10, 13)), d=tuple('fgh')),
+                index=index2)
+
+        f3 = f1.join_left(f2,
+                left_depth_level=(0, 1),
+                right_depth_level=(0, 1),
+                fill_value=None)
+
+        self.assertEqual(f3.to_pairs(0),
+                (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
+                )
+
+        f4 = f1.join_left(f2,
+                left_depth_level=(0, 1),
+                right_depth_level=(0, 1),
+                fill_value=None)
+
+        self.assertEqual(f4.to_pairs(0),
+                (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
+                )
+
+        import ipdb; ipdb.set_trace()
 
 
+    def test_frame_join_f(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
+                index=tuple('abcde'))
+
+        f2 = Frame.from_dict(
+                dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
+                index=('q', 'p', 'r'))
+
+        # case of when a non-index value is joined on, where the right as repeated values; Pandas df1.merge(df2, how='left', left_on='b', right_on='c') will add rows for all unique combinations and drop the resulting index.
+
+        f1.join_left(f2, left_columns='b', right_columns='c')
+
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

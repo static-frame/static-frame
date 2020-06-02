@@ -4541,6 +4541,7 @@ class Frame(ContainerOperand):
                 columns: GetItemKeyType
                 ) -> tp.Iterator[np.ndarray]:
             if depth_level is not None:
+                # NOTE: a 1D index of tuples will be taken as a 1D array of tuples; there is no obvious way to treat this as 2D array without guessing that we are trying to match an IndexHierarchy
                 yield source.index.values_at_depth(depth_level)
             if columns is not None:
                 column_key = source.columns.loc_to_iloc(columns)
@@ -4553,6 +4554,7 @@ class Frame(ContainerOperand):
                 extract(other, right_depth_level, right_columns)).values
 
         if target_left.shape[1] != target_right.shape[1]:
+            import ipdb; ipdb.set_trace()
             raise RuntimeError('left and right selections must be the same width.')
 
         # NOTE: Pandas behavior is to make this AND, not OR
