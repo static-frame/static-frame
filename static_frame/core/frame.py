@@ -2,9 +2,11 @@ import typing as tp
 import sqlite3
 import csv
 import json
+
 from functools import partial
 from itertools import chain
 from itertools import repeat
+from itertools import product
 import operator as operator_mod
 
 import numpy as np
@@ -4529,9 +4531,9 @@ class Frame(ContainerOperand):
             ):
 
         # NOTE:
-        # consider adding removal of overlapping columns? this happens implicitly with index on index.
-        # should index-bound be optional?
-        #
+        # consider adding removal of overlapping columns? this happens implicitly with index on index in Pandas
+        # consider argument flag to disable "many" joins from proceeding
+
 
         left_index = self.index
         right_index = other.index
@@ -4554,14 +4556,13 @@ class Frame(ContainerOperand):
                 extract(other, right_depth_level, right_columns)).values
 
         if target_left.shape[1] != target_right.shape[1]:
-            import ipdb; ipdb.set_trace()
             raise RuntimeError('left and right selections must be the same width.')
 
-        # NOTE: Pandas behavior is to make this AND, not OR
-        index_bound = left_depth_level is not None or right_depth_level is not None
 
         # Find matching pairs. Get iloc of left to iloc of right
-        mapping = {}
+        is_many = False # one to many or many to many
+        map_iloc = {}
+        seen = set()
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
             matched = func(row_left, target_right)
@@ -4573,67 +4574,161 @@ class Frame(ContainerOperand):
 
             matched_idx = np.flatnonzero(matched)
             # this should be one to one; what if it is one to many?
-            mapping[idx_left] = matched_idx[0]
+            if not is_many:
+                if len(matched_idx) > 1:
+                    is_many = True
+                elif len(matched_idx) == 1:
+                    if matched_idx[0] in seen:
+                        is_many = True
+                    seen.add(matched_idx[0])
 
-        if index_bound:
-            if index_source is Join.INNER:
-                final_index = left_index.intersection(right_index)
-            elif index_source is Join.LEFT:
-                final_index = left_index
-            elif index_source is Join.RIGHT:
-                final_index = right_index
-            elif index_source is Join.OUTER:
-                final_index = left_index.union(right_index)
+            map_iloc[idx_left] = matched_idx
+
+        left_loc = []
+        left_loc_set = set()
+        # right_loc = []
+        right_loc_set = set()
+        many_loc = []
+        many_iloc = []
+
+        class Pair(tuple): pass
+        class PairLeft(Pair): pass
+        class PairRight(Pair): pass
+
+        PairElement = None # object()
+
+        for k, v in map_iloc.items():
+            left_loc_element = left_index[k]
+            left_loc.append(left_loc_element)
+            left_loc_set.add(left_loc_element)
+
+            # right at v is an array
+            right_loc_part = right_index[v] # iloc to loc
+            # right_loc.extend(right_loc_part)
+            right_loc_set.update(right_loc_part)
+
+            if is_many:
+                many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
+                many_iloc.extend(Pair(p) for p in product((k,), v))
+
+        if index_source is Join.INNER:
+            if is_many:
+                final_index = Index(many_loc)
             else:
-                raise NotImplementedError(f'index source must be one of {tuple(Join)}')
-        else:
-            left_loc = []
-            right_loc = []
-            for k, v in mapping.items():
-                left_loc.append(left_index[k])
-                right_loc.append(right_index[v])
-
-            if index_source is Join.INNER:
+                # just those matched from the left
                 final_index = Index(left_loc) # always unique
-            elif index_source is Join.LEFT:
-                final_index = left_index
-            elif index_source is Join.RIGHT:
-                # A right outer join returns all the values from the right table and matched values from the left
-                right_loc_found = set(right_loc)
-                # should control the order rather than use a set; maybe create an AutoMap?
-                labels = dict()
-                for label in chain(left_loc,
-                        (loc for loc in right_index if loc not in right_loc_found)):
-                    labels[label] = None
-                final_index = Index(labels.keys())
-            elif index_source is Join.OUTER:
-                right_loc_found = set(right_loc)
-                # should control the order rather than use a set; maybe create an AutoMap?
-                labels = dict()
-                for label in chain(left_index, # start with all of left
-                        (loc for loc in right_index if loc not in right_loc_found)):
-                    labels[label] = None
-                final_index = Index(labels.keys())
+
+        elif index_source is Join.LEFT:
+            if is_many:
+                extend = (PairLeft((x, PairElement))
+                        for x in left_index if x not in left_loc_set)
+                # What if we are extending an index that already has a tuple
+                final_index = Index(chain(many_loc, extend))
             else:
-                raise NotImplementedError(f'index source must be one of {tuple(Join)}')
+                final_index = left_index # add extend
 
-        final = FrameGO(index=final_index)
+        elif index_source is Join.RIGHT:
+            if is_many:
+                extend = (PairRight((PairElement, x))
+                        for x in right_index if x not in right_loc_set)
+                # must revese the many_loc so as to preserent right id first
+                #many_loc_reversed = ((y, x) for x, y in many_loc)
+                final_index = Index(chain(many_loc, extend))
+            else:
+                final_index = right_index # add extend?
+
+        elif index_source is Join.OUTER:
+            #NOTE: None is not an acceptable sentinal
+            extend_left = (PairLeft((x, PairElement))
+                    for x in left_index if x not in left_loc_set)
+            extend_right = (PairRight((PairElement, x))
+                    for x in right_index if x not in right_loc_set)
+
+            if is_many:
+                # must revese the many_loc so as to preserent right id first
+                final_index = Index(chain(many_loc, extend_left, extend_right))
+            else:
+                final_index = left_index.union(right_index)
+
+        else:
+            raise NotImplementedError(f'index source must be one of {tuple(Join)}')
+
+        if not is_many:
+            final = FrameGO(index=final_index)
+            left_columns = (left_template.format(c) for c in self.columns)
+            final.extend(self.relabel(columns=left_columns), fill_value=fill_value)
+            # build up a Series for each new column; probably best to one columns at at ime to avoid constructing by records
+            for idx_col, col in enumerate(other.columns):
+                values = []
+                for loc in final_index:
+                    # what if loc is in both left and rihgt?
+                    if loc in left_index and left_index.loc_to_iloc(loc) in map_iloc:
+                        iloc = map_iloc[left_index.loc_to_iloc(loc)]
+                        assert len(iloc) == 1 # not is_many, so all have to be length 1
+                        values.append(other.iloc[iloc[0], idx_col])
+                    elif loc in right_index:
+                        values.append(other.loc[loc, col])
+                    else:
+                        values.append(fill_value)
+
+                #TODO: evaluate dtype while iterating to create final array
+                final[right_template.format(col)] = values
+            return final.to_frame()
+
+        # From here, is_many is True
+        # import ipdb; ipdb.set_trace()
+        columns = [left_template.format(c) for c in self.columns]
+
+        row_key = []
+        final_index_left = []
+        for p in final_index:
+            if p.__class__ is Pair: # in both
+                iloc = left_index.loc_to_iloc(p[0])
+                row_key.append(iloc)
+                final_index_left.append(p)
+            elif p.__class__ is PairLeft:
+                row_key.append(left_index.loc_to_iloc(p[0]))
+                final_index_left.append(p)
+            elif p.__class__ is PairRight:
+                # only in right
+                pass
+
+        # extract potentially repeated rows
+        tb = self._blocks._extract(row_key=row_key)
         left_columns = (left_template.format(c) for c in self.columns)
-        final.extend(self.relabel(columns=left_columns), fill_value=fill_value)
+        final = FrameGO(tb,
+                index=Index(final_index_left),
+                columns=left_columns,
+                own_data=True)
 
-        # build up a Series for each new column; probably best to one columns at at ime to avoid constructing by records
+        # only do this if we have PairRight above
+        if len(final_index_left) < len(final_index):
+            final = final.reindex(final_index, fill_value=fill_value)
+
+        # populate fomr right columns
         for idx_col, col in enumerate(other.columns):
+            columns.append(right_template.format(col))
             values = []
-            for loc in final_index:
-                if loc in left_index and left_index.loc_to_iloc(loc) in mapping:
-                    values.append(other.iloc[mapping[left_index.loc_to_iloc(loc)], idx_col])
-                elif loc in right_index:
-                    values.append(other.loc[loc, col])
+            for pair in final_index:
+                if isinstance(pair, Pair):
+                    loc_left, loc_right = pair
+                    if pair.__class__ is PairRight:
+                        # get from right
+                        values.append(other.loc[loc_right, col])
+                    elif pair.__class__ is PairLeft:
+                        # get from left, but we do not have col, so fill value
+                        values.append(fill_value)
+                    else: # is this case needed?
+                        values.append(other.loc[loc_right, col])
                 else:
                     values.append(fill_value)
+
+            #TODO: evaluate dtype while iterating to avoid this call
             final[right_template.format(col)] = values
 
         return final.to_frame()
+
+
 
 
 
