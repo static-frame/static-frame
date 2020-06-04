@@ -6723,10 +6723,11 @@ class TestUnit(TestCase):
 
         a1 = np.array([[1,2,3], [4,5,6]])
 
-        f1 = sf.Frame.from_records(a1, index=('x', 'y'), columns=['a', 'b', 'c'])
+        f1 = sf.Frame.from_records(a1, index=('x', 'y'), columns=['a', 'b', 'c'], name='foo')
 
         self.assertEqual(f1.to_pairs(0),
                 (('a', (('x', 1), ('y', 4))), ('b', (('x', 2), ('y', 5))), ('c', (('x', 3), ('y', 6)))))
+        self.assertEqual(f1.name, 'foo')
 
 
     def test_frame_from_records_e(self) -> None:

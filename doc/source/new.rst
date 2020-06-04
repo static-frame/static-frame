@@ -10,6 +10,8 @@ Implemented ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and
 
 ``IndexHierarchy.from_labels`` enforces all labels to have the same depth.
 
+Fixed issue where, when passing an array to ``Frame.from_records``, the ``name`` parameter is not passed to the constructor.
+
 
 0.6.17
 ----------

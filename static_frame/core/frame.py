@@ -599,6 +599,7 @@ class Frame(ContainerOperand):
                     columns_constructor=columns_constructor,
                     own_index=own_index,
                     own_columns=own_columns,
+                    name=name,
                     )
 
         if not hasattr(records, '__len__'):
@@ -614,6 +615,7 @@ class Frame(ContainerOperand):
                         columns=columns,
                         columns_constructor=columns_constructor,
                         own_columns=own_columns,
+                        name=name,
                         )
             raise ErrorInitFrame('no rows available in records, and no columns defined.')
 
