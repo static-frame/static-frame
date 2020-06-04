@@ -9026,8 +9026,6 @@ class TestUnit(TestCase):
         # TODO: left not working due to datedate/ datetime64 mismatch, inner is working
         f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
 
-        import ipdb; ipdb.set_trace()
-
 
         self.assertEqual(f3.dtypes.values.tolist(),
                 [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64'), np.dtype('<U1')]
