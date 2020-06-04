@@ -20,6 +20,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import NAME_DEFAULT
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index import Index
@@ -478,7 +479,7 @@ class IndexHierarchy(IndexBase):
     def __init__(self,
             levels: tp.Union[IndexLevel, 'IndexHierarchy'],
             *,
-            name: NameType = None,
+            name: NameType = NAME_DEFAULT,
             blocks: tp.Optional[TypeBlocks] = None,
             own_blocks: bool = False,
             ):
@@ -498,7 +499,7 @@ class IndexHierarchy(IndexBase):
             if not levels._recache:
                 self._blocks = levels._blocks.copy()
             # transfer name if not given as arg
-            if name is None and levels.name is not None:
+            if name is NAME_DEFAULT:
                 name = levels.name
 
         elif isinstance(levels, IndexLevel):
@@ -517,7 +518,7 @@ class IndexHierarchy(IndexBase):
                     )
 
         self._recache = self._blocks is None
-        self._name = name if name is None else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name)
 
     #---------------------------------------------------------------------------
     # name interface

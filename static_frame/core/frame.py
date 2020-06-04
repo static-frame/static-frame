@@ -28,6 +28,8 @@ from static_frame.core.util import KeyOrKeys
 from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
+from static_frame.core.util import NameType
+from static_frame.core.util import NAME_DEFAULT
 
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import DtypeSpecifier
@@ -1935,7 +1937,7 @@ class Frame(ContainerOperand):
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            name: tp.Hashable = None,
+            name: NameType = NAME_DEFAULT,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             own_data: bool = False,
@@ -1943,8 +1945,6 @@ class Frame(ContainerOperand):
             own_columns: bool = False
             ) -> None:
         # doc string at class def
-
-        self._name = name if name is None else name_filter(name)
 
         # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
         columns_empty = index_constructor_empty(columns)
@@ -1983,6 +1983,8 @@ class Frame(ContainerOperand):
                 # cannot own, but can let constructors handle potential mutability
                 columns = data.columns
                 columns_empty = index_constructor_empty(columns)
+            if name is NAME_DEFAULT:
+                name = data.name
 
         elif isinstance(data, dict):
             raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
@@ -1994,6 +1996,8 @@ class Frame(ContainerOperand):
         # counts can be zero (not None) if _block was created but is empty
         row_count, col_count = (self._blocks._shape
                 if not blocks_constructor else (None, None))
+
+        self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         #-----------------------------------------------------------------------
         # columns assignment

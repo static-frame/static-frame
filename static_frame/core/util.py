@@ -232,6 +232,7 @@ FrameInitializer = tp.Union[
         ] # need to add FRAME_INITIALIZER_DEFAULT
 
 FILL_VALUE_DEFAULT = object()
+NAME_DEFAULT = object()
 
 
 DateInitializer = tp.Union[str, datetime.date, np.datetime64]

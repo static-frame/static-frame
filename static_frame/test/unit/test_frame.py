@@ -7021,6 +7021,26 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.relabel_flat()
 
+
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_rename_a(self) -> None:
+
+        records = (
+                (2, 'a', False),
+                (34, 'b', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x'),
+                name='foo')
+        self.assertEqual(f1.name, 'foo')
+
+        f2 = Frame(f1)
+        self.assertEqual(f2.name, 'foo')
+
+
     #---------------------------------------------------------------------------
 
 

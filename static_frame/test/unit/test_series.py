@@ -492,8 +492,18 @@ class TestUnit(TestCase):
                 ((0, '_b'), (1, '_b'), (2, '_b'))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_series_rename_a(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(s1.name, 'foo')
+        s2 = s1.rename(None)
+        self.assertEqual(s2.name, None)
 
-
+    def test_series_rename_b(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        self.assertEqual(s1.name, 'foo')
+        s2 = Series(s1)
+        self.assertEqual(s2.name, 'foo')
 
     #---------------------------------------------------------------------------
 

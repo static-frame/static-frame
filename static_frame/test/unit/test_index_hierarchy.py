@@ -765,6 +765,13 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_hierarchy_rename_a(self) -> None:
+        labels = (('a', 1), ('a', 2), ('b', 1), ('b', 2))
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        self.assertEqual(ih1.name, 'foo')
+        ih2 = ih1.rename(None)
+        self.assertEqual(ih2.name, None)
+
     def test_hierarchy_reversed(self) -> None:
         labels = (('a', 1), ('a', 2), ('b', 1), ('b', 2))
         hier_idx = IndexHierarchy.from_labels(labels)

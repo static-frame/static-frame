@@ -175,12 +175,21 @@ class TestUnit(TestCase):
         idx.append('e')
         self.assertEqual(idx.nbytes, 20)
 
+    #---------------------------------------------------------------------------
 
     def test_index_rename_a(self) -> None:
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')
         idx1.append('e')
         idx2 = idx1.rename('bar')
         self.assertEqual(idx2.name, 'bar')
+
+    def test_index_rename_b(self) -> None:
+        a = Index([1], name='foo')
+        self.assertEqual(a.name, 'foo')
+        b = a.rename(None)
+        self.assertEqual(b.name, None)
+
+    #---------------------------------------------------------------------------
 
     def test_index_positions_a(self) -> None:
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='foo')

@@ -17,6 +17,7 @@ from static_frame.core.util import SLICE_ATTRS
 from static_frame.core.util import SLICE_START_ATTR
 from static_frame.core.util import SLICE_STOP_ATTR
 from static_frame.core.util import SLICE_STEP_ATTR
+from static_frame.core.util import NAME_DEFAULT
 
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
@@ -402,7 +403,7 @@ class Index(IndexBase):
             labels: IndexInitializer,
             *,
             loc_is_iloc: bool = False,
-            name: NameType = None,
+            name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None
             ) -> None:
 
@@ -427,7 +428,7 @@ class Index(IndexBase):
         if isinstance(labels, IndexBase):
             if labels._recache:
                 labels._update_array_cache()
-            if name is None and labels.name is not None:
+            if name is NAME_DEFAULT:
                 name = labels.name # immutable, so no copy necessary
             if isinstance(labels, Index): # not an IndexHierarchy
                 if (labels.STATIC and self.STATIC and dtype is None):
@@ -461,7 +462,7 @@ class Index(IndexBase):
                 labels = labels.astype(dtype_extract)
                 labels.flags.writeable = False #type: ignore
 
-        self._name = name if name is None else name_filter(name)
+        self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:

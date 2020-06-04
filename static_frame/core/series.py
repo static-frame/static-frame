@@ -7,6 +7,8 @@ from numpy.ma import MaskedArray
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NameType
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
@@ -335,7 +337,7 @@ class Series(ContainerOperand):
             values: SeriesInitializer,
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType, None] = None,
-            name: tp.Optional[tp.Hashable] = None,
+            name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None,
             index_constructor: IndexConstructor = None,
             own_index: bool = False
@@ -343,14 +345,13 @@ class Series(ContainerOperand):
         '''
         Default constructor of :obj:`static_frame.Series`.
         '''
-        # doc string at class definition
-        self._name = name if name is None else name_filter(name)
 
         if own_index and index is None:
             raise ErrorInitSeries('cannot own_index if no index is provided.')
 
         #-----------------------------------------------------------------------
         # values assignment
+
         values_constructor = None # if deferred
 
         if not isinstance(values, np.ndarray):
@@ -364,6 +365,8 @@ class Series(ContainerOperand):
                     # set up for direct assignment below; index is always immutable
                     index = values.index
                     own_index = True
+                if name is NAME_DEFAULT:
+                    name = values.name # propagate Series.name
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
@@ -380,6 +383,8 @@ class Series(ContainerOperand):
                     self.values.flags.writeable = False
             else:
                 self.values = immutable_filter(values)
+
+        self._name = None if name is NAME_DEFAULT else name_filter(name)
 
         #-----------------------------------------------------------------------
         # index assignment
