@@ -623,6 +623,16 @@ class TestUnit(TestCase):
                     reorder_for_hierarchy=True,
                     continuation_token='')
 
+
+    def test_hierarchy_from_labels_i(self) -> None:
+        labels = (('I', 'A', 1),
+                ('I', 'A', 2),
+                ('I', 'B'),
+                ('II', 'B', 2),
+                )
+        with self.assertRaises(ErrorInitIndex):
+            ih1 = IndexHierarchy.from_labels(labels)
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_index_items_a(self) -> None:

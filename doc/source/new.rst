@@ -6,6 +6,10 @@ What is New in Static Frame
 
 Extended support for step arguments in ``loc`` interfaces.
 
+Implemented ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``.
+
+``IndexHierarchy.from_labels`` enforces all labels to have the same depth.
+
 
 0.6.17
 ----------

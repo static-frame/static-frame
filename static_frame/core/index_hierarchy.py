@@ -255,9 +255,9 @@ class IndexHierarchy(IndexBase):
         depth = len(first)
         # minimum permitted depth is 2
         if depth < 2:
-            raise ErrorInitIndex('cannot create an IndexHierarchy from only one level.')
+            raise ErrorInitIndex('Cannot create an IndexHierarchy from only one level.')
         if index_constructors and len(index_constructors) != depth:
-            raise ErrorInitIndex('if providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
+            raise ErrorInitIndex('If providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
 
         depth_max = depth - 1
         depth_pre_max = depth - 2
@@ -268,6 +268,9 @@ class IndexHierarchy(IndexBase):
         tree = dict() # order assumed and necessary
         # put first back in front
         for label in chain((first,), labels_iter):
+            if len(label) != depth:
+                raise ErrorInitIndex(f'Inconsistent label depth: expected {depth}, got {len(label)}')
+
             current = tree # NOTE: over the life of this loop, current can be a dict or a list
             # each label is an iterable
             for d, v in enumerate(label):
