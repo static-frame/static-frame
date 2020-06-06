@@ -1719,8 +1719,93 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 5))
 
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_insert_a(self) -> None:
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        blocks = (np.array([[50, 40], [30, 20]]),
+                np.array([[50, 40], [30, 20]]))
+        columns = ('a', 'b', 'c', 'd')
+        f2 = Frame(TypeBlocks.from_blocks(blocks), columns=columns, index=('y', 'z'))
+
+        f3 = f1._insert(2, f2, fill_value=None)
+
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('x', 1), ('y', 30))), ('q', (('x', 2), ('y', 50))), ('a', (('x', None), ('y', 50))), ('b', (('x', None), ('y', 40))), ('c', (('x', None), ('y', 50))), ('d', (('x', None), ('y', 40))), ('r', (('x', 'a'), ('y', 'b'))), ('s', (('x', False), ('y', True))), ('t', (('x', True), ('y', False))))
+                )
+
+    def test_frame_insert_b(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        with self.assertRaises(NotImplementedError):
+            f1._insert(0, 'a')
 
 
+    def test_frame_insert_c(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('y', 'x'), name='s')
+
+        f2 = f1._insert(0, s1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('s', (('x', -3), ('y', 200))), ('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False))))
+                )
+
+        f3 = f1._insert(-1, s1)
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('s', (('x', -3), ('y', 200))), ('r', (('x', True), ('y', False))))
+                )
+
+        f4 = f1._insert(3, s1) # same as appending
+        self.assertEqual(f4.to_pairs(0),
+                (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False))), ('s', (('x', -3), ('y', 200))))
+                )
+
+
+    def test_frame_insert_d(self) -> None:
+
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        index = IndexHierarchy.from_product((100, 200), (True, False))
+        f1 = Frame.from_records(records,
+                columns=columns,
+                index=index)
+
+        f2 = Frame(np.arange(8).reshape(4,2),
+                index=index,
+                columns=(('c', 1), ('c', 2))
+                )
+
+        f3 = f1._insert(2, f2)
+
+        self.assertEqual(f3.to_pairs(0),
+                ((('a', 1), (((100, True), 1), ((100, False), 30), ((200, True), 54), ((200, False), 65))), (('a', 2), (((100, True), 2), ((100, False), 34), ((200, True), 95), ((200, False), 73))), (('c', 1), (((100, True), 0), ((100, False), 2), ((200, True), 4), ((200, False), 6))), (('c', 2), (((100, True), 1), ((100, False), 3), ((200, True), 5), ((200, False), 7))), (('b', 1), (((100, True), 'a'), ((100, False), 'b'), ((200, True), 'c'), ((200, False), 'd'))), (('b', 2), (((100, True), False), ((100, False), True), ((200, True), False), ((200, False), True))))
+                )
+
+
+    #---------------------------------------------------------------------------
 
     def test_frame_extract_a(self) -> None:
         # reindex both axis

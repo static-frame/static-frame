@@ -3012,7 +3012,10 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @staticmethod
-    def _extract_axis_not_multi(row_key, column_key) -> tp.Tuple[bool, bool]:
+    def _extract_axis_not_multi(
+                row_key,
+                column_key,
+                ) -> tp.Tuple[bool, bool]:
         '''
         If either row or column is given with a non-multiple type of selection (a single scalar), reduce dimensionality.
         '''
@@ -3027,7 +3030,8 @@ class Frame(ContainerOperand):
 
     def _extract(self,
             row_key: GetItemKeyType = None,
-            column_key: GetItemKeyType = None) -> tp.Union['Frame', Series]:
+            column_key: GetItemKeyType = None,
+            ) -> tp.Union['Frame', Series]:
         '''
         Extract based on iloc selection (indices have already mapped)
         '''
@@ -4835,6 +4839,65 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+    def _insert(self,
+            column_key: int, # iloc positions
+            container: tp.Union['Frame', Series],
+            fill_value=np.nan,
+            ):
+        '''
+        Insert the container at the position determined by the column key; values existing at that key come after the inserted container.
+        '''
+        if not isinstance(container, (Series, Frame)):
+            raise NotImplementedError(
+                    f'no support for inserting with {type(container)}')
+
+        if not len(container.index): # must be empty data, empty index container
+            return
+
+        # self's index will never change; we only take what aligns in the passed container
+        if not self._index.equals(container._index):
+            container = container.reindex(self._index,
+                    fill_value=fill_value,
+                    check_equals=False,
+                    )
+
+        # NOTE: might introduce coercions in IndexHierarchy
+        labels_prior = self._columns.values
+
+        if isinstance(container, Frame):
+            labels_insert = container.columns.values
+            if not len(labels_insert):
+                return
+            blocks_insert = container._blocks._blocks
+
+        elif isinstance(container, Series):
+            labels_insert = (container.name,)
+            blocks_insert = (container.values,)
+
+
+        columns = self._columns.__class__.from_labels(chain(
+                labels_prior[:column_key],
+                labels_insert,
+                labels_prior[column_key:],
+                ))
+
+        blocks = TypeBlocks.from_blocks(chain(
+                self._blocks._slice_blocks(column_key=slice(0, column_key)),
+                blocks_insert,
+                self._blocks._slice_blocks(column_key=slice(column_key, None)),
+                ))
+
+        return self.__class__(blocks,
+                index=self._index,
+                columns=columns,
+                name=self._name,
+                own_data=True,
+                own_columns=True,
+                own_index=True,
+                )
+
+
+    #---------------------------------------------------------------------------
     # utility function to numpy array or other types
 
     @doc_inject()
@@ -5415,7 +5478,7 @@ class FrameGO(Frame):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, Series]],
             fill_value=np.nan):
         '''
-        Given an iterable of pairs of column name, column value, extend this FrameGO.
+        Given an iterable of pairs of column name, column value, extend this FrameGO. Columns values can be any iterable suitable for usage in __setitem__.
         '''
         for k, v in pairs:
             self.__setitem__(k, v, fill_value)
@@ -5456,7 +5519,6 @@ class FrameGO(Frame):
 
         # this should never happen, and is hard to test!
         assert len(self._columns) == self._blocks._shape[1] #pragma: no cover
-
 
     #---------------------------------------------------------------------------
 
