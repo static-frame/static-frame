@@ -8,6 +8,8 @@ Extended support for step arguments in ``loc`` interfaces.
 
 Implemented ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``.
 
+Implemented ``Frame.insert_before``, ``Frame.insert_after``.
+
 ``IndexHierarchy.from_labels`` enforces all labels to have the same depth.
 
 Fixed issue where, when passing an array to ``Frame.from_records``, the ``name`` parameter is not passed to the constructor.

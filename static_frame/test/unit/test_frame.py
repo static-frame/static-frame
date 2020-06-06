@@ -1815,7 +1815,13 @@ class TestUnit(TestCase):
 
         s1 = Series((200, -3), index=('y', 'x'), name='s')
 
-        import ipdb; ipdb.set_trace()
+        self.assertEqual(f1.insert_after('q', s1).to_pairs(0),
+                (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('s', (('x', -3), ('y', 200))), ('r', (('x', True), ('y', False))))
+                )
+
+        self.assertEqual(f1.insert_before('q', s1).to_pairs(0),
+                (('p', (('x', 'a'), ('y', 'b'))), ('s', (('x', -3), ('y', 200))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False))))
+                )
 
     #---------------------------------------------------------------------------
 

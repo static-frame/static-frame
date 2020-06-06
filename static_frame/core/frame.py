@@ -4883,9 +4883,9 @@ class Frame(ContainerOperand):
                 ))
 
         blocks = TypeBlocks.from_blocks(chain(
-                self._blocks._slice_blocks(key=slice(0, key)),
+                self._blocks._slice_blocks(column_key=slice(0, key)),
                 blocks_insert,
-                self._blocks._slice_blocks(key=slice(key, None)),
+                self._blocks._slice_blocks(column_key=slice(key, None)),
                 ))
 
         return self.__class__(blocks,
@@ -4905,8 +4905,10 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
 
-        key_iloc = self._columns.loc_to_iloc(key)
-        return self._insert(key_iloc, container, fill_value=fill_value)
+        iloc_key = self._columns.loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key}')
+        return self._insert(iloc_key, container, fill_value=fill_value)
 
     def insert_after(self,
             key: tp.Hashable, # iloc positions
@@ -4915,7 +4917,10 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
 
-        return self._insert(key_iloc, container, fill_value=fill_value)
+        iloc_key = self._columns.loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key}')
+        return self._insert(iloc_key + 1, container, fill_value=fill_value)
 
 
 
