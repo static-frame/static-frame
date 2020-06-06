@@ -1805,6 +1805,18 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_insert_e(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('y', 'x'), name='s')
+
+        import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
 
     def test_frame_extract_a(self) -> None:

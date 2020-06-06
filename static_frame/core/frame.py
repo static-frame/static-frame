@@ -4840,10 +4840,11 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _insert(self,
-            column_key: int, # iloc positions
+            key: int, # iloc positions
             container: tp.Union['Frame', Series],
-            fill_value=np.nan,
-            ):
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
         '''
         Insert the container at the position determined by the column key; values existing at that key come after the inserted container.
         '''
@@ -4852,7 +4853,7 @@ class Frame(ContainerOperand):
                     f'no support for inserting with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
-            return
+            return self.copy() # always return a new Frame?
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
@@ -4876,15 +4877,15 @@ class Frame(ContainerOperand):
 
 
         columns = self._columns.__class__.from_labels(chain(
-                labels_prior[:column_key],
+                labels_prior[:key],
                 labels_insert,
-                labels_prior[column_key:],
+                labels_prior[key:],
                 ))
 
         blocks = TypeBlocks.from_blocks(chain(
-                self._blocks._slice_blocks(column_key=slice(0, column_key)),
+                self._blocks._slice_blocks(key=slice(0, key)),
                 blocks_insert,
-                self._blocks._slice_blocks(column_key=slice(column_key, None)),
+                self._blocks._slice_blocks(key=slice(key, None)),
                 ))
 
         return self.__class__(blocks,
@@ -4895,6 +4896,28 @@ class Frame(ContainerOperand):
                 own_columns=True,
                 own_index=True,
                 )
+
+
+    def insert_before(self,
+            key: tp.Hashable,
+            container: tp.Union['Frame', Series],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+
+        key_iloc = self._columns.loc_to_iloc(key)
+        return self._insert(key_iloc, container, fill_value=fill_value)
+
+    def insert_after(self,
+            key: tp.Hashable, # iloc positions
+            container: tp.Union['Frame', Series],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Frame':
+
+        return self._insert(key_iloc, container, fill_value=fill_value)
+
+
 
 
     #---------------------------------------------------------------------------
