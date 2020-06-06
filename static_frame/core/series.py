@@ -1,5 +1,6 @@
 import typing as tp
 from functools import partial
+from itertools import chain
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -1869,7 +1870,7 @@ class Series(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    # transformations resulting in reduced dimensionality
+    # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Series')
     def head(self, count: int = 5) -> 'Series':
@@ -1961,6 +1962,67 @@ class Series(ContainerOperand):
             int
         '''
         return argmax_1d(self.values, skipna=skipna)
+
+    #---------------------------------------------------------------------------
+    def _insert(self,
+            key: int, # iloc positions
+            container: 'Series',
+            ) -> 'Series':
+        if not isinstance(container, Series):
+            raise NotImplementedError(
+                    f'No support for inserting with {type(container)}')
+
+        if not len(container.index): # must be empty data, empty index container
+            return self.copy() # always return a new Series
+
+        dtype = resolve_dtype(self.values.dtype, container.dtype)
+        values = np.empty(len(self) + len(container), dtype=dtype)
+        key_end = key + len(container)
+
+        values_prior = self.values
+
+        values[:key] = values_prior[:key]
+        values[key: key_end] = container.values
+        values[key_end:] = values_prior[key:]
+        values.flags.writeable = False
+
+        labels_prior = self._index.values
+
+        index = self._index.__class__.from_labels(chain(
+                labels_prior[:key],
+                container._index.__iter__(),
+                labels_prior[key:],
+                ))
+
+        return self.__class__(values,
+                index=index,
+                name=self._name,
+                own_index=True,
+                )
+
+
+    def insert_before(self,
+            key: tp.Hashable,
+            container: 'Series',
+            ) -> 'Series':
+
+        iloc_key = self._index.loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key}')
+        return self._insert(iloc_key, container)
+
+    def insert_after(self,
+            key: tp.Hashable, # iloc positions
+            container: 'Series',
+            ) -> 'Series':
+
+        iloc_key = self._index.loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key}')
+        return self._insert(iloc_key + 1, container)
+
+
+
 
 
     #---------------------------------------------------------------------------

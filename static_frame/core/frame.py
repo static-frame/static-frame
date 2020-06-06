@@ -4846,14 +4846,14 @@ class Frame(ContainerOperand):
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
         '''
-        Insert the container at the position determined by the column key; values existing at that key come after the inserted container.
+        Return a new Frame with the provided container inserted at the position determined by the column key; values existing at that key come after the inserted container.
         '''
         if not isinstance(container, (Series, Frame)):
             raise NotImplementedError(
-                    f'no support for inserting with {type(container)}')
+                    f'No support for inserting with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
-            return self.copy() # always return a new Frame?
+            return self.copy() # always return a new Frame
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
@@ -4866,15 +4866,14 @@ class Frame(ContainerOperand):
         labels_prior = self._columns.values
 
         if isinstance(container, Frame):
-            labels_insert = container.columns.values
-            if not len(labels_insert):
+            labels_insert = container.columns.__iter__()
+            if not len(container.columns):
                 return
             blocks_insert = container._blocks._blocks
 
         elif isinstance(container, Series):
             labels_insert = (container.name,)
             blocks_insert = (container.values,)
-
 
         columns = self._columns.__class__.from_labels(chain(
                 labels_prior[:key],
