@@ -4853,7 +4853,7 @@ class Frame(ContainerOperand):
                     f'No support for inserting with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
-            return self.copy() # always return a new Frame
+            return self if self.STATIC else self.copy() # always return a new Frame
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):

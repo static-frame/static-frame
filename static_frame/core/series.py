@@ -1973,7 +1973,7 @@ class Series(ContainerOperand):
                     f'No support for inserting with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
-            return self.copy() # always return a new Series
+            return self
 
         dtype = resolve_dtype(self.values.dtype, container.dtype)
         values = np.empty(len(self) + len(container), dtype=dtype)
