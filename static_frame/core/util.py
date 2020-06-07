@@ -239,6 +239,8 @@ DateInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearMonthInitializer = tp.Union[str, datetime.date, np.datetime64]
 YearInitializer = tp.Union[str, datetime.date, np.datetime64]
 
+#-------------------------------------------------------------------------------
+# join utils
 
 class Join(Enum):
     INNER = 0
@@ -246,7 +248,11 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
+class Pair(tuple): pass
 
+class PairLeft(Pair): pass
+
+class PairRight(Pair): pass
 
 #-------------------------------------------------------------------------------
 

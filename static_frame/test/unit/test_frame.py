@@ -9009,15 +9009,17 @@ class TestUnit(TestCase):
 
         # df1 = f1.to_pandas()
         # df2 = f2.to_pandas()
-        # import ipdb; ipdb.set_trace()
 
-        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0)
+        f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, composite_index=False)
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
                 )
 
-        f4 = f1.join_outer(f2, left_depth_level=0, right_depth_level=0).fillna(None)
+        f4 = f1.join_outer(f2,
+                left_depth_level=0,
+                right_depth_level=0,
+                composite_index=False).fillna(None)
 
         # NOTE: this indexes ordering after union is not stable, so do an explict selection before testing
         locs4 = [0, 1, 2, 'foo', 'x', 'y']
@@ -9027,13 +9029,19 @@ class TestUnit(TestCase):
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0), ('y', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'), ('y', None))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'), ('y', 'bar'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0), ('y', 20.0))))
                 )
 
-        f5 = f1.join_left(f2, left_depth_level=0, right_depth_level=0).fillna(None)
+        f5 = f1.join_left(f2,
+                left_depth_level=0,
+                right_depth_level=0,
+                composite_index=False).fillna(None)
 
         self.assertEqual(f5.to_pairs(0),
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
                 )
 
-        f6 = f1.join_right(f2, left_depth_level=0, right_depth_level=0).fillna(None)
+        f6 = f1.join_right(f2,
+                left_depth_level=0,
+                right_depth_level=0,
+                composite_index=False).fillna(None)
         self.assertEqual(f6.to_pairs(0),
                 (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
                 )
@@ -9112,6 +9120,15 @@ class TestUnit(TestCase):
         self.assertEqual(f6.fillna(None).to_pairs(0),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), 35))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), ((None, 13), 'Marketing'))))
                 )
+
+        with self.assertRaises(RuntimeError):
+            f1.join_right(f2,
+                    left_columns='DepartmentID',
+                    left_template='Employee.{}',
+                    right_columns='DepartmentID',
+                    right_template='Department.{}',
+                    composite_index=False,
+                    )
 
 
     def test_frame_join_c(self) -> None:
@@ -9192,7 +9209,9 @@ class TestUnit(TestCase):
         f3 = f1.join_left(f2,
                 left_depth_level=(0, 1),
                 right_depth_level=(0, 1),
-                fill_value=None)
+                fill_value=None,
+                composite_index=False,
+                )
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
@@ -9201,7 +9220,9 @@ class TestUnit(TestCase):
         f4 = f1.join_left(f2,
                 left_depth_level=(0, 1),
                 right_depth_level=(0, 1),
-                fill_value=None)
+                fill_value=None,
+                composite_index=False,
+                )
 
         self.assertEqual(f4.to_pairs(0),
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
@@ -9330,21 +9351,65 @@ class TestUnit(TestCase):
                 (('c', ()), ('d', ()), ('a', ()), ('b', ()))
                 )
 
-        f4 = f2.join_right(f1, left_depth_level=0, right_depth_level=0, fill_value=None)
+        f4 = f2.join_right(f1,
+                left_depth_level=0,
+                right_depth_level=0,
+                fill_value=None,
+                composite_index=False,
+                )
         self.assertEqual(f4.to_pairs(0),
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
                 )
 
-        f5 = f2.join_left(f1, left_depth_level=0, right_depth_level=0, fill_value=None)
+        f5 = f2.join_left(f1,
+                left_depth_level=0,
+                right_depth_level=0,
+                fill_value=None,
+                composite_index=False,
+                )
         self.assertEqual(f5.to_pairs(0),
                 (('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))), ('a', (('x', None), ('y', None))), ('b', (('x', None), ('y', None))))
                 )
 
-        f6 = f2.join_outer(f1, left_depth_level=0, right_depth_level=0, fill_value=None)
+        f6 = f2.join_outer(f1,
+                left_depth_level=0,
+                right_depth_level=0,
+                fill_value=None,
+                composite_index=False,
+                )
         f6 = f6.loc[[0, 1, 2, 3, 4, 'y', 'x']] # get stable ordering
         self.assertEqual(f6.to_pairs(0),
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 'bar'), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 20), ('x', 10))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20), ('y', None), ('x', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'), ('y', None), ('x', None))))
                 )
+
+    def test_frame_join_i(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(10,10,20,20), b=('x','x','y','z')),
+                index=('a', 'b', 'c', 'd'))
+        f2 = Frame.from_dict(
+                dict(c=('foo', 'bar'), d=(10, 20)),
+                index=('c', 'd'))
+
+        f3 = f1.join_left(f2, left_depth_level=0,
+                right_depth_level=0,
+                fill_value=None,
+                composite_index=False)
+
+        self.assertEqual(f3.to_pairs(0),
+                (('a', (('a', 10), ('b', 10), ('c', 20), ('d', 20))), ('b', (('a', 'x'), ('b', 'x'), ('c', 'y'), ('d', 'z'))), ('c', (('a', None), ('b', None), ('c', 'foo'), ('d', 'bar'))), ('d', (('a', None), ('b', None), ('c', 10), ('d', 20))))
+                )
+
+        f4 = f1.join_inner(f2, left_depth_level=0,
+                right_depth_level=0,
+                fill_value=None,
+                composite_index=False,
+                )
+        self.assertEqual( f4.to_pairs(0),
+                (('a', (('c', 20), ('d', 20))), ('b', (('c', 'y'), ('d', 'z'))), ('c', (('c', 'foo'), ('d', 'bar'))), ('d', (('c', 10), ('d', 20))))
+                )
+        # import ipdb; ipdb.set_trace()
+
 
 if __name__ == '__main__':
     unittest.main()

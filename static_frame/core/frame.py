@@ -78,6 +78,9 @@ from static_frame.core.util import is_hashable
 from static_frame.core.util import reversed_iter
 
 from static_frame.core.util import Join
+from static_frame.core.util import Pair
+from static_frame.core.util import PairLeft
+from static_frame.core.util import PairRight
 
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
@@ -4536,14 +4539,10 @@ class Frame(ContainerOperand):
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
+            composite_index: bool = True,
+            composite_index_fill_value: tp.Hashable = None,
             ):
-
-        # NOTE:
-        # consider adding removal of overlapping columns? this happens implicitly with index on index in Pandas
-        # consider argument flag to disable "many" joins from proceeding
-
 
         left_index = self.index
         right_index = other.index
@@ -4568,22 +4567,23 @@ class Frame(ContainerOperand):
         if target_left.shape[1] != target_right.shape[1]:
             raise RuntimeError('left and right selections must be the same width.')
 
+        # Find matching pairs. Get iloc of left to iloc of right.
+        # If composite_index is True, is_many is True, if False, need to check if it is possible to not havea composite index.
+        is_many = composite_index # one to many or many to many
 
-        # Find matching pairs. Get iloc of left to iloc of right
-        is_many = False # one to many or many to many
         map_iloc = {}
         seen = set()
+
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
-            matched = func(row_left, target_right)
+            matched = row_left == target_right
             if matched is False:
                 continue
             matched = matched.all(axis=1)
             if not matched.any():
                 continue
-
             matched_idx = np.flatnonzero(matched)
-            # this should be one to one; what if it is one to many?
+
             if not is_many:
                 if len(matched_idx) > 1:
                     is_many = True
@@ -4594,27 +4594,24 @@ class Frame(ContainerOperand):
 
             map_iloc[idx_left] = matched_idx
 
+        if not composite_index and is_many:
+            raise RuntimeError('A composite index is required in this join.')
+
+        # store collections of matches
         left_loc = []
         left_loc_set = set()
-        # right_loc = []
         right_loc_set = set()
         many_loc = []
         many_iloc = []
 
-        class Pair(tuple): pass
-        class PairLeft(Pair): pass
-        class PairRight(Pair): pass
-
-        PairElement = None # object()
+        cifv = composite_index_fill_value
 
         for k, v in map_iloc.items():
             left_loc_element = left_index[k]
             left_loc.append(left_loc_element)
             left_loc_set.add(left_loc_element)
-
             # right at v is an array
             right_loc_part = right_index[v] # iloc to loc
-            # right_loc.extend(right_loc_part)
             right_loc_set.update(right_loc_part)
 
             if is_many:
@@ -4624,42 +4621,33 @@ class Frame(ContainerOperand):
         if index_source is Join.INNER:
             if is_many:
                 final_index = Index(many_loc)
-            else:
-                # just those matched from the left
-                final_index = Index(left_loc) # always unique
-
+            else: # just those matched from the left, which are also on right
+                final_index = Index(left_loc)
         elif index_source is Join.LEFT:
             if is_many:
-                extend = (PairLeft((x, PairElement))
+                extend = (PairLeft((x, cifv))
                         for x in left_index if x not in left_loc_set)
                 # What if we are extending an index that already has a tuple
                 final_index = Index(chain(many_loc, extend))
             else:
-                final_index = left_index # add extend
-
+                final_index = left_index
         elif index_source is Join.RIGHT:
             if is_many:
-                extend = (PairRight((PairElement, x))
+                extend = (PairRight((cifv, x))
                         for x in right_index if x not in right_loc_set)
-                # must revese the many_loc so as to preserent right id first
-                #many_loc_reversed = ((y, x) for x, y in many_loc)
                 final_index = Index(chain(many_loc, extend))
             else:
-                final_index = right_index # add extend?
-
+                final_index = right_index
         elif index_source is Join.OUTER:
-            #NOTE: None is not an acceptable sentinal
-            extend_left = (PairLeft((x, PairElement))
+            extend_left = (PairLeft((x, cifv))
                     for x in left_index if x not in left_loc_set)
-            extend_right = (PairRight((PairElement, x))
+            extend_right = (PairRight((cifv, x))
                     for x in right_index if x not in right_loc_set)
-
             if is_many:
                 # must revese the many_loc so as to preserent right id first
                 final_index = Index(chain(many_loc, extend_left, extend_right))
             else:
                 final_index = left_index.union(right_index)
-
         else:
             raise NotImplementedError(f'index source must be one of {tuple(Join)}')
 
@@ -4667,7 +4655,7 @@ class Frame(ContainerOperand):
             final = FrameGO(index=final_index)
             left_columns = (left_template.format(c) for c in self.columns)
             final.extend(self.relabel(columns=left_columns), fill_value=fill_value)
-            # build up a Series for each new column; probably best to one columns at at ime to avoid constructing by records
+            # build up a Series for each new column
             for idx_col, col in enumerate(other.columns):
                 values = []
                 for loc in final_index:
@@ -4680,15 +4668,10 @@ class Frame(ContainerOperand):
                         values.append(other.loc[loc, col])
                     else:
                         values.append(fill_value)
-
-                #TODO: evaluate dtype while iterating to create final array
                 final[right_template.format(col)] = values
             return final.to_frame()
 
         # From here, is_many is True
-        # import ipdb; ipdb.set_trace()
-        columns = [left_template.format(c) for c in self.columns]
-
         row_key = []
         final_index_left = []
         for p in final_index:
@@ -4715,15 +4698,15 @@ class Frame(ContainerOperand):
         if len(final_index_left) < len(final_index):
             final = final.reindex(final_index, fill_value=fill_value)
 
-        # populate fomr right columns
+        # populate from right columns
         for idx_col, col in enumerate(other.columns):
-            columns.append(right_template.format(col))
+            # columns.append(right_template.format(col))
+
             values = []
             for pair in final_index:
                 if isinstance(pair, Pair):
                     loc_left, loc_right = pair
-                    if pair.__class__ is PairRight:
-                        # get from right
+                    if pair.__class__ is PairRight: # get from right
                         values.append(other.loc[loc_right, col])
                     elif pair.__class__ is PairLeft:
                         # get from left, but we do not have col, so fill value
@@ -4733,15 +4716,11 @@ class Frame(ContainerOperand):
                 else:
                     values.append(fill_value)
 
-            #TODO: evaluate dtype while iterating to avoid this call
             final[right_template.format(col)] = values
 
         return final.to_frame()
 
-
-
-
-
+    @doc_inject(selector='join')
     def join_inner(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
@@ -4751,9 +4730,27 @@ class Frame(ContainerOperand):
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
+            composite_index: bool = True,
+            composite_index_fill_value: tp.Hashable = None,
             ):
+        '''
+        Perform an inner join.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {composite_index}
+            {composite_index_fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         return self._join(other=other,
                 index_source=Join.INNER,
                 left_depth_level=left_depth_level,
@@ -4762,10 +4759,12 @@ class Frame(ContainerOperand):
                 right_columns=right_columns,
                 left_template=left_template,
                 right_template=right_template,
-                func=func,
                 fill_value=fill_value,
+                composite_index=composite_index,
+                composite_index_fill_value=composite_index_fill_value,
                 )
 
+    @doc_inject(selector='join')
     def join_left(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
@@ -4775,9 +4774,27 @@ class Frame(ContainerOperand):
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
+            composite_index: bool = True,
+            composite_index_fill_value: tp.Hashable = None,
             ):
+        '''
+        Perform a left outer join.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {composite_index}
+            {composite_index_fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         return self._join(other=other,
                 index_source=Join.LEFT,
                 left_depth_level=left_depth_level,
@@ -4786,10 +4803,12 @@ class Frame(ContainerOperand):
                 right_columns=right_columns,
                 left_template=left_template,
                 right_template=right_template,
-                func=func,
                 fill_value=fill_value,
+                composite_index=composite_index,
+                composite_index_fill_value=composite_index_fill_value,
                 )
 
+    @doc_inject(selector='join')
     def join_right(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
@@ -4799,9 +4818,27 @@ class Frame(ContainerOperand):
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
+            composite_index: bool = True,
+            composite_index_fill_value: tp.Hashable = None,
             ):
+        '''
+        Perform a right outer join.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {composite_index}
+            {composite_index_fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         return self._join(other=other,
                 index_source=Join.RIGHT,
                 left_depth_level=left_depth_level,
@@ -4810,10 +4847,12 @@ class Frame(ContainerOperand):
                 right_columns=right_columns,
                 left_template=left_template,
                 right_template=right_template,
-                func=func,
                 fill_value=fill_value,
+                composite_index=composite_index,
+                composite_index_fill_value=composite_index_fill_value,
                 )
 
+    @doc_inject(selector='join')
     def join_outer(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
@@ -4823,9 +4862,27 @@ class Frame(ContainerOperand):
             right_columns: GetItemKeyType = None,
             left_template: str = '{}',
             right_template: str = '{}',
-            func: UFunc = operator_mod.eq, # processor of 2D array, returns Boolean
             fill_value: tp.Any = np.nan,
+            composite_index: bool = True,
+            composite_index_fill_value: tp.Hashable = None,
             ):
+        '''
+        Perform an outer join.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {composite_index}
+            {composite_index_fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         return self._join(other=other,
                 index_source=Join.OUTER,
                 left_depth_level=left_depth_level,
@@ -4834,8 +4891,9 @@ class Frame(ContainerOperand):
                 right_columns=right_columns,
                 left_template=left_template,
                 right_template=right_template,
-                func=func,
                 fill_value=fill_value,
+                composite_index=composite_index,
+                composite_index_fill_value=composite_index_fill_value,
                 )
 
     #---------------------------------------------------------------------------

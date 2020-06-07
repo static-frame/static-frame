@@ -148,6 +148,17 @@ class DOC_TEMPLATE:
             container="container: Container to be inserted.",
             fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
             )
+    join = dict(
+            left_depth_level="left_depth_level: Specify one or more left index depths to include in the join predicate.",
+            left_columns="left_columns: Specify one or more left columns to include in the join predicate.",
+            right_depth_level="right_depth_level: Specify one or more right index depths to include in the join predicate.",
+            right_columns="right_columns: Specify one or more right columns to include in the join predicate.",
+            left_template="left_template: Provide a format string for naming left columns in the joined result.",
+            right_template="right_template: Provide a format string for naming right columns in the joined result.",
+            fill_value='fill_value: A value to be used to fill space created in the join.',
+            composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
+            composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.'
+            )
 
     reindex = dict(
             doc='''Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
