@@ -142,6 +142,12 @@ class DOC_TEMPLATE:
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
             skipna="skipna: If True, comparisons between missing valeus are equal.",
             )
+    insert = dict(
+            key_before="key: Label before which the new container will be inserted.",
+            key_after="key: Label after which the new container will be inserted.",
+            container="container: Container to be inserted.",
+            fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
+            )
 
     reindex = dict(
             doc='''Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.

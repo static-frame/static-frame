@@ -4896,26 +4896,47 @@ class Frame(ContainerOperand):
                 own_index=True,
                 )
 
-
+    @doc_inject(selector='insert')
     def insert_before(self,
             key: tp.Hashable,
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
+        '''
+        Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position before the label specified by ``key``.
 
+        Args:
+            {key_before}
+            {container}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         iloc_key = self._columns.loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key, container, fill_value=fill_value)
 
+    @doc_inject(selector='insert')
     def insert_after(self,
             key: tp.Hashable, # iloc positions
             container: tp.Union['Frame', Series],
             *,
             fill_value: tp.Any = np.nan,
             ) -> 'Frame':
+        '''
+        Create a new :obj:`Frame` by inserting a named :obj:`Series` or :obj:`Frame` at the position after the label specified by ``key``.
 
+        Args:
+            {key_after}
+            {container}
+            {fill_value}
+
+        Returns:
+            :obj:`Frame`
+        '''
         iloc_key = self._columns.loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')

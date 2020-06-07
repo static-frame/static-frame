@@ -2000,22 +2000,41 @@ class Series(ContainerOperand):
                 own_index=True,
                 )
 
-
+    @doc_inject(selector='insert')
     def insert_before(self,
             key: tp.Hashable,
             container: 'Series',
             ) -> 'Series':
+        '''
+        Create a new :obj:`Series` by inserting a :obj:`Series` at the position before the label specified by ``key``.
 
+        Args:
+            {key_before}
+            {container}
+
+        Returns:
+            :obj:`Series`
+        '''
         iloc_key = self._index.loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key, container)
 
+    @doc_inject(selector='insert')
     def insert_after(self,
             key: tp.Hashable, # iloc positions
             container: 'Series',
             ) -> 'Series':
+        '''
+        Create a new :obj:`Series` by inserting a :obj:`Series` at the position after the label specified by ``key``.
 
+        Args:
+            {key_after}
+            {container}
+
+        Returns:
+            :obj:`Series`
+        '''
         iloc_key = self._index.loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
