@@ -7,7 +7,6 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 from itertools import product
-import operator as operator_mod
 
 import numpy as np
 

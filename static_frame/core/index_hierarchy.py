@@ -523,7 +523,7 @@ class IndexHierarchy(IndexBase):
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: IH, name: tp.Hashable) -> IH:
+    def rename(self: IH, name: NameType) -> IH:
         '''
         Return a new Frame with an updated name attribute.
         '''

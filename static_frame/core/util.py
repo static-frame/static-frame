@@ -248,11 +248,14 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
-class Pair(tuple): pass
+class Pair(tuple): #type: ignore
+    pass
 
-class PairLeft(Pair): pass
+class PairLeft(Pair):
+    pass
 
-class PairRight(Pair): pass
+class PairRight(Pair):
+    pass
 
 #-------------------------------------------------------------------------------
 
@@ -292,7 +295,7 @@ def immutable_filter(src_array: np.ndarray) -> np.ndarray:
         return dst_array
     return src_array # keep it as is
 
-def name_filter(name: tp.Hashable) -> tp.Hashable:
+def name_filter(name: NameType) -> NameType:
     '''
     For name attributes on containers, only permit recursively hashable objects.
     '''

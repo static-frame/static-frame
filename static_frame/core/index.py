@@ -502,7 +502,7 @@ class Index(IndexBase):
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: I, name: tp.Hashable) -> I:
+    def rename(self: I, name: NameType) -> I:
         '''
         Return a new Frame with an updated name attribute.
         '''

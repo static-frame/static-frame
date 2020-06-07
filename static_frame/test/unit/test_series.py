@@ -3441,6 +3441,21 @@ class TestUnit(TestCase):
                 (('a', 1), ('b', None), ('c', 5), ('d', 1.0), ('e', 3.4), ('f', 5.0))
                 )
 
+    def test_series_insert_b(self) -> None:
+
+        s1 = Series((1, None, 5), index=('a', 'b', 'c'))
+        s2 = Series((1, 3.4, 5), index=('d', 'e', 'f'))
+
+        s3 = s1.insert_before('c', s2)
+        self.assertEqual(s3.to_pairs(),
+                (('a', 1), ('b', None), ('d', 1.0), ('e', 3.4), ('f', 5.0), ('c', 5))
+                )
+
+        s4 = s1.insert_after('c', s2)
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1), ('b', None), ('c', 5), ('d', 1.0), ('e', 3.4), ('f', 5.0))
+                )
+
 
 
 if __name__ == '__main__':

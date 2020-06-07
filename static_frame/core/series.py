@@ -10,6 +10,7 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NameType
+from static_frame.core.util import INT_TYPES
 
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import resolve_dtype
@@ -456,7 +457,7 @@ class Series(ContainerOperand):
         '''{}'''
         return self._name
 
-    def rename(self, name: tp.Hashable) -> 'Series':
+    def rename(self, name: NameType) -> 'Series':
         '''
         Return a new Series with an updated name attribute.
         '''
