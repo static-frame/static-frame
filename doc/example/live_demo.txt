@@ -9,16 +9,21 @@ df1
 
 df2 = df1.rename(lambda x: x.upper())
 
-pd.concat((df1, df1), axis=1, ignore_index=False)
+df3 = pd.concat((df1, df1), axis=1, ignore_index=False)
 
 
 a1 = df1.values
 a1.flags.writeable = False
 
 f1 = sf.Frame(a1, columns=tuple('abcdefghij'))
+f1
 
 f2 = f1.relabel(columns=lambda x: x.upper())
+f2
 
 f3 = sf.Frame.from_concat((f1, f2), axis=1)
+f3.shape
+
+f3
 
 
