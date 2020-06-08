@@ -42,7 +42,6 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
