@@ -27,7 +27,6 @@ a1.flags.writeable = False
 
 f1 = sf.Frame(a1, columns=columns)
 f1.shape
-f1.nbytes
 
 f2 = f1.relabel(columns=lambda x: x.upper())
 f2.columns
@@ -35,7 +34,6 @@ f2.columns
 f3 = sf.Frame.from_concat((f1, f2), axis=1)
 f3.columns.values
 f3.shape
-f3.nbytes
 
 
 
