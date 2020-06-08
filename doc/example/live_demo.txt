@@ -1,0 +1,24 @@
+
+
+# term size is 100 x 42
+{.env-sf}{} % prlimit --as=850000000 python3 -m static_frame
+
+
+df1 = pd.DataFrame(np.arange(10_000_000).reshape(1_000_000, 10), columns=tuple('abcdefghij'))
+df1
+
+df2 = df1.rename(lambda x: x.upper())
+
+pd.concat((df1, df1), axis=1, ignore_index=False)
+
+
+a1 = df1.values
+a1.flags.writeable = False
+
+f1 = sf.Frame(a1, columns=tuple('abcdefghij'))
+
+f2 = f1.relabel(columns=lambda x: x.upper())
+
+f3 = sf.Frame.from_concat((f1, f2), axis=1)
+
+
