@@ -1,18 +1,26 @@
 
 
-# term size is 100 x 42
-{.env-sf}{} % prlimit --as=850000000 python3 -m static_frame
+# term size is 110 x 42
+
+prlimit --as=850000000 python3 -m static_frame
 
 
-df1 = pd.DataFrame(np.arange(10_000_000).reshape(1_000_000, 10), columns=tuple('abcdefghij'))
-df1
 
-df2 = df1.rename(lambda x: x.upper())
+
+termtosvg --template window_frame_js --command "prlimit --as=850000000 python3 -m static_frame"
+termtosvg --template window_frame_js --command "prlimit --as=850000000 python3 -m static_frame"
+
+
+a1 = np.arange(10_000_000).reshape(1_000_000, 10)
+
+df1 = pd.DataFrame(a1, columns=tuple('abcdefghij'))
+df1.shape
+
+df2 = df1.rename(columns=lambda x: x.upper())
 
 df3 = pd.concat((df1, df1), axis=1, ignore_index=False)
 
 
-a1 = df1.values
 a1.flags.writeable = False
 
 f1 = sf.Frame(a1, columns=tuple('abcdefghij'))
