@@ -8,30 +8,31 @@
 #-------------------------------------------------------------------------------
 # live_concat.svg
 
-termtosvg --template window_frame --command "prlimit --as=850000000 python3 -m static_frame"
+termtosvg --template window_frame -g 100x42 -M 150 --command "prlimit --as=850000000 python3 -m static_frame"
 
 
 a1 = np.arange(10_000_000).reshape(1_000_000, 10)
 
-df1 = pd.DataFrame(a1, columns=tuple('abcdefghij'))
+columns = tuple('abcdefghij')
+
+df1 = pd.DataFrame(a1, columns=columns)
 df1.shape
 
-df2 = df1.rename(columns=lambda x: x.upper())
+df1.rename(columns=lambda x: x.upper())
 
-df3 = pd.concat((df1, df1), axis=1, ignore_index=False)
+pd.concat((df1, df1), axis=1, ignore_index=True)
 
 
 a1.flags.writeable = False
 
-f1 = sf.Frame(a1, columns=tuple('abcdefghij'))
-f1
+f1 = sf.Frame(a1, columns=columns)
+f1.shape
 
 f2 = f1.relabel(columns=lambda x: x.upper())
-f2
+f2.columns
 
 f3 = sf.Frame.from_concat((f1, f2), axis=1)
 f3.shape
-
-f3
+f3.columns
 
 
