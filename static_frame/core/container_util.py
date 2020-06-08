@@ -35,6 +35,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DepthLevelSpecifier
 
 from static_frame.core.index_base import IndexBase
 
@@ -673,3 +674,20 @@ def apply_binary_operator(*,
 
     result.flags.writeable = False
     return result
+
+
+def arrays_from_index_frame(
+        container: 'Frame',
+        depth_level: tp.Optional[DepthLevelSpecifier],
+        columns: GetItemKeyType
+        ) -> tp.Iterator[np.ndarray]:
+    '''
+    Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
+    '''
+    if depth_level is not None:
+        # NOTE: a 1D index of tuples will be taken as a 1D array of tuples; there is no obvious way to treat this as 2D array without guessing that we are trying to match an IndexHierarchy
+        # NOTE: if a multi-column selection, might be better to yield one depth at a time
+        yield container.index.values_at_depth(depth_level)
+    if columns is not None:
+        column_key = container.columns.loc_to_iloc(columns)
+        yield from container._blocks._slice_blocks(column_key=column_key)

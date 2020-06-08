@@ -948,6 +948,7 @@ class IndexHierarchy(IndexBase):
         if isinstance(key, INT_TYPES):
             # return a tuple if selecting a single row
             # NOTE: if extracting a single row, should be able to get it from IndexLevel without forcing a complete recache
+            # NOTE: Selecting a single row may force type coercion before values are added to the tuple; i.e., a datetime64 will go to datetime.date before going to the tuple
             return tuple(self._blocks._extract_array(row_key=key))
 
         index_constructors = tuple(self._levels.index_types())
@@ -1069,12 +1070,8 @@ class IndexHierarchy(IndexBase):
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''Iterate over labels.
         '''
+        # NOTE: by iterating from levels, we avoid type casting to a row
         yield from self._levels.__iter__()
-
-        # if self._recache:
-        #     self._update_array_cache()
-        # for array in self._blocks.axis_values(1):
-        #     yield tuple(array)
 
     def __reversed__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
         '''

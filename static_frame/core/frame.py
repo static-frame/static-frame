@@ -103,6 +103,7 @@ from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import pandas_to_numpy
+from static_frame.core.container_util import arrays_from_index_frame
 
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeType
@@ -142,7 +143,6 @@ from static_frame.core.assign import Assign
 
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-
 
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import AxisInvalid
@@ -4546,22 +4546,14 @@ class Frame(ContainerOperand):
         left_index = self.index
         right_index = other.index
 
-        def extract(source: 'Frame',
-                depth_level: tp.Optional[DepthLevelSpecifier],
-                columns: GetItemKeyType
-                ) -> tp.Iterator[np.ndarray]:
-            if depth_level is not None:
-                # NOTE: a 1D index of tuples will be taken as a 1D array of tuples; there is no obvious way to treat this as 2D array without guessing that we are trying to match an IndexHierarchy
-                yield source.index.values_at_depth(depth_level)
-            if columns is not None:
-                column_key = source.columns.loc_to_iloc(columns)
-                yield from source._blocks._slice_blocks(column_key=column_key)
+        #-----------------------------------------------------------------------
+        # find matches
 
         # for now we reduce the targets to arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
         target_left = TypeBlocks.from_blocks(
-                extract(self, left_depth_level, left_columns)).values
+                arrays_from_index_frame(self, left_depth_level, left_columns)).values
         target_right = TypeBlocks.from_blocks(
-                extract(other, right_depth_level, right_columns)).values
+                arrays_from_index_frame(other, right_depth_level, right_columns)).values
 
         if target_left.shape[1] != target_right.shape[1]:
             raise RuntimeError('left and right selections must be the same width.')
@@ -4573,6 +4565,7 @@ class Frame(ContainerOperand):
         map_iloc = {}
         seen = set()
 
+        # NOTE: this could be optimized by always iterating over the shorter target
         for idx_left, row_left in enumerate(target_left):
             # Get 1D vector showing matches along right's full heigh
             matched = row_left == target_right
@@ -4596,8 +4589,9 @@ class Frame(ContainerOperand):
         if not composite_index and is_many:
             raise RuntimeError('A composite index is required in this join.')
 
-        # store collections of matches
-        left_loc = []
+        #-----------------------------------------------------------------------
+        # store collections of matches, derive final index
+
         left_loc_set = set()
         right_loc_set = set()
         many_loc = []
@@ -4605,9 +4599,10 @@ class Frame(ContainerOperand):
 
         cifv = composite_index_fill_value
 
-        for k, v in map_iloc.items():
-            left_loc_element = left_index[k]
-            left_loc.append(left_loc_element)
+        # NOTE: doing selection and using iteration (from set, and with zip, below) reduces chances for type coercion in IndexHierarchy
+        left_loc = left_index[list(map_iloc.keys())]
+
+        for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
             left_loc_set.add(left_loc_element)
             # right at v is an array
             right_loc_part = right_index[v] # iloc to loc
@@ -4650,6 +4645,9 @@ class Frame(ContainerOperand):
         else:
             raise NotImplementedError(f'index source must be one of {tuple(Join)}')
 
+        #-----------------------------------------------------------------------
+        # construct final frame
+
         if not is_many:
             final = FrameGO(index=final_index)
             left_columns = (left_template.format(c) for c in self.columns)
@@ -4681,13 +4679,11 @@ class Frame(ContainerOperand):
             elif p.__class__ is PairLeft:
                 row_key.append(left_index.loc_to_iloc(p[0]))
                 final_index_left.append(p)
-            elif p.__class__ is PairRight:
-                # only in right
-                pass
 
         # extract potentially repeated rows
         tb = self._blocks._extract(row_key=row_key)
         left_columns = (left_template.format(c) for c in self.columns)
+
         final = FrameGO(tb,
                 index=Index(final_index_left),
                 columns=left_columns,
@@ -4699,8 +4695,6 @@ class Frame(ContainerOperand):
 
         # populate from right columns
         for idx_col, col in enumerate(other.columns):
-            # columns.append(right_template.format(col))
-
             values = []
             for pair in final_index:
                 if isinstance(pair, Pair):
@@ -4714,10 +4708,9 @@ class Frame(ContainerOperand):
                         values.append(other.loc[loc_right, col])
                 else:
                     values.append(fill_value)
-
             final[right_template.format(col)] = values
-
         return final.to_frame()
+
 
     @doc_inject(selector='join')
     def join_inner(self,

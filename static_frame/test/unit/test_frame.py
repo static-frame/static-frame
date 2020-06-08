@@ -9154,8 +9154,6 @@ class TestUnit(TestCase):
         self.assertTrue(f6.equals(f3, compare_dtype=True))
 
 
-
-    @unittest.skip('not yet')
     @skip_win #type: ignore
     def test_frame_join_d(self) -> None:
         index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
@@ -9167,32 +9165,20 @@ class TestUnit(TestCase):
         # TODO: left not working due to datedate/ datetime64 mismatch, inner is working
         f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
 
-
         self.assertEqual(f3.dtypes.values.tolist(),
                 [np.dtype('int64'), np.dtype('<U1'), np.dtype('int64'), np.dtype('<U1')]
                 )
+        self.assertEqual(f3.shape, (10, 4))
 
         self.assertEqual(
                 f3.to_pairs(0),
-                (('a', ((('A', datetime.date(2020, 5, 4)), 0), (('A', datetime.date(2020, 5, 5)), 1), (('A', datetime.date(2020, 5, 6)), 2), (('A', datetime.date(2020, 5, 7)), 3), (('A', datetime.date(2020, 5, 8)), 4), (('B', datetime.date(2020, 5, 4)), 5), (('B', datetime.date(2020, 5, 5)), 6), (('B', datetime.date(2020, 5, 6)), 7), (('B', datetime.date(2020, 5, 7)), 8), (('B', datetime.date(2020, 5, 8)), 9))), ('b', ((('A', datetime.date(2020, 5, 4)), 'p'), (('A', datetime.date(2020, 5, 5)), 'q'), (('A', datetime.date(2020, 5, 6)), 'r'), (('A', datetime.date(2020, 5, 7)), 's'), (('A', datetime.date(2020, 5, 8)), 't'), (('B', datetime.date(2020, 5, 4)), 'u'), (('B', datetime.date(2020, 5, 5)), 'v'), (('B', datetime.date(2020, 5, 6)), 'w'), (('B', datetime.date(2020, 5, 7)), 'x'), (('B', datetime.date(2020, 5, 8)), 'y'))), ('c', ((('A', datetime.date(2020, 5, 4)), 10), (('A', datetime.date(2020, 5, 5)), 11), (('A', datetime.date(2020, 5, 6)), 12), (('A', datetime.date(2020, 5, 7)), 13), (('A', datetime.date(2020, 5, 8)), 14), (('B', datetime.date(2020, 5, 4)), 10), (('B', datetime.date(2020, 5, 5)), 11), (('B', datetime.date(2020, 5, 6)), 12), (('B', datetime.date(2020, 5, 7)), 13), (('B', datetime.date(2020, 5, 8)), 14))), ('d', ((('A', datetime.date(2020, 5, 4)), 'f'), (('A', datetime.date(2020, 5, 5)), 'f'), (('A', datetime.date(2020, 5, 6)), 'f'), (('A', datetime.date(2020, 5, 7)), 'g'), (('A', datetime.date(2020, 5, 8)), 'g'), (('B', datetime.date(2020, 5, 4)), 'f'), (('B', datetime.date(2020, 5, 5)), 'f'), (('B', datetime.date(2020, 5, 6)), 'f'), (('B', datetime.date(2020, 5, 7)), 'g'), (('B', datetime.date(2020, 5, 8)), 'g'))))
+                (('a', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 0), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 1), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 2), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 3), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 4), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 5), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 6), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 7), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 8), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 9))), ('b', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'p'), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'q'), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'r'), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 's'), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 't'), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'u'), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'v'), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'w'), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'x'), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'y'))), ('c', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 10), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 11), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 12), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 13), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 14), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 10), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 11), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 12), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 13), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 14))), ('d', (((('A', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'f'), ((('A', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'f'), ((('A', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'f'), ((('A', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'g'), ((('A', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'g'), ((('B', np.datetime64('2020-05-04')), np.datetime64('2020-05-04')), 'f'), ((('B', np.datetime64('2020-05-05')), np.datetime64('2020-05-05')), 'f'), ((('B', np.datetime64('2020-05-06')), np.datetime64('2020-05-06')), 'f'), ((('B', np.datetime64('2020-05-07')), np.datetime64('2020-05-07')), 'g'), ((('B', np.datetime64('2020-05-08')), np.datetime64('2020-05-08')), 'g'))))
                 )
 
-        # inner join returns now rows as there is now alignment on the index.
-        self.assertEqual(
-                f1.join_inner(f2, left_depth_level=1, right_depth_level=0).shape,
-                (0, 4))
-
-        # right join just returns the index from the right, with filled columns from f1
-        f4 = f1.join_right(f2, left_depth_level=1, right_depth_level=0, fill_value=None)
-
-        self.assertEqual(
-                f4.to_pairs(0),
-                (('a', ((np.datetime64('2020-05-04'), None), (np.datetime64('2020-05-05'), None), (np.datetime64('2020-05-06'), None), (np.datetime64('2020-05-07'), None), (np.datetime64('2020-05-08'), None))), ('b', ((np.datetime64('2020-05-04'), None), (np.datetime64('2020-05-05'), None), (np.datetime64('2020-05-06'), None), (np.datetime64('2020-05-07'), None), (np.datetime64('2020-05-08'), None))), ('c', ((np.datetime64('2020-05-04'), 10), (np.datetime64('2020-05-05'), 11), (np.datetime64('2020-05-06'), 12), (np.datetime64('2020-05-07'), 13), (np.datetime64('2020-05-08'), 14))), ('d', ((np.datetime64('2020-05-04'), 'f'), (np.datetime64('2020-05-05'), 'f'), (np.datetime64('2020-05-06'), 'f'), (np.datetime64('2020-05-07'), 'g'), (np.datetime64('2020-05-08'), 'g'))))
-                )
-
-        # this fails correctly as we cannot combine a 1D index with a 2D index
-        with self.assertRaises(ErrorInitIndex):
-            f1.join_outer(f2, left_depth_level=1, right_depth_level=0, fill_value=None)
+        # inner join is equivalent to left, right, outer
+        self.assertTrue(f1.join_inner(f2, left_depth_level=1, right_depth_level=0).equals(f3))
+        self.assertTrue(f1.join_right(f2, left_depth_level=1, right_depth_level=0).equals(f3))
+        self.assertTrue(f1.join_outer(f2, left_depth_level=1, right_depth_level=0).equals(f3))
 
 
     def test_frame_join_e(self) -> None:
