@@ -2,12 +2,12 @@
 
 # term size is 110 x 42
 
-prlimit --as=850000000 python3 -m static_frame
 
 
 
+#-------------------------------------------------------------------------------
+# live_concat.svg
 
-termtosvg --template window_frame_js --command "prlimit --as=850000000 python3 -m static_frame"
 termtosvg --template window_frame_js --command "prlimit --as=850000000 python3 -m static_frame"
 
 
