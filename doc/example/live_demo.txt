@@ -8,7 +8,7 @@
 #-------------------------------------------------------------------------------
 # live_concat.svg
 
-termtosvg --template window_frame -g 100x42 -M 150 --command "prlimit --as=850000000 python3 -m static_frame"
+termtosvg --template window_frame -g 100x26 -M 150 --command "prlimit --as=850000000 python3 -m static_frame"
 
 
 a1 = np.arange(10_000_000).reshape(1_000_000, 10)
