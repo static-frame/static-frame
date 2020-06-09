@@ -15,7 +15,7 @@ PAUSE_LONG = object()
 PAUSE_FINAL = object()
 
 class Comment:
-    def __init__(self, message, color='grey'):
+    def __init__(self, message, color=0xaaaaaa):
         self.message = message
         self.color = color
 
@@ -25,7 +25,7 @@ class Comment:
 def relabel_concat_low_memory() -> tp.Iterator[str]:
     # return lines of code to execute
 
-    yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with `prlimit`. Lets start by importing numpy, pandas, and static_frame")
+    yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with `prlimit`. Let us start by importing numpy, pandas, and static_frame")
     yield PAUSE_SHORT
 
     yield 'import numpy as np'
@@ -94,8 +94,8 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
 class Runner:
 
     PREFIX = HexColor.format_terminal('lightgrey', '>>> ')
-    CHAR_INTERVAL = 0.04 #0.07
-    CHAR_JITTER = [x * .01 for x in range(6)]
+    CHAR_INTERVAL = 0.05 #0.07
+    CHAR_JITTER = [x * .01 for x in range(5)]
 
     @classmethod
     def print_char(cls, char):
