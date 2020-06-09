@@ -15,6 +15,7 @@ a1 = np.arange(10_000_000).reshape(1_000_000, 10)
 
 columns = tuple('abcdefghij')
 
+
 df1 = pd.DataFrame(a1, columns=columns)
 df1.shape
 
