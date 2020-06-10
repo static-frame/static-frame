@@ -336,26 +336,30 @@ class TestUnit(TestCase):
     def test_series_binary_operator_a(self) -> None:
         '''Test binary operators where one operand is a numeric.
         '''
-        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
 
         self.assertEqual(list((s1 * 3).items()),
                 [('a', 0), ('b', 3), ('c', 6), ('d', 9)])
+        self.assertEqual((s1 * 3).name, 'foo')
 
         self.assertEqual(list((s1 / .5).items()),
                 [('a', 0.0), ('b', 2.0), ('c', 4.0), ('d', 6.0)])
 
         self.assertEqual(list((s1 ** 3).items()),
                 [('a', 0), ('b', 1), ('c', 8), ('d', 27)])
+        self.assertEqual((s1 ** 3).name, 'foo')
 
 
     def test_series_binary_operator_b(self) -> None:
         '''Test binary operators with Series of same index
         '''
-        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-        s2 = Series((x * 2 for x in range(4)), index=('a', 'b', 'c', 'd'))
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        s2 = Series((x * 2 for x in range(4)), index=('a', 'b', 'c', 'd'), name='bar')
 
         self.assertEqual(list((s1 + s2).items()),
                 [('a', 0), ('b', 3), ('c', 6), ('d', 9)])
+
+        self.assertEqual((s1 + s2).name, None)
 
         self.assertEqual(list((s1 * s2).items()),
                 [('a', 0), ('b', 2), ('c', 8), ('d', 18)])
@@ -391,7 +395,7 @@ class TestUnit(TestCase):
 
     def test_series_binary_operator_e(self) -> None:
 
-        s1 = Series((False, True, False, True), index=list('abcd'))
+        s1 = Series((False, True, False, True), index=list('abcd'), name='foo')
         s2 = Series([True] * 3, index=list('abc'))
 
         self.assertEqual((s1 == -1).to_pairs(),
@@ -402,6 +406,7 @@ class TestUnit(TestCase):
 
         self.assertEqual((s1 == True).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', True)))
+        self.assertEqual((s1 == True).name, 'foo')
 
         # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
 
@@ -424,8 +429,6 @@ class TestUnit(TestCase):
                 index=['100312', '101376', '101092', '100828', '100185'])
         post = r == c
 
-        # import ipdb; ipdb.set_trace()
-
         self.assertEqual(set(post.to_pairs()),
                 set(((0, False), (1, False), (2, False), (3, False), (4, False), ('101376', False), ('101092', False), ('100828', False), ('100312', False), ('100185', False)))
                 )
@@ -438,7 +441,6 @@ class TestUnit(TestCase):
                 (s1 - 1).to_pairs(),
                 (('a', -1), ('b', 0), ('c', 1), ('d', 2))
                 )
-
 
         self.assertEqual((1 - s1).to_pairs(),
                 (('a', 1), ('b', 0), ('c', -1), ('d', -2))
@@ -472,9 +474,10 @@ class TestUnit(TestCase):
 
     def test_series_binary_operator_k(self) -> None:
 
-
-        s3 = sf.Series.from_element('b', index=range(3))
+        s3 = sf.Series.from_element('b', index=range(3), name='foo')
         s4 = 3 * s3
+
+        self.assertEqual(s4.name, 'foo')
 
         self.assertEqual(s4.to_pairs(),
                 ((0, 'bbb'), (1, 'bbb'), (2, 'bbb')))
@@ -491,6 +494,13 @@ class TestUnit(TestCase):
         self.assertEqual(('_' + s3).to_pairs(),
                 ((0, '_b'), (1, '_b'), (2, '_b'))
                 )
+
+    def test_series_binary_operator_l(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
+        s2 = s1 * np.arange(10, 14)
+        self.assertEqual(s2.to_pairs(),
+                (('a', 0), ('b', 11), ('c', 24), ('d', 39)))
+        self.assertEqual(s2.name, None)
 
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:

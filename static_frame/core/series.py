@@ -1074,7 +1074,7 @@ class Series(ContainerOperand):
             other: tp.Any,
             ) -> 'Series':
         '''
-        For binary operations, the `name` attribute does not propagate.
+        For binary operations, the `name` attribute does not propagate unless other is a scalar.
         '''
         # get both reverse and regular
         if operator.__name__ == 'matmul':
@@ -1087,6 +1087,7 @@ class Series(ContainerOperand):
         other_is_array = False
 
         if isinstance(other, Series):
+            name = None
             other_is_array = True
             if not self._index.equals(other._index):
                 # if not equal, create a new Index by forming the union
@@ -1096,12 +1097,13 @@ class Series(ContainerOperand):
                 other = other.reindex(index, own_index=True, check_equals=False).values
             else:
                 other = other.values
-
-        # if its an np array, we simply fall back on np behavior
         elif isinstance(other, np.ndarray):
+            name = None
             other_is_array = True
             if other.ndim > 1:
                 raise NotImplementedError('Operator application to greater dimensionalities will result in an array with more than 1 dimension.')
+        else:
+            name = self._name
 
         result = apply_binary_operator(
                 values=values,
@@ -1109,7 +1111,7 @@ class Series(ContainerOperand):
                 other_is_array=other_is_array,
                 operator=operator,
                 )
-        return self.__class__(result, index=index)
+        return self.__class__(result, index=index, name=name)
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
