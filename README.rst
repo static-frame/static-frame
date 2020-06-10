@@ -50,9 +50,9 @@ Packages: https://pypi.org/project/static-frame
 Why Immutable Data?
 -------------------------------
 
-The following example, executed in a low-memory environment (using ``prlimit --as=850000000``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame without copying underlying data, which in this restrictive environment causes a ``MemoryError``. By using immutable NumPy arrays, StaticFrame can reuse arrays without copying, permitting more efficient memory usage.
+The following example, executed in a low-memory environment (using ``prlimit``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame to itself without copying underlying data. By using immutable NumPy arrays, StaticFrame can perform these operations in the same low-memory environment. By reuseing immutable arrays without copying, StaticFrame can achieve more efficient memory usage.
 
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/live-concat.svg
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-concat.svg
    :align: center
 
 

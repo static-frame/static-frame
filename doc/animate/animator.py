@@ -25,7 +25,7 @@ class Comment:
 def relabel_concat_low_memory() -> tp.Iterator[str]:
     # return lines of code to execute
 
-    yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with `prlimit`. Let us start by importing numpy, pandas, and static_frame")
+    yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with prlimit. Let us start by importing numpy, pandas, and static_frame")
     yield PAUSE_SHORT
 
     yield 'import numpy as np'
@@ -40,7 +40,7 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
     yield "columns = tuple('abcdefghij')"
     yield PAUSE_SHORT
 
-    yield Comment('# We can create a Pandas DataFrame with that array.')
+    yield Comment('# Next, we create a Pandas DataFrame using that array.')
     yield PAUSE_SHORT
 
 
@@ -74,7 +74,7 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
     yield PAUSE_SHORT
 
 
-    yield Comment('# As StaticFrame is built on immutable arrays, we can relabel the Frame without a MemoryError as underlying data does not need to be copied.')
+    yield Comment('# As StaticFrame is built on immutable arrays, we can relabel the Frame without a MemoryError, as underlying data does not need to be copied.')
     yield PAUSE_SHORT
 
     yield 'f2 = f1.relabel(columns=lambda x: x.upper())'
@@ -83,7 +83,7 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
     yield PAUSE_LONG
 
 
-    yield Comment('# Similarly, while Pandas runs out of memory, StaticFrame can successfully concatenate the Frame without copying the underlying data.')
+    yield Comment('# Similarly, while Pandas runs out of memory, StaticFrame can successfully concatenate the Frame.')
     yield PAUSE_SHORT
 
     yield 'f3 = sf.Frame.from_concat((f1, f2), axis=1)'
@@ -94,8 +94,8 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
 class Runner:
 
     PREFIX = HexColor.format_terminal('lightgrey', '>>> ')
-    CHAR_INTERVAL = 0.05 #0.07
-    CHAR_JITTER = [x * .01 for x in range(5)]
+    CHAR_INTERVAL = 0.04 #0.07
+    CHAR_JITTER = [x * .01 for x in range(6)] + [0.08, .12]
 
     @classmethod
     def print_char(cls, char):

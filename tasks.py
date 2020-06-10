@@ -21,6 +21,7 @@ def clean(context):
     context.run('rm -rf .ipynb_checkpoints')
 
 
+
 @invoke.task()
 def doc(context):
     '''Build docs
