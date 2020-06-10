@@ -10,19 +10,25 @@ from static_frame.core.display_color import HexColor
 
 #termtosvg --template window_frame -g 90x20 --command "prlimit --as=800000000 python3 doc/animate/animator.py" /tmp/term.svg
 
-PAUSE_SHORT = object()
-PAUSE_LONG = object()
-PAUSE_FINAL = object()
+class Line:
+    pass
 
-class Comment:
-    def __init__(self, message, color=0xaaaaaa):
+PAUSE_SHORT = Line()
+PAUSE_LONG = Line()
+PAUSE_FINAL = Line()
+
+class Comment(Line):
+    def __init__(self, message: str, color: int = 0xaaaaaa) -> None:
         self.message = message
         self.color = color
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterator[str]:
         return HexColor.format_terminal(self.color, self.message).__iter__()
 
-def relabel_concat_low_memory() -> tp.Iterator[str]:
+LineIter = tp.Iterator[tp.Union[Line, str]]
+
+
+def relabel_concat_low_memory() -> LineIter:
     # return lines of code to execute
 
     yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with prlimit. Let us start by importing numpy, pandas, and static_frame")
@@ -91,6 +97,7 @@ def relabel_concat_low_memory() -> tp.Iterator[str]:
     yield 'f3.shape'
     yield PAUSE_LONG
 
+#------------------------------------------------------------------------\------
 class Runner:
 
     PREFIX = HexColor.format_terminal('lightgrey', '>>> ')
@@ -98,13 +105,13 @@ class Runner:
     CHAR_JITTER = [x * .01 for x in range(6)] + [0.08, .12]
 
     @classmethod
-    def print_char(cls, char):
+    def print_char(cls, char: str) -> None:
         print(char, end='')
         sys.stdout.flush()
         time.sleep(cls.CHAR_INTERVAL + random.choice(cls.CHAR_JITTER))
 
     @classmethod
-    def pause(cls, interval):
+    def pause(cls, interval: float) -> None:
         print(cls.PREFIX, end='')
         sys.stdout.flush()
         time.sleep(interval)
@@ -113,7 +120,7 @@ class Runner:
 
 
     @classmethod
-    def main(cls, func):
+    def main(cls, func: tp.Callable[[], LineIter]) -> None:
 
         for line in func():
             if line is PAUSE_SHORT:
@@ -125,6 +132,8 @@ class Runner:
             if line is PAUSE_FINAL:
                 cls.pause(5)
                 continue
+
+            assert isinstance(line, (Comment, str))
 
             print(cls.PREFIX, end='')
             for char in line:
