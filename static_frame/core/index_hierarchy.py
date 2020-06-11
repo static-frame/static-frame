@@ -4,8 +4,6 @@ from ast import literal_eval
 
 import numpy as np
 
-from static_frame.core.container import ContainerOperand
-
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -80,7 +78,7 @@ class IndexHierarchy(IndexBase):
             '_name',
             )
     _levels: IndexLevel
-    _blocks: TypeBlocks
+    _blocks: TypeBlocks # should be tp.Optional[TypeBlocks] but many typing changes required
     _recache: bool
     _name: NameType
 
@@ -92,6 +90,7 @@ class IndexHierarchy(IndexBase):
 
     _INDEX_CONSTRUCTOR = Index
     _LEVEL_CONSTRUCTOR = IndexLevel
+
     _UFUNC_UNION = union2d
     _UFUNC_INTERSECTION = intersect2d
     _UFUNC_DIFFERENCE = setdiff2d
@@ -200,7 +199,7 @@ class IndexHierarchy(IndexBase):
                     index_constructors=index_constructors,
                     name=name,
                     )
-            return index
+            return index #type: ignore
 
         labels_iter = iter(labels)
         try:
@@ -224,7 +223,7 @@ class IndexHierarchy(IndexBase):
         token = object()
         observed_last = [token for _ in range(depth)]
 
-        tree = dict() # order assumed and necessary
+        tree: tp.Any = dict() # order assumed and necessary
         # put first back in front
         for label in chain((first,), labels_iter):
             if len(label) != depth:
@@ -288,7 +287,7 @@ class IndexHierarchy(IndexBase):
         offset = 0
         for label, index in items:
             labels.append(label)
-            index = mutable_immutable_index_filter(cls.STATIC, index)
+            index = mutable_immutable_index_filter(cls.STATIC, index) #type: ignore
             index_levels.append(cls._LEVEL_CONSTRUCTOR(
                     index,
                     offset=offset,
@@ -302,7 +301,7 @@ class IndexHierarchy(IndexBase):
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=index_constructor)
         levels = cls._LEVEL_CONSTRUCTOR(
-                index=index_outer,
+                index=index_outer, #type: ignore
                 targets=targets,
                 own_index=True
                 )
@@ -385,7 +384,7 @@ class IndexHierarchy(IndexBase):
         observed_last = [token for _ in range(depth)]
         # range_depth = range(depth)
 
-        tree = dict() # order assumed and necessary
+        tree: tp.Any = dict() # order assumed and necessary
 
         idx_row_last = -1
         for (idx_row, d), v in blocks.element_items():
@@ -427,7 +426,7 @@ class IndexHierarchy(IndexBase):
         if index_constructors is not None:
             # If defined, we may have changed columnar dtypes in IndexLevels, and cannot reuse blocks
             if tuple(blocks.dtypes) != tuple(levels.dtype_per_depth()):
-                blocks = None
+                blocks = None #type: ignore
                 own_blocks = False
 
         return cls(levels=levels, name=name, blocks=blocks, own_blocks=own_blocks)
@@ -447,7 +446,7 @@ class IndexHierarchy(IndexBase):
             labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
         '''
 
-        self._blocks = None
+        self._blocks = None #type: ignore
 
         if isinstance(levels, IndexHierarchy):
             if not blocks is None:
@@ -493,12 +492,12 @@ class IndexHierarchy(IndexBase):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_loc)
+    def loc(self) -> InterfaceGetItem['IndexHierarchy']:
+        return InterfaceGetItem(self._extract_loc) #type: ignore
 
     @property
-    def iloc(self) -> InterfaceGetItem:
-        return InterfaceGetItem(self._extract_iloc)
+    def iloc(self) -> InterfaceGetItem['IndexHierarchy']:
+        return InterfaceGetItem(self._extract_iloc) #type: ignore
 
 
     def _iter_label(self,
@@ -1295,7 +1294,9 @@ class IndexHierarchy(IndexBase):
                 index = levels.index.__class__(labels)
                 if not targets:
                     return index
-                levels = levels.__class__(index=index, targets=targets)
+                levels = levels.__class__(
+                        index=index,
+                        targets=ArrayGO(targets, own_iterable=True))
 
             # if we have TypeBlocks and levels is the same length
             if not self._recache and levels.__len__() == self.__len__():

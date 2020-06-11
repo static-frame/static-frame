@@ -1694,7 +1694,6 @@ def setdiff1d(
 def union2d(
         array: np.ndarray,
         other: np.ndarray,
-        *,
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
@@ -1708,7 +1707,6 @@ def union2d(
 def intersect2d(
         array: np.ndarray,
         other: np.ndarray,
-        *,
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
@@ -1722,7 +1720,6 @@ def intersect2d(
 def setdiff2d(
         array: np.ndarray,
         other: np.ndarray,
-        *,
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
@@ -1736,7 +1733,6 @@ def setdiff2d(
 def ufunc_set_iter(
         arrays: tp.Iterable[np.ndarray],
         union: bool = False,
-        *,
         assume_unique: bool=False
         ) -> np.ndarray:
     '''
@@ -1754,7 +1750,7 @@ def ufunc_set_iter(
         ufunc = union1d if union else intersect1d
         ndim = 1
     else: # ndim == 2
-        ufunc = union2d if union else intersect2d #type: ignore
+        ufunc = union2d if union else intersect2d
         ndim = 2
 
     for array in arrays:

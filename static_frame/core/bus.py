@@ -45,7 +45,6 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.container import ContainerBase
 
-from static_frame.core.node_selector import TContainer
 
 
 #-------------------------------------------------------------------------------
