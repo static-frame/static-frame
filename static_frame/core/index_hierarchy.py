@@ -145,55 +145,6 @@ class IndexHierarchy(IndexBase):
         level = cls._LEVEL_CONSTRUCTOR(index=index_up, targets=targets_previous)
         return cls(level, name=name)
 
-    # # NOTE: this should be a constructor on IndexLevel
-    # @classmethod
-    # def _tree_to_index_level(cls,
-    #         tree,
-    #         index_constructors: tp.Optional[IndexConstructors] = None
-    #         ) -> IndexLevel:
-    #     '''
-    #     Convert a tree structure to an IndexLevel instance.
-    #     '''
-    #     # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
-
-    #     def get_index(labels, depth: int):
-    #         if index_constructors is not None:
-    #             explicit_constructor = index_constructors[depth]
-    #         else:
-    #             explicit_constructor = None
-
-    #         return index_from_optional_constructor(labels,
-    #                 default_constructor=cls._INDEX_CONSTRUCTOR,
-    #                 explicit_constructor=explicit_constructor)
-
-    #     def get_level(level_data, offset=0, depth=0):
-
-    #         if isinstance(level_data, dict):
-    #             level_labels = []
-    #             targets = np.empty(len(level_data), dtype=object)
-    #             offset_local = 0
-
-    #             # ordered key, value pairs, where the key is the label, the value is a list or dictionary; enmerate for insertion pre-allocated object array
-    #             for idx, (k, v) in enumerate(level_data.items()):
-    #                 level_labels.append(k)
-    #                 level = get_level(v, offset=offset_local, depth=depth + 1)
-    #                 targets[idx] = level
-    #                 offset_local += len(level) # for lower level offsetting
-
-    #             index = get_index(level_labels, depth=depth)
-    #             targets = ArrayGO(targets, own_iterable=True)
-
-    #         else: # an iterable, terminal node, no offsets needed
-    #             index = get_index(level_data, depth=depth)
-    #             targets = None
-
-    #         return cls._LEVEL_CONSTRUCTOR(
-    #                 index=index,
-    #                 offset=offset,
-    #                 targets=targets,
-    #                 )
-    #     return get_level(tree)
-
     @classmethod
     def from_tree(cls: tp.Type[IH],
             tree,
