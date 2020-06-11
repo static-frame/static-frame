@@ -935,8 +935,12 @@ def iterable_to_array_nd(
     Attempt to determiine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
     '''
     if hasattr(values, '__iter__') and not isinstance(values, str):
+
         values = iter(values)
-        first = next(values)
+        try:
+            first = next(values)
+        except StopIteration:
+            return EMPTY_ARRAY
 
         if hasattr(first, '__iter__') and not isinstance(first, str):
             return iterable_to_array_2d(chain((first,), values))

@@ -182,6 +182,17 @@ class TestUnit(TestCase):
         self.assertTrue(isinstance(post, np.ndarray))
 
 
+    @given(get_labels())
+    def test_iterable_to_array_nd(self, labels: tp.Iterable[tp.Any]) -> None:
+        post = util.iterable_to_array_nd(labels)
+        self.assertAlmostEqualValues(post, labels)
+        self.assertTrue(isinstance(post, np.ndarray))
+
+        if len(labels):
+            sample = post[0]
+            post = util.iterable_to_array_nd(sample)
+            self.assertTrue(isinstance(post, np.ndarray))
+
     @given(st.slices(10))  #pylint: disable=E1120
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
