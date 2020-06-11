@@ -1864,6 +1864,9 @@ class TypeBlocks(ContainerOperand):
             other: tp.Iterable[tp.Any]
             ) -> 'TypeBlocks':
 
+        self_operands: tp.Iterable[np.ndarray]
+        other_operands: tp.Iterable[np.ndarray]
+
         if operator.__name__ == 'matmul' or operator.__name__ == 'rmatmul':
             # this could be implemented but would force block consolidation
             raise NotImplementedError('matrix multiplication not supported')
@@ -1878,11 +1881,11 @@ class TypeBlocks(ContainerOperand):
             elif self._shape == other._shape:
                 # if the result of reblock does not result in compatible shapes, we have to use .values as operands; the dtypes can be different so we only have to check that they columns sizes, the second element of the signature, all match.
                 if not self.reblock_compatible(other):
-                    self_operands = (self.values,) #type: ignore
-                    other_operands = (other.values,) #type: ignore
+                    self_operands = (self.values,)
+                    other_operands = (other.values,)
                 else:
-                    self_operands = self._reblock() #type: ignore
-                    other_operands = other._reblock() #type: ignore
+                    self_operands = self._reblock()
+                    other_operands = other._reblock()
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else:
@@ -1894,12 +1897,12 @@ class TypeBlocks(ContainerOperand):
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
-                other_operands = (other for _ in range(len(self._blocks))) #type: ignore
+                other_operands = (other for _ in range(len(self._blocks)))
             elif other.ndim == 1 and len(other) == self._shape[1]:
                 apply_column_2d_filter = False
                 # if given a 1d array, we apply it to the rows
                 # one dimensional array of same size: chop to block width
-                other_operands = (other[s] for s in self._block_shape_slices()) #type: ignore
+                other_operands = (other[s] for s in self._block_shape_slices())
             elif other.ndim == 2 and other.shape == self._shape:
                 apply_column_2d_filter = True
                 other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices())

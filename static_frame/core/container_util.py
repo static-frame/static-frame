@@ -679,8 +679,8 @@ def apply_binary_operator(*,
 
 
 def apply_binary_operator_blocks(*,
-        values: tp.Iterator[np.ndarray],
-        other: tp.Iterator[np.ndarray],
+        values: tp.Iterable[np.ndarray],
+        other: tp.Iterable[np.ndarray],
         operator: UFunc,
         apply_column_2d_filter: bool,
     ) -> tp.Iterator[np.ndarray]:
