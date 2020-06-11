@@ -188,7 +188,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(post, labels)
         self.assertTrue(isinstance(post, np.ndarray))
 
-        if len(labels):
+        if len(labels): #type: ignore
             sample = post[0]
             post = util.iterable_to_array_nd(sample)
             self.assertTrue(isinstance(post, np.ndarray))
