@@ -50,7 +50,6 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
 
 from static_frame.core.util import isin
