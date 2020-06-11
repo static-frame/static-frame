@@ -30,6 +30,7 @@ from static_frame.core.util import _read_url
 from static_frame.core.util import _ufunc_set_2d
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import iterable_to_array_nd
 
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import array_shift
@@ -1791,6 +1792,32 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             # looks like a 2d array enough to get past type sampling
             post = iterable_to_array_2d(['asd', 'wer'])
+
+
+    #---------------------------------------------------------------------------
+
+    def test_iterable_to_array_nd_a(self) -> None:
+        n1 = iterable_to_array_nd('foo')
+        self.assertEqual(n1.dtype, np.dtype('<U3'))
+        self.assertEqual(n1.ndim, 0)
+
+
+        n2 = iterable_to_array_nd(['0', 2, 3])
+        self.assertEqual(n2.tolist(), ['0', 2, 3])
+
+        n3 = iterable_to_array_nd(range(4))
+        self.assertEqual(n3.tolist(), [0, 1, 2, 3])
+
+        n4 = iterable_to_array_nd((x**2 for x in (3, 4, 5)))
+        self.assertEqual(n4.tolist(), [9, 16, 25])
+
+        n5 = iterable_to_array_nd([(4, 5), (3, 2), (0, 0)])
+        self.assertEqual(n5.ndim, 2)
+        self.assertEqual(n5.tolist(),
+                [[4, 5], [3, 2], [0, 0]])
+
+        self.assertEqual(len(iterable_to_array_nd(())), 0)
+
 
     #---------------------------------------------------------------------------
     def test_argmin_1d_a(self) -> None:
