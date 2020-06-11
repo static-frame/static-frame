@@ -3,6 +3,7 @@ This module us for utilty functions that take as input and / or return Container
 '''
 
 from collections import defaultdict
+from itertools import zip_longest
 
 import numpy as np
 from numpy import char as npc
@@ -30,6 +31,7 @@ from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import UFunc
+from static_frame.core.util import column_2d_filter
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
@@ -674,6 +676,29 @@ def apply_binary_operator(*,
 
     result.flags.writeable = False
     return result
+
+
+def apply_binary_operator_blocks(*,
+        values: tp.Iterator[np.ndarray],
+        other: tp.Iterator[np.ndarray],
+        operator: UFunc,
+        apply_column_2d_filter: bool,
+    ) -> tp.Iterator[np.ndarray]:
+    '''
+    Application from iterators of arrays, to iterators of arrays.
+    '''
+
+    if apply_column_2d_filter:
+        values = (column_2d_filter(op) for op in values)
+        other = (column_2d_filter(op) for op in other)
+
+    for a, b in zip_longest(values, other):
+        yield apply_binary_operator(
+                values=a,
+                other=b,
+                other_is_array=True,
+                operator=operator,
+                )
 
 
 def arrays_from_index_frame(

@@ -899,7 +899,6 @@ def iterable_to_array_1d(
     return v, is_unique
 
 
-
 def iterable_to_array_2d(
         values: tp.Iterable[tp.Iterable[tp.Any]],
         ) -> np.ndarray:
@@ -928,6 +927,24 @@ def iterable_to_array_2d(
 
     array.flags.writeable = False
     return array
+
+def iterable_to_array_nd(
+        values: tp.Any,
+        ) -> np.ndarray:
+    '''
+    Attempt to determiine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
+    '''
+    if hasattr(values, '__iter__') and not isinstance(values, str):
+        values = iter(values)
+        first = next(values)
+
+        if hasattr(first, '__iter__') and not isinstance(first, str):
+            return iterable_to_array_2d(chain((first,), values))
+
+        array, _ = iterable_to_array_1d(chain((first,), values))
+        return array
+    # its an element
+    return np.array(values)
 
 #-------------------------------------------------------------------------------
 

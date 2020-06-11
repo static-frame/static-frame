@@ -3474,7 +3474,42 @@ class TestUnit(TestCase):
                 [np.dtype('<U3'), np.dtype('<U3'), np.dtype('<U9')])
 
 
+    def test_frame_binary_operator_k(self) -> None:
 
+        # handling of name attr
+
+        f1 = Frame.from_dict(dict(a=(1, 2, 3), b=(5, 6, 7)),
+                index=tuple('xyz'),
+                name='foo')
+
+        f2 = f1 * [[3, 5], [0, 0], [1, 1]]
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 3), ('y', 0), ('z', 3))), ('b', (('x', 25), ('y', 0), ('z', 7)))))
+        self.assertEqual(f2.name, None)
+
+        f3 = f1 * 20
+        self.assertEqual(f3.name, 'foo')
+
+
+    def test_frame_binary_operator_l(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1, '2', 3), b=(5, '6', 7)),
+                index=tuple('xyz'),
+                name='foo')
+
+        # test comparison to a single string
+        self.assertEqual((f1 == '2').to_pairs(0),
+                (('a', (('x', False), ('y', True), ('z', False))), ('b', (('x', False), ('y', False), ('z', False))))
+                )
+
+        # should be all true of we do our array conversion right
+        f2 = f1 == f1.values.tolist()
+        self.assertTrue(f2.all().all())
+
+
+    #---------------------------------------------------------------------------
     def test_frame_isin_a(self) -> None:
         # reindex both axis
         records = (

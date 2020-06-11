@@ -42,11 +42,15 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import shape_filter
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import iterable_to_array_nd
+
 
 from static_frame.core.node_selector import InterfaceGetItem
+
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import FILL_VALUE_DEFAULT
+
 from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.index_correspondence import IndexCorrespondence
@@ -57,6 +61,7 @@ from static_frame.core.display import Display
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
+from static_frame.core.container_util import apply_binary_operator_blocks
 
 from static_frame.core.exception import ErrorInitTypeBlocks
 from static_frame.core.exception import AxisInvalid
@@ -1864,6 +1869,8 @@ class TypeBlocks(ContainerOperand):
             raise NotImplementedError('matrix multiplication not supported')
 
         if isinstance(other, TypeBlocks):
+            apply_column_2d_filter = True
+
             if self.block_compatible(other, axis=None):
                 # this means that the blocks are the same shape; we do not check types
                 self_operands = self._blocks
@@ -1878,46 +1885,33 @@ class TypeBlocks(ContainerOperand):
                     other_operands = other._reblock() #type: ignore
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
-
-            def operation() -> tp.Iterator[np.ndarray]:
-                for a, b in zip_longest(
-                        (column_2d_filter(op) for op in self_operands),
-                        (column_2d_filter(op) for op in other_operands)
-                        ):
-                    yield apply_binary_operator(
-                            values=a,
-                            other=b,
-                            other_is_array=True,
-                            operator=operator,
-                            )
         else:
             # process other as an array
             self_operands = self._blocks
             if not isinstance(other, np.ndarray):
-                # this maybe expensive for a single scalar
-                other = np.array(other) # this will work with a single scalar too
-
+                other = iterable_to_array_nd(other)
             # handle dimensions
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
+                apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks))) #type: ignore
             elif other.ndim == 1 and len(other) == self._shape[1]:
-                # if given a 1d array
+                apply_column_2d_filter = False
+                # if given a 1d array, we apply it to the rows
                 # one dimensional array of same size: chop to block width
                 other_operands = (other[s] for s in self._block_shape_slices()) #type: ignore
+            elif other.ndim == 2 and other.shape == self._shape:
+                apply_column_2d_filter = True
+                other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices())
             else:
-                raise NotImplementedError('cannot apply binary operators to arbitrary np arrays.')
+                raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.')
 
-            def operation() -> tp.Iterator[np.ndarray]:
-                for a, b in zip_longest(self_operands, other_operands):
-                    yield apply_binary_operator(
-                            values=a,
-                            other=b,
-                            other_is_array=True,
-                            operator=operator,
-                            )
-
-        return self.from_blocks(operation())
+        return self.from_blocks(apply_binary_operator_blocks(
+                values=self_operands,
+                other=other_operands,
+                operator=operator,
+                apply_column_2d_filter=apply_column_2d_filter,
+                ))
 
 
 

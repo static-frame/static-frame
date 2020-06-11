@@ -4,7 +4,9 @@ What is New in Static Frame
 0.6.19.dev
 ----------
 
-Extended ``name`` propegation to applications of binary operators where an opperand is a scalar.
+Extended ``name`` propagation to applications of binary operators where an opperand is a scalar.
+
+Binary operators now work with ``Frame`` and same-shaped NumPy arrays.
 
 
 0.6.18

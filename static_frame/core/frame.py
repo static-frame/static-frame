@@ -50,15 +50,16 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import name_filter
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import iterable_to_array_nd
+
 from static_frame.core.util import isin
-# from static_frame.core.util import _dict_to_sorted_items
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import _read_url
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import ufunc_unique
-# from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import array_to_groups_and_locations
@@ -366,7 +367,7 @@ class Frame(ContainerOperand):
         '''
 
         # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
-        # axis_series = (0 if axis is 1 else 1)
+        # TODO: check for Series that do not have names
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
         own_columns = False
@@ -927,8 +928,8 @@ class Frame(ContainerOperand):
                 elif isinstance(v, Frame):
                     raise ErrorInitFrame('Frames are not supported in from_items constructor.')
                 else:
-                    values = np.array(v, dtype=column_type)
-                    values.flags.writeable = False
+                    # returned array is immutable
+                    values, _ = iterable_to_array_1d(v, column_type)
                     yield values
 
         if consolidate_blocks:
@@ -3321,7 +3322,9 @@ class Frame(ContainerOperand):
         return self.__class__(
                 self._blocks._ufunc_unary_operator(operator=operator),
                 index=self._index,
-                columns=self._columns)
+                columns=self._columns,
+                name=self._name,
+                )
 
     def _ufunc_binary_operator(self, *,
             operator,
@@ -3336,6 +3339,7 @@ class Frame(ContainerOperand):
         #TODO: use equals on columns, index before calling reindex
 
         if isinstance(other, Frame):
+            name = None
             # reindex both dimensions to union indices
             columns = self._columns.union(other._columns)
             index = self._index.union(other._index)
@@ -3362,6 +3366,8 @@ class Frame(ContainerOperand):
                     own_index=True,
                     )
         elif isinstance(other, Series):
+            name = None
+            # when operating on a Series, we treat it as a row-wise operation, and thus take the union of the Series.index and Frame.columns
             columns = self._columns.union(other._index)
             self_tb = self.reindex(columns=columns, own_columns=True)._blocks
             other_array = other.reindex(columns, own_index=True).values
@@ -3373,9 +3379,14 @@ class Frame(ContainerOperand):
                     own_data=True,
                     own_index=True,
                     )
-        # handle single values and lists that can be converted to appropriate arrays
-        if not isinstance(other, np.ndarray) and hasattr(other, '__iter__'):
-            other = np.array(other)
+        elif isinstance(other, np.ndarray):
+            name = None
+        else:
+            other = iterable_to_array_nd(other)
+            if other.ndim == 0:# only for elements should we keep name
+                name = self._name
+            else:
+                name = None
 
         # assume we will keep dimensionality
         return self.__class__(self._blocks._ufunc_binary_operator(
@@ -3385,6 +3396,7 @@ class Frame(ContainerOperand):
                 columns=self._columns,
                 own_data=True,
                 own_index=True,
+                name=name,
                 )
 
     #---------------------------------------------------------------------------
@@ -4438,7 +4450,7 @@ class Frame(ContainerOperand):
             index_loc = index_fields[0]
         else:
             index_loc = index_fields
-        # will return np.array or frozen set
+        # will return np.ndarray or frozen set
         index_values = ufunc_unique(
                 self._blocks._extract_array(
                         column_key=self._columns.loc_to_iloc(index_loc)),
