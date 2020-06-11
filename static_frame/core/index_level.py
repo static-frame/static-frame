@@ -7,8 +7,8 @@ from itertools import zip_longest
 import numpy as np
 
 from static_frame.core.hloc import HLoc
-from static_frame.core.index import Index
 from static_frame.core.index import ILoc
+from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.array_go import ArrayGO
 
@@ -16,9 +16,11 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import GetItemKeyType
-
+from static_frame.core.util import IndexConstructors
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import GetItemKeyTypeCompound
+
+from static_frame.core.container_util import index_from_optional_constructor
 
 from static_frame.core.type_blocks import TypeBlocks
 
@@ -52,6 +54,58 @@ class IndexLevel:
     _length: tp.Optional[int]
 
     STATIC: bool = True
+    _INDEX_CONSTRUCTOR = Index
+
+
+    @classmethod
+    def from_tree(cls,
+            tree,
+            index_constructors: tp.Optional[IndexConstructors] = None,
+            ) -> 'IndexLevel':
+        '''
+        Convert a tree structure to an IndexLevel instance.
+        '''
+        # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
+
+        def get_index(labels, depth: int):
+            if index_constructors is not None:
+                explicit_constructor = index_constructors[depth]
+            else:
+                explicit_constructor = None
+
+            return index_from_optional_constructor(labels,
+                    default_constructor=cls._INDEX_CONSTRUCTOR,
+                    explicit_constructor=explicit_constructor)
+
+        def get_level(level_data, offset=0, depth=0):
+
+            if isinstance(level_data, dict):
+                level_labels = []
+                targets = np.empty(len(level_data), dtype=object)
+                offset_local = 0
+
+                # ordered key, value pairs, where the key is the label, the value is a list or dictionary; enmerate for insertion pre-allocated object array
+                for idx, (k, v) in enumerate(level_data.items()):
+                    level_labels.append(k)
+                    level = get_level(v, offset=offset_local, depth=depth + 1)
+                    targets[idx] = level
+                    offset_local += len(level) # for lower level offsetting
+
+                index = get_index(level_labels, depth=depth)
+                targets = ArrayGO(targets, own_iterable=True)
+
+            else: # an iterable, terminal node, no offsets needed
+                index = get_index(level_data, depth=depth)
+                targets = None
+
+            return cls(
+                    index=index,
+                    offset=offset,
+                    targets=targets,
+                    )
+
+        return get_level(tree)
+
 
     def __init__(self,
             index: Index,
@@ -641,6 +695,7 @@ class IndexLevelGO(IndexLevel):
     _length: tp.Optional[int]
 
     STATIC: bool = False
+    _INDEX_CONSTRUCTOR = IndexGO
 
     #---------------------------------------------------------------------------
     # grow only mutation

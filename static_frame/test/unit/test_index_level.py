@@ -256,6 +256,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(lvl0.leaf_loc_to_iloc(('A', '2018-01-01', 'y')), 1)
 
+    def test_index_level_leaf_loc_to_iloc_d(self) -> None:
+
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2, 3)), ('B', (1,))
+                        ])
+                ),
+                ])
+
+        levels = IndexLevel.from_tree(tree)
+        with self.assertRaises(KeyError):
+            levels.leaf_loc_to_iloc(('II', 'B', 1, 'a'))
 
     #---------------------------------------------------------------------------
 
@@ -365,7 +382,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels = IndexHierarchy._tree_to_index_level(tree)
+        levels = IndexLevel.from_tree(tree)
 
         post = list(levels.label_nodes_at_depth(0))
         self.assertEqual(post, ['I', 'II'])
@@ -390,7 +407,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels = IndexHierarchy._tree_to_index_level(tree)
+        levels = IndexLevel.from_tree(tree)
         tuples = tuple(levels)
         self.assertEqual(
                 tuples,
@@ -415,7 +432,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels = IndexHierarchy._tree_to_index_level(tree)
+        levels = IndexLevel.from_tree(tree)
 
         post0 = tuple(levels.label_widths_at_depth(0))
         post1 = tuple(levels.label_widths_at_depth(1))
@@ -498,7 +515,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels = IndexHierarchy._tree_to_index_level(tree)
+        levels = IndexLevel.from_tree(tree)
         self.assertEqual(levels.depth, 3)
         self.assertEqual(levels.loc_to_iloc((('II', 'II'), 'B', 1)), 8)
 
@@ -518,7 +535,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels1 = IndexHierarchy._tree_to_index_level(tree1)
+        levels1 = IndexLevel.from_tree(tree1)
 
         tree2 = OD([
                 (('I', 'I'), OD([
@@ -531,7 +548,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels2 = IndexHierarchy._tree_to_index_level(tree2)
+        levels2 = IndexLevel.from_tree(tree2)
 
         tree3 = OD([
                 (('I', 'I'), OD([
@@ -544,7 +561,7 @@ class TestUnit(TestCase):
                 ),
                 ])
 
-        levels3 = IndexHierarchy._tree_to_index_level(tree3)
+        levels3 = IndexLevel.from_tree(tree3)
 
 
 
