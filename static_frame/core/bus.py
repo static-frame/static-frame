@@ -326,12 +326,12 @@ class Bus(ContainerBase): # not a ContainerOperand
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_loc)  #type: ignore
+    def loc(self) -> InterfaceGetItem['Bus']:
+        return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem[TContainer]:
-        return InterfaceGetItem(self._extract_iloc)  #type: ignore
+    def iloc(self) -> InterfaceGetItem['Bus']:
+        return InterfaceGetItem(self._extract_iloc)
 
 
     # ---------------------------------------------------------------------------

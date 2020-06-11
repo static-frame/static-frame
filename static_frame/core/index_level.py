@@ -126,7 +126,7 @@ class IndexLevel:
 
     def __init__(self,
             index: Index,
-            targets: tp.Optional[ArrayGO] = None,
+            targets: tp.Optional[tp.Union[ArrayGO, tp.List[tp.Any]]] = None,
             offset: int = 0,
             own_index: bool = False
             ):

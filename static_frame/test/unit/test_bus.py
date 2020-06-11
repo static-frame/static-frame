@@ -408,7 +408,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp)
 
             self.assertEqual(
-                    b2.iloc[[0, 2]].status['loaded'].to_pairs(), # type: ignore
+                    b2.iloc[[0, 2]].status['loaded'].to_pairs(),
                     (('f1', True), ('f3', True))
                     )
 
@@ -449,7 +449,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = b1.loc['f2':] #type: ignore
         self.assertEqual(len(b2), 2)
-        self.assertEqual(b2.index.values.tolist(), ['f2', 'f3']) #type: ignore
+        self.assertEqual(b2.index.values.tolist(), ['f2', 'f3'])
 
 
     def test_bus_getitem_a(self) -> None:

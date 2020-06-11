@@ -8442,7 +8442,7 @@ class TestUnit(TestCase):
     def test_frame_pivot_k(self) -> None:
 
         index = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(index=index)
@@ -8461,7 +8461,7 @@ class TestUnit(TestCase):
     def test_frame_pivot_m(self) -> None:
 
         index = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(index=index)
@@ -8919,11 +8919,11 @@ class TestUnit(TestCase):
     def test_frame_equals_a(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
@@ -8948,11 +8948,11 @@ class TestUnit(TestCase):
     def test_frame_equals_b(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'q')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
@@ -8965,11 +8965,11 @@ class TestUnit(TestCase):
     def test_frame_equals_c(self) -> None:
 
         idx1 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         idx2 = IndexHierarchy.from_product(
-                ('far', 20), (None, 'down'), (False, 'right'),
+                ('far', 20), (None, 'down'), (False, 'right'), #type: ignore
                 name=('z', 'y', 'x')
                 )
         f1 = FrameGO(np.arange(16, dtype=np.int64).reshape(8, 2), index=idx1)
