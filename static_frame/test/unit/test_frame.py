@@ -3491,6 +3491,13 @@ class TestUnit(TestCase):
         f3 = f1 * 20
         self.assertEqual(f3.name, 'foo')
 
+        f4 = f1 * np.array([[3, 5], [0, 0], [1, 1]])
+
+        self.assertEqual(f4.to_pairs(0),
+                (('a', (('x', 3), ('y', 0), ('z', 3))), ('b', (('x', 25), ('y', 0), ('z', 7)))))
+        self.assertEqual(f2.name, None)
+
+
 
     def test_frame_binary_operator_l(self) -> None:
 
