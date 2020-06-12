@@ -1766,6 +1766,25 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             f1._insert(0, 'a')
 
+        s1 = sf.Series(())
+
+        f2 = f1.insert_before('q', s1)
+        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        self.assertNotEqual(id(f1), id(f2))
+
+        f3 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+        f4 = f3.insert_before('q', s1)
+        self.assertTrue(f1.equals(f2)) # no insertion of an empty container
+        self.assertEqual(id(f3), id(f4))
+
+        # matching index but no columns
+        f5 = FrameGO(columns=(), index=('x','y'))
+        f6 = f3.insert_before('q', f5)
+        self.assertTrue(f3.equals(f6)) # no insertion of an empty container
+        self.assertEqual(id(f3), id(f6))
+
 
     def test_frame_insert_c(self) -> None:
         records = (
@@ -1837,6 +1856,24 @@ class TestUnit(TestCase):
         self.assertEqual(f1.insert_before('q', s1).to_pairs(0),
                 (('p', (('x', 'a'), ('y', 'b'))), ('s', (('x', -3), ('y', 200))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False))))
                 )
+
+
+    def test_frame_insert_f(self) -> None:
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
+
+        s1 = Series((200, -3), index=('y', 'x'), name='s')
+
+        with self.assertRaises(RuntimeError):
+            f1.insert_before(slice('q', 'r'), s1)
+
+        with self.assertRaises(RuntimeError):
+            f1.insert_after(slice('q', 'r'), s1)
+
 
     #---------------------------------------------------------------------------
 

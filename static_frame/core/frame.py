@@ -4911,7 +4911,7 @@ class Frame(ContainerOperand):
                     f'No support for inserting with {type(container)}')
 
         if not len(container.index): # must be empty data, empty index container
-            return self if self.STATIC else self.copy() # always return a new Frame
+            return self if self.STATIC else self.__class__(self)
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
@@ -4924,9 +4924,10 @@ class Frame(ContainerOperand):
         labels_prior = self._columns.values
 
         if isinstance(container, Frame):
-            labels_insert = container.columns.__iter__()
             if not len(container.columns):
-                return
+                return self if self.STATIC else self.__class__(self)
+
+            labels_insert = container.columns.__iter__()
             blocks_insert = container._blocks._blocks
 
         elif isinstance(container, Series):
