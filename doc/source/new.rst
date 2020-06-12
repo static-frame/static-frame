@@ -1,7 +1,7 @@
 What is New in Static Frame
 ===============================
 
-0.6.19.dev
+0.6.19
 ----------
 
 Extended ``name`` propagation to applications of binary operators where an opperand is a scalar.
