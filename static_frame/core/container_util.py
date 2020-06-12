@@ -126,12 +126,8 @@ def pandas_to_numpy(
             # if an extension type and it hasna, have to go to object; otherwise, set to None or the dtype obtained above
             dtype = DTYPE_OBJECT if hasna else dtype
 
-        try:
-            array = container.to_numpy(copy=not own_data, dtype=dtype)
-        except (ValueError, TypeError):
-            # cannot convert to '<class 'int'>'-dtype NumPy array with missing values. Specify an appropriate 'na_value' for this dtype; this will go to object
-            # TypeError: boolean value of NA is ambiguous
-            array = container.to_numpy(copy=not own_data)
+        # NOTE: in some cases passing the dtype might raise an exception, but it appears we are handling all of those cases by looking at hasna and selecting an object dtype
+        array = container.to_numpy(copy=not own_data, dtype=dtype)
 
         if hasna:
             # if hasna and extension dtype, should be an object array; please pd.NA objects with fill_value (np.nan)
