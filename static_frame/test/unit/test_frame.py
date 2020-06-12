@@ -9226,6 +9226,10 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
+        with self.assertRaises(RuntimeError):
+            _ = f1.join_left(f2, left_columns=['a', 'b'], right_depth_level=0)
+
+
         f3 = f1.join_left(f2, left_columns='b', right_depth_level=0)
         self.assertEqual(f3.fillna(None).to_pairs(0),
                 (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20), ((4, None), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'), ((4, None), 'z'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'), ((4, None), None))), ('d', (((0, 'x'), 10.0), ((1, 'x'), 10.0), ((2, 'y'), 20.0), ((3, 'y'), 20.0), ((4, None), None))))
@@ -9485,7 +9489,34 @@ class TestUnit(TestCase):
         self.assertEqual( f4.to_pairs(0),
                 (('a', (('c', 20), ('d', 20))), ('b', (('c', 'y'), ('d', 'z'))), ('c', (('c', 'foo'), ('d', 'bar'))), ('d', (('c', 10), ('d', 20))))
                 )
-        # import ipdb; ipdb.set_trace()
+
+
+    def test_frame_join_j(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            # composite index is required
+            _ = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=False)
+
+        f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', composite_index=True)
+
+        self.assertEqual(f3.to_pairs(0),
+                (('c', ((('x', 0), 'foo'), (('x', 1), 'foo'), (('y', 2), 'bar'), (('y', 3), 'bar'))), ('d', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('a', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('b', ((('x', 0), 'x'), (('x', 1), 'x'), (('y', 2), 'y'), (('y', 3), 'y')))))
+
+
+    def test_frame_join_k(self) -> None:
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            f1._join(f2, join_type=None)
+        with self.assertRaises(RuntimeError):
+            f1._join(f2, join_type=None, left_depth_level=0)
+
+        with self.assertRaises(NotImplementedError):
+            f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
 
 
 if __name__ == '__main__':

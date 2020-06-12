@@ -4535,7 +4535,7 @@ class Frame(ContainerOperand):
     def _join(self,
             other: 'Frame', # support a named Series as a 1D frame?
             *,
-            index_source: Join, # intersect, left, right, union,
+            join_type: Join, # intersect, left, right, union,
             left_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             left_columns: GetItemKeyType = None,
             right_depth_level: tp.Optional[DepthLevelSpecifier] = None,
@@ -4552,6 +4552,11 @@ class Frame(ContainerOperand):
 
         #-----------------------------------------------------------------------
         # find matches
+
+        if left_depth_level is None and left_columns is None:
+            raise RuntimeError('Must specify one or both of left_depth_level and left_columns.')
+        if right_depth_level is None and right_columns is None:
+            raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
         # for now we reduce the targets to arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
         target_left = TypeBlocks.from_blocks(
@@ -4579,7 +4584,6 @@ class Frame(ContainerOperand):
             if not matched.any():
                 continue
             matched_idx = np.flatnonzero(matched)
-
             if not is_many:
                 if len(matched_idx) > 1:
                     is_many = True
@@ -4616,12 +4620,12 @@ class Frame(ContainerOperand):
                 many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
                 many_iloc.extend(Pair(p) for p in product((k,), v))
 
-        if index_source is Join.INNER:
+        if join_type is Join.INNER:
             if is_many:
                 final_index = Index(many_loc)
             else: # just those matched from the left, which are also on right
                 final_index = Index(left_loc)
-        elif index_source is Join.LEFT:
+        elif join_type is Join.LEFT:
             if is_many:
                 extend = (PairLeft((x, cifv))
                         for x in left_index if x not in left_loc_set)
@@ -4629,14 +4633,14 @@ class Frame(ContainerOperand):
                 final_index = Index(chain(many_loc, extend))
             else:
                 final_index = left_index
-        elif index_source is Join.RIGHT:
+        elif join_type is Join.RIGHT:
             if is_many:
                 extend = (PairRight((cifv, x))
                         for x in right_index if x not in right_loc_set)
                 final_index = Index(chain(many_loc, extend))
             else:
                 final_index = right_index
-        elif index_source is Join.OUTER:
+        elif join_type is Join.OUTER:
             extend_left = (PairLeft((x, cifv))
                     for x in left_index if x not in left_loc_set)
             extend_right = (PairRight((cifv, x))
@@ -4748,7 +4752,7 @@ class Frame(ContainerOperand):
             :obj:`Frame`
         '''
         return self._join(other=other,
-                index_source=Join.INNER,
+                join_type=Join.INNER,
                 left_depth_level=left_depth_level,
                 left_columns=left_columns,
                 right_depth_level=right_depth_level,
@@ -4792,7 +4796,7 @@ class Frame(ContainerOperand):
             :obj:`Frame`
         '''
         return self._join(other=other,
-                index_source=Join.LEFT,
+                join_type=Join.LEFT,
                 left_depth_level=left_depth_level,
                 left_columns=left_columns,
                 right_depth_level=right_depth_level,
@@ -4836,7 +4840,7 @@ class Frame(ContainerOperand):
             :obj:`Frame`
         '''
         return self._join(other=other,
-                index_source=Join.RIGHT,
+                join_type=Join.RIGHT,
                 left_depth_level=left_depth_level,
                 left_columns=left_columns,
                 right_depth_level=right_depth_level,
@@ -4880,7 +4884,7 @@ class Frame(ContainerOperand):
             :obj:`Frame`
         '''
         return self._join(other=other,
-                index_source=Join.OUTER,
+                join_type=Join.OUTER,
                 left_depth_level=left_depth_level,
                 left_columns=left_columns,
                 right_depth_level=right_depth_level,
