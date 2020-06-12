@@ -330,6 +330,8 @@ def matmul(
                 own_index = False
                 columns = rhs._columns
                 constructor = rhs.__class__
+    else:
+        raise NotImplementedError(f'no handling for {lhs}')
 
     # NOTE: np.matmul is not the same as np.dot for some arguments
     data = np.matmul(left, right)

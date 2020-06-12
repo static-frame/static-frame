@@ -301,6 +301,13 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(f5.columns.STATIC)
 
+    def test_frame_init_x(self) -> None:
+        f = Frame(columns=(), index=(3, 5))
+        self.assertEqual(f.shape, (2, 0))
+        self.assertEqual(f.to_pairs(0), ())
+
+
+
     #---------------------------------------------------------------------------
     def test_frame_init_index_constructor_a(self) -> None:
 
@@ -968,6 +975,13 @@ class TestUnit(TestCase):
 
         with temp_file('.parquet') as fp:
             f1.to_parquet(fp)
+
+            with self.assertRaises(ErrorInitFrame):
+                _ = Frame.from_parquet(fp,
+                        index_depth=1, # cannot use with columns_selectg
+                        columns_select=('d', 'a'),
+                        columns_depth=1)
+
             f2 = Frame.from_parquet(fp,
                     index_depth=0,
                     columns_select=('d', 'a'),
@@ -1285,8 +1299,6 @@ class TestUnit(TestCase):
         self.assertEqual(post, ((0, 1, 2, 3, 4),))
 
 
-
-
     def test_frame_iter_tuple_b(self) -> None:
         post = tuple(sf.Frame.from_elements(range(3), index=tuple('abc')).iter_tuple(axis=0))
         self.assertEqual(post, ((0, 1, 2),))
@@ -1294,6 +1306,10 @@ class TestUnit(TestCase):
         self.assertEqual(tuple(post[0]._asdict().items()),
                 (('a', 0), ('b', 1), ('c', 2))
                 )
+
+    def test_frame_iter_tuple_c(self) -> None:
+        with self.assertRaises(AxisInvalid):
+            post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=2))
 
 
     #---------------------------------------------------------------------------
@@ -3401,6 +3417,14 @@ class TestUnit(TestCase):
         self.assertEqual(post3.to_pairs(),
                 (('w', 11), ('x', 14), ('y', 17), ('z', 20)))
 
+        with self.assertRaises(NotImplementedError):
+            # cannot do an operation on a 1D array
+            _ = 3 @ b
+
+        post5 = [3, 4] @ b
+        self.assertEqual(post5.to_pairs(),
+                (('p', 11), ('q', 25), ('r', 39)))
+
 
     def test_frame_binary_operator_g(self) -> None:
 
@@ -4719,6 +4743,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.notna().to_pairs(0),
                 (('A', ((0, False), (1, True), (2, False))), ('B', ((0, True), (1, True), (2, False))), ('C', ((0, False), (1, False), (2, False))), ('D', ((0, True), (1, True), (2, True)))))
 
+    #---------------------------------------------------------------------------
     def test_frame_dropna_a(self) -> None:
         f1 = FrameGO.from_records([
                 [np.nan, 2, np.nan, 0],
@@ -4762,6 +4787,18 @@ class TestUnit(TestCase):
         f2 = f1.dropna()
         self.assertEqual(f2.shape, (0, 2))
 
+    def test_frame_dropna_d(self) -> None:
+        f1 = Frame(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f2 = f1.dropna()
+        self.assertEqual(id(f1), id(f2))
+
+        f3 = FrameGO(np.arange(4).reshape(2, 2), columns=list('ab'))
+        f4 = f3.dropna()
+        self.assertNotEqual(id(f3), id(f4))
+
+
+
+    #---------------------------------------------------------------------------
 
     @skip_win #type: ignore
     def test_frame_fillna_a(self) -> None:
@@ -4872,6 +4909,14 @@ class TestUnit(TestCase):
 
         # assure we do not fill with float when reindexing
         self.assertEqual([type(v) for v in f3['B'].values.tolist()], [int, int, int])
+
+    def test_frame_fillna_e(self) -> None:
+
+        f = Frame(np.arange(4).reshape(2, 2))
+        with self.assertRaises(RuntimeError):
+            # must provde a Frame
+            f.fillna(np.arange(4).reshape(2, 2))
+
 
     #---------------------------------------------------------------------------
 
@@ -8562,6 +8607,11 @@ class TestUnit(TestCase):
                 (('c', 12), ('d', 18), ('e', 24), ('f', 30), ('g', 36), ('h', 42), ('i', 48), ('j', 54), ('k', 60), ('l', 66), ('m', 72), ('n', 78), ('o', 84), ('p', 90), ('q', 96), ('r', 102), ('s', 108), ('t', 114))
         )
 
+        post = list(f1.iter_window(size=3))
+        self.assertEqual(len(post), 18)
+        self.assertTrue(all(f.shape == (3, 4) for f in post))
+
+    #---------------------------------------------------------------------------
 
     def test_frame_bool_a(self) -> None:
         records = (

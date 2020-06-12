@@ -2055,18 +2055,10 @@ class Frame(ContainerOperand):
         index_empty = row_count == 0
 
         if blocks_constructor:
-            # if we have a blocks_constructor, we are determining final size from index and/or columns; we might have a legitamate single value for data, but it cannot be FRAME_INITIALIZER_DEFAULT
-            if data is not FRAME_INITIALIZER_DEFAULT and (
-                    columns_empty or index_empty):
-                raise ErrorInitFrame('cannot supply a data argument to Frame constructor when index or columns is empty')
-            # must update the row/col counts, sets self._blocks
+            # if we have a blocks_constructor if is because data remained FRAME_INITIALIZER_DEFAULT
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
-
-        if self._blocks.ndim != self._NDIM:
-            raise ErrorInitFrame('dimensionality of final values not supported')
-
         if self._blocks.shape[0] != row_count:
             # row count might be 0 for an empty DF
             raise ErrorInitFrame(
@@ -2694,8 +2686,9 @@ class Frame(ContainerOperand):
 
         # NOTE: if not values to drop and this is a Frame (not a FrameGO) we can return self as it is immutable
         if self.__class__ is Frame:
-            if (row_key is not None and column_key is not None
-                    and row_key.all() and column_key.all()):
+            # only one of row_key, colum_Key will be an array
+            if ((column_key is None and row_key.all()) or
+                    (row_key is None and column_key.all())):
                 return self
         return self._extract(row_key, column_key)
 
@@ -3489,7 +3482,7 @@ class Frame(ContainerOperand):
         elif axis == 0:
             Tuple = get_tuple_constructor(self._index.values)
         else:
-            raise NotImplementedError()
+            raise AxisInvalid(f'no support for axis {axis}')
 
         for axis_values in self._blocks.axis_values(axis):
             yield Tuple(*axis_values)
