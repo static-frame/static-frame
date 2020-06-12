@@ -362,3 +362,6 @@ class IndexBase(ContainerOperand):
             webbrowser.open_new_tab(fp) #pragma: no cover
 
         return fp
+
+    def to_pandas(self) -> 'pandas.Series':
+        raise NotImplementedError()

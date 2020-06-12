@@ -94,7 +94,9 @@ from static_frame.core.doc_str import doc_inject
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
-    from pandas import DataFrame # pylint: disable=W0611 #pragma: no cover
+    from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
+
+    import pandas # pylint: disable=W0611 #pragma: no cover
 
 
 RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
@@ -1433,7 +1435,7 @@ class Series(ContainerOperand):
 
     def _axis_group_items(self, *,
             axis: int = 0
-            ):
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
 
@@ -1444,7 +1446,7 @@ class Series(ContainerOperand):
 
     def _axis_group(self, *,
             axis: int = 0
-            ):
+            ) -> tp.Iterator['Series']:
         yield from (x for _, x in self._axis_group_items(axis=axis))
 
 
@@ -1731,8 +1733,9 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='duplicated')
     def duplicated(self, *,
-            exclude_first=False,
-            exclude_last=False) -> np.ndarray:
+            exclude_first: bool = False,
+            exclude_last: bool = False,
+            ) -> np.ndarray:
         '''
         Return a same-sized Boolean Series that shows True for all b values that are duplicated.
 
@@ -2134,9 +2137,9 @@ class Series(ContainerOperand):
 
 
     def _to_frame(self,
-            constructor: tp.Type[ContainerOperand],
+            constructor: tp.Type['Frame'],
             axis: int = 1
-            ):
+            ) -> 'Frame':
         '''
         Common Frame construction utilities.
         '''
@@ -2144,7 +2147,7 @@ class Series(ContainerOperand):
 
         if axis == 1:
             # present as a column
-            def block_gen():
+            def block_gen() -> tp.Iterator[np.ndarray]:
                 yield self.values
 
             index = self._index
@@ -2152,7 +2155,7 @@ class Series(ContainerOperand):
             columns = None if self._name is None else (self._name,)
             own_columns = False
         elif axis == 0:
-            def block_gen():
+            def block_gen() -> tp.Iterator[np.ndarray]:
                 yield self.values.reshape((1, self.values.shape[0]))
 
             index = None if self._name is None else (self._name,)
@@ -2166,7 +2169,7 @@ class Series(ContainerOperand):
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,
-                columns=columns,
+                columns=columns, #type: ignore
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
@@ -2191,9 +2194,9 @@ class Series(ContainerOperand):
             :obj:`static_frame.FrameGO`
         '''
         from static_frame import FrameGO
-        return self._to_frame(constructor=FrameGO, axis=axis)
+        return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
 
-    def to_pandas(self) -> 'pd.Series':
+    def to_pandas(self) -> 'pandas.Series':
         '''
         Return a Pandas Series.
 
@@ -2208,7 +2211,7 @@ class Series(ContainerOperand):
     @doc_inject(class_name='Series')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None
-            ):
+            ) -> str:
         '''
         {}
         '''
@@ -2236,6 +2239,7 @@ class Series(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
+            assert isinstance(fp, str) #mypy
             import webbrowser #pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
@@ -2253,9 +2257,9 @@ class SeriesAssign(Assign):
         self.iloc_key = iloc_key
 
     def __call__(self,
-            value, # any possible assignment type
+            value: tp.Any, # any possible assignment type
             fill_value: tp.Any = np.nan
-            ):
+            ) -> Series:
         '''
         Assign the ``value`` in the position specified by the selector. The `name` attribute is propagated to the returned container.
 
