@@ -652,7 +652,7 @@ class IndexLevel:
 
         if not levels_self and not levels_other:
             return True # both exhausted
-        return False # one excited early: will we ever get here?
+        return False #pragma: no cover
 
     #---------------------------------------------------------------------------
     # exporters

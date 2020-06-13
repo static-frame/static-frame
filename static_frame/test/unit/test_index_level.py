@@ -1,26 +1,24 @@
 
 import unittest
-import numpy as np
-
 from collections import OrderedDict
 
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import ILoc
-from static_frame import HLoc
-from static_frame import Frame
 
+import numpy as np
+
+
+from static_frame import Frame
+from static_frame import HLoc
+from static_frame import ILoc
+from static_frame import Index
+from static_frame import IndexDate
+from static_frame import IndexGO
 from static_frame import IndexHierarchy
-# from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexLevelGO
-# from static_frame import HLoc
-
-from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.core.array_go import ArrayGO
-from static_frame.test.test_case import TestCase
+from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -583,8 +581,58 @@ class TestUnit(TestCase):
 
         self.assertTrue(levels1.equals(levels2))
 
+    def test_index_levels_equals_c(self) -> None:
+
+        OD = OrderedDict
+        tree1 = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2)),
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2)),
+                        ])
+                ),
+                ])
+
+        levels1 = IndexLevel.from_tree(tree1)
+
+        tree2 = OD([
+                ('I', OD([
+                        ('A', (1, 2)),
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1, 2)),
+                        ])
+                ),
+                ])
+
+        levels2 = IndexLevel.from_tree(tree2)
+
+        tree3 = OD([
+                ('I', (1, 2)),
+                ('II', (1, 2)),
+                ])
+
+        levels3 = IndexLevel.from_tree(tree3)
+
+        self.assertFalse(levels1.equals(levels1.values, compare_class=True))
+        self.assertFalse(levels1.equals(levels1.values, compare_class=False))
+
+        # differing length
+        self.assertFalse(levels1.equals(levels2))
+
+        # differeing depth
+        self.assertFalse(levels2.equals(levels3))
 
 
+    def test_index_levels_equals_d(self) -> None:
+
+        levels1 = IndexLevel(Index(('a', 'b', 'c')), targets=None)
+        levels2 = IndexLevel(Index(('a', 'b', 'c')), targets=None)
+
+        self.assertTrue(levels1.equals(levels2))
 
 
 
