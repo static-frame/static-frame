@@ -64,49 +64,6 @@ class StoreHDF5(Store):
                 table.flush()
 
 
-    # @doc_inject(selector='constructor_frame')
-    # @store_coherent_non_write
-    # def read(self,
-    #         label: tp.Optional[str] = None,
-    #         *,
-    #         config: tp.Optional[StoreConfig] = None
-    #         # index_depth: int=1,
-    #         # columns_depth: int=1,
-    #         ) -> Frame:
-    #     '''
-    #     Args:
-    #         {dtypes}
-    #     '''
-    #     import tables
-
-    #     if config is None:
-    #         config = StoreConfig() # get default
-    #     if config.dtypes:
-    #         raise NotImplementedError('using config.dtypes on HDF5 not yet supported')
-
-    #     with tables.open_file(self._fp, mode='r') as file:
-    #         table = file.get_node(f'/{label}')
-
-    #         array = table.read()
-    #         array.flags.writeable = False
-
-    #         # Discover all string dtypes and replace the dtype with a generic `str` function; first element in values array is the dtype object.
-    #         dtypes =  {k: str
-    #                 for i, (k, v) in enumerate(array.dtype.fields.items())
-    #                 if v[0].kind in DTYPE_STR_KIND
-    #                 }
-    #         # this works, but does not let us pull off columns yet
-    #         f = tp.cast(Frame,
-    #                 Frame.from_structured_array(
-    #                         array,
-    #                         name=label,
-    #                         index_depth=config.index_depth,
-    #                         columns_depth=config.columns_depth,
-    #                         dtypes=dtypes,
-    #                 ))
-    #         return f
-
-
     @doc_inject(selector='constructor_frame')
     @store_coherent_non_write
     def read(self,

@@ -634,6 +634,15 @@ class TestUnit(TestCase):
 
         self.assertTrue(levels1.equals(levels2))
 
+    #---------------------------------------------------------------------------
+
+    def test_index_levels_to_type_blocks_a(self) -> None:
+
+        levels1 = IndexLevel(Index(()), targets=None)
+        tb = levels1.to_type_blocks()
+        # NOTE: this will be updated to (0, 0) with IndexLevel support for zero size
+        self.assertEqual(tb.shape, (0, 1))
+
 
 
 if __name__ == '__main__':

@@ -15,6 +15,7 @@ from static_frame.test.test_case import temp_file
 
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfig
 
 
 class TestUnit(TestCase):
@@ -65,6 +66,44 @@ class TestUnit(TestCase):
                 c = config[f_src.name]
                 f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded)
+
+
+
+    def test_store_hdf5_write_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(x=(1,2,-5,object()), y=(3,4,-5,-3000)),
+                )
+        frames = (f1,)
+
+        with temp_file('.hdf5') as fp:
+            st1 = StoreHDF5(fp)
+            with self.assertRaises(RuntimeError):
+                st1.write(((f.name, f) for f in frames))
+
+
+    def test_store_hdf5_write_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(x=(True, False), y=('foo', 'bar')),
+                name='baz')
+        frames = (f1,)
+
+        with temp_file('.hdf5') as fp:
+            st1 = StoreHDF5(fp)
+            st1.write(((f.name, f) for f in frames))
+
+            f2 = st1.read('baz')
+            self.assertEqual(f2.columns.values.tolist(),
+                    ['__index0__', 'x', 'y'])
+
+            # cannot use dtypes on hdf5
+            config = StoreConfig(dtypes=(int,))
+            with self.assertRaises(NotImplementedError):
+                f2 = st1.read('baz', config=config)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
