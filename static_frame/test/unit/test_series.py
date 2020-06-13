@@ -3403,6 +3403,17 @@ class TestUnit(TestCase):
 
         self.assertFalse(s1.equals(s2, compare_dtype=False))
 
+    def test_series_equals_g(self) -> None:
+
+        s1 = Series((1, 2, 5), index=('a', 'b', 'c'))
+        s2 = Series((2, 5), index=('b', 'c'))
+
+        a1 = s1.values
+
+        self.assertFalse(s1.equals(a1, compare_class=True))
+        self.assertFalse(s1.equals(a1, compare_class=False))
+        self.assertFalse(s1.equals(s2))
+
     #---------------------------------------------------------------------------
     def test_series_enum_a(self) -> None:
 
@@ -3439,6 +3450,9 @@ class TestUnit(TestCase):
         s1 = Series((1, None, 5), index=('a', 'b', 'c'))
         s2 = Series((1, 3.4, 5), index=('d', 'e', 'f'))
 
+        with self.assertRaises(NotImplementedError):
+            _ = s1._insert(1, (3, 4))
+
         s3 = s1._insert(1, s2)
 
         self.assertEqual(s3.to_pairs(),
@@ -3466,6 +3480,18 @@ class TestUnit(TestCase):
                 (('a', 1), ('b', None), ('c', 5), ('d', 1.0), ('e', 3.4), ('f', 5.0))
                 )
 
+
+    def test_series_insert_c(self) -> None:
+
+        s1 = Series((1, None, 5), index=('a', 'b', 'c'))
+        s2 = Series((), index=())
+        s3 = s1.insert_before('a', s2)
+        self.assertEqual(id(s1), id(s3))
+
+        with self.assertRaises(RuntimeError):
+            s1.insert_before(slice('a', 'c'), s2)
+        with self.assertRaises(RuntimeError):
+            s1.insert_after(slice('a', 'c'), s2)
 
 
 if __name__ == '__main__':

@@ -2239,7 +2239,7 @@ class Series(ContainerOperand):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
-            assert isinstance(fp, str) #mypy
+            assert isinstance(fp, str) #pragma: no cover
             import webbrowser #pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
