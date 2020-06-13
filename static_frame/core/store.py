@@ -3,28 +3,21 @@
 import typing as tp
 import os
 
-
-
 from itertools import chain
 from functools import partial
 from functools import wraps
 import numpy as np
 
-from static_frame.core.util import AnyCallable
 
-
-from static_frame.core.frame import Frame
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.exception import StoreFileMutation
-
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import path_filter
-# from static_frame.core.util import array2d_to_tuples
+from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
-
-
+from static_frame.core.util import path_filter
+from static_frame.core.util import PathSpecifier
 
 
 #-------------------------------------------------------------------------------

@@ -3,15 +3,14 @@ import typing as tp
 import numpy as np
 from numpy import char as npc
 
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import UFunc
-
-from static_frame.core.util import array_from_element_method
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
+from static_frame.core.util import array_from_element_method
+from static_frame.core.util import DTYPE_STR
+from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import UFunc
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -20,14 +19,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
 
-# only ContainerOperand subclasses
-# TContainer = tp.TypeVar('TContainer',
-#         'Index',
-#         'IndexHierarchy',
-#         'Series',
-#         'Frame',
-#         'TypeBlocks'
-#         )
 
 BlocksType = tp.Iterable[np.ndarray]
 ToContainerType = tp.Callable[[tp.Iterator[np.ndarray]], TContainer]

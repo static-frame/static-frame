@@ -3,19 +3,18 @@ import zipfile
 import pickle
 from io import StringIO
 
-from static_frame.core.util import AnyCallable
-from static_frame.core.store import Store
-from static_frame.core.store import StoreConfig
-from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.store import StoreConfigMap
-
-from static_frame.core.store import store_coherent_non_write
-from static_frame.core.store import store_coherent_write
-
-from static_frame.core.frame import Frame
-from static_frame.core.frame import FrameGO
 
 from static_frame.core.exception import ErrorInitStore
+from static_frame.core.frame import Frame
+from static_frame.core.frame import FrameGO
+from static_frame.core.store import Store
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.util import AnyCallable
+
 
 class _StoreZip(Store):
 

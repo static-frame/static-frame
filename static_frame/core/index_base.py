@@ -2,25 +2,19 @@ import typing as tp
 import numpy as np
 
 
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import write_optional_file
-# from static_frame.core.util import IndexInitializer
-# from static_frame.core.util import IndexConstructor
-from static_frame.core.util import UFunc
+from static_frame.core.container import ContainerOperand
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayFormats
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
+from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import UFunc
+from static_frame.core.util import write_optional_file
 
-from static_frame.core.display import DisplayFormats
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import Display
-
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.container import ContainerOperand
-# from static_frame.core.node_selector import InterfaceGetItem
-# from static_frame.core.node_selector import TContainer
-# from static_frame.core.exception import ErrorInitIndex
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover

@@ -10,6 +10,29 @@ from numpy import char as npc
 
 import typing as tp
 
+
+from static_frame.core.index_base import IndexBase
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_STR
+from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import UFunc
+
+
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
@@ -17,30 +40,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
-
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import STATIC_ATTR
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import slice_to_ascending_slice
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import UFunc
-from static_frame.core.util import column_2d_filter
-
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DepthLevelSpecifier
-
-from static_frame.core.index_base import IndexBase
-
 
 
 def dtypes_mappable(dtypes: DtypesSpecifier) -> bool:

@@ -5,27 +5,19 @@ from fractions import Fraction
 
 import numpy as np
 
-from static_frame.core.frame import Frame
-from static_frame.core.store import Store
-
-# from static_frame.core.index_hierarchy import IndexHierarchy
-# from static_frame.core.store_filter import StoreFilter
-# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-
-from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.store import StoreConfigMap
-from static_frame.core.store import StoreConfig
 
 from static_frame.core.doc_str import doc_inject
-
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_BOOL
-
-
+from static_frame.core.frame import Frame
+from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
+from static_frame.core.store import StoreConfig
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store import StoreConfigMapInitializer
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_INT_KIND
+from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_STR_KIND
 
 
 class StoreSQLite(Store):

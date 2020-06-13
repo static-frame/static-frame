@@ -1,20 +1,20 @@
-import typing as tp
-import os
-import operator
 
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
+from enum import Enum
 from functools import partial
 from functools import reduce
+from io import StringIO
 from itertools import chain
 from itertools import zip_longest
-from io import StringIO
-from enum import Enum
-import datetime
-from urllib import request
-import tempfile
 from pathlib import Path
+from urllib import request
+import datetime
+import operator
+import os
+import tempfile
+import typing as tp
 
 from automap import FrozenAutoMap  # pylint: disable = E0611
 import numpy as np

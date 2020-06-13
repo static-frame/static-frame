@@ -6,32 +6,28 @@ from itertools import zip_longest
 
 import numpy as np
 
+
+from static_frame.core.array_go import ArrayGO
+from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import ErrorInitIndexLevel
 from static_frame.core.hloc import HLoc
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index import ILoc
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.array_go import ArrayGO
-
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import INT_TYPES
+from static_frame.core.index import LocMap
+from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index_base import IndexBase
+from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import GetItemKeyTypeCompound
-
-from static_frame.core.container_util import index_from_optional_constructor
-
-from static_frame.core.type_blocks import TypeBlocks
-
-from static_frame.core.index import LocMap
-from static_frame.core.index import mutable_immutable_index_filter
-from static_frame.core.exception import ErrorInitIndexLevel
-
-from static_frame.core.doc_str import doc_inject
 
 
 # if tp.TYPE_CHECKING:

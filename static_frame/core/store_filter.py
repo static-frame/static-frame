@@ -3,19 +3,16 @@ import typing as tp
 
 import numpy as np
 
+
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.core.util import DTYPE_NAT_KIND
-from static_frame.core.util import DTYPE_COMPLEX_KIND
-
-# from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
-
-from static_frame.core.util import FLOAT_TYPES
-# from static_frame.core.util import AnyCallable
+from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import EMPTY_SET
+from static_frame.core.util import FLOAT_TYPES
 
 
 class StoreFilter:

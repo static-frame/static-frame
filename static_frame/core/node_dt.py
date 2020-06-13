@@ -2,31 +2,29 @@
 import typing as tp
 import numpy as np
 
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_DAY
-
-from static_frame.core.util import DT64_H
-from static_frame.core.util import DT64_M
-from static_frame.core.util import DT64_S
-from static_frame.core.util import DT64_MS
-from static_frame.core.util import DT64_US
-from static_frame.core.util import DT64_NS
-from static_frame.core.util import DT64_PS
-from static_frame.core.util import DT64_FS
-from static_frame.core.util import DT64_AS
-
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import DTYPE_STR
-
-from static_frame.core.util import array_from_element_attr
-from static_frame.core.util import array_from_element_method
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
+from static_frame.core.util import array_from_element_attr
+from static_frame.core.util import array_from_element_method
+from static_frame.core.util import DT64_AS
+from static_frame.core.util import DT64_DAY
+from static_frame.core.util import DT64_FS
+from static_frame.core.util import DT64_H
+from static_frame.core.util import DT64_M
+from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_NS
+from static_frame.core.util import DT64_PS
+from static_frame.core.util import DT64_S
+from static_frame.core.util import DT64_US
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_STR
+from static_frame.core.util import EMPTY_TUPLE
+
 
 if tp.TYPE_CHECKING:
 

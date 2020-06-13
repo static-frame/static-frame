@@ -9,80 +9,67 @@ import numpy as np
 from automap import AutoMap
 from automap import FrozenAutoMap
 
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import SLICE_ATTRS
-from static_frame.core.util import SLICE_START_ATTR
-from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import SLICE_STEP_ATTR
-from static_frame.core.util import NAME_DEFAULT
 
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import DTYPE_DATETIME_KIND
-
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import KeyTransformType
-from static_frame.core.util import CallableOrMapping
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import KeyIterableTypes
-from static_frame.core.util import UFunc
-from static_frame.core.util import NameType
-
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import isin
-
-from static_frame.core.util import immutable_filter
-from static_frame.core.util import name_filter
-from static_frame.core.util import array_shift
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import slice_to_inclusive_slice
-from static_frame.core.util import isna_array
-
-from static_frame.core.util import DTYPE_INT_DEFAULT
-
-from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.node_selector import InterfaceSelectDuo
-from static_frame.core.node_selector import TContainer
-
-from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.util import union1d
-from static_frame.core.util import intersect1d
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import mloc
-
-from static_frame.core.util import resolve_dtype
 from static_frame.core.container import ContainerOperand
-from static_frame.core.container_util import matmul
 from static_frame.core.container_util import apply_binary_operator
-
-
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.index_base import IndexBase
-# from static_frame.core.node_iter import IterNode
-from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_iter import IterNodeApplyType
-
-
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
+from static_frame.core.container_util import matmul
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayHeader
-
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
+from static_frame.core.index_base import IndexBase
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import TContainer
+from static_frame.core.node_str import InterfaceString
 
+from static_frame.core.util import array_shift
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import BOOL_TYPES
+from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import EMPTY_SLICE
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import intersect1d
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import KeyIterableTypes
+from static_frame.core.util import KeyTransformType
+from static_frame.core.util import mloc
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import name_filter
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import setdiff1d
+from static_frame.core.util import SLICE_ATTRS
+from static_frame.core.util import SLICE_START_ATTR
+from static_frame.core.util import SLICE_STEP_ATTR
+from static_frame.core.util import SLICE_STOP_ATTR
+from static_frame.core.util import slice_to_inclusive_slice
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import UFunc
+from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import union1d
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover

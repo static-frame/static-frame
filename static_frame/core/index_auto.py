@@ -1,18 +1,13 @@
 
 import typing as tp
 
-from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
-
 
 from static_frame.core.index import Index
-# from static_frame.core.index_hierarchy import IndexHierarchy
-
 from static_frame.core.index import IndexGO
 from static_frame.core.index import PositionsAllocator
-
-from static_frame.core.util import IndexConstructor
-
+from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import IndexConstructor
 
 
 IndexAutoInitializer = int

@@ -5,20 +5,18 @@ Tools for iterators in Series and Frame. These components are imported by both s
 import typing as tp
 from enum import Enum
 from functools import partial
-
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-# from static_frame.core.util import CallableOrMapping
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import KEY_ITERABLE_TYPES
 
 
 if tp.TYPE_CHECKING:

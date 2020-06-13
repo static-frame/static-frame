@@ -3,15 +3,14 @@ import typing as tp
 import numpy as np
 
 
+from static_frame.core.assign import Assign
+from static_frame.core.doc_str import doc_inject
+from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.assign import Assign
 
 
 if tp.TYPE_CHECKING:
-
     from static_frame.core.bus import Bus  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  #pylint: disable = W0611 #pragma: no cover

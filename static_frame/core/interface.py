@@ -7,44 +7,35 @@ from itertools import chain
 
 import numpy as np
 
-from static_frame.core.frame import Frame
+
 from static_frame.core.bus import Bus
-
-from static_frame.core.util import DT64_S
-from static_frame.core.util import AnyCallable
-
+from static_frame.core.container import _RIGHT_OPERATOR_MAP
+from static_frame.core.container import _UFUNC_BINARY_OPERATORS
+from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
-
-from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.index_base import IndexBase
-
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexYearMonth
-from static_frame.core.index_datetime import IndexYear
-
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.display import Display
+from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
-
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexYear
+from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeDelegate
-
-from static_frame.core.container import _UFUNC_BINARY_OPERATORS
-from static_frame.core.container import _RIGHT_OPERATOR_MAP
-from static_frame.core.container import _UFUNC_UNARY_OPERATORS
-
-from static_frame.core.node_selector import TContainer
 from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceSelectDuo
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAssignQuartet
-
+from static_frame.core.node_selector import InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
-
-from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_selector import InterfaceSelectDuo
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import DT64_S
 
 
 #-------------------------------------------------------------------------------

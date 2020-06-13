@@ -16,14 +16,13 @@ from collections import namedtuple
 import numpy as np
 
 
-from static_frame.core.util import _gen_skip_middle
-from static_frame.core.display_color import HexColor
 from static_frame.core import display_html_datatables
-
+from static_frame.core.display_color import HexColor
+from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import COMPLEX_TYPES
 
 _module = sys.modules[__name__]
 

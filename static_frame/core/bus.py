@@ -4,47 +4,32 @@ import typing as tp
 import numpy as np
 
 
-from static_frame.core.series import Series
+from static_frame.core.container import ContainerBase
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayHeader
+from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
-# from static_frame.core.frame import Index
-
+from static_frame.core.hloc import HLoc
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.series import Series
 from static_frame.core.store import Store
-from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.store_zip import StoreZipPickle
-from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_sqlite import StoreSQLite
-from static_frame.core.store_hdf5 import StoreHDF5
-
-# from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
-
-
-from static_frame.core.exception import ErrorInitBus
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.store_hdf5 import StoreHDF5
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_xlsx import StoreXLSX
+from static_frame.core.store_zip import StoreZipCSV
+from static_frame.core.store_zip import StoreZipPickle
+from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import DTYPE_BOOL
-# from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import PathSpecifier
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
-
-# from static_frame.core.util import DtypesSpecifier
-
-from static_frame.core.node_selector import InterfaceGetItem
-
-from static_frame.core.hloc import HLoc
-
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayHeader
-
-from static_frame.core.doc_str import doc_inject
-
-from static_frame.core.container import ContainerBase
-
+from static_frame.core.util import PathSpecifier
 
 
 #-------------------------------------------------------------------------------

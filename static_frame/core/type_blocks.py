@@ -1,69 +1,55 @@
 
 
 import typing as tp
-
 from itertools import zip_longest
 from itertools import chain
 from functools import partial
-# from collections import deque
+
+
 import numpy as np
 
 
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import UNIT_SLICE
-from static_frame.core.util import DTYPE_OBJECT
-# from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import DTYPE_BOOL
-
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-# from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_NAN_KIND
-
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import UFunc
-
-from static_frame.core.util import row_1d_filter
-from static_frame.core.util import column_2d_filter
-
-from static_frame.core.util import mloc
-from static_frame.core.util import array_shift
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import dtype_to_na
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import isna_array
-from static_frame.core.util import slice_to_ascending_slice
-from static_frame.core.util import binary_transition
-from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import shape_filter
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import iterable_to_array_nd
-
-
-from static_frame.core.node_selector import InterfaceGetItem
-
-from static_frame.core.util import immutable_filter
-from static_frame.core.util import slices_from_targets
-from static_frame.core.util import FILL_VALUE_DEFAULT
-
-from static_frame.core.doc_str import doc_inject
-
-from static_frame.core.index_correspondence import IndexCorrespondence
-
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import Display
-
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
-
-from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import binary_transition
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import dtype_to_na
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.util import full_for_fill
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import mloc
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import row_1d_filter
+from static_frame.core.util import shape_filter
+from static_frame.core.util import slice_to_ascending_slice
+from static_frame.core.util import slices_from_targets
+from static_frame.core.util import UFunc
+from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import UNIT_SLICE
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):

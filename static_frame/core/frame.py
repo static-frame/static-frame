@@ -9,145 +9,124 @@ from itertools import repeat
 from itertools import product
 
 import numpy as np
-
 from numpy.ma import MaskedArray
 
-from static_frame.core.util import UFunc
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import DTYPE_OBJECT
 
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import KeyOrKeys
-from static_frame.core.util import PathSpecifier
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
-from static_frame.core.util import NameType
-from static_frame.core.util import NAME_DEFAULT
-
-from static_frame.core.util import DtypesSpecifier
-from static_frame.core.util import DtypeSpecifier
-
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import path_filter
-from static_frame.core.util import Bloc2DKeyType
-
-from static_frame.core.util import IndexSpecifier
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-
-from static_frame.core.util import FrameInitializer
-from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
-from static_frame.core.util import column_2d_filter
-from static_frame.core.util import column_1d_filter
-
-from static_frame.core.util import name_filter
-from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_nd
-
-from static_frame.core.util import isin
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import ufunc_set_iter
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import _read_url
-from static_frame.core.util import write_optional_file
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import CallableOrCallableMap
-from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import AnyCallable
-
-from static_frame.core.util import argmin_2d
-from static_frame.core.util import argmax_2d
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import key_normalize
-from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import dtype_to_na
-from static_frame.core.util import is_hashable
-from static_frame.core.util import reversed_iter
-
-from static_frame.core.util import Join
-from static_frame.core.util import Pair
-from static_frame.core.util import PairLeft
-from static_frame.core.util import PairRight
-
-from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterfaceAssignQuartet
-from static_frame.core.node_selector import InterfaceAsType
-from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_dt import InterfaceDatetime
-
-from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
-
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import array_from_value_iter
+from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import rehierarch_from_type_blocks
-from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import dtypes_mappable
-from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import index_constructor_empty
-from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import key_to_ascending_key
+from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import arrays_from_index_frame
+from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import rehierarch_from_index_hierarchy
+from static_frame.core.container_util import rehierarch_from_type_blocks
 
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeType
-
-from static_frame.core.node_iter import IterNodeAxis
-from static_frame.core.node_iter import IterNodeDepthLevelAxis
-from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
-
-
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
 from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayHeader
+from static_frame.core.doc_str import doc_inject
 
-from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitFrame
 
-from static_frame.core.series import Series
-from static_frame.core.series import RelabelInput
-
-from static_frame.core.index_base import IndexBase
-
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
-
+from static_frame.core.index import Index
+from static_frame.core.index import IndexGO
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
-
-from static_frame.core.assign import Assign
-
-from static_frame.core.store_filter import StoreFilter
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeDepthLevelAxis
+from static_frame.core.node_iter import IterNodeGroupAxis
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_selector import InterfaceAssignQuartet
+from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_str import InterfaceString
+from static_frame.core.series import RelabelInput
+from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+from static_frame.core.store_filter import StoreFilter
+from static_frame.core.type_blocks import TypeBlocks
 
-from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import AxisInvalid
-
-from static_frame.core.doc_str import doc_inject
+from static_frame.core.util import _gen_skip_middle
+from static_frame.core.util import _read_url
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import argmax_2d
+from static_frame.core.util import argmin_2d
+from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import CallableOrCallableMap
+from static_frame.core.util import column_1d_filter
+from static_frame.core.util import column_2d_filter
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import dtype_to_na
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import FILL_VALUE_DEFAULT
+from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
+from static_frame.core.util import FrameInitializer
+from static_frame.core.util import get_tuple_constructor
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import IndexSpecifier
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import is_hashable
+from static_frame.core.util import isin
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import iterable_to_array_nd
+from static_frame.core.util import Join
+from static_frame.core.util import KEY_MULTIPLE_TYPES
+from static_frame.core.util import key_normalize
+from static_frame.core.util import KeyOrKeys
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import name_filter
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import Pair
+from static_frame.core.util import PairLeft
+from static_frame.core.util import PairRight
+from static_frame.core.util import path_filter
+from static_frame.core.util import PathSpecifier
+from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import reversed_iter
+from static_frame.core.util import UFunc
+from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import ufunc_unique
+from static_frame.core.util import write_optional_file
 
 # Alias str for type annotations so as to not get confused with str property on
 String = str

@@ -9,30 +9,23 @@ from collections import namedtuple
 
 import numpy as np
 
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_NAT_KIND
-from static_frame.core.util import isna_array
-
-# from static_frame.core.util import DTYPE_BOOL
-# from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-
-from static_frame.core.util import DTYPES_BOOL
-from static_frame.core.util import DTYPES_INEXACT
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-# from static_frame.core.util import NAT
-
-from static_frame.core.doc_str import DOC_TEMPLATE
 
 from static_frame.core.display import Display
-from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayFormats
-
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.doc_str import DOC_TEMPLATE
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import DTYPE_FLOAT_DEFAULT
+from static_frame.core.util import DTYPE_INT_KIND
+from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_NAT_KIND
+from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPES_BOOL
+from static_frame.core.util import DTYPES_INEXACT
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import isna_array
 
 
 if tp.TYPE_CHECKING:
