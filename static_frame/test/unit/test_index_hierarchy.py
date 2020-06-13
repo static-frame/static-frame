@@ -1644,7 +1644,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         ih2 = ih1._drop_loc([('I', 'B', 1), ('II', 'B', 2)])
 
-        self.assertEqual(ih2.to_frame().to_pairs(0),
+        self.assertEqual(ih2.to_frame().to_pairs(0), #type: ignore
                 ((0, ((0, 'I'), (1, 'II'))), (1, ((0, 'A'), (1, 'A'))), (2, ((0, 1), (1, 1))))
                 )
 

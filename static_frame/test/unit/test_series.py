@@ -3451,7 +3451,7 @@ class TestUnit(TestCase):
         s2 = Series((1, 3.4, 5), index=('d', 'e', 'f'))
 
         with self.assertRaises(NotImplementedError):
-            _ = s1._insert(1, (3, 4))
+            _ = s1._insert(1, (3, 4)) #type: ignore
 
         s3 = s1._insert(1, s2)
 
