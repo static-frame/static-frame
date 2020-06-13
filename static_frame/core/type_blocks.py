@@ -1525,7 +1525,7 @@ class TypeBlocks(ContainerOperand):
 
         for block, target in zip_longest(self._blocks, targets):
             if block is None or target is None:
-                raise Exception('blocks or targets do not align')
+                raise RuntimeError('blocks or targets do not align')
 
             if not is_element:
                 if block.ndim == 1:
