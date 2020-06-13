@@ -688,8 +688,25 @@ class TestUnit(TestCase):
                 [  0. ,   0. ,   2. ,   0. ,   0.1]])
 
 
+#     @unittest.skip('implement operators for same sized but differently typed blocks')
+    def test_type_blocks_binary_operator_e(self) -> None:
 
-    def test_type_blocks_binary_operator_d(self) -> None:
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+        a4 = np.array([None, None, None])
+        tb = TypeBlocks.from_blocks((a1, a2, a4, a3))
+
+        post1 = [x for x in tb.element_items()]
+
+        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._row_dtype)
+        self.assertTrue((tb.values == tb2.values).all())
+
+        post2 = tb == tb2
+        self.assertEqual(post2.values.tolist(),
+                [[True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True]])
+
+    def test_type_blocks_binary_operator_f(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6]])
         a2 = np.array([[1.5,2.6], [4.2,5.5]])
         tb1 = TypeBlocks.from_blocks((a1, a2))
@@ -815,7 +832,7 @@ class TestUnit(TestCase):
                 [ True, False, False,  True, False, False,  True, False]])
 
 
-    def test_type_blocks_mask_blocks_c(self) -> None:
+    def test_type_blocks_mask_blocks_d(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6]])
         a2 = np.array([[False, False], [True, False]])
@@ -1149,7 +1166,7 @@ class TestUnit(TestCase):
 
     #--------------------------------------------------------------------------
 
-    def test_type_blocks_assign_blocks_i(self) -> None:
+    def test_type_blocks_assign_blocks_j(self) -> None:
 
         a1 = np.array([[3], [3],])
         a2 = np.array([False, True])
@@ -1177,7 +1194,7 @@ class TestUnit(TestCase):
                            ))
 
 
-    def test_type_blocks_assign_blocks_j(self) -> None:
+    def test_type_blocks_assign_blocks_k(self) -> None:
 
         a1 = np.arange(9).reshape(3, 3)
         tb1 = TypeBlocks.from_blocks((a1,))
@@ -1503,24 +1520,6 @@ class TestUnit(TestCase):
                 [(dtype('int64'), 3), (dtype('bool'), 3), (dtype('<U2'), 2), (dtype('O'), 1)])
 
 
-
-#     @unittest.skip('implement operators for same sized but differently typed blocks')
-    def test_type_blocks_binary_operator_e(self) -> None:
-
-        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
-        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
-        a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
-        a4 = np.array([None, None, None])
-        tb = TypeBlocks.from_blocks((a1, a2, a4, a3))
-
-        post1 = [x for x in tb.element_items()]
-
-        tb2 = TypeBlocks.from_element_items(post1, tb.shape, tb._row_dtype)
-        self.assertTrue((tb.values == tb2.values).all())
-
-        post2 = tb == tb2
-        self.assertEqual(post2.values.tolist(),
-                [[True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True], [True, True, True, True, True, True, True, True, True]])
 
 
     def test_type_blocks_copy_a(self) -> None:
