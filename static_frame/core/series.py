@@ -5,97 +5,89 @@ from itertools import chain
 import numpy as np
 from numpy.ma import MaskedArray
 
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NameType
-from static_frame.core.util import INT_TYPES
-
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import mloc
-from static_frame.core.util import immutable_filter
-from static_frame.core.util import name_filter
-from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import array2d_to_tuples
-from static_frame.core.util import array_shift
-from static_frame.core.util import write_optional_file
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import binary_transition
-from static_frame.core.util import isin
-from static_frame.core.util import slices_from_targets
-from static_frame.core.util import is_callable_or_mapping
-
-from static_frame.core.util import AnyCallable
-from static_frame.core.util import CallableOrMapping
-from static_frame.core.util import SeriesInitializer
-from static_frame.core.util import PathSpecifierOrFileLike
-from static_frame.core.util import DepthLevelSpecifier
-
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import dtype_to_na
-from static_frame.core.util import argmin_1d
-from static_frame.core.util import argmax_1d
-from static_frame.core.util import intersect1d
-
-from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceSelectTrio
-
-from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.container import ContainerOperand
-
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayFormats
-from static_frame.core.display import DisplayHeader
-
-from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_iter import IterNodeGroup
-from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeWindow
-from static_frame.core.node_iter import IterNodeNoArg
-from static_frame.core.node_iter import IterNodeApplyType
-
-from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_dt import InterfaceDatetime
-
-from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_base import IndexBase
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexAutoFactoryType
-
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import axis_window_items
-from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import pandas_version_under_1
-from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import apply_binary_operator
 
 from static_frame.core.assign import Assign
 
-from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import AxisInvalid
+from static_frame.core.container import ContainerOperand
+from static_frame.core.container_util import apply_binary_operator
+from static_frame.core.container_util import axis_window_items
+from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import matmul
+from static_frame.core.container_util import pandas_to_numpy
+from static_frame.core.container_util import pandas_version_under_1
+from static_frame.core.container_util import rehierarch_from_index_hierarchy
 
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayFormats
+from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitSeries
+
+from static_frame.core.index import Index
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_base import IndexBase
+from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_hierarchy import IndexHierarchy
+
+from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_iter import IterNodeApplyType
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeGroup
+from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_selector import InterfaceAssignTrio
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_str import InterfaceString
+
+from static_frame.core.util import AnyCallable
+from static_frame.core.util import argmax_1d
+from static_frame.core.util import argmin_1d
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import array_to_groups_and_locations
+from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import binary_transition
+from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import dtype_to_na
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import FLOAT_TYPES
+from static_frame.core.util import full_for_fill
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import immutable_filter
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import intersect1d
+from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import mloc
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import name_filter
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import PathSpecifierOrFileLike
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import SeriesInitializer
+from static_frame.core.util import slices_from_targets
+from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import ufunc_unique
+from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame import FrameGO # pylint: disable=W0611 #pragma: no cover
-
     import pandas # pylint: disable=W0611 #pragma: no cover
 
 

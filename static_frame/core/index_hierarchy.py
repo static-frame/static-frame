@@ -4,57 +4,57 @@ from ast import literal_eval
 
 import numpy as np
 
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import IndexConstructor
-from static_frame.core.util import IndexConstructors
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import intersect2d
-from static_frame.core.util import union2d
-from static_frame.core.util import setdiff2d
-from static_frame.core.util import name_filter
-from static_frame.core.util import isin
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NameType
-from static_frame.core.util import CallableOrMapping
-from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IndexInitializer
-from static_frame.core.util import DtypeSpecifier
-from static_frame.core.util import UFunc
 
-from static_frame.core.index_base import IndexBase
+from static_frame.core.array_go import ArrayGO
+from static_frame.core.container_util import apply_binary_operator
+from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import matmul
+from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.display import Display
+from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
+from static_frame.core.display import DisplayHeader
+from static_frame.core.doc_str import doc_inject
+
+from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.hloc import HLoc
+
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
 
-from static_frame.core.node_selector import InterfaceGetItem
-from static_frame.core.node_selector import InterfaceAsType
-from static_frame.core.node_selector import TContainer
-
-
-from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_dt import InterfaceDatetime
-
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import rehierarch_from_type_blocks
-from static_frame.core.container_util import apply_binary_operator
-
-from static_frame.core.array_go import ArrayGO
-from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayHeader
-from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.hloc import HLoc
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.doc_str import doc_inject
+from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeType
+from static_frame.core.node_selector import InterfaceAsType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import TContainer
+from static_frame.core.node_str import InterfaceString
+
+from static_frame.core.type_blocks import TypeBlocks
+
+from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import IndexConstructor
+from static_frame.core.util import IndexConstructors
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import intersect2d
+from static_frame.core.util import isin
+from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import name_filter
+from static_frame.core.util import NameType
+from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import setdiff2d
+from static_frame.core.util import UFunc
+from static_frame.core.util import union2d
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -232,7 +232,6 @@ class IndexHierarchy(IndexBase):
             current = tree # NOTE: over the life of this loop, current can be a dict or a list
             # each label is an iterable
             for d, v in enumerate(label):
-                # print('d', d, 'v', v, 'depth_pre_max', depth_pre_max, 'depth_max', depth_max)
                 if continuation_token is not CONTINUATION_TOKEN_INACTIVE:
                     if v == continuation_token:
                         # might check that observed_last[d] != token
@@ -258,8 +257,8 @@ class IndexHierarchy(IndexBase):
                 elif d == depth_max:
                     # if there are redundancies here they will be caught in index creation
                     current.append(v)
-                else:
-                    raise ErrorInitIndex('label exceeded expected depth', label)
+                else: # NOTE: cannot get here with length check above
+                    raise ErrorInitIndex('label exceeded expected depth', label) #pragma: no cover
                 # shared implementation with _from_type_blocks -----------------
 
         levels = cls._LEVEL_CONSTRUCTOR.from_tree(

@@ -6,29 +6,24 @@ import numpy as np
 
 from collections import OrderedDict
 
-from static_frame import Index
-# from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import Series
+
+from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
-# from static_frame import IndexYearMonth
-# from static_frame import IndexYear
-from static_frame import DisplayConfig
-
+from static_frame import HLoc
+from static_frame import Index
+from static_frame import IndexDate
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexYearMonth
+from static_frame import Series
 
-# from static_frame import IndexLevelGO
-from static_frame import HLoc
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
-
+from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
 
 
 class TestUnit(TestCase):
@@ -167,6 +162,59 @@ class TestUnit(TestCase):
         # names does not use name as it is the wrong size
         self.assertEqual(ih1.names, ('__index0__', '__index1__'))
 
+
+    def test_hierarchy_init_k(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        ih1._update_array_cache() # force block creation
+
+        with self.assertRaises(ErrorInitIndex):
+            _ = IndexHierarchy(ih1, blocks=ih1._blocks)
+
+        ih2 = IndexHierarchy(ih1)
+        self.assertTrue(ih2.equals(ih1, compare_dtype=True))
+
+
+    #---------------------------------------------------------------------------
+    def test_hierarchy_mloc_a(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        # per type block size
+        self.assertEqual(ih1.size, 4)
+
+        ih1._update_array_cache()
+        ih2 = IndexHierarchy(ih1)
+        self.assertEqual(ih2.mloc.tolist(), ih1.mloc.tolist())
+
+    def test_hierarchy_size_a(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        self.assertEqual(ih1.nbytes, 16)
+
+
+
+    def test_hierarchy_bool_a(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        self.assertTrue(bool(ih1))
+        # post array caching
+        self.assertTrue(bool(ih1))
 
     #---------------------------------------------------------------------------
 
@@ -633,6 +681,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             ih1 = IndexHierarchy.from_labels(labels)
 
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_from_index_items_a(self) -> None:
@@ -721,6 +770,15 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitIndex):
             IndexHierarchy._from_type_blocks(f3._blocks)
+
+    def test_hierarchy_from_type_blocks_b(self) -> None:
+        f1 = Frame.from_items((
+                ('a', tuple('ABAB')),
+                ('b', (1, 2, 1, 2)),
+                ('c', (1, 2, 1, 2)))
+                )
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy._from_type_blocks(f1._blocks)
 
 
     #---------------------------------------------------------------------------
@@ -1572,7 +1630,23 @@ class TestUnit(TestCase):
         assert isinstance(post3, IndexHierarchy) # mypy
         self.assertEqual(ih._blocks.mloc[2:].tolist(), post3._blocks.mloc.tolist())
 
+    #---------------------------------------------------------------------------
 
+    def test_hierarchy_drop_loc_a(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'B', 2),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1._drop_loc([('I', 'B', 1), ('II', 'B', 2)])
+
+        self.assertEqual(ih2.to_frame().to_pairs(0),
+                ((0, ((0, 'I'), (1, 'II'))), (1, ((0, 'A'), (1, 'A'))), (2, ((0, 1), (1, 1))))
+                )
 
     #---------------------------------------------------------------------------
 
