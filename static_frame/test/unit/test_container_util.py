@@ -262,7 +262,18 @@ class TestUnit(TestCase):
                     self.assertTrue(post.tolist(), (pair[0].values @ pair[1].values).tolist())
 
 
+    def test_matmul_j(self) -> None:
 
+        f1 = Frame.from_dict(dict(a=(1, 2, 3), b=(5, 6, 7)),
+                index=tuple('xyz'),
+                name='foo')
+        a1 = np.array([[5], [0]])
+
+        with self.assertRaises(RuntimeError):
+            _ = matmul(a1, f1)
+
+
+    #---------------------------------------------------------------------------
     def test_key_to_ascending_key_a(self) -> None:
         self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
         self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]) # type: ignore

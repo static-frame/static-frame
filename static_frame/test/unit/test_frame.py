@@ -3576,7 +3576,6 @@ class TestUnit(TestCase):
         f2 = f1 == f1.values.tolist()
         self.assertTrue(f2.all().all())
 
-
     #---------------------------------------------------------------------------
     def test_frame_isin_a(self) -> None:
         # reindex both axis
