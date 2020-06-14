@@ -369,7 +369,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''Returns a Series of tuples of dtypes, one for each loaded Frame.
         '''
         if not self._loaded.any():
-            return Series(None, index=self._series._index)
+            return Series.from_element(None, index=self._series._index)
 
         def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Optional[tp.Tuple[int, ...]]]]:
             for label, f in zip(self._series._index, self._series.values):

@@ -730,9 +730,39 @@ class TestUnit(TestCase):
         self.assertFalse(b1.equals(b5))
         self.assertFalse(b1.equals(b6))
 
+    #---------------------------------------------------------------------------
+
+    def test_bus_interface_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        b1 = Bus.from_frames((f1,),)
+        post = b1.interface
+        self.assertEqual(post.shape, (41, 3))
 
 
+    #---------------------------------------------------------------------------
 
+    def test_bus_mlox_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        b1 = Bus.from_frames((f1,),)
+
+        with temp_file('.db') as fp:
+
+            b1.to_sqlite(fp)
+            b2 = Bus.from_sqlite(fp)
+
+            mloc = b2.mloc
+
+            self.assertEqual(mloc.to_pairs(),
+                    (('f1', None),))
 
 
 
