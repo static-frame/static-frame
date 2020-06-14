@@ -582,6 +582,14 @@ class TestUnit(TestCase):
                 ['a', 'd', 'e'])
 
 
+    def test_index_drop_iloc_b(self) -> None:
+
+        idx = IndexGO(('a', 'b', 'c', 'd'))
+        idx.append('e')
+        post = idx._drop_iloc(None)
+        self.assertEqual(post.values.tolist(),
+                ['a', 'b', 'c', 'd', 'e'])
+
 
     #---------------------------------------------------------------------------
 
@@ -1140,6 +1148,13 @@ class TestUnit(TestCase):
         self.assertTrue(not a.equals(c))
         self.assertTrue(not a.equals(d))
         self.assertTrue(not a.equals(e))
+
+
+    def test_index_equals_f(self) -> None:
+        a = IndexGO([1, 2, 3])
+        b = IndexGO([1, 2, 3])
+        b.append(4)
+        self.assertFalse(a.equals(b))
 
 
 
