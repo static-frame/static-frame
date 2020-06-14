@@ -4,10 +4,8 @@ import unittest
 import datetime
 import typing as tp
 from enum import Enum
-import datetime
 
 import numpy as np
-
 
 from static_frame.core.util import _array_to_duplicated_sortable
 from static_frame.core.util import _gen_skip_middle
