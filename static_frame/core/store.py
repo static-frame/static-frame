@@ -324,7 +324,7 @@ class Store:
             ) -> Frame:
         '''Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def write(self,
             items: tp.Iterable[tp.Tuple[str, Frame]],
@@ -333,10 +333,10 @@ class Store:
             ) -> None:
         '''Write all ``Frames`` in the Store.
         '''
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
 

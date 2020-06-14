@@ -18,6 +18,14 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_store_init_a(self) -> None:
+
+        class StoreDerived(Store):
+            _EXT = '.txt'
+
+        st = StoreDerived(fp='foo.txt')
+        self.assertTrue(np.isnan(st._last_modified))
+
     def test_store_config_map_a(self) -> None:
 
         sc1 = StoreConfig(index_depth=3, columns_depth=3)
@@ -29,8 +37,6 @@ class TestUnit(TestCase):
         sc2m = StoreConfigMap.from_config(sc2)
         self.assertEqual(sc2m['a'].include_index, False)
         self.assertEqual(sc2m['b'].include_index, False)
-
-
 
 
     def test_store_config_map_b(self) -> None:
