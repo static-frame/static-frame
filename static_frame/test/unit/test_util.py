@@ -4,63 +4,56 @@ import unittest
 import datetime
 import typing as tp
 from enum import Enum
+import datetime
 
 import numpy as np
 
-from static_frame.core.util import isna_array
-from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import ufunc_set_iter
 
-from static_frame.core.util import intersect2d
-from static_frame.core.util import union2d
-from static_frame.core.util import setdiff2d
-from static_frame.core.util import concat_resolved
+from static_frame.core.util import _array_to_duplicated_sortable
+from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
 from static_frame.core.util import _isin_2d
-from static_frame.core.util import isin
-
-from static_frame.core.util import _gen_skip_middle
-from static_frame.core.util import dtype_to_na
-from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import column_1d_filter
-from static_frame.core.util import row_1d_filter
 from static_frame.core.util import _read_url
+from static_frame.core.util import _ufunc_set_1d
 from static_frame.core.util import _ufunc_set_2d
+from static_frame.core.util import argmax_1d
+from static_frame.core.util import argmax_2d
+from static_frame.core.util import argmin_1d
+from static_frame.core.util import argmin_2d
+from static_frame.core.util import array_from_element_method
+from static_frame.core.util import array_shift
+from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import binary_transition
+from static_frame.core.util import column_1d_filter
+from static_frame.core.util import concat_resolved
+from static_frame.core.util import DT64_DAY
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import dtype_to_na
+from static_frame.core.util import intersect1d
+from static_frame.core.util import intersect2d
+from static_frame.core.util import isin
+from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_2d
 from static_frame.core.util import iterable_to_array_nd
-
-from static_frame.core.util import slice_to_ascending_slice
-from static_frame.core.util import array_shift
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import to_timedelta64
-from static_frame.core.util import binary_transition
-
+from static_frame.core.util import key_to_datetime_key
+from static_frame.core.util import resolve_dtype
+from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import resolve_type_iter
 from static_frame.core.util import roll_1d
 from static_frame.core.util import roll_2d
-
-from static_frame.core.util import union1d
-from static_frame.core.util import intersect1d
+from static_frame.core.util import row_1d_filter
 from static_frame.core.util import setdiff1d
-
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DT64_DAY
-
-from static_frame.core.util import resolve_type_iter
-
-from static_frame.core.util import argmin_1d
-from static_frame.core.util import argmax_1d
-from static_frame.core.util import argmin_2d
-from static_frame.core.util import argmax_2d
-
-from static_frame.core.util import _array_to_duplicated_sortable
-from static_frame.core.util import _ufunc_set_1d
+from static_frame.core.util import setdiff2d
+from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
-
+from static_frame.core.util import to_datetime64
+from static_frame.core.util import to_timedelta64
+from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import ufunc_unique
+from static_frame.core.util import union1d
+from static_frame.core.util import union2d
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
@@ -1980,6 +1973,42 @@ class TestUnit(TestCase):
         post = tuple(post_iter)
         self.assertEqual(post, ((slice(1, 4, None), 0),))
 
+    #---------------------------------------------------------------------------
+    def test_array_from_element_method_a(self) -> None:
+
+        a1 = np.array(['blue', 'black'], dtype=object)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda x: x.replace('B', '_')
+                )
+        self.assertEqual(a2.tolist(), ['_LUE', '_LACK'])
+
+        a3 = np.array([['blue', 'black'], ['brick', 'brown']], dtype=object)
+        a4 = array_from_element_method(
+                array=a3,
+                method_name='upper',
+                args=(),
+                dtype=str,
+                pre_insert=lambda x: x.replace('B', '_')
+                )
+        self.assertEqual(a4.tolist(),
+                [['_LUE', '_LACK'], ['_RICK', '_ROWN']])
+
+
+    def test_array_from_element_method_b(self) -> None:
+
+        a1 = np.array([datetime.date(2020, 1, 2), datetime.date(1900, 1, 1)], dtype=object)
+        a2 = array_from_element_method(
+                array=a1,
+                method_name='weekday',
+                args=(),
+                dtype=int,
+                pre_insert=lambda x: x * 100
+                )
+        self.assertEqual(a2.tolist(), [300, 0])
 
 if __name__ == '__main__':
     unittest.main()

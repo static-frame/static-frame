@@ -1886,6 +1886,9 @@ def array_from_element_method(*,
         ) -> np.array:
     '''
     Handle element-wise method calling on arrays of Python date/datetime objects.
+
+    Args:
+        pre_insert:
     '''
     if dtype == DTYPE_STR:
         # build into a list first, then construct array to determine size

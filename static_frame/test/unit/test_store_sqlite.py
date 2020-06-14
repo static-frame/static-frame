@@ -111,6 +111,37 @@ class TestUnit(TestCase):
                     ((('I', 'a'), 1.2001953125), (('I', 'b'), 4.5), (('II', 'a'), 3.19921875), (('II', 'b'), 6.5))
                     )
 
+
+    def test_store_sqlite_write_d(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        frames = (f1,)
+
+        with temp_file('.sqlite') as fp:
+
+            config = StoreConfig(include_index=False)
+
+            st1 = StoreSQLite(fp)
+            st1.write(((f.name, f) for f in frames), config=config)
+
+            f2 = st1.read(f1.name, config=config)
+
+            self.assertEqual(f2.to_pairs(0),
+                    (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
+                    )
+
+            # getting the default config
+            f3 = st1.read(f1.name, config=None)
+
+            self.assertEqual(f3.to_pairs(0),
+                    (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
+                    )
+
+
 if __name__ == '__main__':
     unittest.main()
 
