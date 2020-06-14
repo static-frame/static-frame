@@ -9121,6 +9121,13 @@ class TestUnit(TestCase):
         self.assertFalse(f1.equals(f2, compare_dtype=False))
 
 
+
+    def test_frame_equals_g(self) -> None:
+
+        f1 = Frame.from_element('a', index=range(2), columns=range(2))
+        self.assertFalse(f1.equals(f1.values, compare_class=True))
+        self.assertFalse(f1.equals(f1.values, compare_class=False))
+
     #---------------------------------------------------------------------------
 
     def test_frame_join_a(self) -> None:
