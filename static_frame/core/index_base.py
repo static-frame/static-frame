@@ -99,7 +99,7 @@ class IndexBase(ContainerOperand):
         raise NotImplementedError()
 
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def _update_array_cache(self) -> None:
         raise NotImplementedError()
@@ -126,10 +126,10 @@ class IndexBase(ContainerOperand):
         pass
 
     def __len__(self) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
     #---------------------------------------------------------------------------
