@@ -51,10 +51,10 @@ def _get_parameters(
     # might need special handling for methods on built-ins
     try:
         sig = inspect.signature(func)
-    except ValueError:
+    except ValueError: #pragma: no cover
         # on Python 3.6, this error happens:
         # ValueError: no signature found for builtin <built-in function abs>
-        return '[]' if is_getitem else '()'
+        return '[]' if is_getitem else '()' #pragma: no cover
 
     positional = []
     kwarg_only = ['*'] # preload

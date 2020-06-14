@@ -21,7 +21,7 @@ class TestUnit(TestCase):
     def test_store_init_a(self) -> None:
 
         class StoreDerived(Store):
-            _EXT = '.txt'
+            _EXT = frozenset(('.txt',))
 
         st = StoreDerived(fp='foo.txt')
         self.assertTrue(np.isnan(st._last_modified))

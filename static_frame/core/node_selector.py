@@ -171,11 +171,11 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TContainer]):
             func_getitem: GetItemFunc,
             delegate: tp.Type[Assign]
             ) -> None:
-
-        self._func_iloc = func_iloc #pylint: disable=E0237
-        self._func_loc = func_loc #pylint: disable=E0237
-        self._func_getitem = func_getitem #pylint: disable=E0237
-
+        InterfaceSelectTrio.__init__(self,
+                func_iloc=func_iloc,
+                func_loc=func_loc,
+                func_getitem=func_getitem,
+                )
         self.delegate = delegate #pylint: disable=E0237
 
 
@@ -197,12 +197,12 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
             func_bloc: tp.Any, # not sure what is the right type
             delegate: tp.Type[Assign]
             ) -> None:
-
-        self._func_iloc = func_iloc #pylint: disable=E0237
-        self._func_loc = func_loc #pylint: disable=E0237
-        self._func_getitem = func_getitem #pylint: disable=E0237
-        self._func_bloc = func_bloc #pylint: disable=E0237
-
+        InterfaceSelectQuartet.__init__(self,
+                func_iloc=func_iloc,
+                func_loc=func_loc,
+                func_getitem=func_getitem,
+                func_bloc=func_bloc,
+                )
         self.delegate = delegate #pylint: disable=E0237
 
 
