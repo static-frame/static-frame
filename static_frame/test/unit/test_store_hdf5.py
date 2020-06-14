@@ -71,6 +71,7 @@ class TestUnit(TestCase):
 
     def test_store_hdf5_write_b(self) -> None:
 
+        # failure when including objects
         f1 = Frame.from_dict(
                 dict(x=(1,2,-5,object()), y=(3,4,-5,-3000)),
                 )
@@ -103,6 +104,26 @@ class TestUnit(TestCase):
                 f2 = st1.read('baz', config=config)
 
 
+    def test_store_hdf5_write_d(self) -> None:
+
+        # failure when including objects
+        f1 = Frame.from_dict(
+                dict(x=(1,2,-5, 3), y=(3,4,-5,-3000)),
+                name='foo',
+                )
+        frames = (f1,)
+
+        with temp_file('.hdf5') as fp:
+            st1 = StoreHDF5(fp)
+            st1.write(((f.name, f) for f in frames))
+
+            c1 = StoreConfig(index_depth=1, consolidate_blocks=False)
+            f2 = st1.read('foo', config=c1)
+            self.assertEqual(f2._blocks.shapes.tolist(), [(4,), (4,)])
+
+            c2 = StoreConfig(index_depth=1, consolidate_blocks=True)
+            f3 = st1.read('foo', config=c2)
+            self.assertEqual(f3._blocks.shapes.tolist(), [(4, 2)])
 
 
 if __name__ == '__main__':
