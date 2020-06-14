@@ -194,6 +194,17 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy(ih1)
         self.assertEqual(ih2.mloc.tolist(), ih1.mloc.tolist())
 
+    def test_hierarchy_mloc_b(self) -> None:
+
+        labels = (('I', 'A'),
+                ('I', 'B'),
+                )
+        ih1 = IndexHierarchy.from_labels(labels, name='foo')
+        # force recache
+        post = ih1.mloc
+        self.assertEqual(post.tolist(), ih1._blocks.mloc.tolist())
+
+
     def test_hierarchy_size_a(self) -> None:
 
         labels = (('I', 'A'),
@@ -214,6 +225,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
         self.assertTrue(bool(ih1))
         # post array caching
+        ih1._update_array_cache()
         self.assertTrue(bool(ih1))
 
     #---------------------------------------------------------------------------
