@@ -1037,6 +1037,19 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_via_str_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+
+        idx1.append('f')
+        idx1.append('g')
+
+        a1 = idx1.via_str.upper()
+        self.assertEqual(a1.tolist(),
+                ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                )
+
+
     def test_index_via_dt_a(self) -> None:
 
         idx1 = IndexDate(('2020-01-01', '2021-02-05', '2019-03-17'))
@@ -1048,6 +1061,17 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.via_dt.weekday().tolist(),
                 [2, 4, 6]
                 )
+
+    def test_index_via_dt_b(self) -> None:
+
+        idx1 = IndexDateGO(('2020-01-01', '2021-02-05', '2019-03-17'))
+        idx1.append('2020-04-01')
+        idx1.append('2020-05-01')
+
+        self.assertEqual(idx1.via_dt.weekday().tolist(),
+                [2, 4, 6, 2, 4]
+                )
+
 
     #---------------------------------------------------------------------------
 
