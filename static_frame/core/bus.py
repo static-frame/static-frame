@@ -196,8 +196,8 @@ class Bus(ContainerBase): # not a ContainerOperand
     # delegation
 
     def __getattr__(self, name: str) -> tp.Any:
-        if name == 'interface':
-            return getattr(self.__class__, 'interface')
+        # if name == 'interface':
+        #     return getattr(self.__class__, 'interface')
 
         try:
             return getattr(self._series, name)

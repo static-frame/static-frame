@@ -717,16 +717,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_bus_interface_a(self) -> None:
-
-        f1 = Frame.from_dict(
-                dict(a=(1,2,3)),
-                index=('x', 'y', 'z'),
-                name='f1')
-
-        b1 = Bus.from_frames((f1,),)
-        post = b1.interface
-        self.assertEqual(post.shape, (41, 3))
 
     def test_bus_interface_b(self) -> None:
         f1 = Frame.from_dict(
@@ -739,9 +729,13 @@ class TestUnit(TestCase):
                 name='bar')
 
         b1 = Bus.from_frames((f1, f2))
-        post = b1.interface
-        self.assertTrue(isinstance(post, Frame))
-        self.assertTrue(len(post) > 38)
+        post1 = b1.interface
+        self.assertTrue(isinstance(post1, Frame))
+        self.assertTrue(post1.shape, (41, 3))
+
+        post2 = Bus.interface
+        self.assertTrue(isinstance(post2, Frame))
+        self.assertTrue(post2.shape, (41, 3))
 
 
     #---------------------------------------------------------------------------
