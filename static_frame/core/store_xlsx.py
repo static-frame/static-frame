@@ -20,12 +20,20 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DT64_DAY
-from static_frame.core.util import DT64_S
+# from static_frame.core.util import DT64_DAY
+# from static_frame.core.util import DT64_S
+# from static_frame.core.util import DT64_H
+# from static_frame.core.util import DT64_M
+
+from static_frame.core.util import DT64_MONTH
+from static_frame.core.util import DT64_YEAR
+
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KIND
 from static_frame.core.util import DTYPE_NAN_KIND
 from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_NAT_KIND
+
 from static_frame.core.util import NUMERIC_TYPES
 
 if tp.TYPE_CHECKING:
@@ -52,7 +60,9 @@ class StoreXLSX(Store):
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
         '''
         kind = dtype.kind
-        if dtype == DT64_S or dtype == DT64_DAY:
+
+        if kind in DTYPE_NAT_KIND and dtype != DT64_MONTH and dtype != DT64_YEAR:
+            # NOTE: not certain if this is a benefit
             return 'write_datetime', True
         elif dtype == DTYPE_BOOL:
             return 'write_boolean', False

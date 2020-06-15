@@ -118,7 +118,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(post.tolist(), [1, None, np.nan, np.nan, np.inf])
 
 
-    def test_store_to_type_filter_array_a(self) -> None:
+    def test_store_to_type_filter_array_b(self) -> None:
         sfd = STORE_FILTER_DEFAULT
         a1 = np.array(['2012', '2013'], dtype=np.datetime64)
         post = sfd.to_type_filter_array(a1)
