@@ -1,3 +1,6 @@
 ignore:
   - "static_frame/performance/.*"
   - "static_frame/test/.*"
+coverage:
+  precision: 2
+  round: up
