@@ -735,7 +735,7 @@ class TestUnit(TestCase):
 
         post2 = Bus.interface
         self.assertTrue(isinstance(post2, Frame))
-        self.assertTrue(post2.shape, (41, 3))
+        self.assertTrue(post2.shape, (41, 3)) #type: ignore
 
 
     #---------------------------------------------------------------------------
