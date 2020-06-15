@@ -1,7 +1,7 @@
 import unittest
-# from io import StringIO
 import numpy as np
 from io import StringIO
+import datetime
 
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import STORE_FILTER_DISABLE
@@ -9,7 +9,7 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
 
 from static_frame.core.frame import Frame
-# from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -72,15 +72,25 @@ class TestUnit(TestCase):
             sfd.from_type_filter_array(a1).tolist(),
             [1, None, np.nan, -np.inf, np.inf])
 
+    def test_store_from_type_filter_array_f(self) -> None:
+
+        a1 = np.array(['2012', '2013'], dtype=np.datetime64)
+
+        sfd = STORE_FILTER_DEFAULT
+
+        with self.assertRaises(NotImplementedError):
+            sfd.from_type_filter_array(a1)
 
 
 
+    #---------------------------------------------------------------------------
     def test_store_from_type_filter_element_a(self) -> None:
         sfd = STORE_FILTER_DEFAULT
 
         self.assertEqual(sfd.from_type_filter_element(None), 'None')
         self.assertEqual(sfd.from_type_filter_element(np.nan), '')
 
+    #---------------------------------------------------------------------------
 
     def test_store_to_type_filter_element_a(self) -> None:
         sfd = STORE_FILTER_DEFAULT
@@ -99,6 +109,7 @@ class TestUnit(TestCase):
         self.assertEqual(sfd.to_type_filter_element('None'), 'None')
 
 
+    #---------------------------------------------------------------------------
 
     def test_store_to_type_filter_array_a(self) -> None:
         sfd = STORE_FILTER_DEFAULT
@@ -107,6 +118,14 @@ class TestUnit(TestCase):
         self.assertAlmostEqualValues(post.tolist(), [1, None, np.nan, np.nan, np.inf])
 
 
+    def test_store_to_type_filter_array_a(self) -> None:
+        sfd = STORE_FILTER_DEFAULT
+        a1 = np.array(['2012', '2013'], dtype=np.datetime64)
+        post = sfd.to_type_filter_array(a1)
+        self.assertAlmostEqualValues(post.tolist(), [datetime.date(2012, 1, 1), datetime.date(2013, 1, 1)])
+
+
+    #---------------------------------------------------------------------------
 
     def test_store_filter_to_delimited_a(self) -> None:
         f = Frame.from_records(((None, np.inf), (np.nan, -np.inf)))

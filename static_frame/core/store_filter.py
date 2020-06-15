@@ -123,9 +123,6 @@ class StoreFilter:
             return array # no replacements posible
 
         if kind in DTYPE_NAN_KIND:
-            # if all(v is None for _, v in self._FLOAT_FUNC_TO_FROM):
-            #     return array
-
             post = None # defer creating until we have a match
             for func, value_replace in self._FLOAT_FUNC_TO_FROM:
                 if value_replace is not None:
@@ -156,7 +153,7 @@ class StoreFilter:
                         post[found] = value_replace
             return post if post is not None else array
 
-        return array
+        raise NotImplementedError(f'no handling for dtype {dtype}') #pragma: no cover
 
     def from_type_filter_element(self,
             value: tp.Any
