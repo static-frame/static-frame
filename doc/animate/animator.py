@@ -121,8 +121,8 @@ class LowMemoryOps(LineGen):
 class Animator:
 
     PROMPT = HexColor.format_terminal('lightgrey', '>>> ')
-    CHAR_INTERVAL = 0.04 #0.07
-    CHAR_JITTER = [x * .01 for x in range(6)] + [0.08, .12]
+    CHAR_INTERVAL = 0.03 #0.07
+    CHAR_JITTER = [x * .01 for x in range(6)] + [0.10, .12]
 
     @classmethod
     def print_char(cls, char: str) -> None:
@@ -208,6 +208,7 @@ if __name__ == '__main__':
             '--template',
             'window_frame',
             '-g', '90x20',
+            '--loop-delay', '5000',
             '--command',
             command,
             '/tmp/term.svg',
