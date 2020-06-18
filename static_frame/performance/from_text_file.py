@@ -10,6 +10,7 @@ import sys
 
 import numpy as np
 import static_frame as sf
+import pandas as pd
 
 from static_frame.performance.perf_test import PerfTest
 
@@ -23,7 +24,7 @@ class SampleData:
     def _get_random_strings(count: int, min_len=1, max_len=20):
         s = []
         for i in range(count):
-            s.append(''.join(random.choice(string.printable) for i in range(random.randint(min_len, max_len))))
+            s.append(''.join(random.choice(string.ascii_letters) for i in range(random.randint(min_len, max_len))))
         return s
 
     @classmethod
@@ -55,7 +56,7 @@ class SampleData:
 
         cls.path_r1000c5_no_i = cls._td / 'r1000c5_no_i.tsv'
         cls.frame_r1000c5_no_i = cls.random_frame(1000, 5)
-        cls.frame_r1000c5_no_i.to_tsv(cls.frame_r1000c5_no_i, include_index=False)
+        cls.frame_r1000c5_no_i.to_tsv(cls.path_r1000c5_no_i, include_index=False)
 
         # cls.r100000c50_no_i = cls._td / 'r100000c50_no_i.tsv'
         # f = cls.random_frame(100000, 50)
@@ -70,8 +71,19 @@ class ReadTsv(PerfTest):
 
     @classmethod
     def pd(cls):
-        return pd.read_csv(SampleData.r1000c5_no_i, sep='/t')
+        return pd.read_csv(SampleData.path_r1000c5_no_i, sep='/t')
 
     @classmethod
     def sf(cls):
-        return sf.from_tsv(SampleData.r1000c5_no_i)
+        return sf.Frame.from_tsv(SampleData.path_r1000c5_no_i)
+
+
+class ReadCsv(PerfTest):
+
+    @classmethod
+    def pd(cls):
+        return pd.read_csv(SampleData.path_r1000c5_no_i)
+
+    @classmethod
+    def sf(cls):
+        return sf.Frame.from_csv(SampleData.path_r1000c5_no_i)
