@@ -648,7 +648,7 @@ Name: 0.666, dtype: object
 
 Pandas support of non-unique indices makes client code more complicated by having to handle selections that might sometimes return a ``pd.Series` and other times returns a ``pd.DataFrame``. Further, uniqueness of indices is often a simple and effective check of data coherency.
 
-In some interfaces Pandas provides an optional check of uniqueness, called `verify_integrity`. While it seems obvious that integrity it desirable, by default `verify_integrity` is disabled.
+In some interfaces Pandas provides an optional check of uniqueness, called `verify_integrity`. While it seems obvious that integrity is desirable, by default Pandas disables `verify_integrity`.
 
 
 >>> df.set_index('type', verify_integrity=True)
