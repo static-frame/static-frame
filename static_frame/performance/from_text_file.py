@@ -53,9 +53,9 @@ class SampleData:
         shutil.rmtree(cls._td, ignore_errors=True)
         cls._td.mkdir()
 
-        cls.r1000c5_no_i = cls._td / 'r1000c5_no_i.tsv'
-        f = cls.random_frame(1000, 5)
-        f.to_tsv(cls.r1000c5_no_i, include_index=False)
+        cls.path_r1000c5_no_i = cls._td / 'r1000c5_no_i.tsv'
+        cls.frame_r1000c5_no_i = cls.random_frame(1000, 5)
+        cls.frame_r1000c5_no_i.to_tsv(cls.frame_r1000c5_no_i, include_index=False)
 
         # cls.r100000c50_no_i = cls._td / 'r100000c50_no_i.tsv'
         # f = cls.random_frame(100000, 50)
@@ -66,3 +66,12 @@ class SampleData:
         # f.to_tsv(cls.r1000c50000_no_i, include_index=False)
 
 
+class ReadTsv(PerfTest):
+
+    @classmethod
+    def pd(cls):
+        return pd.read_csv(SampleData.r1000c5_no_i, sep='/t')
+
+    @classmethod
+    def sf(cls):
+        return sf.from_tsv(SampleData.r1000c5_no_i)

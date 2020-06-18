@@ -177,6 +177,9 @@ def main() -> None:
         elif module == 'iter_group_perf':
             from static_frame.performance import iter_group_perf
             module_targets.append(iter_group_perf)
+        elif module == 'from_text_file':
+            from static_frame.performance import from_text_file
+            module_targets.append(from_text_file)
         else:
             raise NotImplementedError()
 
