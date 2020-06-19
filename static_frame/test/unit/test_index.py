@@ -131,6 +131,14 @@ class TestUnit(TestCase):
         post = idx.loc_to_iloc(Series(['b', 'c']))
         self.assertEqual(post, [1, 2])
 
+    def test_index_loc_to_iloc_c(self) -> None:
+        idx = Index(('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = idx.loc_to_iloc(['c', 'd', 'e'])
+
+        post = idx.loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
+        self.assertEqual(post, [2, 3])
+
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))

@@ -184,13 +184,15 @@ class LocMap:
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
-            offset: tp.Optional[int] = None
+            offset: tp.Optional[int] = None,
+            partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
             offset: in the contect of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
+            partial_selection: if True and key is an iterable of labels that includes lables not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
@@ -218,7 +220,6 @@ class LocMap:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        # handles only lists and arrays; break out comparisons to avoid multiple
         is_array = isinstance(key, np.ndarray)
         is_list = isinstance(key, list)
 
@@ -227,22 +228,24 @@ class LocMap:
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND:
                 if labels.dtype != key.dtype:
                     labels_ref = labels.astype(key.dtype)
-                    # let Boolean key hit next branch
-                    key = reduce(operator_mod.or_,
-                            (labels_ref == k for k in key))
-                    # NOTE: may want to raise instead of support this
-                    # raise NotImplementedError(f'selecting {labels.dtype} with {key.dtype} is not presently supported')
+                    # let Boolean key advance to next branch
+                    key = reduce(operator_mod.or_, (labels_ref == k for k in key))
 
             if is_array and key.dtype == bool:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
 
-            # map labels to integer positions
-            # NOTE: we may miss the opportunity to get a reference from values when we have contiguous keys
+            # map labels to integer positions, return a list of integer positions
+            # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
+            # NOTE: we do more branching here to optimize performance
+            if partial_selection:
+                if offset_apply:
+                    return [label_to_pos[k] + offset for k in key if k in label_to_pos] #type: ignore
+                return [label_to_pos[k] for k in key if k in label_to_pos]
             if offset_apply:
-                return [label_to_pos[x] + offset for x in key] #type: ignore
-            return [label_to_pos[x] for x in key]
+                return [label_to_pos[k] + offset for k in key] #type: ignore
+            return [label_to_pos[k] for k in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
         if offset_apply:
@@ -829,7 +832,8 @@ class Index(IndexBase):
     def loc_to_iloc(self,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
-            key_transform: KeyTransformType = None
+            key_transform: KeyTransformType = None,
+            partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
@@ -882,7 +886,8 @@ class Index(IndexBase):
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,
-                offset=offset
+                offset=offset,
+                partial_selection=partial_selection,
                 )
 
     def _extract_iloc(self,
