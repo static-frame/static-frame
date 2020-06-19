@@ -831,6 +831,7 @@ class Index(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
+            *,
             offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,

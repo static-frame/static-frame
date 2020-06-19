@@ -427,6 +427,7 @@ class TestUnit(TestCase):
                 [datetime.date(2010, 1, 1), datetime.date(2011, 1, 1), datetime.date(2012, 1, 1), datetime.date(2013, 1, 1), datetime.date(2014, 1, 1), datetime.date(2015, 1, 1), datetime.date(2016, 1, 1), datetime.date(2017, 1, 1), datetime.date(2018, 1, 1), datetime.date(2019, 1, 1), datetime.date(2020, 1, 1), datetime.date(2009, 1, 1), datetime.date(2021, 1, 1)]
                 )
 
+    #---------------------------------------------------------------------------
     def test_index_date_loc_to_iloc_a(self) -> None:
 
         index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
@@ -441,8 +442,17 @@ class TestUnit(TestCase):
                 index.loc_to_iloc(slice('2018-02-11', '2018-02-24')),
                 slice(41, 55, None))
 
+    def test_index_date_loc_to_iloc_b(self) -> None:
 
+        index = IndexDate.from_date_range('2018-01-01', '2018-03-01')
 
+        # with self.assertRaises(RuntimeError):
+        #     _ = index.loc_to_iloc(['2017-12-01', '2018-01-01', '2018-02-01'])
+
+        post = index.loc_to_iloc(
+                ['2017-12-01', '2018-01-01', '2018-02-01'],
+                partial_selection=True)
+        self.assertEqual(post, [0, 31])
 
 
     def test_index_millisecond_a(self) -> None:
