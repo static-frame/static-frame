@@ -425,9 +425,16 @@ class IndexLevel:
             next_offset = offset + level.offset
 
             if isinstance(depth_key, np.ndarray) and depth_key.dtype is DTYPE_BOOL:
-                depth_key = depth_key[next_offset: next_offset + len(level.index)]
+                # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
+                depth_key = depth_key[next_offset: next_offset + len(level)]
+                if len(depth_key) > len(level.index):
+                    # given leaf-Boolean, determine what upper nodes to select
+                    depth_key = level.values_at_depth(0)[depth_key]
+                    if len(depth_key) > 1:
+                        depth_key = np.unique(depth_key)
 
             # print(level, depth, offset, depth_key, next_offset)
+
             if level.targets is None:
                 try:
                     # NOTE: as a selection list might be given within the HLoc, it will be tested accross many indices, and should support a partial matching
@@ -468,7 +475,6 @@ class IndexLevel:
         for part in ilocs:
             if isinstance(part, slice):
                 iloc_flat.extend(range(*part.indices(length)))
-            # just look for ints
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
             else: # assume it is an iterable

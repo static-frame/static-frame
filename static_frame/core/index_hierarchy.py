@@ -892,9 +892,10 @@ class IndexHierarchy(IndexBase):
         key = key_from_container_key(self, key)
 
         if isinstance(key, HLoc):
-            # TODO: need to recast inner ILocs into Boolean arrays
-            # unpack any Series or Index into the context of this IndexHierarchy
-            key = HLoc(tuple(key_from_container_key(self, k) for k in key))
+            # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
+            key = HLoc(tuple(
+                    key_from_container_key(self, k, expand_iloc=True)
+                    for k in key))
 
         return self._levels.loc_to_iloc(key)
 

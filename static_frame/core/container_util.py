@@ -718,9 +718,11 @@ def arrays_from_index_frame(
 def key_from_container_key(
         index: IndexBase,
         key: GetItemKeyType,
+        expand_iloc: bool = False,
         ) -> GetItemKeyType:
 
     from static_frame.core.index import Index
+    from static_frame.core.index import ILoc
     from static_frame.core.series import Series
 
     if isinstance(key, Index):
@@ -739,6 +741,11 @@ def key_from_container_key(
         else:
             # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
             key = key.values
+    elif expand_iloc and isinstance(key, ILoc):
+        # realize as Boolean array
+        array = np.full(len(index), False)
+        array[key.key] = True
+        key = array
 
     # detect and fail on Frame?
 

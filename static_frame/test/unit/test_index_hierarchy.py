@@ -513,9 +513,9 @@ class TestUnit(TestCase):
         post1 = ih1.loc_to_iloc(ILoc[4])
         self.assertEqual(post1, 4)
 
-        # TODO: ILoc context is hierarchy, not local
-        # post1 = ih1.loc_to_iloc(HLoc[slice(None), ILoc[[0, -1]], 3])
-
+        # ILoc context is outermost, not local
+        post1 = ih1.loc_to_iloc(HLoc[slice(None), ILoc[[0, -1]], 3])
+        self.assertEqual(post1, [6])
 
     #---------------------------------------------------------------------------
 
