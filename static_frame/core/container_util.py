@@ -713,3 +713,33 @@ def arrays_from_index_frame(
     if columns is not None:
         column_key = container.columns.loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
+
+
+def key_from_container_key(
+        index: IndexBase,
+        key: GetItemKeyType,
+        ) -> GetItemKeyType:
+
+    from static_frame.core.index import Index
+    from static_frame.core.series import Series
+
+    if isinstance(key, Index):
+        # if an Index, we simply use the values of the index
+        key = key.values
+    elif isinstance(key, Series):
+        if key.dtype == bool:
+            # if a Boolean series, sort and reindex
+            if not key.index.equals(index):
+                key = key.reindex(index,
+                        fill_value=False,
+                        check_equals=False,
+                        ).values
+            else: # the index is equal
+                key = key.values
+        else:
+            # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
+            key = key.values
+
+    # detect and fail on Frame?
+
+    return key

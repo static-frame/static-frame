@@ -80,7 +80,7 @@ class IndexBase(ContainerOperand):
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
     loc_to_iloc: tp.Callable[
-            [GetItemKeyType, tp.Optional[int], KeyTransformType],
+            [GetItemKeyType, tp.Optional[int], KeyTransformType, bool],
             GetItemKeyType
             ]
 

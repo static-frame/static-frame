@@ -25,6 +25,7 @@ from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import resolve_dtype_iter
@@ -395,18 +396,18 @@ class IndexLevel:
 
         If key is an np.ndarray, a Boolean array will be passed through; otherwise, it will be treated as an iterable of values to be passed to leaf_loc_to_iloc.
         '''
+        from static_frame.core.series import Series
+
         if isinstance(key, slice):
             # given a top-level definition of a slice (and if that slice results in a single value), we can get a value range
             return slice(*LocMap.map_slice_args(self.leaf_loc_to_iloc, key))
 
-        # this should not match tuples that are leaf-locs
-        if isinstance(key, KEY_ITERABLE_TYPES):
+        if isinstance(key, KEY_ITERABLE_TYPES): # iterables of leaf-locs
             if isinstance(key, np.ndarray) and key.dtype == bool:
                 return key # keep as Boolean
             return [self.leaf_loc_to_iloc(x) for x in key]
 
-        if not isinstance(key, HLoc):
-            # assume it is a leaf loc tuple
+        if not isinstance(key, HLoc): # assume a leaf loc tuple
             if not isinstance(key, tuple):
                 raise KeyError(f'{key} cannot be used for loc selection from IndexHierarchy; try HLoc')
             return self.leaf_loc_to_iloc(key)
@@ -418,8 +419,13 @@ class IndexLevel:
 
         while levels:
             level, depth, offset = levels.popleft()
+
             depth_key = key[depth]
+            # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
+
+            if isinstance(depth_key, np.ndarray) and depth_key.dtype is DTYPE_BOOL:
+                depth_key = depth_key[next_offset: next_offset + len(level.index)]
 
             # print(level, depth, offset, depth_key, next_offset)
             if level.targets is None:
@@ -432,9 +438,9 @@ class IndexLevel:
                             ))
                 except KeyError:
                     pass
-            else: # target is iterable np.ndaarray
-                try:
-                    iloc = level.index.loc_to_iloc(depth_key) # no offset
+            else: # when not at a leaf, we are selecting level_targets to descend withing
+                try: # NOTE: no offset necessary as not a leaf selection
+                    iloc = level.index.loc_to_iloc(depth_key, partial_selection=True)
                 except KeyError:
                     pass
                 else:

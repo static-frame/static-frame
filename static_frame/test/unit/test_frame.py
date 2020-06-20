@@ -2084,6 +2084,7 @@ class TestUnit(TestCase):
 
     def test_frame_loc_j(self) -> None:
         f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
         f = f.set_index_hierarchy(('type', 'name'), drop=True)
 
         post1 = f.loc[HLoc[:, ['muon', 'strange']]]
@@ -2091,13 +2092,18 @@ class TestUnit(TestCase):
                 (('mass', ((('lepton', 'muon'), 0.106), (('quark', 'strange'), 0.1))), ('charge', ((('lepton', 'muon'), -1.0), (('quark', 'strange'), -0.333))))
                 )
 
-        # NOTE: pandas supports these two types of selection that span outside of the hierarchies: can we support it?
+    def test_frame_loc_k(self) -> None:
+        f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
 
-        # ipdb> df.loc[pd.IndexSlice[:, df['mass'] > 1], :]
-        #                mass  charge
-        # type   name
-        # lepton tau    1.777  -1.000
-        # quark  charm  1.300   0.666
+        f = f.set_index_hierarchy(('type', 'name'), drop=True)
+
+        post2 = f.loc[HLoc[:, f['mass'] > 1]]
+
+        self.assertEqual(post2.to_pairs(0),
+                (('mass', ((('lepton', 'tau'), 1.777), (('quark', 'charm'), 1.3))), ('charge', ((('lepton', 'tau'), -1.0), (('quark', 'charm'), 0.666))))
+                )
+
+
 
 
     #---------------------------------------------------------------------------
@@ -9317,7 +9323,6 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
         f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
 
-        # TODO: left not working due to datedate/ datetime64 mismatch, inner is working
         f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
 
         self.assertEqual(f3.dtypes.values.tolist(),

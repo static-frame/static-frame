@@ -10,6 +10,8 @@ from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.container_util import key_from_container_key
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
@@ -18,6 +20,7 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.hloc import HLoc
+from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
@@ -880,31 +883,19 @@ class IndexHierarchy(IndexBase):
         '''
         from static_frame.core.series import Series
 
-        # NOTE: this implementation is different from Index.loc_to_iloc: here, we explicitly translate Series, Index, and IndexHierarchy before passing on to IndexLevels
-
-        if isinstance(key, Index):
-            # if an Index, we simply use the values of the index
-            key = key.values
-
-        if isinstance(key, IndexHierarchy):
+        if isinstance(key, ILoc):
+            return key.key
+        elif isinstance(key, IndexHierarchy):
             # default iteration of IH is as tuple
             return [self._levels.leaf_loc_to_iloc(k) for k in key]
 
-        if isinstance(key, Series):
-            if key.dtype == bool:
-                # if a Boolean series, sort and reindex
-                if not key.index.equals(self):
-                    key = key.reindex(self,
-                            fill_value=False,
-                            check_equals=False,
-                            ).values
-                else: # the index is equal
-                    key = key.values
-            else:
-                # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
-                key = key.values
+        key = key_from_container_key(self, key)
 
-        # if an HLoc, will pass on to loc_to_iloc
+        if isinstance(key, HLoc):
+            # TODO: need to recast inner ILocs into Boolean arrays
+            # unpack any Series or Index into the context of this IndexHierarchy
+            key = HLoc(tuple(key_from_container_key(self, k) for k in key))
+
         return self._levels.loc_to_iloc(key)
 
     def _extract_iloc(self,

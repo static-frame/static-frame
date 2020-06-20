@@ -13,6 +13,8 @@ from automap import FrozenAutoMap
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import key_from_container_key
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
@@ -39,6 +41,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
@@ -231,7 +234,7 @@ class LocMap:
                     # let Boolean key advance to next branch
                     key = reduce(operator_mod.or_, (labels_ref == k for k in key))
 
-            if is_array and key.dtype == bool:
+            if is_array and key.dtype is DTYPE_BOOL:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
@@ -831,7 +834,6 @@ class Index(IndexBase):
 
     def loc_to_iloc(self,
             key: GetItemKeyType,
-            *,
             offset: tp.Optional[int] = None,
             key_transform: KeyTransformType = None,
             partial_selection: bool = False,
@@ -852,20 +854,8 @@ class Index(IndexBase):
 
         if isinstance(key, ILoc):
             return key.key
-        elif isinstance(key, Index):
-            # if an Index, we simply use the values of the index
-            key = key.values
-        elif isinstance(key, Series):
-            if key.dtype == bool:
-                if not key.index.equals(self):
-                    key = key.reindex(self,
-                            fill_value=False,
-                            check_equals=False,
-                            ).values
-                else: # the index is equal
-                    key = key.values
-            else:
-                key = key.values
+
+        key = key_from_container_key(self, key)
 
         if self._map is None: # loc_is_iloc
             if isinstance(key, np.ndarray):

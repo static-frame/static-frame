@@ -11,6 +11,7 @@ from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import HLoc
+from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
@@ -448,6 +449,73 @@ class TestUnit(TestCase):
 
         a2 = ih1.loc_to_iloc(Series((labels[5], labels[2], labels[4])))
         self.assertEqual(a2, [5, 2, 4])
+
+
+    def test_hierarchy_loc_to_iloc_g(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual(
+                ih1.loc_to_iloc(HLoc[slice(None), ['A', 'C']]),
+                [0, 2, 3, 5]
+                )
+
+        self.assertEqual(
+                ih1.loc_to_iloc(HLoc[slice(None), ['A', 'C'], [-1, 3]]),
+                [0, 5]
+                )
+
+    def test_hierarchy_loc_to_iloc_h(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 2),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        sel1 = ih1.values_at_depth(1) == 'C'
+        post1 = ih1.loc_to_iloc(HLoc[slice(None), sel1])
+        self.assertEqual(post1, [3, 5, 6])
+
+        sel2 = ih1.values_at_depth(2) == 3
+        post2 = ih1.loc_to_iloc(HLoc[slice(None), slice(None), sel2])
+        self.assertEqual(post2, [6])
+
+
+    def test_hierarchy_loc_to_iloc_i(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 3),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 2),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.loc_to_iloc(ILoc[4])
+        self.assertEqual(post1, 4)
+
+        # TODO: ILoc context is hierarchy, not local
+        # post1 = ih1.loc_to_iloc(HLoc[slice(None), ILoc[[0, -1]], 3])
+
 
     #---------------------------------------------------------------------------
 
