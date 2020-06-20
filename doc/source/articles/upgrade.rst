@@ -497,7 +497,7 @@ While not possible with Pandas, creating an index of years or dates extending to
 <datetime64[D]>
 
 
-No. 8: Well-behaved Hierarchical Indices
+No. 8: Well-Behaved Hierarchical Indices
 ___________________________________________
 
 
@@ -609,6 +609,15 @@ Further, unlike Pandas, StaticFrame is consistent in what ``loc`` arguments mean
 lepton                             muon  0.106
 lepton                             tau   1.777
 <<U6>                              <<U4> <float64>
+
+>>> f.loc[HLoc[:, ['muon', 'strange']]]
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
 
 >>> f.loc[sf.HLoc['lepton', 'tau'], 'charge']
 -1.0

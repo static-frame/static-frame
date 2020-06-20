@@ -424,7 +424,12 @@ class IndexLevel:
             # print(level, depth, offset, depth_key, next_offset)
             if level.targets is None:
                 try:
-                    ilocs.append(level.index.loc_to_iloc(depth_key, offset=next_offset))
+                    # NOTE: as a selection list might be given within the HLoc, it will be tested accross many indices, and should support a partial matching
+                    ilocs.append(level.index.loc_to_iloc(
+                            depth_key,
+                            offset=next_offset,
+                            partial_selection=True,
+                            ))
                 except KeyError:
                     pass
             else: # target is iterable np.ndaarray

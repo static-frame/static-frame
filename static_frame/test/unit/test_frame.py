@@ -2086,16 +2086,12 @@ class TestUnit(TestCase):
         f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
         f = f.set_index_hierarchy(('type', 'name'), drop=True)
 
-
-        # post = f.loc[HLoc[:, ['muon', 'strange']]]
+        post1 = f.loc[HLoc[:, ['muon', 'strange']]]
+        self.assertEqual(post1.to_pairs(0),
+                (('mass', ((('lepton', 'muon'), 0.106), (('quark', 'strange'), 0.1))), ('charge', ((('lepton', 'muon'), -1.0), (('quark', 'strange'), -0.333))))
+                )
 
         # NOTE: pandas supports these two types of selection that span outside of the hierarchies: can we support it?
-
-        # ipdb> df.loc[pd.IndexSlice[:, ['muon', 'strange']], :]
-        #                  mass  charge
-        # type   name
-        # lepton muon     0.106  -1.000
-        # quark  strange  0.100  -0.33
 
         # ipdb> df.loc[pd.IndexSlice[:, df['mass'] > 1], :]
         #                mass  charge

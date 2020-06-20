@@ -356,8 +356,10 @@ class TestUnit(TestCase):
         post = ih.loc_to_iloc(HLoc[:, :, 1])
         self.assertEqual(post, [0, 2, 7, 10])
 
-        # TODO: not sure what to do when a multiple selection, [1, 2], is a superset of the leaf index; we do not match with a normal loc
-        # ih.loc_to_iloc((slice(None), slice(None), [1,2]))
+        self.assertEqual(
+                ih.loc_to_iloc(HLoc[:, :, [1, 2]]),
+                [0, 1, 2, 3, 5, 7, 8, 10]
+                )
 
 
     def test_hierarchy_loc_to_iloc_c(self) -> None:
@@ -376,7 +378,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_tree(tree)
 
         # TODO: add additional validaton
-        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore
         self.assertTrue(len(post), 6)
 
         post = ih.loc[[('I', 'B', 2), ('II', 'A', 2)]]
