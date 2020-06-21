@@ -365,24 +365,17 @@ class TestUnit(TestCase):
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
-        if post.dtype == object:
-            self.assertTrue(post.ndim in (1, 2))
-        else:
-            self.assertTrue(post.ndim == 2)
-
+        self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0]))
                 & set(util.array2d_to_tuples(arrays[1])))
                 )
 
+
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
-        if post.dtype == object:
-            self.assertTrue(post.ndim in (1, 2))
-        else:
-            self.assertTrue(post.ndim == 2)
-
+        self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0])).difference(
                 set(util.array2d_to_tuples(arrays[1]))))
@@ -393,11 +386,7 @@ class TestUnit(TestCase):
 
         for union in (True, False):
             post = util.ufunc_set_iter(arrays, union=union)
-            if post.dtype == object:
-                # returned object arrays might be 2D or 1D of tuples
-                self.assertTrue(post.ndim in (1, 2))
-            else:
-                self.assertTrue(post.ndim == 2)
+            self.assertTrue(post.ndim == 2)
 
     #---------------------------------------------------------------------------
     @given(get_array_1d2d(min_rows=1, min_columns=1))

@@ -85,7 +85,6 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 EMPTY_TUPLE = ()
-EMPTY_TUPLE_TUPLE = (EMPTY_TUPLE,)
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
@@ -1545,13 +1544,14 @@ def _ufunc_set_2d(
         other: can be a 2D array, or a 1D object array of tuples.
         assume_unique: if True, array operands are assumed unique and order is preserved for matching operands.
     Returns:
-        Either a 2D array, or a 1D object array of tuples.
+        Either a 2D array (if both operands are 2D), or a 1D object array of tuples (if one or both are 1d tuple arrays).
     '''
     # NOTE: diversity if ruturned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
 
     is_union = func == np.union1d
     is_intersection = func == np.intersect1d
     is_difference = func == np.setdiff1d
+    is_2d = array.ndim == 2 and other.ndim == 2
 
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
@@ -1562,9 +1562,13 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
+            if is_2d:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
             return np.array(EMPTY_TUPLE, dtype=dtype)
     elif is_difference:
         if len(array) == 0:
+            if is_2d:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
@@ -1586,9 +1590,10 @@ def _ufunc_set_2d(
                 arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
-
             if arrays_are_equal:
                 if is_difference:
+                    if is_2d:
+                        return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
                     return np.array(EMPTY_TUPLE, dtype=dtype)
                 return array
 
@@ -1617,8 +1622,9 @@ def _ufunc_set_2d(
         except TypeError:
             values = tuple(result)
 
-        if array.ndim == 2 and other.ndim == 2:
-            # if both operands are 2D, always return a 2D array; this was needas used in Frame.from_concat, when calling ufunc_set_iter
+        if is_2d:
+            if len(values) == 0:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
             return np.array(values, dtype=object)
 
         post = np.empty(len(values), dtype=object)
@@ -1626,7 +1632,7 @@ def _ufunc_set_2d(
         return post
 
     # from here, we assume we have two 2D arrays
-    if array.ndim != 2 or other.ndim != 2:
+    if not is_2d:
         raise RuntimeError('non-object arrays have to both be 2D')
 
     # number of columns must be the same, as doing row-wise comparison, and determines the length of each row
