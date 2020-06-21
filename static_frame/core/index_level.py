@@ -412,8 +412,7 @@ class IndexLevel:
                 raise KeyError(f'{key} cannot be used for loc selection from IndexHierarchy; try HLoc')
             return self.leaf_loc_to_iloc(key)
 
-        # everything after this is an HLoc
-        # collect all ilocs for all leaf indices matching HLoc patterns
+        # HLoc following: collect all ilocs for all leaf indices matching HLoc patterns
         ilocs = []
         levels = deque(((self, 0, 0),)) # order matters
 
@@ -431,10 +430,10 @@ class IndexLevel:
                     # given leaf-Boolean, determine what upper nodes to select
                     depth_key = level.values_at_depth(0)[depth_key]
                     if len(depth_key) > 1:
-                        depth_key = np.unique(depth_key)
+                        # NOTE: must strip repeated labels, but cannot us np.unique as must retain order
+                        depth_key = list(dict.fromkeys(depth_key).keys())
 
             # print(level, depth, offset, depth_key, next_offset)
-
             if level.targets is None:
                 try:
                     # NOTE: as a selection list might be given within the HLoc, it will be tested accross many indices, and should support a partial matching
@@ -462,12 +461,10 @@ class IndexLevel:
 
         iloc_count = len(ilocs)
         if iloc_count == 0:
-            # import ipdb; ipdb.set_trace()
             raise KeyError('no matching keys across all levels')
 
         if iloc_count == 1 and not key.has_key_multiple():
-            # drop to a single iloc selection
-            return ilocs[0]
+            return ilocs[0] # drop to a single iloc selection
 
         # NOTE: might be able to combine contiguous ilocs into a single slice
         iloc_flat: tp.List[GetItemKeyType] = [] # combine into one flat iloc
@@ -478,7 +475,6 @@ class IndexLevel:
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
             else: # assume it is an iterable
-                assert part is not None
                 iloc_flat.extend(part)
         return iloc_flat
 

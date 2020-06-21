@@ -517,6 +517,54 @@ class TestUnit(TestCase):
         post1 = ih1.loc_to_iloc(HLoc[slice(None), ILoc[[0, -1]], 3])
         self.assertEqual(post1, [6])
 
+        post2 = ih1.loc_to_iloc(HLoc[['I', 'III'], 'B', 1])
+        self.assertEqual(post2, [1, 4])
+
+
+    def test_hierarchy_loc_to_iloc_j(self) -> None:
+
+        labels = (
+                ('I', 'X', 1),
+                ('I', 'X', 2),
+                ('I', 'W', 0),
+                ('I', 'W', 1),
+                ('II', 'R', 1),
+                ('II', 'R', 2),
+                ('II', 'P', 0),
+                ('II', 'P', 1),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[ILoc[-4:], :, 1]),
+                [4, 7])
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, :, 1]),
+                [0, 3, 4, 7])
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, :, ILoc[-2:]]),
+                [6, 7])
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, ILoc[2:6], 1]),
+                [3, 4])
+
+
+    def test_hierarchy_loc_to_iloc_k(self) -> None:
+
+        labels = (
+                ('I', 'X', 1),
+                ('I', 'X', 2),
+                ('II', 'R', 0),
+                ('II', 'R', 1),
+                ('II', 'R', 2),
+                ('II', 'R', 3),
+                ('II', 'B', 3),
+                ('II', 'A', 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.loc_to_iloc(HLoc['II', ILoc[-5:], [2, 3]])
+        self.assertEqual(post1, [4, 5, 6, 7])
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:
