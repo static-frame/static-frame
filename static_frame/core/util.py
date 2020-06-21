@@ -85,6 +85,7 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 STATIC_ATTR = 'STATIC'
 
 EMPTY_TUPLE = ()
+EMPTY_TUPLE_TUPLE = (EMPTY_TUPLE,)
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
 # defaults to float64
@@ -1561,7 +1562,6 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
-            # not sure what DTYPE is correct to return here
             return np.array(EMPTY_TUPLE, dtype=dtype)
     elif is_difference:
         if len(array) == 0:

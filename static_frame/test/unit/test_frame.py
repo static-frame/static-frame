@@ -6688,11 +6688,11 @@ class TestUnit(TestCase):
 
         f2 = sf.Frame.from_concat((f1, f1), axis=1, columns=['a', 'b'])
 
-        self.assertEqual(f2.values.tolist(),
-                [[2, 2], [1, 1]])
+        # index order is not stable due to NaN
+        self.assertEqual(sorted(f2.values.tolist()),
+                [[1, 1], [2, 2]])
         self.assertEqual(f2.index.depth, 2)
-
-        self.assertAlmostEqualValues(f2.index.values.ravel().tolist(), ['b', np.nan, 'b', 'b'])
+        self.assertAlmostEqualValues(set(f2.index.values.ravel()), {'b', np.nan})
 
 
     #---------------------------------------------------------------------------

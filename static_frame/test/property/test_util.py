@@ -351,6 +351,7 @@ class TestUnit(TestCase):
             self.assertSetEqual(set(post), (set(arrays[0]).difference(set(arrays[1]))))
 
 
+    #---------------------------------------------------------------------------
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
@@ -398,6 +399,7 @@ class TestUnit(TestCase):
             else:
                 self.assertTrue(post.ndim == 2)
 
+    #---------------------------------------------------------------------------
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
