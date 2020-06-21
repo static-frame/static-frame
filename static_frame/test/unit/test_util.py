@@ -1156,7 +1156,7 @@ class TestUnit(TestCase):
         a2 = np.array([[0]])
 
         post = _ufunc_set_2d(np.union1d, a1, a2)
-        self.assertEqual(post.tolist(), [(False,)])
+        self.assertEqual(post.tolist(), [[False,]])
 
 
     def test_set_ufunc2d_d(self) -> None:
@@ -1217,6 +1217,15 @@ class TestUnit(TestCase):
                     assume_unique=True)
 
 
+    def test_set_ufunc2d_i(self) -> None:
+
+        a1 = np.array([[0, 1], [-1, -2]])
+        a2 = np.empty(2, dtype=object)
+        a2[:] =((0, 1), (3, 4))
+
+        # intersect 2D with 1D of tuples results in 1D of tuples
+        post1 = _ufunc_set_2d(np.intersect1d, a1, a2)
+        self.assertEqual(post1[0], (0, 1))
 
     #---------------------------------------------------------------------------
 

@@ -1546,6 +1546,8 @@ def _ufunc_set_2d(
     Returns:
         Either a 2D array, or a 1D object array of tuples.
     '''
+    # NOTE: diversity if ruturned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
+
     is_union = func == np.union1d
     is_intersection = func == np.intersect1d
     is_difference = func == np.setdiff1d
@@ -1579,7 +1581,6 @@ def _ufunc_set_2d(
         if array.shape == other.shape:
             arrays_are_equal = False
             compare = array == other
-
             # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
             if isinstance(compare, BOOL_TYPES) and compare:
                 arrays_are_equal = True #pragma: no cover
@@ -1589,8 +1590,7 @@ def _ufunc_set_2d(
             if arrays_are_equal:
                 if is_difference:
                     return np.array(EMPTY_TUPLE, dtype=dtype)
-                else:
-                    return array
+                return array
 
     if dtype.kind == 'O':
         # assume that 1D arrays arrays are arrays of tuples
@@ -1617,7 +1617,10 @@ def _ufunc_set_2d(
         except TypeError:
             values = tuple(result)
 
-        # returns a 1D object array of tuples
+        if array.ndim == 2 and other.ndim == 2:
+            # if both operands are 2D, always return a 2D array; this was needas used in Frame.from_concat, when calling ufunc_set_iter
+            return np.array(values, dtype=object)
+
         post = np.empty(len(values), dtype=object)
         post[:] = values
         return post

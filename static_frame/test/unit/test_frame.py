@@ -6681,6 +6681,19 @@ class TestUnit(TestCase):
         self.assertEqual((0,),  f5.index.shape)
         self.assertEqual('f5',  f5.name)
 
+    def test_frame_from_concat_y(self) -> None:
+        # problematic case of a NaN in IndexHierarchy
+        f1 = sf.Frame.from_elements([1, 2],
+                index=IndexHierarchy.from_labels([['b', 'b'], ['b', np.nan]]))
+
+        f2 = sf.Frame.from_concat((f1, f1), axis=1, columns=['a', 'b'])
+
+        self.assertEqual(f2.values.tolist(),
+                [[2, 2], [1, 1]])
+        self.assertEqual(f2.index.depth, 2)
+
+        self.assertAlmostEqualValues(f2.index.values.ravel().tolist(), ['b', np.nan, 'b', 'b'])
+
 
     #---------------------------------------------------------------------------
 

@@ -387,7 +387,6 @@ class Frame(ContainerOperand):
                         )
                 index.flags.writeable = False
                 from_array_index = True
-
             def blocks():
                 for frame in frames:
                     if len(frame.index) != len(index) or (frame.index != index).any():

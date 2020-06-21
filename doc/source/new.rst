@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Extended functionality of ``HLoc`` selections in ``IndexHierarchy`` to properly handle selection lists, Boolean arrays, and nested ``ILoc`` selections.
 
+Corrected issue in ``Frame.from_concat`` whereby, when given inputs with ``IndexHierarchy``, ``IndexHierarchy`` were not returned.
+
 
 0.6.19
 ----------
