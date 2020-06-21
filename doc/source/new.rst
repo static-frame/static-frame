@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.20
+----------
+
+Extended functionality of ``HLoc`` selections in ``IndexHierarchy`` to properly handle selection lists, Boolean arrays, and nested ``ILoc`` selections.
+
+
 0.6.19
 ----------
 

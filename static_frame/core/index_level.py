@@ -475,7 +475,7 @@ class IndexLevel:
             elif isinstance(part, INT_TYPES):
                 iloc_flat.append(part)
             else: # assume it is an iterable
-                iloc_flat.extend(part)
+                iloc_flat.extend(part) #type: ignore
         return iloc_flat
 
     #---------------------------------------------------------------------------
