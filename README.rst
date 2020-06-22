@@ -52,7 +52,7 @@ Why Immutable Data?
 
 The following example, executed in a low-memory environment (using ``prlimit``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame to itself without copying underlying data. By using immutable NumPy arrays, StaticFrame can perform these operations in the same low-memory environment. By reuseing immutable arrays without copying, StaticFrame can achieve more efficient memory usage.
 
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-concat.svg
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-low-memory-ops-verbose.svg
    :align: center
 
 
@@ -61,7 +61,7 @@ Why So Many Type Labels?
 
 Unexpected type coercions can expose errors or degrade performance. StaticFrame's container display provides full visibility into the types in a ``Frame``, and provides a variety of ways to configure the presentation and color of those types.
 
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-concat.svg
    :align: center
 
 

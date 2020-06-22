@@ -67,7 +67,7 @@ class DisplayConfig(LineGen):
         yield PAUSE_FINAL
 
 
-class LowMemoryOps(LineGen):
+class LowMemoryOpsVerbose(LineGen):
     CMD_PREFIX = 'prlimit --as=800000000' # shown to cause expected memory error
 
     @staticmethod
@@ -213,7 +213,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
 if __name__ == '__main__':
 
     options = get_arg_parser().parse_args()
-    line_gen = {cls.__name__: cls for cls in (LowMemoryOps, DisplayConfig)}
+    line_gen = {cls.__name__: cls for cls in (LowMemoryOpsVerbose, DisplayConfig)}
 
     if options.animate:
         cls = line_gen[options.animate]
@@ -230,8 +230,8 @@ if __name__ == '__main__':
         cmd = ['termtosvg',
             '--template',
             'window_frame',
-            '-g', '90x20',
-            '--loop-delay', '5000',
+            '-g', '80x18',
+            '--loop-delay', '2000',
             '--command',
             command,
             '/tmp/term.svg',

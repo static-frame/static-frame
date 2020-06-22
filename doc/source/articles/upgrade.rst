@@ -154,26 +154,14 @@ mass
 <<U6>
 
 
-As much time is spent looking at the contents of ``Frame`` and ``Series``, StaticFrame offers numerous configuration options for displaying containers, all exposed through the ``DisplayConfig`` class. Specific types can be colored and type annotations can be removed entirely.
+As much time is spent visually exploring the contents of ``Frame`` and ``Series``, StaticFrame offers numerous configuration options for displaying containers, all exposed through the ``DisplayConfig`` class. Specific types can be colored and type annotations can be removed entirely.
 
 
->>> f.display(sf.DisplayConfig(type_color_str='lime', type_color_float='orange'))
-<Frame>
-<Index> symbol mass      <<U6>
-<Index>
-charm   c      1.3
-strange s      0.1
-<<U7>   <<U1>  <float64>
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
+   :align: center
 
 
->>> f.display(sf.DisplayConfig(type_show=False))
-        symbol mass
-charm   c      1.3
-strange s      0.1
-
-
-
-No. 3: Immutable Data: Better Memory Management, No Defensive Copies
+No. 3: Immutable Data: Efficient Memory Management, No Defensive Copies
 ___________________________________________________________________________________
 
 
