@@ -4,15 +4,15 @@
 Ten Tips for Transitioning from Pandas to StaticFrame
 ====================================================================
 
-Pandas code can become complex, hard to maintain, and error prone. This happens because Pandas supports many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips to get up to speed with StaticFrame.
+Pandas code can become complex, hard to maintain, and error prone. This happens because Pandas supports many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up to speed with StaticFrame.
 
 
 Why StaticFrame
 ______________________
 
-After years of using Pandas to develop production, back-end financial systems, it became clear to me that Pandas was not the right tool. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's irregular approach to data ownership and support for mutation and undesirable side effects led to serious vulnerabilities and opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
+After years of using Pandas to develop back-end financial systems, it became clear to me that Pandas was not the right tool for the job. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's irregular approach to data ownership and support for mutation and undesirable side effects led to serious opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
-Now, after three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While StaticFrame is not yet always as fast as Pandas for some operations, we often see StaticFrame out-performing Pandas on large-scale, real-world processes.
+Now, after three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While StaticFrame is not yet always as fast as Pandas for some operations, we often see StaticFrame out-perform Pandas in real-world use cases.
 
 What follows are ten tips to aid Pandas users in transitioning to StaticFrame. While Pandas users will find many familiar idioms, there are significant differences.
 
@@ -177,7 +177,7 @@ No. 3: Immutable Data: Better Memory Management, No Defensive Copies
 ___________________________________________________________________________________
 
 
-Pandas displays inconsistent behavior in regard to ownership of data inputs and data attached to containers. In some cases, it is possible to mutate NumPy arrays "behind-the-back" of Pandas.
+Pandas displays inconsistent behavior in regard to ownership of data inputs and data attached to containers. In some cases, it is possible to mutate NumPy arrays "behind-the-back" of Pandas, exposing opportunities for confusion and bugs in Pandas code.
 
 For example, if we give an 2D array as an input to a ``pd.DataFrame``, the lingering reference of the array can be used to "remotely" change the values of ``pd.DataFrame``. In this case, the ``pd.DataFrame`` does not protect access to its data, serving only as a wrapper of a shared, mutable array.
 
@@ -212,7 +212,7 @@ muon    NaN    -1.0
 tau   1.777     NaN
 
 
-As StaticFrame manages immutable NumPy arrays, this vulnerability of "behind the back" mutation is never permitted, either from StaticFrame containers or from direct access to underlying arrays.
+As StaticFrame manages immutable NumPy arrays, there is no vulnerability of "behind the back" mutation: arrays cannot be mutated from StaticFrame containers or from direct access to underlying arrays.
 
 
 >>> f = sf.Frame.from_dict_records_items((('charm', {'symbol':'c', 'mass':1.3}), ('strange', {'symbol':'s', 'mass':0.1})))
@@ -241,7 +241,7 @@ strange          s      0.1
 
 
 
-Similarly, some types of concatenation (horizontal, axis 1 concatenation on aligned indices) can be done without copying data. Concatenating a ``Series`` to this ``Frame`` does not require copying underlying data to the new ``Frame``: it simply holds references to the data already allocated.
+Similarly, some types of concatenation (horizontal, axis-1 concatenation on aligned indices) can be done without copying data. Concatenating a ``Series`` to this ``Frame`` does not require copying underlying data to the new ``Frame``: it simply holds references to the data already allocated.
 
 >>> s = sf.Series.from_dict(dict(charm=0.666, strange=-0.333), name='charge')
 
@@ -329,9 +329,9 @@ No. 5: Iterators are for Iterating and Function Application
 ________________________________________________________________
 
 
-Pandas has separate functions for iterating and function application. For example, there is ``pd.DataFrame.iteritems``, ``pd.DataFrame.iterrows``, ``pd.DataFrame.itertuples``, ``pd.DataFrame.groupby`` for iteration, and ``pd.DataFrame.apply`` and ``pd.DataFrame.applymap`` for function application.
+Pandas has separate functions for iteration and function application. For iterations there is ``pd.DataFrame.iteritems``, ``pd.DataFrame.iterrows``, ``pd.DataFrame.itertuples``, ``pd.DataFrame.groupby``; for function application there is ``pd.DataFrame.apply`` and ``pd.DataFrame.applymap``.
 
-But since function application requires iteration, it is sensible for function application to build on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array`` or ``Frame.iter_group_items``)that can be extended to function application with an ``apply`` method. Functions for using mapping types (such as ``map_any`` and ``map_fill``) are also available on iterators. This means that once you find how you want to iterate, function application is a just a method away.
+But since function application requires iteration, it is sensible for function application to be built on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array`` or ``Frame.iter_group_items``) that can be used for function application with an ``apply`` method. Functions for using mapping types (such as ``map_any`` and ``map_fill``) are also available on iterators. This means that once you find how you want to iterate, function application is a just a method away.
 
 For an example, we will create a ``Frame`` with ``Frame.from_records``:
 
@@ -347,7 +347,7 @@ charm   1.3       0.666     quark
 strange 0.1       -0.333    quark
 
 
-Ee can iterate over elements in a ``Series`` with ``iter_element()``.
+We can iterate over elements in a ``Series`` with ``iter_element()``.
 
 >>> tuple(f['type'].iter_element())
 ('lepton', 'lepton', 'quark', 'quark')
@@ -378,7 +378,7 @@ strange .....0.1 ..-0.333 ...quark
 <<U7>   <object> <object> <object>
 
 
-For row or column iteration, a family of methods allows specifying the type of container to be used for the iterated rows or columns, i.e, as an array, as a ``NamedTuple``, or as a ``Series`` (``iter_array()``, ``iter_tuple()``, ``iter_series()``, respectively). These methods take an axis argument to determine whether iteration is by row or by column.
+For row or column iteration, a family of methods allows specifying the type of container to be used for the iterated rows or columns, i.e, as an array, as a ``NamedTuple``, or as a ``Series`` (``iter_array()``, ``iter_tuple()``, ``iter_series()``, respectively). These methods take an axis argument to determine whether iteration is by row or by column, and similarly expose an ``apply`` method for function application.
 
 For example, to apply a function to columns, we can do the following.
 
@@ -390,7 +390,7 @@ charge   -1.667
 <<U6>    <float64>
 
 
-If our ``apply`` function needs to process both key and value pairs, we can use the corresponding iterator that returns items-style pairs.
+If our ``apply`` function needs to process both key and value pairs, we can use the corresponding items iterator, calling the provided function with both key and value.
 
 
 >>> f.iter_array_items(axis=0).apply(lambda k, v: v.sum() if k != 'type' else np.nan)
@@ -414,7 +414,7 @@ strange  False
 <<U7>    <bool>
 
 
-Group iteration and function application in StaticFrame works exactly the same way.
+Group iteration and function application works the same way.
 
 >>> f.iter_group('type').apply(lambda f: f['mass'].mean())
 <Series>
@@ -501,9 +501,9 @@ No. 8: Well-Behaved Hierarchical Indices
 ___________________________________________
 
 
-Hierarchical indices permit fitting many dimensions into one. Using hierarchical indices, *n*-dimensional data can be encoded into ``Series`` or ``Frame``.
+Hierarchical indices permit fitting many dimensions into one. Using hierarchical indices, *n*-dimensional data can be encoded into a single ``Series`` or ``Frame``.
 
-Pandas implementation of hierarchical indices, the `pd.MultiIndex`, while powerful, behaves inconsistently, again forcing client code to handle unnecessary variability. We can begin by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
+Pandas implementation of hierarchical indices, the `pd.MultiIndex`, behaves inconsistently, again forcing client code to handle unnecessary variability. We can begin by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
 
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
@@ -533,7 +533,7 @@ quark charm     1.3   0.666
       strange   0.1  -0.333
 
 
-Another inconsistency is in using ``loc`` with a ``pd.MultiIndex``. In common usage, when two arguments are given to ``loc``, the first argument is for row selection, the second argument is for column selection.
+Using ``loc`` selection with a ``pd.MultiIndex`` is similarly inconsistent. In general usage on ``pd.DataFrame``, when two arguments are given to ``loc``, the first argument is for row selection, the second argument is for column selection.
 
 >>> df.loc['lepton', 'mass'] # Selects "lepton" from row, "mass" from columns
 name
@@ -542,7 +542,7 @@ tau     1.777
 Name: mass, dtype: float64
 
 
-In opposition to that behavior, Pandas will sometimes (depending on the value of the  argument) use the second argument in ``loc`` not as a column selection, but rather as an inner level selection on the rows.
+However, in opposition to the common behavior, Pandas will sometimes (depending on the value of the  argument) use the second argument in ``loc`` not as a column selection, but rather as an inner-level ``pd.MultiIndex`` selection on the rows.
 
 >>> df.loc['lepton', 'tau'] # Selects lepton and tau from rows
 mass      1.777
@@ -550,14 +550,14 @@ charge   -1.000
 Name: (lepton, tau), dtype: float64
 
 
-If a column selection is required, the more common behavior can be restored by wrapping the hierarchical row selection within a ``pd.IndexSlice`` selector.
+If a column selection is required, the generally expected behavior can be restored by wrapping the hierarchical row selection within a ``pd.IndexSlice`` selector.
 
 >>> df.loc[pd.IndexSlice['lepton', 'tau'], 'charge']
 -1.0
 
-This inconsistency in the meaning of the arguments given to ``loc`` is unnecessary and difficult to maintain: what is intended from the usage of ``loc`` cannot be known without knowing what labels might be found in that index.
+This inconsistency in the meaning of the positional arguments given to ``loc`` is unnecessary and makes Pandas code harder to maintain: what is intended from the usage of ``loc`` cannot be known without knowing what labels might be found in that index.
 
-StaticFrame's ``IndexHierarchy`` are built from ``Index`` objects and offer more consistent behavior. We will create an equivalent ``Frame`` and set an ``IndexHierarchy``.
+StaticFrame's ``IndexHierarchy`` offer more consistent behavior. We will create an equivalent ``Frame`` and set an ``IndexHierarchy``.
 
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
 >>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
@@ -572,7 +572,7 @@ quark                              strange 0.1       -0.333
 <<U6>                              <<U7>   <float64> <float64>
 
 
-Unlike Pandas, a selection never automatically reduces the ``IndexHierarchy`` to an ``Index``. If reduction is needed, the ``Frame.relabel_drop_level()`` can be used. This is a lightweight operation that does not copy underlying data. Notice also that an ``sf.HLoc`` selection modifier, similar to ``pd.IndexSlice`` is always required for partial selections within a hierarchical index.
+Unlike Pandas, a selection never automatically reduces the ``IndexHierarchy`` to an ``Index``. If reduction is needed, the ``Frame.relabel_drop_level()`` can be used. This is a lightweight operation that does not copy underlying data. Notice also that an ``sf.HLoc`` selection modifier, similar to ``pd.IndexSlice`` is always required for partial selections within a hierarchical index. This makes explicit whether a row and column selection is intended, or an intra-hierarchy row selection is intended.
 
 
 >>> f.loc[sf.HLoc['quark']]
@@ -600,27 +600,24 @@ strange 0.1       -0.333
 <<U7>   <float64> <float64>
 
 
-Further, unlike Pandas, StaticFrame is consistent in what ``loc`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within an ``IndexHierarchy`` the ``sf.HLoc`` selection modifier is used to specify selection within the depths of the ``IndexHierarchy``.
+Further, unlike Pandas, StaticFrame is consistent in what positional ``loc`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within an ``IndexHierarchy`` the ``sf.HLoc`` selection modifier is used to specify selection within the depths of the ``IndexHierarchy``. This approach makes StaticFrame code easier to understand and maintain.
 
+>>> f.loc[sf.HLoc['lepton']]
+<Frame>
+<Index>                                  mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon  0.106     -1.0
+lepton                             tau   1.777     -1.0
+<<U6>                              <<U4> <float64> <float64>
 
->>> f.loc[sf.HLoc['lepton'], 'mass']
+>>> f.loc[sf.HLoc[:, ['muon', 'strange']], 'mass']
 <Series: mass>
 <IndexHierarchy: ('type', 'name')>
-lepton                             muon  0.106
-lepton                             tau   1.777
-<<U6>                              <<U4> <float64>
-
->>> f.loc[HLoc[:, ['muon', 'strange']]]
-<Frame>
-<Index>                                    mass      charge    <<U6>
-<IndexHierarchy: ('type', 'name')>
-lepton                             muon    0.106     -1.0
-quark                              strange 0.1       -0.333
-<<U6>                              <<U7>   <float64> <float64>
+lepton                             muon    0.106
+quark                              strange 0.1
+<<U6>                              <<U7>   <float64>
 
 
->>> f.loc[sf.HLoc['lepton', 'tau'], 'charge']
--1.0
 
 
 
@@ -629,11 +626,11 @@ quark                              strange 0.1       -0.333
 No. 9: Indices are Always Unique
 _______________________________________________
 
-It is natural to think of indices and columns on a ``pd.DataFrame`` as unique identifiers: their interfaces suggest they are like dictionaries, where keys are always unique. Pandas indices, however, are not constrained to unique values. Creating an index on a ``pd.Frame`` with duplicates means that, for some single-label selections, a ``pd.Series`` will be returned, but for other single-label selections, a ``pd.DataFrame`` will be returned.
+It is natural to think index and column labels on a ``pd.DataFrame`` are unique identifiers: their interfaces suggest that they are like Python dictionaries, where keys are always unique. Pandas indices, however, are not constrained to unique values. Creating an index on a ``pd.Frame`` with duplicates means that, for some single-label selections, a ``pd.Series`` will be returned, but for other single-label selections, a ``pd.DataFrame`` will be returned.
 
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
->>> df.set_index('charge', inplace=True)
+>>> df.set_index('charge', inplace=True) # Creating an index with duplicated labels
 >>> df
            name   mass    type
 charge
@@ -655,9 +652,9 @@ type    quark
 Name: 0.666, dtype: object
 
 
-Pandas support of non-unique indices makes client code more complicated by having to handle selections that might sometimes return a ``pd.Series` and other times returns a ``pd.DataFrame``. Further, uniqueness of indices is often a simple and effective check of data coherency.
+Pandas support of non-unique indices makes client code more complicated by having to handle selections that sometimes return a ``pd.Series` and other times returns a ``pd.DataFrame``. Further, uniqueness of indices is often a simple and effective check of data coherency.
 
-In some interfaces Pandas provides an optional check of uniqueness, called `verify_integrity`. While it seems obvious that integrity is desirable, by default Pandas disables `verify_integrity`.
+In interfaces like ``pd.DataFrame.set_index``, Pandas provides an optional check of uniqueness, called ``verify_integrity``. While it seems obvious that integrity is desirable, by default Pandas disables ``verify_integrity``.
 
 
 >>> df.set_index('type', verify_integrity=True)
@@ -665,7 +662,7 @@ Traceback (most recent call last):
 ValueError: Index has duplicate keys: Index(['lepton', 'quark'], dtype='object', name='type')
 
 
-In StaticFrame, indices are always unique. Attempting to set a non-unique index will always raise an exception.
+In StaticFrame, indices are always unique. Attempting to set a non-unique index will always raise an exception. This constraint eliminates opportunities for mistakenly introducing duplicates in indices.
 
 
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
@@ -715,4 +712,4 @@ Conclusion
 ____________________________________________________
 
 
-The concept of a DataFrame came long before Pandas, and today finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative API designed to be more consistent and reduce opportunities for error.
+The concept of a "DataFrame" came long before Pandas. Today, the "DataFrame" finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative API designed to be more consistent and reduce opportunities for error.

@@ -56,6 +56,14 @@ The following example, executed in a low-memory environment (using ``prlimit``),
    :align: center
 
 
+Why So Many Type Labels?
+-------------------------------
+
+Unexpected type coercions can expose errors or degrade performance. StaticFrame's container display provides full visibility into the types in a ``Frame``, and provides a variety of ways to configure the presentation and color of those types.
+
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
+   :align: center
+
 
 
 

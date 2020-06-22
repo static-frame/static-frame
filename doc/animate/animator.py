@@ -38,10 +38,33 @@ class DisplayConfig(LineGen):
 
     @staticmethod
     def lines() -> LineIter:
-        yield 'import numpy as np'
-        yield 'import pandas as pd'
         yield 'import static_frame as sf'
         yield PAUSE_SHORT
+
+        yield "f = sf.FrameGO.from_dict_records_items((('charm', {'symbol':'c', 'mass':1.3}), ('strange', {'symbol':'s', 'mass':0.1})))"
+        yield "f['target'] = f['mass'] > 1"
+        yield 'f'
+        yield PAUSE_SHORT
+
+
+        yield "sf.DisplayActive.set(sf.DisplayConfig(type_color_float='orange'))"
+        yield 'f'
+        yield PAUSE_SHORT
+
+        yield "sf.DisplayActive.update(type_color_str='lightcoral', type_color_bool='mediumpurple')"
+        yield 'f'
+        yield PAUSE_SHORT
+
+
+        yield "sf.DisplayActive.update(type_color_index=0x4682b4, type_color_frame=0xbfff)"
+        yield 'f'
+        yield PAUSE_SHORT
+
+        yield 'f.display(sf.DisplayConfig(type_color=False))'
+        yield PAUSE_SHORT
+
+        yield 'f.display(sf.DisplayConfig(type_show=False, include_index=False))'
+        yield PAUSE_FINAL
 
 
 class LowMemoryOps(LineGen):
@@ -179,10 +202,10 @@ def get_arg_parser() -> argparse.ArgumentParser:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             )
     p.add_argument('--animate',
-            help='Name of function to display the animation.',
+            help='Name of class to display the animation.',
             )
     p.add_argument('--record',
-            help='Name of function to record.',
+            help='Name of class to record.',
             )
     return p
 
