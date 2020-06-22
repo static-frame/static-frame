@@ -564,6 +564,8 @@ class TestUnit(TestCase):
         post1 = ih1.loc_to_iloc(HLoc['II', ILoc[-5:], [2, 3]])
         self.assertEqual(post1, [4, 5, 6, 7])
 
+        post2 = ih1.loc_to_iloc(HLoc[:, :, ILoc[-4]])
+        self.assertEqual(post1, [4, 5, 6, 7])
 
     #---------------------------------------------------------------------------
 
