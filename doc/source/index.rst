@@ -36,7 +36,7 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :caption: Articles
 
    articles/upgrade
-   articles/reset_index
+   articles/aiii
 
 
 .. toctree::

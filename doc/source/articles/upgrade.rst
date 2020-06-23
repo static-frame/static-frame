@@ -16,6 +16,10 @@ Now, after three years of development and refinement, we are seeing excellent re
 
 What follows are ten tips to aid Pandas users in transitioning to StaticFrame. While Pandas users will find many familiar idioms, there are significant differences.
 
+All examples use StaticFrame 0.6.20 or later (https://pypi.org/project/static-frame) and import with the following convention:
+
+>>> import static_frame as sf
+
 
 No. 1: Consistent and Discoverable Interfaces
 ____________________________________________________
@@ -654,3 +658,6 @@ ____________________________________________________
 
 
 The concept of a "data frame" came long before Pandas. Today, the data frame finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative designed to be more consistent and reduce opportunities for error.
+
+For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project (https://github.com/InvestmentSystems/static-frame) sites.
+

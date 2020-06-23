@@ -78,6 +78,158 @@ Neptune  11
 #-------------------------------------------------------------------------------
 # article: boring indices
 
+#start_aiii_fig01
+>>> s1 = sf.Series((x * 100 for x in range(1, 5)), index=tuple('wxyz'))
+>>> s1
+<Series>
+<Index>
+w        100
+x        200
+y        300
+z        400
+<<U1>    <int64>
+
+>>> s1.reindex(tuple('stwx'), fill_value=0)
+<Series>
+<Index>
+s        0
+t        0
+w        100
+x        200
+<<U1>    <int64>
+
+#end_aiii_fig01
+
+
+#start_aiii_fig02
+>>> s1.relabel(tuple('abcd'))
+<Series>
+<Index>
+a        100
+b        200
+c        300
+d        400
+<<U1>    <int64>
+
+#end_aiii_fig02
+
+
+#start_aiii_fig03
+>>> s1.relabel(sf.IndexAutoFactory)
+<Series>
+<Index>
+0        100
+1        200
+2        300
+3        400
+<int64>  <int64>
+
+#end_aiii_fig03
+
+
+
+
+#start_aiii_fig04
+>>> f1 = sf.Frame.from_dict(dict(a=(1,2), b=(True, False)), index=tuple('xy'))
+>>> f1
+<Frame>
+<Index> a       b      <<U1>
+<Index>
+x       1       True
+y       2       False
+<<U1>   <int64> <bool>
+
+>>> f1.relabel(index=sf.IndexAutoFactory, columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1      <int64>
+<Index>
+0       1       True
+1       2       False
+<int64> <int64> <bool>
+
+>>> f1.relabel(index=tuple('ab'), columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1      <int64>
+<Index>
+a       1       True
+b       2       False
+<<U1>   <int64> <bool>
+
+#end_aiii_fig04
+
+
+#start_aiii_fig05
+>>> s1
+<Series>
+<Index>
+w        100
+x        200
+y        300
+z        400
+<<U1>    <int64>
+
+>>> sf.Series.from_concat((s1, s1), index=tuple('abcdefgh'))
+<Series>
+<Index>
+a        100
+b        200
+c        300
+d        400
+e        100
+f        200
+g        300
+h        400
+<<U1>    <int64>
+
+#end_aiii_fig05
+
+
+
+#start_aiii_fig06
+>>> sf.Series.from_concat((s1, s1), index=sf.IndexAutoFactory)
+<Series>
+<Index>
+0        100
+1        200
+2        300
+3        400
+4        100
+5        200
+6        300
+7        400
+<int64>  <int64>
+
+#end_aiii_fig06
+
+
+
+#start_aiii_fig07
+>>> s2 = s1 * .5
+>>> sf.Frame.from_concat((s1, s2), axis=1, columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1         <int64>
+<Index>
+w       100     50.0
+x       200     100.0
+y       300     150.0
+z       400     200.0
+<<U1>   <int64> <float64>
+
+#end_aiii_fig07
+
+
+
+#start_aiii_fig08
+>>> sf.Frame.from_concat((f1, f1), axis=1, columns=sf.IndexAutoFactory)
+<Frame>
+<Index> 0       1      2       3      <int64>
+<Index>
+x       1       True   1       True
+y       2       False  2       False
+<<U1>   <int64> <bool> <int64> <bool>
+
+#end_aiii_fig08
+
 
 
 
