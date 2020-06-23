@@ -33,7 +33,7 @@ x        200
 y        300
 z        400
 <<U1>    <int64>
-
+>>>
 >>> s1.reindex(tuple('stwx'), fill_value=0)
 <Series>
 <Index>
