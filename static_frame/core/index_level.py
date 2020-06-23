@@ -636,7 +636,7 @@ class IndexLevel:
             return self.index.equals(other.index, **kwargs) #type: ignore
 
         # same length and depth, can traverse trees
-        # can store tuple of object ids to note those that have already been examine.
+        # can store tuple of object ids to note those that have already been examined.
         equal_pairs = set()
 
         levels_self = [self]
@@ -657,10 +657,10 @@ class IndexLevel:
             if level_self.targets is not None and level_other.targets is not None: # not terminus
                 levels_self.extend(level_self.targets)
                 levels_other.extend(level_other.targets)
-            if level_self.targets is None and level_other.targets is None: # not terminus
+            if level_self.targets is None and level_other.targets is None: # terminus
                 continue
-            if level_self.targets is None or level_other.targets is None: # not terminus
-                # at least one is at a terminus, but maybe both
+            if level_self.targets is None or level_other.targets is None:
+                # at least one is at a terminus
                 return False
 
         if not levels_self and not levels_other:

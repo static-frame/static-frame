@@ -1076,7 +1076,7 @@ class Index(IndexBase):
                     & isna_array(other.values, include_none=False))
             eq[isna_both] = True
 
-        if not eq.all():
+        if not eq.all(): # avoid returning a NumPy Bool
             return False
         return True
 
