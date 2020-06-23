@@ -4,7 +4,7 @@
 Ten Tips for Transitioning from Pandas to StaticFrame
 ====================================================================
 
-Pandas code can become complex, hard to maintain, and error prone. This happens because Pandas supports many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up-to-speed with StaticFrame.
+Complex Pandas code can become hard to maintain and error prone. This happens because Pandas supports many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up-to-speed with StaticFrame.
 
 
 Why StaticFrame
@@ -124,7 +124,7 @@ Name: mass, dtype: float64
 Index(['charm', 'strange'], dtype='object')
 
 
-StaticFrame offers a consistent, configurable display for all containers. The display of ``Series``, ``Frame``, ``Index``, and ``IndexHierarchy`` all share a common design. Under the hood, the display components are modular: the display components are composed to return the final display.
+StaticFrame offers a consistent, configurable display for all containers. The display of ``Series``, ``Frame``, ``Index``, and ``IndexHierarchy`` all share a common implementation and design.
 
 >>> f = sf.Frame.from_dict_records_items((('charm', {'symbol':'c', 'mass':1.3}), ('strange', {'symbol':'s', 'mass':0.1})))
 >>> f
@@ -154,7 +154,7 @@ As much time is spent visually exploring the contents of ``Frame`` and ``Series`
    :align: center
 
 
-No. 3: Immutable Data: Efficient Memory Management, No Defensive Copies
+No. 3: Immutable Data: Efficient Memory Management without Defensive Copies
 ___________________________________________________________________________________
 
 
@@ -292,7 +292,7 @@ ________________________________________________________________
 
 Pandas has separate functions for iteration and function application. For iteration there is ``pd.DataFrame.iteritems``, ``pd.DataFrame.iterrows``, ``pd.DataFrame.itertuples``, ``pd.DataFrame.groupby``; for function application there is ``pd.DataFrame.apply`` and ``pd.DataFrame.applymap``.
 
-But since function application requires iteration, it is sensible for function application to be built on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array`` or ``Frame.iter_group_items``) that can be used for function application with an ``apply`` method. Functions for using mapping types (such as ``map_any`` and ``map_fill``) are also available on iterators. This means that once you find how you want to iterate, function application is a just a method away.
+But since function application requires iteration, it is sensible for function application to be built on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array`` or ``Frame.iter_group_items``) that can be used for function application with an ``apply`` method. Functions for using mapping types (such as ``map_any`` and ``map_fill``) are also available on iterators. This means that once you know how you want to iterate, function application is a just a method away.
 
 For example, we can create a ``Frame`` with ``Frame.from_records``:
 
@@ -403,7 +403,7 @@ This limited form of mutation meets a practical need. Further, converting back a
 
 
 
-No 7: Everything is not a Nanosecond
+No. 7: Everything is not a Nanosecond
 __________________________________________________________________
 
 Pandas models every date or timestamp as a NumPy nanosecond ``datetime64`` object, regardless of if nanosecond-level resolution is practical or appropriate. This has the amusing side effect of creating a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
@@ -450,7 +450,7 @@ ___________________________________________
 
 Hierarchical indices permit fitting many dimensions into one. Using hierarchical indices, *n*-dimensional data can be encoded into a single ``Series`` or ``Frame``.
 
-Pandas implementation of hierarchical indices, the `pd.MultiIndex`, behaves inconsistently, again forcing client code to handle unnecessary variability. We can begin by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
+Pandas implementation of hierarchical indices, the ``pd.MultiIndex``, behaves inconsistently, again forcing client code to handle unnecessary variability. We can begin by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
 
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
@@ -595,7 +595,7 @@ type    quark
 Name: 0.666, dtype: object
 
 
-Pandas support of non-unique indices makes client code more complicated by having to handle selections that sometimes return a ``pd.Series` and other times returns a ``pd.DataFrame``. Further, uniqueness of indices is often a simple and effective check of data coherency.
+Pandas support of non-unique indices makes client code more complicated by having to handle selections that sometimes return a ``pd.Series`` and other times returns a ``pd.DataFrame``. Further, uniqueness of indices is often a simple and effective check of data coherency.
 
 In interfaces like ``pd.DataFrame.set_index``, Pandas provides an optional check of uniqueness, called ``verify_integrity``. While it seems obvious that integrity is desirable, by default Pandas disables ``verify_integrity``.
 
