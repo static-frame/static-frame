@@ -326,17 +326,17 @@ strange  QUARK
 <<U7>    <<U6>
 
 
-This approach is used for all iterators on all containers in StaticFrame. For example, we can use ``iter_element()`` and ``apply`` on ``Frame``.
+This approach is used for all iterators on all containers in StaticFrame. For example, we can use ``iter_element()`` and ``apply`` on a ``Frame``.
 
->>> f.iter_element().apply(lambda e: str(e).rjust(8, '.'))
+>>> f[['mass', 'charge']].iter_element().apply(lambda e: format(e, '.2e'))
 <Frame>
-<Index> mass     charge   type     <<U6>
+<Index> mass     charge    <<U6>
 <Index>
-muon    ...0.106 ....-1.0 ..lepton
-tau     ...1.777 ....-1.0 ..lepton
-charm   .....1.3 ...0.666 ...quark
-strange .....0.1 ..-0.333 ...quark
-<<U7>   <object> <object> <object>
+muon    1.06e-01 -1.00e+00
+tau     1.78e+00 -1.00e+00
+charm   1.30e+00 6.66e-01
+strange 1.00e-01 -3.33e-01
+<<U7>   <object> <object>
 
 
 For row or column iteration, a family of methods allows specifying the type of container to be used for the iterated rows or columns, i.e, with an array, with a ``NamedTuple``, or with a ``Series`` (``iter_array()``, ``iter_tuple()``, ``iter_series()``, respectively). These methods take an axis argument to determine whether iteration is by row or by column, and similarly expose an ``apply`` method for function application. To apply a function to columns, we can do the following.
@@ -525,7 +525,7 @@ quark                              strange 0.1       -0.333
 <<U6>                              <<U7>   <float64> <float64>
 
 
-Unlike Pandas, a selection never automatically reduces the ``IndexHierarchy`` to an ``Index``. If reduction is needed, the ``Frame.relabel_drop_level()`` can be used. This is a lightweight operation that does not copy underlying data. Notice also that an ``sf.HLoc`` selection modifier, similar to ``pd.IndexSlice`` is always required for partial selections within a hierarchical index.
+Unlike Pandas, a selection never automatically reduces the ``IndexHierarchy`` to an ``Index``. If reduction is needed, the ``Frame.relabel_drop_level()`` method can be used. This is a lightweight operation that does not copy underlying data. Notice also that an ``sf.HLoc`` selection modifier, similar to ``pd.IndexSlice`` is always required for partial selections within a hierarchical index.
 
 
 >>> f.loc[sf.HLoc['quark']]
