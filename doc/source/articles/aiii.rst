@@ -6,7 +6,7 @@ This article demonstrates how StaticFrame exposes functionality for creating the
 
 While index objects that provide scrutable labels into data are a key feature of libraries like Pandas and StaticFrame, there are many situations where the simple, inscrutable AIII is needed, such as when data does not have a meaningful index, or in concatenation of data with redundant indices. Offering convenient and consistent approaches to creating these indices supports creating more maintainable code.
 
-All examples use StaticFrame 0.4.0 or later (https://pypi.org/project/static-frame) and import with the following convention:
+All examples use StaticFrame 0.4.0 or later and import with the following convention:
 
 >>> import static_frame as sf
 
@@ -129,4 +129,4 @@ Consistent Interfaces for More Maintainable Code
 
 Resetting an index is not a complex operation. However, how to provide the option to create an AIII within diverse interfaces is not obvious. The approach taken with StaticFrame offers a consistent interface, leading to more maintainable code.
 
-For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project (https://github.com/InvestmentSystems/static-frame) sites.
+For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/InvestmentSystems/static-frame).
