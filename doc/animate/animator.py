@@ -167,10 +167,10 @@ class Animator:
 
         for line in func():
             if line is PAUSE_SHORT:
-                cls.pause(0.5)
+                cls.pause(1)
                 continue
             if line is PAUSE_LONG:
-                cls.pause(2)
+                cls.pause(2.5)
                 continue
             if line is PAUSE_FINAL:
                 cls.pause(5)
@@ -186,6 +186,7 @@ class Animator:
             if isinstance(line, Comment):
                 continue
 
+            # NOTE: exec puts variables in this scope; pass globals and locals eval, exec
             try:
                 post = eval(line)
                 if post is not None:
