@@ -89,7 +89,7 @@ class StoreFilter:
 
         # for object array processing
         self._EQUAL_FUNC_TO_FROM = (
-                # NOTE: this using the same heuristic as util.isna_array,, which may not be the besr choice for non-standard objects
+                # NOTE: this using the same heuristic as util.isna_array, which may not be the best choice for non-standard objects
                 (lambda x: np.not_equal(x, x), self.from_nan),
                 (lambda x: np.equal(x, None), self.from_none),
                 (lambda x: np.equal(x, np.inf), self.from_posinf),
@@ -185,7 +185,7 @@ class StoreFilter:
                 or kind in DTYPE_NAN_KIND
                 or dtype == DTYPE_BOOL
                 ):
-            return array # no replacements posible
+            return array # no replacements possible
 
         # need to only check object or float
         if kind in DTYPE_STR_KIND or dtype == DTYPE_OBJECT:
