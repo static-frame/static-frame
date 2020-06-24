@@ -410,7 +410,7 @@ This limited form of mutation meets a practical need. Further, converting back a
 No. 7: Everything is not a Nanosecond
 __________________________________________________________________
 
-Pandas models every date or timestamp as a NumPy nanosecond ``datetime64`` object, regardless of if nanosecond-level resolution is practical or appropriate. This has the amusing side effect of creating a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
+Pandas models date or timestamp values as NumPy ``datetime64[ns]`` (nanosecond) arrays, regardless of if nanosecond-level resolution is practical or appropriate. This has the amusing side-effect of creating a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
 
 >>> pd.date_range('1980', '2262-04-11')
 DatetimeIndex(['1980-01-01', '1980-01-02', '1980-01-03', '1980-01-04',
@@ -454,7 +454,7 @@ ___________________________________________
 
 Hierarchical indices permit fitting many dimensions into one. Using hierarchical indices, *n*-dimensional data can be encoded into a single ``Series`` or ``Frame``.
 
-Pandas implementation of hierarchical indices, the ``pd.MultiIndex``, behaves inconsistently, again forcing client code to handle unnecessary variability. We can begin by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
+Pandas's implementation of hierarchical indices, the ``pd.MultiIndex``, behaves inconsistently, again forcing client code to handle unnecessary variability. We can see this by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
 
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
@@ -551,7 +551,7 @@ strange 0.1       -0.333
 <<U7>   <float64> <float64>
 
 
-Further, unlike Pandas, StaticFrame is consistent in what positional ``loc`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within an ``IndexHierarchy``, the ``sf.HLoc`` selection modifier is required to specify selection at arbitrary depths within the hierarchy. This approach makes StaticFrame code easier to understand and maintain.
+Unlike Pandas, StaticFrame is consistent in what positional ``loc`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within an ``IndexHierarchy``, the ``sf.HLoc`` selection modifier is required to specify selection at arbitrary depths within the hierarchy. This approach makes StaticFrame code easier to understand and maintain.
 
 >>> f.loc[sf.HLoc['lepton']]
 <Frame>
@@ -609,7 +609,7 @@ Traceback (most recent call last):
 ValueError: Index has duplicate keys: Index(['lepton', 'quark'], dtype='object', name='type')
 
 
-In StaticFrame, indices are always unique. Attempting to set a non-unique index will always raise an exception. This constraint eliminates opportunities for mistakenly introducing duplicates in indices.
+In StaticFrame, indices are always unique. Attempting to set a non-unique index will raise an exception. This constraint eliminates opportunities for mistakenly introducing duplicates in indices.
 
 
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
