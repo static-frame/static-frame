@@ -4,7 +4,7 @@
 Ten Tips for Transitioning from Pandas to StaticFrame
 ====================================================================
 
-Complex Pandas code can become hard to maintain and error prone. This happens because Pandas supports many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up-to-speed with StaticFrame.
+Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up-to-speed with StaticFrame.
 
 
 Why StaticFrame
@@ -12,7 +12,7 @@ ______________________
 
 After years of using Pandas to develop back-end financial systems, it became clear to me that Pandas was not the right tool for the job. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's irregular approach to data ownership and support for in-place mutation led to serious opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
-Now, after three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While StaticFrame is not yet always as fast as Pandas for some operations, we often see StaticFrame out-perform Pandas in large-scale, real-world use cases.
+Now, after three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While, for some operations, StaticFrame is not yet as fast as Pandas, we often see StaticFrame out-perform Pandas in large-scale, real-world use cases.
 
 What follows are ten tips to aid Pandas users in transitioning to StaticFrame. While Pandas users will find many familiar idioms, there are significant differences.
 
@@ -24,12 +24,11 @@ All examples use StaticFrame 0.6.20 or later and import with the following conve
 No. 1: Consistent and Discoverable Interfaces
 ____________________________________________________
 
+An application programming interface (API) can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from Pandas's API to support greater consistency in all of these areas.
 
-An API can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from Pandas's API to support greater consistency in all of these areas.
+To create a ``Series`` or a ``Frame``, you need constructors. Pandas places its ``pd.DataFrame`` constructors in two places: on the root namespace (``pd``, as commonly imported) and on the ``pd.DataFrame`` class.
 
-To create a ``Series`` or ``Frame``, you need constructors. Pandas places its ``pd.DataFrame`` constructors in two places: on the root namespace (``pd``, as commonly imported) and on the ``pd.DataFrame`` class.
-
-For example, JSON data is loaded from a function on the ``pd`` namespace, while records (Python sequences) are loaded from the ``pd.DataFrame`` class.
+For example, JSON data is loaded from a function on the ``pd`` namespace, while record data (an iterable of Python sequences) is loaded from the ``pd.DataFrame`` class.
 
 
 >>> pd.read_json('[{"name":"muon", "mass":0.106},{"name":"tau", "mass":1.777}]')
@@ -72,7 +71,7 @@ For the user, there is no benefit to this diversity and redundancy. StaticFrame 
 <int64> <<U4> <float64>
 
 
-Being explicit leads to lots of constructors. To help you find what you are looking for, StaticFrame containers expose an ``interface`` attribute that provides the entire public interface of the calling class or instance as a ``Frame``. We can filter this table to constructors by using a ``loc`` selection.
+Being explicit leads to lots of constructors. To help you find what you are looking for, StaticFrame containers expose an ``interface`` attribute that provides the entire public interface of the calling class or instance as a ``Frame``. We can filter this table to show only constructors by using a ``loc`` selection.
 
 >>> sf.Frame.interface.loc[sf.Frame.interface['group'] == 'Constructor']
 <Frame: Frame>
@@ -116,14 +115,14 @@ ___________________________________________
 Pandas displays its containers in diverse, inconsistent ways. For example, a ``pd.Series`` is shown with its name and type, while a ``pd.DataFrame`` shows neither of those attributes. If you display a ``pd.Index`` or ``pd.MultiIndex``, you get a third approach: an ``eval``-able string, but one that is unmanageable when large.
 
 >>> df = pd.DataFrame.from_records([{'symbol':'c', 'mass':1.3}, {'symbol':'s', 'mass':0.1}], index=('charm', 'strange'))
->>> df
-        symbol  mass
-charm        c   1.3
-strange      s   0.1
 >>> df['mass']
 charm      1.3
 strange    0.1
 Name: mass, dtype: float64
+>>> df
+        symbol  mass
+charm        c   1.3
+strange      s   0.1
 >>> df.index
 Index(['charm', 'strange'], dtype='object')
 
@@ -151,7 +150,7 @@ mass
 <<U6>
 
 
-As much time is spent visually exploring the contents of ``Frame`` and ``Series``, StaticFrame offers numerous configuration options for displaying containers, all exposed through the ``DisplayConfig`` class. Specific types can be colored or type annotations can be removed entirely.
+As much time is spent visually exploring the contents of ``Frame`` and ``Series`` containers, StaticFrame offers numerous display configuration options, all exposed through the ``DisplayConfig`` class. For persistent changes, ``DisplayConfig`` instances can be passed to ``DisplayActive.set()``; for one-off changes, ``DisplayConfig`` instances can be passed to the container's ``display()`` method. Using ``DisplayConfig``, specific types can be colored or type annotations can be removed entirely.
 
 
 .. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
