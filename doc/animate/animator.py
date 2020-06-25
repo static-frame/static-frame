@@ -34,6 +34,14 @@ class LineGen:
     def lines() -> LineIter:
         raise NotImplementedError()
 
+    @classmethod
+    def get_animate_command(cls) -> str:
+        if cls.CMD_PREFIX:
+            return f"{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {cls.__name__}"
+        return f"python3 doc/animate/animator.py --animate {cls.__name__}"
+
+
+
 class DisplayConfig(LineGen):
 
     @staticmethod
@@ -205,8 +213,11 @@ def get_arg_parser() -> argparse.ArgumentParser:
     p.add_argument('--animate',
             help='Name of class to display the animation.',
             )
-    p.add_argument('--record',
-            help='Name of class to record.',
+    p.add_argument('--termtosvg',
+            help='Name of class to termtosvg.',
+            )
+    p.add_argument('--asciinema',
+            help='Name of class to asciinema.',
             )
     return p
 
@@ -220,13 +231,8 @@ if __name__ == '__main__':
         cls = line_gen[options.animate]
         Animator.main(cls.lines)
 
-    elif options.record:
-        cls = line_gen[options.record]
-
-        if cls.CMD_PREFIX:
-            command = f"{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {options.record}"
-        else:
-            command = f"python3 doc/animate/animator.py --animate {options.record}"
+    elif options.termtosvg:
+        cls = line_gen[options.termtosvg]
 
         cmd = ['termtosvg',
             '--template',
@@ -234,7 +240,19 @@ if __name__ == '__main__':
             '-g', '80x18',
             '--loop-delay', '2000',
             '--command',
-            command,
+            cls.get_animate_command(),
             '/tmp/term.svg',
             ]
         subprocess.run(cmd)
+
+    elif options.asciinema:
+        cls = line_gen[options.asciinema]
+
+        cmd = ['asciinema',
+            'rec',
+            '--command',
+            cls.get_animate_command(),
+            '/tmp/term.cast',
+            ]
+        subprocess.run(cmd)
+        # NOTE: can upload with asciinema upload /tmp/term.cast
