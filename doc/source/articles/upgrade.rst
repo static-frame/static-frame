@@ -1,5 +1,5 @@
 
-Ten Reasons to Use SaticFrame Instead of Pandas
+Ten Reasons to Use StaticFrame Instead of Pandas
 ====================================================================
 
 If you work with data in Python, you likely use Pandas and are pleased with its functionality and performance. However, if you have used Pandas on large projects over many years, you might have a few complaints. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
