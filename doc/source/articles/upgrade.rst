@@ -1,10 +1,25 @@
 
 
 
+
+
+Ten Reasons StaticFrame Might Lure You Away from Pandas
+
+Ten Reasons to Try StaticFrame
+
+Ten Reasons to Upgrade from Pandas to StaticFrame
+
+Ten Ways StaticFrame can Improve your Pandas Code
+
+Ten Reasons to Start Using StaticFrame for Your Next Pandas Project
+
 Ten Tips for Transitioning from Pandas to StaticFrame
+
+
+
 ====================================================================
 
-Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistencies in its interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article provides ten tips for Pandas users to get up-to-speed with StaticFrame.
+Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article offers ten reasons to give StaticFrame a try.
 
 
 Why StaticFrame
@@ -14,10 +29,13 @@ After years of using Pandas to develop back-end financial systems, it became cle
 
 Now, after three years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While, for some operations, StaticFrame is not yet as fast as Pandas, we often see StaticFrame out-perform Pandas in large-scale, real-world use cases.
 
-What follows are ten tips to aid Pandas users in transitioning to StaticFrame. While Pandas users will find many familiar idioms, there are significant differences.
+What follows are ten reasons to try StaticFrame instead of Pandas for your next project. Of course, as the primary author of SaticFrame, I am biased: I think you might find some reasons to not use Pandas.
 
-All examples use StaticFrame 0.6.20 or later and import with the following convention:
+While Pandas users will find many familiar idioms, there are significant differences.
 
+All examples use Pandas 1.0.3 and StaticFrame 0.6.20. Imports use the following convention:
+
+>>> import pandas as pd
 >>> import static_frame as sf
 
 
@@ -115,19 +133,21 @@ ___________________________________________
 Pandas displays its containers in diverse, inconsistent ways. For example, a ``pd.Series`` is shown with its name and type, while a ``pd.DataFrame`` shows neither of those attributes. If you display a ``pd.Index`` or ``pd.MultiIndex``, you get a third approach: a string suitable for ``eval()`` which is inscrutable when large.
 
 >>> df = pd.DataFrame.from_records([{'symbol':'c', 'mass':1.3}, {'symbol':'s', 'mass':0.1}], index=('charm', 'strange'))
->>> df['mass']
-charm      1.3
-strange    0.1
-Name: mass, dtype: float64
 >>> df
         symbol  mass
 charm        c   1.3
 strange      s   0.1
+
+>>> df['mass']
+charm      1.3
+strange    0.1
+Name: mass, dtype: float64
+
 >>> df.index
 Index(['charm', 'strange'], dtype='object')
 
 
-StaticFrame offers a consistent, configurable display for all containers. The display of ``Series``, ``Frame``, ``Index``, and ``IndexHierarchy`` all share a common implementation and design.
+StaticFrame offers a consistent, configurable display for all containers. The display of ``Series``, ``Frame``, ``Index``, and ``IndexHierarchy`` all share a common implementation and design. A priority of that design is to always make explicit container classes and underlying array types.
 
 >>> f = sf.Frame.from_dict_records_items((('charm', {'symbol':'c', 'mass':1.3}), ('strange', {'symbol':'s', 'mass':0.1})))
 >>> f
@@ -137,12 +157,14 @@ StaticFrame offers a consistent, configurable display for all containers. The di
 charm   c      1.3
 strange s      0.1
 <<U7>   <<U1>  <float64>
+
 >>> f['mass']
 <Series: mass>
 <Index>
 charm          1.3
 strange        0.1
 <<U7>          <float64>
+
 >>> f.columns
 <Index>
 symbol
@@ -150,7 +172,11 @@ mass
 <<U6>
 
 
-As much time is spent visually exploring the contents of ``Frame`` and ``Series`` containers, StaticFrame offers numerous display configuration options, all exposed through the ``DisplayConfig`` class. For persistent changes, ``DisplayConfig`` instances can be passed to ``DisplayActive.set()``; for one-off changes, ``DisplayConfig`` instances can be passed to the container's ``display()`` method. Using ``DisplayConfig``, specific types can be colored or type annotations can be removed entirely.
+As much time is spent visually exploring the contents of ``Frame`` and ``Series`` containers, StaticFrame offers numerous display configuration options, all exposed through the ``DisplayConfig`` class.
+
+For persistent changes, ``DisplayConfig`` instances can be passed to ``DisplayActive.set()``; for one-off changes, ``DisplayConfig`` instances can be passed to the container's ``display()`` method.
+
+While ``pd.set_option`` can similarly be used to set Pandas display characteristics, such as maximum rows or columns, StaticFrame provides more extensive options for making data types apparent. As shown in the following terminal animation, specific types can be colored or type annotations can be removed entirely with ``DisplayConfig``.
 
 
 .. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
@@ -365,7 +391,7 @@ type     nan
 <<U6>    <float64>
 
 
-Applying a function to a row instead of a column simply requires changing the axis argument.
+Applying a function to a row instead of a column simply requires changing the axis argument, and group iteration and function application follow the same pattern.
 
 >>> f.iter_series(axis=1).apply(lambda s: s['mass'] > 1 and s['type'] == 'quark')
 <Series>
@@ -375,8 +401,6 @@ tau      False
 charm    True
 strange  False
 <<U7>    <bool>
-
-Group iteration and function application work the same way.
 
 >>> f.iter_group('type').apply(lambda f: f['mass'].mean())
 <Series>
@@ -412,7 +436,7 @@ This limited form of mutation meets a practical need. Further, converting back a
 No. 7: Dates are not Nanoseconds
 __________________________________________________________________
 
-Pandas models all date or timestamp values as NumPy ``datetime64[ns]`` (nanosecond) arrays, regardless of if nanosecond-level resolution is practical or appropriate. This has the amusing side-effect of creating a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
+Pandas models all date or timestamp values as NumPy ``datetime64[ns]`` (nanosecond) arrays, regardless of if nanosecond-level resolution is practical or appropriate. This has the result of creating a "Y2262 problem" for Pandas: dates beyond 2262-04-11 cannot be expressed. While I can create a ``pd.DatetimeIndex`` up to 2262-04-11, one day further and Pandas raises an error.
 
 >>> pd.date_range('1980', '2262-04-11')
 DatetimeIndex(['1980-01-01', '1980-01-02', '1980-01-03', '1980-01-04',
