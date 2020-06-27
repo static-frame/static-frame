@@ -1,8 +1,28 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Ten Reasons to Use StaticFrame Instead of Pandas
 ====================================================================
 
-If you work with data in Python, you likely use Pandas and are pleased with its functionality and performance. However, if you have used Pandas on large projects over many years, you might have a few complaints. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
+If you work with data in Python, you probably use Pandas. Pandas provides instant gratification: sophisticated data processing routines can be implemented in a few lines of code. However, if you have used Pandas on large projects over many years, you may have had some challenges. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
 
 
 Why StaticFrame
@@ -10,9 +30,9 @@ ______________________
 
 After years of using Pandas to develop back-end financial systems, it became clear to me that Pandas was not the right tool for the job. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's irregular approach to data ownership and support for in-place mutation led to serious opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
-Now, after years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. While, for some isolated operations, StaticFrame is not yet as fast as Pandas, we often see StaticFrame out-perform Pandas in large-scale, real-world use cases.
+Now, after years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. Libraries and applications written with StaticFrame are easier to maintain and test. And we often see StaticFrame out-perform Pandas in large-scale, real-world use cases, even though, for many isolated operations, StaticFrame is not yet as fast as Pandas.
 
-What follows are ten reasons to favor using StaticFrame over Pandas. As the primary author of StaticFrame, I am likely biased in this presentation. However, having worked with Pandas since 2013, I hope to have some perspective to share.
+What follows are ten reasons to favor using StaticFrame over Pandas. As the primary author of StaticFrame, I am certainly biased in this presentation! However, having worked with Pandas since 2013, I hope to have some perspective to share.
 
 All examples use Pandas 1.0.3 and StaticFrame 0.6.20. Imports use the following convention:
 
@@ -221,15 +241,16 @@ ValueError: assignment destination is read-only
 
 
 
-While immutable data reduces opportunities for error, it also offers performance advantages. For example, when renaming an already-created ``Frame``, underlying data is not copied. Instead, references to the same immutable arrays are shared. Such "no-copy" operations are thus fast and light-weight.
+While immutable data reduces opportunities for error, it also offers performance advantages. For example, when replacing column labels with ``sf.Frame.relabel()``, underlying data is not copied. Instead, references to the same immutable arrays are shared between the old and new containers. Such "no-copy" operations are thus fast and light-weight. This is in contrast to what happens when doing the same thing in Pandas: when using the corresponding ``df.DataFrame.rename()`` method, a defensive copy of all data is required.
 
->>> f.rename('fermion')
-<Frame: fermion>
-<Index>          symbol mass      <<U6>
+>>> f.relabel(columns=lambda x: x.upper())
+<Frame>
+<Index> MASS      CHARGE    <<U6>
 <Index>
-charm            c      1.3
-strange          s      0.1
-<<U7>            <<U1>  <float64>
+muon    0.106     -1.0
+tau     1.777     -1.0
+<<U4>   <float64> <float64>
+
 
 
 
@@ -272,7 +293,7 @@ down     -0.333
 <<U4>    <float64>
 
 
-StaticFrame uses a special ``sf.Frame.assign`` interface for performing assignment function calls. On a ``Frame``, this interface exposes a ``sf.Frame.assign.loc[]`` interface that can be used to select the target of assignment, just as ``sf.Frame.loc[]``. After this selection, the value to be assigned is passed through a function call.
+StaticFrame uses a special ``assign`` interface for performing assignment function calls. On a ``Frame``, this interface exposes a ``sf.Frame.assign.loc[]`` interface that can be used to select the target of assignment, just as ``sf.Frame.loc[]``. After this selection, the value to be assigned is passed through a function call.
 
 
 >>> f = sf.Frame.from_dict_records_items((('charm', {'charge':0.666, 'mass':1.3}), ('strange', {'charge':-0.333, 'mass':0.1})))
@@ -377,7 +398,7 @@ _____________________________________________
 
 An efficient use of a ``pd.DataFrame`` is to load initial data, then produce derived data by adding additional columns. This approach leverages the columnar organization of types and underlying arrays: adding new columns does not require re-allocating old columns.
 
-``StaticFrame`` makes this approach less vulnerable to error by offering a strict, grow-only version of a ``sf.Frame`` called a ``sf.FrameGO``. For example, once a ``sf.FrameGO`` is created, new columns can be added while existing columns cannot be overwritten or mutated in-place.
+StaticFrame makes this approach less vulnerable to error by offering a strict, grow-only version of a ``sf.Frame`` called a ``sf.FrameGO``. For example, once a ``sf.FrameGO`` is created, new columns can be added while existing columns cannot be overwritten or mutated in-place.
 
 
 >>> f = sf.FrameGO.from_records(((0.106, -1.0, 'lepton'), (1.777, -1.0, 'lepton'), (1.3, 0.666, 'quark'), (0.1, -0.333, 'quark')), columns=('mass', 'charge', 'type'), index=('muon', 'tau', 'charm', 'strange'))
@@ -427,6 +448,7 @@ While not possible with Pandas, creating an index of years or dates extending to
 2999
 3000
 <datetime64[Y]>
+
 >>> sf.IndexDate.from_year_range(1980, 3000).tail()
 <IndexDate>
 3000-12-27
@@ -443,9 +465,9 @@ ___________________________________________________________________________
 
 Hierarchical indices permit fitting many dimensions into one. Using hierarchical indices, *n*-dimensional data can be encoded into a single ``sf.Series`` or ``sf.Frame``.
 
-A key feature of hierarchical indices is partial selection at arbitrary depths, whereby a selection can be composed from the intersection of selections at each depth level. How to fit those inner depth selections in a ``pd.DataFrame.loc[]`` selection is not obvious.
+A key feature of hierarchical indices is partial selection at arbitrary depths, whereby a selection can be composed from the intersection of selections at each depth level. Pandas offers numerous ways to express those inner depth selections.
 
-The reason for confusion when using Pandas's hierarchical index (``pd.MultiIndex``) is that the meaning of positional arguments in a ``pd.DataFrame.loc[]`` selection becomes inconsistent. We can see this by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
+One way is by overloading ``pd.DataFrame.loc[]``. When using Pandas's hierarchical index (``pd.MultiIndex``), the meaning of positional arguments in a ``pd.DataFrame.loc[]`` selection becomes dynamic. It is this that makes Pandas code using hierarchical indices hard to maintain. We can see this by creating a ``pd.DataFrame`` and setting a ``pd.MultiIndex``.
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
 
@@ -538,11 +560,13 @@ charge
 -1.000      tau  1.777  lepton
  0.666    charm  1.300   quark
 -0.333  strange  0.100   quark
+
 >>> df.loc[-1.0] # Selecting a non-unique label results in a pd.DataFrame
         name   mass    type
 charge
 -1.0    muon  0.106  lepton
 -1.0     tau  1.777  lepton
+
 >>> df.loc[0.666] # Selecting a unique label results in a pd.Series
 name    charm
 mass      1.3
