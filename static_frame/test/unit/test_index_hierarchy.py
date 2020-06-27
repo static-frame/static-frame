@@ -1365,7 +1365,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_set_operators_e(self) -> None:
+    def test_hierarchy_set_operators_f(self) -> None:
         dd = datetime.date
 
         i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
@@ -1379,7 +1379,7 @@ class TestUnit(TestCase):
                 ((0, Index), (1, IndexDate))
                 )
 
-    def test_hierarchy_set_operators_f(self) -> None:
+    def test_hierarchy_set_operators_g(self) -> None:
         dd = datetime.date
 
         i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
@@ -1395,7 +1395,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_hierarchy_set_operators_g(self) -> None:
+    def test_hierarchy_set_operators_h(self) -> None:
         dd = datetime.date
 
         i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
@@ -1409,7 +1409,7 @@ class TestUnit(TestCase):
 
 
 
-    def test_hierarchy_set_operators_h(self) -> None:
+    def test_hierarchy_set_operators_i(self) -> None:
         labels = (
                 ('II', 'B'),
                 ('II', 'A'),
