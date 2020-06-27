@@ -4,7 +4,7 @@ What is New in Static Frame
 0.6.21
 ----------
 
-``IndexHierarchy`` set operations will now delegate ``Index`` types where they are equivalent between operands.
+``IndexHierarchy`` set operations will now delegate ``Index`` types when they are equivalent between operands at corresponding depth levels.
 
 
 0.6.20
