@@ -1241,6 +1241,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1.rehierarch([0,])
 
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_set_operators_a(self) -> None:
 
@@ -1348,6 +1349,84 @@ class TestUnit(TestCase):
         post3 = ih1.difference(ih2)
         self.assertEqual(post3.values.tolist(),
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+
+
+    def test_hierarchy_set_operators_e(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 2)], [3, date(2019, 1, 3)]], index_constructors=[Index, IndexDate])
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+
+    def test_hierarchy_set_operators_e(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate])
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+    def test_hierarchy_set_operators_f(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]],)
+
+        i3 = i1.union(i2)
+
+        # only if classes match do we pass on index types
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, Index))
+                )
+
+
+    def test_hierarchy_set_operators_g(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2), 'a'], [3, dd(2019, 1, 3), 'b']],)
+
+        with self.assertRaises(ErrorInitIndex):
+            i3 = i1.union(i2)
+        with self.assertRaises(ErrorInitIndex):
+            i3 = i1.union(np.arange(4))
+
+
+
+    def test_hierarchy_set_operators_h(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        f1 = Frame.from_records((('III', 1), ('III', 2)))
+
+        ih2 = ih1.union(f1)
+
+        self.assertEqual(ih2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
+                )
+
 
     #---------------------------------------------------------------------------
 

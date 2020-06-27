@@ -232,34 +232,7 @@ class IndexBase(ContainerOperand):
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: tp.Union['IndexBase', 'Series']
             ) -> I:
-        '''
-        Utility function for preparing and collecting values for Indices to produce a new Index.
-        '''
-        if self._recache:
-            self._update_array_cache()
-
-        if isinstance(other, np.ndarray):
-            opperand = other
-            assume_unique = False
-        elif isinstance(other, IndexBase):
-            opperand = other.values
-            assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand):
-            opperand = other.values
-            assume_unique = False
-        else:
-            raise NotImplementedError(f'no support for {other}')
-
-        cls = self.__class__
-
-        # using assume_unique will permit retaining order when opperands are identical
-        labels = func(self.values, opperand, assume_unique=assume_unique) # type: ignore
-
-        if id(labels) == id(self.values):
-            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-            return cls(self)
-        return cls.from_labels(labels)
-
+        raise NotImplementedError()
 
     def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
         '''

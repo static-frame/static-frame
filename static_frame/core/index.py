@@ -619,6 +619,43 @@ class Index(IndexBase):
         return bool(self._labels.size)
 
     #---------------------------------------------------------------------------
+    # set operations
+
+    def _ufunc_set(self: I,
+            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
+            other: tp.Union['IndexBase', 'Series']
+            ) -> I:
+        '''
+        Utility function for preparing and collecting values for Indices to produce a new Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(other, np.ndarray):
+            operand = other
+            assume_unique = False
+        elif isinstance(other, IndexBase):
+            operand = other.values
+            assume_unique = True # can always assume unique
+        elif isinstance(other, ContainerOperand):
+            operand = other.values
+            assume_unique = False
+        else:
+            raise NotImplementedError(f'no support for {other}')
+
+        cls = self.__class__
+
+        # using assume_unique will permit retaining order when operands are identical
+        labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
+
+        if id(labels) == id(self.values):
+            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
+            return cls(self)
+
+        return cls.from_labels(labels)
+
+
+    #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
         '''Create a new index after removing the values specified by the loc key.
         '''

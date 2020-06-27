@@ -6,6 +6,7 @@ import numpy as np
 
 
 from static_frame.core.array_go import ArrayGO
+from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
@@ -501,7 +502,7 @@ class IndexHierarchy(IndexBase):
     def iloc(self) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
 
-
+    # HOTE: this is only nodes, not a the full realization; probably need both
     def _iter_label(self,
             depth_level: int = 0,
             ) -> tp.Iterator[tp.Hashable]:
@@ -714,6 +715,66 @@ class IndexHierarchy(IndexBase):
                 sub_display.extend_iterable(col, header=header_sub)
 
         return sub_display #type: ignore
+
+    #---------------------------------------------------------------------------
+    # set operations
+
+    def _ufunc_set(self,
+            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
+            other: tp.Union['IndexBase', 'Series']
+            ) -> 'IndexHierarchy':
+        '''
+        Utility function for preparing and collecting values for Indices to produce a new Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if isinstance(other, np.ndarray):
+            operand = other
+            assume_unique = False
+        elif isinstance(other, IndexBase):
+            operand = other.values
+            assume_unique = True # can always assume unique
+        elif isinstance(other, ContainerOperand):
+            operand = other.values
+            assume_unique = False
+        else:
+            raise NotImplementedError(f'no support for {other}')
+
+        both_sized = len(operand) > 0 and len(self) > 0
+
+        if operand.ndim != 2:
+            raise ErrorInitIndex('operand in IndexHierarchy set operations must ndim of 2')
+        if both_sized and self.shape[1] != operand.shape[1]:
+            raise ErrorInitIndex('operands in IndexHierarchy set operations must have matching depth')
+
+        cls = self.__class__
+
+        # using assume_unique will permit retaining order when operands are identical
+        labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
+
+        if id(labels) == id(self.values):
+            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
+            return cls(self)
+
+        # derive index_constructors for IndexHierarchy
+        index_constructors: tp.Optional[tp.Sequence[tp.Type[IndexBase]]]
+
+        if both_sized and isinstance(other, IndexHierarchy):
+            index_constructors = []
+            # depth, and length of idnex_types, must be equal
+            for cls_self, cls_other in zip(
+                    self._levels.index_types(),
+                    other._levels.index_types()):
+                if cls_self == cls_other:
+                    index_constructors.append(cls_self)
+                else:
+                    index_constructors.append(Index)
+        else:
+            # if other is not an IndexHierarchy, do not try to propagate types
+            index_constructors = None
+
+        return cls.from_labels(labels, index_constructors=index_constructors)
 
 
     #---------------------------------------------------------------------------

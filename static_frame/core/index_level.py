@@ -273,7 +273,7 @@ class IndexLevel:
 
 
     def label_nodes_at_depth(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
-        '''Given a depth position, iterate over label nodes at that depth. Only nodes will be provided, which for outer depths may not be of length equal to the entir index.
+        '''Given a depth position, iterate over label nodes at that depth. Only nodes will be provided, which for outer depths may not be of length equal to the entire index.
         '''
         if depth_level == 0:
             yield from self.index
