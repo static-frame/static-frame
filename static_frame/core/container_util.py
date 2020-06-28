@@ -782,7 +782,13 @@ def index_many_to_one(
     cls_first = index.__class__
     cls_aligned = True
 
-    # NOTE: if IndexHierarchy, try to collect index_types
+    # if IndexHierarchy, collect index_types generators
+    if index.ndim == 2:
+        depth_first = index.depth
+        index_types_gen = [index._levels.index_types()]
+        index_types_aligned = True
+    else:
+        index_types_aligned = False
 
     for index in indices_iter:
         arrays.append(index.values)
@@ -790,6 +796,20 @@ def index_many_to_one(
             name_aligned = False
         if cls_aligned and index.__class__ != cls_first:
             cls_aligned = False
+
+        if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
+            index_types_gen.append(index._levels.index_types())
+        else:
+            index_types_aligned = False
+
+    if index_types_aligned:
+        # all depths are already aligned
+        index_constructors = []
+        for types in zip(*index_types_gen):
+            if all(types[0] == t for t in types[1:]):
+                index_constructors.append(types[0])
+            else: # assume this is always a 1D index
+                index_constructors.append(cls_default)
 
     if cls_aligned:
         if cls_default.STATIC and not cls_first.STATIC:
@@ -807,8 +827,10 @@ def index_many_to_one(
 
     # returns an immutable array
     array = array_processor(arrays)
-    return constructor(array, name=name)
 
+    if index_types_aligned:
+        return constructor(array, name=name, index_constructors=index_constructors)
+    return constructor(array, name=name)
 
 def index_many_concat(
         indices: tp.Iterable[IndexBase],

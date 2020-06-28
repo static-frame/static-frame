@@ -382,6 +382,31 @@ class TestUnit(TestCase):
         post2 = index_many_concat((idx1,  idx2), IndexGO)
         self.assertEqual(post2.__class__, IndexDateGO)
 
+    def test_index_many_concat_c(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 3)], [3, date(2019, 1, 4)]], index_constructors=[Index, IndexDate])
+
+        i3 = IndexHierarchy.from_labels([[4, date(2019, 1, 5)], [5, date(2019, 1, 6)]], index_constructors=[Index, IndexDate])
+
+        i4 = IndexHierarchy.from_labels([[4, date(2019, 1, 5)], [5, date(2019, 1, 6)]])
+
+
+        i5 = index_many_concat((i1, i2, i3), cls_default=Index)
+        self.assertEqual(i5.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+        self.assertEqual(i5.values.tolist(),
+                [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)], [4, date(2019, 1, 5)], [5, date(2019, 1, 6)]])
+
+        # with unaligned index types we fall back in Index
+        i6 = index_many_concat((i1, i2, i4), cls_default=Index)
+        self.assertEqual(i6.index_types.to_pairs(),
+                ((0, Index), (1, Index))
+                )
+
+    #---------------------------------------------------------------------------
     def test_index_many_set_a(self) -> None:
 
         idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
@@ -431,6 +456,7 @@ class TestUnit(TestCase):
 
         post2 = index_many_set((idx1,  idx2), IndexGO, union=False)
         self.assertEqual(post2.__class__, IndexDateGO)
+
 
 
 
