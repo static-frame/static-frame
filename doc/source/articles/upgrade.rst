@@ -22,7 +22,7 @@
 Ten Reasons to Use StaticFrame Instead of Pandas
 ====================================================================
 
-If you work with data in Python, you probably use Pandas. Pandas provides instant gratification: sophisticated data processing routines can be implemented in a few lines of code. However, if you have used Pandas on large projects over many years, you may have had some challenges. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
+If you work with data in Python, you probably use Pandas. Pandas provides nearly instant gratification: sophisticated data processing routines can be implemented in a few lines of code. However, if you have used Pandas on large projects over many years, you may have had some challenges. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
 
 
 Why StaticFrame
@@ -45,7 +45,7 @@ ____________________________________________________
 
 An application programming interface (API) can be consistent in where functions are located, how functions are named, and the name and types of arguments those functions accept. StaticFrame deviates from Pandas's API to support greater consistency in all of these areas.
 
-To create an ``sf.Series`` or a ``sf.Frame``, you need constructors. Pandas places its ``pd.DataFrame`` constructors in two places: on the root namespace (``pd``, as commonly imported) and on the ``pd.DataFrame`` class.
+To create a ``sf.Series`` or a ``sf.Frame``, you need constructors. Pandas places its ``pd.DataFrame`` constructors in two places: on the root namespace (``pd``, as commonly imported) and on the ``pd.DataFrame`` class.
 
 For example, JSON data is loaded from a function on the ``pd`` namespace, while record data (an iterable of Python sequences) is loaded from the ``pd.DataFrame`` class.
 
@@ -62,17 +62,14 @@ For example, JSON data is loaded from a function on the ``pd`` namespace, while 
 
 Even though Pandas has specialized constructors, the default ``pd.DataFrame`` constructor accepts a staggering diversity of inputs, including many of the same inputs as ``pd.DataFrame.from_records()``.
 
->>> pd.DataFrame.from_records([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
-   name   mass
-0  muon  0.106
-1   tau  1.777
+
 >>> pd.DataFrame([{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}])
    name   mass
 0  muon  0.106
 1   tau  1.777
 
 
-For the user, there is no benefit to this diversity and redundancy. StaticFrame places all constructors on the class they construct, and as much as possible, narrowly focuses their functionality. As they are easier to maintain, explicit, specialized constructors are common in StaticFrame. For example, ``sf.Frame.from_json()`` and ``sf.Frame.from_dict_records()``:
+For the user, there is little benefit to this diversity and redundancy. StaticFrame places all constructors on the class they construct, and as much as possible, narrowly focuses their functionality. As they are easier to maintain, explicit, specialized constructors are common in StaticFrame. For example, ``sf.Frame.from_json()`` and ``sf.Frame.from_dict_records()``:
 
 >>> sf.Frame.from_json('[{"name":"muon", "mass":0.106}, {"name":"tau", "mass":1.777}]')
 <Frame>
@@ -131,7 +128,7 @@ No. 2: Consistent and Colorful Display
 ___________________________________________
 
 
-Pandas displays its containers in diverse, inconsistent ways. For example, a ``pd.Series`` is shown with its name and type, while a ``pd.DataFrame`` shows neither of those attributes. If you display a ``pd.Index`` or ``pd.MultiIndex``, you get a third approach: a string suitable for ``eval()`` which is inscrutable when large.
+Pandas displays its containers in diverse ways. For example, a ``pd.Series`` is shown with its name and type, while a ``pd.DataFrame`` shows neither of those attributes. If you display a ``pd.Index`` or ``pd.MultiIndex``, you get a third approach: a string suitable for ``eval()`` which is inscrutable when large.
 
 >>> df = pd.DataFrame.from_records([{'symbol':'c', 'mass':1.3}, {'symbol':'s', 'mass':0.1}], index=('charm', 'strange'))
 >>> df
@@ -254,7 +251,7 @@ tau     1.777     -1.0
 
 
 
-No. 4: Assignment is a Function that Preserves Types
+No. 4: Assignment is a Function
 _____________________________________________________________
 
 
@@ -293,7 +290,7 @@ down     -0.333
 <<U4>    <float64>
 
 
-StaticFrame uses a special ``assign`` interface for performing assignment function calls. On a ``Frame``, this interface exposes a ``sf.Frame.assign.loc[]`` interface that can be used to select the target of assignment, just as ``sf.Frame.loc[]``. After this selection, the value to be assigned is passed through a function call.
+StaticFrame uses a special ``assign`` interface for performing assignment function calls. On a ``sf.Frame``, this interface exposes a ``sf.Frame.assign.loc[]`` interface that can be used to select the target of assignment. Following this selection, the value to be assigned is passed through a function call.
 
 
 >>> f = sf.Frame.from_dict_records_items((('charm', {'charge':0.666, 'mass':1.3}), ('strange', {'charge':-0.333, 'mass':0.1})))
@@ -362,7 +359,7 @@ strange 1.00e-01 -3.33e-01
 <<U7>   <object> <object>
 
 
-For row or column iteration on an ``sf.Frame``, a family of methods allows specifying the type of container to be used for the iterated rows or columns, i.e, with an array, with a ``NamedTuple``, or with a ``sf.Series`` (``iter_array()``, ``iter_tuple()``, ``iter_series()``, respectively). These methods take an axis argument to determine whether iteration is by row or by column, and similarly expose an ``apply()`` method for function application. To apply a function to columns, we can do the following.
+For row or column iteration on a ``sf.Frame``, a family of methods allows specifying the type of container to be used for the iterated rows or columns, i.e, with an array, with a ``NamedTuple``, or with a ``sf.Series`` (``iter_array()``, ``iter_tuple()``, ``iter_series()``, respectively). These methods take an axis argument to determine whether iteration is by row or by column, and similarly expose an ``apply()`` method for function application. To apply a function to columns, we can do the following.
 
 >>> f[['mass', 'charge']].iter_array(axis=0).apply(np.sum)
 <Series>
@@ -497,7 +494,7 @@ charge   -1.000
 Name: (lepton, tau), dtype: float64
 
 
-To handle this ambiguity, Pandas offers two alternatives. If a row and a column selection is required, the expected behavior can be restored by wrapping the hierarchical row selection within a ``pd.IndexSlice[]`` selection modifier. Or, if an inner-depth selection is desired without using a ``pd.IndexSlice[]``, the ``pd.DataFrame.xs`` method can be used.
+To handle this ambiguity, Pandas offers two alternatives. If a row and a column selection is required, the expected behavior can be restored by wrapping the hierarchical row selection within a ``pd.IndexSlice[]`` selection modifier. Or, if an inner-depth selection is desired without using a ``pd.IndexSlice[]``, the ``pd.DataFrame.xs()`` method can be used.
 
 >>> df.loc[pd.IndexSlice['lepton', 'tau'], 'charge']
 -1.0
@@ -508,7 +505,7 @@ lepton  1.777    -1.0
 
 This inconsistency in the meaning of the positional arguments given to ``pd.DataFrame.loc[]`` is unnecessary and makes Pandas code harder to maintain: what is intended from the usage of ``pd.DataFrame.loc[]`` becomes ambiguous without a ``pd.IndexSlice[]``. Further, providing multiple ways to solve this problem is also a shortcoming, as it is preferable to have one obvious way to do things in Python.
 
-StaticFrame's ``sf.IndexHierarchy`` offers more consistent behavior. We will create an equivalent ``sf.Frame`` and set an ``sf.IndexHierarchy``.
+StaticFrame's ``sf.IndexHierarchy`` offers more consistent behavior. We will create an equivalent ``sf.Frame`` and set a ``sf.IndexHierarchy``.
 
 
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
@@ -525,7 +522,7 @@ quark                              strange 0.1       -0.333
 <<U6>                              <<U7>   <float64> <float64>
 
 
-Unlike Pandas, StaticFrame is consistent in what positional ``sf.Frame.loc[]`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within an ``sf.IndexHierarchy``, the ``sf.HLoc[]`` selection modifier is required to specify selection at arbitrary depths within the hierarchy. There is one obvious way to select inner depths. This approach makes StaticFrame code easier to understand and maintain.
+Unlike Pandas, StaticFrame is consistent in what positional ``sf.Frame.loc[]`` arguments mean: the first argument is always a row selector, the second argument is always a column selector. For selection within a ``sf.IndexHierarchy``, the ``sf.HLoc[]`` selection modifier is required to specify selection at arbitrary depths within the hierarchy. There is one obvious way to select inner depths. This approach makes StaticFrame code easier to understand and maintain.
 
 >>> f.loc[sf.HLoc['lepton']]
 <Frame>

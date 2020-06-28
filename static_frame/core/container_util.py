@@ -782,7 +782,7 @@ def index_many_to_one(
     cls_first = index.__class__
     cls_aligned = True
 
-    # TODO: if any are IndexHierarchy, try to go to IndexHierarchy (permit 2d with 1d of tuples, if matching size, to become IndexHierarchy)
+    # NOTE: if IndexHierarchy, try to collect index_types
 
     for index in indices_iter:
         arrays.append(index.values)
