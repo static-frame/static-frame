@@ -1771,8 +1771,9 @@ def ufunc_set_iter(
 
         if not union and len(result) == 0:
             # short circuit intersection that results in no common values
-            return result
+            break
 
+    result.flags.writeable = False
     return result
 
 

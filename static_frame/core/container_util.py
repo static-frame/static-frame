@@ -4,6 +4,7 @@ This module us for utilty functions that take as input and / or return Container
 
 from collections import defaultdict
 from itertools import zip_longest
+from functools import partial
 
 import numpy as np
 from numpy import char as npc
@@ -15,6 +16,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import column_2d_filter
+from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_BOOL
@@ -31,7 +33,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import UFunc
-
+from static_frame.core.util import ufunc_set_iter
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -750,3 +752,79 @@ def key_from_container_key(
     # detect and fail on Frame?
 
     return key
+
+
+
+#---------------------------------------------------------------------------
+
+def index_many_to_one(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+        ) -> tp.Optional[IndexBase]:
+    '''
+    Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
+
+    Args:
+        cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
+    '''
+    indices_iter = iter(indices)
+    try:
+        index = next(indices_iter)
+    except StopIteration:
+        return None
+
+    arrays = [index.values]
+
+    name_first = index.name
+    name_aligned = True
+
+    cls_first = index.__class__
+    cls_aligned = True
+
+    # TODO: if any are IndexHierarchy, try to go to IndexHierarchy (permit 2d with 1d of tuples, if matching size, to become IndexHierarchy)
+
+    for index in indices_iter:
+        arrays.append(index.values)
+        if name_aligned and index.name != name_first:
+            name_aligned = False
+        if cls_aligned and index.__class__ != cls_first:
+            cls_aligned = False
+
+    if cls_aligned:
+        if cls_default.STATIC and not cls_first.STATIC:
+            # default is static but aligned is mutable
+            constructor = cls_first._IMMUTABLE_CONSTRUCTOR
+        elif not cls_default.STATIC and cls_first.STATIC:
+            # default is mutable but aligned is static
+            constructor = cls_first._MUTABLE_CONSTRUCTOR
+        else:
+            constructor = cls_first.from_labels
+    else:
+        constructor = cls_default.from_labels
+
+    name = name_first if name_aligned else None
+
+    # returns an immutable array
+    array = array_processor(arrays)
+    return constructor(array, name=name)
+
+
+def index_many_concat(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        ) -> tp.Optional[IndexBase]:
+    return index_many_to_one(indices, cls_default, concat_resolved)
+
+def index_many_set(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        union: bool,
+        ) -> tp.Optional[IndexBase]:
+    '''
+    Given multiple Index objects, concatenate them in order. Preserve name and index type if aligned.
+    '''
+    array_processor = partial(ufunc_set_iter,
+            union=union,
+            assume_unique=True)
+    return index_many_to_one(indices, cls_default, array_processor)

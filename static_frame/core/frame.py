@@ -345,13 +345,12 @@ class Frame(ContainerOperand):
         '''
 
         # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
-        # TODO: check for Series that do not have names
+        # NOTE: might check for Series that do not have names
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
         own_columns = False
         own_index = False
 
-        # End quickly if empty iterable
         if not frames:
             return cls(
                     index=index,
@@ -396,7 +395,7 @@ class Frame(ContainerOperand):
 
         elif axis == 0: # stacks rows (extends columns vertically)
             if index is IndexAutoFactory:
-                index = None # let default creationn happen
+                index = None # let default creation happen
             elif index is None:
                 # returns immutable array
                 index = concat_resolved([frame._index.values for frame in frames])

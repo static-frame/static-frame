@@ -6632,8 +6632,6 @@ class TestUnit(TestCase):
             Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
 
 
-
-
     @skip_win  # type: ignore
     def test_frame_from_concat_w(self) -> None:
 
@@ -6693,6 +6691,16 @@ class TestUnit(TestCase):
                 [[1, 1], [2, 2]])
         self.assertEqual(f2.index.depth, 2)
         self.assertAlmostEqualValues(set(f2.index.values.ravel()), {'b', np.nan})
+
+    def test_frame_from_concat_z(self) -> None:
+        frames = tuple(
+                sf.Frame.from_element(1, index=sf.Index([i], name='tom'), columns=[str(i)])
+                for i in range(2, 4)
+                )
+
+        # TODO: name should be transferred
+        post = Frame.from_concat(frames)
+        # import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------
