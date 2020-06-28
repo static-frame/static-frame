@@ -132,6 +132,10 @@ class IndexBase(ContainerOperand):
         raise NotImplementedError() #pragma: no cover
 
 
+    @property
+    def ndim(self) -> int:
+        raise NotImplementedError()
+
     #---------------------------------------------------------------------------
     # constructors
 

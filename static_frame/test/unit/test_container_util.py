@@ -394,6 +394,8 @@ class TestUnit(TestCase):
 
 
         i5 = index_many_concat((i1, i2, i3), cls_default=Index)
+        assert isinstance(i5, IndexHierarchy)
+
         self.assertEqual(i5.index_types.to_pairs(),
                 ((0, Index), (1, IndexDate))
                 )
@@ -402,6 +404,8 @@ class TestUnit(TestCase):
 
         # with unaligned index types we fall back in Index
         i6 = index_many_concat((i1, i2, i4), cls_default=Index)
+        assert isinstance(i6, IndexHierarchy)
+
         self.assertEqual(i6.index_types.to_pairs(),
                 ((0, Index), (1, Index))
                 )
