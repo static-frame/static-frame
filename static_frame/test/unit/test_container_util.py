@@ -417,6 +417,7 @@ class TestUnit(TestCase):
 
         post1 = index_many_concat((i1, i2), cls_default=IndexGO)
         self.assertEqual(post1.__class__, IndexHierarchyGO)
+        assert isinstance(post1, IndexHierarchy)
         self.assertEqual(post1.values.tolist(),
                 [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)]]
                 )
@@ -482,7 +483,7 @@ class TestUnit(TestCase):
 
         # empty iterable returns an empty index
         post2 = index_many_set((), Index, union=True)
-        self.assertEqual(len(post2), 0)
+        self.assertEqual(len(post2), 0) #type: ignore
 
 
 

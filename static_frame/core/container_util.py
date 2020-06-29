@@ -815,10 +815,10 @@ def _index_many_to_one(
     if cls_aligned:
         if cls_default.STATIC and not cls_first.STATIC:
             # default is static but aligned is mutable
-            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels
+            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels #type: ignore
         elif not cls_default.STATIC and cls_first.STATIC:
             # default is mutable but aligned is static
-            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels
+            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels #type: ignore
         else:
             constructor = cls_first.from_labels
     else:
@@ -830,8 +830,8 @@ def _index_many_to_one(
     array = array_processor(arrays)
 
     if index_types_aligned:
-        return constructor(array, name=name, index_constructors=index_constructors)
-    return constructor(array, name=name)
+        return constructor(array, name=name, index_constructors=index_constructors) #type: ignore
+    return constructor(array, name=name) #type: ignore
 
 def index_many_concat(
         indices: tp.Iterable[IndexBase],

@@ -128,7 +128,6 @@ from static_frame.core.util import resolve_dtype
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 
@@ -366,10 +365,6 @@ class Frame(ContainerOperand):
         own_index = False
         own_columns = False
 
-        # switch if we have reduced the columns argument to an array
-        # from_array_columns = False
-        # from_array_index = False
-
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
             if columns is IndexAutoFactory:
@@ -384,11 +379,6 @@ class Frame(ContainerOperand):
                     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
                 own_columns = True
 
-                # columns = concat_resolved([frame._columns.values for frame in frames])
-                # from_array_columns = True
-                # if len(ufunc_unique(columns, axis=0)) != len(columns):
-                #     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
-
             if index is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
@@ -398,14 +388,7 @@ class Frame(ContainerOperand):
                         union=union,
                         )
                 own_index = True
-                # # get the union index, or the common index if identical
-                # index = ufunc_set_iter(
-                #         (frame._index.values for frame in frames),
-                #         union=union,
-                #         assume_unique=True # all from indices
-                #         )
-                # index.flags.writeable = False
-                # from_array_index = True
+
             def blocks():
                 for frame in frames:
                     if len(frame.index) != len(index) or (frame.index != index).any():
@@ -423,11 +406,6 @@ class Frame(ContainerOperand):
                     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
                 own_index = True
 
-                # index = concat_resolved([frame._index.values for frame in frames])
-                # from_array_index = True
-                # if len(ufunc_unique(index, axis=0)) != len(index):
-                #     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
-
             if columns is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
@@ -437,14 +415,6 @@ class Frame(ContainerOperand):
                         union=union,
                         )
                 own_columns = True
-
-                # columns = ufunc_set_iter(
-                #         (frame._columns.values for frame in frames),
-                #         union=union,
-                #         assume_unique=True
-                #         )
-                # columns.flags.writeable = False
-                # from_array_columns = True
 
             def blocks():
                 aligned_frames = []
