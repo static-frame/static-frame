@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``IndexHierarchy`` set operations will now delegate ``Index`` types when they are equivalent between operands at corresponding depth levels.
 
+``Frame.from_concat`` now delegates in returned index input index name, type, ``IndexHierarchy`` contained types, if aligned on all indices per axis.
+
 
 0.6.20
 ----------
