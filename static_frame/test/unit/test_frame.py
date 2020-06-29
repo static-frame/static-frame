@@ -7292,6 +7292,18 @@ class TestUnit(TestCase):
             _ = f1.relabel_flat()
 
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_add_level_a(self) -> None:
+        f1 = sf.FrameGO.from_element(1, index=[1, 2, 3], columns=['a'])
+        f2 = f1.relabel_add_level(columns='a')
+
+        self.assertEqual(f2.columns.__class__, IndexHierarchyGO)
+        self.assertEqual(f2.columns.values.tolist(),
+                [['a', 'a']]
+                )
+
+
 
     #---------------------------------------------------------------------------
 

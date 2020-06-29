@@ -2542,8 +2542,9 @@ class Frame(ContainerOperand):
             columns: {level}
         '''
 
-        index = self._index.add_level(index) if index else self._index.copy()
+        index = self._index.add_level(index) if index else self._index
         columns = self._columns.add_level(columns) if columns else self._columns.copy()
+
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
