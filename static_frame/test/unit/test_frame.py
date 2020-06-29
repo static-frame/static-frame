@@ -6697,10 +6697,11 @@ class TestUnit(TestCase):
                 sf.Frame.from_element(1, index=sf.Index([i], name='tom'), columns=[str(i)])
                 for i in range(2, 4)
                 )
-
-        # TODO: name should be transferred
         post = Frame.from_concat(frames)
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(post.index.name, 'tom')
+        self.assertEqual(post.fillna(None).to_pairs(0),
+                (('2', ((2, 1.0), (3, None))), ('3', ((2, None), (3, 1.0))))
+                )
 
 
     #---------------------------------------------------------------------------

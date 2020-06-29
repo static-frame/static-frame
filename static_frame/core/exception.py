@@ -20,6 +20,10 @@ class ErrorInitIndex(ErrorInit):
     '''Error in IndexBase (and derived Index) initialization.
     '''
 
+class ErrorInitIndexNonUnique(ErrorInitIndex):
+    '''Error in IndexBase initialization due to non-unique values.
+    '''
+
 class ErrorInitIndexLevel(ErrorInit):
     '''Error in IndexBase (and derived Index) initialization.
     '''

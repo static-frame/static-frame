@@ -1412,7 +1412,7 @@ class IndexHierarchyGO(IndexHierarchy):
                 own_blocks=True,
                 )
 
-# update class attr on Index after class initialziation
+# update class attr on Index after class initialization
 IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
 
 

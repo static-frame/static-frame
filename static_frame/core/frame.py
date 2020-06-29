@@ -12,6 +12,7 @@ import numpy as np
 from numpy.ma import MaskedArray
 
 
+
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import array_from_value_iter
@@ -21,6 +22,8 @@ from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import dtypes_mappable
 from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -37,6 +40,7 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndexNonUnique
 
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
@@ -359,33 +363,49 @@ class Frame(ContainerOperand):
                     own_columns=own_columns,
                     own_index=own_index)
 
+        own_index = False
+        own_columns = False
+
         # switch if we have reduced the columns argument to an array
-        from_array_columns = False
-        from_array_index = False
+        # from_array_columns = False
+        # from_array_index = False
 
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
             if columns is IndexAutoFactory:
                 columns = None # let default creation happen
             elif columns is None:
-                # returns immutable array
-                columns = concat_resolved([frame._columns.values for frame in frames])
-                from_array_columns = True
-                # avoid sort for performance; always want rows if ndim is 2
-                if len(ufunc_unique(columns, axis=0)) != len(columns):
+                try:
+                    columns = index_many_concat(
+                            (f._columns for f in frames),
+                            cls._COLUMNS_CONSTRUCTOR,
+                            )
+                except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
+                own_columns = True
+
+                # columns = concat_resolved([frame._columns.values for frame in frames])
+                # from_array_columns = True
+                # if len(ufunc_unique(columns, axis=0)) != len(columns):
+                #     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
 
             if index is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
-                # get the union index, or the common index if identical
-                index = ufunc_set_iter(
-                        (frame._index.values for frame in frames),
+                index = index_many_set(
+                        (f._index for f in frames),
+                        Index,
                         union=union,
-                        assume_unique=True # all from indices
                         )
-                index.flags.writeable = False
-                from_array_index = True
+                own_index = True
+                # # get the union index, or the common index if identical
+                # index = ufunc_set_iter(
+                #         (frame._index.values for frame in frames),
+                #         union=union,
+                #         assume_unique=True # all from indices
+                #         )
+                # index.flags.writeable = False
+                # from_array_index = True
             def blocks():
                 for frame in frames:
                     if len(frame.index) != len(index) or (frame.index != index).any():
@@ -397,23 +417,34 @@ class Frame(ContainerOperand):
             if index is IndexAutoFactory:
                 index = None # let default creation happen
             elif index is None:
-                # returns immutable array
-                index = concat_resolved([frame._index.values for frame in frames])
-                from_array_index = True
-                # avoid sort for performance; always want rows if ndim is 2
-                if len(ufunc_unique(index, axis=0)) != len(index):
+                try:
+                    index = index_many_concat((f._index for f in frames), Index)
+                except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+                own_index = True
+
+                # index = concat_resolved([frame._index.values for frame in frames])
+                # from_array_index = True
+                # if len(ufunc_unique(index, axis=0)) != len(index):
+                #     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
 
             if columns is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
-                columns = ufunc_set_iter(
-                        (frame._columns.values for frame in frames),
+                columns = index_many_set(
+                        (f._columns for f in frames),
+                        cls._COLUMNS_CONSTRUCTOR,
                         union=union,
-                        assume_unique=True
                         )
-                columns.flags.writeable = False
-                from_array_columns = True
+                own_columns = True
+
+                # columns = ufunc_set_iter(
+                #         (frame._columns.values for frame in frames),
+                #         union=union,
+                #         assume_unique=True
+                #         )
+                # columns.flags.writeable = False
+                # from_array_columns = True
 
             def blocks():
                 aligned_frames = []
@@ -462,16 +493,16 @@ class Frame(ContainerOperand):
         else:
             raise NotImplementedError(f'no support for {axis}')
 
-        if from_array_columns:
-            if columns.ndim == 2: # we have a hierarchical index
-                columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns)
-                own_columns = True
+        # if from_array_columns:
+        #     if columns.ndim == 2: # we have a hierarchical index
+        #         columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns)
+        #         own_columns = True
 
-        if from_array_index:
-            if index.ndim == 2: # we have a hierarchical index
-                # NOTE: could pass index_constructors here
-                index = IndexHierarchy.from_labels(index)
-                own_index = True
+        # if from_array_index:
+        #     if index.ndim == 2: # we have a hierarchical index
+        #         # NOTE: could pass index_constructors here
+        #         index = IndexHierarchy.from_labels(index)
+        #         own_index = True
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())

@@ -757,22 +757,23 @@ def key_from_container_key(
 
 #---------------------------------------------------------------------------
 
-def index_many_to_one(
+def _index_many_to_one(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
-        ) -> tp.Optional[IndexBase]:
+        ) -> IndexBase:
     '''
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
 
     Args:
+        indices: can be a generator
         cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
     '''
     indices_iter = iter(indices)
     try:
         index = next(indices_iter)
     except StopIteration:
-        return None
+        return cls_default.from_labels(())
 
     arrays = [index.values]
 
@@ -814,10 +815,10 @@ def index_many_to_one(
     if cls_aligned:
         if cls_default.STATIC and not cls_first.STATIC:
             # default is static but aligned is mutable
-            constructor = cls_first._IMMUTABLE_CONSTRUCTOR
+            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels
         elif not cls_default.STATIC and cls_first.STATIC:
             # default is mutable but aligned is static
-            constructor = cls_first._MUTABLE_CONSTRUCTOR
+            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels
         else:
             constructor = cls_first.from_labels
     else:
@@ -836,7 +837,7 @@ def index_many_concat(
         indices: tp.Iterable[IndexBase],
         cls_default: tp.Type[IndexBase],
         ) -> tp.Optional[IndexBase]:
-    return index_many_to_one(indices, cls_default, concat_resolved)
+    return _index_many_to_one(indices, cls_default, concat_resolved)
 
 def index_many_set(
         indices: tp.Iterable[IndexBase],
@@ -849,4 +850,4 @@ def index_many_set(
     array_processor = partial(ufunc_set_iter,
             union=union,
             assume_unique=True)
-    return index_many_to_one(indices, cls_default, array_processor)
+    return _index_many_to_one(indices, cls_default, array_processor)

@@ -347,7 +347,6 @@ class TestUnit(TestCase):
         idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
         idx2 = IndexDate(('2020-02-01', '2020-02-02'))
 
-        self.assertEqual(index_many_concat((), Index), None)
 
         post1 = index_many_concat((idx0,  idx1), Index)
         assert isinstance(post1, Index)
@@ -410,6 +409,19 @@ class TestUnit(TestCase):
                 ((0, Index), (1, Index))
                 )
 
+    def test_index_many_concat_d(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 3)], [3, date(2019, 1, 4)]], index_constructors=[Index, IndexDate])
+
+        post1 = index_many_concat((i1, i2), cls_default=IndexGO)
+        self.assertEqual(post1.__class__, IndexHierarchyGO)
+        self.assertEqual(post1.values.tolist(),
+                [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)]]
+                )
+
+
     #---------------------------------------------------------------------------
     def test_index_many_set_a(self) -> None:
 
@@ -417,7 +429,6 @@ class TestUnit(TestCase):
         idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
         idx2 = IndexDate(('2020-01-02', '2020-01-03'))
 
-        self.assertEqual(index_many_set((), Index, union=True), None)
 
         post1 = index_many_set((idx0,  idx1), Index, union=True)
         assert isinstance(post1, Index)
@@ -461,6 +472,17 @@ class TestUnit(TestCase):
         post2 = index_many_set((idx1,  idx2), IndexGO, union=False)
         self.assertEqual(post2.__class__, IndexDateGO)
 
+
+    def test_index_many_set_c(self) -> None:
+        idx1 = IndexDate(('2020-02-01', '2020-02-02'))
+
+        post1 = index_many_set((idx1,), Index, union=True)
+        self.assertEqual(post1.__class__, IndexDate)
+        self.assertTrue(idx1.equals(post1))
+
+        # empty iterable returns an empty index
+        post2 = index_many_set((), Index, union=True)
+        self.assertEqual(len(post2), 0)
 
 
 

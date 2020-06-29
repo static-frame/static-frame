@@ -21,6 +21,7 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
@@ -464,7 +465,9 @@ class Index(IndexBase):
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
                     pass
                 if self._map is None:
-                    raise ErrorInitIndex(f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})')
+                    raise ErrorInitIndexNonUnique(
+                            f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
+                            )
                 size = len(self._map)
             else: # must assume labels are unique
                 # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
