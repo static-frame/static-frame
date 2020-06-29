@@ -1165,13 +1165,14 @@ class Index(IndexBase):
         from static_frame import Series
         return Series(self.values, name=self._name)
 
+
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarchy with an added root level.
         '''
-        if self.STATIC:
-            from static_frame import IndexHierarchy as cls
-        else:
-            from static_frame import IndexHierarchyGO as cls
+        from static_frame import IndexHierarchy
+        from static_frame import IndexHierarchyGO
+
+        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
         return cls.from_tree({level: self.values})
 
 
