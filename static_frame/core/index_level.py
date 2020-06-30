@@ -632,9 +632,8 @@ class IndexLevel:
                 skipna=skipna,
                 )
 
-        if self.targets is None and other.targets is None:
-            return self.index.equals(other.index, **kwargs) #type: ignore
-        if len(self.targets) == 0 and len(other.targets) == 0:
+        if ((self.targets is None or len(self.targets) == 0)
+                and (other.targets is None or len(other.targets) == 0)):
             return self.index.equals(other.index, **kwargs) #type: ignore
 
         # same length and depth, can traverse trees

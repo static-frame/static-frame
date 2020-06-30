@@ -6705,12 +6705,6 @@ class TestUnit(TestCase):
 
     def test_frame_from_concat_aa(self) -> None:
 
-        # s1 = sf.Series((), index=sf.IndexHierarchy.from_labels(()), name='a', dtype=object)
-        # s2 = sf.Series((), index=sf.IndexHierarchy.from_labels(()), name='b', dtype=object)
-
-        # f1 = sf.Frame.from_concat((s1, s2), axis=1, name='foo')
-        # import ipdb; ipdb.set_trace()
-
         a1 = np.arange(25).reshape(5,5)
         a2 = np.arange(start=24, stop=-1, step=-1).reshape(5,5)
 
@@ -6720,7 +6714,6 @@ class TestUnit(TestCase):
 
         # Determine locations to alter - leave at least one row and col fully unchanged
         to_change = [(0,0), (0,1), (0,3), (0,4), (1,3), (3,1), (3,3), (4,0), (4,3)]
-
         # Make changes
         for row, col in to_change:
             a1[row][col] = 99
