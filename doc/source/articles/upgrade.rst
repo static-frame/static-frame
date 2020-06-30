@@ -1,38 +1,19 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Ten Reasons to Use StaticFrame Instead of Pandas
 ====================================================================
 
-If you work with data in Python, you probably use Pandas. Pandas provides nearly instant gratification: sophisticated data processing routines can be implemented in a few lines of code. However, if you have used Pandas on large projects over many years, you may have had some challenges. Complex Pandas applications can produce Python code that is hard to maintain and error prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
+If you work with data in Python, you probably use Pandas. Pandas provides nearly instant gratification: sophisticated data processing routines can be implemented in a few lines of code. However, if you have used Pandas on large projects over many years, you may have had some challenges. Complex Pandas applications can produce Python code that is hard to maintain and error-prone. This happens because Pandas provides many ways to do the same thing, has inconsistent interfaces, and broadly supports in-place mutation. For those coming from Pandas, StaticFrame offers a more consistent interface and reduces opportunities for error. This article demonstrates ten reasons you might use StaticFrame instead of Pandas.
 
 
 Why StaticFrame
 ______________________
 
-After years of using Pandas to develop back-end financial systems, it became clear to me that Pandas was not the right tool for the job. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's irregular approach to data ownership and support for in-place mutation led to serious opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
+After years of using Pandas to develop back-end financial systems, it became clear to me that Pandas was not the right tool for the job. Pandas's handling of labeled data and missing values, with performance close to NumPy, certainly accelerated my productivity. And yet, the numerous inconsistencies in Pandas's API led to hard-to-maintain code. Further, Pandas's support for in-place mutation led to serious opportunities for error. So in May of 2017 I began implementing a library more suitable for critical production systems.
 
 Now, after years of development and refinement, we are seeing excellent results in our production systems by replacing Pandas with StaticFrame. Libraries and applications written with StaticFrame are easier to maintain and test. And we often see StaticFrame out-perform Pandas in large-scale, real-world use cases, even though, for many isolated operations, StaticFrame is not yet as fast as Pandas.
 
-What follows are ten reasons to favor using StaticFrame over Pandas. As the primary author of StaticFrame, I am certainly biased in this presentation! However, having worked with Pandas since 2013, I hope to have some perspective to share.
+What follows are ten reasons to favor using StaticFrame over Pandas. As the primary author of StaticFrame, I am certainly biased in this presentation. However, having worked with Pandas since 2013, I hope to have some perspective to share.
 
 All examples use Pandas 1.0.3 and StaticFrame 0.6.20. Imports use the following convention:
 
@@ -170,9 +151,9 @@ mass
 <<U6>
 
 
-As much time is spent visually exploring the contents of these containers, StaticFrame offers numerous display configuration options, all exposed through the ``DisplayConfig`` class. For persistent changes, ``DisplayConfig`` instances can be passed to ``DisplayActive.set()``; for one-off changes, ``DisplayConfig`` instances can be passed to the container's ``display()`` method.
+As much time is spent visually exploring the contents of these containers, StaticFrame offers numerous display configuration options, all exposed through the ``sf.DisplayConfig`` class. For persistent changes, ``sf.DisplayConfig`` instances can be passed to ``sf.DisplayActive.set()``; for one-off changes, ``sf.DisplayConfig`` instances can be passed to the container's ``display()`` method.
 
-While ``pd.set_option`` can similarly be used to set Pandas display characteristics, StaticFrame provides more extensive options for making types discoverable. As shown in the following terminal animation, specific types can be colored or type annotations can be removed entirely.
+While ``pd.set_option()`` can similarly be used to set Pandas display characteristics, StaticFrame provides more extensive options for making types discoverable. As shown in the following terminal animation, specific types can be colored or type annotations can be removed entirely.
 
 
 .. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
@@ -238,9 +219,9 @@ ValueError: assignment destination is read-only
 
 
 
-While immutable data reduces opportunities for error, it also offers performance advantages. For example, when replacing column labels with ``sf.Frame.relabel()``, underlying data is not copied. Instead, references to the same immutable arrays are shared between the old and new containers. Such "no-copy" operations are thus fast and light-weight. This is in contrast to what happens when doing the same thing in Pandas: when using the corresponding ``df.DataFrame.rename()`` method, a defensive copy of all data is required.
+While immutable data reduces opportunities for error, it also offers performance advantages. For example, when replacing column labels with ``sf.Frame.relabel()``, underlying data is not copied. Instead, references to the same immutable arrays are shared between the old and new containers. Such "no-copy" operations are thus fast and light-weight. This is in contrast to what happens when doing the same thing in Pandas: the corresponding Pandas method, ``df.DataFrame.rename()``, is forced to make a defensive copy of all underlying data.
 
->>> f.relabel(columns=lambda x: x.upper())
+>>> f.relabel(columns=lambda x: x.upper()) # Underlying arrays are not copied
 <Frame>
 <Index> MASS      CHARGE    <<U6>
 <Index>
@@ -282,7 +263,7 @@ tau      -1
 down     -1
 <<U4>    <int64>
 
->>> s.assign['down'](-0.333)
+>>> s.assign['down'](-0.333) # The float is assigned without truncation
 <Series>
 <Index>
 tau      -1.0
@@ -318,7 +299,7 @@ ________________________________________________________________
 
 Pandas has separate functions for iteration and function application. For iteration on a ``pd.DataFrame`` there is ``pd.DataFrame.iteritems()``, ``pd.DataFrame.iterrows()``, ``pd.DataFrame.itertuples()``, and ``pd.DataFrame.groupby()``; for function application on a ``pd.DataFrame`` there is ``pd.DataFrame.apply()`` and ``pd.DataFrame.applymap()``.
 
-But since function application requires iteration, it is sensible for function application to be built on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array()`` or ``Frame.iter_group_items()``) that can be used for function application with an ``apply()`` method. Functions for applying mapping types (such as ``map_any()`` and ``map_fill()``) are also available on iterators. This means that once you know how you want to iterate, function application is a just a method away.
+But since function application requires iteration, it is sensible for function application to be built on iteration. StaticFrame organizes iteration and function application by providing families of iterators (such as ``Frame.iter_array()`` or ``Frame.iter_group_items()``) that, with a chained call to ``apply()``, can also be used for function application. Functions for applying mapping types (such as ``map_any()`` and ``map_fill()``) are also available on iterators. This means that once you know how you want to iterate, function application is a just a method away.
 
 For example, we can create a ``sf.Frame`` with ``sf.Frame.from_records()``:
 
@@ -334,7 +315,7 @@ charm   1.3       0.666     quark
 strange 0.1       -0.333    quark
 
 
-We can iterate over values with ``sf.Series.iter_element()``. We can use the same iterator to do function application by using the ``apply()`` method found on the object returned from ``sf.Series.iter_element()``. This same interface is found on ``sf.Series`` and ``sf.Frame``.
+We can iterate over a columns values with ``sf.Series.iter_element()``. We can use the same iterator to do function application by using the ``apply()`` method found on the object returned from ``sf.Series.iter_element()``. The same interface is found on both ``sf.Series`` and ``sf.Frame``.
 
 >>> tuple(f['type'].iter_element())
 ('lepton', 'lepton', 'quark', 'quark')
@@ -379,7 +360,7 @@ charm    True
 strange  False
 <<U7>    <bool>
 
-Group-by operations are just another form of iteration, with an identical interface for iteration and function application. Consistency in interface means we simply follow the same pattern.
+Group-by operations are just another form of iteration, with an identical interface for iteration and function application.
 
 >>> f.iter_group('type').apply(lambda f: f['mass'].mean())
 <Series>
@@ -631,7 +612,7 @@ ____________________________________________________
 
 
 
-The concept of a "data frame" object came long before Pandas 0.1 release in 2009: the first implementation may have been as early as 1991 in the S language, a predecessor of R. Today, the data frame finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative designed to be more consistent and reduce opportunities for error.
+The concept of a "data frame" object came long before Pandas 0.1 release in 2009: the first implementation of a data frame may have been as early as 1991 in the S language, a predecessor of R. Today, the data frame finds realization in a wide variety of languages and implementations. Pandas will continue to provide an excellent resource to a broad community of users. However, for situations where correctness and code maintainability are critical, StaticFrame offers an alternative designed to be more consistent and reduce opportunities for error.
 
 For more information about StaticFrame, see the documentation (http://static-frame.readthedocs.io) or project site (https://github.com/InvestmentSystems/static-frame).
 
