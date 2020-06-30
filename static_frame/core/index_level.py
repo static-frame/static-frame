@@ -155,7 +155,7 @@ class IndexLevel:
         Get the depth of all leaves (which should all be the same). Mostly for integrity validation.
         '''
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
-        if self.targets is None:
+        if self.targets is None or not len(self.targets):
             yield 1
         else:
             levels = [(self, 0)]
@@ -174,7 +174,7 @@ class IndexLevel:
         if not len(self.index): # if zero sized, depth is zero
             # TODO: need a way to represent 0-length IndexLevels with non-zero depth
             return 1
-        if self.targets is None:
+        if self.targets is None or not len(self.targets):
             return 1
         level, depth = self, 1
         while True:
@@ -189,7 +189,7 @@ class IndexLevel:
         return self._depth
 
     def _get_length(self) -> int:
-        if self.targets is None:
+        if self.targets is None or not len(self.targets):
             return self.index.__len__()
 
         count = 0
@@ -292,7 +292,7 @@ class IndexLevel:
     # TODO: consider a different name; was dtypes()
     def dtypes_iter(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of all dtypes from every depth level.'''
-        if self.targets is None:
+        if self.targets is None or not len(self.targets):
             yield self.index.values.dtype
         else:
             levels = [self]
@@ -326,7 +326,7 @@ class IndexLevel:
     # consider renaming index_types_per_depth
     def index_types(self) -> tp.Iterator[np.dtype]:
         '''Return an iterator of reprsentative Index classes, one from each depth level.'''
-        if self.targets is None:
+        if self.targets is None or not len(self.targets):
             yield self.index.__class__
         else:
             levels = [self]
@@ -633,6 +633,8 @@ class IndexLevel:
                 )
 
         if self.targets is None and other.targets is None:
+            return self.index.equals(other.index, **kwargs) #type: ignore
+        if len(self.targets) == 0 and len(other.targets) == 0:
             return self.index.equals(other.index, **kwargs) #type: ignore
 
         # same length and depth, can traverse trees
