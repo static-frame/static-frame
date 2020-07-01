@@ -6703,6 +6703,48 @@ class TestUnit(TestCase):
                 (('2', ((2, 1.0), (3, None))), ('3', ((2, None), (3, 1.0))))
                 )
 
+    def test_frame_from_concat_aa(self) -> None:
+
+        a1 = np.arange(25).reshape(5,5)
+        a2 = np.arange(start=24, stop=-1, step=-1).reshape(5,5)
+
+        # Add unique rows/cols
+        a1 = np.vstack((np.hstack((a1, np.arange(5).reshape(5, 1))), np.arange(6)))
+        a2 = np.vstack((np.hstack((a2, np.arange(5).reshape(5, 1))), np.arange(6)))
+
+        # Determine locations to alter - leave at least one row and col fully unchanged
+        to_change = [(0,0), (0,1), (0,3), (0,4), (1,3), (3,1), (3,3), (4,0), (4,3)]
+        # Make changes
+        for row, col in to_change:
+            a1[row][col] = 99
+
+        # Build changes
+        f1_col_labels = [['c_I','A'],['c_I','B'],['c_I','C'],['c_II','A'],['c_II','B'],['c_II','C']]
+        f1_idx_labels = [['i_I','1'],['i_I','2'],['i_I','3'],['i_II','1'],['i_II','2'],['i_II','3']]
+
+        f2_col_labels = [['c_II','B'],['c_II','A'],['c_I','C'],['c_I','B'],['c_I','A'],['c_I','D']]
+        f2_idx_labels = [['i_II','2'],['i_II','1'],['i_I','3'],['i_I','2'],['i_I','1'],['i_I','4']]
+
+        f1 = sf.Frame(a1,
+                columns=sf.IndexHierarchy.from_labels(f1_col_labels),
+                index=sf.IndexHierarchy.from_labels(f1_idx_labels)
+        )
+        f2 = sf.Frame(a2,
+                columns=sf.IndexHierarchy.from_labels(f2_col_labels),
+                index=sf.IndexHierarchy.from_labels(f2_idx_labels)
+        )
+        intersection_cols: sf.Index = f1.columns.intersection(f2.columns)
+        intersection_idx: sf.Index = f1.index.intersection(f2.index)
+
+        f1_reindexed = f1.reindex(intersection_idx)[intersection_cols]
+        f2_reindexed = f2.reindex(intersection_idx)[intersection_cols]
+
+        mismatch_idx_dtypes: sf.Index = f1_reindexed.dtypes != f2_reindexed.dtypes
+        f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
+        f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
+
+        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
+        self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
     #---------------------------------------------------------------------------
 
