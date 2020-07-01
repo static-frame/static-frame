@@ -272,10 +272,6 @@ class TypeBlocks(ContainerOperand):
         a.flags.writeable = False
         return a
 
-    @property
-    def iloc(self) -> InterfaceGetItem: #type: ignore
-        return InterfaceGetItem(self._extract_iloc)
-
     @property #type: ignore
     @doc_inject()
     def mloc(self) -> np.ndarray:
@@ -291,6 +287,13 @@ class TypeBlocks(ContainerOperand):
     @property
     def unified(self) -> bool:
         return len(self._blocks) <= 1
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def iloc(self) -> InterfaceGetItem: #type: ignore
+        return InterfaceGetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # common NP-style properties
