@@ -30,7 +30,7 @@ Corrected issue in ``Frame.from_concat`` whereby, when given inputs with ``Index
 0.6.19
 ----------
 
-Extended ``name`` propagation to applications of binary operators where an opperand is a scalar.
+Extended ``name`` propagation to applications of binary operators where an operand is a scalar.
 
 Binary operators now work with ``Frame`` and same-shaped NumPy arrays.
 
