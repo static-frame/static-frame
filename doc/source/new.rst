@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.22
+----------
+
+Fixed flaw in ``IndexLevel`` for handling of zero-length levels.
+
+Fixed flaw in ``TypeBlocks.iloc`` that caused an undesirable reference cycle.
+
+
 0.6.21
 ----------
 
