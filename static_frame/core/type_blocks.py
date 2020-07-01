@@ -273,7 +273,7 @@ class TypeBlocks(ContainerOperand):
         return a
 
     @property
-    def iloc(self) -> InterfaceGetItem:
+    def iloc(self) -> InterfaceGetItem: #type: ignore
         return InterfaceGetItem(self._extract_iloc)
 
     @property #type: ignore
