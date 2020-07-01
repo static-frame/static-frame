@@ -64,7 +64,6 @@ class TypeBlocks(ContainerOperand):
             '_index',
             '_shape',
             '_row_dtype',
-            'iloc',
             )
 
     STATIC = False
@@ -229,8 +228,6 @@ class TypeBlocks(ContainerOperand):
             # NOTE: this violates the type; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
-        self.iloc = InterfaceGetItem(self._extract_iloc)
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
         '''
@@ -275,6 +272,9 @@ class TypeBlocks(ContainerOperand):
         a.flags.writeable = False
         return a
 
+    @property
+    def iloc(self) -> InterfaceGetItem: #type: ignore
+        return InterfaceGetItem(self._extract_iloc)
 
     @property #type: ignore
     @doc_inject()
