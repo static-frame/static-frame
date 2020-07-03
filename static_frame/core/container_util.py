@@ -24,6 +24,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KIND
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -44,12 +45,35 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
 
 
-def dtypes_mappable(dtypes: DtypesSpecifier) -> bool:
+
+def get_col_dtype_factory(
+        dtypes: DtypesSpecifier,
+        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        ) -> tp.Callable[[int], np.dtype]:
     '''
-    Determine if the dtypes argument can be used by name lookup, rather than index.
+    Return a function, or None, to get values from a DtypeSpecifier.
+
+    Args:
+        columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
     from static_frame.core.series import Series
-    return isinstance(dtypes, (dict, Series))
+
+    # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
+
+    if isinstance(dtypes, (dict, Series)):
+        is_map = True
+    else:
+        is_map = False
+
+    if columns is None and is_map:
+        raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
+
+    def get_col_dtype(col_idx: int) -> DtypeSpecifier:
+        if is_map:
+            return dtypes.get(columns[col_idx], None) #type: ignore
+        return dtypes[col_idx] #type: ignore
+
+    return get_col_dtype
 
 
 def is_static(value: IndexConstructor) -> bool:
@@ -103,8 +127,10 @@ def pandas_to_numpy(
         is_extension_dtype = True
 
     if is_extension_dtype:
-        isna = container.isna() # returns a NumPy Boolean type
-        hasna = isna.values.any() # will work for ndim 1 and 2
+        isna = container.isna() # returns a NumPy Boolean type sometimes
+        if not isinstance(isna, np.ndarray):
+            isna = isna.values
+        hasna = isna.any() # will work for ndim 1 and 2
 
         from pandas import StringDtype #pylint: disable=E0611
         from pandas import BooleanDtype #pylint: disable=E0611
@@ -131,7 +157,7 @@ def pandas_to_numpy(
         array = container.to_numpy(copy=not own_data, dtype=dtype)
 
         if hasna:
-            # if hasna and extension dtype, should be an object array; please pd.NA objects with fill_value (np.nan)
+            # if hasna and extension dtype, should be an object array; replace pd.NA objects with fill_value (np.nan)
             assert array.dtype == DTYPE_OBJECT
             array[isna] = fill_value
 
@@ -614,11 +640,8 @@ def array_from_value_iter(
         idx: integer position to extract from dtypes
     '''
     # for each column, try to get a dtype, or None
-    if get_col_dtype is None:
-        dtype = None
-    else: # dtype returned here can be None.
-        dtype = get_col_dtype(idx)
-        # if this value is None we cannot tell if it was explicitly None or just was not specified
+    # if this value is None we cannot tell if it was explicitly None or just was not specified
+    dtype = None if get_col_dtype is None else get_col_dtype(idx)
 
     # NOTE: shown to be faster to try fromiter in some performance tests
     # values, _ = iterable_to_array_1d(get_value_iter(key), dtype=dtype)

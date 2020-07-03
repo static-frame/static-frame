@@ -917,6 +917,7 @@ class TestUnit(TestCase):
                 (('0', ((0, 1), (1, 30), (2, 54), (3, 65))), ('1', ((0, 2), (1, 34), (2, 95), (3, 73))), ('2', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('3', ((0, False), (1, True), (2, False), (3, True))))
                 )
 
+
     def test_frame_to_parquet_c(self) -> None:
         records = (
                 (1, 'a', False),
@@ -938,6 +939,7 @@ class TestUnit(TestCase):
                 (('a', ((0, 1), (1, 30), (2, 54), (3, 65))), ('b', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('c', ((0, False), (1, True), (2, False), (3, True))), ('d', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-16T00:00:00.000000000')), (2, np.datetime64('2017-12-17T00:00:00.000000000')), (3, np.datetime64('2017-12-18T00:00:00.000000000')))))
                 )
         self.assertTrue(f2.index._map is None)
+
 
     def test_frame_from_parquet_a(self) -> None:
         records = (
@@ -1010,6 +1012,71 @@ class TestUnit(TestCase):
             # when index_depth is not provided an exception is raised
             with self.assertRaises(RuntimeError):
                 sf.Frame.from_parquet(fp, columns_depth=2)
+
+    @skip_win  # type: ignore
+    def test_frame_from_parquet_d(self) -> None:
+        dt64 = np.datetime64
+        dtype = np.dtype
+
+        items = (
+                ('a', (dt64('2020-01-01'), dt64('2019-02-02'))),
+                ('b', ('foo', 'bar')),
+                ('c', (True, False)),
+                ('d', (2000, 3000)),
+                )
+        index = ('x', 'y')
+        f1 = Frame.from_items(items,
+                index=index,
+                )
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1)
+
+            self.assertEqual(
+                    f2.dtypes.values.tolist(),
+                    [dtype('<M8[ns]'), dtype('O'), dtype('bool'), dtype('int64')]
+                    )
+
+            f3 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes={'a': 'datetime64[D]', 'b': str}
+                    )
+            self.assertEqual(
+                    f3.dtypes.values.tolist(),
+                    [dtype('<M8[D]'), dtype('<U3'), dtype('bool'), dtype('int64')]
+                    )
+
+            f4 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes=('datetime64[Y]', str, bool, '<U4')
+                    )
+
+            self.assertEqual(f4.dtypes.values.tolist(),
+                    [dtype('<M8[Y]'), dtype('<U3'), dtype('bool'), dtype('<U4')]
+                    )
+
+            # if dtypes is an iterable, it has to be of length equal to data records
+            with self.assertRaises(IndexError):
+                f5 = Frame.from_parquet(fp,
+                        index_depth=1,
+                        columns_depth=1,
+                        dtypes=('datetime64[Y]', str, bool)
+                        )
+
+            # cannot take a single dtype argument
+            with self.assertRaises(TypeError):
+                f5 = Frame.from_parquet(fp,
+                        index_depth=1,
+                        columns_depth=1,
+                        dtypes=str
+                        )
+
+    # TODO: test from_parquet with dtypes but columns_depth = 0
 
 
     #---------------------------------------------------------------------------

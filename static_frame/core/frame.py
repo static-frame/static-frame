@@ -19,7 +19,8 @@ from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import dtypes_mappable
+from static_frame.core.container_util import get_col_dtype_factory
+
 from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
@@ -616,17 +617,12 @@ class Frame(ContainerOperand):
         column_name_getter = None
         if columns is None and hasattr(row_reference, '_fields'): # NamedTuple
             column_name_getter = row_reference._fields.__getitem__
+            # NOTE: this empty list needs to be available to get_col_dtype after it is populated
             columns = []
 
-        if dtypes:
-            dtypes_is_map = dtypes_mappable(dtypes)
-            def get_col_dtype(col_idx):
-                if dtypes_is_map:
-                    return dtypes.get(columns[col_idx], None)
-                return dtypes[col_idx]
-        else:
-            get_col_dtype = None
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
+        # NOTE: row data by definition here does not have Index data, so col count is length of row
         col_count = len(row_reference)
 
         def get_value_iter(col_key):
@@ -642,8 +638,9 @@ class Frame(ContainerOperand):
 
                 values = array_from_value_iter(
                         key=col_idx,
-                        idx=col_idx,
-                        get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
+                        idx=col_idx, # integer used
+                        get_value_iter=get_value_iter,
+                        get_col_dtype=get_col_dtype,
                         row_count=row_count
                         )
                 yield values
@@ -692,14 +689,7 @@ class Frame(ContainerOperand):
         '''
         columns = []
 
-        if dtypes:
-            dtypes_is_map = dtypes_mappable(dtypes)
-            def get_col_dtype(col_idx):
-                if dtypes_is_map:
-                    return dtypes.get(columns[col_idx], None)
-                return dtypes[col_idx]
-        else:
-            get_col_dtype = None
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -842,7 +832,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
             ):
-        '''Frame constructor from an iterator or generator of pairs, where the first value is the column label and the second value is an iterable of a column's values.
+        '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
@@ -866,20 +856,12 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-        def get_col_dtype(col_idx):
-            if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            return dtypes[col_idx]
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         def blocks():
             for col_idx, (k, v) in enumerate(pairs):
-                columns.append(k) # side effet of generator!
-
-                if dtypes:
-                    column_type = get_col_dtype(col_idx)
-                else:
-                    column_type = None
+                columns.append(k) # side effect of generator!
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx)
 
                 if isinstance(v, np.ndarray):
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
@@ -1013,7 +995,7 @@ class Frame(ContainerOperand):
         else:
             use_dtype_names = False
             columns_idx = 0 # relative position in index object
-            # construct columns_by_col_idx from columns, adding Nones for index columns
+            # construct columns_by_col_idx from columns, adding sentinal for index columns; this means we cannot get map dtypes from index names
             for i in range(len(names)):
                 if i >= index_start_pos and i <= index_end_pos:
                     columns_by_col_idx.append(index_field_placeholder)
@@ -1021,14 +1003,9 @@ class Frame(ContainerOperand):
                 columns_by_col_idx.append(columns[columns_idx])
                 columns_idx += 1
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-
-        def get_col_dtype(col_idx: int):
-            if dtypes_is_map:
-                # columns_by_col_idx may have a index_field_placeholder: will return None
-                return dtypes.get(columns_by_col_idx[col_idx], None)
-            # assume dytpes is an ordered sequences
-            return dtypes[col_idx]
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+                dtypes,
+                columns_by_col_idx)
 
         def blocks():
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
@@ -1052,6 +1029,7 @@ class Frame(ContainerOperand):
                     array_final = store_filter.to_type_filter_array(array_final)
 
                 if dtypes:
+                    # dtypes can refer to columns that will become part of the Index by name or iloc position
                     dtype = get_col_dtype(col_idx)
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
@@ -1803,16 +1781,26 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='from_any')
     def from_arrow(cls,
             value: 'pyarrow.Table',
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            name: tp.Hashable = None
             ) -> 'Frame':
-        '''Convert an Arrow Table into a Frame.
+        '''Realize a ``Frame`` from an Arrow Table.
+
+        Args:
+            value: A :obj:`pyarrow.Table` instance.
+            {index_depth}
+            {columns_depth}
+            {consolidate_blocks}
+            {name}
         '''
+
         # this is similar to from_structured_array
         index_start_pos = -1 # will be ignored
         index_end_pos = -1
@@ -1823,12 +1811,17 @@ class Frame(ContainerOperand):
         index_arrays = []
         if columns_depth > 0:
             columns = []
+        else:
+            columns = None
+
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         pdvu1 = pandas_version_under_1()
 
         def blocks():
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
+                # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
                 # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
                 series = chunked_array.to_pandas(
                         date_as_object=False, # get an np array
@@ -1848,6 +1841,14 @@ class Frame(ContainerOperand):
                 if columns_depth > 0:
                     columns.append(name)
 
+                # if columns depth == 0, we cannot use the name to lookup dtype
+                if get_col_dtype:
+                    # ordered values are assumed to be after index depth
+                    dtype = get_col_dtype(col_idx - index_depth)
+                    if dtype is not None:
+                        array_final = array_final.astype(dtype)
+                        array_final.flags.writeable = False
+
                 yield array_final
 
         if consolidate_blocks:
@@ -1856,9 +1857,7 @@ class Frame(ContainerOperand):
             block_gen = blocks
 
         columns_constructor = None
-        if columns_depth == 0:
-            columns = None
-        elif columns_depth > 1:
+        if columns_depth > 1:
             columns_constructor = partial(
                     cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ')
@@ -1882,22 +1881,33 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='from_any')
     def from_parquet(cls,
             fp: PathSpecifier,
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            consolidate_blocks: bool = False,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Realize a ``Frame`` from a Parquet file.
+
+        Args:
+            {fp}
+            {index_depth}
+            {columns_depth}
+            {columns_select}
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
         import pyarrow.parquet as pq
 
         if columns_select and index_depth != 0:
-            raise ErrorInitFrame(f'cannot create load index_depth {index_depth} when columns_select is specified.')
+            raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
@@ -1907,6 +1917,7 @@ class Frame(ContainerOperand):
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
+                dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
