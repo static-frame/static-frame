@@ -861,7 +861,7 @@ class Frame(ContainerOperand):
         def blocks():
             for col_idx, (k, v) in enumerate(pairs):
                 columns.append(k) # side effect of generator!
-                column_type = None if get_col_dtype is None else get_col_dtype(col_idx)
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
                 if isinstance(v, np.ndarray):
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
@@ -1028,9 +1028,9 @@ class Frame(ContainerOperand):
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
 
-                if dtypes:
+                if get_col_dtype:
                     # dtypes can refer to columns that will become part of the Index by name or iloc position
-                    dtype = get_col_dtype(col_idx)
+                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
@@ -1844,7 +1844,7 @@ class Frame(ContainerOperand):
                 # if columns depth == 0, we cannot use the name to lookup dtype
                 if get_col_dtype:
                     # ordered values are assumed to be after index depth
-                    dtype = get_col_dtype(col_idx - index_depth)
+                    dtype = get_col_dtype(col_idx - index_depth) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
                         array_final.flags.writeable = False
