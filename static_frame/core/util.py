@@ -8,7 +8,8 @@ from functools import reduce
 from io import StringIO
 from itertools import chain
 from itertools import zip_longest
-from pathlib import Path
+# from pathlib import Path
+from os import PathLike
 from urllib import request
 import datetime
 import operator
@@ -186,9 +187,9 @@ CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallabl
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
-PathSpecifier = tp.Union[str, Path]
-PathSpecifierOrFileLike = tp.Union[str, Path, tp.TextIO]
-PathSpecifierOrFileLikeOrIterator = tp.Union[str, Path, tp.TextIO, tp.Iterator[str]]
+PathSpecifier = tp.Union[str, PathLike]
+PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
+PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
@@ -2023,7 +2024,7 @@ def slices_from_targets(
 def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
-    if isinstance(fp, Path):
+    if isinstance(fp, PathLike):
         return str(fp)
     return fp
 

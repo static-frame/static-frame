@@ -4903,6 +4903,8 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new Frame with the provided container inserted at the position determined by the column key; values existing at that key come after the inserted container.
+
+        NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         '''
         if not isinstance(container, (Series, Frame)):
             raise NotImplementedError(

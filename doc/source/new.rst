@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``Frame.from_parquet`` and ``Frame.from_arrow`` now accept a ``dtypes`` argument.
 
+All ``PathLike`` path objects now accepted wherever ``Path`` objects were previously.
+
 
 
 0.6.22
