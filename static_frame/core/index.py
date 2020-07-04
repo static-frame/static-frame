@@ -1155,6 +1155,32 @@ class Index(IndexBase):
             values.flags.writeable = False
         return self.__class__(values, name=self._name)
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        values = self.values # force usage of property for cache update
+        sel = isna_array(values)
+        if not np.any(sel):
+            return self if self.STATIC else self.copy()
+
+        value_dtype = np.array(value).dtype
+        assignable_dtype = resolve_dtype(value_dtype, values.dtype)
+
+        if values.dtype == assignable_dtype:
+            assigned = values.copy()
+        else:
+            assigned = values.astype(assignable_dtype)
+
+        assigned[sel] = value
+        assigned.flags.writeable = False
+
+        return self.__class__(assigned, name=self._name)
+
+
     #---------------------------------------------------------------------------
     # export
 

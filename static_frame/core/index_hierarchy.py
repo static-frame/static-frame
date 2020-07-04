@@ -1208,7 +1208,7 @@ class IndexHierarchy(IndexBase):
         return isin(self.flat().values, matches)
 
     def roll(self, shift: int) -> 'IndexHierarchy':
-        '''Return an Index with values rotated forward and wrapped around (with a postive shift) or backward and wrapped around (with a negative shift).
+        '''Return an :obj:`IndexHierarchy` with values rotated forward and wrapped around (with a positive shift) or backward and wrapped around (with a negative shift).
         '''
         if self._recache:
             self._update_array_cache()
@@ -1223,6 +1223,26 @@ class IndexHierarchy(IndexBase):
                 name=self._name,
                 own_blocks=True
                 )
+
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'IndexHierarchy':
+        '''Return an :obj:`IndexHierarchy` after replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        blocks = self._blocks.fillna(value, None)
+        index_constructors = tuple(self._levels.index_types())
+
+        return self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
+
 
     #---------------------------------------------------------------------------
     # export

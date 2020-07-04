@@ -669,6 +669,33 @@ class TestUnit(TestCase):
         self.assertEqual(idx.roll(1).values.tolist(),
                 ['d', 'a', 'b', 'c'])
 
+    #---------------------------------------------------------------------------
+
+    def test_index_fillna_a(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', None))
+        idx2 = idx1.fillna('d')
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd'])
+
+        idx3 = Index((10, 20, np.nan))
+        idx4 = idx3.fillna(30.1)
+        self.assertEqual(idx4.values.tolist(),
+                [10, 20, 30.1])
+
+
+    def test_index_fillna_b(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c'))
+        idx2 = idx1.fillna('d')
+        self.assertEqual(id(idx1), id(idx2))
+
+        idx3 = IndexGO(('a', 'b', 'c'))
+        idx4 = idx3.fillna('d')
+        self.assertNotEqual(id(idx3), id(idx4))
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_attributes_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))

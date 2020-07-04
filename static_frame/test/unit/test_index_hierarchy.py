@@ -2499,7 +2499,24 @@ class TestUnit(TestCase):
         self.assertTrue(ih1.equals(ih2, compare_class=False))
 
 
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_fillna_a(self) -> None:
 
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None))
+        ih2 = ih1.fillna(20)
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'a', 2], [1, 'a', 20], [1, 'b', 2], [1, 'b', 20], [2, 'a', 2], [2, 'a', 20], [2, 'b', 2], [2, 'b', 20]]
+                )
+
+    def test_index_hierarchy_fillna_b(self) -> None:
+
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, np.nan))
+        ih1.append((3, 'c', np.nan))
+        ih2 = ih1.fillna('foo')
+
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'a', 2.0], [1, 'a', 'foo'], [1, 'b', 2.0], [1, 'b', 'foo'], [2, 'a', 2.0], [2, 'a', 'foo'], [2, 'b', 2.0], [2, 'b', 'foo'], [3, 'c', 'foo']]
+                )
 
 if __name__ == '__main__':
     unittest.main()

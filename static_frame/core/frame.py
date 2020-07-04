@@ -1853,7 +1853,8 @@ class Frame(ContainerOperand):
                 if is_index_col:
                     index_arrays.append(array_final)
                     continue
-                elif not is_index_col and columns_depth > 0:
+
+                if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
                     columns.append(name)
 
