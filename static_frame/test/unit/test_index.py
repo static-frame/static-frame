@@ -673,7 +673,7 @@ class TestUnit(TestCase):
 
     def test_index_fillna_a(self) -> None:
 
-        idx1 = Index(('a', 'b', 'c', None))
+        idx1 = Index(('a', 'b', 'c', None)) #type: ignore
         idx2 = idx1.fillna('d')
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd'])
