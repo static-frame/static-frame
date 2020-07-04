@@ -60,6 +60,8 @@ def get_col_dtype_factory(
 
     # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
 
+    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
+
     if isinstance(dtypes, (dict, Series)):
         is_map = True
     else:

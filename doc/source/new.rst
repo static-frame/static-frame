@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.6.23
+----------
+
+``Frame.from_parquet`` and ``Frame.from_arrow`` now accept a ``dtypes`` argument.
+
+
+
 0.6.22
 ----------
 

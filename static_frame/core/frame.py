@@ -1695,10 +1695,13 @@ class Frame(ContainerOperand):
 
         Args:
             value: Pandas DataFrame.
+            {index_constructor}
+            {columns_constructor}
+            {consolidate_blocks}
             {own_data}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         pdvu1 = pandas_version_under_1()
 
@@ -1797,8 +1800,9 @@ class Frame(ContainerOperand):
             value: A :obj:`pyarrow.Table` instance.
             {index_depth}
             {columns_depth}
-            {consolidate_blocks}
+            {dtypes}
             {name}
+            {consolidate_blocks}
         '''
 
         # this is similar to from_structured_array
@@ -1814,7 +1818,10 @@ class Frame(ContainerOperand):
         else:
             columns = None
 
-        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+        # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+                dtypes,
+                value.column_names)
 
         pdvu1 = pandas_version_under_1()
 
@@ -1830,24 +1837,25 @@ class Frame(ContainerOperand):
                         )
                 if pdvu1:
                     array_final = series.values
-                    array_final.flags.writeable = False
                 else:
                     array_final = pandas_to_numpy(series, own_data=True)
 
-                if col_idx >= index_start_pos and col_idx <= index_end_pos:
-                    index_arrays.append(array_final)
-                    continue
-
-                if columns_depth > 0:
-                    columns.append(name)
-
-                # if columns depth == 0, we cannot use the name to lookup dtype
                 if get_col_dtype:
-                    # ordered values are assumed to be after index depth
-                    dtype = get_col_dtype(col_idx - index_depth) #pylint: disable=E1102
+                    # ordered values will include index positions
+                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
-                        array_final.flags.writeable = False
+
+                array_final.flags.writeable = False
+
+                is_index_col = (col_idx >= index_start_pos and col_idx <= index_end_pos)
+
+                if is_index_col:
+                    index_arrays.append(array_final)
+                    continue
+                elif not is_index_col and columns_depth > 0:
+                    # only accumulate column names after index extraction
+                    columns.append(name)
 
                 yield array_final
 

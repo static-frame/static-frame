@@ -1050,10 +1050,11 @@ class TestUnit(TestCase):
                     [dtype('<M8[D]'), dtype('<U3'), dtype('bool'), dtype('int64')]
                     )
 
+            # positional dtypes include the index array
             f4 = Frame.from_parquet(fp,
                     index_depth=1,
                     columns_depth=1,
-                    dtypes=('datetime64[Y]', str, bool, '<U4')
+                    dtypes=(None, 'datetime64[Y]', str, bool, '<U4')
                     )
 
             self.assertEqual(f4.dtypes.values.tolist(),
@@ -1065,7 +1066,7 @@ class TestUnit(TestCase):
                 f5 = Frame.from_parquet(fp,
                         index_depth=1,
                         columns_depth=1,
-                        dtypes=('datetime64[Y]', str, bool)
+                        dtypes=(None, 'datetime64[Y]', str, bool)
                         )
 
             # cannot take a single dtype argument
@@ -1076,7 +1077,45 @@ class TestUnit(TestCase):
                         dtypes=str
                         )
 
-    # TODO: test from_parquet with dtypes but columns_depth = 0
+    def test_frame_from_parquet_e(self) -> None:
+        dt64 = np.datetime64
+        dtype = np.dtype
+
+        records = ((10.1, 20.1, False, dt64('2020-01-01')),
+                (-5.1, 0.1, True, dt64('2000-09-01')),
+                (2000.1, 33.1, False, dt64('2017-03-01')))
+        f1 = Frame.from_records(records)
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=False)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_depth=0)
+
+            self.assertEqual(f2.dtypes.values.tolist(),
+                    [dtype('float64'), dtype('float64'), dtype('bool'), dtype('<M8[ns]')]
+                    )
+
+            # can include fields that are not used; this does not raise
+            f3 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_depth=0,
+                    dtypes={'foo': str})
+
+
+            f4 = Frame.from_parquet(fp,
+                        index_depth=0,
+                        columns_depth=0,
+                        dtypes=(float, float, str, 'datetime64[Y]'))
+
+            self.assertEqual(f4.dtypes.values.tolist(),
+                    [dtype('float64'), dtype('float64'), dtype('<U5'), dtype('<M8[Y]')]
+                    )
+
+
+            self.assertEqual(f4.to_pairs(0),
+                    ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
+                    )
 
 
     #---------------------------------------------------------------------------
@@ -5535,6 +5574,25 @@ class TestUnit(TestCase):
             f1.to_tsv(fp)
             f2 = sf.Frame.from_tsv(fp, index_depth=1)
             self.assertEqualFrames(f1, f2)
+
+
+    def test_frame_from_tsv_h(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
+                file.close()
+
+            f1 = sf.Frame.from_tsv(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes=(None, int, str), # position dtypes include index
+                    )
+
+            self.assertEqual(f1.to_pairs(0),
+                    (('A', (('a', 1), ('b', 0))), ('B', (('a', '20.2'), ('b', '85.3'))))
+                    )
 
 
     #---------------------------------------------------------------------------

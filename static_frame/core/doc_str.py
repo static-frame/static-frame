@@ -37,6 +37,10 @@ NAME = 'name: A hashable object to label the container.'
 
 DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
 
+INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+
+COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
+
 
 class DOC_TEMPLATE:
 
@@ -165,6 +169,23 @@ class DOC_TEMPLATE:
             dtypes=DTYPES,
             )
 
+
+    from_pandas = dict(
+            own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
+            own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',
+            own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
+            columns_constructor=COLUMNS_CONSTRUCTOR,
+            index_constructor=INDEX_CONSTRUCTOR,
+            consolidate_blocks=CONSOLIDATE_BLOCKS,
+            )
+
+
+    fillna = dict(
+            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
+            value='value: Value to be used to replace missing values (NaN or None).',
+            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+            )
+
     insert = dict(
             key_before="key: Label before which the new container will be inserted.",
             key_after="key: Label after which the new container will be inserted.",
@@ -250,20 +271,6 @@ class DOC_TEMPLATE:
             {NAME}
             '''
             )
-
-    from_pandas = dict(
-            own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
-            own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',
-            own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
-            )
-
-
-    fillna = dict(
-            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
-            value='value: Value to be used to replace missing values (NaN or None).',
-            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
-    )
-
 
 
     mloc = dict(
