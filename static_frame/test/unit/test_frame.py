@@ -36,6 +36,8 @@ from static_frame import IndexAutoFactory
 
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
+from static_frame.core.store_filter import StoreFilter
+
 from static_frame.core.frame import FrameAssign
 
 from static_frame.test.test_case import TestCase
@@ -5661,6 +5663,7 @@ class TestUnit(TestCase):
                     '2|b|3|x'
                     ])
 
+    @skip_win # type: ignore
     def test_frame_to_delimited_c(self) -> None:
 
         records = (
@@ -5671,15 +5674,33 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
 
+        sf1 = StoreFilter(
+                value_format_float_positional='{:.8f}',
+                value_format_float_scientific='{:.8f}'
+                )
+        sf2 = StoreFilter(
+                value_format_float_positional='{:.4e}',
+                value_format_float_scientific='{:.4e}'
+                )
         with temp_file('.txt', path=True) as fp:
-
-            f1.to_delimited(fp, delimiter='|', store_filter=None)
+            f1.to_delimited(fp, delimiter='|', store_filter=sf1)
             f = open(fp)
-            lines = f.readlines()
-            # ['__index0__|r|s|t\n', 'w|False|2e-08|1.23e-07\n', 'x|True|1.119e-06|nan']
+            lines1 = f.readlines()
+            self.assertEqual(lines1,
+                    ['__index0__|r|s|t\n',
+                    'w|False|0.00000002|0.00000012\n',
+                    'x|True|0.00000112|'])
 
-            import ipdb; ipdb.set_trace()
-            pass
+        with temp_file('.txt', path=True) as fp:
+            f1.to_delimited(fp, delimiter='|', store_filter=sf2)
+            f = open(fp)
+            lines2 = f.readlines()
+            self.assertEqual(lines2,
+                    ['__index0__|r|s|t\n',
+                    'w|False|2.0000e-08|1.2300e-07\n',
+                    'x|True|1.1190e-06|'])
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
