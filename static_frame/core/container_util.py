@@ -22,7 +22,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
@@ -678,8 +678,8 @@ def apply_binary_operator(*,
     Utility to handle binary operator application.
     '''
 
-    if (values.dtype.kind in DTYPE_STR_KIND or
-            (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+    if (values.dtype.kind in DTYPE_STR_KINDS or
+            (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
 
         if operator_name == 'add':

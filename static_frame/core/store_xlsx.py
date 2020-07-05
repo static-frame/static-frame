@@ -29,10 +29,10 @@ from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_YEAR
 
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_STR_KIND
-from static_frame.core.util import DTYPE_NAT_KIND
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 
 from static_frame.core.util import NUMERIC_TYPES
 
@@ -61,16 +61,16 @@ class StoreXLSX(Store):
         '''
         kind = dtype.kind
 
-        if kind in DTYPE_NAT_KIND and dtype != DT64_MONTH and dtype != DT64_YEAR:
+        if kind in DTYPE_NAT_KINDS and dtype != DT64_MONTH and dtype != DT64_YEAR:
             # NOTE: not certain if this is a benefit
             return 'write_datetime', True
         elif dtype == DTYPE_BOOL:
             return 'write_boolean', False
-        elif kind in DTYPE_STR_KIND:
+        elif kind in DTYPE_STR_KINDS:
             return 'write_string', False
-        elif kind in DTYPE_INT_KIND:
+        elif kind in DTYPE_INT_KINDS:
             return 'write_number', False
-        elif kind in DTYPE_NAN_KIND:
+        elif kind in DTYPE_INEXACT_KINDS:
             return 'write_number', True
         return 'write', True
 

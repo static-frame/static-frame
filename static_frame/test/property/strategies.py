@@ -16,7 +16,7 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
-# from static_frame.core.util import DTYPE_NAN_KIND
+# from static_frame.core.util import DTYPE_INEXACT_KINDS
 
 from static_frame import TypeBlocks
 
@@ -315,7 +315,7 @@ def get_array_from_dtype_group(
     # TODO: can remove floating-point NaNs when necessary with .map call with this function on array generators; can apply based on DTYPE group
 
     # def fill_na(array: np.ndarray) -> np.ndarray:
-    #     if array.dtype.kind in DTYPE_NAN_KIND:
+    #     if array.dtype.kind in DTYPE_INEXACT_KINDS:
     #         is_nan = np.isnan(array)
     #         if is_nan.any():
     #             fill = np.empty(array.shape, dtype=array.dtype)

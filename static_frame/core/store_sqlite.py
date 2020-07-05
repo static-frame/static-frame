@@ -15,9 +15,9 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
 
 
 class StoreSQLite(Store):
@@ -41,11 +41,11 @@ class StoreSQLite(Store):
         kind = dtype.kind
         if dtype == DTYPE_BOOL:
             return 'BOOLEAN' # maps to NUMERIC
-        elif kind in DTYPE_STR_KIND:
+        elif kind in DTYPE_STR_KINDS:
             return 'TEXT'
-        elif kind in DTYPE_INT_KIND:
+        elif kind in DTYPE_INT_KINDS:
             return 'INTEGER'
-        elif kind in DTYPE_NAN_KIND:
+        elif kind in DTYPE_INEXACT_KINDS:
             return 'REAL'
         return 'NONE'
 

@@ -6,21 +6,19 @@ import numpy as np
 
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_COMPLEX_KIND
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_NAT_KIND
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_SET
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import COMPLEX_TYPES
 
 from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
 
-
-from static_frame.core.util import InexactTypes
+# from static_frame.core.util import InexactTypes
 
 class StoreFilter:
     '''
@@ -153,7 +151,7 @@ class StoreFilter:
     def _format_inexact_element(self,
             value: tp.Any,
             kind: str,
-            ) -> str:
+            ) -> tp.Any:
         '''
         Must let unexact types pass, as object arrays will have mixed types.
         '''
@@ -218,13 +216,13 @@ class StoreFilter:
         kind = array.dtype.kind
         dtype = array.dtype
 
-        if kind in DTYPE_INT_KIND or kind in DTYPE_STR_KIND or dtype == DTYPE_BOOL:
+        if kind in DTYPE_INT_KINDS or kind in DTYPE_STR_KINDS or dtype == DTYPE_BOOL:
             return array # no replacements possible
 
         kind_is_complex = kind == DTYPE_COMPLEX_KIND
         kind_is_object = kind == DTYPE_OBJECT_KIND
 
-        if kind in DTYPE_NAN_KIND or kind_is_object:
+        if kind in DTYPE_INEXACT_KINDS or kind_is_object:
             func_value_replace_pairs = (
                     self._EQUAL_FUNC_TO_FROM if kind_is_object
                     else self._FLOAT_FUNC_TO_FROM)
@@ -248,7 +246,7 @@ class StoreFilter:
                 return self._format_inexact_array(array_final, post)
             return array_final
 
-        if kind in DTYPE_NAT_KIND:
+        if kind in DTYPE_NAT_KINDS:
             raise NotImplementedError() # np.isnat
 
         raise NotImplementedError(f'no handling for dtype {dtype}') #pragma: no cover
@@ -296,14 +294,14 @@ class StoreFilter:
         dtype = array.dtype
 
         # nothin to do with ints, floats, or bools
-        if (kind in DTYPE_INT_KIND
-                or kind in DTYPE_NAN_KIND
+        if (kind in DTYPE_INT_KINDS
+                or kind in DTYPE_INEXACT_KINDS
                 or dtype == DTYPE_BOOL
                 ):
             return array # no replacements possible
 
         # need to only check object or float
-        if kind in DTYPE_STR_KIND or dtype == DTYPE_OBJECT:
+        if kind in DTYPE_STR_KINDS or dtype == DTYPE_OBJECT:
             # for string types, cannot use np.equal
             post = None
             for value_replace, matching in self._TYPE_TO_TO_TUPLE:

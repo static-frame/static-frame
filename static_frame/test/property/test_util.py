@@ -8,7 +8,7 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given
 
-from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property.strategies import DTGroup
 
 from static_frame.test.property.strategies import get_shape_1d2d
@@ -397,7 +397,7 @@ class TestUnit(TestCase):
 
         if array.ndim == 1:
             sample = array[0]
-            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+            if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
             else:
                 for factory in container_factory:
@@ -405,7 +405,7 @@ class TestUnit(TestCase):
                     self.assertTrue(result[0])
         elif array.ndim == 2:
             sample = array[0, 0]
-            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+            if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
             else:
                 for factory in container_factory:

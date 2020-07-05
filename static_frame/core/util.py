@@ -54,15 +54,16 @@ DEFAULT_STABLE_SORT_KIND = 'mergesort'
 # ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
 # ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
-DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
-DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
-DTYPE_NAN_KIND = ('f', 'c') # kinds that support NaN values
+DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
+DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
+DTYPE_INEXACT_KINDS = ('f', 'c') # kinds that support NaN values
+DTYPE_NAT_KINDS = ('M', 'm')
+
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_COMPLEX_KIND = 'c'
 DTYPE_FLOAT_KIND = 'f'
 DTYPE_OBJECT_KIND = 'O'
-DTYPE_NAT_KIND = ('M', 'm')
 
 # DTYPE_BOOL_KIND = ('b',)
 
@@ -114,7 +115,7 @@ TIME_DELTA_ATTR_MAP = (
         ('microseconds', 'us')
         )
 
-# ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
+# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
 UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 #-------------------------------------------------------------------------------
@@ -388,8 +389,8 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     if dt1.kind == 'O' or dt2.kind == 'O':
         return DTYPE_OBJECT
 
-    dt1_is_str = dt1.kind in DTYPE_STR_KIND
-    dt2_is_str = dt2.kind in DTYPE_STR_KIND
+    dt1_is_str = dt1.kind in DTYPE_STR_KINDS
+    dt2_is_str = dt2.kind in DTYPE_STR_KINDS
     if dt1_is_str and dt2_is_str:
         # if both are string or string-like, we can use result type to get the longest string
         return np.result_type(dt1, dt2)
@@ -496,15 +497,15 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
 
     kind = dtype.kind
 
-    if kind in DTYPE_INT_KIND:
+    if kind in DTYPE_INT_KINDS:
         return 0 # cannot support NaN
     elif kind == 'b':
         return False
-    elif kind in DTYPE_NAN_KIND:
+    elif kind in DTYPE_INEXACT_KINDS:
         return np.nan
     elif kind == 'O':
         return None
-    elif kind in DTYPE_STR_KIND:
+    elif kind in DTYPE_STR_KINDS:
         return ''
     elif kind in DTYPE_DATETIME_KIND:
         return NAT
@@ -550,7 +551,7 @@ def ufunc_axis_skipna(
         # dates do not support skipna functions
         return ufunc(array, axis=axis, out=out)
 
-    elif array.dtype.kind in DTYPE_STR_KIND and ufunc in UFUNC_AXIS_STR_TO_OBJ:
+    elif array.dtype.kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:
         v = array
@@ -1159,9 +1160,9 @@ def isna_array(array: np.ndarray,
     '''
     kind = array.dtype.kind
     # matches all floating point types
-    if kind in DTYPE_NAN_KIND:
+    if kind in DTYPE_INEXACT_KINDS:
         return np.isnan(array)
-    elif kind in DTYPE_NAT_KIND:
+    elif kind in DTYPE_NAT_KINDS:
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != 'O':
@@ -1507,8 +1508,8 @@ def _ufunc_set_1d(
                     return array
 
     set_compare = False
-    array_is_str = array.dtype.kind in DTYPE_STR_KIND
-    other_is_str = other.dtype.kind in DTYPE_STR_KIND
+    array_is_str = array.dtype.kind in DTYPE_STR_KINDS
+    other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
     if array_is_str ^ other_is_str:
         # if only one is string

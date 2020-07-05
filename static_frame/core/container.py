@@ -18,10 +18,10 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import DOC_TEMPLATE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_NAN_KIND
-from static_frame.core.util import DTYPE_NAT_KIND
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_INEXACT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import EMPTY_TUPLE
@@ -128,16 +128,16 @@ def _ufunc_logical_skipna(
     # types that cannot have NA
     if kind == 'b':
         return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_INT_KIND:
+    if kind in DTYPE_INT_KINDS:
         return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_STR_KIND:
+    if kind in DTYPE_STR_KINDS:
         # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
         return ufunc(array != '', axis=axis, out=out)
 
     #---------------------------------------------------------------------------
     # types that can have NA
 
-    if kind in DTYPE_NAN_KIND:
+    if kind in DTYPE_INEXACT_KINDS:
         isna = isna_array(array)
         hasna = isna.any() # returns single value for 1d, 2d
         if hasna and skipna:
@@ -151,7 +151,7 @@ def _ufunc_logical_skipna(
             raise TypeError('cannot propagate NaN without expanding to object array result')
         return ufunc(array, axis=axis, out=out)
 
-    if kind in DTYPE_NAT_KIND:
+    if kind in DTYPE_NAT_KINDS:
         isna = isna_array(array)
         hasna = isna.any() # returns single value for 1d, 2d
         # all dates are truthy, special handling only to propagate NaNs
