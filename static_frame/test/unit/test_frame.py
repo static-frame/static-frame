@@ -5661,6 +5661,26 @@ class TestUnit(TestCase):
                     '2|b|3|x'
                     ])
 
+    def test_frame_to_delimited_c(self) -> None:
+
+        records = (
+                (False, 0.000000020, 0.000000123),
+                (True, 0.000001119, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+
+        with temp_file('.txt', path=True) as fp:
+
+            f1.to_delimited(fp, delimiter='|', store_filter=None)
+            f = open(fp)
+            lines = f.readlines()
+            # ['__index0__|r|s|t\n', 'w|False|2e-08|1.23e-07\n', 'x|True|1.119e-06|nan']
+
+            import ipdb; ipdb.set_trace()
+            pass
+
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
         records = (

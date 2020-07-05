@@ -60,7 +60,10 @@ DTYPE_NAN_KIND = ('f', 'c') # kinds that support NaN values
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_COMPLEX_KIND = 'c'
+DTYPE_FLOAT_KIND = 'f'
+DTYPE_OBJECT_KIND = 'O'
 DTYPE_NAT_KIND = ('M', 'm')
+
 # DTYPE_BOOL_KIND = ('b',)
 
 DTYPE_OBJECT = np.dtype(object)
@@ -121,6 +124,7 @@ INT_TYPES = (int, np.integer) # np.integer catches all np int
 FLOAT_TYPES = (float, np.floating) # np.floating catches all np float
 COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all np complex
 INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
+InexactTypes = tp.Union[float, complex, np.inexact]
 NUMERIC_TYPES = (int, float, complex, np.number)
 
 BOOL_TYPES = (bool, np.bool_)

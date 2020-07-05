@@ -8,7 +8,7 @@ What is New in Static Frame
 
 All ``PathLike`` path objects now accepted wherever ``Path`` objects were previously.
 
-Added fillna methods to ``Index``, ``IndexHierarchy``.
+Added ``fillna`` methods to ``Index``, ``IndexHierarchy``.
 
 
 0.6.22
