@@ -895,6 +895,23 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             idx2 = idx1.intersection('b') #type: ignore
 
+    def test_index_intersection_e(self) -> None:
+
+        idx1 = Index((10, 'foo', None, 4.1))
+        idx2 = idx1.union(idx1)
+        self.assertEqual(id(idx1), id(idx2))
+        self.assertTrue(idx1.equals(idx1))
+
+        idx3 = idx1.intersection(idx1)
+        self.assertEqual(id(idx1), id(idx3))
+        self.assertTrue(idx1.equals(idx3))
+
+        idx4 = idx1.difference(idx1)
+        self.assertEqual(len(idx4), 0)
+        self.assertEqual(idx4.dtype, np.dtype(object))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_index_union_a(self) -> None:

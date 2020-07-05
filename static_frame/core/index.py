@@ -634,6 +634,16 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
 
+        if self.equals(other, compare_dtype=True):
+            # compare dtype as result should be resolved, even if values are the same
+            if (func is self.__class__._UFUNC_INTERSECTION or
+                    func is self.__class__._UFUNC_UNION):
+                # NOTE: this will delegate name attr
+                return self if self.STATIC else self.copy()
+            elif func is self.__class__._UFUNC_DIFFERENCE:
+                # get a zero-length slice so as to preserve dtype
+                return self.__class__(self.values[:0])
+
         if isinstance(other, np.ndarray):
             operand = other
             assume_unique = False
