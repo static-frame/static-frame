@@ -356,7 +356,10 @@ class Index(IndexBase):
         if hasattr(labels, '__len__'): # not a generator, not an array
             # resolving the dtype is expensive, pass if possible
             if len(labels) == 0: #type: ignore
-                labels = EMPTY_ARRAY
+                if dtype is None:
+                    labels = EMPTY_ARRAY
+                else:
+                    labels = np.empty(0, dtype=dtype)
             else:
                 labels, _ = iterable_to_array_1d(labels, dtype=dtype)
         else: # labels may be an expired generator, must use the mapping
@@ -642,7 +645,7 @@ class Index(IndexBase):
                 return self if self.STATIC else self.copy()
             elif func is self.__class__._UFUNC_DIFFERENCE:
                 # get a zero-length slice so as to preserve dtype
-                return self.__class__(self.values[:0])
+                return self.__class__((), dtype=self.dtype) #type: ignore
 
         if isinstance(other, np.ndarray):
             operand = other

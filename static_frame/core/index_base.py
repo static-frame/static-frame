@@ -263,7 +263,6 @@ class IndexBase(ContainerOperand):
                 self.__class__._UFUNC_DIFFERENCE,
                 other)
 
-
     #---------------------------------------------------------------------------
     # metaclass-applied functions
 
