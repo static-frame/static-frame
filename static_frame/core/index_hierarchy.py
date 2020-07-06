@@ -726,6 +726,17 @@ class IndexHierarchy(IndexBase):
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
         '''
+        # can compare equality without cache update
+        if self.equals(other, compare_dtype=True):
+            # compare dtype as result should be resolved, even if values are the same
+            if (func is self.__class__._UFUNC_INTERSECTION or
+                    func is self.__class__._UFUNC_UNION):
+                # NOTE: this will delegate name attr
+                return self if self.STATIC else self.copy()
+            elif func is self.__class__._UFUNC_DIFFERENCE:
+                # we will no longer have type associations, and we do not have the appropriate depth...
+                return self.__class__.from_labels(())
+
         if self._recache:
             self._update_array_cache()
 

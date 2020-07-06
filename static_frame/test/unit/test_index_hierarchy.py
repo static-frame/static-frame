@@ -1428,6 +1428,30 @@ class TestUnit(TestCase):
                 )
 
 
+
+    def test_hierarchy_set_operators_j(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        ih2 = ih1.intersection(ih1.copy())
+        self.assertEqual(id(ih1), id(ih2))
+        self.assertTrue(ih1.equals(ih2))
+
+        ih3 = ih1.union(ih1.copy())
+        self.assertEqual(id(ih1), id(ih3))
+        self.assertTrue(ih1.equals(ih3))
+
+        ih4 = ih1.difference(ih1.copy())
+        self.assertEqual(len(ih4), 0)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_unary_operators_a(self) -> None:
