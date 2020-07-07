@@ -638,10 +638,10 @@ class TestUnit(TestCase):
 
     def test_index_levels_to_type_blocks_a(self) -> None:
 
-        levels1 = IndexLevel(Index(()), targets=None)
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
         tb = levels1.to_type_blocks()
         # NOTE: this will be updated to (0, 0) with IndexLevel support for zero size
-        self.assertEqual(tb.shape, (0, 1))
+        self.assertEqual(tb.shape, (0, 3))
 
 
 

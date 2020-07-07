@@ -98,11 +98,12 @@ class IndexLevel:
 
     @classmethod
     def from_tree(cls,
-            tree: tp.Any, # recersively defined
+            tree: tp.Any, # recursively defined
             index_constructors: tp.Optional[IndexConstructors] = None,
+            depth_reference: tp.Optional[int] = None,
             ) -> 'IndexLevel':
         '''
-        Convert a tree structure to an IndexLevel instance.
+        Convert a tree structure to an IndexLevel instance. As a tree structure is a dictionary of keys to either a sequence of hashables or a dict of other keys, there is no way to represent a zero length, non-zero depth structure.
         '''
         # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
 
@@ -118,6 +119,9 @@ class IndexLevel:
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=explicit_constructor)
 
+        if len(tree) == 0:
+            return cls(get_index((), 0), depth_reference=depth_reference)
+        # NOTE: code check that returned object has depth equal depth_reference
         return cls.from_level_data(tree, get_index)
 
 
@@ -125,7 +129,8 @@ class IndexLevel:
             index: Index,
             targets: tp.Optional[ArrayGO] = None,
             offset: int = 0,
-            own_index: bool = False
+            own_index: bool = False,
+            depth_reference: tp.Optional[int] = None,
             ):
         '''
         Args:
@@ -133,11 +138,12 @@ class IndexLevel:
             offset: integer offset for this level.
             targets: None, or an ArrayGO of IndexLevel objects
             own_index: Boolean to determine whether the Index can be owned by this IndexLevel; if False, a static index will be reused if appropriate for this IndexLevel class.
+            depth_reference: for zero length Levels, provide the depth if it is greater than 1.
         '''
         if not isinstance(index, Index) or index.depth > 1:
-            # all derived Index should be depth == 1
             raise ErrorInitIndexLevel('cannot create an IndexLevel from a higher-dimensional Index.')
-        # NOTE: indices that conatain tuples will take additional work to support; we are not at this time checking for them, though values_at_depth will fail
+
+        # NOTE: indices that contain tuples will take additional work to support; we are not at this time checking for them, though values_at_depth will fail
 
         if own_index:
             self.index = index
@@ -146,8 +152,16 @@ class IndexLevel:
 
         self.targets = targets
         self.offset = offset
-        self._depth = None
-        self._length = None
+
+        # NOTE: once _depth is set, is ever re-evaluated over the life of the instance, even if it is an IndexLevelGO
+        if len(index) > 0:
+            self._depth = 1 if self.targets is None else None
+            self._length = None
+        else:
+            if depth_reference is None:
+                raise ErrorInitIndexLevel('zero length index requires specification of depth_reference')
+            self._depth = depth_reference
+            self._length = 0
 
     #---------------------------------------------------------------------------
     def depths(self) -> tp.Iterator[int]:
@@ -156,7 +170,7 @@ class IndexLevel:
         '''
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None or not len(self.targets):
-            yield 1
+            yield self._depth
         else:
             levels = [(self, 0)]
             while levels:
@@ -169,12 +183,15 @@ class IndexLevel:
 
     def _get_depth(self) -> int:
         '''
-        Assuming all depths are uniform, can get the depth without storing levels list. Could store a depth attribute, but all nested components with provide overlapping depth descriptions that are never examined.
+        Called once over the life of an instance to set self._depth; this is not re-evaluated over the life of the instance.
         '''
-        if not len(self.index): # if zero sized, depth is still 1
+        if not len(self.index):
+            raise AssertionError('zero-length indices should have depth set through depth_reference')
+
+        if self.targets is None: # this may not need to be here
             return 1
-        if self.targets is None:
-            return 1
+
+        # if we need to recurse to the max depth
         level, depth = self, 1
         while True:
             if level.targets is None: # terminus
@@ -188,6 +205,7 @@ class IndexLevel:
         return self._depth
 
     def _get_length(self) -> int:
+        # NOTE: unlike depth, length can change in an IndexLevelGO and should be re-evaluated.
         if self.targets is None or not len(self.targets):
             return self.index.__len__()
 
@@ -205,6 +223,7 @@ class IndexLevel:
         '''
         The length is the sum of all leaves
         '''
+        # NOTE: in IndexLevelGO, setting length to None is how length is reset after mutation.
         if self._length is None:
             self._length = self._get_length()
         return self._length
@@ -306,15 +325,19 @@ class IndexLevel:
         '''
         Return all dtypes found on a depth.
         '''
-        levels = deque(((self, 0),))
-        while levels:
-            level, depth = levels.popleft()
-            if depth == depth_level:
-                yield level.index.dtype
-                continue # do not need to descend
-            if level.targets is not None: # terminus
-                next_depth = depth + 1
-                levels.extend([(lvl, next_depth) for lvl in level.targets])
+        if not self.index.__len__():
+            for _ in range(self._depth):
+                yield self.index.dtype
+        else:
+            levels = deque(((self, 0),))
+            while levels:
+                level, depth = levels.popleft()
+                if depth == depth_level:
+                    yield level.index.dtype
+                    continue # do not need to descend
+                if level.targets is not None: # terminus
+                    next_depth = depth + 1
+                    levels.extend([(lvl, next_depth) for lvl in level.targets])
 
     def dtype_per_depth(self) -> tp.Iterator[np.dtype]:
         '''Return a tuple of resolved dtypes, one from each depth level.'''
@@ -489,8 +512,8 @@ class IndexLevel:
         # need to get a compatible dtype for all dtypes
         dtype = resolve_dtype_iter(self.dtypes_iter())
         labels = np.empty(shape, dtype=dtype)
-        row_count = 0
 
+        row_count = 0
         levels = deque(((self, 0, None),)) # order matters
 
         while levels:
@@ -559,6 +582,10 @@ class IndexLevel:
         length = self.__len__()
         # pre allocate array to ensure we use a resovled type
         array = np.empty(length, dtype=dtype)
+
+        if length == 0:
+            array.flags.writeable = False
+            return array
 
         if depth_level == depth_count - 1:
             # at maximal depth, can concat underlying arrays
@@ -692,7 +719,11 @@ class IndexLevel:
             targets = None
 
         offset = self.offset if offset is None else offset
-        return cls(index=index, targets=targets, offset=offset) #type: ignore
+        return cls(index=index,
+                targets=targets,
+                offset=offset,
+                depth_reference=self.depth,
+                ) #type: ignore
 
 
     def to_type_blocks(self) -> TypeBlocks:

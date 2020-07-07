@@ -45,6 +45,8 @@ from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import EMPTY_TUPLE
+
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -176,6 +178,7 @@ class IndexHierarchy(IndexBase):
             name: NameType = None,
             reorder_for_hierarchy: bool = False,
             index_constructors: tp.Optional[IndexConstructors] = None,
+            depth_reference: tp.Optional[int] = None,
             continuation_token: tp.Union[tp.Hashable, None] = CONTINUATION_TOKEN_INACTIVE
             ) -> IH:
         '''
@@ -208,11 +211,27 @@ class IndexHierarchy(IndexBase):
         labels_iter = iter(labels)
         try:
             first = next(labels_iter)
+            labels_empty = False
         except StopIteration:
-            # if iterable is empty, return empty index
-            return cls(levels=cls._LEVEL_CONSTRUCTOR(
-                    cls._INDEX_CONSTRUCTOR(())
-                    ), name=name)
+            labels_empty = True
+
+        if labels_empty:
+            # if iterable is empty, must discover depth
+            if isinstance(labels, np.ndarray) and labels.ndim == 2:
+                # if this is a 2D array, we can get the depth
+                depth = labels.shape[1]
+                if depth == 0: # an empty 2D array can have 0 depth
+                    pass # do not set depth_reference, assume it is set
+                elif ((depth_reference is None and depth > 1)
+                        or (depth_reference is not None and depth_reference == depth)):
+                    depth_reference = depth
+                else:
+                    raise ErrorInitIndex(f'depth_reference provided {depth_reference} does not match depth of supplied array {depth}')
+
+            levels = cls._LEVEL_CONSTRUCTOR(
+                    cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE),
+                    depth_reference=depth_reference)
+            return cls(levels=levels, name=name)
 
         depth = len(first)
         # minimum permitted depth is 2
@@ -385,7 +404,6 @@ class IndexHierarchy(IndexBase):
 
         token = object()
         observed_last = [token for _ in range(depth)]
-        # range_depth = range(depth)
 
         tree: tp.Any = dict() # order assumed and necessary
 
@@ -423,7 +441,8 @@ class IndexHierarchy(IndexBase):
 
         levels = cls._LEVEL_CONSTRUCTOR.from_tree(
                 tree,
-                index_constructors=index_constructors
+                index_constructors=index_constructors,
+                depth_reference=depth,
                 )
 
         if index_constructors is not None:
@@ -476,6 +495,9 @@ class IndexHierarchy(IndexBase):
             self._levels = index_level.to_index_level(
                     cls=self._LEVEL_CONSTRUCTOR
                     )
+
+        if self._levels.depth <= 1:
+            raise ErrorInitIndex(f'invalid depth ({self._levels.depth}) for IndexLevels composed in IndexHierarchy')
 
         self._recache = self._blocks is None
         self._name = None if name is NAME_DEFAULT else name_filter(name)
@@ -734,8 +756,8 @@ class IndexHierarchy(IndexBase):
                 # NOTE: this will delegate name attr
                 return self if self.STATIC else self.copy()
             elif func is self.__class__._UFUNC_DIFFERENCE:
-                # we will no longer have type associations, and we do not have the appropriate depth...
-                return self.__class__.from_labels(())
+                # we will no longer have type associations per depth
+                return self.__class__.from_labels((), depth_reference=self.depth)
 
         if self._recache:
             self._update_array_cache()
@@ -785,7 +807,9 @@ class IndexHierarchy(IndexBase):
             # if other is not an IndexHierarchy, do not try to propagate types
             index_constructors = None
 
-        return cls.from_labels(labels, index_constructors=index_constructors)
+        return cls.from_labels(labels,
+                index_constructors=index_constructors,
+                depth_reference=self.depth)
 
 
     #---------------------------------------------------------------------------

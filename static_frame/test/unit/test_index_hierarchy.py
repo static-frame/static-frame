@@ -22,6 +22,8 @@ from static_frame import Series
 
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexLevel
+
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
@@ -591,6 +593,22 @@ class TestUnit(TestCase):
         ih4 = ih1._extract_iloc(3)
         self.assertEqual(ih4, ('II', 'A', 2))
 
+    def test_hierarchy_extract_iloc_b(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'B', 2),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih2 = ih1.iloc[:0]
+        self.assertEqual(ih1.depth, ih2.depth)
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_getitem_astype_a(self) -> None:
@@ -708,8 +726,19 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_labels_c(self) -> None:
 
-        ih = IndexHierarchy.from_labels(tuple())
-        self.assertEqual(len(ih), 0)
+        with self.assertRaises(ErrorInitIndexLevel):
+            ih = IndexHierarchy.from_labels(tuple())
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy.from_labels(tuple(), depth_reference=1)
+
+
+        ih = IndexHierarchy.from_labels(np.array(()).reshape(0, 3))
+        self.assertEqual(ih.shape, (0, 3))
+
+        with self.assertRaises(ErrorInitIndex):
+            # if depth_reference provided, must match iterable
+            ih = IndexHierarchy.from_labels(np.array(()).reshape(0, 3), depth_reference=2)
 
 
     def test_hierarchy_from_labels_d(self) -> None:
@@ -1297,8 +1326,9 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post3 = ih1.difference(ih2)
-        self.assertEqual(post3.values.tolist(),
-                [])
+        self.assertEqual(post3.values.tolist(), [])
+        self.assertEqual(post3.shape, (0, 2))
+
 
 
     def test_hierarchy_set_operators_c(self) -> None:
@@ -1310,7 +1340,7 @@ class TestUnit(TestCase):
                 ('I', 'A'),
                 )
 
-        ih1 = IndexHierarchy.from_labels(())
+        ih1 = IndexHierarchy.from_labels((), depth_reference=2)
         ih2 = IndexHierarchy.from_labels(labels)
 
         post1 = ih1.union(ih2)
@@ -1336,7 +1366,7 @@ class TestUnit(TestCase):
                 )
 
         ih1 = IndexHierarchy.from_labels(labels)
-        ih2 = IndexHierarchy.from_labels(())
+        ih2 = IndexHierarchy.from_labels((), depth_reference=2)
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
@@ -1449,7 +1479,6 @@ class TestUnit(TestCase):
 
         ih4 = ih1.difference(ih1.copy())
         self.assertEqual(len(ih4), 0)
-
 
 
     #---------------------------------------------------------------------------
