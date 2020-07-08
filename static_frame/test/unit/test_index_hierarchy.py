@@ -609,6 +609,24 @@ class TestUnit(TestCase):
         self.assertEqual(ih1.depth, ih2.depth)
 
 
+    def test_hierarchy_extract_iloc_c(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'B', 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1[:0]
+        self.assertEqual(ih2._levels.depth, 3)
+        ih2._update_array_cache()
+        self.assertEqual(ih2._blocks.shape, (0, 3))
+        self.assertEqual(ih2.shape, (0, 3))
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_getitem_astype_a(self) -> None:
