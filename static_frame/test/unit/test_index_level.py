@@ -21,6 +21,8 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 
 
+from static_frame.core.util import EMPTY_ARRAY
+
 class TestUnit(TestCase):
 
     def test_index_level_a(self) -> None:
@@ -643,9 +645,28 @@ class TestUnit(TestCase):
         # NOTE: this will be updated to (0, 0) with IndexLevel support for zero size
         self.assertEqual(tb.shape, (0, 3))
 
+    #---------------------------------------------------------------------------
+
+    def test_index_level_depth_reference_a(self) -> None:
+        dtype = np.dtype
+
+        lvl1 = IndexLevel(Index(()), depth_reference=3)
+        self.assertEqual(lvl1.depth, 3)
+
+        self.assertEqual(tuple(lvl1.dtype_per_depth()),
+                (dtype('float64'), dtype('float64'), dtype('float64')))
+
+        self.assertEqual(tuple(lvl1.labels_at_depth(0)), (EMPTY_ARRAY,))
+
+        self.assertEqual(lvl1.values_at_depth(0).tolist(), EMPTY_ARRAY.tolist())
+
+        tb = lvl1.to_type_blocks()
+        self.assertEqual(tb.shape, (0, 3))
+
+
+
 
 
 if __name__ == '__main__':
     unittest.main()
-
 

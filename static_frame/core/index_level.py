@@ -326,8 +326,10 @@ class IndexLevel:
         Return all dtypes found on a depth.
         '''
         if not self.index.__len__():
-            for _ in range(self._depth):
+            if depth_level in range(self._depth):
                 yield self.index.dtype
+            else:
+                raise RuntimeError(f'invalid depth: {depth}')
         else:
             levels = deque(((self, 0),))
             while levels:
@@ -347,8 +349,10 @@ class IndexLevel:
 
     # consider renaming index_types_per_depth
     def index_types(self) -> tp.Iterator[np.dtype]:
-        '''Return an iterator of reprsentative Index classes, one from each depth level.'''
-        if self.targets is None or not len(self.targets):
+        '''Return an iterator of representative Index classes, one from each depth level.'''
+        if not self.index.__len__():
+            yield from (self.index.__class__ for _ in range(self.depth))
+        elif self.targets is None:
             yield self.index.__class__
         else:
             levels = [self]
@@ -545,10 +549,6 @@ class IndexLevel:
         depth_count = self.depth
         levels = deque(((self, 0, None),)) # order matters
 
-        # level: IndexLevel
-        # depth: int
-        # row_previous: tp.Optional[tp.List[tp.Hashable]]
-
         while levels:
             level, depth, row_previous = levels.popleft()
 
@@ -567,9 +567,6 @@ class IndexLevel:
                     row[depth] = label
                     levels.append((level_target, depth_next, row)) #type: ignore
 
-    # def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
-    #     part = [None] * self.depth
-    #     yield from _iter_recurse(self, part, 0)
 
     def values_at_depth(self,
             depth_level: int

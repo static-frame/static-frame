@@ -2018,7 +2018,6 @@ class Frame(ContainerOperand):
                     explicit_constructor=columns_constructor
                     )
             col_count = len(self._columns)
-
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
             raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')

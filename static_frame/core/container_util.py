@@ -214,8 +214,14 @@ def index_constructor_empty(
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
-    return index is None or index is IndexAutoFactory or (
-            hasattr(index, '__len__') and len(index) == 0) #type: ignore
+    if index is None or index is IndexAutoFactory:
+        return True
+    elif (not isinstance(index, IndexBase)
+            and hasattr(index, '__len__')
+            and len(index) == 0
+            ): #type: ignore
+        return True
+    return False
 
 def matmul(
         lhs: tp.Union['Series', 'Frame', np.ndarray],
