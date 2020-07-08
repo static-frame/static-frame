@@ -9833,6 +9833,14 @@ class TestUnit(TestCase):
             f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_append_a(self) -> None:
+
+        f1 = FrameGO(index=('a', 'b'),
+                columns=IndexHierarchyGO.from_labels((), depth_reference=3))
+        f1[('a', 1, True)] = 30
+        import ipdb; ipdb.set_trace()
+
 if __name__ == '__main__':
     unittest.main()
 
