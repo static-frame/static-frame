@@ -294,7 +294,7 @@ class IndexHierarchy(IndexBase):
     def from_index_items(cls: tp.Type[IH],
             items: tp.Iterable[tp.Tuple[tp.Hashable, Index]],
             *,
-            index_constructor: tp.Optional[IndexConstructor] = None
+            index_constructor: tp.Optional[IndexConstructor] = None,
             ) -> IH:
         '''
         Given an iterable of pairs of label, :obj:`Index`, produce an :obj:`IndexHierarchy` where the labels are depth 0, the indices are depth 1.
@@ -325,7 +325,8 @@ class IndexHierarchy(IndexBase):
         levels = cls._LEVEL_CONSTRUCTOR(
                 index=index_outer, #type: ignore
                 targets=targets,
-                own_index=True
+                own_index=True,
+                depth_reference=2, # depth always 2
                 )
         # import ipdb; ipdb.set_trace()
         return cls(levels)

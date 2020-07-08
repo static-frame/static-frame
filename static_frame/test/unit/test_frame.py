@@ -7934,7 +7934,14 @@ class TestUnit(TestCase):
 
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
-        self.assertEqual(tuple(d), (['<Frame>'], ['<IndexHierarchy>', '<float64>'], ['<Index>'], ['0'], ['1'], ['<int64>']))
+        self.assertEqual(tuple(d), (['<Frame>'],
+                ['<IndexHierarchy>', '<float64>'],
+                ['', '<float64>'],
+                ['<Index>'],
+                ['0'],
+                ['1'],
+                ['<int64>']
+                ))
 
     #---------------------------------------------------------------------------
 
