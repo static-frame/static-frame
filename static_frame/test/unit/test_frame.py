@@ -9841,7 +9841,11 @@ class TestUnit(TestCase):
                 columns=IndexHierarchyGO.from_labels((), depth_reference=3)
                 )
         f1[('a', 1, True)] = 30
-        import ipdb; ipdb.set_trace()
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('a', 1, True), (('a', 30), ('b', 30))),))
+
+
 
 if __name__ == '__main__':
     unittest.main()

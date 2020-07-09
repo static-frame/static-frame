@@ -366,6 +366,24 @@ class TestUnit(TestCase):
                 [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y'], [1, 2]])
 
 
+    def test_index_level_append_c(self) -> None:
+
+        levels1 = IndexLevelGO(Index(()), depth_reference=3)
+        levels1.append(('III', 'A', 1))
+
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(0))), 1)
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(1))), 1)
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(2))), 1)
+
+        self.assertEqual(levels1.values.tolist(),
+                [['III', 'A', 1]]
+                )
+
+        levels1.append(('III', 'A', 2))
+
+        self.assertEqual(levels1.values.tolist(),
+                [['III', 'A', 1], ['III', 'A', 2]])
+
 
     #---------------------------------------------------------------------------
 

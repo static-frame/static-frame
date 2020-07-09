@@ -576,6 +576,7 @@ class IndexLevel:
         '''
         depth_count = self.depth
         dtype = tuple(self.dtype_per_depth())[depth_level]
+
         length = self.__len__()
         # pre allocate array to ensure we use a resovled type
         array = np.empty(length, dtype=dtype)
@@ -791,16 +792,41 @@ class IndexLevelGO(IndexLevel):
         '''
         # find fist depth that does not contain key
         depth_count = self.depth
-        index_types = tuple(self.index_types())
 
         if len(key) != depth_count:
             raise RuntimeError('appending key {} of insufficent depth {}'.format(
                         key, depth_count))
 
+        if not self.index.__len__():
+            # where we have zero length, create new root index and targets from the key alone
+            depth_max = depth_count - 1
+            level_previous = None
+
+            for depth in range(depth_max, -1, -1):
+                k = key[depth]
+                # NOTE: we do not want to take index_types, as it based on notional index from zero length structure
+                # index_constructor = index_types[depth]
+                index = self._INDEX_CONSTRUCTOR((k,))
+                if depth == depth_max:
+                    targets = None
+                else:
+                    targets = ArrayGO([level_previous,], own_iterable=True)
+
+                if depth != 0:
+                    level_previous = IndexLevelGO(index, targets)
+                else:
+                    self.index = index
+                    self.targets = targets
+            self._length = None
+            return
+
+        # NOTE: does not use index_types when starting from a zero-length IndexLevels
+        index_types = tuple(self.index_types())
+
         depth_not_found = -1
         edge_nodes = np.empty(depth_count, dtype=object)
-
         node = self
+
         for depth, k in enumerate(key):
             edge_nodes[depth] = node
             # only set on first encounter in descent
