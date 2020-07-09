@@ -218,8 +218,8 @@ def index_constructor_empty(
         return True
     elif (not isinstance(index, IndexBase)
             and hasattr(index, '__len__')
-            and len(index) == 0
-            ): #type: ignore
+            and len(index) == 0 #type: ignore
+            ):
         return True
     return False
 

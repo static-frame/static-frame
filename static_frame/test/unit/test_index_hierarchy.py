@@ -621,6 +621,7 @@ class TestUnit(TestCase):
                 )
         ih1 = IndexHierarchy.from_labels(labels)
         ih2 = ih1[:0]
+        assert isinstance(ih2, IndexHierarchy)
         self.assertEqual(ih2._levels.depth, 3)
         ih2._update_array_cache()
         self.assertEqual(ih2._blocks.shape, (0, 3))

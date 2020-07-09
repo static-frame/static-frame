@@ -107,7 +107,7 @@ class IndexLevel:
         '''
         # tree: tp.Dict[tp.Hashable, tp.Union[Sequence[tp.Hashable], tp.Dict]]
 
-        def get_index(labels: IndexInitializer, depth: int) -> IndexBase:
+        def get_index(labels: IndexInitializer, depth: int) -> Index:
             explicit_constructor: tp.Optional[IndexConstructor]
 
             if index_constructors is not None:
@@ -115,7 +115,7 @@ class IndexLevel:
             else:
                 explicit_constructor = None
 
-            return index_from_optional_constructor(labels,
+            return index_from_optional_constructor(labels, #type: ignore
                     default_constructor=cls._INDEX_CONSTRUCTOR,
                     explicit_constructor=explicit_constructor)
 
@@ -170,7 +170,8 @@ class IndexLevel:
         '''
         # NOTE: as this uses a list instead of deque, the depths given will not be in the order of the actual leaves
         if self.targets is None or not len(self.targets):
-            yield self._depth
+            # NOTE: requires being set in __init__
+            yield self._depth #type: ignore
         else:
             levels = [(self, 0)]
             while levels:
@@ -326,10 +327,10 @@ class IndexLevel:
         Return all dtypes found on a depth.
         '''
         if not self.index.__len__():
-            if depth_level in range(self._depth):
+            if depth_level in range(self.depth):
                 yield self.index.dtype
             else:
-                raise RuntimeError(f'invalid depth: {depth}')
+                raise RuntimeError(f'invalid depth: {depth_level}')
         else:
             levels = deque(((self, 0),))
             while levels:
@@ -717,11 +718,11 @@ class IndexLevel:
             targets = None
 
         offset = self.offset if offset is None else offset
-        return cls(index=index,
+        return cls(index=index, #type: ignore
                 targets=targets,
                 offset=offset,
                 depth_reference=self.depth,
-                ) #type: ignore
+                )
 
 
     def to_type_blocks(self) -> TypeBlocks:
