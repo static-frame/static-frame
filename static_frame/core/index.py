@@ -353,25 +353,18 @@ class Index(IndexBase):
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
 
-        if hasattr(labels, '__len__'): # not a generator, not an array
-            # resolving the dtype is expensive, pass if possible
-            if len(labels) == 0: #type: ignore
-                if dtype is None:
-                    labels = EMPTY_ARRAY
-                else:
-                    labels = np.empty(0, dtype=dtype)
+        # labels may be an expired generator, must use the mapping
+        labels_src = labels if hasattr(labels, '__len__') else mapping
+
+        if len(labels_src) == 0: #type: ignore
+            if dtype is None:
+                labels = EMPTY_ARRAY
             else:
-                labels, _ = iterable_to_array_1d(labels, dtype=dtype)
-        else: # labels may be an expired generator, must use the mapping
-            if len(mapping) == 0: #type: ignore
-                if dtype is None:
-                    labels = EMPTY_ARRAY
-                else:
-                    labels = np.empty(0, dtype=dtype)
-            else:
-                labels, _ = iterable_to_array_1d(mapping, dtype=dtype) #type: ignore
-        # all arrays are immutable
-        # assert labels.flags.writeable == False
+                labels = np.empty(0, dtype=dtype)
+                labels.flags.writeable = False
+        else: # resolving the dtype is expensive, pass if possible
+            labels, _ = iterable_to_array_1d(labels_src, dtype=dtype)
+
         return labels
 
     @staticmethod
