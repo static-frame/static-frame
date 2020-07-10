@@ -14,7 +14,7 @@ Added to ``StoreFilter`` the following parameters: ``value_format_float_position
 
 ``Index`` and ``IndexHierarchy`` will reuse instances for set operations on equivalent indices.
 
-``IndexHierarchy.from_names`` constructor for creating zero-length ``IndexHierarchy``.
+Added ``IndexHierarchy.from_names`` constructor for creating zero-length ``IndexHierarchy``.
 
 Refinements to ``IndexHierarchy`` to support grow-only mutation from zero length.
 
