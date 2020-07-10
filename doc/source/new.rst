@@ -16,7 +16,7 @@ Added to ``StoreFilter`` the following parameters: ``value_format_float_position
 
 ``IndexHierarchy.from_names`` constructor for creating zero-length ``IndexHierarchy``.
 
-Refinements to ``IndexHierarchy`` to support GO mutation from zero length.
+Refinements to ``IndexHierarchy`` to support grow-only mutation from zero length.
 
 
 0.6.22
