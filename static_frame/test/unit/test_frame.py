@@ -9872,6 +9872,16 @@ class TestUnit(TestCase):
                 ((('a', 1, True), (('a', 30), ('b', 30))),))
 
 
+    def test_frame_append_b(self) -> None:
+        f1 = FrameGO(columns=IndexHierarchyGO.from_names(('foo', 'bar')), index=range(2))
+        f1[('A', 1)] = 10
+        f1[('A', 2)] = 20
+        f1[('B', 2)] = 30
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), ((0, 10), (1, 10))), (('A', 2), ((0, 20), (1, 20))), (('B', 2), ((0, 30), (1, 30))))
+                )
+
 
 if __name__ == '__main__':
     unittest.main()

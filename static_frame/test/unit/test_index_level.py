@@ -368,7 +368,7 @@ class TestUnit(TestCase):
 
     def test_index_level_append_c(self) -> None:
 
-        levels1 = IndexLevelGO(Index(()), depth_reference=3)
+        levels1 = IndexLevelGO(IndexGO(()), depth_reference=3)
         levels1.append(('III', 'A', 1))
 
         self.assertEqual(len(tuple(levels1.dtypes_at_depth(0))), 1)
@@ -680,6 +680,15 @@ class TestUnit(TestCase):
 
         tb = lvl1.to_type_blocks()
         self.assertEqual(tb.shape, (0, 3))
+
+    #---------------------------------------------------------------------------
+    def test_index_level_from_depth_a(self) -> None:
+
+        lvl1 = IndexLevel.from_depth(4)
+        self.assertEqual(lvl1.depth, 4)
+        self.assertEqual(len(lvl1), 0)
+
+
 
 
 

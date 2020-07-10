@@ -340,7 +340,7 @@ class IndexHierarchy(IndexBase):
             index_constructors: tp.Optional[IndexConstructors] = None,
             ) -> IH:
         '''
-        Construct an ``IndexHierarhcy`` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
+        Construct an :obj:`IndexHierarchy` from an iterable of labels, where each label is string defining the component labels for all hierarchies using a string delimiter. All components after splitting the string by the delimited will be literal evaled to produce proper types; thus, strings must be quoted.
 
         Args:
             labels: an iterator or generator of tuples.
@@ -372,6 +372,21 @@ class IndexHierarchy(IndexBase):
                 name=name,
                 index_constructors=index_constructors
                 )
+
+    @classmethod
+    def from_names(cls: tp.Type[IH],
+            names: tp.Iterable[tp.Hashable]
+            ) -> IH:
+        '''
+        Construct a zero-length :obj:`IndexHierarchy` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
+
+        Args:
+            names: Iterable of hashable names per depth.
+        '''
+        name = tuple(names)
+        depth = len(names)
+        levels = cls._LEVEL_CONSTRUCTOR.from_depth(depth)
+        return cls(levels, name=name)
 
 
     @classmethod

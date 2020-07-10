@@ -2603,5 +2603,21 @@ class TestUnit(TestCase):
                 [[1, 'a', 2.0], [1, 'a', 'foo'], [1, 'b', 2.0], [1, 'b', 'foo'], [2, 'a', 2.0], [2, 'a', 'foo'], [2, 'b', 2.0], [2, 'b', 'foo'], [3, 'c', 'foo']]
                 )
 
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_from_names_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_names(('foo', 'bar'))
+        self.assertEqual(ih1.name, ('foo', 'bar'))
+        self.assertEqual(ih1.shape, (0, 2))
+
+        ih2 = IndexHierarchyGO.from_names(('x', 'y', 'z'))
+        self.assertEqual(ih2.name, ('x', 'y', 'z'))
+        self.assertEqual(ih2.shape, (0, 3))
+
+        ih2.append(('A', 10, False))
+        self.assertEqual(ih2.values.tolist(),
+                [['A', 10, False]])
+
+
 if __name__ == '__main__':
     unittest.main()

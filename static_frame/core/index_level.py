@@ -29,6 +29,7 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import EMPTY_TUPLE
 
 
 # if tp.TYPE_CHECKING:
@@ -124,6 +125,16 @@ class IndexLevel:
         # NOTE: code check that returned object has depth equal depth_reference
         return cls.from_level_data(tree, get_index)
 
+
+    @classmethod
+    def from_depth(cls, depth: int) -> 'IndexLevel':
+        '''
+        Create zero-legnth IndexLevel from depth.
+        '''
+        return cls(cls._INDEX_CONSTRUCTOR(EMPTY_TUPLE),
+                own_index=True,
+                depth_reference=depth,
+                )
 
     def __init__(self,
             index: Index,
