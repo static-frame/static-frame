@@ -384,7 +384,7 @@ class IndexHierarchy(IndexBase):
             names: Iterable of hashable names per depth.
         '''
         name = tuple(names)
-        depth = len(names)
+        depth = len(name)
         levels = cls._LEVEL_CONSTRUCTOR.from_depth(depth)
         return cls(levels, name=name)
 
