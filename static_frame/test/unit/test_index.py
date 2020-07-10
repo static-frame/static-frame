@@ -911,6 +911,28 @@ class TestUnit(TestCase):
         self.assertEqual(idx4.dtype, np.dtype(object))
 
 
+    def test_index_intersection_f(self) -> None:
+
+        idx1 = IndexDate.from_date_range('2020-01-02', '2020-01-08')
+        idx2 = IndexDate.from_date_range('2020-01-02', '2020-01-08')
+        idx3 = IndexDate.from_date_range('2020-01-03', '2020-01-09')
+
+        self.assertEqual(idx1.union(idx2).values.tolist(),
+                [datetime.date(2020, 1, 2), datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
+        self.assertEqual(id(idx1), id(idx1.union(idx2)))
+
+        self.assertEqual(idx1.intersection(idx2).values.tolist(),
+                [datetime.date(2020, 1, 2), datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
+
+        self.assertEqual(id(idx1), id(idx1.intersection(idx2)))
+
+        self.assertEqual(idx1.difference(idx2).values.tolist(), [])
+
+        self.assertEqual(idx1.intersection(idx3).values.tolist(),
+                [datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
 
     #---------------------------------------------------------------------------
 

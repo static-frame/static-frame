@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.6.24
+----------
+
+Fixed flaw in difference operations on ``IndexDatetime`` subclasses of equivalent indices.
+
+
 0.6.23
 ----------
 

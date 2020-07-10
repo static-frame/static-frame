@@ -364,7 +364,10 @@ class Index(IndexBase):
                 labels, _ = iterable_to_array_1d(labels, dtype=dtype)
         else: # labels may be an expired generator, must use the mapping
             if len(mapping) == 0: #type: ignore
-                labels = EMPTY_ARRAY
+                if dtype is None:
+                    labels = EMPTY_ARRAY
+                else:
+                    labels = np.empty(0, dtype=dtype)
             else:
                 labels, _ = iterable_to_array_1d(mapping, dtype=dtype) #type: ignore
         # all arrays are immutable
@@ -644,8 +647,11 @@ class Index(IndexBase):
                 # NOTE: this will delegate name attr
                 return self if self.STATIC else self.copy()
             elif func is self.__class__._UFUNC_DIFFERENCE:
-                # get a zero-length slice so as to preserve dtype
-                return self.__class__((), dtype=self.dtype) #type: ignore
+                if self._DTYPE is None: #type: ignore
+                    # an index with a variable dtype accepts a dtype argument
+                    return self.__class__((), dtype=self.dtype) #type: ignore
+                # if self._DTYPE is defined, the default constructor does not take a dtype argument
+                return self.__class__(())
 
         if isinstance(other, np.ndarray):
             operand = other
