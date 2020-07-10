@@ -12,7 +12,11 @@ Added ``fillna`` methods to ``Index``, ``IndexHierarchy``.
 
 Added to ``StoreFilter`` the following parameters: ``value_format_float_positional``, ``value_format_float_scientific``, ``value_format_complex_positional``, ``value_format_complex_scientific``.
 
-``Index`` and ``IndexHierarchy`` will reuse on instances for set operations on equivalent indices.
+``Index`` and ``IndexHierarchy`` will reuse instances for set operations on equivalent indices.
+
+``IndexHierarchy.from_names`` constructor for creating zero-length ``IndexHierarchy``.
+
+Refinements to ``IndexHierarchy`` to support GO mutation from zero length.
 
 
 0.6.22

@@ -608,6 +608,19 @@ class TestUnit(TestCase):
         ih2 = ih1.iloc[:0]
         self.assertEqual(ih1.depth, ih2.depth)
 
+        assert isinstance(ih2, IndexHierarchyGO)
+
+        ih2.append(('a', 'b', 'c'))
+        ih2.append(('a', 'b', 'd'))
+        self.assertEqual(ih2.shape, (2, 3))
+
+        self.assertEqual(ih2.dtypes.values.tolist(),
+                [np.dtype('<U1'), np.dtype('<U1'), np.dtype('<U1')])
+
+        self.assertEqual(ih2.values.tolist(),
+                [['a', 'b', 'c'], ['a', 'b', 'd']]
+                )
+
 
     def test_hierarchy_extract_iloc_c(self) -> None:
 

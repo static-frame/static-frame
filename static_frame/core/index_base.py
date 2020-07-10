@@ -157,10 +157,19 @@ class IndexBase(ContainerOperand):
 
         if isinstance(value, pandas.MultiIndex):
             # iterating over a hierarchucal index will iterate over labels
-            name = tuple(value.names)
+            name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
+            # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
+            if all(n is None for n in name): #type: ignore
+                name = None
+            depth = value.nlevels
+
             if not cls.STATIC:
-                return IndexHierarchyGO.from_labels(value, name=name)
-            return IndexHierarchy.from_labels(value, name=name)
+                return IndexHierarchyGO.from_labels(value,
+                        name=name,
+                        depth_reference=depth)
+            return IndexHierarchy.from_labels(value,
+                    name=name,
+                    depth_reference=depth)
         elif isinstance(value, pandas.DatetimeIndex):
             # if IndexDatetime, use cls, else use IndexNanosecond
             if issubclass(cls, IndexDatetime):

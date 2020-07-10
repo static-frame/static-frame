@@ -44,6 +44,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
@@ -680,6 +681,31 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(0),
                 ((0, ((np.datetime64('2012-01-01'), 1.0), (np.datetime64('2012-01-02'), 3.0), (np.datetime64('2012-01-03'), 1.5))), (1, ((np.datetime64('2012-01-01'), 2.0), (np.datetime64('2012-01-02'), 4.0), (np.datetime64('2012-01-03'), 2.5))))
                 )
+
+    def test_frame_from_pandas_n(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(np.arange(8).reshape(2, 4),
+                columns=pd.MultiIndex.from_product((('a', 'b'), (1, 2))))
+
+
+        ih1 = IndexHierarchy.from_pandas(df.columns)
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 1], ['a', 2], ['b', 1], ['b', 2]]
+                )
+
+        f = sf.Frame.from_pandas(df)
+        self.assertEqual(f.to_pairs(0),
+                ((('a', 1), ((0, 0), (1, 4))), (('a', 2), ((0, 1), (1, 5))), (('b', 1), ((0, 2), (1, 6))), (('b', 2), ((0, 3), (1, 7))))
+                )
+
+
+        # this index shows itself as having only one level
+        pd_idx = pd.MultiIndex([[]], [[]])
+        with self.assertRaises(ErrorInitIndex):
+            _ = sf.IndexHierarchy.from_pandas(pd_idx)
+
+
 
     #---------------------------------------------------------------------------
 
