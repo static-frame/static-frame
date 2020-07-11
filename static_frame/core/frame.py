@@ -7,6 +7,7 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 from itertools import product
+from io import StringIO
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -464,17 +465,6 @@ class Frame(ContainerOperand):
         else:
             raise NotImplementedError(f'no support for {axis}')
 
-        # if from_array_columns:
-        #     if columns.ndim == 2: # we have a hierarchical index
-        #         columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns)
-        #         own_columns = True
-
-        # if from_array_index:
-        #     if index.ndim == 2: # we have a hierarchical index
-        #         # NOTE: could pass index_constructors here
-        #         index = IndexHierarchy.from_labels(index)
-        #         own_index = True
-
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
         else:
@@ -919,7 +909,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
-        Create a Frame from a dictionary, or any object that has an items() method.
+        Create a Frame from a dictionary (or any object that has an items() method) where keys are column labels and values are columns values (either sequence types or :obj:`Series`).
 
         Args:
             mapping: a dictionary or similar mapping interface.
@@ -1604,6 +1594,52 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 store_filter=store_filter,
                 )
+
+    @classmethod
+    def from_clipboard(cls,
+            *,
+            delimiter='\t',
+            index_depth: int = 0,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
+
+        Returns:
+            :obj:`static_frame.Frame`
+        '''
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+
+        # using a StringIO might handle platform newline conventions
+        sio = StringIO()
+        sio.write(root.clipboard_get())
+        sio.seek(0)
+        return cls.from_delimited(sio,
+                delimiter=delimiter,
+                index_depth=index_depth,
+                index_column_first=index_column_first,
+                columns_depth=columns_depth,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                quote_char=quote_char,
+                encoding=encoding,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
+
 
     @classmethod
     def from_xlsx(cls,
@@ -5369,6 +5405,34 @@ class Frame(ContainerOperand):
                 store_filter=store_filter
                 )
 
+    def to_clipboard(self,
+            *,
+            delimiter='\t',
+            include_index: bool = True,
+            include_columns: bool = True,
+            encoding: tp.Optional[str] = None,
+            line_terminator: str = '\n',
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ):
+        '''
+        Given a file path or file-like object, write the Frame as tab-delimited text.
+        '''
+        sio = StringIO()
+        self.to_delimited(fp=sio,
+                delimiter=delimiter,
+                include_index=include_index,
+                include_columns=include_columns,
+                encoding=encoding,
+                line_terminator=line_terminator,
+                store_filter=store_filter
+                )
+        sio.seek(0)
+
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        root.clipboard_clear()
+        root.clipboard_append(sio.read())
 
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet

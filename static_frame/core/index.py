@@ -361,9 +361,9 @@ class Index(IndexBase):
                 labels = EMPTY_ARRAY
             else:
                 labels = np.empty(0, dtype=dtype)
-                labels.flags.writeable = False
+                labels.flags.writeable = False #type: ignore
         else: # resolving the dtype is expensive, pass if possible
-            labels, _ = iterable_to_array_1d(labels_src, dtype=dtype)
+            labels, _ = iterable_to_array_1d(labels_src, dtype=dtype) #type: ignore
 
         return labels
 

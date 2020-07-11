@@ -5885,6 +5885,20 @@ class TestUnit(TestCase):
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
             self.assertEqualFrames(f1, f2)
 
+    #---------------------------------------------------------------------------
+    def test_frame_to_clipboard_a(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+
+        f1.to_clipboard()
+        f2 = Frame.from_clipboard(index_depth=1)
+        self.assertTrue(f2.equals(f1, compare_dtype=True))
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:
