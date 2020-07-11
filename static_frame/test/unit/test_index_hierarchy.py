@@ -11,6 +11,7 @@ from static_frame import DisplayConfig
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import HLoc
+from static_frame import ILoc
 from static_frame import Index
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
@@ -21,6 +22,8 @@ from static_frame import Series
 
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexLevel
+
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
@@ -356,8 +359,10 @@ class TestUnit(TestCase):
         post = ih.loc_to_iloc(HLoc[:, :, 1])
         self.assertEqual(post, [0, 2, 7, 10])
 
-        # TODO: not sure what to do when a multiple selection, [1, 2], is a superset of the leaf index; we do not match with a normal loc
-        # ih.loc_to_iloc((slice(None), slice(None), [1,2]))
+        self.assertEqual(
+                ih.loc_to_iloc(HLoc[:, :, [1, 2]]),
+                [0, 1, 2, 3, 5, 7, 8, 10]
+                )
 
 
     def test_hierarchy_loc_to_iloc_c(self) -> None:
@@ -376,7 +381,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_tree(tree)
 
         # TODO: add additional validaton
-        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore  # https://github.com/python/typeshed/pull/3024
+        post = ih.loc[('I', 'B', 2): ('II', 'A', 2)]  # type: ignore
         self.assertTrue(len(post), 6)
 
         post = ih.loc[[('I', 'B', 2), ('II', 'A', 2)]]
@@ -447,6 +452,123 @@ class TestUnit(TestCase):
         a2 = ih1.loc_to_iloc(Series((labels[5], labels[2], labels[4])))
         self.assertEqual(a2, [5, 2, 4])
 
+
+    def test_hierarchy_loc_to_iloc_g(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual(
+                ih1.loc_to_iloc(HLoc[slice(None), ['A', 'C']]),
+                [0, 2, 3, 5]
+                )
+
+        self.assertEqual(
+                ih1.loc_to_iloc(HLoc[slice(None), ['A', 'C'], [-1, 3]]),
+                [0, 5]
+                )
+
+    def test_hierarchy_loc_to_iloc_h(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 2),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        sel1 = ih1.values_at_depth(1) == 'C'
+        post1 = ih1.loc_to_iloc(HLoc[slice(None), sel1])
+        self.assertEqual(post1, [3, 5, 6])
+
+        sel2 = ih1.values_at_depth(2) == 3
+        post2 = ih1.loc_to_iloc(HLoc[slice(None), slice(None), sel2])
+        self.assertEqual(post2, [6])
+
+
+    def test_hierarchy_loc_to_iloc_i(self) -> None:
+
+        labels = (
+                ('I', 'A', -1),
+                ('I', 'B', 1),
+                ('II', 'A', 3),
+                ('II', 'C', 2),
+                ('III', 'B', 1),
+                ('III', 'C', 2),
+                ('III', 'C', 3),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.loc_to_iloc(ILoc[4])
+        self.assertEqual(post1, 4)
+
+        # ILoc context is outermost, not local
+        post1 = ih1.loc_to_iloc(HLoc[slice(None), ILoc[[0, -1]], 3])
+        self.assertEqual(post1, [6])
+
+        post2 = ih1.loc_to_iloc(HLoc[['I', 'III'], 'B', 1])
+        self.assertEqual(post2, [1, 4])
+
+
+    def test_hierarchy_loc_to_iloc_j(self) -> None:
+
+        labels = (
+                ('I', 'X', 1),
+                ('I', 'X', 2),
+                ('I', 'W', 0),
+                ('I', 'W', 1),
+                ('II', 'R', 1),
+                ('II', 'R', 2),
+                ('II', 'P', 0),
+                ('II', 'P', 1),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[ILoc[-4:], :, 1]),
+                [4, 7])
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, :, 1]),
+                [0, 3, 4, 7])
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, :, ILoc[-2:]]),
+                [6, 7])
+
+        self.assertEqual(ih1.loc_to_iloc(HLoc[:, ILoc[2:6], 1]),
+                [3, 4])
+
+
+    def test_hierarchy_loc_to_iloc_k(self) -> None:
+
+        labels = (
+                ('I', 'X', 1),
+                ('I', 'X', 2),
+                ('II', 'R', 0),
+                ('II', 'R', 1),
+                ('II', 'R', 2),
+                ('II', 'R', 3),
+                ('II', 'B', 3),
+                ('II', 'A', 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.loc_to_iloc(HLoc['II', ILoc[-5:], [2, 3]])
+        self.assertEqual(post1, [4, 5, 6, 7])
+
+        post2 = ih1.loc_to_iloc(HLoc[:, :, ILoc[-4]])
+        self.assertEqual(post1, [4, 5, 6, 7])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:
@@ -470,6 +592,54 @@ class TestUnit(TestCase):
         # reduces to a tuple
         ih4 = ih1._extract_iloc(3)
         self.assertEqual(ih4, ('II', 'A', 2))
+
+    def test_hierarchy_extract_iloc_b(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'B', 2),
+                )
+
+        ih1 = IndexHierarchyGO.from_labels(labels)
+        ih2 = ih1.iloc[:0]
+        self.assertEqual(ih1.depth, ih2.depth)
+
+        assert isinstance(ih2, IndexHierarchyGO)
+
+        ih2.append(('a', 'b', 'c'))
+        ih2.append(('a', 'b', 'd'))
+        self.assertEqual(ih2.shape, (2, 3))
+
+        self.assertEqual(ih2.dtypes.values.tolist(),
+                [np.dtype('<U1'), np.dtype('<U1'), np.dtype('<U1')])
+
+        self.assertEqual(ih2.values.tolist(),
+                [['a', 'b', 'c'], ['a', 'b', 'd']]
+                )
+
+
+    def test_hierarchy_extract_iloc_c(self) -> None:
+
+        labels = (
+                ('I', 'A', 1),
+                ('I', 'B', 1),
+                ('II', 'A', 1),
+                ('II', 'A', 2),
+                ('II', 'B', 1),
+                ('II', 'B', 2),
+                )
+        ih1 = IndexHierarchy.from_labels(labels)
+        ih2 = ih1[:0]
+        assert isinstance(ih2, IndexHierarchy)
+        self.assertEqual(ih2._levels.depth, 3)
+        ih2._update_array_cache()
+        self.assertEqual(ih2._blocks.shape, (0, 3))
+        self.assertEqual(ih2.shape, (0, 3))
+
 
     #---------------------------------------------------------------------------
 
@@ -588,8 +758,19 @@ class TestUnit(TestCase):
 
     def test_hierarchy_from_labels_c(self) -> None:
 
-        ih = IndexHierarchy.from_labels(tuple())
-        self.assertEqual(len(ih), 0)
+        with self.assertRaises(ErrorInitIndexLevel):
+            ih = IndexHierarchy.from_labels(tuple())
+
+        with self.assertRaises(ErrorInitIndex):
+            ih = IndexHierarchy.from_labels(tuple(), depth_reference=1)
+
+
+        ih = IndexHierarchy.from_labels(np.array(()).reshape(0, 3))
+        self.assertEqual(ih.shape, (0, 3))
+
+        with self.assertRaises(ErrorInitIndex):
+            # if depth_reference provided, must match iterable
+            ih = IndexHierarchy.from_labels(np.array(()).reshape(0, 3), depth_reference=2)
 
 
     def test_hierarchy_from_labels_d(self) -> None:
@@ -1121,6 +1302,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             ih1.rehierarch([0,])
 
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_set_operators_a(self) -> None:
 
@@ -1176,8 +1358,9 @@ class TestUnit(TestCase):
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
 
         post3 = ih1.difference(ih2)
-        self.assertEqual(post3.values.tolist(),
-                [])
+        self.assertEqual(post3.values.tolist(), [])
+        self.assertEqual(post3.shape, (0, 2))
+
 
 
     def test_hierarchy_set_operators_c(self) -> None:
@@ -1189,7 +1372,7 @@ class TestUnit(TestCase):
                 ('I', 'A'),
                 )
 
-        ih1 = IndexHierarchy.from_labels(())
+        ih1 = IndexHierarchy.from_labels((), depth_reference=2)
         ih2 = IndexHierarchy.from_labels(labels)
 
         post1 = ih1.union(ih2)
@@ -1215,7 +1398,7 @@ class TestUnit(TestCase):
                 )
 
         ih1 = IndexHierarchy.from_labels(labels)
-        ih2 = IndexHierarchy.from_labels(())
+        ih2 = IndexHierarchy.from_labels((), depth_reference=2)
 
         post1 = ih1.union(ih2)
         self.assertEqual(post1.values.tolist(),
@@ -1228,6 +1411,107 @@ class TestUnit(TestCase):
         post3 = ih1.difference(ih2)
         self.assertEqual(post3.values.tolist(),
                 [['II', 'B'], ['II', 'A'], ['I', 'B'], ['I', 'A']])
+
+
+    def test_hierarchy_set_operators_e(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 2)], [3, date(2019, 1, 3)]], index_constructors=[Index, IndexDate])
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+
+    def test_hierarchy_set_operators_f(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]], index_constructors=[Index, IndexDate])
+
+        i3 = i1.union(i2)
+
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+
+    def test_hierarchy_set_operators_g(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2)], [3, dd(2019, 1, 3)]],)
+
+        i3 = i1.union(i2)
+
+        # only if classes match do we pass on index types
+        self.assertEqual(
+                i3.index_types.to_pairs(),
+                ((0, Index), (1, Index))
+                )
+
+
+    def test_hierarchy_set_operators_h(self) -> None:
+        dd = datetime.date
+
+        i1 = IndexHierarchy.from_labels([[1, dd(2019, 1, 1)], [2, dd(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, dd(2019, 1, 2), 'a'], [3, dd(2019, 1, 3), 'b']],)
+
+        with self.assertRaises(ErrorInitIndex):
+            i3 = i1.union(i2)
+        with self.assertRaises(ErrorInitIndex):
+            i3 = i1.union(np.arange(4))
+
+
+
+    def test_hierarchy_set_operators_i(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        f1 = Frame.from_records((('III', 1), ('III', 2)))
+
+        ih2 = ih1.union(f1)
+
+        self.assertEqual(ih2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
+                )
+
+
+
+    def test_hierarchy_set_operators_j(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        ih2 = ih1.intersection(ih1.copy())
+        self.assertEqual(id(ih1), id(ih2))
+        self.assertTrue(ih1.equals(ih2))
+
+        ih3 = ih1.union(ih1.copy())
+        self.assertEqual(id(ih1), id(ih3))
+        self.assertTrue(ih1.equals(ih3))
+
+        ih4 = ih1.difference(ih1.copy())
+        self.assertEqual(len(ih4), 0)
+
 
     #---------------------------------------------------------------------------
 
@@ -2298,6 +2582,41 @@ class TestUnit(TestCase):
 
         self.assertFalse(ih1.equals(ih2, compare_class=True))
         self.assertTrue(ih1.equals(ih2, compare_class=False))
+
+
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_fillna_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'), (2, None)) #type: ignore
+        ih2 = ih1.fillna(20)
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'a', 2], [1, 'a', 20], [1, 'b', 2], [1, 'b', 20], [2, 'a', 2], [2, 'a', 20], [2, 'b', 2], [2, 'b', 20]]
+                )
+
+    def test_index_hierarchy_fillna_b(self) -> None:
+
+        ih1 = IndexHierarchyGO.from_product((1, 2), ('a', 'b'), (2, np.nan))
+        ih1.append((3, 'c', np.nan))
+        ih2 = ih1.fillna('foo')
+
+        self.assertEqual(ih2.values.tolist(),
+                [[1, 'a', 2.0], [1, 'a', 'foo'], [1, 'b', 2.0], [1, 'b', 'foo'], [2, 'a', 2.0], [2, 'a', 'foo'], [2, 'b', 2.0], [2, 'b', 'foo'], [3, 'c', 'foo']]
+                )
+
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_from_names_a(self) -> None:
+
+        ih1 = IndexHierarchy.from_names(('foo', 'bar'))
+        self.assertEqual(ih1.name, ('foo', 'bar'))
+        self.assertEqual(ih1.shape, (0, 2))
+
+        ih2 = IndexHierarchyGO.from_names(('x', 'y', 'z'))
+        self.assertEqual(ih2.name, ('x', 'y', 'z'))
+        self.assertEqual(ih2.shape, (0, 3))
+
+        ih2.append(('A', 10, False))
+        self.assertEqual(ih2.values.tolist(),
+                [['A', 10, False]])
 
 
 if __name__ == '__main__':

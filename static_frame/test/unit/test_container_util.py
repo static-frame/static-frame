@@ -1,4 +1,5 @@
 import unittest
+import datetime
 
 import numpy as np
 
@@ -12,13 +13,17 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import bloc_key_normalize
 
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 
 from static_frame import Series
 from static_frame import Frame
 
 from static_frame import Index
 from static_frame import IndexGO
-# from static_frame import IndexDate
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 
@@ -334,6 +339,151 @@ class TestUnit(TestCase):
 
         post2 = bloc_key_normalize(f1 < 5, f1)
         self.assertEqual(post2.tolist(), [[True, False], [True, False]])
+
+
+    def test_index_many_concat_a(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        idx2 = IndexDate(('2020-02-01', '2020-02-02'))
+
+
+        post1 = index_many_concat((idx0,  idx1), Index)
+        assert isinstance(post1, Index)
+
+        self.assertEqual(post1.values.tolist(),
+                ['1997-01-01',
+                '1997-01-02',
+                datetime.date(2020, 1, 1),
+                datetime.date(2020, 1, 2)])
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, Index)
+
+        post2 = index_many_concat((idx1,  idx2), Index)
+        assert isinstance(post2, Index)
+
+        self.assertEqual(post2.__class__, IndexDate)
+        self.assertEqual(post2.values.tolist(),
+                [datetime.date(2020, 1, 1),
+                datetime.date(2020, 1, 2),
+                datetime.date(2020, 2, 1),
+                datetime.date(2020, 2, 2)])
+
+    def test_index_many_concat_b(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        idx2 = IndexDate(('2020-02-01', '2020-02-02'))
+
+        post1 = index_many_concat((idx0,  idx1), IndexGO)
+        self.assertEqual(post1.__class__, IndexGO)
+
+        post2 = index_many_concat((idx1,  idx2), IndexGO)
+        self.assertEqual(post2.__class__, IndexDateGO)
+
+    def test_index_many_concat_c(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 3)], [3, date(2019, 1, 4)]], index_constructors=[Index, IndexDate])
+
+        i3 = IndexHierarchy.from_labels([[4, date(2019, 1, 5)], [5, date(2019, 1, 6)]], index_constructors=[Index, IndexDate])
+
+        i4 = IndexHierarchy.from_labels([[4, date(2019, 1, 5)], [5, date(2019, 1, 6)]])
+
+
+        i5 = index_many_concat((i1, i2, i3), cls_default=Index)
+        assert isinstance(i5, IndexHierarchy)
+
+        self.assertEqual(i5.index_types.to_pairs(),
+                ((0, Index), (1, IndexDate))
+                )
+        self.assertEqual(i5.values.tolist(),
+                [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)], [4, date(2019, 1, 5)], [5, date(2019, 1, 6)]])
+
+        # with unaligned index types we fall back in Index
+        i6 = index_many_concat((i1, i2, i4), cls_default=Index)
+        assert isinstance(i6, IndexHierarchy)
+
+        self.assertEqual(i6.index_types.to_pairs(),
+                ((0, Index), (1, Index))
+                )
+
+    def test_index_many_concat_d(self) -> None:
+        from datetime import date
+        i1 = IndexHierarchy.from_labels([[1, date(2019, 1, 1)], [2, date(2019, 1, 2)]], index_constructors=[Index, IndexDate])
+
+        i2 = IndexHierarchy.from_labels([[2, date(2019, 1, 3)], [3, date(2019, 1, 4)]], index_constructors=[Index, IndexDate])
+
+        post1 = index_many_concat((i1, i2), cls_default=IndexGO)
+        self.assertEqual(post1.__class__, IndexHierarchyGO)
+        assert isinstance(post1, IndexHierarchy)
+        self.assertEqual(post1.values.tolist(),
+                [[1, date(2019, 1, 1)], [2, date(2019, 1, 2)], [2, date(2019, 1, 3)], [3, date(2019, 1, 4)]]
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_index_many_set_a(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        idx2 = IndexDate(('2020-01-02', '2020-01-03'))
+
+
+        post1 = index_many_set((idx0,  idx1), Index, union=True)
+        assert isinstance(post1, Index)
+
+        self.assertEqual(post1.name, 'foo')
+        self.assertEqual(post1.__class__, Index)
+        self.assertEqual(set(post1.values),
+                {'1997-01-02',
+                '1997-01-01',
+                np.datetime64('2020-01-01'),
+                np.datetime64('2020-01-02')})
+
+
+        post2 = index_many_set((idx1,  idx2), Index, union=True)
+        assert isinstance(post2, Index)
+
+        self.assertEqual(post2.name, None)
+        self.assertEqual(post2.__class__, IndexDate)
+        self.assertEqual(post2.values.tolist(),
+                [datetime.date(2020, 1, 1),
+                datetime.date(2020, 1, 2),
+                datetime.date(2020, 1, 3)])
+
+        post3 = index_many_set((idx1,  idx2), Index, union=False)
+        assert isinstance(post3, Index)
+
+        self.assertEqual(post3.name, None)
+        self.assertEqual(post3.__class__, IndexDate)
+        self.assertEqual(post3.values.tolist(),
+                [datetime.date(2020, 1, 2)])
+
+    def test_index_many_set_b(self) -> None:
+
+        idx0 = Index(('1997-01-01', '1997-01-02'), name='foo')
+        idx1 = IndexDate(('2020-01-01', '2020-01-02'), name='foo')
+        idx2 = IndexDate(('2020-02-01', '2020-02-02'))
+
+        post1 = index_many_set((idx0,  idx1), IndexGO, union=True)
+        self.assertEqual(post1.__class__, IndexGO)
+
+        post2 = index_many_set((idx1,  idx2), IndexGO, union=False)
+        self.assertEqual(post2.__class__, IndexDateGO)
+
+
+    def test_index_many_set_c(self) -> None:
+        idx1 = IndexDate(('2020-02-01', '2020-02-02'))
+
+        post1 = index_many_set((idx1,), Index, union=True)
+        self.assertEqual(post1.__class__, IndexDate)
+        self.assertTrue(idx1.equals(post1))
+
+        # empty iterable returns an empty index
+        post2 = index_many_set((), Index, union=True)
+        self.assertEqual(len(post2), 0) #type: ignore
 
 
 

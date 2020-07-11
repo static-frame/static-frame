@@ -4,6 +4,7 @@ import unittest
 import operator
 import os
 import sqlite3
+import gc
 
 import numpy as np
 
@@ -354,6 +355,10 @@ class TestUnit(TestCase):
     def test_frame_to_latex(self, f1: Frame) -> None:
         post = f1.to_latex()
         self.assertTrue(len(post) > 0)
+
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_blocks_dont_have_reference_cycles(self, f1: Frame) -> None:
+        self.assertEqual([f1], gc.get_referrers(f1._blocks))
 
 
 if __name__ == '__main__':

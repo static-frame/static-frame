@@ -1,10 +1,61 @@
 What is New in Static Frame
 ===============================
 
+
+0.6.24
+----------
+
+Fixed flaw in difference operations on ``IndexDatetime`` subclasses of equivalent indices.
+
+
+0.6.23
+----------
+
+``Frame.from_parquet`` and ``Frame.from_arrow`` now accept a ``dtypes`` argument.
+
+All ``PathLike`` path objects now accepted wherever ``Path`` objects were previously.
+
+Added ``fillna`` methods to ``Index``, ``IndexHierarchy``.
+
+Added to ``StoreFilter`` the following parameters: ``value_format_float_positional``, ``value_format_float_scientific``, ``value_format_complex_positional``, ``value_format_complex_scientific``.
+
+``Index`` and ``IndexHierarchy`` will reuse instances for set operations on equivalent indices.
+
+Added ``IndexHierarchy.from_names`` constructor for creating zero-length ``IndexHierarchy``.
+
+Refinements to ``IndexHierarchy`` to support grow-only mutation from zero length.
+
+
+0.6.22
+----------
+
+Fixed flaw in ``IndexLevel`` for handling of zero-length levels.
+
+Fixed flaw in ``TypeBlocks.iloc`` that caused an undesirable reference cycle.
+
+
+0.6.21
+----------
+
+``IndexHierarchy`` set operations will now delegate ``Index`` types when they are equivalent between operands at corresponding depth levels.
+
+``Frame.from_concat`` now delegates returned index input index name, type, ``IndexHierarchy`` contained types, if aligned on all indices per axis.
+
+Fixed issue when calling ``relabel_add_level()`` from a ``FrameGO``.
+
+
+0.6.20
+----------
+
+Extended functionality of ``HLoc`` selections in ``IndexHierarchy`` to properly handle selection lists, Boolean arrays, and nested ``ILoc`` selections.
+
+Corrected issue in ``Frame.from_concat`` whereby, when given inputs with ``IndexHierarchy``, ``IndexHierarchy`` were not returned.
+
+
 0.6.19
 ----------
 
-Extended ``name`` propagation to applications of binary operators where an opperand is a scalar.
+Extended ``name`` propagation to applications of binary operators where an operand is a scalar.
 
 Binary operators now work with ``Frame`` and same-shaped NumPy arrays.
 

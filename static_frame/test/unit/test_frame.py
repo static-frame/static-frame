@@ -36,12 +36,15 @@ from static_frame import IndexAutoFactory
 
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
+from static_frame.core.store_filter import StoreFilter
+
 from static_frame.core.frame import FrameAssign
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import AxisInvalid
 
 nan = np.nan
@@ -679,6 +682,31 @@ class TestUnit(TestCase):
                 ((0, ((np.datetime64('2012-01-01'), 1.0), (np.datetime64('2012-01-02'), 3.0), (np.datetime64('2012-01-03'), 1.5))), (1, ((np.datetime64('2012-01-01'), 2.0), (np.datetime64('2012-01-02'), 4.0), (np.datetime64('2012-01-03'), 2.5))))
                 )
 
+    def test_frame_from_pandas_n(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(np.arange(8).reshape(2, 4),
+                columns=pd.MultiIndex.from_product((('a', 'b'), (1, 2))))
+
+
+        ih1 = IndexHierarchy.from_pandas(df.columns)
+        self.assertEqual(ih1.values.tolist(),
+                [['a', 1], ['a', 2], ['b', 1], ['b', 2]]
+                )
+
+        f = sf.Frame.from_pandas(df)
+        self.assertEqual(f.to_pairs(0),
+                ((('a', 1), ((0, 0), (1, 4))), (('a', 2), ((0, 1), (1, 5))), (('b', 1), ((0, 2), (1, 6))), (('b', 2), ((0, 3), (1, 7))))
+                )
+
+
+        # this index shows itself as having only one level
+        pd_idx = pd.MultiIndex([[]], [[]])
+        with self.assertRaises(ErrorInitIndex):
+            _ = sf.IndexHierarchy.from_pandas(pd_idx)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
@@ -917,6 +945,7 @@ class TestUnit(TestCase):
                 (('0', ((0, 1), (1, 30), (2, 54), (3, 65))), ('1', ((0, 2), (1, 34), (2, 95), (3, 73))), ('2', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('3', ((0, False), (1, True), (2, False), (3, True))))
                 )
 
+
     def test_frame_to_parquet_c(self) -> None:
         records = (
                 (1, 'a', False),
@@ -938,6 +967,7 @@ class TestUnit(TestCase):
                 (('a', ((0, 1), (1, 30), (2, 54), (3, 65))), ('b', ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), ('c', ((0, False), (1, True), (2, False), (3, True))), ('d', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-16T00:00:00.000000000')), (2, np.datetime64('2017-12-17T00:00:00.000000000')), (3, np.datetime64('2017-12-18T00:00:00.000000000')))))
                 )
         self.assertTrue(f2.index._map is None)
+
 
     def test_frame_from_parquet_a(self) -> None:
         records = (
@@ -1010,6 +1040,110 @@ class TestUnit(TestCase):
             # when index_depth is not provided an exception is raised
             with self.assertRaises(RuntimeError):
                 sf.Frame.from_parquet(fp, columns_depth=2)
+
+    @skip_win  # type: ignore
+    def test_frame_from_parquet_d(self) -> None:
+        dt64 = np.datetime64
+        dtype = np.dtype
+
+        items = (
+                ('a', (dt64('2020-01-01'), dt64('2019-02-02'))),
+                ('b', ('foo', 'bar')),
+                ('c', (True, False)),
+                ('d', (2000, 3000)),
+                )
+        index = ('x', 'y')
+        f1 = Frame.from_items(items,
+                index=index,
+                )
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1)
+
+            self.assertEqual(
+                    f2.dtypes.values.tolist(),
+                    [dtype('<M8[ns]'), dtype('O'), dtype('bool'), dtype('int64')]
+                    )
+
+            f3 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes={'a': 'datetime64[D]', 'b': str}
+                    )
+            self.assertEqual(
+                    f3.dtypes.values.tolist(),
+                    [dtype('<M8[D]'), dtype('<U3'), dtype('bool'), dtype('int64')]
+                    )
+
+            # positional dtypes include the index array
+            f4 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes=(None, 'datetime64[Y]', str, bool, '<U4')
+                    )
+
+            self.assertEqual(f4.dtypes.values.tolist(),
+                    [dtype('<M8[Y]'), dtype('<U3'), dtype('bool'), dtype('<U4')]
+                    )
+
+            # if dtypes is an iterable, it has to be of length equal to data records
+            with self.assertRaises(IndexError):
+                f5 = Frame.from_parquet(fp,
+                        index_depth=1,
+                        columns_depth=1,
+                        dtypes=(None, 'datetime64[Y]', str, bool)
+                        )
+
+            # cannot take a single dtype argument
+            with self.assertRaises(TypeError):
+                f5 = Frame.from_parquet(fp,
+                        index_depth=1,
+                        columns_depth=1,
+                        dtypes=str
+                        )
+
+    def test_frame_from_parquet_e(self) -> None:
+        dt64 = np.datetime64
+        dtype = np.dtype
+
+        records = ((10.1, 20.1, False, dt64('2020-01-01')),
+                (-5.1, 0.1, True, dt64('2000-09-01')),
+                (2000.1, 33.1, False, dt64('2017-03-01')))
+        f1 = Frame.from_records(records)
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=False)
+            f2 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_depth=0)
+
+            self.assertEqual(f2.dtypes.values.tolist(),
+                    [dtype('float64'), dtype('float64'), dtype('bool'), dtype('<M8[ns]')]
+                    )
+
+            # can include fields that are not used; this does not raise
+            f3 = Frame.from_parquet(fp,
+                    index_depth=0,
+                    columns_depth=0,
+                    dtypes={'foo': str})
+
+
+            f4 = Frame.from_parquet(fp,
+                        index_depth=0,
+                        columns_depth=0,
+                        dtypes=(float, float, str, 'datetime64[Y]'))
+
+            self.assertEqual(f4.dtypes.values.tolist(),
+                    [dtype('float64'), dtype('float64'), dtype('<U5'), dtype('<M8[Y]')]
+                    )
+
+
+            self.assertEqual(f4.to_pairs(0),
+                    ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
+                    )
 
 
     #---------------------------------------------------------------------------
@@ -2081,6 +2215,29 @@ class TestUnit(TestCase):
         self.assertEqual(f1.iloc[:2, :2].to_pairs(0),
                 ((0, ((0, 0), (1, 4))), (1, ((0, 1), (1, 5))))
                 )
+
+    def test_frame_loc_j(self) -> None:
+        f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
+        f = f.set_index_hierarchy(('type', 'name'), drop=True)
+
+        post1 = f.loc[HLoc[:, ['muon', 'strange']]]
+        self.assertEqual(post1.to_pairs(0),
+                (('mass', ((('lepton', 'muon'), 0.106), (('quark', 'strange'), 0.1))), ('charge', ((('lepton', 'muon'), -1.0), (('quark', 'strange'), -0.333))))
+                )
+
+    def test_frame_loc_k(self) -> None:
+        f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
+        f = f.set_index_hierarchy(('type', 'name'), drop=True)
+
+        post2 = f.loc[HLoc[:, f['mass'] > 1]]
+
+        self.assertEqual(post2.to_pairs(0),
+                (('mass', ((('lepton', 'tau'), 1.777), (('quark', 'charm'), 1.3))), ('charge', ((('lepton', 'tau'), -1.0), (('quark', 'charm'), 0.666))))
+                )
+
+
 
 
     #---------------------------------------------------------------------------
@@ -5447,6 +5604,25 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f2)
 
 
+    def test_frame_from_tsv_h(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index\tA\tB', 'a\tTrue\t20.2', 'b\tFalse\t85.3')))
+                file.close()
+
+            f1 = sf.Frame.from_tsv(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes=(None, int, str), # position dtypes include index
+                    )
+
+            self.assertEqual(f1.to_pairs(0),
+                    (('A', (('a', 1), ('b', 0))), ('B', (('a', '20.2'), ('b', '85.3'))))
+                    )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pairs_a(self) -> None:
@@ -5512,6 +5688,45 @@ class TestUnit(TestCase):
                     '2|a|0|False\n',
                     '2|b|3|x'
                     ])
+
+    @skip_win # type: ignore
+    def test_frame_to_delimited_c(self) -> None:
+
+        records = (
+                (False, 0.000000020, 0.000000123),
+                (True, 0.000001119, np.nan),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+
+        sf1 = StoreFilter(
+                value_format_float_positional='{:.8f}',
+                value_format_float_scientific='{:.8f}'
+                )
+        sf2 = StoreFilter(
+                value_format_float_positional='{:.4e}',
+                value_format_float_scientific='{:.4e}'
+                )
+        with temp_file('.txt', path=True) as fp:
+            f1.to_delimited(fp, delimiter='|', store_filter=sf1)
+            f = open(fp)
+            lines1 = f.readlines()
+            self.assertEqual(lines1,
+                    ['__index0__|r|s|t\n',
+                    'w|False|0.00000002|0.00000012\n',
+                    'x|True|0.00000112|'])
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_delimited(fp, delimiter='|', store_filter=sf2)
+            f = open(fp)
+            lines2 = f.readlines()
+            self.assertEqual(lines2,
+                    ['__index0__|r|s|t\n',
+                    'w|False|2.0000e-08|1.2300e-07\n',
+                    'x|True|1.1190e-06|'])
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
@@ -5669,6 +5884,20 @@ class TestUnit(TestCase):
             f1.to_tsv(fp, include_index=True)
             f2 = Frame.from_tsv(fp, index_depth=2, columns_depth=2)
             self.assertEqualFrames(f1, f2)
+
+    #---------------------------------------------------------------------------
+    def test_frame_to_clipboard_a(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=('w', 'x'))
+
+        f1.to_clipboard()
+        f2 = Frame.from_clipboard(index_depth=1)
+        self.assertTrue(f2.equals(f1, compare_dtype=True))
 
 
     #---------------------------------------------------------------------------
@@ -6609,8 +6838,6 @@ class TestUnit(TestCase):
             Frame.from_concat((f1, f2), axis=0, index=IndexAutoFactory, columns=IndexAutoFactory)
 
 
-
-
     @skip_win  # type: ignore
     def test_frame_from_concat_w(self) -> None:
 
@@ -6658,6 +6885,72 @@ class TestUnit(TestCase):
         self.assertEqual((0,),  f5.index.shape)
         self.assertEqual('f5',  f5.name)
 
+    def test_frame_from_concat_y(self) -> None:
+        # problematic case of a NaN in IndexHierarchy
+        f1 = sf.Frame.from_elements([1, 2],
+                index=IndexHierarchy.from_labels([['b', 'b'], ['b', np.nan]]))
+
+        f2 = sf.Frame.from_concat((f1, f1), axis=1, columns=['a', 'b'])
+
+        # index order is not stable due to NaN
+        self.assertEqual(sorted(f2.values.tolist()),
+                [[1, 1], [2, 2]])
+        self.assertEqual(f2.index.depth, 2)
+        self.assertAlmostEqualValues(set(f2.index.values.ravel()), {'b', np.nan})
+
+    def test_frame_from_concat_z(self) -> None:
+        frames = tuple(
+                sf.Frame.from_element(1, index=sf.Index([i], name='tom'), columns=[str(i)])
+                for i in range(2, 4)
+                )
+        post = Frame.from_concat(frames)
+        self.assertEqual(post.index.name, 'tom')
+        self.assertEqual(post.fillna(None).to_pairs(0),
+                (('2', ((2, 1.0), (3, None))), ('3', ((2, None), (3, 1.0))))
+                )
+
+    def test_frame_from_concat_aa(self) -> None:
+
+        a1 = np.arange(25).reshape(5,5)
+        a2 = np.arange(start=24, stop=-1, step=-1).reshape(5,5)
+
+        # Add unique rows/cols
+        a1 = np.vstack((np.hstack((a1, np.arange(5).reshape(5, 1))), np.arange(6)))
+        a2 = np.vstack((np.hstack((a2, np.arange(5).reshape(5, 1))), np.arange(6)))
+
+        # Determine locations to alter - leave at least one row and col fully unchanged
+        to_change = [(0,0), (0,1), (0,3), (0,4), (1,3), (3,1), (3,3), (4,0), (4,3)]
+        # Make changes
+        for row, col in to_change:
+            a1[row][col] = 99
+
+        # Build changes
+        f1_col_labels = [['c_I','A'],['c_I','B'],['c_I','C'],['c_II','A'],['c_II','B'],['c_II','C']]
+        f1_idx_labels = [['i_I','1'],['i_I','2'],['i_I','3'],['i_II','1'],['i_II','2'],['i_II','3']]
+
+        f2_col_labels = [['c_II','B'],['c_II','A'],['c_I','C'],['c_I','B'],['c_I','A'],['c_I','D']]
+        f2_idx_labels = [['i_II','2'],['i_II','1'],['i_I','3'],['i_I','2'],['i_I','1'],['i_I','4']]
+
+        f1 = sf.Frame(a1,
+                columns=sf.IndexHierarchy.from_labels(f1_col_labels),
+                index=sf.IndexHierarchy.from_labels(f1_idx_labels)
+        )
+        f2 = sf.Frame(a2,
+                columns=sf.IndexHierarchy.from_labels(f2_col_labels),
+                index=sf.IndexHierarchy.from_labels(f2_idx_labels)
+        )
+        intersection_cols: sf.Index = f1.columns.intersection(f2.columns)
+        intersection_idx: sf.Index = f1.index.intersection(f2.index)
+
+        f1_reindexed = f1.reindex(intersection_idx)[intersection_cols]
+        f2_reindexed = f2.reindex(intersection_idx)[intersection_cols]
+
+        mismatch_idx_dtypes: sf.Index = f1_reindexed.dtypes != f2_reindexed.dtypes
+        f1_dtypes = f1_reindexed.dtypes[mismatch_idx_dtypes].rename('a')
+        f2_dtypes = f2_reindexed.dtypes[mismatch_idx_dtypes].rename('b')
+
+        dtype_diffs = sf.Frame.from_concat((f1_dtypes, f2_dtypes), axis=1, name='dtype_diffs')
+        self.assertEqual(dtype_diffs.to_pairs(0), (('a', ()), ('b', ())))
 
     #---------------------------------------------------------------------------
 
@@ -7247,6 +7540,18 @@ class TestUnit(TestCase):
             _ = f1.relabel_flat()
 
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_relabel_add_level_a(self) -> None:
+        f1 = sf.FrameGO.from_element(1, index=[1, 2, 3], columns=['a'])
+        f2 = f1.relabel_add_level(columns='a')
+
+        self.assertEqual(f2.columns.__class__, IndexHierarchyGO)
+        self.assertEqual(f2.columns.values.tolist(),
+                [['a', 'a']]
+                )
+
+
 
     #---------------------------------------------------------------------------
 
@@ -7669,7 +7974,14 @@ class TestUnit(TestCase):
 
         # Check that we can represent the IndexHierarchy
         d = f5.display(DisplayConfig(type_color=False))
-        self.assertEqual(tuple(d), (['<Frame>'], ['<IndexHierarchy>', '<float64>'], ['<Index>'], ['0'], ['1'], ['<int64>']))
+        self.assertEqual(tuple(d), (['<Frame>'],
+                ['<IndexHierarchy>', '<float64>'],
+                ['', '<float64>'],
+                ['<Index>'],
+                ['0'],
+                ['1'],
+                ['<int64>']
+                ))
 
     #---------------------------------------------------------------------------
 
@@ -9300,7 +9612,6 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
         f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
 
-        # TODO: left not working due to datedate/ datetime64 mismatch, inner is working
         f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0)
 
         self.assertEqual(f3.dtypes.values.tolist(),
@@ -9560,6 +9871,30 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             f1._join(f2, join_type=None, left_depth_level=0, right_depth_level=0)
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_append_a(self) -> None:
+
+        f1 = FrameGO(
+                index=('a', 'b'),
+                columns=IndexHierarchyGO.from_labels((), depth_reference=3)
+                )
+        f1[('a', 1, True)] = 30
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('a', 1, True), (('a', 30), ('b', 30))),))
+
+
+    def test_frame_append_b(self) -> None:
+        f1 = FrameGO(columns=IndexHierarchyGO.from_names(('foo', 'bar')), index=range(2))
+        f1[('A', 1)] = 10
+        f1[('A', 2)] = 20
+        f1[('B', 2)] = 30
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), ((0, 10), (1, 10))), (('A', 2), ((0, 20), (1, 20))), (('B', 2), ((0, 30), (1, 30))))
+                )
 
 
 if __name__ == '__main__':

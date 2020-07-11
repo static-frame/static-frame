@@ -131,6 +131,14 @@ class TestUnit(TestCase):
         post = idx.loc_to_iloc(Series(['b', 'c']))
         self.assertEqual(post, [1, 2])
 
+    def test_index_loc_to_iloc_c(self) -> None:
+        idx = Index(('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = idx.loc_to_iloc(['c', 'd', 'e'])
+
+        post = idx.loc_to_iloc(['c', 'd', 'e'], partial_selection=True)
+        self.assertEqual(post, [2, 3])
+
     #---------------------------------------------------------------------------
     def test_index_mloc_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
@@ -661,6 +669,33 @@ class TestUnit(TestCase):
         self.assertEqual(idx.roll(1).values.tolist(),
                 ['d', 'a', 'b', 'c'])
 
+    #---------------------------------------------------------------------------
+
+    def test_index_fillna_a(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c', None)) #type: ignore
+        idx2 = idx1.fillna('d')
+        self.assertEqual(idx2.values.tolist(),
+                ['a', 'b', 'c', 'd'])
+
+        idx3 = Index((10, 20, np.nan))
+        idx4 = idx3.fillna(30.1)
+        self.assertEqual(idx4.values.tolist(),
+                [10, 20, 30.1])
+
+
+    def test_index_fillna_b(self) -> None:
+
+        idx1 = Index(('a', 'b', 'c'))
+        idx2 = idx1.fillna('d')
+        self.assertEqual(id(idx1), id(idx2))
+
+        idx3 = IndexGO(('a', 'b', 'c'))
+        idx4 = idx3.fillna('d')
+        self.assertNotEqual(id(idx3), id(idx4))
+
+
+    #---------------------------------------------------------------------------
 
     def test_index_attributes_a(self) -> None:
         idx = Index(('a', 'b', 'c', 'd'))
@@ -859,6 +894,45 @@ class TestUnit(TestCase):
         idx1 = Index((10, 20))
         with self.assertRaises(NotImplementedError):
             idx2 = idx1.intersection('b') #type: ignore
+
+    def test_index_intersection_e(self) -> None:
+
+        idx1 = Index((10, 'foo', None, 4.1)) #type: ignore
+        idx2 = idx1.union(idx1)
+        self.assertEqual(id(idx1), id(idx2))
+        self.assertTrue(idx1.equals(idx1))
+
+        idx3 = idx1.intersection(idx1)
+        self.assertEqual(id(idx1), id(idx3))
+        self.assertTrue(idx1.equals(idx3))
+
+        idx4 = idx1.difference(idx1)
+        self.assertEqual(len(idx4), 0)
+        self.assertEqual(idx4.dtype, np.dtype(object))
+
+
+    def test_index_intersection_f(self) -> None:
+
+        idx1 = IndexDate.from_date_range('2020-01-02', '2020-01-08')
+        idx2 = IndexDate.from_date_range('2020-01-02', '2020-01-08')
+        idx3 = IndexDate.from_date_range('2020-01-03', '2020-01-09')
+
+        self.assertEqual(idx1.union(idx2).values.tolist(),
+                [datetime.date(2020, 1, 2), datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
+        self.assertEqual(id(idx1), id(idx1.union(idx2)))
+
+        self.assertEqual(idx1.intersection(idx2).values.tolist(),
+                [datetime.date(2020, 1, 2), datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
+
+        self.assertEqual(id(idx1), id(idx1.intersection(idx2)))
+
+        self.assertEqual(idx1.difference(idx2).values.tolist(), [])
+
+        self.assertEqual(idx1.intersection(idx3).values.tolist(),
+                [datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
+                )
 
     #---------------------------------------------------------------------------
 

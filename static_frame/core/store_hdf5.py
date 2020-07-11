@@ -13,7 +13,7 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KINDS
 
 
 class StoreHDF5(Store):
@@ -99,7 +99,7 @@ class StoreHDF5(Store):
                     # can also do: table.read(field=colname)
                     array = table.col(colname)
 
-                    if array.dtype.kind in DTYPE_STR_KIND:
+                    if array.dtype.kind in DTYPE_STR_KINDS:
                         array = array.astype(str)
                     array.flags.writeable = False
 

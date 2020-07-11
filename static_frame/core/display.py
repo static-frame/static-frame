@@ -20,8 +20,8 @@ from static_frame.core import display_html_datatables
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DTYPE_INT_KIND
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
 
 _module = sys.modules[__name__]
@@ -48,7 +48,7 @@ class DisplayTypeInt(DisplayTypeCategory):
 
     @staticmethod
     def in_category(t: tp.Union[type, np.dtype]) -> bool:
-        return isinstance(t, np.dtype) and t.kind in DTYPE_INT_KIND
+        return isinstance(t, np.dtype) and t.kind in DTYPE_INT_KINDS
 
 class DisplayTypeFloat(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_float'
@@ -83,7 +83,7 @@ class DisplayTypeStr(DisplayTypeCategory):
 
     @staticmethod
     def in_category(t: tp.Union[type, np.dtype]) -> bool:
-        return isinstance(t, np.dtype) and t.kind in DTYPE_STR_KIND
+        return isinstance(t, np.dtype) and t.kind in DTYPE_STR_KINDS
 
 class DisplayTypeDateTime(DisplayTypeCategory):
     CONFIG_ATTR = 'type_color_datetime'

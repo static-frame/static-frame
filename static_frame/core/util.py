@@ -8,7 +8,8 @@ from functools import reduce
 from io import StringIO
 from itertools import chain
 from itertools import zip_longest
-from pathlib import Path
+# from pathlib import Path
+from os import PathLike
 from urllib import request
 import datetime
 import operator
@@ -53,13 +54,17 @@ DEFAULT_STABLE_SORT_KIND = 'mergesort'
 # ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
 # ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
-DTYPE_STR_KIND = ('U', 'S') # S is np.bytes_
-DTYPE_INT_KIND = ('i', 'u') # signed and unsigned
-DTYPE_NAN_KIND = ('f', 'c') # kinds that support NaN values
+DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
+DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
+DTYPE_INEXACT_KINDS = ('f', 'c') # kinds that support NaN values
+DTYPE_NAT_KINDS = ('M', 'm')
+
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_COMPLEX_KIND = 'c'
-DTYPE_NAT_KIND = ('M', 'm')
+DTYPE_FLOAT_KIND = 'f'
+DTYPE_OBJECT_KIND = 'O'
+
 # DTYPE_BOOL_KIND = ('b',)
 
 DTYPE_OBJECT = np.dtype(object)
@@ -110,7 +115,7 @@ TIME_DELTA_ATTR_MAP = (
         ('microseconds', 'us')
         )
 
-# ufunc functions that will not work with DTYPE_STR_KIND, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
+# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
 UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 #-------------------------------------------------------------------------------
@@ -120,6 +125,7 @@ INT_TYPES = (int, np.integer) # np.integer catches all np int
 FLOAT_TYPES = (float, np.floating) # np.floating catches all np float
 COMPLEX_TYPES = (complex, np.complexfloating) # np.complexfloating catches all np complex
 INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complexfloating
+InexactTypes = tp.Union[float, complex, np.inexact]
 NUMERIC_TYPES = (int, float, complex, np.number)
 
 BOOL_TYPES = (bool, np.bool_)
@@ -186,9 +192,9 @@ CallableOrCallableMap = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, AnyCallabl
 # for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 KeyOrKeys = tp.Union[tp.Hashable, tp.Iterable[tp.Hashable]]
 
-PathSpecifier = tp.Union[str, Path]
-PathSpecifierOrFileLike = tp.Union[str, Path, tp.TextIO]
-PathSpecifierOrFileLikeOrIterator = tp.Union[str, Path, tp.TextIO, tp.Iterator[str]]
+PathSpecifier = tp.Union[str, PathLike]
+PathSpecifierOrFileLike = tp.Union[str, PathLike, tp.TextIO]
+PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
 
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
@@ -383,8 +389,8 @@ def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     if dt1.kind == 'O' or dt2.kind == 'O':
         return DTYPE_OBJECT
 
-    dt1_is_str = dt1.kind in DTYPE_STR_KIND
-    dt2_is_str = dt2.kind in DTYPE_STR_KIND
+    dt1_is_str = dt1.kind in DTYPE_STR_KINDS
+    dt2_is_str = dt2.kind in DTYPE_STR_KINDS
     if dt1_is_str and dt2_is_str:
         # if both are string or string-like, we can use result type to get the longest string
         return np.result_type(dt1, dt2)
@@ -491,15 +497,15 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
 
     kind = dtype.kind
 
-    if kind in DTYPE_INT_KIND:
+    if kind in DTYPE_INT_KINDS:
         return 0 # cannot support NaN
     elif kind == 'b':
         return False
-    elif kind in DTYPE_NAN_KIND:
+    elif kind in DTYPE_INEXACT_KINDS:
         return np.nan
     elif kind == 'O':
         return None
-    elif kind in DTYPE_STR_KIND:
+    elif kind in DTYPE_STR_KINDS:
         return ''
     elif kind in DTYPE_DATETIME_KIND:
         return NAT
@@ -545,7 +551,7 @@ def ufunc_axis_skipna(
         # dates do not support skipna functions
         return ufunc(array, axis=axis, out=out)
 
-    elif array.dtype.kind in DTYPE_STR_KIND and ufunc in UFUNC_AXIS_STR_TO_OBJ:
+    elif array.dtype.kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:
         v = array
@@ -1154,9 +1160,9 @@ def isna_array(array: np.ndarray,
     '''
     kind = array.dtype.kind
     # matches all floating point types
-    if kind in DTYPE_NAN_KIND:
+    if kind in DTYPE_INEXACT_KINDS:
         return np.isnan(array)
-    elif kind in DTYPE_NAT_KIND:
+    elif kind in DTYPE_NAT_KINDS:
         return np.isnat(array)
     # match everything that is not an object; options are: biufcmMOSUV
     elif kind != 'O':
@@ -1502,8 +1508,8 @@ def _ufunc_set_1d(
                     return array
 
     set_compare = False
-    array_is_str = array.dtype.kind in DTYPE_STR_KIND
-    other_is_str = other.dtype.kind in DTYPE_STR_KIND
+    array_is_str = array.dtype.kind in DTYPE_STR_KINDS
+    other_is_str = other.dtype.kind in DTYPE_STR_KINDS
 
     if array_is_str ^ other_is_str:
         # if only one is string
@@ -1544,11 +1550,14 @@ def _ufunc_set_2d(
         other: can be a 2D array, or a 1D object array of tuples.
         assume_unique: if True, array operands are assumed unique and order is preserved for matching operands.
     Returns:
-        Either a 2D array, or a 1D object array of tuples.
+        Either a 2D array (if both operands are 2D), or a 1D object array of tuples (if one or both are 1d tuple arrays).
     '''
+    # NOTE: diversity if ruturned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
+
     is_union = func == np.union1d
     is_intersection = func == np.intersect1d
     is_difference = func == np.setdiff1d
+    is_2d = array.ndim == 2 and other.ndim == 2
 
     if not (is_union or is_intersection or is_difference):
         raise NotImplementedError('unexpected func', func)
@@ -1559,10 +1568,13 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
-            # not sure what DTYPE is correct to return here
+            if is_2d:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
             return np.array(EMPTY_TUPLE, dtype=dtype)
     elif is_difference:
         if len(array) == 0:
+            if is_2d:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
@@ -1579,18 +1591,17 @@ def _ufunc_set_2d(
         if array.shape == other.shape:
             arrays_are_equal = False
             compare = array == other
-
             # will not match a 2D array of integers and 1D array of tuples containing integers (would have to do a post-set comparison, but would loose order)
             if isinstance(compare, BOOL_TYPES) and compare:
                 arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
-
             if arrays_are_equal:
                 if is_difference:
+                    if is_2d:
+                        return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
                     return np.array(EMPTY_TUPLE, dtype=dtype)
-                else:
-                    return array
+                return array
 
     if dtype.kind == 'O':
         # assume that 1D arrays arrays are arrays of tuples
@@ -1617,13 +1628,17 @@ def _ufunc_set_2d(
         except TypeError:
             values = tuple(result)
 
-        # returns a 1D object array of tuples
+        if is_2d:
+            if len(values) == 0:
+                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
+            return np.array(values, dtype=object)
+
         post = np.empty(len(values), dtype=object)
         post[:] = values
         return post
 
     # from here, we assume we have two 2D arrays
-    if array.ndim != 2 or other.ndim != 2:
+    if not is_2d:
         raise RuntimeError('non-object arrays have to both be 2D')
 
     # number of columns must be the same, as doing row-wise comparison, and determines the length of each row
@@ -1762,8 +1777,9 @@ def ufunc_set_iter(
 
         if not union and len(result) == 0:
             # short circuit intersection that results in no common values
-            return result
+            break
 
+    result.flags.writeable = False
     return result
 
 
@@ -2013,7 +2029,7 @@ def slices_from_targets(
 def path_filter(fp: PathSpecifierOrFileLike) -> tp.Union[str, tp.TextIO]:
     '''Realize Path objects as strings, let TextIO pass through, if given.
     '''
-    if isinstance(fp, Path):
+    if isinstance(fp, PathLike):
         return str(fp)
     return fp
 

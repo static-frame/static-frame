@@ -25,7 +25,7 @@ from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
 from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import DtypeSpecifier
@@ -64,7 +64,6 @@ class TypeBlocks(ContainerOperand):
             '_index',
             '_shape',
             '_row_dtype',
-            'iloc',
             )
 
     STATIC = False
@@ -229,8 +228,6 @@ class TypeBlocks(ContainerOperand):
             # NOTE: this violates the type; however, this is desirable when appending such that this value does not force an undesirable type resolution
             self._row_dtype = None
 
-        self.iloc = InterfaceGetItem(self._extract_iloc)
-
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Tuple[object, tp.Mapping[str, tp.Any]]) -> None:
         '''
@@ -275,7 +272,6 @@ class TypeBlocks(ContainerOperand):
         a.flags.writeable = False
         return a
 
-
     @property #type: ignore
     @doc_inject()
     def mloc(self) -> np.ndarray:
@@ -291,6 +287,13 @@ class TypeBlocks(ContainerOperand):
     @property
     def unified(self) -> bool:
         return len(self._blocks) <= 1
+
+    #---------------------------------------------------------------------------
+    # interfaces
+
+    @property
+    def iloc(self) -> InterfaceGetItem: #type: ignore
+        return InterfaceGetItem(self._extract_iloc)
 
     #---------------------------------------------------------------------------
     # common NP-style properties
@@ -798,7 +801,7 @@ class TypeBlocks(ContainerOperand):
                         break
                 else: # no break encountered
                     dtype = dtypes[0]
-                astype_pre = dtype.kind in DTYPE_NAN_KIND
+                astype_pre = dtype.kind in DTYPE_INEXACT_KINDS
             else:
                 dtype = self._row_dtype
                 astype_pre = True # if no dtypes given (like bool) we can coerce

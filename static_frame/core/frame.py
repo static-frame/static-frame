@@ -7,9 +7,11 @@ from functools import partial
 from itertools import chain
 from itertools import repeat
 from itertools import product
+from io import StringIO
 
 import numpy as np
 from numpy.ma import MaskedArray
+
 
 
 from static_frame.core.assign import Assign
@@ -18,9 +20,12 @@ from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import dtypes_mappable
+from static_frame.core.container_util import get_col_dtype_factory
+
 from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
+from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import index_many_set
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
@@ -37,6 +42,7 @@ from static_frame.core.doc_str import doc_inject
 
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ErrorInitIndexNonUnique
 
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
@@ -124,7 +130,6 @@ from static_frame.core.util import resolve_dtype
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
-from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 
@@ -345,13 +350,12 @@ class Frame(ContainerOperand):
         '''
 
         # when doing axis 1 concat (growin horizontally) Series need to be presented as rows (axis 0)
-        # TODO: check for Series that do not have names
+        # NOTE: might check for Series that do not have names
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
 
         own_columns = False
         own_index = False
 
-        # End quickly if empty iterable
         if not frames:
             return cls(
                     index=index,
@@ -360,33 +364,32 @@ class Frame(ContainerOperand):
                     own_columns=own_columns,
                     own_index=own_index)
 
-        # switch if we have reduced the columns argument to an array
-        from_array_columns = False
-        from_array_index = False
+        own_index = False
+        own_columns = False
 
         if axis == 1: # stacks columns (extends rows horizontally)
             # index can be the same, columns must be redefined if not unique
             if columns is IndexAutoFactory:
                 columns = None # let default creation happen
             elif columns is None:
-                # returns immutable array
-                columns = concat_resolved([frame._columns.values for frame in frames])
-                from_array_columns = True
-                # avoid sort for performance; always want rows if ndim is 2
-                if len(ufunc_unique(columns, axis=0)) != len(columns):
+                try:
+                    columns = index_many_concat(
+                            (f._columns for f in frames),
+                            cls._COLUMNS_CONSTRUCTOR,
+                            )
+                except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Column names after horizontal concatenation are not unique; supply a columns argument or IndexAutoFactory.')
+                own_columns = True
 
             if index is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 1 concatenation, index must be used for reindexing row alignment: IndexAutoFactory is not permitted')
             elif index is None:
-                # get the union index, or the common index if identical
-                index = ufunc_set_iter(
-                        (frame._index.values for frame in frames),
+                index = index_many_set(
+                        (f._index for f in frames),
+                        Index,
                         union=union,
-                        assume_unique=True # all from indices
                         )
-                index.flags.writeable = False
-                from_array_index = True
+                own_index = True
 
             def blocks():
                 for frame in frames:
@@ -397,25 +400,23 @@ class Frame(ContainerOperand):
 
         elif axis == 0: # stacks rows (extends columns vertically)
             if index is IndexAutoFactory:
-                index = None # let default creationn happen
+                index = None # let default creation happen
             elif index is None:
-                # returns immutable array
-                index = concat_resolved([frame._index.values for frame in frames])
-                from_array_index = True
-                # avoid sort for performance; always want rows if ndim is 2
-                if len(ufunc_unique(index, axis=0)) != len(index):
+                try:
+                    index = index_many_concat((f._index for f in frames), Index)
+                except ErrorInitIndexNonUnique:
                     raise ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+                own_index = True
 
             if columns is IndexAutoFactory:
                 raise ErrorInitFrame('for axis 0 concatenation, columns must be used for reindexing and column alignment: IndexAutoFactory is not permitted')
             elif columns is None:
-                columns = ufunc_set_iter(
-                        (frame._columns.values for frame in frames),
+                columns = index_many_set(
+                        (f._columns for f in frames),
+                        cls._COLUMNS_CONSTRUCTOR,
                         union=union,
-                        assume_unique=True
                         )
-                columns.flags.writeable = False
-                from_array_columns = True
+                own_columns = True
 
             def blocks():
                 aligned_frames = []
@@ -463,17 +464,6 @@ class Frame(ContainerOperand):
                         yield concat_resolved(block_parts)
         else:
             raise NotImplementedError(f'no support for {axis}')
-
-        if from_array_columns:
-            if columns.ndim == 2: # we have a hierarchical index
-                columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns)
-                own_columns = True
-
-        if from_array_index:
-            if index.ndim == 2: # we have a hierarchical index
-                # NOTE: could pass index_constructors here
-                index = IndexHierarchy.from_labels(index)
-                own_index = True
 
         if consolidate_blocks:
             block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
@@ -617,17 +607,12 @@ class Frame(ContainerOperand):
         column_name_getter = None
         if columns is None and hasattr(row_reference, '_fields'): # NamedTuple
             column_name_getter = row_reference._fields.__getitem__
+            # NOTE: this empty list needs to be available to get_col_dtype after it is populated
             columns = []
 
-        if dtypes:
-            dtypes_is_map = dtypes_mappable(dtypes)
-            def get_col_dtype(col_idx):
-                if dtypes_is_map:
-                    return dtypes.get(columns[col_idx], None)
-                return dtypes[col_idx]
-        else:
-            get_col_dtype = None
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
+        # NOTE: row data by definition here does not have Index data, so col count is length of row
         col_count = len(row_reference)
 
         def get_value_iter(col_key):
@@ -643,8 +628,9 @@ class Frame(ContainerOperand):
 
                 values = array_from_value_iter(
                         key=col_idx,
-                        idx=col_idx,
-                        get_value_iter=get_value_iter, get_col_dtype=get_col_dtype,
+                        idx=col_idx, # integer used
+                        get_value_iter=get_value_iter,
+                        get_col_dtype=get_col_dtype,
                         row_count=row_count
                         )
                 yield values
@@ -693,14 +679,7 @@ class Frame(ContainerOperand):
         '''
         columns = []
 
-        if dtypes:
-            dtypes_is_map = dtypes_mappable(dtypes)
-            def get_col_dtype(col_idx):
-                if dtypes_is_map:
-                    return dtypes.get(columns[col_idx], None)
-                return dtypes[col_idx]
-        else:
-            get_col_dtype = None
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         if not hasattr(records, '__len__'):
             # might be a generator; must convert to sequence
@@ -843,7 +822,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
             ):
-        '''Frame constructor from an iterator or generator of pairs, where the first value is the column label and the second value is an iterable of a column's values.
+        '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
             pairs: Iterable of pairs of column name, column values.
@@ -867,20 +846,12 @@ class Frame(ContainerOperand):
                     )
             own_index = True
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-        def get_col_dtype(col_idx):
-            if dtypes_is_map:
-                return dtypes.get(columns[col_idx], None)
-            return dtypes[col_idx]
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         def blocks():
             for col_idx, (k, v) in enumerate(pairs):
-                columns.append(k) # side effet of generator!
-
-                if dtypes:
-                    column_type = get_col_dtype(col_idx)
-                else:
-                    column_type = None
+                columns.append(k) # side effect of generator!
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
                 if isinstance(v, np.ndarray):
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
@@ -938,7 +909,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''
-        Create a Frame from a dictionary, or any object that has an items() method.
+        Create a Frame from a dictionary (or any object that has an items() method) where keys are column labels and values are columns values (either sequence types or :obj:`Series`).
 
         Args:
             mapping: a dictionary or similar mapping interface.
@@ -1014,7 +985,7 @@ class Frame(ContainerOperand):
         else:
             use_dtype_names = False
             columns_idx = 0 # relative position in index object
-            # construct columns_by_col_idx from columns, adding Nones for index columns
+            # construct columns_by_col_idx from columns, adding sentinal for index columns; this means we cannot get map dtypes from index names
             for i in range(len(names)):
                 if i >= index_start_pos and i <= index_end_pos:
                     columns_by_col_idx.append(index_field_placeholder)
@@ -1022,14 +993,9 @@ class Frame(ContainerOperand):
                 columns_by_col_idx.append(columns[columns_idx])
                 columns_idx += 1
 
-        dtypes_is_map = dtypes_mappable(dtypes)
-
-        def get_col_dtype(col_idx: int):
-            if dtypes_is_map:
-                # columns_by_col_idx may have a index_field_placeholder: will return None
-                return dtypes.get(columns_by_col_idx[col_idx], None)
-            # assume dytpes is an ordered sequences
-            return dtypes[col_idx]
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+                dtypes,
+                columns_by_col_idx)
 
         def blocks():
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
@@ -1052,8 +1018,9 @@ class Frame(ContainerOperand):
                 if store_filter is not None:
                     array_final = store_filter.to_type_filter_array(array_final)
 
-                if dtypes:
-                    dtype = get_col_dtype(col_idx)
+                if get_col_dtype:
+                    # dtypes can refer to columns that will become part of the Index by name or iloc position
+                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
@@ -1670,6 +1637,52 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    def from_clipboard(cls,
+            *,
+            delimiter='\t',
+            index_depth: int = 0,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        '''
+        Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
+
+        Returns:
+            :obj:`static_frame.Frame`
+        '''
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+
+        # using a StringIO might handle platform newline conventions
+        sio = StringIO()
+        sio.write(root.clipboard_get())
+        sio.seek(0)
+        return cls.from_delimited(sio,
+                delimiter=delimiter,
+                index_depth=index_depth,
+                index_column_first=index_column_first,
+                columns_depth=columns_depth,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                quote_char=quote_char,
+                encoding=encoding,
+                dtypes=dtypes,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                store_filter=store_filter,
+                )
+
+
+    @classmethod
     def from_xlsx(cls,
             fp: PathSpecifier,
             *,
@@ -1759,10 +1772,13 @@ class Frame(ContainerOperand):
 
         Args:
             value: Pandas DataFrame.
+            {index_constructor}
+            {columns_constructor}
+            {consolidate_blocks}
             {own_data}
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         pdvu1 = pandas_version_under_1()
 
@@ -1845,16 +1861,27 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='from_any')
     def from_arrow(cls,
             value: 'pyarrow.Table',
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
             consolidate_blocks: bool = False,
-            name: tp.Hashable = None
             ) -> 'Frame':
-        '''Convert an Arrow Table into a Frame.
+        '''Realize a ``Frame`` from an Arrow Table.
+
+        Args:
+            value: A :obj:`pyarrow.Table` instance.
+            {index_depth}
+            {columns_depth}
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
+
         # this is similar to from_structured_array
         index_start_pos = -1 # will be ignored
         index_end_pos = -1
@@ -1865,12 +1892,20 @@ class Frame(ContainerOperand):
         index_arrays = []
         if columns_depth > 0:
             columns = []
+        else:
+            columns = None
+
+        # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(
+                dtypes,
+                value.column_names)
 
         pdvu1 = pandas_version_under_1()
 
         def blocks():
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
+                # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
                 # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
                 series = chunked_array.to_pandas(
                         date_as_object=False, # get an np array
@@ -1879,15 +1914,25 @@ class Frame(ContainerOperand):
                         )
                 if pdvu1:
                     array_final = series.values
-                    array_final.flags.writeable = False
                 else:
                     array_final = pandas_to_numpy(series, own_data=True)
 
-                if col_idx >= index_start_pos and col_idx <= index_end_pos:
+                if get_col_dtype:
+                    # ordered values will include index positions
+                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
+                    if dtype is not None:
+                        array_final = array_final.astype(dtype)
+
+                array_final.flags.writeable = False
+
+                is_index_col = (col_idx >= index_start_pos and col_idx <= index_end_pos)
+
+                if is_index_col:
                     index_arrays.append(array_final)
                     continue
 
-                if columns_depth > 0:
+                if not is_index_col and columns_depth > 0:
+                    # only accumulate column names after index extraction
                     columns.append(name)
 
                 yield array_final
@@ -1898,9 +1943,7 @@ class Frame(ContainerOperand):
             block_gen = blocks
 
         columns_constructor = None
-        if columns_depth == 0:
-            columns = None
-        elif columns_depth > 1:
+        if columns_depth > 1:
             columns_constructor = partial(
                     cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ')
@@ -1924,22 +1967,33 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='from_any')
     def from_parquet(cls,
             fp: PathSpecifier,
             *,
             index_depth: int = 0,
             columns_depth: int = 1,
             columns_select: tp.Optional[tp.Iterable[str]] = None,
-            consolidate_blocks: bool = False,
+            dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
             ) -> 'Frame':
         '''
         Realize a ``Frame`` from a Parquet file.
+
+        Args:
+            {fp}
+            {index_depth}
+            {columns_depth}
+            {columns_select}
+            {dtypes}
+            {name}
+            {consolidate_blocks}
         '''
         import pyarrow.parquet as pq
 
         if columns_select and index_depth != 0:
-            raise ErrorInitFrame(f'cannot create load index_depth {index_depth} when columns_select is specified.')
+            raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
 
         # NOTE: the order of columns_select will determine their order
         table = pq.read_table(fp,
@@ -1949,6 +2003,7 @@ class Frame(ContainerOperand):
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
+                dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
@@ -2040,7 +2095,6 @@ class Frame(ContainerOperand):
                     explicit_constructor=columns_constructor
                     )
             col_count = len(self._columns)
-
         # check after creation, as we cannot determine from the constructor (it might be a method on a class)
         if self._COLUMNS_CONSTRUCTOR.STATIC != self._columns.STATIC:
             raise ErrorInitFrame(f'supplied column constructor does not match required static attribute: {self._COLUMNS_CONSTRUCTOR.STATIC}')
@@ -2584,8 +2638,9 @@ class Frame(ContainerOperand):
             columns: {level}
         '''
 
-        index = self._index.add_level(index) if index else self._index.copy()
+        index = self._index.add_level(index) if index else self._index
         columns = self._columns.add_level(columns) if columns else self._columns.copy()
+
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays
@@ -4925,6 +4980,8 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new Frame with the provided container inserted at the position determined by the column key; values existing at that key come after the inserted container.
+
+        NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         '''
         if not isinstance(container, (Series, Frame)):
             raise NotImplementedError(
@@ -5389,6 +5446,34 @@ class Frame(ContainerOperand):
                 store_filter=store_filter
                 )
 
+    def to_clipboard(self,
+            *,
+            delimiter='\t',
+            include_index: bool = True,
+            include_columns: bool = True,
+            encoding: tp.Optional[str] = None,
+            line_terminator: str = '\n',
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ):
+        '''
+        Given a file path or file-like object, write the Frame as tab-delimited text.
+        '''
+        sio = StringIO()
+        self.to_delimited(fp=sio,
+                delimiter=delimiter,
+                include_index=include_index,
+                include_columns=include_columns,
+                encoding=encoding,
+                line_terminator=line_terminator,
+                store_filter=store_filter
+                )
+        sio.seek(0)
+
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        root.clipboard_clear()
+        root.clipboard_append(sio.read())
 
     def to_xlsx(self,
             fp: PathSpecifier, # not sure I can take a file like yet

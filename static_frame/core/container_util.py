@@ -4,6 +4,7 @@ This module us for utilty functions that take as input and / or return Container
 
 from collections import defaultdict
 from itertools import zip_longest
+from functools import partial
 
 import numpy as np
 from numpy import char as npc
@@ -15,13 +16,15 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import column_2d_filter
+from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DtypesSpecifier
+from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import IndexConstructor
 from static_frame.core.util import IndexConstructors
@@ -31,7 +34,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import UFunc
-
+from static_frame.core.util import ufunc_set_iter
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -42,12 +45,37 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_auto import IndexAutoFactoryType #pylint: disable=W0611 #pragma: no cover
 
 
-def dtypes_mappable(dtypes: DtypesSpecifier) -> bool:
+
+def get_col_dtype_factory(
+        dtypes: DtypesSpecifier,
+        columns: tp.Optional[tp.Sequence[tp.Hashable]],
+        ) -> tp.Callable[[int], np.dtype]:
     '''
-    Determine if the dtypes argument can be used by name lookup, rather than index.
+    Return a function, or None, to get values from a DtypeSpecifier.
+
+    Args:
+        columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
     '''
     from static_frame.core.series import Series
-    return isinstance(dtypes, (dict, Series))
+
+    # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
+
+    # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
+
+    if isinstance(dtypes, (dict, Series)):
+        is_map = True
+    else:
+        is_map = False
+
+    if columns is None and is_map:
+        raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
+
+    def get_col_dtype(col_idx: int) -> DtypeSpecifier:
+        if is_map:
+            return dtypes.get(columns[col_idx], None) #type: ignore
+        return dtypes[col_idx] #type: ignore
+
+    return get_col_dtype
 
 
 def is_static(value: IndexConstructor) -> bool:
@@ -101,8 +129,10 @@ def pandas_to_numpy(
         is_extension_dtype = True
 
     if is_extension_dtype:
-        isna = container.isna() # returns a NumPy Boolean type
-        hasna = isna.values.any() # will work for ndim 1 and 2
+        isna = container.isna() # returns a NumPy Boolean type sometimes
+        if not isinstance(isna, np.ndarray):
+            isna = isna.values
+        hasna = isna.any() # will work for ndim 1 and 2
 
         from pandas import StringDtype #pylint: disable=E0611
         from pandas import BooleanDtype #pylint: disable=E0611
@@ -129,7 +159,7 @@ def pandas_to_numpy(
         array = container.to_numpy(copy=not own_data, dtype=dtype)
 
         if hasna:
-            # if hasna and extension dtype, should be an object array; please pd.NA objects with fill_value (np.nan)
+            # if hasna and extension dtype, should be an object array; replace pd.NA objects with fill_value (np.nan)
             assert array.dtype == DTYPE_OBJECT
             array[isna] = fill_value
 
@@ -184,8 +214,14 @@ def index_constructor_empty(
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     '''
     from static_frame.core.index_auto import IndexAutoFactory
-    return index is None or index is IndexAutoFactory or (
-            hasattr(index, '__len__') and len(index) == 0) #type: ignore
+    if index is None or index is IndexAutoFactory:
+        return True
+    elif (not isinstance(index, IndexBase)
+            and hasattr(index, '__len__')
+            and len(index) == 0 #type: ignore
+            ):
+        return True
+    return False
 
 def matmul(
         lhs: tp.Union['Series', 'Frame', np.ndarray],
@@ -612,11 +648,8 @@ def array_from_value_iter(
         idx: integer position to extract from dtypes
     '''
     # for each column, try to get a dtype, or None
-    if get_col_dtype is None:
-        dtype = None
-    else: # dtype returned here can be None.
-        dtype = get_col_dtype(idx)
-        # if this value is None we cannot tell if it was explicitly None or just was not specified
+    # if this value is None we cannot tell if it was explicitly None or just was not specified
+    dtype = None if get_col_dtype is None else get_col_dtype(idx)
 
     # NOTE: shown to be faster to try fromiter in some performance tests
     # values, _ = iterable_to_array_1d(get_value_iter(key), dtype=dtype)
@@ -651,8 +684,8 @@ def apply_binary_operator(*,
     Utility to handle binary operator application.
     '''
 
-    if (values.dtype.kind in DTYPE_STR_KIND or
-            (other_is_array and other.dtype.kind in DTYPE_STR_KIND)):
+    if (values.dtype.kind in DTYPE_STR_KINDS or
+            (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
 
         if operator_name == 'add':
@@ -713,3 +746,139 @@ def arrays_from_index_frame(
     if columns is not None:
         column_key = container.columns.loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
+
+
+def key_from_container_key(
+        index: IndexBase,
+        key: GetItemKeyType,
+        expand_iloc: bool = False,
+        ) -> GetItemKeyType:
+
+    from static_frame.core.index import Index
+    from static_frame.core.index import ILoc
+    from static_frame.core.series import Series
+
+    if isinstance(key, Index):
+        # if an Index, we simply use the values of the index
+        key = key.values
+    elif isinstance(key, Series):
+        if key.dtype == bool:
+            # if a Boolean series, sort and reindex
+            if not key.index.equals(index):
+                key = key.reindex(index,
+                        fill_value=False,
+                        check_equals=False,
+                        ).values
+            else: # the index is equal
+                key = key.values
+        else:
+            # For all other Series types, we simply assume that the values are to be used as keys in the IH. This ignores the index, but it does not seem useful to require the Series, used like this, to have a matching index value, as the index and values would need to be identical to have the desired selection.
+            key = key.values
+    elif expand_iloc and isinstance(key, ILoc):
+        # realize as Boolean array
+        array = np.full(len(index), False)
+        array[key.key] = True
+        key = array
+
+    # detect and fail on Frame?
+
+    return key
+
+
+
+#---------------------------------------------------------------------------
+
+def _index_many_to_one(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        array_processor: tp.Callable[[tp.Iterable[np.ndarray]], np.ndarray]
+        ) -> IndexBase:
+    '''
+    Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
+
+    Args:
+        indices: can be a generator
+        cls_default: Default Index class to be used if no alignment of classes; also used to determine if result Index should be static or mutable.
+    '''
+    indices_iter = iter(indices)
+    try:
+        index = next(indices_iter)
+    except StopIteration:
+        return cls_default.from_labels(())
+
+    arrays = [index.values]
+
+    name_first = index.name
+    name_aligned = True
+
+    cls_first = index.__class__
+    cls_aligned = True
+
+    # if IndexHierarchy, collect index_types generators
+    if index.ndim == 2:
+        depth_first = index.depth
+        index_types_gen = [index._levels.index_types()] #type: ignore
+        index_types_aligned = True
+    else:
+        index_types_aligned = False
+
+    for index in indices_iter:
+        arrays.append(index.values)
+        if name_aligned and index.name != name_first:
+            name_aligned = False
+        if cls_aligned and index.__class__ != cls_first:
+            cls_aligned = False
+
+        if index_types_aligned and index.ndim == 2 and index.depth == depth_first:
+            index_types_gen.append(index._levels.index_types()) #type: ignore
+        else:
+            index_types_aligned = False
+
+    if index_types_aligned:
+        # all depths are already aligned
+        index_constructors = []
+        for types in zip(*index_types_gen):
+            if all(types[0] == t for t in types[1:]):
+                index_constructors.append(types[0])
+            else: # assume this is always a 1D index
+                index_constructors.append(cls_default)
+
+    if cls_aligned:
+        if cls_default.STATIC and not cls_first.STATIC:
+            # default is static but aligned is mutable
+            constructor = cls_first._IMMUTABLE_CONSTRUCTOR.from_labels #type: ignore
+        elif not cls_default.STATIC and cls_first.STATIC:
+            # default is mutable but aligned is static
+            constructor = cls_first._MUTABLE_CONSTRUCTOR.from_labels #type: ignore
+        else:
+            constructor = cls_first.from_labels
+    else:
+        constructor = cls_default.from_labels
+
+    name = name_first if name_aligned else None
+
+    # returns an immutable array
+    array = array_processor(arrays)
+
+    if index_types_aligned:
+        return constructor(array, name=name, index_constructors=index_constructors) #type: ignore
+    return constructor(array, name=name) #type: ignore
+
+def index_many_concat(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        ) -> tp.Optional[IndexBase]:
+    return _index_many_to_one(indices, cls_default, concat_resolved)
+
+def index_many_set(
+        indices: tp.Iterable[IndexBase],
+        cls_default: tp.Type[IndexBase],
+        union: bool,
+        ) -> tp.Optional[IndexBase]:
+    '''
+    Given multiple Index objects, concatenate them in order. Preserve name and index type if aligned.
+    '''
+    array_processor = partial(ufunc_set_iter,
+            union=union,
+            assume_unique=True)
+    return _index_many_to_one(indices, cls_default, array_processor)

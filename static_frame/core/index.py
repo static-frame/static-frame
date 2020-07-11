@@ -13,12 +13,15 @@ from automap import FrozenAutoMap
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import matmul
+from static_frame.core.container_util import key_from_container_key
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index_base import IndexBase
@@ -39,6 +42,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
@@ -184,13 +188,15 @@ class LocMap:
             labels: np.ndarray,
             positions: np.ndarray,
             key: GetItemKeyType,
-            offset: tp.Optional[int] = None
+            offset: tp.Optional[int] = None,
+            partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
             offset: in the contect of an IndexHierarchical, the iloc positions returned from this funcition need to be shifted.
+            partial_selection: if True and key is an iterable of labels that includes lables not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
@@ -218,7 +224,6 @@ class LocMap:
                 key = labels.astype(key.dtype) == key
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        # handles only lists and arrays; break out comparisons to avoid multiple
         is_array = isinstance(key, np.ndarray)
         is_list = isinstance(key, list)
 
@@ -227,22 +232,24 @@ class LocMap:
             if is_array and key.dtype.kind == DTYPE_DATETIME_KIND:
                 if labels.dtype != key.dtype:
                     labels_ref = labels.astype(key.dtype)
-                    # let Boolean key hit next branch
-                    key = reduce(operator_mod.or_,
-                            (labels_ref == k for k in key))
-                    # NOTE: may want to raise instead of support this
-                    # raise NotImplementedError(f'selecting {labels.dtype} with {key.dtype} is not presently supported')
+                    # let Boolean key advance to next branch
+                    key = reduce(operator_mod.or_, (labels_ref == k for k in key))
 
-            if is_array and key.dtype == bool:
+            if is_array and key.dtype is DTYPE_BOOL:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
 
-            # map labels to integer positions
-            # NOTE: we may miss the opportunity to get a reference from values when we have contiguous keys
+            # map labels to integer positions, return a list of integer positions
+            # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
+            # NOTE: we do more branching here to optimize performance
+            if partial_selection:
+                if offset_apply:
+                    return [label_to_pos[k] + offset for k in key if k in label_to_pos] #type: ignore
+                return [label_to_pos[k] for k in key if k in label_to_pos]
             if offset_apply:
-                return [label_to_pos[x] + offset for x in key] #type: ignore
-            return [label_to_pos[x] for x in key]
+                return [label_to_pos[k] + offset for k in key] #type: ignore
+            return [label_to_pos[k] for k in key]
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
         if offset_apply:
@@ -346,19 +353,18 @@ class Index(IndexBase):
                 raise ErrorInitIndex('invalid label dtype for this Index')
             return immutable_filter(labels)
 
-        if hasattr(labels, '__len__'): # not a generator, not an array
-            # resolving the dtype is expensive, pass if possible
-            if len(labels) == 0: #type: ignore
+        # labels may be an expired generator, must use the mapping
+        labels_src = labels if hasattr(labels, '__len__') else mapping
+
+        if len(labels_src) == 0: #type: ignore
+            if dtype is None:
                 labels = EMPTY_ARRAY
             else:
-                labels, _ = iterable_to_array_1d(labels, dtype=dtype)
-        else: # labels may be an expired generator, must use the mapping
-            if len(mapping) == 0: #type: ignore
-                labels = EMPTY_ARRAY
-            else:
-                labels, _ = iterable_to_array_1d(mapping, dtype=dtype) #type: ignore
-        # all arrays are immutable
-        # assert labels.flags.writeable == False
+                labels = np.empty(0, dtype=dtype)
+                labels.flags.writeable = False #type: ignore
+        else: # resolving the dtype is expensive, pass if possible
+            labels, _ = iterable_to_array_1d(labels_src, dtype=dtype) #type: ignore
+
         return labels
 
     @staticmethod
@@ -458,7 +464,9 @@ class Index(IndexBase):
                 except ValueError: # Automap will raise ValueError of non-unique values are encountered
                     pass
                 if self._map is None:
-                    raise ErrorInitIndex(f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})')
+                    raise ErrorInitIndexNonUnique(
+                            f'labels ({len(tuple(labels))}) have non-unique values ({len(set(labels))})'
+                            )
                 size = len(self._map)
             else: # must assume labels are unique
                 # labels must not be a generator, but we assume that internal clients that provided loc_is_iloc will not give a generator
@@ -611,6 +619,56 @@ class Index(IndexBase):
         if self._recache:
             self._update_array_cache()
         return bool(self._labels.size)
+
+    #---------------------------------------------------------------------------
+    # set operations
+
+    def _ufunc_set(self: I,
+            func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
+            other: tp.Union['IndexBase', 'Series']
+            ) -> I:
+        '''
+        Utility function for preparing and collecting values for Indices to produce a new Index.
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        if self.equals(other, compare_dtype=True):
+            # compare dtype as result should be resolved, even if values are the same
+            if (func is self.__class__._UFUNC_INTERSECTION or
+                    func is self.__class__._UFUNC_UNION):
+                # NOTE: this will delegate name attr
+                return self if self.STATIC else self.copy()
+            elif func is self.__class__._UFUNC_DIFFERENCE:
+                if self._DTYPE is None: #type: ignore
+                    # an index with a variable dtype accepts a dtype argument
+                    return self.__class__((), dtype=self.dtype) #type: ignore
+                # if self._DTYPE is defined, the default constructor does not take a dtype argument
+                return self.__class__(())
+
+        if isinstance(other, np.ndarray):
+            operand = other
+            assume_unique = False
+        elif isinstance(other, IndexBase):
+            operand = other.values
+            assume_unique = True # can always assume unique
+        elif isinstance(other, ContainerOperand):
+            operand = other.values
+            assume_unique = False
+        else:
+            raise NotImplementedError(f'no support for {other}')
+
+        cls = self.__class__
+
+        # using assume_unique will permit retaining order when operands are identical
+        labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
+
+        if id(labels) == id(self.values):
+            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
+            return cls(self)
+
+        return cls.from_labels(labels)
+
 
     #---------------------------------------------------------------------------
     def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
@@ -829,7 +887,8 @@ class Index(IndexBase):
     def loc_to_iloc(self,
             key: GetItemKeyType,
             offset: tp.Optional[int] = None,
-            key_transform: KeyTransformType = None
+            key_transform: KeyTransformType = None,
+            partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Note: Boolean Series are reindexed to this index, then passed on as all Boolean arrays.
@@ -847,20 +906,8 @@ class Index(IndexBase):
 
         if isinstance(key, ILoc):
             return key.key
-        elif isinstance(key, Index):
-            # if an Index, we simply use the values of the index
-            key = key.values
-        elif isinstance(key, Series):
-            if key.dtype == bool:
-                if not key.index.equals(self):
-                    key = key.reindex(self,
-                            fill_value=False,
-                            check_equals=False,
-                            ).values
-                else: # the index is equal
-                    key = key.values
-            else:
-                key = key.values
+
+        key = key_from_container_key(self, key)
 
         if self._map is None: # loc_is_iloc
             if isinstance(key, np.ndarray):
@@ -882,7 +929,8 @@ class Index(IndexBase):
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
                 key=key,
-                offset=offset
+                offset=offset,
+                partial_selection=partial_selection,
                 )
 
     def _extract_iloc(self,
@@ -1080,7 +1128,7 @@ class Index(IndexBase):
                     & isna_array(other.values, include_none=False))
             eq[isna_both] = True
 
-        if not eq.all():
+        if not eq.all(): # avoid returning a NumPy Bool
             return False
         return True
 
@@ -1119,6 +1167,32 @@ class Index(IndexBase):
             values.flags.writeable = False
         return self.__class__(values, name=self._name)
 
+    @doc_inject(selector='fillna')
+    def fillna(self, value: tp.Any) -> 'Index':
+        '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
+
+        Args:
+            {value}
+        '''
+        values = self.values # force usage of property for cache update
+        sel = isna_array(values)
+        if not np.any(sel):
+            return self if self.STATIC else self.copy()
+
+        value_dtype = np.array(value).dtype
+        assignable_dtype = resolve_dtype(value_dtype, values.dtype)
+
+        if values.dtype == assignable_dtype:
+            assigned = values.copy()
+        else:
+            assigned = values.astype(assignable_dtype)
+
+        assigned[sel] = value
+        assigned.flags.writeable = False
+
+        return self.__class__(assigned, name=self._name)
+
+
     #---------------------------------------------------------------------------
     # export
 
@@ -1129,11 +1203,16 @@ class Index(IndexBase):
         from static_frame import Series
         return Series(self.values, name=self._name)
 
+
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
-        '''Return an IndexHierarhcy with an added root level.
+        '''Return an IndexHierarchy with an added root level.
         '''
         from static_frame import IndexHierarchy
-        return IndexHierarchy.from_tree({level: self.values})
+        from static_frame import IndexHierarchyGO
+
+        cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
+        return cls.from_tree({level: self.values})
+
 
     def to_pandas(self) -> 'pandas.Index':
         '''Return a Pandas Index.

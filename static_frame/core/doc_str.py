@@ -7,7 +7,18 @@ import typing as tp
 
 from static_frame.core.util import AnyCallable
 
+#-------------------------------------------------------------------------------
+# common strings
 #NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
+INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
+
+LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
+
+ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
+
+
+#-------------------------------------------------------------------------------
+# full parameter definitions
 
 OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
@@ -15,15 +26,21 @@ OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_fra
 
 OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
 
-INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
-
-LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
-
-ILOC_SELECTOR = '''An iloc selector, either an index, a list of indicces, a slice of indices, or a Boolean array.'''
 
 DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
 
 AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default.'''
+
+CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+
+NAME = 'name: A hashable object to label the container.'
+
+DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used."
+
+INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function to create the :obj:`Index` applied to the rows."
+
+COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
+
 
 class DOC_TEMPLATE:
 
@@ -118,10 +135,9 @@ class DOC_TEMPLATE:
             )
 
     constructor_frame = dict(
-            dtypes='''dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name. If a dtype is given as None, NumPy's default type determination will be used.
-            ''',
-            name='name: A hashable object to name the Frame.',
-            consolidate_blocks='consolidate_blocks: Optionally consolidate adjacent same-typed columns into contiguous arrays.'
+            dtypes=DTYPES,
+            name=NAME,
+            consolidate_blocks=CONSOLIDATE_BLOCKS
     )
 
     duplicated = dict(
@@ -142,6 +158,34 @@ class DOC_TEMPLATE:
             compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
             skipna="skipna: If True, comparisons between missing valeus are equal.",
             )
+
+    from_any = dict(
+            fp='fp: A string or :obj:`Path` to read.',
+            index_depth='index_depth: integer specification of how many columns to use in forming the index. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
+            columns_depth='columns_depth: integer specification of how many rows to use in forming the columns. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
+            columns_select='columns_select: An optional iterable of column names to load.',
+            consolidate_blocks=CONSOLIDATE_BLOCKS,
+            name=NAME,
+            dtypes=DTYPES,
+            )
+
+
+    from_pandas = dict(
+            own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
+            own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',
+            own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
+            columns_constructor=COLUMNS_CONSTRUCTOR,
+            index_constructor=INDEX_CONSTRUCTOR,
+            consolidate_blocks=CONSOLIDATE_BLOCKS,
+            )
+
+
+    fillna = dict(
+            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
+            value='value: Value to be used to replace missing values (NaN or None).',
+            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+            )
+
     insert = dict(
             key_before="key: Label before which the new container will be inserted.",
             key_after="key: Label after which the new container will be inserted.",
@@ -215,32 +259,18 @@ class DOC_TEMPLATE:
             args = f'''
         Args:
             labels: {INDEX_INITIALIZER}
-            name: A hashable object to name the Index.
+            {NAME}
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
             {DTYPE_SPECIFIER}'''
             )
 
     index_date_time_init = dict(
-            args = '''
+            args = f'''
         Args:
             labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
-            name: A hashable object to name the Index.
+            {NAME}
             '''
             )
-
-    from_pandas = dict(
-            own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
-            own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',
-            own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
-            )
-
-
-    fillna = dict(
-            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
-            value='value: Value to be used to replace missing values (NaN or None).',
-            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
-    )
-
 
 
     mloc = dict(

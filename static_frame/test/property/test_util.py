@@ -8,7 +8,7 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given
 
-from static_frame.core.util import DTYPE_NAN_KIND
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property.strategies import DTGroup
 
 from static_frame.test.property.strategies import get_shape_1d2d
@@ -351,14 +351,11 @@ class TestUnit(TestCase):
             self.assertSetEqual(set(post), (set(arrays[0]).difference(set(arrays[1]))))
 
 
+    #---------------------------------------------------------------------------
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_union2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.union2d(arrays[0], arrays[1], assume_unique=False)
-        if post.dtype == object:
-            self.assertTrue(post.ndim == 1)
-        else:
-            self.assertTrue(post.ndim == 2)
-
+        self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0]))
                 | set(util.array2d_to_tuples(arrays[1])))
@@ -368,24 +365,17 @@ class TestUnit(TestCase):
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_intersect2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
-        if post.dtype == object:
-            self.assertTrue(post.ndim == 1)
-        else:
-            self.assertTrue(post.ndim == 2)
-
+        self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0]))
                 & set(util.array2d_to_tuples(arrays[1])))
                 )
 
+
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
     def test_setdiff2d(self, arrays: tp.Sequence[np.ndarray]) -> None:
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
-        if post.dtype == object:
-            self.assertTrue(post.ndim == 1)
-        else:
-            self.assertTrue(post.ndim == 2)
-
+        self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
                 set(util.array2d_to_tuples(arrays[0])).difference(
                 set(util.array2d_to_tuples(arrays[1]))))
@@ -396,12 +386,9 @@ class TestUnit(TestCase):
 
         for union in (True, False):
             post = util.ufunc_set_iter(arrays, union=union)
-            if post.dtype == object:
-                # returned object arrays might be 2D or 1D of tuples
-                self.assertTrue(post.ndim in (1, 2))
-            else:
-                self.assertTrue(post.ndim == 2)
+            self.assertTrue(post.ndim == 2)
 
+    #---------------------------------------------------------------------------
     @given(get_array_1d2d(min_rows=1, min_columns=1))
     def test_isin(self, array: np.ndarray) -> None:
 
@@ -410,7 +397,7 @@ class TestUnit(TestCase):
 
         if array.ndim == 1:
             sample = array[0]
-            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+            if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
             else:
                 for factory in container_factory:
@@ -418,7 +405,7 @@ class TestUnit(TestCase):
                     self.assertTrue(result[0])
         elif array.ndim == 2:
             sample = array[0, 0]
-            if np.array(sample).dtype.kind in DTYPE_NAN_KIND and np.isnan(sample):
+            if np.array(sample).dtype.kind in DTYPE_INEXACT_KINDS and np.isnan(sample):
                 pass
             else:
                 for factory in container_factory:

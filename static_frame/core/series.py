@@ -869,12 +869,13 @@ class Series(ContainerOperand):
     def fillna(self,
             value: tp.Any # an element or a Series
             ) -> 'Series':
-        '''Return a new :obj:`static_frame.Series` after replacing null (NaN or None) with the supplied value. The value can be element or
+        '''Return a new :obj:`Series` after replacing null (NaN or None) with the supplied value. The value can be an element or :obj:`Series`.
 
         Args:
             {value}
         '''
-        sel = isna_array(self.values)
+        values = self.values
+        sel = isna_array(values)
         if not np.any(sel):
             return self
 
@@ -897,12 +898,12 @@ class Series(ContainerOperand):
         else:
             value_dtype = np.array(value).dtype
 
-        assignable_dtype = resolve_dtype(value_dtype, self.values.dtype)
+        assignable_dtype = resolve_dtype(value_dtype, values.dtype)
 
-        if self.values.dtype == assignable_dtype:
-            assigned = self.values.copy()
+        if values.dtype == assignable_dtype:
+            assigned = values.copy()
         else:
-            assigned = self.values.astype(assignable_dtype)
+            assigned = values.astype(assignable_dtype)
 
         assigned[sel] = value
         assigned.flags.writeable = False

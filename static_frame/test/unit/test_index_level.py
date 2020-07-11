@@ -21,6 +21,8 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import TestCase
 
 
+from static_frame.core.util import EMPTY_ARRAY
+
 class TestUnit(TestCase):
 
     def test_index_level_a(self) -> None:
@@ -364,6 +366,24 @@ class TestUnit(TestCase):
                 [['A', 'x'], ['A', 'y'], ['B', 'x'], ['B', 'y'], [1, 2]])
 
 
+    def test_index_level_append_c(self) -> None:
+
+        levels1 = IndexLevelGO(IndexGO(()), depth_reference=3)
+        levels1.append(('III', 'A', 1))
+
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(0))), 1)
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(1))), 1)
+        self.assertEqual(len(tuple(levels1.dtypes_at_depth(2))), 1)
+
+        self.assertEqual(levels1.values.tolist(),
+                [['III', 'A', 1]]
+                )
+
+        levels1.append(('III', 'A', 2))
+
+        self.assertEqual(levels1.values.tolist(),
+                [['III', 'A', 1], ['III', 'A', 2]])
+
 
     #---------------------------------------------------------------------------
 
@@ -638,14 +658,42 @@ class TestUnit(TestCase):
 
     def test_index_levels_to_type_blocks_a(self) -> None:
 
-        levels1 = IndexLevel(Index(()), targets=None)
+        levels1 = IndexLevel(Index(()), targets=None, depth_reference=3)
         tb = levels1.to_type_blocks()
         # NOTE: this will be updated to (0, 0) with IndexLevel support for zero size
-        self.assertEqual(tb.shape, (0, 1))
+        self.assertEqual(tb.shape, (0, 3))
+
+    #---------------------------------------------------------------------------
+
+    def test_index_level_depth_reference_a(self) -> None:
+        dtype = np.dtype
+
+        lvl1 = IndexLevel(Index(()), depth_reference=3)
+        self.assertEqual(lvl1.depth, 3)
+
+        self.assertEqual(tuple(lvl1.dtype_per_depth()),
+                (dtype('float64'), dtype('float64'), dtype('float64')))
+
+        self.assertEqual(tuple(lvl1.labels_at_depth(0)), (EMPTY_ARRAY,))
+
+        self.assertEqual(lvl1.values_at_depth(0).tolist(), EMPTY_ARRAY.tolist())
+
+        tb = lvl1.to_type_blocks()
+        self.assertEqual(tb.shape, (0, 3))
+
+    #---------------------------------------------------------------------------
+    def test_index_level_from_depth_a(self) -> None:
+
+        lvl1 = IndexLevel.from_depth(4)
+        self.assertEqual(lvl1.depth, 4)
+        self.assertEqual(len(lvl1), 0)
+
+
+
+
 
 
 
 if __name__ == '__main__':
     unittest.main()
-
 

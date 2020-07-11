@@ -630,7 +630,7 @@ class InterfaceRecord(tp.NamedTuple):
                     terminus_doc,
                     reference,
                     use_signature=True,
-                    is_attr=False,
+                    is_attr=True,
                     delegate_reference=terminus_reference,
                     signature_no_args=signature_no_args
                     )

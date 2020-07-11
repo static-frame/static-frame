@@ -8,7 +8,7 @@ from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KIND
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import UFunc
 
@@ -91,7 +91,7 @@ class InterfaceString(Interface[TContainer]):
         Block-wise processing of blocks after optional string conversion. Non-string conversion is necessary for ``decode``.
         '''
         for block in blocks:
-            if astype_str and block.dtype not in DTYPE_STR_KIND:
+            if astype_str and block.dtype not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
             array = func(block, *args)
             array.flags.writeable = False
@@ -108,7 +108,7 @@ class InterfaceString(Interface[TContainer]):
         Element-wise processing of a methods on objects in a block, with pre-insert conversion to a tuple.
         '''
         for block in blocks:
-            if block.dtype not in DTYPE_STR_KIND:
+            if block.dtype not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable

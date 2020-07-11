@@ -50,11 +50,19 @@ Packages: https://pypi.org/project/static-frame
 Why Immutable Data?
 -------------------------------
 
-The following example, executed in a low-memory environment (using ``prlimit``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame to itself without copying underlying data. By using immutable NumPy arrays, StaticFrame can perform these operations in the same low-memory environment. By reuseing immutable arrays without copying, StaticFrame can achieve more efficient memory usage.
+The following example, executed in a low-memory environment (using ``prlimit``), shows how Pandas cannot re-label columns of a DataFrame or concatenate a DataFrame to itself without copying underlying data. By using immutable NumPy arrays, StaticFrame can perform these operations in the same low-memory environment. By reusing immutable arrays without copying, StaticFrame can achieve more efficient memory usage.
 
-.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-concat.svg
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-low-memory-ops-verbose.svg
    :align: center
 
+
+Colorful Types
+-------------------------------
+
+Unexpected type coercions can expose errors or degrade performance. StaticFrame's container display provides full visibility into the types in a ``Frame``, and provides a variety of ways to configure the presentation and color of those types.
+
+.. image:: https://raw.githubusercontent.com/InvestmentSystems/static-frame/master/doc/images/animate-display-config.svg
+   :align: center
 
 
 
@@ -416,7 +424,7 @@ Unlike with Pandas, StaticFrame ``Index`` objects always enforce uniqueness (the
 
 >>> frame_go.set_index('albumId')
 Traceback (most recent call last):
-static_frame.core.exception.ErrorInitIndex: labels (5000) have non-unique values (100)
+static_frame.core.exception.ErrorInitIndexNonUnique: labels (5000) have non-unique values (100)
 
 
 For a data set such as the one used in this example, a hierarchical index, by "albumId" and "track", is practical. StaticFrame implements hierarchical indices as ``IndexHierarchy`` objects. The ``Frame.set_index_hierarchy()`` method, given columns in a ``Frame``, can be used to create a hierarchical index:

@@ -34,17 +34,48 @@ class LineGen:
     def lines() -> LineIter:
         raise NotImplementedError()
 
+    @classmethod
+    def get_animate_command(cls) -> str:
+        if cls.CMD_PREFIX:
+            return f"{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {cls.__name__}"
+        return f"python3 doc/animate/animator.py --animate {cls.__name__}"
+
+
+
 class DisplayConfig(LineGen):
 
     @staticmethod
     def lines() -> LineIter:
-        yield 'import numpy as np'
-        yield 'import pandas as pd'
         yield 'import static_frame as sf'
         yield PAUSE_SHORT
 
+        yield "f = sf.FrameGO.from_dict_records_items((('charm', {'symbol':'c', 'mass':1.3}), ('strange', {'symbol':'s', 'mass':0.1})))"
+        yield "f['target'] = f['mass'] > 1"
+        yield 'f'
+        yield PAUSE_SHORT
 
-class LowMemoryOps(LineGen):
+
+        yield "sf.DisplayActive.set(sf.DisplayConfig(type_color_float='orange'))"
+        yield 'f'
+        yield PAUSE_SHORT
+
+        yield "sf.DisplayActive.update(type_color_str='lightcoral', type_color_bool='mediumpurple')"
+        yield 'f'
+        yield PAUSE_SHORT
+
+
+        yield "sf.DisplayActive.update(type_color_index=0x4682b4, type_color_frame=0xbfff)"
+        yield 'f'
+        yield PAUSE_SHORT
+
+        yield 'f.display(sf.DisplayConfig(type_color=False))'
+        yield PAUSE_SHORT
+
+        yield 'f.display(sf.DisplayConfig(type_show=False, include_index=False))'
+        yield PAUSE_FINAL
+
+
+class LowMemoryOpsVerbose(LineGen):
     CMD_PREFIX = 'prlimit --as=800000000' # shown to cause expected memory error
 
     @staticmethod
@@ -144,10 +175,10 @@ class Animator:
 
         for line in func():
             if line is PAUSE_SHORT:
-                cls.pause(0.5)
+                cls.pause(1)
                 continue
             if line is PAUSE_LONG:
-                cls.pause(2)
+                cls.pause(2.5)
                 continue
             if line is PAUSE_FINAL:
                 cls.pause(5)
@@ -163,6 +194,7 @@ class Animator:
             if isinstance(line, Comment):
                 continue
 
+            # NOTE: exec puts variables in this scope; pass globals and locals eval, exec
             try:
                 post = eval(line)
                 if post is not None:
@@ -179,10 +211,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
             formatter_class=argparse.RawDescriptionHelpFormatter,
             )
     p.add_argument('--animate',
-            help='Name of function to display the animation.',
+            help='Name of class to display the animation.',
             )
-    p.add_argument('--record',
-            help='Name of function to record.',
+    p.add_argument('--termtosvg',
+            help='Name of class to termtosvg.',
+            )
+    p.add_argument('--asciinema',
+            help='Name of class to asciinema.',
             )
     return p
 
@@ -190,27 +225,34 @@ def get_arg_parser() -> argparse.ArgumentParser:
 if __name__ == '__main__':
 
     options = get_arg_parser().parse_args()
-    line_gen = {cls.__name__: cls for cls in (LowMemoryOps, DisplayConfig)}
+    line_gen = {cls.__name__: cls for cls in (LowMemoryOpsVerbose, DisplayConfig)}
 
     if options.animate:
         cls = line_gen[options.animate]
         Animator.main(cls.lines)
 
-    elif options.record:
-        cls = line_gen[options.record]
-
-        if cls.CMD_PREFIX:
-            command = f"{cls.CMD_PREFIX} python3 doc/animate/animator.py --animate {options.record}"
-        else:
-            command = f"python3 doc/animate/animator.py --animate {options.record}"
+    elif options.termtosvg:
+        cls = line_gen[options.termtosvg]
 
         cmd = ['termtosvg',
             '--template',
             'window_frame',
-            '-g', '90x20',
-            '--loop-delay', '5000',
+            '-g', '80x18',
+            '--loop-delay', '2000',
             '--command',
-            command,
+            cls.get_animate_command(),
             '/tmp/term.svg',
             ]
         subprocess.run(cmd)
+
+    elif options.asciinema:
+        cls = line_gen[options.asciinema]
+
+        cmd = ['asciinema',
+            'rec',
+            '--command',
+            cls.get_animate_command(),
+            '/tmp/term.cast',
+            ]
+        subprocess.run(cmd)
+        # NOTE: can upload with asciinema upload /tmp/term.cast

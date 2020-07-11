@@ -100,7 +100,9 @@ class IndexDatetime(Index):
 
     def loc_to_iloc(self,  # type: ignore
             key: GetItemKeyType,
+            *,
             offset: tp.Optional[int] = None,
+            partial_selection: bool = False,
             ) -> GetItemKeyType:
         '''
         Specialized for IndexData indices to convert string data representations into np.datetime64 objects as appropriate.
@@ -109,7 +111,9 @@ class IndexDatetime(Index):
         return Index.loc_to_iloc(self,
                 key=key,
                 offset=offset,
-                key_transform=key_to_datetime_key)
+                key_transform=key_to_datetime_key,
+                partial_selection=partial_selection,
+                )
 
     #---------------------------------------------------------------------------
     def to_pandas(self) -> 'pandas.DatetimeIndex':
