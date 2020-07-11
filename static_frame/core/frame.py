@@ -1381,6 +1381,48 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    def from_txt(cls,
+            fp: PathSpecifierOrFileLikeOrIterator,
+            *,
+            delimiter: str,
+            index_depth: int = 0,
+            index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            columns_depth: int = 1,
+            skip_header: int = 0,
+            skip_footer: int = 0,
+            quote_char: str = '"',
+            encoding: tp.Optional[str] = None,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            ) -> 'Frame':
+        data = list(csv.reader(fp, delimiter=delimiter, quotechar=quote_char))
+
+        array = np.array(data[columns_depth:])
+
+        #Transpose to column vector (does not copy: https://stackoverflow.com/a/16406968/1286571)
+        array = array.T
+
+        # Build columns
+        columns_data = data[:columns_depth]
+        own_columns = False
+        if columns_depth == 1:
+            columns = cls._COLUMNS_CONSTRUCTOR(columns_data[0])
+            own_columns = True
+        else:
+            columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns_data)
+            own_columns = True
+
+        return cls(
+            data=array,
+            columns=columns,
+            own_data=True,
+            own_columns=own_columns,
+            name=name,
+        )
+
+    @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
             fp: PathSpecifierOrFileLikeOrIterator,
@@ -1421,7 +1463,6 @@ class Frame(ContainerOperand):
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.genfromtxt.html
 
         # TODO: add columns_select as usecols styles selective loading
-
         if skip_header < 0:
             raise ErrorInitFrame('skip_header must be greater than or equal to 0')
 
