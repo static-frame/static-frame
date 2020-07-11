@@ -25,7 +25,7 @@ def test_from_tsv(tmpdir) -> None:
     # fp = Path('/Users/tomrutherford/Documents/persistent_tmp/r1000c5_no_i.tsv')
     infp = Path(tmpdir) / 'infp.txt'
     simple_frame = sf.Frame.from_records(
-        [(1, 2, 3), (1, 2, 3), (1, 2, 3)],
+        [(1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)],
         columns=['11', '22', '33'],
     )
     simple_frame.to_tsv(infp, include_index=False)

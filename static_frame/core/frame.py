@@ -1366,11 +1366,6 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         data = list(csv.reader(fp, delimiter=delimiter, quotechar=quote_char))
 
-        array = np.array(data[columns_depth:])
-
-        #Transpose to column vector (does not copy: https://stackoverflow.com/a/16406968/1286571)
-        array = array.T
-
         # Build columns
         columns_data = data[:columns_depth]
         own_columns = False
@@ -1382,7 +1377,7 @@ class Frame(ContainerOperand):
             own_columns = True
 
         return cls(
-            data=array,
+            data=np.array(data[columns_depth:]),
             columns=columns,
             own_data=True,
             own_columns=own_columns,

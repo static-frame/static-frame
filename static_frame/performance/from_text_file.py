@@ -78,12 +78,24 @@ class ReadTsv(PerfTest):
         return sf.Frame.from_tsv(SampleData.path_r1000c5_no_i)
 
 
-class ReadCsv(PerfTest):
+# class ReadCsv(PerfTest):
+
+    # @classmethod
+    # def pd(cls):
+        # return pd.read_csv(SampleData.path_r1000c5_no_i)
+
+    # @classmethod
+    # def sf(cls):
+        # return sf.Frame.from_csv(SampleData.path_r1000c5_no_i)
+
+
+class ReadTxt(PerfTest):
 
     @classmethod
     def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_no_i)
+        return pd.read_csv(SampleData.path_r1000c5_no_i, sep='\t')
 
     @classmethod
     def sf(cls):
-        return sf.Frame.from_csv(SampleData.path_r1000c5_no_i)
+        with open(SampleData.path_r1000c5_no_i) as f:
+            return sf.Frame.from_txt(f, delimiter='\t')
