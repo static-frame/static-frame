@@ -20,6 +20,21 @@ class SampleData:
     _store: tp.Dict[str, tp.Any] = {}
     _td = pathlib.Path(tempfile.gettempdir()) / f'{__name__}-of-{getpass.getuser()}'
 
+    constructor_to_suffix = {
+            sf.Frame.to_tsv: '.tsv',
+            sf.Frame.to_csv: '.csv',
+    }
+
+    @classmethod
+    def create(cls) -> None:
+        '''Aka __init__'''
+        shutil.rmtree(cls._td, ignore_errors=True)
+        cls._td.mkdir()
+        print(cls._td)
+
+        cls.r1000c5 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 1000, 5)
+        cls.r10000c50 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 10000, 50)
+
     @staticmethod
     def _get_random_strings(count: int, min_len=1, max_len=20, unique=False):
         s = []
@@ -55,29 +70,32 @@ class SampleData:
         return sf.Frame.from_concat(series, columns=cls._get_random_strings(n_cols, unique=True), axis=1)
 
     @classmethod
-    def create(cls) -> None:
-        '''Aka __init__'''
-        shutil.rmtree(cls._td, ignore_errors=True)
-        cls._td.mkdir()
-        print(cls._td)
+    def create_frames_if_not_exists(cls, base_target: pathlib.Path, n_rows: int, n_cols: int):
+        f = cls.random_frame(n_rows, n_cols)
+        constructor_to_target = {k: base_target.with_suffix(v) for k, v in cls.constructor_to_suffix.items()}
 
-        cls.frame_r1000c5_no_i = cls.random_frame(1000, 5)
-        cls.path_r1000c5_tsv = cls._td / 'r1000c5.tsv'
-        cls.path_r1000c5_csv = cls._td / 'r1000c5.csv'
-        cls.frame_r1000c5_no_i.to_tsv(cls.path_r1000c5_tsv, include_index=False)
-        cls.frame_r1000c5_no_i.to_csv(cls.path_r1000c5_csv, include_index=False)
+        if not all(t.exists() for t in constructor_to_target.values()):
+            for c, t in constructor_to_target.items():
+                c(f, t, include_index=False)
+        return {p.suffix: p for p in constructor_to_target.values()}
 
-        f = cls.random_frame(10000, 50)
-        cls.path_r10000c50_tsv = cls._td / 'r10000c50_no_i.tsv'
-        cls.path_r10000c50_csv = cls._td / 'r10000c50_no_i.csv'
-        f.to_tsv(cls.path_r10000c50_tsv, include_index=False)
-        f.to_csv(cls.path_r10000c50_csv, include_index=False)
 
-        # f = cls.random_frame(1000, 50000)
-        # cls.r1000c50000_tsv = cls._td / 'r1000c50000_no_i.tsv'
-        # cls.r1000c50000_csv = cls._td / 'r1000c50000_no_i.csv'
-        # f.to_tsv(cls.r1000c50000_tsv, include_index=False)
-        # f.to_csv(cls.r1000c50000_csv, include_index=False)
+
+# Build performance classes for all frames
+sizes = (
+    'r1000c5',
+    'r10000c50',
+)
+for size in sizes:
+    for suffix in SampleData.constructor_to_suffix.values():
+        nodot = suffix[1:]
+        # paths = getattr(SampleData, size)
+
+        name = f'Read_{nodot}_{size}'
+
+
+        class_ = type()
+
 
 
 class ReadTsv_r1000c5(PerfTest):
