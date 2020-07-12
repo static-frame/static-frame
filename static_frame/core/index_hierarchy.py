@@ -802,10 +802,6 @@ class IndexHierarchy(IndexBase):
         # using assume_unique will permit retaining order when operands are identical
         labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
 
-        if id(labels) == id(self.values):
-            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-            return cls(self)
-
         # derive index_constructors for IndexHierarchy
         index_constructors: tp.Optional[tp.Sequence[tp.Type[IndexBase]]]
 

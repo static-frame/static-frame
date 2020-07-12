@@ -2,6 +2,12 @@ What is New in Static Frame
 ===============================
 
 
+0.6.25
+----------
+
+Added ``Frame.from_clipboard()`` and ``Frame.to_clipboard()``.
+
+
 0.6.24
 ----------
 

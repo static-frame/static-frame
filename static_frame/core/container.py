@@ -577,7 +577,7 @@ class ContainerBase(metaclass=ContainerMeta):
             compare_class: bool = False,
             skipna: bool = True,
             ) -> bool:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
 
