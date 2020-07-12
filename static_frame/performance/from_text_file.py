@@ -34,8 +34,8 @@ class SampleData:
         print(cls._td)
 
         cls.r1000c5 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 1000, 5)
-        cls.r10000c50 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 10000, 50)
-        cls.r10000c500 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 10000, 500)
+        cls.r10000c50 = cls.create_frames_if_not_exists(cls._td / 'r10000c50', 10000, 50)
+        cls.r10000c500 = cls.create_frames_if_not_exists(cls._td / 'r10000c500', 10000, 500)
 
     @staticmethod
     def _get_random_strings(count: int, min_len=1, max_len=20, unique=False):
@@ -82,9 +82,13 @@ class SampleData:
         return {p.suffix: p for p in constructor_to_target.values()}
 
 
+print = functools.lru_cache()(print)
+
+
 def run_method(func, data_name, suffix):
     path = getattr(SampleData, data_name)[suffix]
     with open(path) as f:
+        print(f'with {data_name}, {suffix}, calling {func} with {path}')
         return func(f)
 
 
