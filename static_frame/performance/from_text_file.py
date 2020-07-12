@@ -82,13 +82,9 @@ class SampleData:
         return {p.suffix: p for p in constructor_to_target.values()}
 
 
-print = functools.lru_cache()(print)
-
-
 def run_method(func, data_name, suffix):
     path = getattr(SampleData, data_name)[suffix]
     with open(path) as f:
-        print(f'with {data_name}, {suffix}, calling {func} with {path}')
         return func(f)
 
 
@@ -105,7 +101,7 @@ suffix_to_pd_read_method = {
 sizes = (
     'r1000c5',
     'r10000c50',
-    'r10000c500',
+    # 'r10000c500',
 )
 for size in sizes:
     for suffix in SampleData.constructor_to_suffix.values():
@@ -125,6 +121,7 @@ for size in sizes:
             methods = {
                 'pd': staticmethod(pandas),
                 'sf': staticmethod(frame),
+                'NUMBER': 10,
             }
 
             class_ = type(name, (PerfTest, ), methods)
