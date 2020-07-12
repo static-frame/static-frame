@@ -35,6 +35,7 @@ class SampleData:
 
         cls.r1000c5 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 1000, 5)
         cls.r10000c50 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 10000, 50)
+        cls.r10000c500 = cls.create_frames_if_not_exists(cls._td / 'r1000c5', 10000, 500)
 
     @staticmethod
     def _get_random_strings(count: int, min_len=1, max_len=20, unique=False):
@@ -81,35 +82,51 @@ class SampleData:
         return {p.suffix: p for p in constructor_to_target.values()}
 
 
+def run_method(func, data_name, suffix):
+    path = getattr(SampleData, data_name)[suffix]
+    with open(path) as f:
+        return func(f)
+
 
 # Build performance classes for all frames
 sf_method_names = ('guess', 'no_guess')
 suffix_to_sf_read_methods = {
-    '.tsv': (sf.Frame.from_tsv, functools.partial(sf.Frame.from_txt, delimiter='/t')),
+    '.tsv': (sf.Frame.from_tsv, functools.partial(sf.Frame.from_txt, delimiter='\t')),
     '.csv': (sf.Frame.from_csv, functools.partial(sf.Frame.from_txt, delimiter=',')),
 }
 suffix_to_pd_read_method = {
-    '.tsv': functools.partial(pd.read_csv, delimiter='/t'),
+    '.tsv': functools.partial(pd.read_csv, delimiter='\t'),
     '.csv': functools.partial(pd.read_csv, delimiter=','),
 }
 sizes = (
     'r1000c5',
     'r10000c50',
+    'r10000c500',
 )
 for size in sizes:
     for suffix in SampleData.constructor_to_suffix.values():
         for sf_name, sf_method in zip(sf_method_names, suffix_to_sf_read_methods[suffix]):
             nodot = suffix[1:]
-            # paths = getattr(SampleData, size)
 
-            name = f'Read_{nodot}_{size}_{sf_name}'
+            name = f'{size}_{nodot}_{sf_name}'
+            partial_kwargs = dict(
+
+                data_name=size,
+                suffix=suffix,
+            )
+
+            pandas = functools.partial(run_method, func=suffix_to_pd_read_method[suffix], **partial_kwargs)
+            frame = functools.partial(run_method, func=sf_method, **partial_kwargs)
 
             methods = {
-                'pd': classmethod(suffix_to_pd_read_method[suffix]),
-                'sf': classmethod(sf_method),
+                'pd': staticmethod(pandas),
+                'sf': staticmethod(frame),
             }
 
             class_ = type(name, (PerfTest, ), methods)
             globals()[name] = class_
+
+            # Remove the class_ variable so it doesn't show up in module namespace later.
+            del class_
 
 
