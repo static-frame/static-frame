@@ -134,7 +134,7 @@ class IndexBase(ContainerOperand):
 
     @property
     def ndim(self) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
     # constructors
@@ -245,7 +245,7 @@ class IndexBase(ContainerOperand):
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: tp.Union['IndexBase', 'Series']
             ) -> I:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
         '''
