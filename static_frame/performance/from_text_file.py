@@ -7,6 +7,7 @@ import string
 import itertools
 import random
 import sys
+import functools
 
 import numpy as np
 import static_frame as sf
@@ -82,110 +83,33 @@ class SampleData:
 
 
 # Build performance classes for all frames
+sf_method_names = ('guess', 'no_guess')
+suffix_to_sf_read_methods = {
+    '.tsv': (sf.Frame.from_tsv, functools.partial(sf.Frame.from_txt, delimiter='/t')),
+    '.csv': (sf.Frame.from_csv, functools.partial(sf.Frame.from_txt, delimiter=',')),
+}
+suffix_to_pd_read_method = {
+    '.tsv': functools.partial(pd.read_csv, delimiter='/t'),
+    '.csv': functools.partial(pd.read_csv, delimiter=','),
+}
 sizes = (
     'r1000c5',
     'r10000c50',
 )
 for size in sizes:
     for suffix in SampleData.constructor_to_suffix.values():
-        nodot = suffix[1:]
-        # paths = getattr(SampleData, size)
+        for sf_name, sf_method in zip(sf_method_names, suffix_to_sf_read_methods[suffix]):
+            nodot = suffix[1:]
+            # paths = getattr(SampleData, size)
 
-        name = f'Read_{nodot}_{size}'
+            name = f'Read_{nodot}_{size}_{sf_name}'
 
+            methods = {
+                'pd': classmethod(suffix_to_pd_read_method[suffix]),
+                'sf': classmethod(sf_method),
+            }
 
-        class_ = type()
-
-
-
-class ReadTsv_r1000c5(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_tsv, sep='/t')
-
-    @classmethod
-    def sf(cls):
-        return sf.Frame.from_tsv(SampleData.path_r1000c5_tsv)
+            class_ = type(name, (PerfTest, ), methods)
+            globals()[name] = class_
 
 
-class ReadCsv_r1000c5(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_csv)
-
-    @classmethod
-    def sf(cls):
-        return sf.Frame.from_csv(SampleData.path_r1000c5_csv)
-
-
-class ReadTxt_Csv_r1000c5(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_csv)
-
-    @classmethod
-    def sf(cls):
-        with open(SampleData.path_r1000c5_csv) as f:
-            return sf.Frame.from_txt(f, delimiter=',')
-
-
-class ReadTxt_Tsv_r1000c5(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_tsv, sep='\t')
-
-    @classmethod
-    def sf(cls):
-        with open(SampleData.path_r1000c5_tsv) as f:
-            return sf.Frame.from_txt(f, delimiter='\t')
-
-
-class ReadTsv_r1000c5(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r1000c5_tsv, sep='/t')
-
-    @classmethod
-    def sf(cls):
-        return sf.Frame.from_tsv(SampleData.path_r1000c5_tsv)
-
-########## r10000c50
-
-class ReadCsv_r10000c50(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r10000c50_csv)
-
-    @classmethod
-    def sf(cls):
-        return sf.Frame.from_csv(SampleData.path_r10000c50_csv)
-
-
-class ReadTxt_Csv_r10000c50(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r10000c50_csv)
-
-    @classmethod
-    def sf(cls):
-        with open(SampleData.path_r10000c50_csv) as f:
-            return sf.Frame.from_txt(f, delimiter=',')
-
-
-class ReadTxt_Tsv_r10000c50(PerfTest):
-
-    @classmethod
-    def pd(cls):
-        return pd.read_csv(SampleData.path_r10000c50_tsv, sep='\t')
-
-    @classmethod
-    def sf(cls):
-        with open(SampleData.path_r10000c50_tsv) as f:
-            return sf.Frame.from_txt(f, delimiter='\t')
