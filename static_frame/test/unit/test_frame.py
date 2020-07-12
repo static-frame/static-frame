@@ -42,6 +42,8 @@ from static_frame.core.frame import FrameAssign
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import skip_linux_no_display
+
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -5886,6 +5888,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f2)
 
     #---------------------------------------------------------------------------
+    @skip_linux_no_display #type: ignore
     def test_frame_to_clipboard_a(self) -> None:
         records = (
                 (2, 'a', False),
@@ -5898,7 +5901,6 @@ class TestUnit(TestCase):
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
         self.assertTrue(f2.equals(f1, compare_dtype=True))
-
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:

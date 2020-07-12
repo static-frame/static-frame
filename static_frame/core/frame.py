@@ -1617,6 +1617,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        # HOTE: this uses tk for now, as this is simpler than pyperclip, as used by pandas
+
         import tkinter as tk
         root = tk.Tk()
         root.withdraw()
