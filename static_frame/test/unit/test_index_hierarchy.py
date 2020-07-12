@@ -1523,7 +1523,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchy.from_labels(labels)
         with self.assertRaises(NotImplementedError):
-            _ = ih1.intersection(['a', 'b'])
+            _ = ih1.intersection(['a', 'b']) #type: ignore
 
 
 
