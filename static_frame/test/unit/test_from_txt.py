@@ -22,13 +22,13 @@ def test_frame_from_txt() -> None:
 
 
 def test_from_tsv(tmpdir) -> None:
-    # fp = Path('/Users/tomrutherford/Documents/persistent_tmp/r1000c5_no_i.tsv')
-    infp = Path(tmpdir) / 'infp.txt'
-    simple_frame = sf.Frame.from_records(
-        [(1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)],
-        columns=['11', '22', '33'],
-    )
-    simple_frame.to_tsv(infp, include_index=False)
+    infp = Path('/var/folders/w6/kz3x68k54sbg64gdkn2ph9nm0000gn/T/static_frame.performance.from_text_file-of-tomrutherford/r1000c5.csv')
+    # infp = Path(tmpdir) / 'infp.txt'
+    # simple_frame = sf.Frame.from_records(
+        # [(1, 2, 3), (1, 2, 3), (1, 2, 3), (1, 2, 3)],
+        # columns=['11', '22', '33'],
+    # )
+    # simple_frame.to_tsv(infp, include_index=False)
 
     with open(infp, 'r') as f:
         f1 = sf.Frame.from_txt(f, delimiter='\t')
