@@ -127,6 +127,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
+from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
@@ -744,7 +745,11 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False) -> 'Frame':
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_columns: bool = False,
+            ) -> 'Frame':
         '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
 
         Args:
@@ -770,7 +775,10 @@ class Frame(ContainerOperand):
                 columns=columns,
                 dtypes=dtypes,
                 name=name,
-                consolidate_blocks=consolidate_blocks
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_columns=own_columns,
                 )
 
     @classmethod
@@ -4566,6 +4574,64 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True
                 )
+
+    def pivot_stack(self,
+            depth_level: DepthLevelSpecifier = -1,
+            ) -> 'Frame':
+        '''
+        Args:
+            depth_level: selection of columns depth or depth to move onto the index.
+        '''
+        # might be more efficient using label_nodes_at_depth
+        values_src = self._blocks # avoid coercion of going to values
+        labels = self.columns.values_at_depth(depth_level)
+        index = self.index
+
+        # determine dtypes in advance so from_records does not have to
+        dtypes_src = self.dtypes # Series
+        dtypes_dst = (
+                resolve_dtype_iter((dtypes_src[label] for label in labels)),
+                )
+
+        def records_items():
+            for row_idx, outer in enumerate(index): # iter tuple or label
+                for col_idx, inner in enumerate(labels):
+                    # NOTE: inner might be tuples
+                    if index.depth == 1:
+                        key = outer, inner
+                    else:
+                        key = outer + (inner,)
+                    record = (values_src._extract(row_idx, col_idx),)
+                    yield key, record
+
+        # TODO: carry over index_construtors as possible
+        if index.depth == 1:
+            index_types = [index.__class__, Index]
+        else:
+            index_types = list(index._levels.index_types())
+            index_types.append(Index) # for new depth being added
+
+        index_constructor = partial(
+                IndexHierarchy.from_labels,
+                index_constructors=index_types,
+                name=index.name,
+                )
+
+        return self.from_records_items(
+                records_items(),
+                index_constructor=index_constructor,
+                name=self.name,
+                dtypes=dtypes_dst,
+                )
+
+
+    def pivot_unstack(self,
+            depth_level: DepthLevelSpecifier = -1,
+            ) -> 'Frame':
+        '''
+        Args:
+            depth_level: selection of index depth or depth to move onto the columns.
+        '''
 
     #---------------------------------------------------------------------------
     def _join(self,

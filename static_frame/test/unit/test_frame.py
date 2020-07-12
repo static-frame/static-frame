@@ -9899,6 +9899,43 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_pivot_stack_a(self) -> None:
+
+        f1 = Frame.from_records(
+                [[0, 'w'], [1, 'x'], [2, 'y'], [3, 'z']],
+                columns=('a', 'b'),
+                index=IndexHierarchy.from_product(('I', 'II'), (1, 2), name='foo'),
+                name='bar'
+                )
+        f2 = f1.pivot_stack()
+        self.assertEqual(f2.to_pairs(0),
+                    ((0, ((('I', 1, 'a'), 0), (('I', 1, 'b'), 'w'), (('I', 2, 'a'), 1), (('I', 2, 'b'), 'x'), (('II', 1, 'a'), 2), (('II', 1, 'b'), 'y'), (('II', 2, 'a'), 3), (('II', 2, 'b'), 'z'))),)
+                    )
+
+        self.assertEqual(f2.index.name, 'foo')
+        self.assertEqual(f2.name, 'bar')
+
+
+    def test_frame_pivot_stack_b(self) -> None:
+
+        f1 = Frame.from_records(
+                np.arange(16).reshape(8, 2),
+                columns=('a', 'b'),
+                index=IndexHierarchy.from_product(
+                        ('foo', 'bar'),
+                        IndexDate.from_date_range('2000-01-01', '2000-01-04')),
+                )
+
+        f2 = f1.pivot_stack()
+        self.assertEqual(f2.index.index_types.values.tolist(),
+                [Index, IndexDate, Index]
+                )
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((('foo', datetime.date(2000, 1, 1), 'a'), 0), (('foo', datetime.date(2000, 1, 1), 'b'), 1), (('foo', datetime.date(2000, 1, 2), 'a'), 2), (('foo', datetime.date(2000, 1, 2), 'b'), 3), (('foo', datetime.date(2000, 1, 3), 'a'), 4), (('foo', datetime.date(2000, 1, 3), 'b'), 5), (('foo', datetime.date(2000, 1, 4), 'a'), 6), (('foo', datetime.date(2000, 1, 4), 'b'), 7), (('bar', datetime.date(2000, 1, 1), 'a'), 8), (('bar', datetime.date(2000, 1, 1), 'b'), 9), (('bar', datetime.date(2000, 1, 2), 'a'), 10), (('bar', datetime.date(2000, 1, 2), 'b'), 11), (('bar', datetime.date(2000, 1, 3), 'a'), 12), (('bar', datetime.date(2000, 1, 3), 'b'), 13), (('bar', datetime.date(2000, 1, 4), 'a'), 14), (('bar', datetime.date(2000, 1, 4), 'b'), 15))),)
+                )
+
 if __name__ == '__main__':
     unittest.main()
 
