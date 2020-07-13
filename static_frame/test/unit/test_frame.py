@@ -9936,6 +9936,24 @@ class TestUnit(TestCase):
                 ((0, ((('foo', datetime.date(2000, 1, 1), 'a'), 0), (('foo', datetime.date(2000, 1, 1), 'b'), 1), (('foo', datetime.date(2000, 1, 2), 'a'), 2), (('foo', datetime.date(2000, 1, 2), 'b'), 3), (('foo', datetime.date(2000, 1, 3), 'a'), 4), (('foo', datetime.date(2000, 1, 3), 'b'), 5), (('foo', datetime.date(2000, 1, 4), 'a'), 6), (('foo', datetime.date(2000, 1, 4), 'b'), 7), (('bar', datetime.date(2000, 1, 1), 'a'), 8), (('bar', datetime.date(2000, 1, 1), 'b'), 9), (('bar', datetime.date(2000, 1, 2), 'a'), 10), (('bar', datetime.date(2000, 1, 2), 'b'), 11), (('bar', datetime.date(2000, 1, 3), 'a'), 12), (('bar', datetime.date(2000, 1, 3), 'b'), 13), (('bar', datetime.date(2000, 1, 4), 'a'), 14), (('bar', datetime.date(2000, 1, 4), 'b'), 15))),)
                 )
 
+    def test_frame_pivot_stack_c(self) -> None:
+
+        index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
+        columns = IndexHierarchy.from_labels(
+                (('c0', 'c00'), ('c0', 'c01'), ('c1', 'c10'))
+                )
+        f1 = Frame(np.arange(6).reshape(2, 3), index=index, columns=columns)
+
+        f2 = f1.pivot_stack(fill_value=-1)
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('c0', ((('r0', 'r00', 'c00'), 0), (('r0', 'r00', 'c01'), 1), (('r0', 'r00', 'c10'), -1), (('r0', 'r01', 'c00'), 3), (('r0', 'r01', 'c01'), 4), (('r0', 'r01', 'c10'), -1))), ('c1', ((('r0', 'r00', 'c00'), -1), (('r0', 'r00', 'c01'), -1), (('r0', 'r00', 'c10'), 2), (('r0', 'r01', 'c00'), -1), (('r0', 'r01', 'c01'), -1), (('r0', 'r01', 'c10'), 5))))
+                )
+
+        # import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     unittest.main()
 

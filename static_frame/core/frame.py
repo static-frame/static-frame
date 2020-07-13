@@ -4577,6 +4577,7 @@ class Frame(ContainerOperand):
 
     def pivot_stack(self,
             depth_level: DepthLevelSpecifier = -1,
+            fill_value: object = np.nan,
             ) -> 'Frame':
         '''
         Args:
@@ -4584,32 +4585,89 @@ class Frame(ContainerOperand):
         '''
         # might be more efficient using label_nodes_at_depth
         values_src = self._blocks # avoid coercion of going to values
-        labels = self.columns.values_at_depth(depth_level)
         index = self.index
+        dtype_fill = np.array(fill_value).dtype
+
+
+        # need to create a mapping of remaining label (group) to the stacked labels; each group will be one column in the final table
+        if self.columns.depth == 1:
+            group_depth = 1
+            group_to_stacked_labels = {
+                    None: {v: idx for idx, v in enumerate(self.columns.values_at_depth(depth_level))}
+                    }
+            group_to_dtypes = {None: self.dtypes.values}
+            columns = None
+        else:
+            from collections import defaultdict
+            # need to get inverse of depth selection
+            # values_at_depth will force a re-cache
+            depth_target = self.columns.values_at_depth(depth_level)
+            # this returns a TypeBlocks instance
+            depth_target_invert = self.columns._blocks.drop((None, depth_level))
+
+            group_to_stacked_labels = defaultdict(dict)
+            group_to_dtypes = defaultdict(list)
+            # values forces coercioni
+            # zip dtypes in here too
+            group_depth = None
+            targets_unique = dict()
+            for col_idx, (group, target, dtype) in enumerate(zip(
+                    depth_target_invert.values,
+                    depth_target,
+                    self.dtypes.values,
+                    )):
+                if group_depth is None:
+                    group_depth = len(group)
+
+                targets_unique[target] = None
+
+                group_key = tuple(group) if group_depth > 1 else group[0]
+                group_to_stacked_labels[group_key][target] = col_idx
+                group_to_dtypes[group_key].append(dtype)
+
+            columns = list(group_to_stacked_labels.keys())
 
         # determine dtypes in advance so from_records does not have to
-        dtypes_src = self.dtypes # Series
-        dtypes_dst = (
-                resolve_dtype_iter((dtypes_src[label] for label in labels)),
-                )
+        dtypes_pre_fill = {g: resolve_dtype_iter(values)
+                for g, values in group_to_dtypes.items()}
+
+        # we iterate by records to construct the new index; but we might provide values
+        group_has_fill = {g: False for g in group_to_dtypes}
 
         def records_items():
             for row_idx, outer in enumerate(index): # iter tuple or label
-                for col_idx, inner in enumerate(labels):
-                    # NOTE: inner might be tuples
+                for target in targets_unique:
                     if index.depth == 1:
-                        key = outer, inner
+                        key = outer, target
                     else:
-                        key = outer + (inner,)
-                    record = (values_src._extract(row_idx, col_idx),)
+                        key = outer + (target,)
+
+                    record = []
+                    for group, target_map in group_to_stacked_labels.items():
+                        if target in target_map:
+                            col_idx = target_map[target]
+                            record.append(values_src._extract(row_idx, col_idx))
+                        else:
+                            record.append(fill_value)
+                            group_has_fill[group] = True
                     yield key, record
 
-        # TODO: carry over index_construtors as possible
+        # NOTE: this is a generator to defer evaluation until after records_items() is run, whereby group_has_fill is populated
+
+        def dtypes():
+            for g, dtype in dtypes_pre_fill.items():
+                if group_has_fill[g]:
+                    yield resolve_dtype(dtype, dtype_fill)
+                else:
+                    yield dtype
+
+
+        # TODO: carry over index_constructors as possible
         if index.depth == 1:
-            index_types = [index.__class__, Index]
+            index_types = [index.__class__]
         else:
             index_types = list(index._levels.index_types())
-            index_types.append(Index) # for new depth being added
+        index_types.extend(Index for _ in range(group_depth)) # for new depth being added
 
         index_constructor = partial(
                 IndexHierarchy.from_labels,
@@ -4619,9 +4677,10 @@ class Frame(ContainerOperand):
 
         return self.from_records_items(
                 records_items(),
+                columns=columns,
                 index_constructor=index_constructor,
                 name=self.name,
-                dtypes=dtypes_dst,
+                dtypes=dtypes(),
                 )
 
 

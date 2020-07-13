@@ -186,7 +186,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             labels: an iterator or generator of tuples.
-            reorder_for_hierarchy: reorder the labels to produce a hierarchible Index, assuming hierarchability is possible.
+            reorder_for_hierarchy: reorder the labels to produce a hierarchable Index, assuming hierarchability is possible.
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
