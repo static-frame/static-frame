@@ -74,8 +74,10 @@ def get_col_dtype_factory(
         nonlocal dtypes
         if is_map:
             return dtypes.get(columns[col_idx], None) #type: ignore
+
+        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here
         if not hasattr(dtypes, '__len__'):
-            dtypes = list(dtypes)
+            dtypes = tuple(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
 
     return get_col_dtype

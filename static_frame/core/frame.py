@@ -1,16 +1,16 @@
-import typing as tp
-import sqlite3
+
+from collections import defaultdict
+from functools import partial
+from io import StringIO
+from itertools import chain
+from itertools import product
+from itertools import repeat
+from numpy.ma import MaskedArray
 import csv
 import json
-
-from functools import partial
-from itertools import chain
-from itertools import repeat
-from itertools import product
-from io import StringIO
-
 import numpy as np
-from numpy.ma import MaskedArray
+import sqlite3
+import typing as tp
 
 
 
@@ -4588,7 +4588,6 @@ class Frame(ContainerOperand):
         index = self.index
         dtype_fill = np.array(fill_value).dtype
 
-
         # need to create a mapping of remaining label (group) to the stacked labels; each group will be one column in the final table
         if self.columns.depth == 1:
             group_depth = 1
@@ -4596,21 +4595,23 @@ class Frame(ContainerOperand):
                     None: {v: idx for idx, v in enumerate(self.columns.values_at_depth(depth_level))}
                     }
             group_to_dtypes = {None: self.dtypes.values}
+            targets_unique = group_to_stacked_labels[None]
+            target_depth = 1
             columns = None
+            columns_constructor = None
         else:
-            from collections import defaultdict
-            # need to get inverse of depth selection
-            # values_at_depth will force a re-cache
+            # need to get inverse of depth selection; values_at_depth will force a re-cache
             depth_target = self.columns.values_at_depth(depth_level)
             # this returns a TypeBlocks instance
             depth_target_invert = self.columns._blocks.drop((None, depth_level))
 
             group_to_stacked_labels = defaultdict(dict)
             group_to_dtypes = defaultdict(list)
-            # values forces coercioni
-            # zip dtypes in here too
-            group_depth = None
-            targets_unique = dict()
+
+            group_depth = None # this will be columns depth
+            target_depth = None
+
+            targets_unique = dict() # collect new unique labels being moved
             for col_idx, (group, target, dtype) in enumerate(zip(
                     depth_target_invert.values,
                     depth_target,
@@ -4618,14 +4619,19 @@ class Frame(ContainerOperand):
                     )):
                 if group_depth is None:
                     group_depth = len(group)
+                if target_depth is None:
+                    target_depth = 1 if target.ndim == 0 else len(target)
 
                 targets_unique[target] = None
 
+                # NOTE: each group_key will become a new column
                 group_key = tuple(group) if group_depth > 1 else group[0]
                 group_to_stacked_labels[group_key][target] = col_idx
                 group_to_dtypes[group_key].append(dtype)
 
             columns = list(group_to_stacked_labels.keys())
+            columns_constructor = (None if group_depth == 1
+                    else self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels)
 
         # determine dtypes in advance so from_records does not have to
         dtypes_pre_fill = {g: resolve_dtype_iter(values)
@@ -4641,7 +4647,6 @@ class Frame(ContainerOperand):
                         key = outer, target
                     else:
                         key = outer + (target,)
-
                     record = []
                     for group, target_map in group_to_stacked_labels.items():
                         if target in target_map:
@@ -4653,7 +4658,6 @@ class Frame(ContainerOperand):
                     yield key, record
 
         # NOTE: this is a generator to defer evaluation until after records_items() is run, whereby group_has_fill is populated
-
         def dtypes():
             for g, dtype in dtypes_pre_fill.items():
                 if group_has_fill[g]:
@@ -4661,13 +4665,11 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-
-        # TODO: carry over index_constructors as possible
         if index.depth == 1:
             index_types = [index.__class__]
         else:
             index_types = list(index._levels.index_types())
-        index_types.extend(Index for _ in range(group_depth)) # for new depth being added
+        index_types.extend(Index for _ in range(target_depth)) # for new depth being added
 
         index_constructor = partial(
                 IndexHierarchy.from_labels,
@@ -4679,6 +4681,7 @@ class Frame(ContainerOperand):
                 records_items(),
                 columns=columns,
                 index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 name=self.name,
                 dtypes=dtypes(),
                 )
