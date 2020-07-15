@@ -9993,7 +9993,7 @@ class TestUnit(TestCase):
                     )
 
         f2 = f1.pivot_stack([0, 2])
-        # import ipdb; ipdb.set_trace()
+        import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()
