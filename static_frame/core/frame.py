@@ -4585,53 +4585,57 @@ class Frame(ContainerOperand):
         '''
         # might be more efficient using label_nodes_at_depth
         values_src = self._blocks # avoid coercion of going to values
-        index = self.index
+        index_src = self.index
+        columns_src = self.columns
         dtype_fill = np.array(fill_value).dtype
 
+        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns. We determine the new columns by observing unique labels ("groups") left over after removing the target depths. To get the values for each new row, we store, for each group, a mapping of target labels to original column index position.
+
         # need to create a mapping of remaining label (group) to the stacked labels; each group will be one column in the final table
-        if self.columns.depth == 1:
+
+        target_select = np.full(columns_src.depth, False)
+        target_select[depth_level] = True
+
+        # print(target_select)
+
+        if columns_src.depth == 1:
             group_depth = 1
-            group_to_stacked_labels = {
-                    None: {v: idx for idx, v in enumerate(self.columns.values_at_depth(depth_level))}
+            target_depth = 1
+            group_to_target_map = {
+                    None: {(v,): idx for idx, v in enumerate(columns_src.values_at_depth(depth_level))}
                     }
             group_to_dtypes = {None: self.dtypes.values}
-            targets_unique = group_to_stacked_labels[None]
-            target_depth = 1
-            columns = None
-            columns_constructor = None
+            # targets here must be a tuple
+            targets_unique = [k for k in group_to_target_map[None]]
         else:
-            # need to get inverse of depth selection; values_at_depth will force a re-cache
-            depth_target = self.columns.values_at_depth(depth_level)
-            # this returns a TypeBlocks instance
-            depth_target_invert = self.columns._blocks.drop((None, depth_level))
+            # values_at_depth will force a re-cache
+            target_labels = columns_src.values_at_depth(depth_level)
+            group_labels = columns_src._blocks.drop((None, depth_level)).values
 
-            group_to_stacked_labels = defaultdict(dict)
+            group_to_target_map = defaultdict(dict)
             group_to_dtypes = defaultdict(list)
+            # number of columns is depth
+            group_depth = 1 if group_labels.ndim == 1 else group_labels.shape[1]
+            target_depth = 1 if target_labels.ndim == 1 else target_labels.shape[1]
 
-            group_depth = None # this will be columns depth
-            target_depth = None
-
-            targets_unique = dict() # collect new unique labels being moved
+            targets_unique = dict() # Store targets in order observed
             for col_idx, (group, target, dtype) in enumerate(zip(
-                    depth_target_invert.values,
-                    depth_target,
+                    group_labels, # better to iterate via type blocks?
+                    target_labels,
                     self.dtypes.values,
                     )):
-                if group_depth is None:
-                    group_depth = len(group)
-                if target_depth is None:
-                    target_depth = 1 if target.ndim == 0 else len(target)
-
-                targets_unique[target] = None
-
-                # NOTE: each group_key will become a new column
                 group_key = tuple(group) if group_depth > 1 else group[0]
-                group_to_stacked_labels[group_key][target] = col_idx
+
+                if hasattr(target, '__len__') and not isinstance(target, str):
+                    target_key = tuple(target)
+                else:
+                    target_key = (target,)
+
+                targets_unique[target_key] = None
+                # NOTE: each group_key will become a new column
+                group_to_target_map[group_key][target_key] = col_idx
                 group_to_dtypes[group_key].append(dtype)
 
-            columns = list(group_to_stacked_labels.keys())
-            columns_constructor = (None if group_depth == 1
-                    else self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels)
 
         # determine dtypes in advance so from_records does not have to
         dtypes_pre_fill = {g: resolve_dtype_iter(values)
@@ -4641,14 +4645,17 @@ class Frame(ContainerOperand):
         group_has_fill = {g: False for g in group_to_dtypes}
 
         def records_items():
-            for row_idx, outer in enumerate(index): # iter tuple or label
-                for target in targets_unique:
-                    if index.depth == 1:
-                        key = outer, target
+            for row_idx, outer in enumerate(index_src): # iter tuple or label
+                for target in targets_unique: # target is always a tuple
+                    if index_src.depth == 1:
+                        key = (outer,) + target
                     else:
-                        key = outer + (target,)
+                        try:
+                            key = outer + target
+                        except:
+                            import ipdb; ipdb.set_trace()
                     record = []
-                    for group, target_map in group_to_stacked_labels.items():
+                    for group, target_map in group_to_target_map.items():
                         if target in target_map:
                             col_idx = target_map[target]
                             record.append(values_src._extract(row_idx, col_idx))
@@ -4665,21 +4672,44 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-        if index.depth == 1:
-            index_types = [index.__class__]
+        #-----------------------------------------------------------------------
+        # prepare constructors
+
+        if index_src.depth == 1:
+            index_types = [index_src.__class__]
         else:
-            index_types = list(index._levels.index_types())
+            index_types = list(index_src._levels.index_types())
         index_types.extend(Index for _ in range(target_depth)) # for new depth being added
 
         index_constructor = partial(
                 IndexHierarchy.from_labels,
                 index_constructors=index_types,
-                name=index.name,
+                name=index_src.name,
                 )
+
+        if columns_src.depth == 1:
+            columns_dst = None
+            columns_constructor = partial(
+                    self._COLUMNS_CONSTRUCTOR,
+                    name=columns_src.name
+                    )
+        else:
+            columns_dst = list(group_to_target_map.keys())
+            if group_depth == 1:
+                columns_constructor = partial(
+                        self._COLUMNS_CONSTRUCTOR,
+                        name=columns_src.name,
+                        )
+            else:
+                columns_types = None # TODO: columns_src[]
+                columns_constructor = partial(
+                        self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                        name=columns_src.name,
+                        )
 
         return self.from_records_items(
                 records_items(),
-                columns=columns,
+                columns=columns_dst,
                 index_constructor=index_constructor,
                 columns_constructor=columns_constructor,
                 name=self.name,
