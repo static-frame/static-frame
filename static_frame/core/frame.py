@@ -4612,15 +4612,15 @@ class Frame(ContainerOperand):
         target_depth = len(target_arrays)
         # import ipdb; ipdb.set_trace()
 
-        if columns_src.depth == 1: # group_depth is zero
+        if group_depth == 0:
             # targets here must be a tuple
             group_to_target_map = {
                     None: {(v,): idx for idx, v in enumerate(target_arrays[0])}
                     }
-            dtypes_pre_fill = {None: resolve_dtype_iter(dtypes_src)}
+            group_to_dtype = {None: resolve_dtype_iter(dtypes_src)}
             targets_unique = [k for k in group_to_target_map[None]]
         else:
-            dtypes_pre_fill = {}
+            group_to_dtype = {}
             group_to_target_map = defaultdict(dict)
             targets_unique = dict() # Store targets in order observed
 
@@ -4635,13 +4635,14 @@ class Frame(ContainerOperand):
                 targets_unique[target] = None
                 group_to_target_map[group][target] = col_idx
 
-                if group in dtypes_pre_fill:
-                    dtypes_pre_fill[group] = resolve_dtype(dtypes_pre_fill[group], dtype)
+                if group in group_to_dtype:
+                    group_to_dtype[group] = resolve_dtype(group_to_dtype[group], dtype)
                 else:
-                    dtypes_pre_fill[group] = dtype
+                    group_to_dtype[group] = dtype
+
 
         # we iterate by records to construct the new index; but we might provide values
-        group_has_fill = {g: False for g in dtypes_pre_fill}
+        group_has_fill = {g: False for g in group_to_dtype}
 
         def records_items():
             for row_idx, outer in enumerate(index_src): # iter tuple or label
@@ -4665,7 +4666,7 @@ class Frame(ContainerOperand):
 
         # NOTE: this is a generator to defer evaluation until after records_items() is run, whereby group_has_fill is populated
         def dtypes():
-            for g, dtype in dtypes_pre_fill.items():
+            for g, dtype in group_to_dtype.items():
                 if group_has_fill[g]:
                     yield resolve_dtype(dtype, dtype_fill)
                 else:
