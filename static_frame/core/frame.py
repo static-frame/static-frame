@@ -4431,6 +4431,9 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
+    #---------------------------------------------------------------------------
+    # pivot family
+
     def pivot(self,
             index_fields: KeyOrKeys,
             columns_fields: KeyOrKeys = EMPTY_TUPLE,
@@ -4575,6 +4578,70 @@ class Frame(ContainerOperand):
                 own_columns=True
                 )
 
+    #---------------------------------------------------------------------------
+    # pivot stack, unstack
+
+    @staticmethod
+    def _pivot_index_map(
+            index_src: IndexBase,
+            depth_level: DepthLevelSpecifier,
+            dtypes_src: tp.Optional[tp.Sequence[np.dtype]],
+            ):
+        '''
+        Args:
+            dtypes_src: must be of length equal to axis
+        '''
+        # We are always moving levels from one axis to another; after application, the destination will always be hierarhical, while the source may or may not be. From the source, we need to divide the levels into two categories: targets (the levels to be moved) and groups (unique combinations that remain after removing targets). Unique targets and group labels have to be "evaluated" after isolation.
+
+        target_select = np.full(index_src.depth, False)
+        target_select[depth_level] = True
+        group_select = ~target_select
+
+        from itertools import repeat
+
+        group_arrays = []
+        target_arrays = []
+        for i, v in enumerate(target_select):
+            if v:
+                target_arrays.append(index_src.values_at_depth(i))
+            else:
+                group_arrays.append(index_src.values_at_depth(i))
+
+        group_depth = len(group_arrays)
+        target_depth = len(target_arrays)
+        group_to_dtype = {}
+
+        if group_depth == 0:
+            # targets must be a tuple
+            group_to_target_map = {
+                    None: {(v,): idx for idx, v in enumerate(target_arrays[0])}
+                    }
+            targets_unique = [k for k in group_to_target_map[None]]
+            if dtypes_src is not None:
+                group_to_dtype[None] = resolve_dtype_iter(dtypes_src)
+        else:
+            group_to_target_map = defaultdict(dict)
+            targets_unique = dict() # Store targets in order observed
+
+            for axis_idx, (group, target, dtype) in enumerate(zip(
+                    zip(*group_arrays), # get tuples of len 1 to depth
+                    zip(*target_arrays),
+                    (dtypes_src if dtypes_src is not None else repeat(None)),
+                    )):
+                if group_depth == 1:
+                    group = group[0]
+                # targets are transfered labels; groups are the new columns
+                group_to_target_map[group][target] = axis_idx
+                targets_unique[target] = None
+
+                if dtypes_src is not None:
+                    if group in group_to_dtype:
+                        group_to_dtype[group] = resolve_dtype(group_to_dtype[group], dtype)
+                    else:
+                        group_to_dtype[group] = dtype
+
+        return targets_unique, target_depth, group_to_target_map, group_depth, group_to_dtype
+
     def pivot_stack(self,
             depth_level: DepthLevelSpecifier = -1,
             fill_value: object = np.nan,
@@ -4583,77 +4650,30 @@ class Frame(ContainerOperand):
         Args:
             depth_level: selection of columns depth or depth to move onto the index.
         '''
-        # might be more efficient using label_nodes_at_depth
-        values_src = self._blocks # avoid coercion of going to values
+        values_src = self._blocks
         index_src = self.index
         columns_src = self.columns
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values
 
-        # We are always moving levels from one axis to another; after application, the destination will always be hierarhical, while the source may or may not be. From the source, we need to divide the levels into two categories: targets (the levels to be moved) and groups (unique combinations that remain after removing targets). Unique targets and group labels have to be "evaluated" after isolation.
-
-        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns. We determine the new columns by observing unique labels ("groups") left over after removing the target depths. To get the values for each new row, we store, for each group, a mapping of target labels to original column index position.
-
-        # need to create a mapping of remaining label (group) to the stacked labels; each group will be one column in the final table
-
-        target_select = np.full(columns_src.depth, False)
-        target_select[depth_level] = True
-        group_select = ~target_select
-
-        group_arrays = []
-        target_arrays = []
-        for i, v in enumerate(target_select):
-            if v:
-                target_arrays.append(columns_src.values_at_depth(i))
-            else:
-                group_arrays.append(columns_src.values_at_depth(i))
-
-        group_depth = len(group_arrays)
-        target_depth = len(target_arrays)
-        # import ipdb; ipdb.set_trace()
-
-        if group_depth == 0:
-            # targets here must be a tuple
-            group_to_target_map = {
-                    None: {(v,): idx for idx, v in enumerate(target_arrays[0])}
-                    }
-            group_to_dtype = {None: resolve_dtype_iter(dtypes_src)}
-            targets_unique = [k for k in group_to_target_map[None]]
-        else:
-            group_to_dtype = {}
-            group_to_target_map = defaultdict(dict)
-            targets_unique = dict() # Store targets in order observed
-
-            for col_idx, (group, target, dtype) in enumerate(zip(
-                    zip(*group_arrays), # get tuples of len 1 to depth
-                    zip(*target_arrays),
-                    dtypes_src,
-                    )):
-                if group_depth == 1:
-                    group = group[0]
-                # targets are transfered labels; groups are the new columns
-                targets_unique[target] = None
-                group_to_target_map[group][target] = col_idx
-
-                if group in group_to_dtype:
-                    group_to_dtype[group] = resolve_dtype(group_to_dtype[group], dtype)
-                else:
-                    group_to_dtype[group] = dtype
-
+        pim = self._pivot_index_map(
+                index_src=columns_src,
+                depth_level=depth_level,
+                dtypes_src=dtypes_src,
+                )
+        targets_unique, target_depth, group_to_target_map, group_depth, group_to_dtype = pim
 
         # we iterate by records to construct the new index; but we might provide values
-        group_has_fill = {g: False for g in group_to_dtype}
+        group_has_fill = {g: False for g in group_to_target_map}
 
-        def records_items():
+        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
+        def records_items() -> tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]:
             for row_idx, outer in enumerate(index_src): # iter tuple or label
                 for target in targets_unique: # target is always a tuple
                     if index_src.depth == 1:
                         key = (outer,) + target
                     else:
-                        try:
-                            key = outer + target
-                        except:
-                            import ipdb; ipdb.set_trace()
+                        key = outer + target
                     record = []
                     for group, target_map in group_to_target_map.items():
                         if target in target_map:
@@ -4675,6 +4695,7 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # prepare constructors
 
+        # index will always be IndexHierarchy after adding depth from columns
         if index_src.depth == 1:
             index_types = [index_src.__class__]
         else:
@@ -4687,7 +4708,8 @@ class Frame(ContainerOperand):
                 name=index_src.name,
                 )
 
-        if columns_src.depth == 1:
+        # columns may or may not be IndexHierarchy after extracting depths
+        if columns_src.depth == 1: # will removed that one level, thus need IndexAuto
             columns_dst = None
             columns_constructor = partial(
                     self._COLUMNS_CONSTRUCTOR,
@@ -4719,11 +4741,88 @@ class Frame(ContainerOperand):
 
     def pivot_unstack(self,
             depth_level: DepthLevelSpecifier = -1,
+            fill_value: object = np.nan,
             ) -> 'Frame':
         '''
         Args:
             depth_level: selection of index depth or depth to move onto the columns.
         '''
+        values_src = self._blocks
+        index_src = self.index
+        columns_src = self.columns
+        dtype_fill = np.array(fill_value).dtype
+        dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
+
+        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
+
+        pim = self._pivot_index_map(
+                index_src=index_src,
+                depth_level=depth_level,
+                dtypes_src=None,
+                )
+        targets_unique, target_depth, group_to_target_map, group_depth, _ = pim
+
+
+        def items() -> tp.Tuple[tp.Hashable, np.ndarray]:
+            for col_idx, outer in enumerate(columns_src): # iter tuple or label
+                dtype_src_col = dtypes_src[col_idx]
+
+                for target in targets_unique: # target is always a tuple
+                    if columns_src.depth == 1:
+                        key = (outer,) + target
+                    else:
+                        key = outer + target
+                    # can not allocate right-size array as do not know dtype until after we find out if we have a fill_value
+                    for group, target_map in group_to_target_map.items():
+                        values = []
+                        if target in target_map:
+                            row_idx = target_map[target]
+                            dtype = dtype_src_col
+                            values.append(values_src._extract(row_idx, col_idx))
+                        else:
+                            values.append(fill_value)
+                            dtype = resolve_dtype(dtype_src_col, dtype_fill)
+
+                        array = np.array(values, dtype=dtype)
+                        array.flags.writeable = False
+                        yield key, array
+
+        # index may or may not be IndexHierarchy after extracting depths
+        if index_src.depth == 1: # will removed that one level, thus need IndexAuto
+            index_dst = None
+            index_constructor = partial(Index, name=index_src.name)
+        else:
+            # TODO: get component index type of remaining levels
+            index_dst = list(group_to_target_map.keys())
+            if group_depth <= 1:
+                index_constructor = partial(Index, name=index_src.name)
+            else:
+                index_types = None # TODO: select types with group_select
+                index_constructor = partial(
+                        IndexHierarchy.from_labels,
+                        name=index_src.name,
+                        )
+
+        # columns will always be IndexHierarchy after adding depth from index
+        if columns_src.depth == 1:
+            columns_types = [columns_src.__class__]
+        else:
+            columns_types = list(columns_src._levels.index_types())
+        columns_types.extend(Index for _ in range(target_depth)) # for new depth being added
+
+        columns_constructor = partial(
+                IndexHierarchy.from_labels,
+                index_constructors=columns_types,
+                name=columns_src.name,
+                )
+
+        return self.from_items(
+                items(),
+                index=index_dst,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                name=self.name,
+                )
 
     #---------------------------------------------------------------------------
     def _join(self,
@@ -5196,9 +5295,6 @@ class Frame(ContainerOperand):
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container, fill_value=fill_value)
-
-
-
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types

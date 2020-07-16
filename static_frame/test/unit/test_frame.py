@@ -10003,6 +10003,24 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+    def test_frame_pivot_unstack_a(self) -> None:
+
+        index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
+        columns = IndexHierarchy.from_labels(
+                (('c0', 'c00'), ('c0', 'c01'), ('c1', 'c10'))
+                )
+        f1 = Frame(np.arange(6).reshape(2, 3), index=index, columns=columns)
+
+        f2 = f1.pivot_unstack(fill_value=-1)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('c0', 'c00', 'r00'), (('r0', 0),)), (('c0', 'c00', 'r01'), (('r0', 3),)), (('c0', 'c01', 'r00'), (('r0', 1),)), (('c0', 'c01', 'r01'), (('r0', 4),)), (('c1', 'c10', 'r00'), (('r0', 2),)), (('c1', 'c10', 'r01'), (('r0', 5),)))
+                )
+
+        # import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     unittest.main()
 
