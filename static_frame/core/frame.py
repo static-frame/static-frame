@@ -4640,7 +4640,13 @@ class Frame(ContainerOperand):
                     else:
                         group_to_dtype[group] = dtype
 
-        return targets_unique, target_depth, group_to_target_map, group_depth, group_to_dtype
+        return (targets_unique,
+                target_depth,
+                target_select,
+                group_to_target_map,
+                group_depth,
+                group_select,
+                group_to_dtype)
 
     def pivot_stack(self,
             depth_level: DepthLevelSpecifier = -1,
@@ -4661,7 +4667,7 @@ class Frame(ContainerOperand):
                 depth_level=depth_level,
                 dtypes_src=dtypes_src,
                 )
-        targets_unique, target_depth, group_to_target_map, group_depth, group_to_dtype = pim
+        targets_unique, target_depth, target_select, group_to_target_map, group_depth, group_select, group_to_dtype = pim
 
         # we iterate by records to construct the new index; but we might provide values
         group_has_fill = {g: False for g in group_to_target_map}
@@ -4750,6 +4756,7 @@ class Frame(ContainerOperand):
         values_src = self._blocks
         index_src = self.index
         columns_src = self.columns
+
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
 
@@ -4760,7 +4767,7 @@ class Frame(ContainerOperand):
                 depth_level=depth_level,
                 dtypes_src=None,
                 )
-        targets_unique, target_depth, group_to_target_map, group_depth, _ = pim
+        targets_unique, target_depth, target_select, group_to_target_map, group_depth, group_select, _ = pim
 
 
         def items() -> tp.Tuple[tp.Hashable, np.ndarray]:
@@ -4773,8 +4780,8 @@ class Frame(ContainerOperand):
                     else:
                         key = outer + target
                     # can not allocate right-size array as do not know dtype until after we find out if we have a fill_value
+                    values = []
                     for group, target_map in group_to_target_map.items():
-                        values = []
                         if target in target_map:
                             row_idx = target_map[target]
                             dtype = dtype_src_col
@@ -4783,24 +4790,27 @@ class Frame(ContainerOperand):
                             values.append(fill_value)
                             dtype = resolve_dtype(dtype_src_col, dtype_fill)
 
-                        array = np.array(values, dtype=dtype)
-                        array.flags.writeable = False
-                        yield key, array
+                    array = np.array(values, dtype=dtype)
+                    array.flags.writeable = False
+                    yield key, array
 
         # index may or may not be IndexHierarchy after extracting depths
+        index_src_types = index_src.index_types.values
         if index_src.depth == 1: # will removed that one level, thus need IndexAuto
             index_dst = None
             index_constructor = partial(Index, name=index_src.name)
         else:
             # TODO: get component index type of remaining levels
             index_dst = list(group_to_target_map.keys())
+            index_dst_types = index_src_types[group_select]
             if group_depth <= 1:
-                index_constructor = partial(Index, name=index_src.name)
+                index_dst_cls = index_dst_types[0] # there should be only one
+                index_constructor = partial(index_dst_cls, name=index_src.name)
             else:
-                index_types = None # TODO: select types with group_select
                 index_constructor = partial(
                         IndexHierarchy.from_labels,
                         name=index_src.name,
+                        index_constructors=index_dst_types,
                         )
 
         # columns will always be IndexHierarchy after adding depth from index
@@ -4808,7 +4818,8 @@ class Frame(ContainerOperand):
             columns_types = [columns_src.__class__]
         else:
             columns_types = list(columns_src._levels.index_types())
-        columns_types.extend(Index for _ in range(target_depth)) # for new depth being added
+        # transfer over index_types from the index be selcting with traget_select Bool
+        columns_types.extend(index_src_types[target_select])
 
         columns_constructor = partial(
                 IndexHierarchy.from_labels,
