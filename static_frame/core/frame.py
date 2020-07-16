@@ -4701,20 +4701,8 @@ class Frame(ContainerOperand):
         #-----------------------------------------------------------------------
         # prepare constructors
 
-        # index will always be IndexHierarchy after adding depth from columns
-        if index_src.depth == 1:
-            index_types = [index_src.__class__]
-        else:
-            index_types = list(index_src._levels.index_types())
-        index_types.extend(Index for _ in range(target_depth)) # for new depth being added
-
-        index_constructor = partial(
-                IndexHierarchy.from_labels,
-                index_constructors=index_types,
-                name=index_src.name,
-                )
-
         # columns may or may not be IndexHierarchy after extracting depths
+        columns_src_types = columns_src.index_types.values
         if columns_src.depth == 1: # will removed that one level, thus need IndexAuto
             columns_dst = None
             columns_constructor = partial(
@@ -4723,17 +4711,30 @@ class Frame(ContainerOperand):
                     )
         else:
             columns_dst = list(group_to_target_map.keys())
+            column_dst_types = columns_src_types[group_select]
             if group_depth <= 1:
-                columns_constructor = partial(
-                        self._COLUMNS_CONSTRUCTOR,
-                        name=columns_src.name,
-                        )
+                # NOTE: may need to be made mutable
+                columns_constructor = partial(column_dst_types[0], name=columns_src.name)
             else:
                 columns_types = None # TODO: select types with group_select
                 columns_constructor = partial(
                         self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_src.name,
+                        index_constructors=column_dst_types,
                         )
+
+        # index will always be IndexHierarchy after adding depth from columns
+        if index_src.depth == 1:
+            index_types = [index_src.__class__]
+        else:
+            index_types = list(index_src._levels.index_types())
+        index_types.extend(columns_src_types[target_select])
+
+        index_constructor = partial(
+                IndexHierarchy.from_labels,
+                index_constructors=index_types,
+                name=index_src.name,
+                )
 
         return self.from_records_items(
                 records_items(),
@@ -4769,7 +4770,6 @@ class Frame(ContainerOperand):
                 )
         targets_unique, target_depth, target_select, group_to_target_map, group_depth, group_select, _ = pim
 
-
         def items() -> tp.Tuple[tp.Hashable, np.ndarray]:
             for col_idx, outer in enumerate(columns_src): # iter tuple or label
                 dtype_src_col = dtypes_src[col_idx]
@@ -4804,8 +4804,7 @@ class Frame(ContainerOperand):
             index_dst = list(group_to_target_map.keys())
             index_dst_types = index_src_types[group_select]
             if group_depth <= 1:
-                index_dst_cls = index_dst_types[0] # there should be only one
-                index_constructor = partial(index_dst_cls, name=index_src.name)
+                index_constructor = partial(index_dst_types[0], name=index_src.name)
             else:
                 index_constructor = partial(
                         IndexHierarchy.from_labels,
@@ -4818,7 +4817,6 @@ class Frame(ContainerOperand):
             columns_types = [columns_src.__class__]
         else:
             columns_types = list(columns_src._levels.index_types())
-        # transfer over index_types from the index be selcting with traget_select Bool
         columns_types.extend(index_src_types[target_select])
 
         columns_constructor = partial(
