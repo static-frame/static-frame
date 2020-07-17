@@ -2,6 +2,13 @@ import doctest
 import os
 import typing as tp
 
+
+# useful constructors
+# >>> f = sf.FrameGO.from_records((('Encke', 3.30, '2003-12-28'), ('Giacobini-Zinner', 6.52, '1998-11-21'), ('Tempel-Tuttle', 32.92, '1998-02-28'), ('Wild 2', 6.39, '2003-09-25')), columns=('Name', 'Orbital Period', 'Perihelion Date'))
+
+
+
+
 api_example_str = '''
 
 

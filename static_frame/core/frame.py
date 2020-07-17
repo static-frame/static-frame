@@ -4591,7 +4591,7 @@ class Frame(ContainerOperand):
         Args:
             dtypes_src: must be of length equal to axis
         '''
-        # We are always moving levels from one axis to another; after application, the destination will always be hierarhical, while the source may or may not be. From the source, we need to divide the levels into two categories: targets (the levels to be moved) and groups (unique combinations that remain after removing targets). Unique targets and group labels have to be "evaluated" after isolation.
+        # We are always moving levels from one axis to another; after application, the destination will always be hierarhical, while the source may or may not be. From the source, we need to divide the levels into two categories: targets (the levels to be moved and added to opposite axis) and groups (unique combinations that remain after removing targets). Unique targets and group labels have to be "evaluated" after isolation.
 
         target_select = np.full(index_src.depth, False)
         target_select[depth_level] = True
@@ -4612,7 +4612,7 @@ class Frame(ContainerOperand):
         if group_depth == 0:
             # targets must be a tuple
             group_to_target_map = {
-                    None: {(v,): idx for idx, v in enumerate(target_arrays[0])}
+                    None: {v: idx for idx, v in enumerate(zip(*target_arrays))}
                     }
             targets_unique = [k for k in group_to_target_map[None]]
             if dtypes_src is not None:
@@ -4801,8 +4801,11 @@ class Frame(ContainerOperand):
         else:
             index_src_types = index_src.index_types.values
             index_dst = list(group_to_target_map.keys())
-            index_dst_types = index_src_types[group_select]
-            if group_depth <= 1:
+            index_dst_types = index_src_types[group_select] # might select None!
+            if group_depth == 0:
+                index_constructor = partial(Index, name=index_src.name)
+                index_dst = None
+            elif group_depth == 1:
                 index_constructor = partial(index_dst_types[0], name=index_src.name)
             else:
                 index_constructor = partial(

@@ -10058,6 +10058,20 @@ class TestUnit(TestCase):
                 ((('c0', 'c00', 'r00', 'r0'), ((0, 0),)), (('c0', 'c00', 'r01', 'r0'), ((0, 3),)), (('c0', 'c01', 'r00', 'r0'), ((0, 1),)), (('c0', 'c01', 'r01', 'r0'), ((0, 4),)), (('c1', 'c10', 'r00', 'r0'), ((0, 2),)), (('c1', 'c10', 'r01', 'r0'), ((0, 5),)))
                 )
 
+    def test_frame_pivot_unstack_b(self) -> None:
+
+        f1 = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
+        f1 = f1.set_index_hierarchy(('type', 'name'), drop=True)
+        f2 = f1.pivot_unstack([0, 1])
+
+        self.assertEqual(f2.to_pairs(0),
+            ((('mass', 'lepton', 'muon'), ((0, 0.106),)), (('mass', 'lepton', 'tau'), ((0, 1.777),)), (('mass', 'quark', 'charm'), ((0, 1.3),)), (('mass', 'quark', 'strange'), ((0, 0.1),)), (('charge', 'lepton', 'muon'), ((0, -1.0),)), (('charge', 'lepton', 'tau'), ((0, -1.0),)), (('charge', 'quark', 'charm'), ((0, 0.666),)), (('charge', 'quark', 'strange'), ((0, -0.333),))))
+
+        # import ipdb; ipdb.set_trace()
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
