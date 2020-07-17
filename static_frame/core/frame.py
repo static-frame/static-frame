@@ -4597,8 +4597,6 @@ class Frame(ContainerOperand):
         target_select[depth_level] = True
         group_select = ~target_select
 
-        from itertools import repeat
-
         group_arrays = []
         target_arrays = []
         for i, v in enumerate(target_select):
@@ -4702,7 +4700,6 @@ class Frame(ContainerOperand):
         # prepare constructors
 
         # columns may or may not be IndexHierarchy after extracting depths
-        columns_src_types = columns_src.index_types.values
         if columns_src.depth == 1: # will removed that one level, thus need IndexAuto
             columns_dst = None
             columns_constructor = partial(
@@ -4710,6 +4707,7 @@ class Frame(ContainerOperand):
                     name=columns_src.name
                     )
         else:
+            columns_src_types = columns_src.index_types.values
             columns_dst = list(group_to_target_map.keys())
             column_dst_types = columns_src_types[group_select]
             if group_depth <= 1:
@@ -4728,7 +4726,10 @@ class Frame(ContainerOperand):
             index_types = [index_src.__class__]
         else:
             index_types = list(index_src._levels.index_types())
-        index_types.extend(columns_src_types[target_select])
+        if columns_src.depth == 1:
+            index_types.append(columns_src.__class__)
+        else:
+            index_types.extend(columns_src_types[target_select])
 
         index_constructor = partial(
                 IndexHierarchy.from_labels,

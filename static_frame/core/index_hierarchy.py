@@ -237,7 +237,7 @@ class IndexHierarchy(IndexBase):
         # minimum permitted depth is 2
         if depth < 2:
             raise ErrorInitIndex('Cannot create an IndexHierarchy from only one level.')
-        if index_constructors and len(index_constructors) != depth:
+        if index_constructors is not None and len(index_constructors) != depth:
             raise ErrorInitIndex('If providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
 
         depth_max = depth - 1
