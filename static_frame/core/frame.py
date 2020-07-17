@@ -4714,7 +4714,6 @@ class Frame(ContainerOperand):
                 # NOTE: may need to be made mutable
                 columns_constructor = partial(column_dst_types[0], name=columns_src.name)
             else:
-                columns_types = None # TODO: select types with group_select
                 columns_constructor = partial(
                         self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                         name=columns_src.name,
@@ -4796,12 +4795,11 @@ class Frame(ContainerOperand):
                     yield key, array
 
         # index may or may not be IndexHierarchy after extracting depths
-        index_src_types = index_src.index_types.values
         if index_src.depth == 1: # will removed that one level, thus need IndexAuto
             index_dst = None
             index_constructor = partial(Index, name=index_src.name)
         else:
-            # TODO: get component index type of remaining levels
+            index_src_types = index_src.index_types.values
             index_dst = list(group_to_target_map.keys())
             index_dst_types = index_src_types[group_select]
             if group_depth <= 1:
@@ -4818,7 +4816,10 @@ class Frame(ContainerOperand):
             columns_types = [columns_src.__class__]
         else:
             columns_types = list(columns_src._levels.index_types())
-        columns_types.extend(index_src_types[target_select])
+        if index_src.depth == 1:
+            columns_types.append(index_src.__class__)
+        else:
+            columns_types.extend(index_src_types[target_select])
 
         columns_constructor = partial(
                 IndexHierarchy.from_labels,
