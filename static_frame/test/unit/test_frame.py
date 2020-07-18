@@ -9913,7 +9913,7 @@ class TestUnit(TestCase):
                     ((0, ((('I', 1, 'a'), 0), (('I', 1, 'b'), 'w'), (('I', 2, 'a'), 1), (('I', 2, 'b'), 'x'), (('II', 1, 'a'), 2), (('II', 1, 'b'), 'y'), (('II', 2, 'a'), 3), (('II', 2, 'b'), 'z'))),)
                     )
 
-        self.assertEqual(f2.index.name, 'foo')
+        self.assertEqual(f2.index.name, None)
         self.assertEqual(f2.name, 'bar')
 
 

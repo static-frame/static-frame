@@ -19,6 +19,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 
+#-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[tp.Hashable]
     target_depth: int
@@ -98,6 +99,7 @@ def pivot_index_map(*,
             )
 
 
+#-------------------------------------------------------------------------------
 class PivotDeriveConstructors(tp.NamedTuple):
     contract_dst: tp.Optional[tp.Iterable[tp.Hashable]]
     contract_constructor: IndexConstructor
@@ -128,24 +130,27 @@ def pivot_derive_constructors(*,
         contract_cls_hierarchy = frame_cls._COLUMNS_HIERARCHY_CONSTRUCTOR
         expand_cls_hierarchy = IndexHierarchy
 
-    # contract axis may or may not be IndexHierarchy after extractinsg depths
+    # NOTE: not propagating name attr, as not obvious how it should when depths are exiting and entering
+
+    # contract axis may or may not be IndexHierarchy after extracting depths
     if contract_src.depth == 1: # will removed that one level, thus need IndexAuto
         contract_dst = None
-        contract_constructor = partial(contract_cls, name=contract_src.name)
+        contract_constructor = contract_cls # partial(contract_cls, name=contract_src.name)
     else:
         contract_src_types = contract_src.index_types.values #type: ignore
         contract_dst_types = contract_src_types[group_select]
         if group_depth == 0:
             contract_dst = None
-            contract_constructor = partial(contract_cls, name=contract_src.name)
+            contract_constructor = contract_cls # partial(contract_cls, name=contract_src.name)
         elif group_depth == 1:
             contract_dst = list(group_to_target_map.keys())
-            contract_constructor = partial(contract_dst_types[0], name=contract_src.name)
+            # contract_constructor = partial(contract_dst_types[0], name=contract_src.name)
+            contract_constructor = contract_dst_types[0]
         else:
             contract_dst = list(group_to_target_map.keys())
             contract_constructor = partial(
                     contract_cls_hierarchy.from_labels, #type: ignore
-                    name=contract_src.name,
+                    # name=contract_src.name,
                     index_constructors=contract_dst_types,
                     )
 
@@ -162,7 +167,7 @@ def pivot_derive_constructors(*,
     expand_constructor = partial(
             expand_cls_hierarchy.from_labels,
             index_constructors=expand_types,
-            name=expand_src.name,
+            # name=expand_src.name,
             )
 
     # NOTE: expand_dst labels will come from the values generator
