@@ -74,6 +74,9 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 
+from static_frame.core.pivot import pivot_derive_constructors
+from static_frame.core.pivot import pivot_index_map
+
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -4581,76 +4584,14 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # pivot stack, unstack
 
-    @staticmethod
-    def _pivot_index_map(
-            index_src: IndexBase,
-            depth_level: DepthLevelSpecifier,
-            dtypes_src: tp.Optional[tp.Sequence[np.dtype]],
-            ):
-        '''
-        Args:
-            dtypes_src: must be of length equal to axis
-        '''
-        # We are always moving levels from one axis to another; after application, the destination will always be hierarhical, while the source may or may not be. From the source, we need to divide the levels into two categories: targets (the levels to be moved and added to opposite axis) and groups (unique combinations that remain after removing targets). Unique targets and group labels have to be "evaluated" after isolation.
-
-        target_select = np.full(index_src.depth, False)
-        target_select[depth_level] = True
-        group_select = ~target_select
-
-        group_arrays = []
-        target_arrays = []
-        for i, v in enumerate(target_select):
-            if v:
-                target_arrays.append(index_src.values_at_depth(i))
-            else:
-                group_arrays.append(index_src.values_at_depth(i))
-
-        group_depth = len(group_arrays)
-        target_depth = len(target_arrays)
-        group_to_dtype = {}
-
-        if group_depth == 0:
-            # targets must be a tuple
-            group_to_target_map = {
-                    None: {v: idx for idx, v in enumerate(zip(*target_arrays))}
-                    }
-            targets_unique = [k for k in group_to_target_map[None]]
-            if dtypes_src is not None:
-                group_to_dtype[None] = resolve_dtype_iter(dtypes_src)
-        else:
-            group_to_target_map = defaultdict(dict)
-            targets_unique = dict() # Store targets in order observed
-
-            for axis_idx, (group, target, dtype) in enumerate(zip(
-                    zip(*group_arrays), # get tuples of len 1 to depth
-                    zip(*target_arrays),
-                    (dtypes_src if dtypes_src is not None else repeat(None)),
-                    )):
-                if group_depth == 1:
-                    group = group[0]
-                # targets are transfered labels; groups are the new columns
-                group_to_target_map[group][target] = axis_idx
-                targets_unique[target] = None
-
-                if dtypes_src is not None:
-                    if group in group_to_dtype:
-                        group_to_dtype[group] = resolve_dtype(group_to_dtype[group], dtype)
-                    else:
-                        group_to_dtype[group] = dtype
-
-        return (targets_unique,
-                target_depth,
-                target_select,
-                group_to_target_map,
-                group_depth,
-                group_select,
-                group_to_dtype)
 
     def pivot_stack(self,
             depth_level: DepthLevelSpecifier = -1,
             fill_value: object = np.nan,
             ) -> 'Frame':
         '''
+        Move labels from the columns to the index, creating or extending an :obj:`IndexHierarchy` on the index.
+
         Args:
             depth_level: selection of columns depth or depth to move onto the index.
         '''
@@ -4660,12 +4601,25 @@ class Frame(ContainerOperand):
         dtype_fill = np.array(fill_value).dtype
         dtypes_src = self.dtypes.values
 
-        pim = self._pivot_index_map(
+        pim = pivot_index_map(
                 index_src=columns_src,
                 depth_level=depth_level,
                 dtypes_src=dtypes_src,
                 )
-        targets_unique, target_depth, target_select, group_to_target_map, group_depth, group_select, group_to_dtype = pim
+        targets_unique = pim.targets_unique
+        group_to_target_map = pim.group_to_target_map
+        group_to_dtype = pim.group_to_dtype
+
+        columns_dst, columns_constructor, index_constructor = pivot_derive_constructors(
+                contract_src=columns_src,
+                expand_src=index_src,
+                group_select=pim.group_select,
+                group_depth=pim.group_depth,
+                target_select=pim.target_select,
+                group_to_target_map=group_to_target_map,
+                expand_is_columns=False,
+                frame_cls=self.__class__,
+                )
 
         # we iterate by records to construct the new index; but we might provide values
         group_has_fill = {g: False for g in group_to_target_map}
@@ -4674,11 +4628,14 @@ class Frame(ContainerOperand):
         def records_items() -> tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]:
             for row_idx, outer in enumerate(index_src): # iter tuple or label
                 for target in targets_unique: # target is always a tuple
+                    # derive the new index
                     if index_src.depth == 1:
                         key = (outer,) + target
                     else:
                         key = outer + target
                     record = []
+
+                    # this is equivalent to iterating over the new columns to get a row of data
                     for group, target_map in group_to_target_map.items():
                         if target in target_map:
                             col_idx = target_map[target]
@@ -4696,45 +4653,6 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-        #-----------------------------------------------------------------------
-        # prepare constructors
-
-        # columns may or may not be IndexHierarchy after extracting depths
-        if columns_src.depth == 1: # will removed that one level, thus need IndexAuto
-            columns_dst = None
-            columns_constructor = partial(
-                    self._COLUMNS_CONSTRUCTOR,
-                    name=columns_src.name
-                    )
-        else:
-            columns_src_types = columns_src.index_types.values
-            columns_dst = list(group_to_target_map.keys())
-            column_dst_types = columns_src_types[group_select]
-            if group_depth <= 1:
-                # NOTE: may need to be made mutable
-                columns_constructor = partial(column_dst_types[0], name=columns_src.name)
-            else:
-                columns_constructor = partial(
-                        self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
-                        name=columns_src.name,
-                        index_constructors=column_dst_types,
-                        )
-
-        # index will always be IndexHierarchy after adding depth from columns
-        if index_src.depth == 1:
-            index_types = [index_src.__class__]
-        else:
-            index_types = list(index_src._levels.index_types())
-        if columns_src.depth == 1:
-            index_types.append(columns_src.__class__)
-        else:
-            index_types.extend(columns_src_types[target_select])
-
-        index_constructor = partial(
-                IndexHierarchy.from_labels,
-                index_constructors=index_types,
-                name=index_src.name,
-                )
 
         return self.from_records_items(
                 records_items(),
@@ -4751,6 +4669,8 @@ class Frame(ContainerOperand):
             fill_value: object = np.nan,
             ) -> 'Frame':
         '''
+        Move labels from the index to the columns, creating or extending an :obj:`IndexHierarchy` on the columns.
+
         Args:
             depth_level: selection of index depth or depth to move onto the columns.
         '''
@@ -4763,12 +4683,24 @@ class Frame(ContainerOperand):
 
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
 
-        pim = self._pivot_index_map(
+        pim = pivot_index_map(
                 index_src=index_src,
                 depth_level=depth_level,
                 dtypes_src=None,
                 )
-        targets_unique, target_depth, target_select, group_to_target_map, group_depth, group_select, _ = pim
+        targets_unique = pim.targets_unique
+        group_to_target_map = pim.group_to_target_map
+
+        index_dst, index_constructor, columns_constructor = pivot_derive_constructors(
+                contract_src=index_src,
+                expand_src=columns_src,
+                group_select=pim.group_select,
+                group_depth=pim.group_depth,
+                target_select=pim.target_select,
+                group_to_target_map=group_to_target_map,
+                expand_is_columns=True,
+                frame_cls=self.__class__,
+                )
 
         def items() -> tp.Tuple[tp.Hashable, np.ndarray]:
             for col_idx, outer in enumerate(columns_src): # iter tuple or label
@@ -4779,7 +4711,7 @@ class Frame(ContainerOperand):
                         key = (outer,) + target
                     else:
                         key = outer + target
-                    # can not allocate right-size array as do not know dtype until after we find out if we have a fill_value
+                    # cannot allocate array as do not know dtype until after fill_value
                     values = []
                     for group, target_map in group_to_target_map.items():
                         if target in target_map:
@@ -4793,42 +4725,6 @@ class Frame(ContainerOperand):
                     array = np.array(values, dtype=dtype)
                     array.flags.writeable = False
                     yield key, array
-
-        # index may or may not be IndexHierarchy after extracting depths
-        if index_src.depth == 1: # will removed that one level, thus need IndexAuto
-            index_dst = None
-            index_constructor = partial(Index, name=index_src.name)
-        else:
-            index_src_types = index_src.index_types.values
-            index_dst = list(group_to_target_map.keys())
-            index_dst_types = index_src_types[group_select] # might select None!
-            if group_depth == 0:
-                index_constructor = partial(Index, name=index_src.name)
-                index_dst = None
-            elif group_depth == 1:
-                index_constructor = partial(index_dst_types[0], name=index_src.name)
-            else:
-                index_constructor = partial(
-                        IndexHierarchy.from_labels,
-                        name=index_src.name,
-                        index_constructors=index_dst_types,
-                        )
-
-        # columns will always be IndexHierarchy after adding depth from index
-        if columns_src.depth == 1:
-            columns_types = [columns_src.__class__]
-        else:
-            columns_types = list(columns_src._levels.index_types())
-        if index_src.depth == 1:
-            columns_types.append(index_src.__class__)
-        else:
-            columns_types.extend(index_src_types[target_select])
-
-        columns_constructor = partial(
-                IndexHierarchy.from_labels,
-                index_constructors=columns_types,
-                name=columns_src.name,
-                )
 
         return self.from_items(
                 items(),
