@@ -81,7 +81,7 @@ def pivot_index_map(*,
                 else:
                     group_to_dtype[group] = dtype
 
-    return PivotIndexMap(
+    return PivotIndexMap( #pylint: disable=E1120
             targets_unique=targets_unique,
             target_depth=target_depth,
             target_select=target_select,

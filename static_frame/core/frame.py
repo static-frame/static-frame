@@ -1,5 +1,4 @@
 
-from collections import defaultdict
 from functools import partial
 from io import StringIO
 from itertools import chain
@@ -130,7 +129,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
-from static_frame.core.util import resolve_dtype_iter
+# from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
