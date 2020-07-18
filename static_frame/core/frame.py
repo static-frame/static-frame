@@ -4609,7 +4609,7 @@ class Frame(ContainerOperand):
         group_to_target_map = pim.group_to_target_map
         group_to_dtype = pim.group_to_dtype
 
-        columns_dst, columns_constructor, index_constructor = pivot_derive_constructors(
+        pdc = pivot_derive_constructors(
                 contract_src=columns_src,
                 expand_src=index_src,
                 group_select=pim.group_select,
@@ -4620,7 +4620,6 @@ class Frame(ContainerOperand):
                 frame_cls=self.__class__,
                 )
 
-        # we iterate by records to construct the new index; but we might provide values
         group_has_fill = {g: False for g in group_to_target_map}
 
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
@@ -4633,7 +4632,6 @@ class Frame(ContainerOperand):
                     else:
                         key = outer + target
                     record = []
-
                     # this is equivalent to iterating over the new columns to get a row of data
                     for group, target_map in group_to_target_map.items():
                         if target in target_map:
@@ -4652,12 +4650,11 @@ class Frame(ContainerOperand):
                 else:
                     yield dtype
 
-
         return self.from_records_items(
                 records_items(),
-                columns=columns_dst,
-                index_constructor=index_constructor,
-                columns_constructor=columns_constructor,
+                index_constructor=pdc.expand_constructor,
+                columns=pdc.contract_dst,
+                columns_constructor=pdc.contract_constructor,
                 name=self.name,
                 dtypes=dtypes(),
                 )
@@ -4690,7 +4687,7 @@ class Frame(ContainerOperand):
         targets_unique = pim.targets_unique
         group_to_target_map = pim.group_to_target_map
 
-        index_dst, index_constructor, columns_constructor = pivot_derive_constructors(
+        pdc = pivot_derive_constructors(
                 contract_src=index_src,
                 expand_src=columns_src,
                 group_select=pim.group_select,
@@ -4727,9 +4724,9 @@ class Frame(ContainerOperand):
 
         return self.from_items(
                 items(),
-                index=index_dst,
-                index_constructor=index_constructor,
-                columns_constructor=columns_constructor,
+                index=pdc.contract_dst,
+                index_constructor=pdc.contract_constructor,
+                columns_constructor=pdc.expand_constructor,
                 name=self.name,
                 )
 

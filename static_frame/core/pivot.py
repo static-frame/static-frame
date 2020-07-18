@@ -12,16 +12,21 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import IndexConstructor
+
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[tp.Hashable]
     target_depth: int
     target_select: np.ndarray
-    group_to_target_map: tp.Dict[tp.Hashable, tp.Dict[tp.Hashable, int]]
+    group_to_target_map: tp.Dict[tp.Optional[tp.Hashable], tp.Dict[tp.Any, int]]
     group_depth: int
     group_select: np.ndarray
-    group_to_dtype: tp.Dict[tp.Hashable, np.dtype]
+    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], np.dtype]
 
 def pivot_index_map(*,
         index_src: IndexBase,
@@ -50,7 +55,8 @@ def pivot_index_map(*,
 
     group_depth = len(group_arrays)
     target_depth = len(target_arrays)
-    group_to_dtype = {}
+    group_to_dtype: tp.Dict[tp.Optional[tp.Hashable], np.dtype] = {}
+    targets_unique: tp.Iterable[tp.Hashable]
 
     if group_depth == 0:
         # targets must be a tuple
@@ -73,7 +79,7 @@ def pivot_index_map(*,
                 group = group[0]
             # targets are transfered labels; groups are the new columns
             group_to_target_map[group][target] = axis_idx
-            targets_unique[target] = None
+            targets_unique[target] = None #type: ignore
 
             if dtypes_src is not None:
                 if group in group_to_dtype:
@@ -85,12 +91,17 @@ def pivot_index_map(*,
             targets_unique=targets_unique,
             target_depth=target_depth,
             target_select=target_select,
-            group_to_target_map=group_to_target_map,
+            group_to_target_map=group_to_target_map, #type: ignore
             group_depth=group_depth,
             group_select=group_select,
             group_to_dtype=group_to_dtype
             )
 
+
+class PivotDeriveConstructors(tp.NamedTuple):
+    contract_dst: tp.Optional[tp.Iterable[tp.Hashable]]
+    contract_constructor: IndexConstructor
+    expand_constructor: IndexConstructor
 
 def pivot_derive_constructors(*,
         contract_src: IndexBase,
@@ -102,7 +113,7 @@ def pivot_derive_constructors(*,
         group_to_target_map: tp.Dict[tp.Hashable, tp.Tuple[tp.Hashable]],
         expand_is_columns: bool,
         frame_cls: tp.Type['Frame'],
-        ):
+        ) -> PivotDeriveConstructors:
     '''
     pivot_stack: columns is contract, index is expand
     pivot_unstack: index is contract, columns is expand
@@ -122,7 +133,7 @@ def pivot_derive_constructors(*,
         contract_dst = None
         contract_constructor = partial(contract_cls, name=contract_src.name)
     else:
-        contract_src_types = contract_src.index_types.values
+        contract_src_types = contract_src.index_types.values #type: ignore
         contract_dst_types = contract_src_types[group_select]
         if group_depth == 0:
             contract_dst = None
@@ -133,7 +144,7 @@ def pivot_derive_constructors(*,
         else:
             contract_dst = list(group_to_target_map.keys())
             contract_constructor = partial(
-                    contract_cls_hierarchy.from_labels,
+                    contract_cls_hierarchy.from_labels, #type: ignore
                     name=contract_src.name,
                     index_constructors=contract_dst_types,
                     )
@@ -142,7 +153,7 @@ def pivot_derive_constructors(*,
     if expand_src.depth == 1:
         expand_types = [expand_src.__class__]
     else:
-        expand_types = list(expand_src._levels.index_types())
+        expand_types = list(expand_src._levels.index_types()) #type: ignore
     if contract_src.depth == 1:
         expand_types.append(contract_src.__class__)
     else:
@@ -155,4 +166,8 @@ def pivot_derive_constructors(*,
             )
 
     # NOTE: expand_dst labels will come from the values generator
-    return contract_dst, contract_constructor, expand_constructor
+    return PivotDeriveConstructors( #pylint: disable=E1120
+            contract_dst=contract_dst,
+            contract_constructor=contract_constructor,
+            expand_constructor=expand_constructor,
+            )

@@ -7,6 +7,8 @@ What is New in Static Frame
 
 Added ``Frame.from_clipboard()`` and ``Frame.to_clipboard()``.
 
+Added ``Frame.pivot_stack()`` and ``Frame.pivot_unstack()``.
+
 
 0.6.24
 ----------
