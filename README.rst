@@ -46,7 +46,7 @@ Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
 
-Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
+Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
 
 Why Immutable Data?
