@@ -2169,6 +2169,207 @@ Mars                  -65
 
 #end_Frame-iloc[]
 
+
+#start_Frame-set_index_hierarchy()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f
+<Frame>
+<Index> name    mass      charge    type   <<U6>
+<Index>
+0       muon    0.106     -1.0      lepton
+1       tau     1.777     -1.0      lepton
+2       charm   1.3       0.666     quark
+3       strange 0.1       -0.333    quark
+<int64> <<U7>   <float64> <float64> <<U6>
+>>> f.set_index_hierarchy(('type', 'name'), drop=True)
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+#end_Frame-set_index_hierarchy()
+
+
+#start_Frame-relabel_flat()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
+>>> f
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+>>> f.relabel_flat(index=True)
+<Frame>
+<Index>              mass      charge    <<U6>
+<Index>
+('lepton', 'muon')   0.106     -1.0
+('lepton', 'tau')    1.777     -1.0
+('quark', 'charm')   1.3       0.666
+('quark', 'strange') 0.1       -0.333
+<object>             <float64> <float64>
+
+#end_Frame-relabel_flat()
+
+#start_Frame-relabel_add_level()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
+>>> f
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+>>> f.relabel_add_level(index='particle')
+<Frame>
+<Index>                                           mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+particle                           lepton muon    0.106     -1.0
+particle                           lepton tau     1.777     -1.0
+particle                           quark  charm   1.3       0.666
+particle                           quark  strange 0.1       -0.333
+<<U8>                              <<U6>  <<U7>   <float64> <float64>
+
+#end_Frame-relabel_add_level()
+
+
+#start_Frame-relabel_drop_level
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
+>>> f
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+>>> f.relabel_drop_level(index=1)
+<Frame>
+<Index> mass      charge    <<U6>
+<Index>
+muon    0.106     -1.0
+tau     1.777     -1.0
+charm   1.3       0.666
+strange 0.1       -0.333
+<<U7>   <float64> <float64>
+
+#end_Frame-relabel_drop_level
+
+
+#start_Frame-pivot()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f
+<Frame>
+<Index> name    mass      charge    type   <<U6>
+<Index>
+0       muon    0.106     -1.0      lepton
+1       tau     1.777     -1.0      lepton
+2       charm   1.3       0.666     quark
+3       strange 0.1       -0.333    quark
+<int64> <<U7>   <float64> <float64> <<U6>
+
+>>> f.pivot(index_fields='type', data_fields='mass', func={'mean':np.mean, 'max':np.max})
+<Frame>
+<IndexHierarchy: ('values', 'func')> mass               mass     <<U4>
+                                     mean               max      <<U4>
+<Index: type>
+lepton                               0.9415             1.777
+quark                                0.7000000000000001 1.3
+<<U6>                                <object>           <object>
+
+#end_Frame-pivot()
+
+
+#start_Frame-pivot_stack()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
+>>> f
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+>>> f.pivot_stack()
+<Frame>
+<Index>                         0         <int64>
+<IndexHierarchy>
+lepton           muon    mass   0.106
+lepton           muon    charge -1.0
+lepton           tau     mass   1.777
+lepton           tau     charge -1.0
+quark            charm   mass   1.3
+quark            charm   charge 0.666
+quark            strange mass   0.1
+quark            strange charge -0.333
+<<U6>            <<U7>   <<U6>  <float64>
+
+#end_Frame-pivot_stack()
+
+#start_Frame-pivot_unstack()
+>>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+>>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
+>>> f
+<Frame>
+<Index>                                    mass      charge    <<U6>
+<IndexHierarchy: ('type', 'name')>
+lepton                             muon    0.106     -1.0
+lepton                             tau     1.777     -1.0
+quark                              charm   1.3       0.666
+quark                              strange 0.1       -0.333
+<<U6>                              <<U7>   <float64> <float64>
+
+>>> f.pivot_unstack(0)
+<Frame>
+<IndexHierarchy> mass      mass      charge    charge    <<U6>
+                 lepton    quark     lepton    quark     <<U6>
+<Index>
+muon             0.106     nan       -1.0      nan
+tau              1.777     nan       -1.0      nan
+charm            nan       1.3       nan       0.666
+strange          nan       0.1       nan       -0.333
+<<U7>            <float64> <float64> <float64> <float64>
+
+>>> f.pivot_unstack(1)
+<Frame>
+<IndexHierarchy> mass      mass      mass      mass      charge    charge    charge    charge    <<U6>
+                 muon      tau       charm     strange   muon      tau       charm     strange   <<U7>
+<Index>
+lepton           0.106     1.777     nan       nan       -1.0      -1.0      nan       nan
+quark            nan       nan       1.3       0.1       nan       nan       0.666     -0.333
+<<U6>            <float64> <float64> <float64> <float64> <float64> <float64> <float64> <float64>
+
+>>> f.pivot_unstack([0, 1])
+<Frame>
+<IndexHierarchy> mass      mass      mass      mass      charge    charge    charge    charge    <<U6>
+                 lepton    lepton    quark     quark     lepton    lepton    quark     quark     <<U6>
+                 muon      tau       charm     strange   muon      tau       charm     strange   <<U7>
+<Index>
+0                0.106     1.777     1.3       0.1       -1.0      -1.0      0.666     -0.333
+<int64>          <float64> <float64> <float64> <float64> <float64> <float64> <float64> <float64>
+
+#end_Frame-pivot_unstack()
+
+
+
 #-------------------------------------------------------------------------------
 # FrameGO
 

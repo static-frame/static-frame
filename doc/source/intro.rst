@@ -3,31 +3,25 @@
 About StaticFrame
 *******************
 
-
-.. admonition:: Alpha Release
-    :class: Warning
-
-    Prior to the 1.0 release, interfaces may change. Please assist in development by reporting any bugs or request any missing features.
-
-    https://github.com/InvestmentSystems/static-frame/issues
-
-
 StaticFrame is not a drop-in replacement for Pandas. While some conventions and API components are directly borrowed from Pandas, some are completely different, either by necessity (due to the immutable data model) or by choice (offering more uniform, less redundant, and more explicit interfaces). As StaticFrame does not support in-place mutation, architectures that made significant use of mutability in Pandas will require refactoring.
 
-StaticFrame is lightweight. It has few dependencies (Pandas is not a dependency).
+For more comparisons to Pandas, see `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
+
+For a concise overview of all StaticFrame interfaces, see :ref:`api-overview`.
 
 StaticFrame does not aspire to be an all-in-one framework for all aspects of data processing and visualization. StaticFrame focuses on providing efficient and powerful data structures with consistent, clear, and stable interfaces.
 
-StaticFrame aspires to have comparable or better performance than Pandas. While this is already the case for some core operations (See :ref:`performance`), some important functions are far more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
+StaticFrame targets comparable or better performance than Pandas. While this is already the case for some core operations (See :ref:`performance`), other operations are, for now, still more performant in Pandas (such as reading delimited text files via ``pd.read_csv``). StaticFrame provides easy conversion to and from Pandas to bridge needed functionality or performance.
 
-StaticFrame relyies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
+StaticFrame relies entirely on NumPy for types and numeric computation routines. NumPy offers desirable stability in performance and interface. For working with SciPy and related tools, StaticFrame exposes easy access to NumPy arrays, conversion to and from Pandas and Arrow, and support for reading from and writing to a wide variety of storage formats.
 
+Please assist in development by reporting bugs or requesting features. We are a welcoming community and appreciate all feedback! https://github.com/InvestmentSystems/static-frame/issues
 
 
 Immutability
 ***********************************
 
-The :obj:`static_frame.Series` and :obj:`static_frame.Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
+The :obj:`Series` and :obj:`Frame` store data in immutable NumPy arrays. Once created, array values cannot be changed. StaticFrame manages NumPy arrays, setting the ``ndarray.flags.writeable`` attribute to False on all managed and returned NumPy arrays.
 
 .. literalinclude:: ../../static_frame/test/unit/test_doc.py
    :language: python
@@ -44,7 +38,7 @@ To mutate values in a ``Series`` or ``Frame``, a copy must be made. Convenient f
    :end-before: end_assign
 
 
-Immutable data has the overwhelming benefit of providing the confidence that a client of a ``Series`` or ``Frame`` cannot mutate its data. This removes the need for many unnecessary copies, and forces clients to only make copies when absolutely necessary.
+Immutable data has the overwhelming benefit of providing the confidence that a client of a ``Series`` or ``Frame`` cannot mutate its data. This removes the need for many unnecessary, defensive copies, and forces clients to only make copies when absolutely necessary.
 
 There is no guarantee that using immutable data will produce correct code or more resilient and robust libraries. It is true, however, that using immutable data removes countless opportunities for introducing flaws in data processing routines and libraries.
 

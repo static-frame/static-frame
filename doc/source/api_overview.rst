@@ -3,7 +3,6 @@
 API Overview
 ===============================
 
-
 For each container, the complete public API is presented below. Note that interface endpoints are expanded to show all interface sub components.
 
 This is an overview for quick reference; for detailed documentation, see :ref:`api-detail`.
@@ -31,14 +30,13 @@ This is an overview for quick reference; for detailed documentation, see :ref:`a
 
         {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
             {% if signature.startswith('[') -%}
-            ":obj:`static_frame.{{name}}{{signature}}`", "{{row.doc}}"
+            :ref:`?<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`static_frame.{{name}}{{signature}}`", "{{row.doc}}"
             {% else -%}
-            ":obj:`static_frame.{{name}}.{{signature}}`", "{{row.doc}}"
+            :ref:`?<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`static_frame.{{name}}.{{signature}}`", "{{row.doc}}"
             {% endif -%}
         {% endfor %}
 
     {% endfor %}
-
     {% endfor %}
 
 
