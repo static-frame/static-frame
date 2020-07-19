@@ -135,22 +135,20 @@ def pivot_derive_constructors(*,
     # contract axis may or may not be IndexHierarchy after extracting depths
     if contract_src.depth == 1: # will removed that one level, thus need IndexAuto
         contract_dst = None
-        contract_constructor = contract_cls # partial(contract_cls, name=contract_src.name)
+        contract_constructor = contract_cls
     else:
         contract_src_types = contract_src.index_types.values #type: ignore
         contract_dst_types = contract_src_types[group_select]
         if group_depth == 0:
             contract_dst = None
-            contract_constructor = contract_cls # partial(contract_cls, name=contract_src.name)
+            contract_constructor = contract_cls
         elif group_depth == 1:
             contract_dst = list(group_to_target_map.keys())
-            # contract_constructor = partial(contract_dst_types[0], name=contract_src.name)
             contract_constructor = contract_dst_types[0]
         else:
             contract_dst = list(group_to_target_map.keys())
-            contract_constructor = partial(
-                    contract_cls_hierarchy.from_labels, #type: ignore
-                    # name=contract_src.name,
+            contract_constructor = partial( #type: ignore
+                    contract_cls_hierarchy.from_labels,
                     index_constructors=contract_dst_types,
                     )
 
@@ -159,6 +157,7 @@ def pivot_derive_constructors(*,
         expand_types = [expand_src.__class__]
     else:
         expand_types = list(expand_src._levels.index_types()) #type: ignore
+
     if contract_src.depth == 1:
         expand_types.append(contract_src.__class__)
     else:
