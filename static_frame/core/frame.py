@@ -4583,9 +4583,9 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # pivot stack, unstack
 
-
     def pivot_stack(self,
             depth_level: DepthLevelSpecifier = -1,
+            *,
             fill_value: object = np.nan,
             ) -> 'Frame':
         '''
@@ -4662,6 +4662,7 @@ class Frame(ContainerOperand):
 
     def pivot_unstack(self,
             depth_level: DepthLevelSpecifier = -1,
+            *,
             fill_value: object = np.nan,
             ) -> 'Frame':
         '''
