@@ -22,6 +22,7 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYearGO
 from static_frame import IndexYear
 from static_frame import IndexDate
+from static_frame import IndexDateGO
 
 from static_frame import Series
 from static_frame import Frame
@@ -42,6 +43,8 @@ from static_frame.core.frame import FrameAssign
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import skip_linux_no_display
+
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -5886,6 +5889,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f1, f2)
 
     #---------------------------------------------------------------------------
+    @skip_linux_no_display #type: ignore
     def test_frame_to_clipboard_a(self) -> None:
         records = (
                 (2, 'a', False),
@@ -5898,7 +5902,6 @@ class TestUnit(TestCase):
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
         self.assertTrue(f2.equals(f1, compare_dtype=True))
-
 
     #---------------------------------------------------------------------------
     def test_frame_to_html_a(self) -> None:
@@ -9895,6 +9898,216 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((('A', 1), ((0, 10), (1, 10))), (('A', 2), ((0, 20), (1, 20))), (('B', 2), ((0, 30), (1, 30))))
                 )
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_pivot_stack_a(self) -> None:
+
+        f1 = Frame.from_records(
+                [[0, 'w'], [1, 'x'], [2, 'y'], [3, 'z']],
+                columns=('a', 'b'),
+                index=IndexHierarchy.from_product(('I', 'II'), (1, 2), name='foo'),
+                name='bar'
+                )
+        f2 = f1.pivot_stack()
+        self.assertEqual(f2.to_pairs(0),
+                    ((0, ((('I', 1, 'a'), 0), (('I', 1, 'b'), 'w'), (('I', 2, 'a'), 1), (('I', 2, 'b'), 'x'), (('II', 1, 'a'), 2), (('II', 1, 'b'), 'y'), (('II', 2, 'a'), 3), (('II', 2, 'b'), 'z'))),)
+                    )
+
+        self.assertEqual(f2.index.name, None)
+        self.assertEqual(f2.name, 'bar')
+
+
+    def test_frame_pivot_stack_b(self) -> None:
+
+        f1 = Frame.from_records(
+                np.arange(16).reshape(8, 2),
+                columns=('a', 'b'),
+                index=IndexHierarchy.from_product(
+                        ('foo', 'bar'),
+                        IndexDate.from_date_range('2000-01-01', '2000-01-04')),
+                )
+
+        f2 = f1.pivot_stack()
+
+        self.assertEqual(f2.index.index_types.values.tolist(),
+                [Index, IndexDate, Index]
+                )
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((('foo', datetime.date(2000, 1, 1), 'a'), 0), (('foo', datetime.date(2000, 1, 1), 'b'), 1), (('foo', datetime.date(2000, 1, 2), 'a'), 2), (('foo', datetime.date(2000, 1, 2), 'b'), 3), (('foo', datetime.date(2000, 1, 3), 'a'), 4), (('foo', datetime.date(2000, 1, 3), 'b'), 5), (('foo', datetime.date(2000, 1, 4), 'a'), 6), (('foo', datetime.date(2000, 1, 4), 'b'), 7), (('bar', datetime.date(2000, 1, 1), 'a'), 8), (('bar', datetime.date(2000, 1, 1), 'b'), 9), (('bar', datetime.date(2000, 1, 2), 'a'), 10), (('bar', datetime.date(2000, 1, 2), 'b'), 11), (('bar', datetime.date(2000, 1, 3), 'a'), 12), (('bar', datetime.date(2000, 1, 3), 'b'), 13), (('bar', datetime.date(2000, 1, 4), 'a'), 14), (('bar', datetime.date(2000, 1, 4), 'b'), 15))),)
+                )
+
+    def test_frame_pivot_stack_c(self) -> None:
+
+        index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
+        columns = IndexHierarchy.from_labels(
+                (('c0', 'c00'), ('c0', 'c01'), ('c1', 'c10'))
+                )
+        f1 = Frame(np.arange(6).reshape(2, 3), index=index, columns=columns)
+
+        f2 = f1.pivot_stack(fill_value=-1)
+
+        self.assertEqual(
+                f2.to_pairs(0),
+                (('c0', ((('r0', 'r00', 'c00'), 0), (('r0', 'r00', 'c01'), 1), (('r0', 'r00', 'c10'), -1), (('r0', 'r01', 'c00'), 3), (('r0', 'r01', 'c01'), 4), (('r0', 'r01', 'c10'), -1))), ('c1', ((('r0', 'r00', 'c00'), -1), (('r0', 'r00', 'c01'), -1), (('r0', 'r00', 'c10'), 2), (('r0', 'r01', 'c00'), -1), (('r0', 'r01', 'c01'), -1), (('r0', 'r01', 'c10'), 5))))
+                )
+
+    def test_frame_pivot_stack_d(self) -> None:
+
+        for cls in (Frame, FrameGO):
+
+            f1 = cls(np.arange(16).reshape(2, 8),
+                        columns=IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+                        )
+
+            f2 = f1.pivot_stack()
+
+            self.assertEqual(f2.to_pairs(0),
+                    ((('I', 'A'), (((0, 1), 0), ((0, 2), 1), ((1, 1), 8), ((1, 2), 9))), (('I', 'B'), (((0, 1), 2), ((0, 2), 3), ((1, 1), 10), ((1, 2), 11))), (('II', 'A'), (((0, 1), 4), ((0, 2), 5), ((1, 1), 12), ((1, 2), 13))), (('II', 'B'), (((0, 1), 6), ((0, 2), 7), ((1, 1), 14), ((1, 2), 15))))
+                    )
+
+            f3 = f2.pivot_stack()
+
+            self.assertEqual(f3.to_pairs(0),
+                    (('I', (((0, 1, 'A'), 0), ((0, 1, 'B'), 2), ((0, 2, 'A'), 1), ((0, 2, 'B'), 3), ((1, 1, 'A'), 8), ((1, 1, 'B'), 10), ((1, 2, 'A'), 9), ((1, 2, 'B'), 11))), ('II', (((0, 1, 'A'), 4), ((0, 1, 'B'), 6), ((0, 2, 'A'), 5), ((0, 2, 'B'), 7), ((1, 1, 'A'), 12), ((1, 1, 'B'), 14), ((1, 2, 'A'), 13), ((1, 2, 'B'), 15))))
+                    )
+
+            f4 = f3.pivot_stack()
+
+            self.assertEqual(f4.to_pairs(0),
+                    ((0, (((0, 1, 'A', 'I'), 0), ((0, 1, 'A', 'II'), 4), ((0, 1, 'B', 'I'), 2), ((0, 1, 'B', 'II'), 6), ((0, 2, 'A', 'I'), 1), ((0, 2, 'A', 'II'), 5), ((0, 2, 'B', 'I'), 3), ((0, 2, 'B', 'II'), 7), ((1, 1, 'A', 'I'), 8), ((1, 1, 'A', 'II'), 12), ((1, 1, 'B', 'I'), 10), ((1, 1, 'B', 'II'), 14), ((1, 2, 'A', 'I'), 9), ((1, 2, 'A', 'II'), 13), ((1, 2, 'B', 'I'), 11), ((1, 2, 'B', 'II'), 15))),)
+                    )
+
+            f5 = f1.pivot_stack(0) # the outermost
+            self.assertEqual(f5.to_pairs(0),
+                    ((('A', 1), (((0, 'I'), 0), ((0, 'II'), 4), ((1, 'I'), 8), ((1, 'II'), 12))), (('A', 2), (((0, 'I'), 1), ((0, 'II'), 5), ((1, 'I'), 9), ((1, 'II'), 13))), (('B', 1), (((0, 'I'), 2), ((0, 'II'), 6), ((1, 'I'), 10), ((1, 'II'), 14))), (('B', 2), (((0, 'I'), 3), ((0, 'II'), 7), ((1, 'I'), 11), ((1, 'II'), 15))))
+                    )
+
+            f6 = f1.pivot_stack(1)
+            self.assertEqual(f6.to_pairs(0),
+                    ((('I', 1), (((0, 'A'), 0), ((0, 'B'), 2), ((1, 'A'), 8), ((1, 'B'), 10))), (('I', 2), (((0, 'A'), 1), ((0, 'B'), 3), ((1, 'A'), 9), ((1, 'B'), 11))), (('II', 1), (((0, 'A'), 4), ((0, 'B'), 6), ((1, 'A'), 12), ((1, 'B'), 14))), (('II', 2), (((0, 'A'), 5), ((0, 'B'), 7), ((1, 'A'), 13), ((1, 'B'), 15))))
+                    )
+
+    def test_frame_pivot_stack_e(self) -> None:
+
+        f1 = Frame(np.arange(16).reshape(2, 8),
+                    columns=IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+                    )
+
+        f2 = f1.pivot_stack([0, 2])
+        self.assertEqual(f2.to_pairs(0),
+                (('A', (((0, 'I', 1), 0), ((0, 'I', 2), 1), ((0, 'II', 1), 4), ((0, 'II', 2), 5), ((1, 'I', 1), 8), ((1, 'I', 2), 9), ((1, 'II', 1), 12), ((1, 'II', 2), 13))), ('B', (((0, 'I', 1), 2), ((0, 'I', 2), 3), ((0, 'II', 1), 6), ((0, 'II', 2), 7), ((1, 'I', 1), 10), ((1, 'I', 2), 11), ((1, 'II', 1), 14), ((1, 'II', 2), 15))))
+                )
+
+        f3 = f1.pivot_stack([1, 2])
+        self.assertEqual(f3.to_pairs(0),
+                (('I', (((0, 'A', 1), 0), ((0, 'A', 2), 1), ((0, 'B', 1), 2), ((0, 'B', 2), 3), ((1, 'A', 1), 8), ((1, 'A', 2), 9), ((1, 'B', 1), 10), ((1, 'B', 2), 11))), ('II', (((0, 'A', 1), 4), ((0, 'A', 2), 5), ((0, 'B', 1), 6), ((0, 'B', 2), 7), ((1, 'A', 1), 12), ((1, 'A', 2), 13), ((1, 'B', 1), 14), ((1, 'B', 2), 15))))
+                )
+
+    def test_frame_pivot_stack_f(self) -> None:
+
+        f1 = Frame.from_records(
+                np.arange(16).reshape(4, 4),
+                columns=IndexHierarchy.from_product(
+                        IndexYear(('1642', '1633')),
+                        IndexDate.from_date_range('1733-01-01', '1733-01-02')),
+                index=IndexHierarchy.from_product(
+                        IndexYear(('1810', '1840')),
+                        IndexDate.from_date_range('2000-01-01', '2000-01-02')),
+                )
+
+        f2 = f1.pivot_unstack()
+
+        self.assertEqual(f2.columns.index_types.values.tolist(),
+                [IndexYear, IndexDate, IndexDate])
+        self.assertEqual(f2.index.__class__, IndexYear)
+
+        dt64 = np.datetime64
+        self.assertEqual(f2.to_pairs(0),
+                (((dt64('1642-01-01'), dt64('1733-01-01'), dt64('2000-01-01')), ((dt64('1810'), 0), (dt64('1840'), 8))), ((dt64('1642-01-01'), dt64('1733-01-01'), dt64('2000-01-02')), ((dt64('1810'), 4), (dt64('1840'), 12))), ((dt64('1642-01-01'), dt64('1733-01-02'), dt64('2000-01-01')), ((dt64('1810'), 1), (dt64('1840'), 9))), ((dt64('1642-01-01'), dt64('1733-01-02'), dt64('2000-01-02')), ((dt64('1810'), 5), (dt64('1840'), 13))), ((dt64('1633-01-01'), dt64('1733-01-01'), dt64('2000-01-01')), ((dt64('1810'), 2), (dt64('1840'), 10))), ((dt64('1633-01-01'), dt64('1733-01-01'), dt64('2000-01-02')), ((dt64('1810'), 6), (dt64('1840'), 14))), ((dt64('1633-01-01'), dt64('1733-01-02'), dt64('2000-01-01')), ((dt64('1810'), 3), (dt64('1840'), 11))), ((dt64('1633-01-01'), dt64('1733-01-02'), dt64('2000-01-02')), ((dt64('1810'), 7), (dt64('1840'), 15)))))
+
+        f3 = f1.pivot_stack()
+        self.assertEqual(
+                f3.index.index_types.values.tolist(),
+                [IndexYear, IndexDate, IndexDate]
+                )
+        self.assertEqual(f3.columns.__class__, IndexYear)
+
+        self.assertEqual(f3.to_pairs(0),
+                ((dt64('1642'), (((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 0), ((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 1), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 4), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 5), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 8), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 9), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 12), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 13))), (dt64('1633'), (((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 2), ((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 3), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 6), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 7), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 10), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 11), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 14), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 15))))
+                )
+
+
+
+    def test_frame_pivot_stack_g(self) -> None:
+
+        f1 = FrameGO.from_records(
+                np.arange(16).reshape(4, 4),
+                columns=IndexHierarchy.from_product(
+                        IndexYear(('1642', '1633')),
+                        IndexDate.from_date_range('1733-01-01', '1733-01-02')),
+                index=IndexHierarchy.from_product(
+                        IndexYear(('1810', '1840')),
+                        IndexDate.from_date_range('2000-01-01', '2000-01-02')),
+                )
+
+        f2 = f1.pivot_unstack()
+
+        self.assertEqual(f2.columns.index_types.values.tolist(),
+                [IndexYearGO, IndexDateGO, IndexDateGO])
+        self.assertEqual(f2.index.__class__, IndexYear)
+
+        dt64 = np.datetime64
+        self.assertEqual(f2.to_pairs(0),
+                (((dt64('1642-01-01'), dt64('1733-01-01'), dt64('2000-01-01')), ((dt64('1810'), 0), (dt64('1840'), 8))), ((dt64('1642-01-01'), dt64('1733-01-01'), dt64('2000-01-02')), ((dt64('1810'), 4), (dt64('1840'), 12))), ((dt64('1642-01-01'), dt64('1733-01-02'), dt64('2000-01-01')), ((dt64('1810'), 1), (dt64('1840'), 9))), ((dt64('1642-01-01'), dt64('1733-01-02'), dt64('2000-01-02')), ((dt64('1810'), 5), (dt64('1840'), 13))), ((dt64('1633-01-01'), dt64('1733-01-01'), dt64('2000-01-01')), ((dt64('1810'), 2), (dt64('1840'), 10))), ((dt64('1633-01-01'), dt64('1733-01-01'), dt64('2000-01-02')), ((dt64('1810'), 6), (dt64('1840'), 14))), ((dt64('1633-01-01'), dt64('1733-01-02'), dt64('2000-01-01')), ((dt64('1810'), 3), (dt64('1840'), 11))), ((dt64('1633-01-01'), dt64('1733-01-02'), dt64('2000-01-02')), ((dt64('1810'), 7), (dt64('1840'), 15)))))
+
+        f3 = f1.pivot_stack()
+        self.assertEqual(
+                f3.index.index_types.values.tolist(),
+                [IndexYear, IndexDate, IndexDate]
+                )
+        self.assertEqual(f3.columns.__class__, IndexYearGO)
+
+        self.assertEqual(f3.to_pairs(0),
+                ((dt64('1642'), (((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 0), ((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 1), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 4), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 5), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 8), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 9), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 12), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 13))), (dt64('1633'), (((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 2), ((dt64('1810-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 3), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 6), ((dt64('1810-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 7), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-01')), 10), ((dt64('1840-01-01'), dt64('2000-01-01'), dt64('1733-01-02')), 11), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-01')), 14), ((dt64('1840-01-01'), dt64('2000-01-02'), dt64('1733-01-02')), 15))))
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_pivot_unstack_a(self) -> None:
+
+        index = IndexHierarchy.from_labels((('r0', 'r00'), ('r0', 'r01')))
+        columns = IndexHierarchy.from_labels(
+                (('c0', 'c00'), ('c0', 'c01'), ('c1', 'c10'))
+                )
+        f1 = Frame(np.arange(6).reshape(2, 3), index=index, columns=columns)
+
+        f2 = f1.pivot_unstack(fill_value=-1)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((('c0', 'c00', 'r00'), (('r0', 0),)), (('c0', 'c00', 'r01'), (('r0', 3),)), (('c0', 'c01', 'r00'), (('r0', 1),)), (('c0', 'c01', 'r01'), (('r0', 4),)), (('c1', 'c10', 'r00'), (('r0', 2),)), (('c1', 'c10', 'r01'), (('r0', 5),)))
+                )
+
+        f3 = f2.pivot_unstack()
+
+        self.assertEqual(f3.to_pairs(0),
+                ((('c0', 'c00', 'r00', 'r0'), ((0, 0),)), (('c0', 'c00', 'r01', 'r0'), ((0, 3),)), (('c0', 'c01', 'r00', 'r0'), ((0, 1),)), (('c0', 'c01', 'r01', 'r0'), ((0, 4),)), (('c1', 'c10', 'r00', 'r0'), ((0, 2),)), (('c1', 'c10', 'r01', 'r0'), ((0, 5),)))
+                )
+
+    def test_frame_pivot_unstack_b(self) -> None:
+
+        f1 = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
+
+        f1 = f1.set_index_hierarchy(('type', 'name'), drop=True)
+        f2 = f1.pivot_unstack([0, 1])
+
+        self.assertEqual(f2.to_pairs(0),
+            ((('mass', 'lepton', 'muon'), ((0, 0.106),)), (('mass', 'lepton', 'tau'), ((0, 1.777),)), (('mass', 'quark', 'charm'), ((0, 1.3),)), (('mass', 'quark', 'strange'), ((0, 0.1),)), (('charge', 'lepton', 'muon'), ((0, -1.0),)), (('charge', 'lepton', 'tau'), ((0, -1.0),)), (('charge', 'quark', 'charm'), ((0, 0.666),)), (('charge', 'quark', 'strange'), ((0, -0.333),))))
+
+        # import ipdb; ipdb.set_trace()
+
+
 
 
 if __name__ == '__main__':

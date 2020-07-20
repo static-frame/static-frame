@@ -34,6 +34,12 @@ skip_win = pytest.mark.skipif(
         reason='Windows default dtypes'
         )
 
+
+skip_linux_no_display = pytest.mark.skipif(
+        sys.platform == 'linux' and 'DISPLAY' not in os.environ,
+        reason='No display available'
+        )
+
 @contextlib.contextmanager
 def temp_file(suffix: tp.Optional[str] = None,
         path: bool = False

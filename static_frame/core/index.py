@@ -829,14 +829,27 @@ class Index(IndexBase):
             self._update_array_cache()
         return self._positions
 
+    @staticmethod
+    def _depth_level_validate(depth_level: DepthLevelSpecifier) -> None:
+        '''
+        Handle all variety of depth_level specifications for a 1D index: only 0, -1, and lists of the same are valid.
+        '''
+        if not isinstance(depth_level, int):
+            depth_level = tuple(depth_level)
+            if len(depth_level) != 1:
+                raise RuntimeError('invalid depth_level', depth_level)
+            depth_level = depth_level[0]
+
+        if depth_level > 0 or depth_level < -1:
+            raise RuntimeError('invalid depth_level', depth_level)
+
     def values_at_depth(self,
             depth_level: DepthLevelSpecifier = 0
             ) -> np.ndarray:
         '''
         Return an NP array for the `depth_level` specified.
         '''
-        if depth_level != 0:
-            raise RuntimeError('invalid depth_level', depth_level)
+        self._depth_level_validate(depth_level)
         return self.values
 
     @doc_inject()
@@ -844,8 +857,7 @@ class Index(IndexBase):
             depth_level: DepthLevelSpecifier = 0
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, int]]:
         '''{}'''
-        if depth_level != 0:
-            raise RuntimeError('invalid depth_level', depth_level)
+        self._depth_level_validate(depth_level)
         yield from zip_longest(self.values, EMPTY_TUPLE, fillvalue=1)
 
 

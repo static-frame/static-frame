@@ -4,37 +4,27 @@ import datetime
 import numpy as np
 
 
-from static_frame.core.container_util import is_static
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import key_to_ascending_key
-
-from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import bloc_key_normalize
-
+from static_frame.core.container_util import get_col_dtype_factory
+from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import index_many_set
-
-from static_frame import Series
-from static_frame import Frame
-
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-
-# from static_frame import IndexYearMonth
-# from static_frame import IndexYear
-from static_frame import IndexSecond
-# from static_frame import IndexMillisecond
-
+from static_frame.core.container_util import is_static
+from static_frame.core.container_util import key_to_ascending_key
+from static_frame.core.container_util import matmul
+from static_frame.core.container_util import pandas_to_numpy
+from static_frame.core.container_util import pandas_version_under_1
 from static_frame.test.test_case import TestCase
 
-
+from static_frame import Frame
+from static_frame import Index
+from static_frame import IndexDate
+from static_frame import IndexDateGO
+from static_frame import IndexGO
+from static_frame import IndexHierarchy
+from static_frame import IndexHierarchyGO
+from static_frame import IndexSecond
+from static_frame import Series
 
 class TestUnit(TestCase):
 
@@ -423,6 +413,18 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_index_many_concat_e(self) -> None:
+
+        idx1 = IndexDateGO(('2020-01-01', '2020-01-02'))
+        idx2 = IndexDateGO(('2020-02-01', '2020-02-02'))
+
+        post1 = index_many_concat((idx1, idx2), cls_default=Index)
+
+        self.assertEqual(post1.__class__, IndexDate)
+        self.assertEqual(post1.values.tolist(), #type: ignore
+                [datetime.date(2020, 1, 1), datetime.date(2020, 1, 2), datetime.date(2020, 2, 1), datetime.date(2020, 2, 2)]
+                )
+
     #---------------------------------------------------------------------------
     def test_index_many_set_a(self) -> None:
 
@@ -484,6 +486,27 @@ class TestUnit(TestCase):
         # empty iterable returns an empty index
         post2 = index_many_set((), Index, union=True)
         self.assertEqual(len(post2), 0) #type: ignore
+
+    #---------------------------------------------------------------------------
+    def test_get_col_dtype_factory_a(self) -> None:
+
+        func1 = get_col_dtype_factory((np.dtype(float), np.dtype(object)), None)
+        self.assertEqual(func1(0), np.dtype(float))
+        self.assertEqual(func1(1), np.dtype(object))
+
+
+        func2 = get_col_dtype_factory((np.dtype(float), np.dtype(object)), ['foo', 'bar'])
+
+        self.assertEqual(func2(0), np.dtype(float))
+        self.assertEqual(func2(1), np.dtype(object))
+
+
+        func3 = get_col_dtype_factory(dict(bar=np.dtype(bool)), ['foo', 'bar'])
+        self.assertEqual(func3(0), None)
+        self.assertEqual(func3(1), np.dtype(bool))
+
+        with self.assertRaises(RuntimeError):
+            _ = get_col_dtype_factory(dict(bar=np.dtype(bool)), None)
 
 
 

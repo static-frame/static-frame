@@ -14,6 +14,7 @@ from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import DepthLevelSpecifier
 
 
 if tp.TYPE_CHECKING:
@@ -87,55 +88,6 @@ class IndexBase(ContainerOperand):
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy
 
-    def _ufunc_axis_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        raise NotImplementedError()
-
-    def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
-        raise NotImplementedError() #pragma: no cover
-
-    def _update_array_cache(self) -> None:
-        raise NotImplementedError()
-
-    def copy(self: I) -> I:
-        raise NotImplementedError()
-
-    def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
-        raise NotImplementedError()
-
-    @classmethod
-    def from_labels(cls: tp.Type[I],
-            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
-            *,
-            name: tp.Optional[tp.Hashable] = None
-            ) -> I:
-        raise NotImplementedError()
-
-    def __init__(self, initializer: tp.Any = None,
-            *,
-            name: tp.Optional[tp.Hashable] = None
-            ):
-        # trivial init for mypy; not called by derived class
-        pass
-
-    def __len__(self) -> int:
-        raise NotImplementedError() #pragma: no cover
-
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
-        raise NotImplementedError() #pragma: no cover
-
-
-    @property
-    def ndim(self) -> int:
-        raise NotImplementedError()
-
     #---------------------------------------------------------------------------
     # constructors
 
@@ -182,6 +134,61 @@ class IndexBase(ContainerOperand):
         if not cls.STATIC:
             return IndexGO(value, name=value.name)
         return Index(value, name=value.name)
+
+
+    @classmethod
+    def from_labels(cls: tp.Type[I],
+            labels: tp.Iterable[tp.Sequence[tp.Hashable]],
+            *,
+            name: tp.Optional[tp.Hashable] = None
+            ) -> I:
+        raise NotImplementedError()
+
+    def __init__(self, initializer: tp.Any = None,
+            *,
+            name: tp.Optional[tp.Hashable] = None
+            ):
+        # trivial init for mypy; not called by derived class
+        pass
+
+    def __len__(self) -> int:
+        raise NotImplementedError() #pragma: no cover
+
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
+
+    @property
+    def ndim(self) -> int:
+        raise NotImplementedError() #pragma: no cover
+
+    def values_at_depth(self,
+            depth_level: DepthLevelSpecifier = 0
+            ) -> np.ndarray:
+        raise NotImplementedError() #pragma: no cover
+
+    def _ufunc_axis_skipna(self, *,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
+            composable: bool,
+            dtypes: tp.Tuple[np.dtype, ...],
+            size_one_unity: bool
+            ) -> np.ndarray:
+        raise NotImplementedError()
+
+    def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
+    def _update_array_cache(self) -> None:
+        raise NotImplementedError()
+
+    def copy(self: I) -> I:
+        raise NotImplementedError()
+
+    def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     # name interface
@@ -245,7 +252,7 @@ class IndexBase(ContainerOperand):
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
             other: tp.Union['IndexBase', 'Series']
             ) -> I:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
         '''

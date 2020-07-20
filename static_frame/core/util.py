@@ -743,7 +743,7 @@ def is_gen_copy_values(values: tp.Iterable[tp.Any]) -> tp.Tuple[bool, bool]:
             copy_values |= is_iifa
     return is_gen, copy_values
 
-
+# TODO: rename, to similar to resolve_dtype_iter
 def resolve_type_iter(
         values: tp.Iterable[tp.Any],
         restrict_copy: bool = False
@@ -782,7 +782,7 @@ def resolve_type_iter(
     for v in v_iter:
         if copy_values:
             # if a generator, have to make a copy while iterating
-            # for array construcdtion, cannot use dictlike, so must convert to list
+            # for array construction, cannot use dictlike, so must convert to list
             values_post.append(v)
 
         if resolved != object:
@@ -792,7 +792,7 @@ def resolve_type_iter(
             if isinstance(v, (tuple, list)):
                 has_tuple = True
             elif isinstance(v, Enum):
-                # must check isinstance, as Enum types are alwyas derived from Enum
+                # must check isinstance, as Enum types are always derived from Enum
                 has_enum = True
             elif value_type == str or value_type == np.str_:
                 # must compare to both sring types
@@ -817,7 +817,6 @@ def resolve_type_iter(
     # NOTE: we break before finding a tuple, but our treatment of object types, downstream, will always assign them in the appropriate way
     if copy_values:
         return resolved, has_tuple, values_post
-
     return resolved, has_tuple, values #type: ignore
 
 
@@ -921,7 +920,7 @@ def iterable_to_array_2d(
     # consume values into a tuple
     values = tuple(values)
 
-    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrrict copy is True
+    # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrict copy is True
     dtype, _, _ = resolve_type_iter(
             (y for z in values for y in z),
             restrict_copy=True

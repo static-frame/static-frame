@@ -46,6 +46,8 @@ Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
 
+Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_.
+
 
 Why Immutable Data?
 -------------------------------
@@ -90,6 +92,7 @@ Core StaticFrame requires the following:
 
 - Python >= 3.6
 - NumPy >= 1.16.5
+- automap >= 0.4.8
 
 For extended input and output, the following packages are required:
 
@@ -105,6 +108,11 @@ Quick-Start Guide
 ---------------------
 
 StaticFrame provides numerous methods for loading and creating data, either as a 1D ``Series`` or a 2D ``Frame``. All creation routines are exposed as alternate constructors on the desired class, such as ``Frame.from_records()``, ``Frame.from_csv()`` or ``Frame.from_pandas()``.
+
+.. note::
+
+    For a concise overview of all StaticFrame interfaces, see `API Overview <https://static-frame.readthedocs.io/en/latest/api_overview.html>`_.
+
 
 For example, we can load JSON data from a URL using ``Frame.from_json_url()``, and then use ``Frame.head()`` to reduce the displayed output to just the first five rows. (Passing explicit ``dtypes`` is only necessary on Windows.)
 
@@ -127,7 +135,7 @@ For example, we can load JSON data from a URL using ``Frame.from_json_url()``, a
 
 .. note::
 
-    The Pandas CSV reader far out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading large CSV files.
+    The Pandas CSV reader out-performs the NumPy-based reader in StaticFrame: thus, for now, using ``Frame.from_pandas(pd.read_csv(fp))`` is recommended for loading large CSV files.
 
     For more information on Frame constructors, see `Frame: Constructor <https://static-frame.readthedocs.io/en/latest/api_detail.html#frame-constructor>`_.
 

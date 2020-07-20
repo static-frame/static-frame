@@ -28,6 +28,8 @@ This is the full API documentation; for an overview, see :ref:`api-overview`.
 
     {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
 
+    {# anchor for linking from overview #}
+    .. _api-sig-{{ name }}-{{ row.signature_no_args }}:
 
 
     {% if row.use_signature and signature.startswith('[') %}

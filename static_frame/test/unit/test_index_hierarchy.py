@@ -1513,6 +1513,20 @@ class TestUnit(TestCase):
         self.assertEqual(len(ih4), 0)
 
 
+    def test_hierarchy_set_operators_k(self) -> None:
+        labels = (
+                ('II', 'B'),
+                ('II', 'A'),
+                ('I', 'B'),
+                ('I', 'A'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+        with self.assertRaises(NotImplementedError):
+            _ = ih1.intersection(['a', 'b']) #type: ignore
+
+
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_unary_operators_a(self) -> None:

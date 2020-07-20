@@ -1,16 +1,15 @@
-import typing as tp
-import sqlite3
-import csv
-import json
 
 from functools import partial
-from itertools import chain
-from itertools import repeat
-from itertools import product
 from io import StringIO
-
-import numpy as np
+from itertools import chain
+from itertools import product
+from itertools import repeat
 from numpy.ma import MaskedArray
+import csv
+import json
+import numpy as np
+import sqlite3
+import typing as tp
 
 
 
@@ -74,6 +73,9 @@ from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 
+from static_frame.core.pivot import pivot_derive_constructors
+from static_frame.core.pivot import pivot_index_map
+
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -127,6 +129,7 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
+# from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
@@ -744,7 +747,11 @@ class Frame(ContainerOperand):
             columns: tp.Optional[IndexInitializer] = None,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
-            consolidate_blocks: bool = False) -> 'Frame':
+            consolidate_blocks: bool = False,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            own_columns: bool = False,
+            ) -> 'Frame':
         '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
 
         Args:
@@ -770,7 +777,10 @@ class Frame(ContainerOperand):
                 columns=columns,
                 dtypes=dtypes,
                 name=name,
-                consolidate_blocks=consolidate_blocks
+                consolidate_blocks=consolidate_blocks,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                own_columns=own_columns,
                 )
 
     @classmethod
@@ -1653,6 +1663,8 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
+        # HOTE: this uses tk for now, as this is simpler than pyperclip, as used by pandas
+
         import tkinter as tk
         root = tk.Tk()
         root.withdraw()
@@ -4457,6 +4469,9 @@ class Frame(ContainerOperand):
             return Series(post, index=immutable_index_filter(self._columns))
         return Series(post, index=self._index)
 
+    #---------------------------------------------------------------------------
+    # pivot family
+
     def pivot(self,
             index_fields: KeyOrKeys,
             columns_fields: KeyOrKeys = EMPTY_TUPLE,
@@ -4466,7 +4481,7 @@ class Frame(ContainerOperand):
             fill_value: object = FILL_VALUE_DEFAULT,
             ) -> 'Frame':
         '''
-        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if not ``data_fields`` ar provided, all unused fields will be displayed.
+        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
 
         Args:
             index_fields
@@ -4599,6 +4614,157 @@ class Frame(ContainerOperand):
                 fill_value=fill_value,
                 own_index=True,
                 own_columns=True
+                )
+
+    #---------------------------------------------------------------------------
+    # pivot stack, unstack
+
+    def pivot_stack(self,
+            depth_level: DepthLevelSpecifier = -1,
+            *,
+            fill_value: object = np.nan,
+            ) -> 'Frame':
+        '''
+        Move labels from the columns to the index, creating or extending an :obj:`IndexHierarchy` on the index.
+
+        Args:
+            depth_level: selection of columns depth or depth to move onto the index.
+        '''
+        values_src = self._blocks
+        index_src = self.index
+        columns_src = self.columns
+        dtype_fill = np.array(fill_value).dtype
+        dtypes_src = self.dtypes.values
+
+        pim = pivot_index_map(
+                index_src=columns_src,
+                depth_level=depth_level,
+                dtypes_src=dtypes_src,
+                )
+        targets_unique = pim.targets_unique
+        group_to_target_map = pim.group_to_target_map
+        group_to_dtype = pim.group_to_dtype
+
+        pdc = pivot_derive_constructors(
+                contract_src=columns_src,
+                expand_src=index_src,
+                group_select=pim.group_select,
+                group_depth=pim.group_depth,
+                target_select=pim.target_select,
+                group_to_target_map=group_to_target_map,
+                expand_is_columns=False,
+                frame_cls=self.__class__,
+                )
+
+        group_has_fill = {g: False for g in group_to_target_map}
+
+        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
+        def records_items() -> tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]:
+            for row_idx, outer in enumerate(index_src): # iter tuple or label
+                for target in targets_unique: # target is always a tuple
+                    # derive the new index
+                    if index_src.depth == 1:
+                        key = (outer,) + target
+                    else:
+                        key = outer + target
+                    record = []
+                    # this is equivalent to iterating over the new columns to get a row of data
+                    for group, target_map in group_to_target_map.items():
+                        if target in target_map:
+                            col_idx = target_map[target]
+                            record.append(values_src._extract(row_idx, col_idx))
+                        else:
+                            record.append(fill_value)
+                            group_has_fill[group] = True
+                    yield key, record
+
+        # NOTE: this is a generator to defer evaluation until after records_items() is run, whereby group_has_fill is populated
+        def dtypes():
+            for g, dtype in group_to_dtype.items():
+                if group_has_fill[g]:
+                    yield resolve_dtype(dtype, dtype_fill)
+                else:
+                    yield dtype
+
+        return self.from_records_items(
+                records_items(),
+                index_constructor=pdc.expand_constructor,
+                columns=pdc.contract_dst,
+                columns_constructor=pdc.contract_constructor,
+                name=self.name,
+                dtypes=dtypes(),
+                )
+
+
+    def pivot_unstack(self,
+            depth_level: DepthLevelSpecifier = -1,
+            *,
+            fill_value: object = np.nan,
+            ) -> 'Frame':
+        '''
+        Move labels from the index to the columns, creating or extending an :obj:`IndexHierarchy` on the columns.
+
+        Args:
+            depth_level: selection of index depth or depth to move onto the columns.
+        '''
+        values_src = self._blocks
+        index_src = self.index
+        columns_src = self.columns
+
+        dtype_fill = np.array(fill_value).dtype
+        dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
+
+        # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
+
+        pim = pivot_index_map(
+                index_src=index_src,
+                depth_level=depth_level,
+                dtypes_src=None,
+                )
+        targets_unique = pim.targets_unique
+        group_to_target_map = pim.group_to_target_map
+
+        pdc = pivot_derive_constructors(
+                contract_src=index_src,
+                expand_src=columns_src,
+                group_select=pim.group_select,
+                group_depth=pim.group_depth,
+                target_select=pim.target_select,
+                group_to_target_map=group_to_target_map,
+                expand_is_columns=True,
+                frame_cls=self.__class__,
+                )
+
+        def items() -> tp.Tuple[tp.Hashable, np.ndarray]:
+            for col_idx, outer in enumerate(columns_src): # iter tuple or label
+                dtype_src_col = dtypes_src[col_idx]
+
+                for target in targets_unique: # target is always a tuple
+                    if columns_src.depth == 1:
+                        key = (outer,) + target
+                    else:
+                        key = outer + target
+                    # cannot allocate array as do not know dtype until after fill_value
+                    values = []
+                    for group, target_map in group_to_target_map.items():
+                        if target in target_map:
+                            row_idx = target_map[target]
+                            dtype = dtype_src_col
+                            values.append(values_src._extract(row_idx, col_idx))
+                        else:
+                            values.append(fill_value)
+                            dtype = resolve_dtype(dtype_src_col, dtype_fill)
+
+                    array = np.array(values, dtype=dtype)
+                    array.flags.writeable = False
+                    yield key, array
+
+        return self.from_items(
+                items(),
+                index=pdc.contract_dst,
+                index_constructor=pdc.contract_constructor,
+                columns_constructor=pdc.expand_constructor,
+                name=self.name,
                 )
 
     #---------------------------------------------------------------------------
@@ -5072,9 +5238,6 @@ class Frame(ContainerOperand):
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key}')
         return self._insert(iloc_key + 1, container, fill_value=fill_value)
-
-
-
 
     #---------------------------------------------------------------------------
     # utility function to numpy array or other types

@@ -186,7 +186,7 @@ class IndexHierarchy(IndexBase):
 
         Args:
             labels: an iterator or generator of tuples.
-            reorder_for_hierarchy: reorder the labels to produce a hierarchible Index, assuming hierarchability is possible.
+            reorder_for_hierarchy: reorder the labels to produce a hierarchable Index, assuming hierarchability is possible.
             continuation_token: a Hashable that will be used as a token to identify when a value in a label should use the previously encountered value at the same depth.
 
         Returns:
@@ -237,7 +237,7 @@ class IndexHierarchy(IndexBase):
         # minimum permitted depth is 2
         if depth < 2:
             raise ErrorInitIndex('Cannot create an IndexHierarchy from only one level.')
-        if index_constructors and len(index_constructors) != depth:
+        if index_constructors is not None and len(index_constructors) != depth:
             raise ErrorInitIndex('If providing index constructors, number of index constructors must equal depth of IndexHierarchy.')
 
         depth_max = depth - 1
@@ -801,10 +801,6 @@ class IndexHierarchy(IndexBase):
 
         # using assume_unique will permit retaining order when operands are identical
         labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-
-        if id(labels) == id(self.values):
-            # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
-            return cls(self)
 
         # derive index_constructors for IndexHierarchy
         index_constructors: tp.Optional[tp.Sequence[tp.Type[IndexBase]]]
