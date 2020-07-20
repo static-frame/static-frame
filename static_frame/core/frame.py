@@ -145,6 +145,14 @@ if tp.TYPE_CHECKING:
     import pyarrow #pylint: disable=W0611 #pragma: no cover
 
 
+# TODO REMOVE
+#  Add a blank placeholder so I don't have to keep commenting/uncommenting the profile decorator
+try:
+    profile
+except NameError:
+    def profile(func):
+        return func
+
 
 @doc_inject(selector='container_init', class_name='Frame')
 class Frame(ContainerOperand):
@@ -1358,6 +1366,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @profile
     def from_txt(cls,
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
@@ -1374,7 +1383,8 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
-        data = list(csv.reader(fp, delimiter=delimiter, quotechar=quote_char))
+        lines = fp.readlines()
+        data = tuple(csv.reader(lines, delimiter=delimiter, quotechar=quote_char))
 
         # Build columns
         columns_data = data[:columns_depth]
@@ -1386,8 +1396,9 @@ class Frame(ContainerOperand):
             columns = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(columns_data)
             own_columns = True
 
+        a = np.array(data[columns_depth:])
         return cls(
-            data=np.array(data[columns_depth:]),
+            data=a,
             columns=columns,
             own_data=True,
             own_columns=own_columns,

@@ -13,12 +13,10 @@ def test_frame_from_txt() -> None:
 
     f1 = sf.Frame.from_txt(s1, delimiter=',')
 
-    post = f1.iloc[:, :2].sum(axis=0)
-    assert post.to_pairs() == (('count', 108.0), ('score', 18.9))
     assert f1.shape == (4, 3)
-
-    assert (f1.dtypes.iter_element().apply(str).to_pairs() ==
-            (('count', 'int64'), ('score', 'float64'), ('color', '<U5')))
+    assert f1.iloc[:, :2].to_pairs(0) == (
+        ('count', ((0, '1'), (1, '3'), (2, '100'), (3, '4'))),
+        ('score', ((0, '1.3'), (1, '5.2'), (2, '3.4'), (3, '9.0'))))
 
 
 def test_from_tsv(tmpdir) -> None:

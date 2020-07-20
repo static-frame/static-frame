@@ -121,7 +121,7 @@ for size in sizes:
             methods = {
                 'pd': staticmethod(pandas),
                 'sf': staticmethod(frame),
-                'NUMBER': 10,
+                'NUMBER': 5,
             }
 
             class_ = type(name, (PerfTest, ), methods)
