@@ -30,13 +30,37 @@ from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
 from static_frame.core.interface import InterfaceSummary
 
-from doc.example_audit import get_defined
+from static_frame.test.unit.test_doc import api_example_str
+
+PREFIX_START = '#start_'
+PREFIX_END = '#end_'
+
+def get_defined() -> tp.Set[str]:
+
+    defined = set()
+    signature_start = ''
+    signature_end = ''
+
+    for line in api_example_str.split('\n'):
+        if line.startswith(PREFIX_START):
+            signature_start = line.replace(PREFIX_START, '').strip()
+        elif line.startswith(PREFIX_END):
+            signature_end = line.replace(PREFIX_END, '').strip()
+            if signature_start == signature_end:
+                if signature_start in defined:
+                    raise RuntimeError(f'duplicate definition: {signature_start}')
+                defined.add(signature_start)
+                signature_start = ''
+                signature_end = ''
+            else:
+                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
+
+    return defined
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
-
 
 
 def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
