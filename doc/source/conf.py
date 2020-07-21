@@ -65,7 +65,7 @@ def get_defined() -> tp.Set[str]:
 
 def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
 
-    post = {}
+    post: tp.Dict[str, tp.Any] = {}
 
     performance_cls = []
     for name in dir(core):
