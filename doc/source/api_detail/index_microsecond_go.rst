@@ -3,5 +3,5 @@
 
     {% import 'doc/source/macros.jinja' as macros %}
 
-    {{ macros.api_detail(*interface['IndexMicrosecondGO']) }}
+    {{ macros.api_detail(*interface['IndexMicrosecondGO'], examples_defined) }}
 
