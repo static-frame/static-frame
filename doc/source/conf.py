@@ -30,6 +30,8 @@ from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
 from static_frame.core.interface import InterfaceSummary
 
+from doc.example_audit import get_defined
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -63,6 +65,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
         label = cls.__name__
         post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
 
+    post['examples_defined'] = get_defined()
 
     post['interface'] = {}
     for target in (
