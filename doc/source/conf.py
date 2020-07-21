@@ -63,7 +63,7 @@ def get_defined() -> tp.Set[str]:
 #sys.path.insert(0, os.path.abspath('.'))
 
 
-def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
+def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     post: tp.Dict[str, tp.Any] = {}
 

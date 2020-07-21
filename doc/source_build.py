@@ -7,7 +7,10 @@ from doc.source.conf import get_jinja_contexts
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
 
-def get_rst_import(group, name) -> str:
+def get_rst_import(group: str, name: str) -> str:
+    '''
+    This approach works when we can import macros in this location. This does not yet work with ReadTheDocs.
+    '''
     return f'''
 .. jinja:: ctx
 
@@ -17,10 +20,13 @@ def get_rst_import(group, name) -> str:
 
 '''
 
-def get_rst_embed(group, name) -> str:
-
+def get_rst_embed(group: str, name: str) -> str:
+    '''
+    This approach does not require importing the macro, and works with ReadTheDocs.
+    '''
     doc_dir = os.path.abspath(os.path.dirname(__file__))
     fp = os.path.join(doc_dir, 'source', 'macros.jinja')
+
     with open(fp) as f:
         macro_lines = f.readlines()
 
@@ -28,6 +34,7 @@ def get_rst_embed(group, name) -> str:
     lines.append('''
 .. jinja:: ctx
 ''')
+
     for line in macro_lines:
         lines.append('    ' + line.rstrip())
 
