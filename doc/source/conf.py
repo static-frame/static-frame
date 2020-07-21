@@ -64,7 +64,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
         post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
 
 
-    post['interface'] = []
+    post['interface'] = {}
     for target in (
             sf.Series,
             sf.Frame,
@@ -93,14 +93,14 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
             ):
-        post['interface'].append((
+        post['interface'][target.__name__] = (
                 target.__name__,
                 target,
                 InterfaceSummary.to_frame(target, #type: ignore
                         minimized=False,
                         max_args=99, # +inf, but keep as int
                         )
-                ))
+                )
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}

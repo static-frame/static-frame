@@ -45,7 +45,38 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    :caption: API Overview
 
    api_overview
-   api_detail
+
+.. toctree::
+   :maxdepth: 1
+   :numbered:
+   :caption: API Detail
+
+   api_detail_series
+   api_detail_frame
+   api_detail_frame_go
+   api_detail_bus
+   api_detail_index
+   api_detail_index_go
+   api_detail_index_hierarchy
+   api_detail_index_hierarchy_go
+   api_detail_index_year
+   api_detail_index_year_go
+   api_detail_index_year_month
+   api_detail_index_year_month_go
+   api_detail_index_date
+   api_detail_index_date_go
+   api_detail_index_minute
+   api_detail_index_minute_go
+   api_detail_index_hour
+   api_detail_index_hour_go
+   api_detail_index_second
+   api_detail_index_second_go
+   api_detail_index_millisecond
+   api_detail_index_millisecond_go
+   api_detail_index_microsecond
+   api_detail_index_microsecond_go
+   api_detail_index_nanosecond
+   api_detail_index_nanosecond_go
 
 
 :ref:`genindex`
