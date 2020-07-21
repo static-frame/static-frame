@@ -76,6 +76,8 @@ def example(context, container=None):
     defined = contexts['examples_defined']
     signatures = set()
 
+    print(defined)
+
     # discover all signatures; if it is defined, print in a darker color
     for name, cls, frame in contexts['interface'].values():
         for signature, row in frame.iter_tuple_items(axis=1):
