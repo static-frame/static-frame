@@ -96,5 +96,6 @@ setup(
             'static_frame',
             'static_frame.core',
             'static_frame.performance',
+            'static_frame.test', # needed for doc generation
             ],
     )
