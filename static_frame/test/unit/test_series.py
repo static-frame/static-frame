@@ -502,6 +502,30 @@ class TestUnit(TestCase):
                 (('a', 0), ('b', 11), ('c', 24), ('d', 39)))
         self.assertEqual(s2.name, None)
 
+
+    def test_series_binary_operator_m(self) -> None:
+
+        s = Series((np.datetime64('2000-01-01'), np.datetime64('2001-01-01')))
+        d = np.datetime64('2000-12-31')
+
+        self.assertEqual((s > d).to_pairs(),
+                ((0, False), (1, True)))
+
+        with self.assertRaises(TypeError):
+            # TypeError: invalid type promotion
+            d < s # why does this fail?
+
+        s2 = s.iloc[:1]
+
+        self.assertEqual((s2 < d).to_pairs(),
+                ((0, True),))
+
+        with self.assertRaises(TypeError):
+            # TypeError: int() argument must be a string, a bytes-like object or a number, not 'datetime.date'
+            d < s2
+
+
+
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
@@ -3492,6 +3516,9 @@ class TestUnit(TestCase):
             s1.insert_before(slice('a', 'c'), s2)
         with self.assertRaises(RuntimeError):
             s1.insert_after(slice('a', 'c'), s2)
+
+
+
 
 
 if __name__ == '__main__':

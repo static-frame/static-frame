@@ -141,9 +141,9 @@
     
         {% for signature, row in frame_sub.iter_tuple_items(axis=1) -%}
             {% if signature.startswith('[') -%}
-            :ref:`?<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`static_frame.{{name}}{{signature}}`", "{{row.doc}}"
+            :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}{{signature}}`", "{{row.doc}}"
             {% else -%}
-            :ref:`?<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`static_frame.{{name}}.{{signature}}`", "{{row.doc}}"
+            :ref:`Detail<api-sig-{{ name }}-{{ row.signature_no_args }}>`, ":obj:`{{name}}.{{signature}}`", "{{row.doc}}"
             {% endif -%}
         {% endfor %}
     

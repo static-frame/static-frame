@@ -75,6 +75,8 @@ def source_build() -> None:
 
             print(fp)
             rst = get_rst_embed(group, name)
+            # rst = get_rst_import(group, name)
+
             # print(rst)
             with open(fp, 'w') as f:
                 f.write(rst)
