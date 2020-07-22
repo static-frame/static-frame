@@ -1018,6 +1018,18 @@ Neptune  14
 #-------------------------------------------------------------------------------
 # Frame
 
+#start_Frame-__init__()
+>>> sf.Frame(np.array([[76.1, 0.967], [3.3, 0.847]]), columns=('Period', 'Eccentricity'), index=('Halley', 'Encke'), name='Orbits')
+<Frame: Orbits>
+<Index>         Period    Eccentricity <<U12>
+<Index>
+Halley          76.1      0.967
+Encke           3.3       0.847
+<<U6>           <float64> <float64
+
+#end_Frame-__init__()
+
+
 
 #start_Frame-via_str.center()
 >>> f = sf.Frame.from_records((('76.1 yrs.', '0.587 AU'), ('3.30 yrs.', '0.340 AU'), ('6.51 yrs.', '1.346 AU')), index=('Halley', 'Encke', "d'Arrest"), columns=('Orbital Period', 'Perihelion Distance'))
@@ -1297,19 +1309,6 @@ Saturn  120536   568.0
 #end_Frame-from_dict()
 
 
-#start_FrameGO-from_dict()
->>> f = sf.FrameGO.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
->>> f['radius'] = f['diameter'] * 0.5
->>> f
-<FrameGO>
-<IndexGO> diameter mass      radius    <<U8>
-<Index>
-Earth     12756    5.97      6378.0
-Jupiter   142984   1898.0    71492.0
-Saturn    120536   568.0     60268.0
-<<U7>     <int64>  <float64> <float64>
-
-#end_FrameGO-from_dict()
 
 
 #start_Frame-from_records()
@@ -2373,6 +2372,27 @@ quark            nan       nan       1.3       0.1       nan       nan       0.6
 #-------------------------------------------------------------------------------
 # FrameGO
 
+#start_FrameGO-__init__()
+>>> f = sf.FrameGO(np.array([[76.1, 0.967], [3.3, 0.847]]), columns=('Period', 'Eccentricity'), index=('Halley', 'Encke'), name='Orbits')
+>>> f
+<FrameGO: Orbits>
+<IndexGO>         Period    Eccentricity <<U12>
+<Index>
+Halley            76.1      0.967
+Encke             3.3       0.847
+<<U6>             <float64> <float64>
+>>> f['Inclination'] = (162.2, 11.8)
+>>> f
+<FrameGO: Orbits>
+<IndexGO>         Period    Eccentricity Inclination <<U12>
+<Index>
+Halley            76.1      0.967        162.2
+Encke             3.3       0.847        11.8
+<<U6>             <float64> <float64>    <float64>
+
+#end_FrameGO-__init__()
+
+
 #start_FrameGO-interface
 >>> sf.FrameGO.interface.loc[sf.FrameGO.interface.index.via_str.startswith('drop')]
 <Frame: FrameGO>
@@ -2386,6 +2406,22 @@ drop.loc[key]                        FrameGO  Selector
 <<U94>                               <<U7>    <<U17>   <<U83>
 
 #end_FrameGO-interface
+
+
+#start_FrameGO-from_dict()
+>>> f = sf.FrameGO.from_dict(dict(diameter=(12756, 142984, 120536), mass=(5.97, 1898, 568)), index=('Earth', 'Jupiter', 'Saturn'), dtypes=dict(diameter=np.int64))
+>>> f['radius'] = f['diameter'] * 0.5
+>>> f
+<FrameGO>
+<IndexGO> diameter mass      radius    <<U8>
+<Index>
+Earth     12756    5.97      6378.0
+Jupiter   142984   1898.0    71492.0
+Saturn    120536   568.0     60268.0
+<<U7>     <int64>  <float64> <float64>
+
+#end_FrameGO-from_dict()
+
 
 
 #-------------------------------------------------------------------------------
@@ -2515,6 +2551,17 @@ from_tree(tree, *, name)             IndexHierarchy Constructor Convert into a I
 #end_IndexHierarchy-interface
 
 
+#start_IndexHierarchy-from_labels()
+>>> sf.IndexHierarchy.from_labels((('lepton', 'electron'), ('lepton', 'muon'), ('quark', 'up'), ('quark', 'down')))
+<IndexHierarchy>
+lepton           electron
+lepton           muon
+quark            up
+quark            down
+<<U6>            <<U8>
+
+#end_IndexHierarchy-from_labels()
+
 
 #-------------------------------------------------------------------------------
 # IndexHierarchyGO
@@ -2530,6 +2577,43 @@ rename(name)              IndexHierarchyGO Method Return a new Fram...
 <<U68>                    <<U16>           <<U17> <<U83>
 
 #end_IndexHierarchyGO-interface
+
+
+
+#start_IndexHierarchyGO-from_labels()
+>>> ih = sf.IndexHierarchyGO.from_labels((('lepton', 'electron'), ('lepton', 'muon'), ('quark', 'up'), ('quark', 'down')))
+>>> ih
+<IndexHierarchyGO>
+lepton             electron
+lepton             muon
+quark              up
+quark              down
+<<U6>              <<U8>
+
+#end_IndexHierarchyGO-from_labels()
+
+
+
+#start_IndexHierarchyGO-append()
+>>> ih = sf.IndexHierarchyGO.from_labels((('lepton', 'electron'), ('lepton', 'muon'), ('quark', 'up'), ('quark', 'down')))
+>>> ih
+<IndexHierarchyGO>
+lepton             electron
+lepton             muon
+quark              up
+quark              down
+<<U6>              <<U8>
+>>> ih.append(('quark', 'strange'))
+>>> ih
+<IndexHierarchyGO>
+lepton             electron
+lepton             muon
+quark              up
+quark              down
+quark              strange
+<<U6>              <<U8>
+
+#end_IndexHierarchyGO-append()
 
 
 #-------------------------------------------------------------------------------

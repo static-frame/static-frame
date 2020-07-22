@@ -152,7 +152,7 @@ class Frame(ContainerOperand):
     A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
     Args:
-        data: A Frame initializer, given as either a NumPy array, a single value (to be used to fill a shape defined by ``index`` and ``columns``), or an iterable suitable to given to the NumPy array constructor.
+        data: Default Frame initialization requires typed data such as a NumPy array. All other initialization should use specialized constructors.
         {index}
         {columns}
         {own_data}
@@ -1992,7 +1992,6 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False
             ) -> None:
-        # doc string at class def
 
         # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
         columns_empty = index_constructor_empty(columns)
@@ -5750,7 +5749,7 @@ class Frame(ContainerOperand):
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
-    '''A two-dimensional, ordered, labelled collection, immutable with grow-only columns. Initialization arguments are the same as for :obj:`Frame`.
+    '''A two-dimensional, ordered, labelled container, immutable with grow-only columns. Initialization arguments are the same as for :obj:`Frame`.
     '''
 
     __slots__ = (
