@@ -513,7 +513,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # TypeError: invalid type promotion
-            d < s # why does this fail?
+            _ = d < s # why does this fail?
 
         s2 = s.iloc[:1]
 
@@ -522,7 +522,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # TypeError: int() argument must be a string, a bytes-like object or a number, not 'datetime.date'
-            d < s2
+            _ = d < s2
 
 
 
