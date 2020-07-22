@@ -1025,7 +1025,7 @@ Neptune  14
 <Index>
 Halley          76.1      0.967
 Encke           3.3       0.847
-<<U6>           <float64> <float64
+<<U6>           <float64> <float64>
 
 #end_Frame-__init__()
 
