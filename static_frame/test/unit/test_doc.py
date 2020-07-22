@@ -2244,7 +2244,7 @@ particle                           quark  strange 0.1       -0.333
 #end_Frame-relabel_add_level()
 
 
-#start_Frame-relabel_drop_level
+#start_Frame-relabel_drop_level()
 >>> f = sf.Frame.from_records((('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')), columns=('name', 'mass', 'charge', 'type'))
 >>> f = f.set_index_hierarchy(('type', 'name'), drop=True)
 >>> f
@@ -2267,7 +2267,7 @@ charm   1.3       0.666
 strange 0.1       -0.333
 <<U7>   <float64> <float64>
 
-#end_Frame-relabel_drop_level
+#end_Frame-relabel_drop_level()
 
 
 #start_Frame-pivot()

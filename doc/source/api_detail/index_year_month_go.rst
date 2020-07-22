@@ -2,16 +2,27 @@
 
 .. jinja:: ctx
 
+    {# api_detail /////////////////////////////////////////////////////////////// #}
     {% macro api_detail(name, cls, frame, examples_defined) -%}
     
     .. _api-detail-{{ name }}:
     
     {{ name }}
-    ===============================
+    ================================================================================
     
     Overview: :ref:`api-overview-{{ name }}`
     
     .. autoclass:: static_frame.{{cls.__name__}}
+    
+    {# for __init__ constructor examples is defined, provide it here #}
+    {% if name + '-__init__()'  in examples_defined %}
+    
+        .. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+           :language: python
+           :start-after: start_{{ name }}-__init__()
+           :end-before: end_{{ name }}-__init__()
+    
+    {% endif %}
     
     
     {% for group, frame_sub in frame.iter_group_items('group', axis=0) %}
@@ -19,7 +30,7 @@
     .. _api-detail-{{ name }}-{{ group }}:
     
     {{ name }}: {{ group }}
-    ..........................................................
+    ................................................................................
     
     Overview: :ref:`api-overview-{{ name }}-{{ group }}`
     
@@ -98,8 +109,8 @@
     {% endif %}
     
     
-    {# ---------------------------------------------------------------------- #}
-    {# ``start_{{ name }}-{{ row.signature_no_args }}`` #}
+    {# example ////////////////////////////////////////////////////////////////// #}
+    {# for debugging: ``start_{{ name }}-{{ row.signature_no_args }}`` #}
     
     {% if name + '-' + row.signature_no_args in examples_defined %}
     
@@ -108,21 +119,19 @@
            :start-after: start_{{ name }}-{{ row.signature_no_args }}
            :end-before: end_{{ name }}-{{ row.signature_no_args }}
     
-    
     {% endif %}
     
     {% endfor %}
     {% endfor %}
-    
     {%- endmacro %}
     
-    
+    {# api_overview ///////////////////////////////////////////////////////////// #}
     {% macro api_overview(name, cls, frame, examples_defined) -%}
     
     .. _api-overview-{{ name }}:
     
     {{ name }}
-    ===============================
+    ================================================================================
     
     Detail: :ref:`api-detail-{{ name }}`
     
@@ -132,7 +141,7 @@
     .. _api-overview-{{ name }}-{{ group }}:
     
     {{ name }}: {{ group }}
-    -----------------------------------------------------------------------------
+    --------------------------------------------------------------------------------
     
     Detail: :ref:`api-detail-{{ name }}-{{ group }}`
     
