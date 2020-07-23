@@ -160,4 +160,4 @@
     
     {%- endmacro %}
 
-    {{ api_overview(*interface['IndexYearGO'], examples_defined=examples_defined) }}
+    {{ api_overview(examples_defined=examples_defined, *interface['IndexYearGO']) }}

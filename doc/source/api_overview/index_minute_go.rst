@@ -160,4 +160,4 @@
     
     {%- endmacro %}
 
-    {{ api_overview(*interface['IndexMinuteGO'], examples_defined=examples_defined) }}
+    {{ api_overview(examples_defined=examples_defined, *interface['IndexMinuteGO']) }}

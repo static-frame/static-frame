@@ -160,4 +160,4 @@
     
     {%- endmacro %}
 
-    {{ api_detail(*interface['IndexHour'], examples_defined=examples_defined) }}
+    {{ api_detail(examples_defined=examples_defined, *interface['IndexHour']) }}

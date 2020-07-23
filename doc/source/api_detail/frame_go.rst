@@ -160,4 +160,4 @@
     
     {%- endmacro %}
 
-    {{ api_detail(*interface['FrameGO'], examples_defined=examples_defined) }}
+    {{ api_detail(examples_defined=examples_defined, *interface['FrameGO']) }}

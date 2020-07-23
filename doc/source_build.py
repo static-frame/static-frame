@@ -39,7 +39,7 @@ def get_rst_embed(group: str, name: str) -> str:
         lines.append('    ' + line.rstrip())
 
     lines.append(f'''
-    {{{{ {group}(*interface['{name}'], examples_defined=examples_defined) }}}}
+    {{{{ {group}(examples_defined=examples_defined, *interface['{name}']) }}}}
 ''')
     return '\n'.join(lines)
 
