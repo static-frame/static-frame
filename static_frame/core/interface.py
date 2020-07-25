@@ -6,6 +6,7 @@ import inspect
 from itertools import chain
 
 import numpy as np
+from enum import Enum
 
 
 from static_frame.core.bus import Bus
@@ -132,7 +133,7 @@ def _get_signatures(
 #-------------------------------------------------------------------------------
 class Features:
     '''
-    Core utilities neede by both Interface and InterfaceSummary
+    Core utilities need by both Interface and InterfaceSummary
     '''
 
     DOC_CHARS = 80
@@ -205,20 +206,22 @@ class Features:
 
 #-------------------------------------------------------------------------------
 class InterfaceGroup:
-    Attribute = 'Attribute'
     Constructor = 'Constructor'
+    Exporter = 'Exporter'
+    Attribute = 'Attribute'
+    Method = 'Method'
     DictLike = 'Dictionary-Like'
     Display = 'Display'
-    Exporter = 'Exporter'
+    Assignment = 'Assignment'
+    Selector = 'Selector'
     Iterator = 'Iterator'
-    Method = 'Method'
     OperatorBinary = 'Operator Binary'
     OperatorUnary = 'Operator Unary'
-    Selector = 'Selector'
-    Assignment = 'Assignment'
-    AccessorString = 'Accessor String'
     AccessorDatetime = 'Accessor Datetime'
+    AccessorString = 'Accessor String'
 
+# NOTE: order from definition retained
+INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items() if not k.startswith('_'))
 
 class InterfaceRecord(tp.NamedTuple):
 
@@ -752,9 +755,7 @@ class InterfaceSummary(Features):
             ) -> tp.Iterator[InterfaceRecord]:
 
         for name_attr, obj, obj_cls in cls.name_obj_iter(target):
-            # properties resdie on the class
             doc = ''
-            # reference = '' # reference attribute to use
 
             if isinstance(obj_cls, property):
                 doc = cls.scrub_doc(obj_cls.__doc__)
@@ -833,9 +834,12 @@ class InterfaceSummary(Features):
         '''
         f = Frame.from_records(
                 cls.interrogate(target, max_args=max_args),
+                )
+        # order be group order
+        f = Frame.from_concat(
+                (f.loc[f['group'] == g] for g in INTERFACE_GROUP_ORDER),
                 name=target.__name__
                 )
-        f = f.sort_values(('cls_name', 'group',))
         f = f.set_index('signature', drop=True)
         if minimized:
             return f[['cls_name', 'group', 'doc']] #type: ignore
