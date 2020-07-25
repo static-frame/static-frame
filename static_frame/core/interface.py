@@ -6,8 +6,6 @@ import inspect
 from itertools import chain
 
 import numpy as np
-from enum import Enum
-
 
 from static_frame.core.bus import Bus
 from static_frame.core.container import _RIGHT_OPERATOR_MAP
