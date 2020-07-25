@@ -673,7 +673,7 @@ class TestUnit(TestCase):
 
     def test_index_fillna_a(self) -> None:
 
-        idx1 = Index(('a', 'b', 'c', None)) #type: ignore
+        idx1 = Index(('a', 'b', 'c', None))
         idx2 = idx1.fillna('d')
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd'])
@@ -719,10 +719,10 @@ class TestUnit(TestCase):
     def test_name_b(self) -> None:
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name=['x', 'y']) #type: ignore
+            Index(('a', 'b', 'c', 'd'), name=['x', 'y'])
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name={'x', 'y'}) #type: ignore
+            Index(('a', 'b', 'c', 'd'), name={'x', 'y'})
 
 
     def test_index_name_c(self) -> None:
@@ -897,7 +897,7 @@ class TestUnit(TestCase):
 
     def test_index_intersection_e(self) -> None:
 
-        idx1 = Index((10, 'foo', None, 4.1)) #type: ignore
+        idx1 = Index((10, 'foo', None, 4.1))
         idx2 = idx1.union(idx1)
         self.assertEqual(id(idx1), id(idx2))
         self.assertTrue(idx1.equals(idx1))
@@ -982,7 +982,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_c(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
         idx2 = Index((2, 3, '4', 'five', 6.6, object()))
 
         idx3 = idx1.difference(idx2)
@@ -992,7 +992,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_d(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
         idx2 = Index((2, 1, '3', 'five', object()))
 
         idx3 = idx1.difference(idx2)
@@ -1201,7 +1201,7 @@ class TestUnit(TestCase):
 
         idx1 = Index((5, 3, np.nan))
         idx2 = Index((5, 3, np.nan))
-        idx3 = Index((5, 3, None)) #type: ignore
+        idx3 = Index((5, 3, None))
 
         self.assertTrue(idx1.equals(idx2))
         self.assertFalse(idx1.equals(idx2, skipna=False))

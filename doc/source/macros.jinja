@@ -11,17 +11,6 @@ Overview: :ref:`api-overview-{{ name }}`
 {# docs are on __init__, not the class, so this just provides an anchor for obj refs #}
 .. autoclass:: static_frame.{{cls.__name__}}
 
-{# if __init__ constructor example is defined, provide it here #}
-{% if name + '-__init__()'  in examples_defined %}
-
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
-   :language: python
-   :start-after: start_{{ name }}-__init__()
-   :end-before: end_{{ name }}-__init__()
-
-{% endif %}
-
-
 {% for group, frame_sub in frame_items %}
 
 .. _api-detail-{{ name }}-{{ group }}:

@@ -96,6 +96,8 @@ RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitialize
 
 #-------------------------------------------------------------------------------
 class Series(ContainerOperand):
+    '''A one-dimensional, ordered, labelled container, immutable and of fixed size.
+    '''
 
     __slots__ = (
             'values',
@@ -330,8 +332,7 @@ class Series(ContainerOperand):
             index_constructor: IndexConstructor = None,
             own_index: bool = False
             ) -> None:
-        '''
-        A one-dimensional ordered, labelled container, immutable and of fixed size.
+        '''Initializer.
 
         Args:
             values: An iterable of values to be aligned with the supplied (or automatically generated) index.

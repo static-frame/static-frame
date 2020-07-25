@@ -57,7 +57,7 @@ class IndexDatetime(Index):
             *,
             name: tp.Optional[tp.Hashable] = None
             ):
-        '''A mapping of :obj:`np.datetime64` type to positions, immutable and of fixed size.
+        '''Initializer.
 
         {args}
         '''
@@ -150,7 +150,8 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
 
 #-------------------------------------------------------------------------------
 class IndexYear(IndexDatetime):
-
+    '''A mapping of years (NumPy :obj:`datetime64[Y]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_YEAR
     __slots__ = _INDEX_SLOTS
@@ -229,7 +230,8 @@ IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
 
 #-------------------------------------------------------------------------------
 class IndexYearMonth(IndexDatetime):
-
+    '''A mapping of year months (NumPy :obj:`datetime64[M]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_MONTH
     __slots__ = _INDEX_SLOTS
@@ -309,8 +311,10 @@ class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
 IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
 
 #-------------------------------------------------------------------------------
-class IndexDate(IndexDatetime):
 
+class IndexDate(IndexDatetime):
+    '''A mapping of dates (NumPy :obj:`datetime64[D]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_DAY
     __slots__ = _INDEX_SLOTS
@@ -380,7 +384,8 @@ IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
 
 #-------------------------------------------------------------------------------
 class IndexHour(IndexDatetime):
-
+    '''A mapping of hours (NumPy :obj:`datetime64[h]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_H
     __slots__ = _INDEX_SLOTS
@@ -394,7 +399,8 @@ IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
 
 #-------------------------------------------------------------------------------
 class IndexMinute(IndexDatetime):
-
+    '''A mapping of minutes (NumPy :obj:`datetime64[m]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_M
     __slots__ = _INDEX_SLOTS
@@ -408,7 +414,8 @@ IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
 
 #-------------------------------------------------------------------------------
 class IndexSecond(IndexDatetime):
-
+    '''A mapping of seconds (NumPy :obj:`datetime64[s]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_S
     __slots__ = _INDEX_SLOTS
@@ -422,7 +429,8 @@ IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
 
 #-------------------------------------------------------------------------------
 class IndexMillisecond(IndexDatetime):
-
+    '''A mapping of milliseconds (NumPy :obj:`datetime64[ms]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_MS
     __slots__ = _INDEX_SLOTS
@@ -436,7 +444,8 @@ IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
 
 #-------------------------------------------------------------------------------
 class IndexMicrosecond(IndexDatetime):
-
+    '''A mapping of microseconds (NumPy :obj:`datetime64[us]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_US
     __slots__ = _INDEX_SLOTS
@@ -450,7 +459,8 @@ IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 
 #-------------------------------------------------------------------------------
 class IndexNanosecond(IndexDatetime):
-
+    '''A mapping of nanoseconds (NumPy :obj:`datetime64[ns]`) to positions, immutable and of fixed size.
+    '''
     STATIC = True
     _DTYPE = DT64_NS
     __slots__ = _INDEX_SLOTS
@@ -461,6 +471,8 @@ class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
     __slots__ = _INDEX_GO_SLOTS
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
+
+
 
 #-------------------------------------------------------------------------------
 _DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
@@ -477,7 +489,7 @@ _DTYPE_TO_CLASS = {cls._DTYPE: cls for cls in (
 
 def _dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
     '''
-    Given an the clazss of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
+    Given an the class of the Index from which this is valled, as well as the dtype of the resultant array, return the appropriate Index class.
     '''
 
     resolved_static = _DTYPE_TO_CLASS.get(dtype)

@@ -147,7 +147,8 @@ if tp.TYPE_CHECKING:
 
 
 class Frame(ContainerOperand):
-
+    '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
+    '''
     __slots__ = (
             '_blocks',
             '_columns',
@@ -1982,7 +1983,7 @@ class Frame(ContainerOperand):
             own_columns: bool = False
             ) -> None:
         '''
-        A two-dimensional ordered, labelled collection, immutable and of fixed size.
+        Initializer.
 
         Args:
             data: Default Frame initialization requires typed data such as a NumPy array. All other initialization should use specialized constructors.
@@ -5748,7 +5749,7 @@ class Frame(ContainerOperand):
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
-    '''A two-dimensional, ordered, labelled container, immutable with grow-only columns. Initialization arguments are the same as for :obj:`Frame`.
+    '''A two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 
     __slots__ = (

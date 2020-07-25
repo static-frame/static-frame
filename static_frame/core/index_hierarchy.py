@@ -74,6 +74,7 @@ CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
+    '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
 
     __slots__ = (
             '_levels',
@@ -477,7 +478,7 @@ class IndexHierarchy(IndexBase):
             own_blocks: bool = False,
             ):
         '''
-        A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.
+        Initializer.
 
         Args:
             levels: :obj:`IndexLevels` instance, or, optionally, an :obj`IndexHierarchy` to be used to construct a new :obj`IndexHierarchy`.
@@ -1302,8 +1303,8 @@ class IndexHierarchy(IndexBase):
 
         return constructor(
                 self._blocks.copy(),
-                columns=None, #type: ignore
-                index=None, #type: ignore
+                columns=None,
+                index=None,
                 own_data=True
                 )
 

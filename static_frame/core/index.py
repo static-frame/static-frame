@@ -303,6 +303,7 @@ _INDEX_SLOTS = (
         )
 
 class Index(IndexBase):
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
 
     __slots__ = _INDEX_SLOTS
 
@@ -395,7 +396,7 @@ class Index(IndexBase):
             name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None
             ) -> None:
-        '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.
+        '''Initializer.
 
         {args}
         '''
@@ -1339,14 +1340,11 @@ class _IndexGOMixin:
             self.append(value)
 
 
-@doc_inject(selector='index_init')
 class IndexGO(_IndexGOMixin, Index):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
-
-    {args}
     '''
-    _IMMUTABLE_CONSTRUCTOR = Index
 
+    _IMMUTABLE_CONSTRUCTOR = Index
     __slots__ = _INDEX_GO_SLOTS
 
 
