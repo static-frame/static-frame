@@ -74,9 +74,7 @@ CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
-    '''
-    A hierarchy of :obj:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
-    '''
+
     __slots__ = (
             '_levels',
             '_blocks',
@@ -479,9 +477,10 @@ class IndexHierarchy(IndexBase):
             own_blocks: bool = False,
             ):
         '''
+        A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.
+
         Args:
-            levels: IndexLevels instance, or, optionally, an IndexHierarchy to be used to construct a new IndexHierarchy.
-            labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
+            levels: :obj:`IndexLevels` instance, or, optionally, an :obj`IndexHierarchy` to be used to construct a new :obj`IndexHierarchy`.
         '''
 
         self._blocks = None #type: ignore

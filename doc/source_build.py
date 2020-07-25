@@ -16,7 +16,7 @@ def get_rst_import(group: str, name: str) -> str:
 
     {{% import 'doc/source/macros.jinja' as macros %}}
 
-    {{{{ macros.{group}(*interface['{name}'], examples_defined=examples_defined) }}}}
+    {{{{ macros.{group}(examples_defined=examples_defined, *interface['{name}']) }}}}
 
 '''
 

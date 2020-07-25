@@ -29,6 +29,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
 from static_frame.core.interface import InterfaceSummary
+from static_frame.core.interface import INTERFACE_GROUP_ORDER
 
 from static_frame.test.unit.test_doc import api_example_str
 
@@ -89,6 +90,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
         label = cls.__name__
         post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
 
+    # for docs
     post['examples_defined'] = get_defined()
 
     post['interface'] = {}
@@ -120,13 +122,21 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
             ):
-        post['interface'][target.__name__] = (
-                target.__name__,
-                target,
-                InterfaceSummary.to_frame(target, #type: ignore
+
+        inter = InterfaceSummary.to_frame(target, #type: ignore
                         minimized=False,
                         max_args=99, # +inf, but keep as int
                         )
+        # break into iterable of group, frame
+        inter_items = []
+        for g in INTERFACE_GROUP_ORDER:
+            inter_sub = inter.loc[inter['group'] == g]
+            if inter_sub: # some groups are empty
+                inter_items.append((g, inter_sub))
+        post['interface'][target.__name__] = (
+                target.__name__,
+                target,
+                inter_items,
                 )
     return post
 

@@ -95,16 +95,7 @@ RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitialize
 
 
 #-------------------------------------------------------------------------------
-@doc_inject(selector='container_init', class_name='Series')
 class Series(ContainerOperand):
-    '''
-    A one-dimensional ordered, labelled container, immutable and of fixed size.
-
-    Args:
-        values: An iterable of values to be aligned with the supplied (or automatically generated) index.
-        {index}
-        {own_index}
-    '''
 
     __slots__ = (
             'values',
@@ -329,6 +320,7 @@ class Series(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='container_init', class_name='Series')
     def __init__(self,
             values: SeriesInitializer,
             *,
@@ -339,7 +331,12 @@ class Series(ContainerOperand):
             own_index: bool = False
             ) -> None:
         '''
-        Default constructor of :obj:`static_frame.Series`.
+        A one-dimensional ordered, labelled container, immutable and of fixed size.
+
+        Args:
+            values: An iterable of values to be aligned with the supplied (or automatically generated) index.
+            {index}
+            {own_index}
         '''
 
         if own_index and index is None:

@@ -302,12 +302,7 @@ _INDEX_SLOTS = (
         '_name'
         )
 
-@doc_inject(selector='index_init')
 class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.
-
-    {args}
-    '''
 
     __slots__ = _INDEX_SLOTS
 
@@ -392,6 +387,7 @@ class Index(IndexBase):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='index_init')
     def __init__(self,
             labels: IndexInitializer,
             *,
@@ -399,7 +395,10 @@ class Index(IndexBase):
             name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None
             ) -> None:
+        '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.
 
+        {args}
+        '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
 

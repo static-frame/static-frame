@@ -3,7 +3,7 @@
 .. jinja:: ctx
 
     {# api_detail /////////////////////////////////////////////////////////////// #}
-    {% macro api_detail(name, cls, frame, examples_defined) -%}
+    {% macro api_detail(name, cls, frame_items, examples_defined) -%}
     
     .. _api-detail-{{ name }}:
     
@@ -12,20 +12,21 @@
     
     Overview: :ref:`api-overview-{{ name }}`
     
+    {# docs are on __init__, not the class, so this just provides an anchor for obj refs #}
     .. autoclass:: static_frame.{{cls.__name__}}
     
-    {# for __init__ constructor examples is defined, provide it here #}
+    {# if __init__ constructor example is defined, provide it here #}
     {% if name + '-__init__()'  in examples_defined %}
     
-        .. literalinclude:: ../../../static_frame/test/unit/test_doc.py
-           :language: python
-           :start-after: start_{{ name }}-__init__()
-           :end-before: end_{{ name }}-__init__()
+    .. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+       :language: python
+       :start-after: start_{{ name }}-__init__()
+       :end-before: end_{{ name }}-__init__()
     
     {% endif %}
     
     
-    {% for group, frame_sub in frame.iter_group_items('group', axis=0) %}
+    {% for group, frame_sub in frame_items %}
     
     .. _api-detail-{{ name }}-{{ group }}:
     
@@ -126,7 +127,7 @@
     {%- endmacro %}
     
     {# api_overview ///////////////////////////////////////////////////////////// #}
-    {% macro api_overview(name, cls, frame, examples_defined) -%}
+    {% macro api_overview(name, cls, frame_items, examples_defined) -%}
     
     .. _api-overview-{{ name }}:
     
@@ -136,7 +137,7 @@
     Detail: :ref:`api-detail-{{ name }}`
     
     
-    {% for group, frame_sub in frame.iter_group_items('group', axis=0) %}
+    {% for group, frame_sub in frame_items %}
     
     .. _api-overview-{{ name }}-{{ group }}:
     
