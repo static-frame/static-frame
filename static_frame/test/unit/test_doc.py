@@ -2428,6 +2428,7 @@ Saturn    120536   568.0     60268.0
 # Bus
 
 #start_Bus-interface
+>>> sf.Bus.interface.loc[sf.Bus.interface['group'] == 'Exporter']
 <Frame: Bus>
 <Index>                   cls_name group    doc    <<U18>
 <Index: signature>
@@ -2437,7 +2438,7 @@ to_xlsx(fp, config)       Bus      Exporter
 to_zip_csv(fp, config)    Bus      Exporter
 to_zip_pickle(fp, config) Bus      Exporter
 to_zip_tsv(fp, config)    Bus      Exporter
-<<U34>                    <<U3>    <<U15>   <<U83>
+<<U50>                    <<U3>    <<U15>   <<U83>
 
 #end_Bus-interface
 

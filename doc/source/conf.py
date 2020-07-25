@@ -92,6 +92,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     # for docs
     post['examples_defined'] = get_defined()
+    # post['interface_groups'] = INTERFACE_GROUP_ORDER
 
     post['interface'] = {}
     for target in (

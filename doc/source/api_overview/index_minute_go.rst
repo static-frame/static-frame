@@ -112,6 +112,9 @@
     {% endif %}
     
     {% endfor %}
+    
+    :ref:`api-detail-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-detail-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %}
+    
     {% endfor %}
     {%- endmacro %}
     
@@ -146,8 +149,9 @@
             {% endif -%}
         {% endfor %}
     
-    {% endfor %}
+    :ref:`api-overview-{{ name }}`: {% for group_xref, _ in frame_items %}:ref:`{{ group_xref }}<api-overview-{{ name }}-{{ group_xref }}>`{{ " | " if not loop.last }}{% endfor %}
     
+    {% endfor %}
     {%- endmacro %}
 
     {{ api_overview(examples_defined=examples_defined, *interface['IndexMinuteGO']) }}
