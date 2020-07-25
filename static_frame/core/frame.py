@@ -146,19 +146,7 @@ if tp.TYPE_CHECKING:
 
 
 
-@doc_inject(selector='container_init', class_name='Frame')
 class Frame(ContainerOperand):
-    '''
-    A two-dimensional ordered, labelled collection, immutable and of fixed size.
-
-    Args:
-        data: Default Frame initialization requires typed data such as a NumPy array. All other initialization should use specialized constructors.
-        {index}
-        {columns}
-        {own_data}
-        {own_index}
-        {own_columns}
-    '''
 
     __slots__ = (
             '_blocks',
@@ -1980,6 +1968,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='container_init', class_name='Frame')
     def __init__(self,
             data: FrameInitializer = FRAME_INITIALIZER_DEFAULT,
             *,
@@ -1992,7 +1981,17 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False
             ) -> None:
+        '''
+        A two-dimensional ordered, labelled collection, immutable and of fixed size.
 
+        Args:
+            data: Default Frame initialization requires typed data such as a NumPy array. All other initialization should use specialized constructors.
+            {index}
+            {columns}
+            {own_data}
+            {own_index}
+            {own_columns}
+        '''
         # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
         columns_empty = index_constructor_empty(columns)
         index_empty = index_constructor_empty(index)
