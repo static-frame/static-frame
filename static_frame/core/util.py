@@ -374,6 +374,17 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
+def dtype_from_element(value: tp.Hashable) -> np.dtype:
+    '''Given an arbitrary hashable, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
+    '''
+    if value is None:
+        return DTYPE_OBJECT
+    if isinstance(value, tuple):
+        return DTYPE_OBJECT
+    if hasattr(value, 'dtype'):
+        return value.dtype
+    return np.array(value).dtype
+
 def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.

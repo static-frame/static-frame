@@ -8877,6 +8877,15 @@ class TestUnit(TestCase):
             # cannot create a pivot Frame from a field (q) that is not a column
             _ = f2.pivot('q')
 
+    # def test_frame_pivot_n(self) -> None:
+
+    #     f1 = FrameGO(index=range(3))
+    #     f1["a"] = np.array(range(3)) + 10001
+    #     f1["b"] = np.array(range(3), "datetime64[D]")
+    #     f1["c"] = np.array(range(3)) * 1e9
+
+    #     f2 = f1.pivot("b", "a")
+    #     import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 

@@ -38,6 +38,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -1293,8 +1294,10 @@ class _IndexGOMixin:
                     self._labels.dtype,
                     self._labels_mutable_dtype)
 
-        self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
-        self._labels.flags.writeable = False
+        # NOTE: necessary to support creation from iterable of tuples
+        self._labels, _ = iterable_to_array_1d(
+                self._labels_mutable,
+                dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
         self._recache = False
 
@@ -1318,10 +1321,10 @@ class _IndexGOMixin:
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(
-                    np.array(value).dtype,
+                    dtype_from_element(value),
                     self._labels_mutable_dtype)
         else:
-            self._labels_mutable_dtype = np.array(value).dtype
+            self._labels_mutable_dtype = dtype_from_element(value)
 
         self._labels_mutable.append(value)
 
