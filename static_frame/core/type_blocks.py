@@ -29,6 +29,7 @@ from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_na
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
@@ -1364,10 +1365,8 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        if isinstance(value, np.ndarray):
-            value_dtype = value.dtype
-        else:
-            value_dtype = np.array(value).dtype
+        value_dtype = np.array(value).dtype
+        # value_dtype = dtype_from_element(value)
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = iter(self._key_to_block_slices(
@@ -1520,6 +1519,7 @@ class TypeBlocks(ContainerOperand):
             assert value.shape == self.shape
             assert value_valid.shape == self.shape #type: ignore
         else: # assumed to be non-string, non-iterable
+            # value_dtype = dtype_from_element(value)
             value_dtype = np.array(value).dtype
             is_element = True
 
@@ -1575,6 +1575,7 @@ class TypeBlocks(ContainerOperand):
             assert value.shape == self.shape
         else:
             value_dtype = np.array(value).dtype
+            # value_dtype = dtype_from_element(value)
             is_element = True
 
         start = 0
@@ -2003,7 +2004,9 @@ class TypeBlocks(ContainerOperand):
                 # can use this last-row observation below
                 yield b
             else:
-                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                assignable_dtype = resolve_dtype(
+                        dtype_from_element(value),
+                        b.dtype)
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:
@@ -2078,7 +2081,9 @@ class TypeBlocks(ContainerOperand):
             if not isna_entry.any():
                 yield b
             else:
-                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                assignable_dtype = resolve_dtype(
+                        dtype_from_element(value),
+                        b.dtype)
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:

@@ -58,6 +58,7 @@ from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import FLOAT_TYPES
@@ -894,7 +895,7 @@ class Series(ContainerOperand):
                     sel,
                     fill_value=fill_value).values
         else:
-            value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
 
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
 
@@ -1000,7 +1001,9 @@ class Series(ContainerOperand):
         if isinstance(value, np.ndarray):
             raise RuntimeError('cannot assign an array to fillna')
 
-        assignable_dtype = resolve_dtype(np.array(value).dtype, array.dtype)
+        assignable_dtype = resolve_dtype(
+                dtype_from_element(value),
+                array.dtype)
 
         if array.dtype == assignable_dtype:
             assigned = array.copy()
@@ -2266,8 +2269,11 @@ class SeriesAssign(Assign):
 
         if isinstance(value, np.ndarray):
             value_dtype = value.dtype
+        elif hasattr(value, '__len__') and not isinstance(value, str):
+            value, _ = iterable_to_array_1d(value)
+            value_dtype = value.dtype
         else:
-            value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
 
         dtype = resolve_dtype(self.container.dtype, value_dtype)
 

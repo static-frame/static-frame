@@ -1192,7 +1192,7 @@ class Index(IndexBase):
         if not np.any(sel):
             return self if self.STATIC else self.copy()
 
-        value_dtype = np.array(value).dtype
+        value_dtype = dtype_from_element(value)
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
 
         if values.dtype == assignable_dtype:
