@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.6.26
+----------
+
+Removed class-level documentation injection, permitting better static analysis.
+
+Corrected issue in appending tuples to an empty ``IndexGO``.
+
 
 0.6.25
 ----------

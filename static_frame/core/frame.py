@@ -4584,167 +4584,165 @@ class Frame(ContainerOperand):
 
 
 
-    def _pivot(self,
-            index_fields: KeyOrKeys,
-            columns_fields: KeyOrKeys = EMPTY_TUPLE,
-            data_fields: KeyOrKeys = EMPTY_TUPLE,
-            *,
-            func: CallableOrCallableMap = None,
-            fill_value: object = FILL_VALUE_DEFAULT,
-            ) -> 'Frame':
-        '''
-        Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
+    # def _pivot(self,
+    #         index_fields: KeyOrKeys,
+    #         columns_fields: KeyOrKeys = EMPTY_TUPLE,
+    #         data_fields: KeyOrKeys = EMPTY_TUPLE,
+    #         *,
+    #         func: CallableOrCallableMap = None,
+    #         fill_value: object = FILL_VALUE_DEFAULT,
+    #         ) -> 'Frame':
+    #     '''
+    #     Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
 
-        Args:
-            index_fields
-            columns_fields
-            data_fields
-            fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
-            func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
-        '''
-        if func is None:
-            # form the equivalent Series function for summing
-            func = partial(ufunc_axis_skipna,
-                    skipna=True,
-                    axis=0,
-                    ufunc=np.sum,
-                    ufunc_skipna=np.nansum
-                    )
-            func_map = (('', func),)
-        elif callable(func):
-            func_map = (('', func),) # store iterable of pairs
-        else:
-            func_map = tuple(func.items())
+    #     Args:
+    #         index_fields
+    #         columns_fields
+    #         data_fields
+    #         fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
+    #         func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
+    #     '''
+    #     if func is None:
+    #         # form the equivalent Series function for summing
+    #         func = partial(ufunc_axis_skipna,
+    #                 skipna=True,
+    #                 axis=0,
+    #                 ufunc=np.sum,
+    #                 ufunc_skipna=np.nansum
+    #                 )
+    #         func_map = (('', func),)
+    #     elif callable(func):
+    #         func_map = (('', func),) # store iterable of pairs
+    #     else:
+    #         func_map = tuple(func.items())
 
-        index_fields = key_normalize(index_fields)
-        columns_fields = key_normalize(columns_fields)
-        data_fields = key_normalize(data_fields)
+    #     index_fields = key_normalize(index_fields)
+    #     columns_fields = key_normalize(columns_fields)
+    #     data_fields = key_normalize(data_fields)
 
-        if not data_fields:
-            used = set(chain(index_fields, columns_fields))
-            data_fields = [x for x in self.columns if x not in used]
-            if not data_fields:
-                raise ErrorInitFrame('no fields remain to populate data.')
+    #     if not data_fields:
+    #         used = set(chain(index_fields, columns_fields))
+    #         data_fields = [x for x in self.columns if x not in used]
+    #         if not data_fields:
+    #             raise ErrorInitFrame('no fields remain to populate data.')
 
-        idx_start_columns = len(index_fields)
+    #     idx_start_columns = len(index_fields)
 
-        # Take fields_group before extending columns with values
-        fields_group = index_fields + columns_fields
-        for field in fields_group:
-            if field not in self._columns:
-                raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
+    #     # Take fields_group before extending columns with values
+    #     fields_group = index_fields + columns_fields
+    #     for field in fields_group:
+    #         if field not in self._columns:
+    #             raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
 
-        if idx_start_columns == 1:
-            # reduce loc to single itme to get 1D array
-            index_loc = index_fields[0]
-        else:
-            index_loc = index_fields
-        # will return np.ndarray or frozen set
-        index_values = ufunc_unique(
-                self._blocks._extract_array(
-                        column_key=self._columns.loc_to_iloc(index_loc)),
-                axis=0)
+    #     if idx_start_columns == 1:
+    #         # reduce loc to single itme to get 1D array
+    #         index_loc = index_fields[0]
+    #     else:
+    #         index_loc = index_fields
+    #     # will return np.ndarray or frozen set
+    #     index_values = ufunc_unique(
+    #             self._blocks._extract_array(
+    #                     column_key=self._columns.loc_to_iloc(index_loc)),
+    #             axis=0)
 
-        if idx_start_columns == 1:
-            pass
-            # index = Index(index_values, name=index_fields[0])
-        else:
-            # use lower-level interface to get columsn
-            index_values = frozenset(zip(*(self[f].values for f in index_fields)))
-            # index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
+    #     if idx_start_columns == 1:
+    #         pass
+    #         # index = Index(index_values, name=index_fields[0])
+    #     else:
+    #         # use lower-level interface to get columsn
+    #         index_values = frozenset(zip(*(self[f].values for f in index_fields)))
+    #         # index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
 
-        # create non hierarchical index of tuples
-        # TODO: supply index name
-        index = Index(index_values)
+    #     # create non hierarchical index of tuples
+    #     # TODO: supply index name
+    #     index = Index(index_values)
 
-        # # Colect bundle of values for from_product constrcution if columns.
-        # columns_product = []
-        # for field in columns_fields:
-        #     # Take one at a time
-        #     columns_values = ufunc_unique(
-        #             self._blocks._extract_array(column_key=self._columns.loc_to_iloc(field)))
-        #     columns_product.append(columns_values)
+    #     # # Colect bundle of values for from_product constrcution if columns.
+    #     # columns_product = []
+    #     # for field in columns_fields:
+    #     #     # Take one at a time
+    #     #     columns_values = ufunc_unique(
+    #     #             self._blocks._extract_array(column_key=self._columns.loc_to_iloc(field)))
+    #     #     columns_product.append(columns_values)
 
-        # # For data fields, we add the field name, not the field values, to the columns.
-        # columns_name = tuple(columns_fields)
-        # if len(data_fields) > 1 or not columns_fields:
-        #     # if no columns fields, have to add values fields
-        #     columns_product.append(data_fields)
-        #     columns_name = tuple(chain(*columns_fields, ('values',)))
+    #     # # For data fields, we add the field name, not the field values, to the columns.
+    #     # columns_name = tuple(columns_fields)
+    #     # if len(data_fields) > 1 or not columns_fields:
+    #     #     # if no columns fields, have to add values fields
+    #     #     columns_product.append(data_fields)
+    #     #     columns_name = tuple(chain(*columns_fields, ('values',)))
 
-        # if len(func_map) > 1:
-        #     # add the labels as another product level
-        #     labels = tuple(x for x, _ in func_map)
-        #     columns_product.append(labels)
-        #     columns_name = columns_name + ('func',)
+    #     # if len(func_map) > 1:
+    #     #     # add the labels as another product level
+    #     #     labels = tuple(x for x, _ in func_map)
+    #     #     columns_product.append(labels)
+    #     #     columns_name = columns_name + ('func',)
 
-        # if len(columns_product) > 1:
-        #     columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_product(
-        #             *columns_product,
-        #             name=columns_name)
-        # else:
-        #     columns = self._COLUMNS_CONSTRUCTOR(
-        #             columns_product[0],
-        #             name=columns_name[0])
+    #     # if len(columns_product) > 1:
+    #     #     columns = self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_product(
+    #     #             *columns_product,
+    #     #             name=columns_name)
+    #     # else:
+    #     #     columns = self._COLUMNS_CONSTRUCTOR(
+    #     #             columns_product[0],
+    #     #             name=columns_name[0])
 
-        print(index, index_fields, index_values, data_fields)
-        func_single = func_map[0][1] if len(func_map) == 1 else None
+    #     print(index, index_fields, index_values, data_fields)
+    #     func_single = func_map[0][1] if len(func_map) == 1 else None
 
-        if not columns_fields:
-            # group by is index_fields, do items generation
-            # TODO: handle func_single is not None
-            def records_items():
-                for group, sub in self.iter_group_items(index_fields):
-                    record = []
-                    for field in data_fields:
-                        record.append(func_single(sub[field].values))
-                    yield group, record
+    #     if not columns_fields:
+    #         # group by is index_fields, do items generation
+    #         # TODO: handle func_single is not None
+    #         def records_items():
+    #             for group, sub in self.iter_group_items(index_fields):
+    #                 record = []
+    #                 for field in data_fields:
+    #                     record.append(func_single(sub[field].values))
+    #                 yield group, record
 
-            f = self.from_records_items(
-                    records_items(),
-                    )
-            # import ipdb; ipdb.set_trace()
-        else:
+    #         f = self.from_records_items(
+    #                 records_items(),
+    #                 )
+    #     else:
 
-            post = FrameGO(index=index)
+    #         post = FrameGO(index=index)
 
-            for group, sub in self.iter_group_items(columns_fields):
+    #         for group, sub in self.iter_group_items(columns_fields):
 
-                # cannot immediately set an index hierarchy, as local group might not be hiearchable
-                if len(index_fields) == 1:
-                    sub_index = sub[index_fields[0]].values
-                else:
-                    sub_index = tuple(zip(*(sub[f].values for f in index_fields)))
+    #             # cannot immediately set an index hierarchy, as local group might not be hiearchable
+    #             if len(index_fields) == 1:
+    #                 sub_index = sub[index_fields[0]].values
+    #             else:
+    #                 sub_index = tuple(zip(*(sub[f].values for f in index_fields)))
 
-                if len(data_fields) == 1:
-                    sub_columns = group # already a tuple
-                else: # create a sub heading for each data field
-                    sub_columns = product(group, data_fields)
+    #             if len(data_fields) == 1:
+    #                 sub_columns = group # already a tuple
+    #             else: # create a sub heading for each data field
+    #                 sub_columns = product(group, data_fields)
 
-                # if sub_index is not unique, we need to aggregate
-                if len(sub_index) > len(index): # not sure if this will always work
-                    print(columns_fields, sub_columns, fields_group)
-                    records = defaultdict(list)
-                    for group_index, part in sub.iter_group_items(index_fields):
-                        if idx_start_columns == 1:
-                            label = group_index[0]
-                        else:
-                            label = group_index
-                        for field in data_fields:
-                            records[label].append(func_single(part[field].values))
-                    sub_frame = Frame.from_records_items(records.items(), columns=sub_columns)
-                else:
-                    sub_frame = Frame(sub[data_fields]._blocks,
-                            columns=sub_columns,
-                            index=sub_index,
-                            own_data=True)
+    #             # if sub_index is not unique, we need to aggregate
+    #             if len(sub_index) > len(index): # not sure if this will always work
+    #                 print(columns_fields, sub_columns, fields_group)
+    #                 records = defaultdict(list)
+    #                 for group_index, part in sub.iter_group_items(index_fields):
+    #                     if idx_start_columns == 1:
+    #                         label = group_index[0]
+    #                     else:
+    #                         label = group_index
+    #                     for field in data_fields:
+    #                         records[label].append(func_single(part[field].values))
+    #                 sub_frame = Frame.from_records_items(records.items(), columns=sub_columns)
+    #             else:
+    #                 sub_frame = Frame(sub[data_fields]._blocks,
+    #                         columns=sub_columns,
+    #                         index=sub_index,
+    #                         own_data=True)
 
-                post.extend(sub_frame, fill_value=fill_value)
+    #             post.extend(sub_frame, fill_value=fill_value)
 
-            f = post.to_frame()
+    #         f = post.to_frame()
 
 
-        import ipdb; ipdb.set_trace()
 
 
     #---------------------------------------------------------------------------
