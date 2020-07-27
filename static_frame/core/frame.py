@@ -4652,6 +4652,7 @@ class Frame(ContainerOperand):
             # index = IndexHierarchy.from_labels(index_values, name=tuple(index_fields))
 
         # create non hierarchical index of tuples
+        # TODO: supply index name
         index = Index(index_values)
 
         # # Colect bundle of values for from_product constrcution if columns.
@@ -4684,85 +4685,65 @@ class Frame(ContainerOperand):
         #             columns_product[0],
         #             name=columns_name[0])
 
-        post = FrameGO(index=index)
-
+        print(index, index_fields, index_values, data_fields)
         func_single = func_map[0][1] if len(func_map) == 1 else None
 
-        print(index, index_fields, index_values, data_fields)
-        for group, sub in self.iter_group_items(columns_fields):
+        if not columns_fields:
+            # group by is index_fields, do items generation
+            # TODO: handle func_single is not None
+            def records_items():
+                for group, sub in self.iter_group_items(index_fields):
+                    record = []
+                    for field in data_fields:
+                        record.append(func_single(sub[field].values))
+                    yield group, record
 
-            # cannot immediately set an index hierarchy, as local group might not be hiearchable
-            sub_index = tuple(zip(*(sub[f].values for f in index_fields)))
+            f = self.from_records_items(
+                    records_items(),
+                    )
+            import ipdb; ipdb.set_trace()
+        else:
 
-            if len(data_fields) == 1:
-                sub_columns = group # already a tuple
-            else:
-                # create a sub heading for each data field
-                sub_columns = product(group, data_fields)
+            post = FrameGO(index=index)
 
-            sub_frame = Frame(sub[data_fields]._blocks,
-                    columns=sub_columns,
-                    index=sub_index,
-                    own_data=True)
-            post.extend(sub_frame)
+            for group, sub in self.iter_group_items(columns_fields):
+
+                # cannot immediately set an index hierarchy, as local group might not be hiearchable
+                if len(index_fields) == 1:
+                    sub_index = sub[index_fields[0]].values
+                else:
+                    sub_index = tuple(zip(*(sub[f].values for f in index_fields)))
+
+                if len(data_fields) == 1:
+                    sub_columns = group # already a tuple
+                else: # create a sub heading for each data field
+                    sub_columns = product(group, data_fields)
+
+                from collections import defaultdict
+                # if sub_index is not unique, we need to aggregate
+                if len(sub_index) > len(index): # not sure if this will always work
+                    print(columns_fields, sub_columns, fields_group)
+                    records = defaultdict(list)
+                    for group_index, part in sub.iter_group_items(index_fields):
+                        if idx_start_columns == 1:
+                            label = group_index[0]
+                        else:
+                            label = group_index
+                        for field in data_fields:
+                            records[label].append(func_single(part[field].values))
+                    sub_frame = Frame.from_records_items(records.items(), columns=sub_columns)
+                else:
+                    sub_frame = Frame(sub[data_fields]._blocks,
+                            columns=sub_columns,
+                            index=sub_index,
+                            own_data=True)
+
+                post.extend(sub_frame, fill_value=fill_value)
+
+            f = post.to_frame()
+
+
         import ipdb; ipdb.set_trace()
-
-
-
-        # def items():
-        #     func_single = func_map[0][1] if len(func_map) == 1 else None
-
-        #     for group, sub in self.iter_group_items(fields_group):
-        #         # index fields always but in front of fields_group
-        #         index_label = group[:idx_start_columns]
-        #         index_label = tuple(index_label) if len(index_label) > 1 else index_label[0]
-
-        #         # get the found parts of the columns labels from the group; this will never have data_fields
-        #         columns_label_raw = group[idx_start_columns:]
-
-
-        #         if len(columns_label_raw) == 0:
-        #             # if none, it means we just have data fields
-        #             columns_labels = data_fields
-        #         elif len(columns_label_raw) == 1 and len(data_fields) == 1:
-        #             # only one data field, do not need to display it
-        #             columns_labels = repeat(columns_label_raw[0])
-        #         elif len(columns_label_raw) > 1 and len(data_fields) == 1:
-        #             # only one data field
-        #             columns_labels = repeat(tuple(columns_label_raw))
-        #         elif len(columns_label_raw) >= 1 and len(data_fields) > 1:
-        #             # create column labels that has an entry for each data field
-        #             if len(columns_label_raw) == 1:
-        #                 columns_labels = ((columns_label_raw[0], v) for v in data_fields)
-        #             else:
-        #                 columns_labels = (tuple(chain(columns_label_raw, (v,))) for v in data_fields)
-
-        #         for field, column_label in zip(data_fields, columns_labels):
-        #             # NOTE: sub[field] produces a Series, which is not needed; better to go to blocks and extract array
-        #             if func_single:
-        #                 print(index_label, column_label, sub[field].values)
-        #                 yield (index_label, column_label), func_single(sub[field].values)
-        #             else:
-        #                 for label, func in func_map:
-        #                     if isinstance(column_label, tuple):
-        #                         column_label_final = column_label + (label,)
-        #                     else: # a single hashable
-        #                         column_label_final = (column_label, label)
-        #                     print(index_label, column_label, column_label_final, sub[field].values)
-
-        #                     yield (index_label, column_label_final), func(sub[field].values)
-
-        # f = self.__class__.from_element_loc_items(
-        #         items(),
-        #         index=index,
-        #         columns=columns,
-        #         dtype=None, # supply if possible,
-        #         fill_value=fill_value,
-        #         own_index=True,
-        #         own_columns=True
-        #         )
-        # print(f)
-        # return f
 
 
     #---------------------------------------------------------------------------
