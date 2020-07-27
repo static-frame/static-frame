@@ -4,13 +4,15 @@ from io import StringIO
 from itertools import chain
 from itertools import product
 from itertools import repeat
-from numpy.ma import MaskedArray
+from collections import defaultdict
+
 import csv
 import json
-import numpy as np
 import sqlite3
 import typing as tp
 
+import numpy as np
+from numpy.ma import MaskedArray
 
 
 from static_frame.core.assign import Assign
@@ -4701,7 +4703,7 @@ class Frame(ContainerOperand):
             f = self.from_records_items(
                     records_items(),
                     )
-            import ipdb; ipdb.set_trace()
+            # import ipdb; ipdb.set_trace()
         else:
 
             post = FrameGO(index=index)
@@ -4719,7 +4721,6 @@ class Frame(ContainerOperand):
                 else: # create a sub heading for each data field
                     sub_columns = product(group, data_fields)
 
-                from collections import defaultdict
                 # if sub_index is not unique, we need to aggregate
                 if len(sub_index) > len(index): # not sure if this will always work
                     print(columns_fields, sub_columns, fields_group)
