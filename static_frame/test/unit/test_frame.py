@@ -8627,6 +8627,10 @@ class TestUnit(TestCase):
                 columns_fields=('z',), # values in this field become columns
                 data_fields=('a', 'b')
                 )
+        self.assertEqual(post.columns.name, ('z', 'values'))
+        self.assertEqual(post.index.name, ('x', 'y'))
+        self.assertEqual(post.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')])
 
         self.assertEqual(post.to_pairs(0),
                 ((('far', 'a'), ((('left', 'down'), 2), (('left', 'up'), 0), (('right', 'down'), 3), (('right', 'up'), 1))), (('far', 'b'), ((('left', 'down'), 21), (('left', 'up'), 19), (('right', 'down'), 22), (('right', 'up'), 20))), (('near', 'a'), ((('left', 'down'), 6), (('left', 'up'), 4), (('right', 'down'), 7), (('right', 'up'), 5))), (('near', 'b'), ((('left', 'down'), 22), (('left', 'up'), 20), (('right', 'down'), 23), (('right', 'up'), 21))))
@@ -8649,6 +8653,10 @@ class TestUnit(TestCase):
                 columns_fields=('z',), # values in this field become columns
                 data_fields=('a',)
                 )
+        self.assertEqual(post.index.name, ('x', 'y'))
+        self.assertEqual(post.columns.name, 'z')
+        self.assertEqual(post.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64')])
 
         self.assertEqual(post.to_pairs(0),
                 (('far', ((('left', 'down'), 2), (('left', 'up'), 0), (('right', 'down'), 3), (('right', 'up'), 1))), ('near', ((('left', 'down'), 6), (('left', 'up'), 4), (('right', 'down'), 7), (('right', 'up'), 5))))
@@ -8671,6 +8679,8 @@ class TestUnit(TestCase):
                 data_fields=('b',)
                 )
 
+        self.assertEqual(post.index.name, ('x', 'y'))
+        self.assertEqual(post.dtypes.values.tolist(), [np.dtype('int64')])
         self.assertEqual(post.to_pairs(0),
                 (('b', ((('left', 'down'), 43), (('left', 'up'), 39), (('right', 'down'), 45), (('right', 'up'), 41))),)
                 )
@@ -8689,19 +8699,40 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         # single argument specs
-        self.assertEqual(f2.pivot('z', 'x', 'a').to_pairs(0),
+        p1 = f2.pivot('z', 'x', 'a')
+        self.assertEqual(p1.index.name, 'z')
+        self.assertEqual(p1.columns.name, 'x')
+        self.assertEqual(p1.__class__, FrameGO)
+        self.assertEqual(p1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64')])
+        self.assertEqual(p1.to_pairs(0),
                 (('left', (('far', 2), ('near', 10))), ('right', (('far', 4), ('near', 12))))
                 )
 
-        self.assertEqual(f2.pivot('z', 'x', 'b').to_pairs(0),
+        p2 = f2.pivot('z', 'x', 'b')
+        self.assertEqual(p2.index.name, 'z')
+        self.assertEqual(p2.columns.name, 'x')
+        self.assertEqual(p2.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64')])
+        self.assertEqual(p2.to_pairs(0),
                 (('left', (('far', 40), ('near', 42))), ('right', (('far', 42), ('near', 44))))
                 )
 
-        self.assertEqual(f2.pivot('x', 'y', 'a').to_pairs(0),
+        p3 = f2.pivot('x', 'y', 'a')
+        self.assertEqual(p3.index.name, 'x')
+        self.assertEqual(p3.columns.name, 'y')
+        self.assertEqual(p3.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64')])
+        self.assertEqual(p3.to_pairs(0),
                 (('down', (('left', 8), ('right', 10))), ('up', (('left', 4), ('right', 6))))
                 )
 
-        self.assertEqual(f2.pivot('x', 'y', 'b').to_pairs(0),
+        p4 = f2.pivot('x', 'y', 'b')
+        self.assertEqual(p4.index.name, 'x')
+        self.assertEqual(p4.columns.name, 'y')
+        self.assertEqual(p4.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64')])
+        self.assertEqual(p4.to_pairs(0),
                 (('down', (('left', 43), ('right', 45))), ('up', (('left', 39), ('right', 41))))
                 )
 
@@ -8718,9 +8749,13 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         # no columns provided
+        p1 = f2.pivot('z', data_fields='b')
 
+        self.assertEqual(p1.index.name, 'z')
+        self.assertEqual(p1.columns.name, 'values')
+        self.assertEqual(p1.dtypes.values.tolist(), [np.dtype('int64')])
         self.assertEqual(
-                f2.pivot('z', data_fields='b').to_pairs(0),
+                p1.to_pairs(0),
                 (('b', (('far', 82), ('near', 86))),)
                 )
 
@@ -8745,6 +8780,12 @@ class TestUnit(TestCase):
         # shows unique values of 'b' as columns, then shows values for z, a
         post = f2.pivot(('x', 'y'), ('b',), fill_value='')
 
+        self.assertEqual(post.index.name, ('x', 'y'))
+        self.assertEqual(post.columns.name, ('b', 'values'))
+        # NOTE: because we are filling na with empty strings, we get object dtypes
+        self.assertEqual(post.dtypes.values.tolist(),
+                [np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'),np. dtype('O'), np.dtype('<U5'), np.dtype('O'), np.dtype('<U5'), np.dtype('O')]
+                )
         self.assertEqual(post.to_pairs(0),
                 (((19, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'far'), (('right', 'down'), ''), (('right', 'up'), ''))), ((19, 'a'), ((('left', 'down'), ''), (('left', 'up'), 0), (('right', 'down'), ''), (('right', 'up'), ''))), ((20, 'z'), ((('left', 'down'), ''), (('left', 'up'), 'near'), (('right', 'down'), ''), (('right', 'up'), 'far'))), ((20, 'a'), ((('left', 'down'), ''), (('left', 'up'), 4), (('right', 'down'), ''), (('right', 'up'), 1))), ((21, 'z'), ((('left', 'down'), 'far'), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 'near'))), ((21, 'a'), ((('left', 'down'), 2), (('left', 'up'), ''), (('right', 'down'), ''), (('right', 'up'), 5))), ((22, 'z'), ((('left', 'down'), 'near'), (('left', 'up'), ''), (('right', 'down'), 'far'), (('right', 'up'), ''))), ((22, 'a'), ((('left', 'down'), 6), (('left', 'up'), ''), (('right', 'down'), 3), (('right', 'up'), ''))), ((23, 'z'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 'near'), (('right', 'up'), ''))), ((23, 'a'), ((('left', 'down'), ''), (('left', 'up'), ''), (('right', 'down'), 7), (('right', 'up'), ''))))
                 )
@@ -8763,7 +8804,11 @@ class TestUnit(TestCase):
 
         # multiple columns; all reamining fields go to data_fields
         post1 = f2.pivot('z', ('y', 'x'))
-
+        self.assertEqual(post1.index.name, 'z')
+        self.assertEqual(post1.columns.name, ('y', 'x', 'values'))
+        self.assertEqual(post1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
+                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'left', 'a'), (('far', 2), ('near', 6))), (('down', 'left', 'b'), (('far', 21), ('near', 22))), (('down', 'right', 'a'), (('far', 3), ('near', 7))), (('down', 'right', 'b'), (('far', 22), ('near', 23))), (('up', 'left', 'a'), (('far', 0), ('near', 4))), (('up', 'left', 'b'), (('far', 19), ('near', 20))), (('up', 'right', 'a'), (('far', 1), ('near', 5))), (('up', 'right', 'b'), (('far', 20), ('near', 21))))
                 )

@@ -579,7 +579,7 @@ def rehierarch_from_type_blocks(*,
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
     Args:
-        index_cls: provide a class, form which the constructor will be called.
+        index_cls: provide a class, from which the constructor will be called.
     '''
 
     depth = labels.shape[1] # number of columns

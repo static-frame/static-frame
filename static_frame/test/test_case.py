@@ -30,7 +30,7 @@ from static_frame.core.util import PathSpecifier
 
 
 skip_win = pytest.mark.skipif(
-        sys.platform == 'win32',
+        sys.platform.startswith('win'),
         reason='Windows default dtypes'
         )
 
