@@ -4616,6 +4616,9 @@ class Frame(ContainerOperand):
         else:
             func_map = tuple(func.items())
 
+        func_single = func_map[0][1] if len(func_map) == 1 else None
+
+
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
         data_fields = key_normalize(data_fields)
@@ -4667,9 +4670,6 @@ class Frame(ContainerOperand):
                     name=columns_name)
 
 
-        # print(index, index_fields, index_values, data_fields)
-        func_single = func_map[0][1] if len(func_map) == 1 else None
-
         if not columns_fields:
             print('NOTE: group-by index')
 
@@ -4699,7 +4699,8 @@ class Frame(ContainerOperand):
                 post = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
             else:
                 post = FrameGO(index=index_inner)
-            index_inner_set = set(index_inner)
+            # index_inner_set = set(index_inner)
+            columns_fields_len = len(columns_fields)
 
             for group, sub in self.iter_group_items(columns_fields):
 
@@ -4708,32 +4709,31 @@ class Frame(ContainerOperand):
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
 
-                if len(data_fields) == 1 and len(columns_fields) == 1:
+                if columns_fields_len == 1 and len(data_fields) == 1:
                     sub_columns = group # already a tuple
-                elif len(columns_fields) == 1: # create a sub heading for each data field
+                elif columns_fields_len == 1: # create a sub heading for each data field
                     sub_columns = product(group, data_fields)
-                else: # group is already a tuple of a partial column label; need to extend with each data field
+                elif columns_fields_len > 1 and len(data_fields) == 1:
+                    sub_columns = (group,)
+                else: # group is already a tuple of the partial column label; need to extend with each data field
                     sub_columns = []
                     for field in data_fields: # order of data fields is maintained below
                         sub_columns.append(group + (field,))
 
-                # print('columns_depth', columns_depth, sub_columns, data_fields, columns_fields)
-
-                # if sub_index_labels are not unique, or if sub_index is not a subset of index_inner_set, we need to aggregate
-                sub_index_unique = set(sub_index_labels)
-                if (len(sub_index_unique) != len(sub_index_labels) or
-                        not sub_index_unique.issubset(index_inner_set)):
+                # if sub_index_labels are not unique we need to aggregate
+                if len(set(sub_index_labels)) != len(sub_index_labels): # or
+                        # not sub_index_unique.issubset(index_inner_set)):
                     print('NOTE: sub-optimal additional group by')
-                    records = defaultdict(list)
-                    for group_index, part in sub.iter_group_items(index_fields):
-                        if index_depth == 1:
-                            label = group_index[0]
-                        else:
-                            label = group_index
-                        for field in data_fields:
-                            records[label].append(func_single(part[field].values))
-                    # import ipdb; ipdb.ssset_trace()
-                    sub_frame = Frame.from_records_items(records.items(),
+
+                    def records() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+                        for group_index, part in sub.iter_group_items(index_fields):
+                            label = group_index if index_depth > 1 else group_index[0]
+                            record = []
+                            for field in data_fields:
+                                record.append(func_single(part[field].values))
+                            yield label, record
+
+                    sub_frame = Frame.from_records_items(records(),
                             columns=sub_columns)
                 else:
                     print('NOTE: optimal sub_frame path')

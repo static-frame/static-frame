@@ -8826,10 +8826,13 @@ class TestUnit(TestCase):
 
         f2 = f1.unset_index()
 
-
         # specifying a data_fields value
         post1 = f2.pivot('z', ('y', 'x'), 'a')
-
+        self.assertEqual(post1.index.name, 'z')
+        self.assertEqual(post1.columns.name, ('y', 'x'))
+        self.assertEqual(post1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
+                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'left'), (('far', 2), ('near', 6))), (('down', 'right'), (('far', 3), ('near', 7))), (('up', 'left'), (('far', 0), ('near', 4))), (('up', 'right'), (('far', 1), ('near', 5)))))
 
