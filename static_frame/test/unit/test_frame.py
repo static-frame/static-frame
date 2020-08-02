@@ -8611,6 +8611,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
+    @skip_win #type: ignore
     def test_frame_pivot_a(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -8655,9 +8656,6 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(post.index.name, ('x', 'y'))
         self.assertEqual(post.columns.name, 'z')
-        self.assertEqual(post.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64')])
-
         self.assertEqual(post.to_pairs(0),
                 (('far', ((('left', 'down'), 2), (('left', 'up'), 0), (('right', 'down'), 3), (('right', 'up'), 1))), ('near', ((('left', 'down'), 6), (('left', 'up'), 4), (('right', 'down'), 7), (('right', 'up'), 5))))
                 )
@@ -8680,7 +8678,6 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(post.index.name, ('x', 'y'))
-        self.assertEqual(post.dtypes.values.tolist(), [np.dtype('int64')])
         self.assertEqual(post.to_pairs(0),
                 (('b', ((('left', 'down'), 43), (('left', 'up'), 39), (('right', 'down'), 45), (('right', 'up'), 41))),)
                 )
@@ -8703,8 +8700,6 @@ class TestUnit(TestCase):
         self.assertEqual(p1.index.name, 'z')
         self.assertEqual(p1.columns.name, 'x')
         self.assertEqual(p1.__class__, FrameGO)
-        self.assertEqual(p1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64')])
         self.assertEqual(p1.to_pairs(0),
                 (('left', (('far', 2), ('near', 10))), ('right', (('far', 4), ('near', 12))))
                 )
@@ -8712,8 +8707,6 @@ class TestUnit(TestCase):
         p2 = f2.pivot('z', 'x', 'b')
         self.assertEqual(p2.index.name, 'z')
         self.assertEqual(p2.columns.name, 'x')
-        self.assertEqual(p2.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64')])
         self.assertEqual(p2.to_pairs(0),
                 (('left', (('far', 40), ('near', 42))), ('right', (('far', 42), ('near', 44))))
                 )
@@ -8721,8 +8714,6 @@ class TestUnit(TestCase):
         p3 = f2.pivot('x', 'y', 'a')
         self.assertEqual(p3.index.name, 'x')
         self.assertEqual(p3.columns.name, 'y')
-        self.assertEqual(p3.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64')])
         self.assertEqual(p3.to_pairs(0),
                 (('down', (('left', 8), ('right', 10))), ('up', (('left', 4), ('right', 6))))
                 )
@@ -8730,12 +8721,11 @@ class TestUnit(TestCase):
         p4 = f2.pivot('x', 'y', 'b')
         self.assertEqual(p4.index.name, 'x')
         self.assertEqual(p4.columns.name, 'y')
-        self.assertEqual(p4.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64')])
         self.assertEqual(p4.to_pairs(0),
                 (('down', (('left', 43), ('right', 45))), ('up', (('left', 39), ('right', 41))))
                 )
 
+    @skip_win #type: ignore
     def test_frame_pivot_e(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -8764,7 +8754,7 @@ class TestUnit(TestCase):
                 (('a', (('far', 6), ('near', 22))), ('b', (('far', 82), ('near', 86))))
                 )
 
-
+    @skip_win #type: ignore
     def test_frame_pivot_f(self) -> None:
 
         index = IndexHierarchy.from_product(
@@ -8806,9 +8796,6 @@ class TestUnit(TestCase):
         post1 = f2.pivot('z', ('y', 'x'))
         self.assertEqual(post1.index.name, 'z')
         self.assertEqual(post1.columns.name, ('y', 'x', 'values'))
-        self.assertEqual(post1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
-                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'left', 'a'), (('far', 2), ('near', 6))), (('down', 'left', 'b'), (('far', 21), ('near', 22))), (('down', 'right', 'a'), (('far', 3), ('near', 7))), (('down', 'right', 'b'), (('far', 22), ('near', 23))), (('up', 'left', 'a'), (('far', 0), ('near', 4))), (('up', 'left', 'b'), (('far', 19), ('near', 20))), (('up', 'right', 'a'), (('far', 1), ('near', 5))), (('up', 'right', 'b'), (('far', 20), ('near', 21))))
                 )
@@ -8830,9 +8817,6 @@ class TestUnit(TestCase):
         post1 = f2.pivot('z', ('y', 'x'), 'a')
         self.assertEqual(post1.index.name, 'z')
         self.assertEqual(post1.columns.name, ('y', 'x'))
-        self.assertEqual(post1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
-                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'left'), (('far', 2), ('near', 6))), (('down', 'right'), (('far', 3), ('near', 7))), (('up', 'left'), (('far', 0), ('near', 4))), (('up', 'right'), (('far', 1), ('near', 5)))))
 
@@ -8853,9 +8837,6 @@ class TestUnit(TestCase):
         post1 = f2.pivot('z', 'y', 'a', func={'min': np.min, 'max': np.max})
         self.assertEqual(post1.index.name, 'z')
         self.assertEqual(post1.columns.name, ('y', 'func'))
-        self.assertEqual(post1.dtypes.values.tolist(),
-                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
-                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'min'), (('far', 2), ('near', 6))), (('down', 'max'), (('far', 3), ('near', 7))), (('up', 'min'), (('far', 0), ('near', 4))), (('up', 'max'), (('far', 1), ('near', 5))))
                 )
