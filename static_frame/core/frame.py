@@ -4590,7 +4590,7 @@ class Frame(ContainerOperand):
             data_fields: KeyOrKeys = EMPTY_TUPLE,
             *,
             func: CallableOrCallableMap = None,
-            fill_value: object = FILL_VALUE_DEFAULT,
+            fill_value: object = np.nan,
             ) -> 'Frame':
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
@@ -4617,7 +4617,6 @@ class Frame(ContainerOperand):
             func_map = tuple(func.items())
 
         func_single = func_map[0][1] if len(func_map) == 1 else None
-
 
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
@@ -4656,9 +4655,6 @@ class Frame(ContainerOperand):
             columns_name = tuple(chain(*columns_fields, ('values',)))
 
         if len(func_map) > 1:
-            # add the labels as another product level
-            # labels = tuple(x for x, _ in func_map)
-            # columns_product.append(labels)
             columns_name = columns_name + ('func',)
         columns_depth = len(columns_name)
 
@@ -4669,26 +4665,32 @@ class Frame(ContainerOperand):
                     depth_reference=columns_depth,
                     name=columns_name)
 
-
         if not columns_fields:
-            print('NOTE: group-by index')
-
+            # print('NOTE: group-by index')
             # group by is index_fields, do items generation
-            # TODO: handle func_single is not None
             group_fields = index_fields if index_depth > 1 else index_fields[0]
+            if func_single:
+                columns = data_fields
+            else:
+                columns = tuple(product(data_fields, (label for label, _ in func_map)))
 
             def records_items():
                 for group, sub in self.iter_group_items(group_fields):
                     record = []
                     for field in data_fields:
-                        record.append(func_single(sub[field].values))
+                        values = sub[field].values
+                        if func_single:
+                            record.append(func_single(values))
+                        else:
+                            for _, func in func_map:
+                                record.append(func(values))
                     yield group, record
 
             index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
             f = self.from_records_items(
                     records_items(),
                     columns_constructor=columns_constructor,
-                    columns=data_fields,
+                    columns=columns,
                     index_constructor=index_constructor,
                     )
             # NOTE: are we sure the index group_by will result in the same ordering as the already created index?
@@ -4696,11 +4698,12 @@ class Frame(ContainerOperand):
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
             if columns_depth == 1:
-                post = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
+                fgo = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
             else:
-                post = FrameGO(index=index_inner)
+                fgo = FrameGO(index=index_inner)
             # index_inner_set = set(index_inner)
             columns_fields_len = len(columns_fields)
+            data_fields_len = len(data_fields)
 
             for group, sub in self.iter_group_items(columns_fields):
 
@@ -4709,50 +4712,72 @@ class Frame(ContainerOperand):
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
 
-                if columns_fields_len == 1 and len(data_fields) == 1:
-                    sub_columns = group # already a tuple
-                elif columns_fields_len == 1: # create a sub heading for each data field
-                    sub_columns = product(group, data_fields)
-                elif columns_fields_len > 1 and len(data_fields) == 1:
-                    sub_columns = (group,)
+                if columns_fields_len == 1 and data_fields_len == 1:
+                    if func_single:
+                        sub_columns = group # already a tuple
+                    else:
+                        sub_columns = [group + (label,) for label, _ in func_map]
+                elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
+                    if func_single:
+                        sub_columns = product(group, data_fields)
+                    else:
+                        sub_columns = product(group, data_fields, (label for label, _ in func_map))
+                elif columns_fields_len > 1 and data_fields_len == 1:
+                    if func_single:
+                        sub_columns = (group,)
+                    else:
+                        sub_columns = [group + (label,) for label, _ in func_map]
                 else: # group is already a tuple of the partial column label; need to extend with each data field
-                    sub_columns = []
-                    for field in data_fields: # order of data fields is maintained below
-                        sub_columns.append(group + (field,))
+                    if func_single:
+                        sub_columns = [group + (field,) for field in data_fields]
+                    else:
+                        sub_columns = [group + (field, label) for field in data_fields for label, _ in func_map]
 
                 # if sub_index_labels are not unique we need to aggregate
-                if len(set(sub_index_labels)) != len(sub_index_labels): # or
-                        # not sub_index_unique.issubset(index_inner_set)):
-                    print('NOTE: sub-optimal additional group by')
-
-                    def records() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+                if len(set(sub_index_labels)) != len(sub_index_labels):
+                    # print('NOTE: sub-optimal additional group by')
+                    def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
                         for group_index, part in sub.iter_group_items(index_fields):
                             label = group_index if index_depth > 1 else group_index[0]
                             record = []
                             for field in data_fields:
-                                record.append(func_single(part[field].values))
+                                values = part[field].values
+                                if func_single:
+                                    record.append(func_single(values))
+                                else:
+                                    for _, func in func_map:
+                                        record.append(func(values))
                             yield label, record
 
-                    sub_frame = Frame.from_records_items(records(),
+                    sub_frame = Frame.from_records_items(records_items(),
                             columns=sub_columns)
                 else:
-                    print('NOTE: optimal sub_frame path')
-                    # import ipdb; ipdb.set_trace()
-                    sub_frame = Frame(
-                            sub[data_fields]._blocks,
-                            columns=sub_columns,
-                            index=sub_index_labels,
-                            own_data=True)
-                post.extend(sub_frame, fill_value=fill_value)
+                    # print('NOTE: optimal sub_frame path')
+                    if func_single: # assume no aggregation Snecessary
+                        data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
+                        sub_frame = Frame(
+                                sub._blocks._extract(row_key=None, column_key=data_fields_iloc),
+                                columns=sub_columns,
+                                index=sub_index_labels,
+                                own_data=True)
+                    else:
+                        def columns() -> tp.Iterator[np.ndarray]:
+                            for field in data_fields:
+                                for _, func in func_map:
+                                    yield sub[field].iter_element().apply(func).values
+                        sub_frame = Frame.from_items(
+                                zip(sub_columns, columns()),
+                                index=sub_index_labels)
 
-            f = post if not self.STATIC else post.to_frame()
+                fgo.extend(sub_frame, fill_value=fill_value)
+
+            f = fgo if not self.STATIC else fgo.to_frame()
 
         index_final = None if index_depth == 1 else index
-        columns_final = None if columns_depth == 1 else columns_constructor(post.columns)
+        columns_final = None if columns_depth == 1 else columns_constructor(f.columns)
         if index_final or columns_final:
             f = f.relabel(index=index_final, columns=columns_final)
 
-        # import ipdb; ipdb.set_trace()
         return f
 
 

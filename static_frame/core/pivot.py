@@ -19,6 +19,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 
+
+
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):
     targets_unique: tp.Iterable[tp.Hashable]

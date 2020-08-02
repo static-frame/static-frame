@@ -8851,13 +8851,17 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         post1 = f2.pivot('z', 'y', 'a', func={'min': np.min, 'max': np.max})
-
+        self.assertEqual(post1.index.name, 'z')
+        self.assertEqual(post1.columns.name, ('y', 'func'))
+        self.assertEqual(post1.dtypes.values.tolist(),
+                [np.dtype('int64'), np.dtype('int64'), np.dtype('int64'), np.dtype('int64')]
+                )
         self.assertEqual(post1.to_pairs(0),
                 ((('down', 'min'), (('far', 2), ('near', 6))), (('down', 'max'), (('far', 3), ('near', 7))), (('up', 'min'), (('far', 0), ('near', 4))), (('up', 'max'), (('far', 1), ('near', 5))))
                 )
 
 
-    def test_frame_pivot_j(self) -> None:
+    def test_frame_pivot_j1(self) -> None:
 
         index = IndexHierarchy.from_product(
                 ('far', 'near'), ('up', 'down'), ('left', 'right'),
@@ -8870,13 +8874,30 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         post1 = f2.pivot('z', ('y', 'x'), 'b', func={'min': np.min, 'max': np.max})
+        self.assertEqual(post1.index.name, 'z')
+        self.assertEqual(post1.columns.name, ('y', 'x', 'func'))
+
         self.assertEqual(
                 post1.to_pairs(0),
                 ((('down', 'left', 'min'), (('far', 21), ('near', 22))), (('down', 'left', 'max'), (('far', 21), ('near', 22))), (('down', 'right', 'min'), (('far', 22), ('near', 23))), (('down', 'right', 'max'), (('far', 22), ('near', 23))), (('up', 'left', 'min'), (('far', 19), ('near', 20))), (('up', 'left', 'max'), (('far', 19), ('near', 20))), (('up', 'right', 'min'), (('far', 20), ('near', 21))), (('up', 'right', 'max'), (('far', 20), ('near', 21))))
                 )
 
+    def test_frame_pivot_j2(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+
         # default populates data values for a, b
         post2 = f2.pivot('z', ('y', 'x'), func={'min': np.min, 'max': np.max})
+        self.assertEqual(post2.index.name, 'z')
+        self.assertEqual(post2.columns.name, ('y', 'x', 'values', 'func'))
         self.assertEqual(
                 post2.to_pairs(0),
                 ((('down', 'left', 'a', 'min'), (('far', 2), ('near', 6))), (('down', 'left', 'a', 'max'), (('far', 2), ('near', 6))), (('down', 'left', 'b', 'min'), (('far', 21), ('near', 22))), (('down', 'left', 'b', 'max'), (('far', 21), ('near', 22))), (('down', 'right', 'a', 'min'), (('far', 3), ('near', 7))), (('down', 'right', 'a', 'max'), (('far', 3), ('near', 7))), (('down', 'right', 'b', 'min'), (('far', 22), ('near', 23))), (('down', 'right', 'b', 'max'), (('far', 22), ('near', 23))), (('up', 'left', 'a', 'min'), (('far', 0), ('near', 4))), (('up', 'left', 'a', 'max'), (('far', 0), ('near', 4))), (('up', 'left', 'b', 'min'), (('far', 19), ('near', 20))), (('up', 'left', 'b', 'max'), (('far', 19), ('near', 20))), (('up', 'right', 'a', 'min'), (('far', 1), ('near', 5))), (('up', 'right', 'a', 'max'), (('far', 1), ('near', 5))), (('up', 'right', 'b', 'min'), (('far', 20), ('near', 21))), (('up', 'right', 'b', 'max'), (('far', 20), ('near', 21))))
@@ -8895,7 +8916,8 @@ class TestUnit(TestCase):
 
         f2 = f1.unset_index()
         post1 = f2.pivot('z', 'y', 'a')
-
+        self.assertEqual(post1.index.name, 'z')
+        self.assertEqual(post1.columns.name, 'y')
         self.assertEqual(post1.to_pairs(0),
                 ((None, (('far', 1), (20, 9))), ('down', (('far', 5), (20, 13))))
                 )
@@ -8925,15 +8947,54 @@ class TestUnit(TestCase):
             # cannot create a pivot Frame from a field (q) that is not a column
             _ = f2.pivot('q')
 
-    # def test_frame_pivot_n(self) -> None:
+    def test_frame_pivot_n(self) -> None:
 
-    #     f1 = FrameGO(index=range(3))
-    #     f1["a"] = np.array(range(3)) + 10001
-    #     f1["b"] = np.array(range(3), "datetime64[D]")
-    #     f1["c"] = np.array(range(3)) * 1e9
+        f1 = FrameGO(index=range(3))
+        f1["a"] = np.array(range(3)) + 10001
+        f1["b"] = np.array(range(3), "datetime64[D]")
+        f1["c"] = np.array(range(3)) * 1e9
 
-    #     f2 = f1.pivot("b", "a")
-    #     import ipdb; ipdb.set_trace()
+        f2 = f1.pivot("b", "a", fill_value=0)
+        self.assertEqual(f2.to_pairs(0),
+                ((10001, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 0.0))), (10002, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 1000000000.0), (np.datetime64('1970-01-03'), 0.0))), (10003, ((np.datetime64('1970-01-01'), 0.0), (np.datetime64('1970-01-02'), 0.0), (np.datetime64('1970-01-03'), 2000000000.0))))
+                )
+
+    def test_frame_pivot_o(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+
+        p1 = f2.pivot('y', data_fields=('a', 'b'),
+            func={'mean':np.mean, 'max':np.max, 'values': lambda x: tuple(x)})
+
+        self.assertEqual(p1.to_pairs(0),
+                ((('a', 'mean'), (('down', 4.5), ('up', 2.5))), (('a', 'max'), (('down', 7), ('up', 5))), (('a', 'values'), (('down', (2, 3, 6, 7)), ('up', (0, 1, 4, 5)))), (('b', 'mean'), (('down', 22.0), ('up', 20.0))), (('b', 'max'), (('down', 23), ('up', 21))), (('b', 'values'), (('down', (21, 22, 22, 23)), ('up', (19, 20, 20, 21)))))
+                )
+
+    def test_frame_pivot_p(self) -> None:
+
+        index = IndexHierarchy.from_product(
+                ('far', 'near'), ('up', 'down'), ('left', 'right'),
+                name=('z', 'y', 'x')
+                )
+        f1 = FrameGO(index=index)
+        f1['a'] = range(len(f1))
+        f1['b'] = (len(str(f1.index.values[i])) for i in range(len(f1)))
+
+        f2 = f1.unset_index()
+
+        p1 = f2.pivot('x', 'y', data_fields=('a', 'b'), func={'mean': np.mean, 'min': np.min})
+
+        self.assertEqual(p1.to_pairs(0),
+                ((('down', 'a', 'mean'), (('left', 4.0), ('right', 5.0))), (('down', 'a', 'min'), (('left', 2), ('right', 3))), (('down', 'b', 'mean'), (('left', 21.5), ('right', 22.5))), (('down', 'b', 'min'), (('left', 21), ('right', 22))), (('up', 'a', 'mean'), (('left', 2.0), ('right', 3.0))), (('up', 'a', 'min'), (('left', 0), ('right', 1))), (('up', 'b', 'mean'), (('left', 19.5), ('right', 20.5))), (('up', 'b', 'min'), (('left', 19), ('right', 20))))
+                )
 
     #---------------------------------------------------------------------------
 
