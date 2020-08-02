@@ -24,15 +24,17 @@ if tp.TYPE_CHECKING:
 #-------------------------------------------------------------------------------
 
 def extrapolate_column_fields(
-        columns_fields: tp.Iterable[tp.Hashable],
-        group: tp.Iterable[tp.Hashable],
-        data_fields: tp.Iterable[tp.Hashable],
+        columns_fields: tp.Sequence[tp.Hashable],
+        group: tp.Tuple[tp.Hashable, ...],
+        data_fields: tp.Sequence[tp.Hashable],
         func_fields: tp.Iterable[tp.Hashable],
-        ) -> tp.Sequence[tp.Hashable]:
+        ) -> tp.Iterable[tp.Hashable]:
     '''Used in Frame.pivot.
     '''
     columns_fields_len = len(columns_fields)
     data_fields_len = len(data_fields)
+
+    sub_columns: tp.Iterable[tp.Hashable]
 
     if columns_fields_len == 1 and data_fields_len == 1:
         if not func_fields:
