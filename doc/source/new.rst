@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.27
+----------
+
+Improved implementation of ``Frame.pivot``.
+
+
 0.6.26
 ----------
 
