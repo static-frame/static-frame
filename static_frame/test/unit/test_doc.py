@@ -2284,12 +2284,12 @@ strange 0.1       -0.333
 
 >>> f.pivot(index_fields='type', data_fields='mass', func={'mean':np.mean, 'max':np.max})
 <Frame>
-<IndexHierarchy: ('values', 'func')> mass               mass     <<U4>
-                                     mean               max      <<U4>
+<IndexHierarchy: ('values', 'func')> mass               mass      <<U4>
+                                     mean               max       <<U4>
 <Index: type>
 lepton                               0.9415             1.777
 quark                                0.7000000000000001 1.3
-<<U6>                                <object>           <object>
+<<U6>                                <float64>          <float64>
 
 #end_Frame-pivot()
 
