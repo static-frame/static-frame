@@ -2,6 +2,7 @@ import typing as tp
 from functools import partial
 from collections import defaultdict
 from itertools import repeat
+from itertools import product
 
 import numpy as np
 
@@ -20,6 +21,41 @@ if tp.TYPE_CHECKING:
 
 
 
+#-------------------------------------------------------------------------------
+
+def extrapolate_column_fields(
+        columns_fields: tp.Iterable[tp.Hashable],
+        group: tp.Iterable[tp.Hashable],
+        data_fields: tp.Iterable[tp.Hashable],
+        func_fields: tp.Iterable[tp.Hashable],
+        ) -> tp.Sequence[tp.Hashable]:
+    '''Used in Frame.pivot.
+    '''
+    columns_fields_len = len(columns_fields)
+    data_fields_len = len(data_fields)
+
+    if columns_fields_len == 1 and data_fields_len == 1:
+        if not func_fields:
+            sub_columns = group # already a tuple
+        else:
+            sub_columns = [group + (label,) for label in func_fields]
+    elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
+        if not func_fields:
+            sub_columns = product(group, data_fields)
+        else:
+            sub_columns = product(group, data_fields, func_fields)
+    elif columns_fields_len > 1 and data_fields_len == 1:
+        if not func_fields:
+            sub_columns = (group,)
+        else:
+            sub_columns = [group + (label,) for label in func_fields]
+    else: # group is already a tuple of the partial column label; need to extend with each data field
+        if not func_fields:
+            sub_columns = [group + (field,) for field in data_fields]
+        else:
+            sub_columns = [group + (field, label) for field in data_fields for label in func_fields]
+
+    return sub_columns
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):

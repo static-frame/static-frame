@@ -4,7 +4,6 @@ from io import StringIO
 from itertools import chain
 from itertools import product
 from itertools import repeat
-from collections import defaultdict
 
 import csv
 import json
@@ -77,6 +76,7 @@ from static_frame.core.type_blocks import TypeBlocks
 
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
+from static_frame.core.pivot import extrapolate_column_fields
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
@@ -4617,6 +4617,7 @@ class Frame(ContainerOperand):
             func_map = tuple(func.items())
 
         func_single = func_map[0][1] if len(func_map) == 1 else None
+        func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
 
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
@@ -4669,10 +4670,7 @@ class Frame(ContainerOperand):
             # print('NOTE: group-by index')
             # group by is index_fields, do items generation
             group_fields = index_fields if index_depth > 1 else index_fields[0]
-            if func_single:
-                columns = data_fields
-            else:
-                columns = tuple(product(data_fields, (label for label, _ in func_map)))
+            columns = data_fields if func_single else tuple(product(data_fields, func_fields))
 
             def records_items():
                 for group, sub in self.iter_group_items(group_fields):
@@ -4706,33 +4704,12 @@ class Frame(ContainerOperand):
             data_fields_len = len(data_fields)
 
             for group, sub in self.iter_group_items(columns_fields):
-
                 if len(index_fields) == 1:
                     sub_index_labels = sub[index_fields[0]].values
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
 
-                if columns_fields_len == 1 and data_fields_len == 1:
-                    if func_single:
-                        sub_columns = group # already a tuple
-                    else:
-                        sub_columns = [group + (label,) for label, _ in func_map]
-                elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
-                    if func_single:
-                        sub_columns = product(group, data_fields)
-                    else:
-                        sub_columns = product(group, data_fields, (label for label, _ in func_map))
-                elif columns_fields_len > 1 and data_fields_len == 1:
-                    if func_single:
-                        sub_columns = (group,)
-                    else:
-                        sub_columns = [group + (label,) for label, _ in func_map]
-                else: # group is already a tuple of the partial column label; need to extend with each data field
-                    if func_single:
-                        sub_columns = [group + (field,) for field in data_fields]
-                    else:
-                        sub_columns = [group + (field, label) for field in data_fields for label, _ in func_map]
-
+                sub_columns = extrapolate_column_fields(columns_fields, group, data_fields, func_fields)
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
                     # print('NOTE: sub-optimal additional group by')

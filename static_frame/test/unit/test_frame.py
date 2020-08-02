@@ -8953,7 +8953,7 @@ class TestUnit(TestCase):
         f2 = f1.unset_index()
 
         p1 = f2.pivot('y', data_fields=('a', 'b'),
-            func={'mean':np.mean, 'max':np.max, 'values': lambda x: tuple(x)})
+            func={'mean':np.mean, 'max':np.max, 'values': tuple})
 
         self.assertEqual(p1.to_pairs(0),
                 ((('a', 'mean'), (('down', 4.5), ('up', 2.5))), (('a', 'max'), (('down', 7), ('up', 5))), (('a', 'values'), (('down', (2, 3, 6, 7)), ('up', (0, 1, 4, 5)))), (('b', 'mean'), (('down', 22.0), ('up', 20.0))), (('b', 'max'), (('down', 23), ('up', 21))), (('b', 'values'), (('down', (21, 22, 22, 23)), ('up', (19, 20, 20, 21)))))
