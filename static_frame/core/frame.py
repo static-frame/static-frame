@@ -3,7 +3,6 @@ from functools import partial
 from io import StringIO
 from itertools import chain
 from itertools import product
-from itertools import repeat
 
 import csv
 import json
@@ -4520,7 +4519,6 @@ class Frame(ContainerOperand):
                     name=columns_name)
 
         if not columns_fields:
-            # print('NOTE: group-by index')
             # group by is index_fields, do items generation
             group_fields = index_fields if index_depth > 1 else index_fields[0]
             columns = data_fields if func_single else tuple(product(data_fields, func_fields))
@@ -4552,7 +4550,6 @@ class Frame(ContainerOperand):
                 fgo = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
             else:
                 fgo = FrameGO(index=index_inner)
-            # index_inner_set = set(index_inner)
             columns_fields_len = len(columns_fields)
             data_fields_len = len(data_fields)
 
@@ -4565,7 +4562,6 @@ class Frame(ContainerOperand):
                 sub_columns = extrapolate_column_fields(columns_fields, group, data_fields, func_fields)
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
-                    # print('NOTE: sub-optimal additional group by')
                     def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
                         for group_index, part in sub.iter_group_items(index_fields):
                             label = group_index if index_depth > 1 else group_index[0]
@@ -4582,7 +4578,6 @@ class Frame(ContainerOperand):
                     sub_frame = Frame.from_records_items(records_items(),
                             columns=sub_columns)
                 else:
-                    # print('NOTE: optimal sub_frame path')
                     if func_single: # assume no aggregation Snecessary
                         data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
                         sub_frame = Frame(
