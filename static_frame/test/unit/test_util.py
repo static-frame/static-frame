@@ -1229,8 +1229,12 @@ class TestUnit(TestCase):
 
     def test_set_ufunc2d_j(self) -> None:
 
-        a1 = np.array([[0, 1], [-1, -2]])
-        a2 = np.array([])
+        a1 = np.array([])
+        a2 = np.empty(2, dtype=object)
+        a2[:] =((0, 1), (3, 4))
+
+        post1 = _ufunc_set_2d(np.setdiff1d, a1, a2)
+        self.assertEqual(len(post1), 0)
 
     #---------------------------------------------------------------------------
 

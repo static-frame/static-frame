@@ -1585,7 +1585,6 @@ def _ufunc_set_2d(
         if len(array) == 0:
             if is_2d:
                 return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            import ipdb; ipdb.set_trace()
             return np.array(EMPTY_TUPLE, dtype=dtype)
 
     if assume_unique:
@@ -1611,6 +1610,7 @@ def _ufunc_set_2d(
                 if is_difference:
                     if is_2d:
                         return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
+                    import ipdb; ipdb.set_trace()
                     return np.array(EMPTY_TUPLE, dtype=dtype)
                 return array
 
