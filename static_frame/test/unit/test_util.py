@@ -1227,6 +1227,11 @@ class TestUnit(TestCase):
         post1 = _ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(post1[0], (0, 1))
 
+    def test_set_ufunc2d_j(self) -> None:
+
+        a1 = np.array([[0, 1], [-1, -2]])
+        a2 = np.array([])
+
     #---------------------------------------------------------------------------
 
 
