@@ -1511,11 +1511,11 @@ def _ufunc_set_1d(
                 arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
+
             if arrays_are_equal:
                 if is_difference:
                     return np.array(EMPTY_TUPLE, dtype=dtype)
-                else:
-                    return array
+                return array
 
     set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS

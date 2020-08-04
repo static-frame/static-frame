@@ -1961,6 +1961,10 @@ class TestUnit(TestCase):
         self.assertEqual(set(post2.tolist()), set((False, True, 'b', 'a')))
 
 
+    def test_ufunc_set_1d_d(self) -> None:
+        post = _ufunc_set_1d(np.setdiff1d, np.arange(3), np.arange(3), assume_unique=True)
+        self.assertEqual(len(post), 0)
+
     #---------------------------------------------------------------------------
 
     def test_slices_from_targets_a(self) -> None:
