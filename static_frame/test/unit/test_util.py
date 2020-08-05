@@ -1237,6 +1237,15 @@ class TestUnit(TestCase):
         post1 = _ufunc_set_2d(np.setdiff1d, a1, a2, assume_unique=True)
         self.assertEqual(len(post1), 0)
 
+    def test_set_ufunc2d_k(self) -> None:
+
+        a1 = np.array(())
+        a2 = np.empty(2, dtype=object)
+        a2[:] =((0, 1), (3, 4))
+
+        post1 = _ufunc_set_2d(np.setdiff1d, a1, a2)
+        self.assertEqual(len(post1), 0)
+
 
     #---------------------------------------------------------------------------
 
