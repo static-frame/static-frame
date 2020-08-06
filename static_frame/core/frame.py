@@ -4542,8 +4542,9 @@ class Frame(ContainerOperand):
                     columns=columns,
                     index_constructor=index_constructor,
                     )
-            # NOTE: are we sure the index group_by will result in the same ordering as the already created index?
-            assert f.index.equals(index_inner)
+            # if we have an IH, we will relabel with that IH, and might have a different order than the order here; this, reindex
+            if index_depth > 1 and not f.index.equals(index_inner):
+                f = f.reindex(index_inner, own_index=True, check_equals=False)
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
             if columns_depth == 1:

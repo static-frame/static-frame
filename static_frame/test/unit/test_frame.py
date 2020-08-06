@@ -8977,6 +8977,13 @@ class TestUnit(TestCase):
                 ((('down', 'a', 'mean'), (('left', 4.0), ('right', 5.0))), (('down', 'a', 'min'), (('left', 2), ('right', 3))), (('down', 'b', 'mean'), (('left', 21.5), ('right', 22.5))), (('down', 'b', 'min'), (('left', 21), ('right', 22))), (('up', 'a', 'mean'), (('left', 2.0), ('right', 3.0))), (('up', 'a', 'min'), (('left', 0), ('right', 1))), (('up', 'b', 'mean'), (('left', 19.5), ('right', 20.5))), (('up', 'b', 'min'), (('left', 19), ('right', 20))))
                 )
 
+    def test_frame_pivot_q(self) -> None:
+        f1 = sf.Frame.from_records([[0, 'A'],[1, None], [2, 'B']])
+        f2 = f1.pivot(1)
+        self.assertEqual(f2.to_pairs(0),
+                ((0, (('A', 0), ('B', 2), (None, 1))),))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_axis_window_items_a(self) -> None:
