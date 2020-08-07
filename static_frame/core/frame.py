@@ -3,11 +3,11 @@ from functools import partial
 from io import StringIO
 from itertools import chain
 from itertools import product
-
 import csv
 import json
 import sqlite3
 import typing as tp
+
 
 import numpy as np
 from numpy.ma import MaskedArray
@@ -20,7 +20,6 @@ from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import get_col_dtype_factory
-
 from static_frame.core.container_util import index_constructor_empty
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
@@ -31,18 +30,15 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
-
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayFormats
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
-
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndexNonUnique
-
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import Index
@@ -53,7 +49,6 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
-
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
@@ -72,11 +67,9 @@ from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
-
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.pivot import extrapolate_column_fields
-
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -130,7 +123,6 @@ from static_frame.core.util import PathSpecifier
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
-# from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
@@ -144,7 +136,6 @@ if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover
     import pyarrow #pylint: disable=W0611 #pragma: no cover
-
 
 
 class Frame(ContainerOperand):
@@ -4456,13 +4447,7 @@ class Frame(ContainerOperand):
         '''
         if func is None:
             # form the equivalent Series function for summing
-            func = partial(ufunc_axis_skipna,
-                    skipna=True,
-                    axis=0,
-                    ufunc=np.sum,
-                    ufunc_skipna=np.nansum
-                    )
-            func_map = (('', func),)
+            func_map = (('', np.nansum),)
         elif callable(func):
             func_map = (('', func),) # store iterable of pairs
         else:
