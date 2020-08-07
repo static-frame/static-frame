@@ -4578,7 +4578,9 @@ class Frame(ContainerOperand):
                             record = []
                             for field in data_fields:
                                 values = part[field].values
-                                if func_single:
+                                if len(values) == 1:
+                                    record.append(values[0])
+                                elif func_single:
                                     record.append(func_single(values))
                                 else:
                                     for _, func in func_map:
@@ -4588,7 +4590,7 @@ class Frame(ContainerOperand):
                     sub_frame = Frame.from_records_items(records_items(),
                             columns=sub_columns)
                 else:
-                    if func_single: # assume no aggregation Snecessary
+                    if func_single: # assume no aggregation necessary
                         data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
                         sub_frame = Frame(
                                 sub._blocks._extract(row_key=None, column_key=data_fields_iloc),
