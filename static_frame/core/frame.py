@@ -4446,8 +4446,14 @@ class Frame(ContainerOperand):
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
         '''
         if func is None:
-            # form the equivalent Series function for summing
-            func_map = (('', np.nansum),)
+            # func = partial(ufunc_axis_skipna,
+            #         skipna=True,
+            #         axis=0,
+            #         ufunc=np.sum,
+            #         ufunc_skipna=np.nansum
+            #         )
+            func = np.nansum
+            func_map = (('', func),)
         elif callable(func):
             func_map = (('', func),) # store iterable of pairs
         else:
@@ -4455,7 +4461,6 @@ class Frame(ContainerOperand):
 
         func_single = func_map[0][1] if len(func_map) == 1 else None
         func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
-
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
         data_fields = key_normalize(data_fields)
@@ -4503,31 +4508,50 @@ class Frame(ContainerOperand):
                     depth_reference=columns_depth,
                     name=columns_name)
 
+
         if not columns_fields:
             # group by is index_fields, do items generation
             group_fields = index_fields if index_depth > 1 else index_fields[0]
             columns = data_fields if func_single else tuple(product(data_fields, func_fields))
-
-            def records_items():
-                for group, sub in self.iter_group_items(group_fields):
-                    record = []
-                    for field in data_fields:
-                        values = sub[field].values
-                        if func_single:
-                            record.append(func_single(values))
-                        else:
-                            for _, func in func_map:
-                                record.append(func(values))
-                    yield group, record
-
             index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
-            f = self.from_records_items(
-                    records_items(),
-                    columns_constructor=columns_constructor,
-                    columns=columns,
-                    index_constructor=index_constructor,
-                    )
-            # if we have an IH, we will relabel with that IH, and might have a different order than the order here; this, reindex
+
+            if len(columns) == 1:
+                def items():
+                    for group, sub in self.iter_group_items(group_fields):
+                        values = sub[data_fields[0]].values # only 1 data field
+                        if len(values) == 1:
+                            yield group, values[0]
+                        else: # can be sure we only have func_single
+                            yield group, func_single(values)
+                f = self.from_series(
+                        Series.from_items(
+                                items(),
+                                name=columns[0],
+                                index_constructor=index_constructor),
+                        columns_constructor=columns_constructor,
+                        )
+            else:
+                def records_items():
+                    for group, sub in self.iter_group_items(group_fields):
+                        record = []
+                        for field in data_fields:
+                            values = sub[field].values
+                            if func_single and len(values) == 1:
+                                record.append(values[0])
+                            elif func_single:
+                                record.append(func_single(values))
+                            else:
+                                for _, func in func_map:
+                                    record.append(func(values))
+                        yield group, record
+
+                f = self.from_records_items(
+                        records_items(),
+                        columns_constructor=columns_constructor,
+                        columns=columns,
+                        index_constructor=index_constructor,
+                        )
+            # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
             if index_depth > 1 and not f.index.equals(index_inner):
                 f = f.reindex(index_inner, own_index=True, check_equals=False)
         else:

@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.28
+----------
+
+Revised default aggregation function to ``Frame.pivot``.
+
+
 0.6.27
 ----------
 

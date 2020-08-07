@@ -8984,6 +8984,25 @@ class TestUnit(TestCase):
                 ((0, (('A', 0), ('B', 2), (None, 1))),))
 
 
+    def test_frame_pivot_r(self) -> None:
+        f1 = sf.Frame.from_records([[0, 'A', False],[1, None, True], [2, 'B', False]])
+        f2 = f1.pivot((0, 1))
+
+        self.assertEqual(f2.dtypes.values.tolist(),
+                [np.dtype('bool')]
+                )
+
+    def test_frame_pivot_s(self) -> None:
+        f = sf.FrameGO(index=range(6))
+        f['a'] = tuple('b' * 3 + 'a' * 3)
+        f['b'] = tuple('b' * 2 + 'c' + 'a' * 3)
+        f['c'] = range(6)
+
+        f2 = f.pivot(('a', 'b'))
+        self.assertEqual(f2.to_pairs(0),
+            (('c', ((('a', 'a'), 12), (('b', 'b'), 1), (('b', 'c'), 2))),)
+            )
+
     #---------------------------------------------------------------------------
 
     def test_frame_axis_window_items_a(self) -> None:
