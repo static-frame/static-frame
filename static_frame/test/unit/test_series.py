@@ -1744,6 +1744,32 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_series_relabel_flat_a(self) -> None:
+
+        s1 = Series(range(4), index=IndexHierarchy.from_product((10, 20), ('a', 'b')))
+
+        s2 = s1.relabel_flat()
+        self.assertEqual(s2.to_pairs(),
+                (((10, 'a'), 0), ((10, 'b'), 1), ((20, 'a'), 2), ((20, 'b'), 3)))
+
+        with self.assertRaises(RuntimeError):
+            _ = s2.relabel_flat()
+
+
+
+    def test_series_relabel_drop_level_a(self) -> None:
+
+        s1 = Series(range(2), index=IndexHierarchy.from_labels(((10, 20), ('a', 'b'))))
+
+        s2 = s1.relabel_drop_level()
+        self.assertEqual(s2.to_pairs(), ((20, 0), ('b', 1)))
+
+        with self.assertRaises(RuntimeError):
+            _ = s2.relabel_drop_level()
+
+
+    #---------------------------------------------------------------------------
+
     def test_series_rehierarch_a(self) -> None:
 
         colors = ('red', 'green')
