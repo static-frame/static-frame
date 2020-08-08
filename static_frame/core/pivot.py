@@ -14,6 +14,7 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import UFunc
 
 
 if tp.TYPE_CHECKING:
@@ -22,7 +23,7 @@ if tp.TYPE_CHECKING:
 
 
 #-------------------------------------------------------------------------------
-
+# for Frame.pivot
 def extrapolate_column_fields(
         columns_fields: tp.Sequence[tp.Hashable],
         group: tp.Tuple[tp.Hashable, ...],
@@ -58,6 +59,30 @@ def extrapolate_column_fields(
             sub_columns = [group + (field, label) for field in data_fields for label in func_fields]
 
     return sub_columns
+
+
+def pivot_get_records_items(
+        frame: Frame,
+        group_fields: tp.Iterable[tp.Hashable],
+        index_depth: int,
+        data_fields: tp.Iterable[tp.Hashable],
+        func_single: UFunc,
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, tp.Callable]]
+        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+
+    for group_index, part in frame.iter_group_items(group_fields):
+        label = group_index if index_depth > 1 else group_index[0]
+        record = []
+        for field in data_fields:
+            values = part[field].values
+            if len(values) == 1:
+                record.append(values[0])
+            elif func_single:
+                record.append(func_single(values))
+            else:
+                for _, func in func_map:
+                    record.append(func(values))
+        yield label, record
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):

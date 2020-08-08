@@ -70,6 +70,8 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.pivot import extrapolate_column_fields
+from static_frame.core.pivot import pivot_get_records_items
+
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
 from static_frame.core.util import AnyCallable
@@ -4560,34 +4562,43 @@ class Frame(ContainerOperand):
                 fgo = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
             else:
                 fgo = FrameGO(index=index_inner)
-            columns_fields_len = len(columns_fields)
-            data_fields_len = len(data_fields)
 
             for group, sub in self.iter_group_items(columns_fields):
                 if len(index_fields) == 1:
                     sub_index_labels = sub[index_fields[0]].values
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
-
-                sub_columns = extrapolate_column_fields(columns_fields, group, data_fields, func_fields)
+                sub_columns = extrapolate_column_fields(
+                        columns_fields,
+                        group,
+                        data_fields,
+                        func_fields)
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
-                    def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
-                        for group_index, part in sub.iter_group_items(index_fields):
-                            label = group_index if index_depth > 1 else group_index[0]
-                            record = []
-                            for field in data_fields:
-                                values = part[field].values
-                                if len(values) == 1:
-                                    record.append(values[0])
-                                elif func_single:
-                                    record.append(func_single(values))
-                                else:
-                                    for _, func in func_map:
-                                        record.append(func(values))
-                            yield label, record
+                    # def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+                    #     for group_index, part in sub.iter_group_items(index_fields):
+                    #         label = group_index if index_depth > 1 else group_index[0]
+                    #         record = []
+                    #         for field in data_fields:
+                    #             values = part[field].values
+                    #             if len(values) == 1:
+                    #                 record.append(values[0])
+                    #             elif func_single:
+                    #                 record.append(func_single(values))
+                    #             else:
+                    #                 for _, func in func_map:
+                    #                     record.append(func(values))
+                    #         yield label, record
 
-                    sub_frame = Frame.from_records_items(records_items(),
+                    sub_frame = Frame.from_records_items(
+                            pivot_get_records_items(
+                                    frame=sub,
+                                    group_fields=index_fields,
+                                    index_depth=index_depth,
+                                    data_fields=data_fields,
+                                    func_single=func_single,
+                                    func_map=func_map,
+                                    ),
                             columns=sub_columns)
                 else:
                     if func_single: # assume no aggregation necessary
