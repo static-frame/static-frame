@@ -121,7 +121,7 @@ class Series(ContainerOperand):
             *,
             index: IndexInitializer,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None,
+            name: NameType = None,
             index_constructor: IndexConstructor = None,
             own_index: bool = False,
             ) -> 'Series':
@@ -155,7 +155,7 @@ class Series(ContainerOperand):
             pairs: tp.Iterable[tp.Tuple[tp.Hashable, tp.Any]],
             *,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None,
+            name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Series':
         '''Series construction from an iterator or generator of pairs, where the first pair value is the index and the second is the value.
@@ -186,7 +186,7 @@ class Series(ContainerOperand):
             mapping: tp.Dict[tp.Hashable, tp.Any],
             *,
             dtype: DtypeSpecifier = None,
-            name: tp.Hashable = None,
+            name: NameType = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
             ) -> 'Series':
         '''Series construction from a dictionary, where the first pair value is the index and the second is the value.
@@ -208,7 +208,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable['Series'],
             *,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            name: tp.Hashable = None
+            name: NameType = None
             ) -> 'Series':
         '''
         Concatenate multiple :obj:`Series` into a new :obj:`Series`.

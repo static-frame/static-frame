@@ -220,36 +220,6 @@ class TestUnit(TestCase):
                     )
 
 
-    def test_bus_mloc_a(self) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='f1')
-        f2 = Frame.from_dict(
-                dict(c=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='f2')
-        f3 = Frame.from_dict(
-                dict(d=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='f3')
-
-        b1 = Bus.from_frames((f1, f2, f3))
-
-        with temp_file('.zip') as fp:
-            b1.to_zip_pickle(fp)
-            b2 = Bus.from_zip_pickle(fp)
-
-            f2_loaded = b2['f2']
-
-            mloc1 = b2.mloc
-
-            f3_loaded = b2['f3']
-            f1_loaded = b2['f1']
-
-            self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
-
-
     @skip_win # type: ignore
     def test_bus_status_a(self) -> None:
         f1 = Frame.from_dict(
@@ -830,6 +800,35 @@ class TestUnit(TestCase):
             self.assertTrue(b2.iloc[1].equals(f2))
             self.assertEqual((b2.mloc == None).to_pairs(),
                     (('f1', True), ('f2', False)))
+
+    def test_bus_mloc_c(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+
+            f2_loaded = b2['f2']
+
+            mloc1 = b2.mloc
+
+            f3_loaded = b2['f3']
+            f1_loaded = b2['f1']
+
+            self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
 
     #---------------------------------------------------------------------------
     def test_bus_update_series_cache_iloc(self) -> None:
