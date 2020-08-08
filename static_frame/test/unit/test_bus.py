@@ -7,7 +7,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred
 
 from static_frame.core.series import Series
-
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.core.store import StoreConfigMap
@@ -18,7 +18,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_win
 
-# from static_frame.test.test_case import skip_win
+
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import StoreFileMutation
 
@@ -715,6 +715,54 @@ class TestUnit(TestCase):
         self.assertFalse(b1.equals(b5))
         self.assertFalse(b1.equals(b6))
 
+    def test_bus_equals_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        self.assertTrue(b1.equals(b1))
+
+        class BusDerived(Bus): pass
+
+        b2 = BusDerived.from_frames((f1, f2, f3))
+
+        self.assertFalse(b1.equals(b2, compare_class=True))
+        self.assertTrue(b1.equals(b2, compare_class=False))
+        self.assertFalse(b1.equals('foo', compare_class=False))
+
+
+    def test_bus_equals_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2), name='foo')
+        self.assertEqual(b1.name, 'foo')
+
+        b2 = Bus.from_frames((f1, f2), name='bar')
+        self.assertEqual(b2.name, 'bar')
+
+        self.assertTrue(b1.equals(b2))
+        self.assertFalse(b1.equals(b2, compare_name=True))
+
+
     #---------------------------------------------------------------------------
 
 
@@ -740,7 +788,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_bus_mlox_a(self) -> None:
+    def test_bus_mloc_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(a=(1,2,3)),
@@ -757,6 +805,47 @@ class TestUnit(TestCase):
 
             self.assertEqual(mloc.to_pairs(),
                     (('f1', None),))
+
+    #---------------------------------------------------------------------------
+    def test_bus_update_series_cache_iloc(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+
+        # simulating a Bus with a FrameDefferred but no Store, just for testing
+        s1 = Series((f1, FrameDeferred), index=('p', 'q'))
+        b1 = Bus(s1, config=config)
+        self.assertFalse(b1._loaded_all)
+
+        with self.assertRaises(RuntimeError):
+            b1._update_series_cache_iloc(1)
+
+    #---------------------------------------------------------------------------
+    def test_bus_extract_loc_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+
+        # do not support IndexHierarchy, as lables are tuples, not strings
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus(s1)
 
 
 

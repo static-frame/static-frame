@@ -30,6 +30,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import NameType
 
 
 #-------------------------------------------------------------------------------
@@ -72,13 +73,15 @@ class Bus(ContainerBase): # not a ContainerOperand
             frames: tp.Iterable[Frame],
             *,
             config: StoreConfigMapInitializer = None,
+            name: NameType = None,
             ) -> 'Bus':
         '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
         '''
         # could take a StoreConfigMap
         series = Series.from_items(
                     ((f.name, f) for f in frames),
-                    dtype=object
+                    dtype=object,
+                    name=name,
                     )
         return cls(series, config=config)
 
@@ -153,7 +156,6 @@ class Bus(ContainerBase): # not a ContainerOperand
                 config=config
                 )
 
-
     #---------------------------------------------------------------------------
     def __init__(self,
             series: Series,
@@ -196,9 +198,6 @@ class Bus(ContainerBase): # not a ContainerOperand
     # delegation
 
     def __getattr__(self, name: str) -> tp.Any:
-        # if name == 'interface':
-        #     return getattr(self.__class__, 'interface')
-
         try:
             return getattr(self._series, name)
         except AttributeError:
@@ -278,12 +277,11 @@ class Bus(ContainerBase): # not a ContainerOperand
         values = self._series.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            if isinstance(key, HLoc) and key.has_key_multiple():
-                # must return a Series, even though we do not have an array
-                values = np.array(values)
-                values.flags.writeable = False
-            else:
-                return values #type: ignore
+            # NOTE: only support str labels, not IndexHierarchy
+            # if isinstance(key, HLoc) and key.has_key_multiple():
+            #     values = np.array(values)
+            #     values.flags.writeable = False
+            return values #type: ignore
 
         series = Series(values,
                 index=self._series._index.iloc[iloc_key],
@@ -304,8 +302,6 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''
         return self._extract_loc(key)
 
-
-
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -317,14 +313,12 @@ class Bus(ContainerBase): # not a ContainerOperand
     def iloc(self) -> InterfaceGetItem['Bus']:
         return InterfaceGetItem(self._extract_iloc)
 
-
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         return reversed(self._series._index) #type: ignore
 
     def __len__(self) -> int:
         return self._series.__len__()
-
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -342,7 +336,6 @@ class Bus(ContainerBase): # not a ContainerOperand
         self._update_series_cache_all()
         return self._seires.values
 
-
     #---------------------------------------------------------------------------
     @doc_inject()
     def display(self,
@@ -359,7 +352,6 @@ class Bus(ContainerBase): # not a ContainerOperand
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
         return self._series._display(config, display_cls)
-
 
     #---------------------------------------------------------------------------
     # extended disciptors
