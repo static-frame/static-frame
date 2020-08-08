@@ -806,6 +806,31 @@ class TestUnit(TestCase):
             self.assertEqual(mloc.to_pairs(),
                     (('f1', None),))
 
+
+    def test_bus_mloc_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        f2 = Frame.from_dict(
+                dict(x=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+            b2 = Bus.from_xlsx(fp, config=config)
+
+            # only show memory locations for loaded Frames
+            self.assertTrue(b2.iloc[1].equals(f2))
+            self.assertEqual((b2.mloc == None).to_pairs(),
+                    (('f1', True), ('f2', False)))
+
     #---------------------------------------------------------------------------
     def test_bus_update_series_cache_iloc(self) -> None:
 
