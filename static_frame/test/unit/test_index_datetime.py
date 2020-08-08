@@ -249,21 +249,21 @@ class TestUnit(TestCase):
 
         # can reuse the map if going from dt64 index to normal index
         idx2 = Index(s1.index)
-        self.assertTrue(id(idx2._map) == id(s1.index._map))
+        self.assertTrue(id(idx2._map) == id(s1.index._map)) #type: ignore
 
         idx3 = IndexDate(idx2)
-        self.assertTrue(id(idx3._map) == id(s1.index._map))
+        self.assertTrue(id(idx3._map) == id(s1.index._map)) #type: ignore
 
         with self.assertRaises(ErrorInitIndex):
             index = IndexYear(idx3) #type: ignore
 
         # from a date to a finer resolution has to create a new map
         idx4 = IndexMinute(idx3)
-        self.assertTrue(id(idx4._map) != id(s1.index._map))
+        self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # a GO has to create a new map
         idx5 = IndexGO(s1.index)
-        self.assertTrue(id(idx4._map) != id(s1.index._map))
+        self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # supplying a dtype to coerce the labels
         with self.assertRaises(ErrorInitIndex):

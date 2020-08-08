@@ -15,11 +15,13 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.util import CallableOrMapping
 
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
 
 
 I = tp.TypeVar('I', bound='IndexBase')
@@ -38,6 +40,8 @@ class IndexBase(ContainerOperand):
     _name: NameType
     values: np.ndarray
     depth: int
+
+    loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
 
     __pos__: tp.Callable[['IndexBase'], np.ndarray]
@@ -157,6 +161,9 @@ class IndexBase(ContainerOperand):
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
+    @property
+    def shape(self) -> tp.Tuple[int, ...]:
+        raise NotImplementedError() #pragma: no cover
 
     @property
     def ndim(self) -> int:
@@ -186,6 +193,9 @@ class IndexBase(ContainerOperand):
 
     def copy(self: I) -> I:
         raise NotImplementedError()
+
+    def relabel(self: I, mapper: CallableOrMapping) -> I:
+        raise NotImplementedError() #pragma: no cover
 
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
@@ -348,6 +358,9 @@ class IndexBase(ContainerOperand):
             webbrowser.open_new_tab(fp) #pragma: no cover
 
         return fp
+
+    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+        raise NotImplementedError() #pragma: no cover
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover

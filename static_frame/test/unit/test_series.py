@@ -2726,10 +2726,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=0))
 
         # first window has second label, and first two values
-        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][1].tolist(), [1, 2]) #type: ignore
         self.assertEqual(post[0][0], 'b')
 
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
         self.assertEqual(post[-1][0], 't')
 
 
@@ -2740,10 +2740,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=-1))
 
         # first window has first label, and first two values
-        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][1].tolist(), [1, 2]) #type: ignore
         self.assertEqual(post[0][0], 'a')
 
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
         self.assertEqual(post[-1][0], 's')
 
 
@@ -2756,10 +2756,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=1, step=0, size_increment=1))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), list(range(1, 21)))
+        self.assertEqual(post[-1][1].tolist(), list(range(1, 21))) #type: ignore
 
 
 
@@ -2770,13 +2770,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, start_shift=-5, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [1, 2])
+        self.assertEqual(post[1][1].tolist(), [1, 2]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20]) #type: ignore
 
 
 
@@ -2788,13 +2788,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [20])
+        self.assertEqual(post[-1][1].tolist(), [20]) #type: ignore
 
 
 
@@ -2806,13 +2806,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=True))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 'p')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20]) #type: ignore
 
 
     def test_series_axis_window_items_g(self) -> None:
@@ -2832,10 +2832,10 @@ class TestUnit(TestCase):
 
         post = tuple(s1._axis_window_items(as_array=True, size=1))
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [20])
+        self.assertEqual(post[-1][1].tolist(), [20]) #type: ignore
 
 
 
@@ -2846,13 +2846,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, step=3))
 
         self.assertEqual(post[0][0], 'c')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3]) #type: ignore
 
         self.assertEqual(post[1][0], 'f')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 'r')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18]) #type: ignore
 
 
     def test_series_axis_window_items_j(self) -> None:
@@ -2862,13 +2862,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, step=3, label_shift=-2, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3]) #type: ignore
 
         self.assertEqual(post[1][0], 'd')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 's')
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
 
 
 
@@ -2879,13 +2879,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, window_valid=lambda w: np.sum(w) % 2 == 1))
 
         self.assertEqual(post[0][0], 'd')
-        self.assertEqual(post[0][1].tolist(), [2, 3, 4])
+        self.assertEqual(post[0][1].tolist(), [2, 3, 4]) #type: ignore
 
         self.assertEqual(post[1][0], 'f')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [18, 19, 20]) #type: ignore
 
 
 
@@ -2897,10 +2897,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=4, window_func=lambda a: a * weight))
 
         self.assertEqual(post[0][0], 'd')
-        self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1])
+        self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [4.25, 9, 9.5, 5])
+        self.assertEqual(post[-1][1].tolist(), [4.25, 9, 9.5, 5]) #type: ignore
 
     #---------------------------------------------------------------------------
 

@@ -129,12 +129,6 @@ def mypy(context):
     '''
     context.run('mypy --strict')
 
-@invoke.task
-def mypyall(context):
-    '''Run mypy static analysis with no configuration.
-    '''
-    context.run('mypy --strict --config-file=')
-
 
 @invoke.task
 def lint(context):

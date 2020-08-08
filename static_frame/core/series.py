@@ -3,8 +3,7 @@ from functools import partial
 from itertools import chain
 
 import numpy as np
-from numpy.ma import MaskedArray
-
+from numpy.ma import MaskedArray #type: ignore
 
 from static_frame.core.assign import Assign
 
@@ -85,6 +84,7 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import UFunc
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -168,7 +168,7 @@ class Series(ContainerOperand):
             :obj:`static_frame.Series`
         '''
         index = []
-        def values():
+        def values() -> tp.Iterator[tp.Any]:
             for k, v in pairs:
                 # populate index list as side effect of iterating values
                 index.append(k)
@@ -260,7 +260,7 @@ class Series(ContainerOperand):
         '''
         array_values = []
 
-        def gen():
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, IndexBase]]:
             for label, series in items:
                 array_values.append(series.values)
                 yield label, series._index
@@ -283,7 +283,7 @@ class Series(ContainerOperand):
     @classmethod
     @doc_inject()
     def from_pandas(cls,
-            value,
+            value: 'pandas.Series',
             *,
             index_constructor: IndexConstructor = None,
             own_data: bool = False) -> 'Series':
@@ -373,7 +373,7 @@ class Series(ContainerOperand):
                 raise ErrorInitSeries(f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})')
 
             if values.shape == (): # handle special case of NP element
-                def values_constructor(count): #pylint: disable=E0102
+                def values_constructor(count: int) -> None: #pylint: disable=E0102
                     self.values = np.repeat(values, count)
                     self.values.flags.writeable = False
             else:
@@ -433,7 +433,7 @@ class Series(ContainerOperand):
         return reversed(self._index)
 
     #---------------------------------------------------------------------------
-    def __setstate__(self, state) -> None:
+    def __setstate__(self, state: tp.Any) -> None:
         '''
         Ensure that reanimated NP arrays are set not writeable.
         '''
@@ -682,7 +682,8 @@ class Series(ContainerOperand):
     def _reindex_other_like_iloc(self,
             value: 'Series',
             iloc_key: GetItemKeyType,
-            fill_value: tp.Any = np.nan) -> 'Series':
+            fill_value: tp.Any = np.nan,
+            ) -> 'Series':
         '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
         '''
         return value.reindex(
@@ -694,7 +695,7 @@ class Series(ContainerOperand):
     def reindex(self,
             index: IndexInitializer,
             *,
-            fill_value=np.nan,
+            fill_value: tp.Any = np.nan,
             own_index: bool = False,
             check_equals: bool = True
             ) -> 'Series':
@@ -773,6 +774,9 @@ class Series(ContainerOperand):
         '''
         {doc}
         '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
+
         return self.__class__(self.values,
                 index=self._index.flat(),
                 name=self._name)
@@ -801,6 +805,9 @@ class Series(ContainerOperand):
         Args:
             count: {count}
         '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
+
         return self.__class__(self.values,
                 index=self._index.drop_level(count),
                 name=self._name)
@@ -982,7 +989,8 @@ class Series(ContainerOperand):
     @staticmethod
     def _fillna_sided(array: np.ndarray,
             value: tp.Any,
-            sided_leading: bool):
+            sided_leading: bool,
+            ) -> np.ndarray:
         '''
         Args:
             sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
@@ -1112,8 +1120,8 @@ class Series(ContainerOperand):
     def _ufunc_axis_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc,
-            ufunc_skipna,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
@@ -1135,8 +1143,8 @@ class Series(ContainerOperand):
     def _ufunc_shape_skipna(self, *,
             axis: int,
             skipna: bool,
-            ufunc,
-            ufunc_skipna,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
@@ -1458,11 +1466,10 @@ class Series(ContainerOperand):
 
     def _axis_group_labels_items(self,
             depth_level: DepthLevelSpecifier = 0,
-            ):
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
 
         values = self.index.values_at_depth(depth_level)
         group_to_tuple = values.ndim == 2
-
         groups, locations = array_to_groups_and_locations(
                 values)
 
@@ -1474,7 +1481,7 @@ class Series(ContainerOperand):
 
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
-            ):
+            ) -> tp.Iterator[tp.Hashable]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level))
 
@@ -1491,7 +1498,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Union[np.ndarray, 'Series']]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(
@@ -1519,7 +1526,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ):
+            ) -> tp.Iterator[np.ndarray, 'Series']:
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
                 size=size,
@@ -1538,7 +1545,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
 
     @property
-    def index(self):
+    def index(self) -> IndexBase:
         '''
         The index instance assigned to this container.
 
@@ -1568,7 +1575,7 @@ class Series(ContainerOperand):
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value) -> bool:
+    def __contains__(self, value: tp.Hashable) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -1585,7 +1592,9 @@ class Series(ContainerOperand):
         '''
         return zip(self._index.values, self.values)
 
-    def get(self, key: tp.Hashable, default=None) -> tp.Any:
+    def get(self, key: tp.Hashable,
+            default: tp.Any = None,
+            ) -> tp.Any:
         '''
         Return the value found at the index key, else the default if the key is not found.
 
@@ -1648,7 +1657,7 @@ class Series(ContainerOperand):
         Return a new Series ordered by the sorted values.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         # argsort lets us do the sort once and reuse the results
         order = np.argsort(self.values, kind=kind)
@@ -1668,21 +1677,21 @@ class Series(ContainerOperand):
                 own_index=True
                 )
 
-    def isin(self, other) -> 'Series':
+    def isin(self, other: tp.Iterable[tp.Any]) -> 'Series':
         '''
         Return a same-sized Boolean Series that shows if the same-positioned element is in the iterable passed to the function.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         array = isin(self.values, other)
         return self.__class__(array, index=self._index, name=self._name)
 
     @doc_inject(class_name='Series')
     def clip(self, *,
-            lower=None,
-            upper=None
-            ):
+            lower: tp.Union[float, 'Series'] = None,
+            upper: tp.Union[float, 'Series'] = None,
+            ) -> 'Series':
         '''{}
 
         Args:
@@ -1690,7 +1699,7 @@ class Series(ContainerOperand):
             upper: value or ``Series`` to define the inclusive upper bound.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         args = [lower, upper]
         for idx, arg in enumerate(args):
@@ -1712,7 +1721,7 @@ class Series(ContainerOperand):
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return self
 
@@ -1721,7 +1730,7 @@ class Series(ContainerOperand):
         '''Transpose. For a 1D immutable container, this returns a reference to self.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return self.transpose()
 
@@ -1759,7 +1768,7 @@ class Series(ContainerOperand):
             {exclude_last}
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         duplicates = array_to_duplicated(self.values,
                 exclude_first=exclude_first,
@@ -1814,7 +1823,7 @@ class Series(ContainerOperand):
             include_index: Determine if the Index is shifted with the underlying data.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         if shift % len(self.values):
             values = array_shift(
@@ -1850,7 +1859,7 @@ class Series(ContainerOperand):
             fill_value: Value to be used to fill data missing after the shift.
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
 
         if shift:
@@ -1880,7 +1889,7 @@ class Series(ContainerOperand):
             {count}
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return self.iloc[:count]
 
@@ -1892,7 +1901,7 @@ class Series(ContainerOperand):
             {count}
 
         Returns:
-            :obj:`static_frame.Series`
+            :obj:`Series`
         '''
         return self.iloc[-count:]
 
@@ -2163,7 +2172,7 @@ class Series(ContainerOperand):
         return constructor(
                 TypeBlocks.from_blocks(block_gen()),
                 index=index,
-                columns=columns, #type: ignore
+                columns=columns,
                 own_data=True,
                 own_index=own_index,
                 own_columns=own_columns,
@@ -2172,20 +2181,20 @@ class Series(ContainerOperand):
 
     def to_frame(self, axis: int = 1) -> 'Frame':
         '''
-        Return a :obj:`static_frame.Frame` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+        Return a :obj:`Frame` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj:`Frame`
         '''
         from static_frame import Frame
         return self._to_frame(constructor=Frame, axis=axis)
 
     def to_frame_go(self, axis: int = 1) -> 'FrameGO':
         '''
-        Return :obj:`static_frame.FrameGO` view of this :obj:`static_frame.Series`. As underlying data is immutable, this is a no-copy operation.
+        Return :obj:`FrameGO` view of this :obj:`Series`. As underlying data is immutable, this is a no-copy operation.
 
         Returns:
-            :obj:`static_frame.FrameGO`
+            :obj:`FrameGO`
         '''
         from static_frame import FrameGO
         return self._to_frame(constructor=FrameGO, axis=axis) #type: ignore
