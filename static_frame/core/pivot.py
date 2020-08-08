@@ -31,6 +31,9 @@ def extrapolate_column_fields(
         func_fields: tp.Iterable[tp.Hashable],
         ) -> tp.Iterable[tp.Hashable]:
     '''Used in Frame.pivot.
+
+    Args:
+        group: a unique label from the the result of doing a group-by with the `columns_fields`.
     '''
     columns_fields_len = len(columns_fields)
     data_fields_len = len(data_fields)
@@ -44,9 +47,9 @@ def extrapolate_column_fields(
             sub_columns = [group + (label,) for label in func_fields]
     elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
         if not func_fields:
-            sub_columns = product(group, data_fields)
+            sub_columns = list(product(group, data_fields))
         else:
-            sub_columns = product(group, data_fields, func_fields)
+            sub_columns = list(product(group, data_fields, func_fields))
     elif columns_fields_len > 1 and data_fields_len == 1:
         if not func_fields:
             sub_columns = (group,)
@@ -85,6 +88,27 @@ def pivot_records_items(
                 for _, func in func_map:
                     record.append(func(values))
         yield label, record
+
+def pivot_items(
+        frame: 'Frame',
+        group_fields: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_fields: tp.Iterable[tp.Hashable],
+        func_single: UFunc,
+        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+    '''
+    Specialized generator of Pairs for when group_fields has been reduced to a single column.
+    '''
+    take_group = group_depth > 1
+
+    for group, sub in frame.iter_group_items(group_fields):
+        label = group if take_group else group[0]
+
+        values = sub[data_fields[0]].values # only 1 data field
+        if len(values) == 1:
+            yield label, values[0]
+        else: # can be sure we only have func_single
+            yield label, func_single(values)
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):

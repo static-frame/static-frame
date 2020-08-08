@@ -71,6 +71,7 @@ from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
+from static_frame.core.pivot import pivot_items
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
@@ -4447,16 +4448,8 @@ class Frame(ContainerOperand):
             fill_value: If the index expansion produces coordinates that have no existing data value, fill that position with this value.
             func: function to apply to ``data_fields``, or a dictionary of labelled functions to apply to data fields, producing an additional hierarchical level.
         '''
-        if func is None:
-            # func = partial(ufunc_axis_skipna,
-            #         skipna=True,
-            #         axis=0,
-            #         ufunc=np.sum,
-            #         ufunc_skipna=np.nansum
-            #         )
-            func = np.nansum
-            func_map = (('', func),)
-        elif callable(func):
+        func = np.nansum if func is None else func
+        if callable(func):
             func_map = (('', func),) # store iterable of pairs
         else:
             func_map = tuple(func.items())
@@ -4467,7 +4460,6 @@ class Frame(ContainerOperand):
         columns_fields = key_normalize(columns_fields)
         data_fields = key_normalize(data_fields)
 
-        # fields_group = index_fields + columns_fields
         for field in chain(index_fields, columns_fields):
             if field not in self._columns:
                 raise ErrorInitFrame(f'cannot create a pivot Frame from a field ({field}) that is not a column')
@@ -4476,7 +4468,6 @@ class Frame(ContainerOperand):
             data_fields = [x for x in self.columns if x not in used]
             if not data_fields:
                 raise ErrorInitFrame('no fields remain to populate data.')
-
 
         index_depth = len(index_fields)
         index_loc = index_fields if index_depth > 1 else index_fields[0]
@@ -4494,15 +4485,12 @@ class Frame(ContainerOperand):
 
         # For data fields, we add the field name, not the field values, to the columns.
         columns_name = tuple(columns_fields)
-        if len(data_fields) > 1 or not columns_fields:
-            # if no columns fields, have to add values fields
-            # columns_product.append(data_fields)
+        if len(data_fields) > 1 or not columns_fields: # if no columns_fields, have to add values label
             columns_name = tuple(chain(*columns_fields, ('values',)))
-
         if len(func_map) > 1:
             columns_name = columns_name + ('func',)
-        columns_depth = len(columns_name)
 
+        columns_depth = len(columns_name)
         if columns_depth == 1:
             columns_constructor = partial(self._COLUMNS_CONSTRUCTOR, name=columns_name[0])
         else:
@@ -4510,43 +4498,24 @@ class Frame(ContainerOperand):
                     depth_reference=columns_depth,
                     name=columns_name)
 
-
-        if not columns_fields:
-            # group by is index_fields, do items generation
+        if not columns_fields: # group by is index_fields
             group_fields = index_fields if index_depth > 1 else index_fields[0]
             columns = data_fields if func_single else tuple(product(data_fields, func_fields))
             index_constructor = None if index_depth > 1 else partial(Index, name=index_fields[0])
 
             if len(columns) == 1:
-                def items():
-                    for group, sub in self.iter_group_items(group_fields):
-                        values = sub[data_fields[0]].values # only 1 data field
-                        if len(values) == 1:
-                            yield group, values[0]
-                        else: # can be sure we only have func_single
-                            yield group, func_single(values)
                 f = self.from_series(
                         Series.from_items(
-                                items(),
+                                pivot_items(frame=self,
+                                        group_fields=group_fields,
+                                        group_depth=np.inf,
+                                        data_fields=data_fields,
+                                        func_single=func_single,
+                                        ),
                                 name=columns[0],
                                 index_constructor=index_constructor),
-                        columns_constructor=columns_constructor,
-                        )
+                        columns_constructor=columns_constructor)
             else:
-                # def records_items():
-                #     for group, sub in self.iter_group_items(group_fields):
-                #         record = []
-                #         for field in data_fields:
-                #             values = sub[field].values
-                #             if func_single and len(values) == 1:
-                #                 record.append(values[0])
-                #             elif func_single:
-                #                 record.append(func_single(values))
-                #             else:
-                #                 for _, func in func_map:
-                #                     record.append(func(values))
-                #         yield group, record
-
                 f = self.from_records_items(
                         pivot_records_items(
                                 frame=self,
@@ -4558,11 +4527,10 @@ class Frame(ContainerOperand):
                         ),
                         columns_constructor=columns_constructor,
                         columns=columns,
-                        index_constructor=index_constructor,
-                        )
+                        index_constructor=index_constructor)
             # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
             if index_depth > 1 and not f.index.equals(index_inner):
-                f = f.reindex(index_inner, own_index=True, check_equals=False)
+                f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
             if columns_depth == 1:
@@ -4580,35 +4548,28 @@ class Frame(ContainerOperand):
                         group,
                         data_fields,
                         func_fields)
-                if len(sub_columns) == 1:
-                    import ipdb; ipdb.set_trace()
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
-                    # def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
-                    #     for group_index, part in sub.iter_group_items(index_fields):
-                    #         label = group_index if index_depth > 1 else group_index[0]
-                    #         record = []
-                    #         for field in data_fields:
-                    #             values = part[field].values
-                    #             if len(values) == 1:
-                    #                 record.append(values[0])
-                    #             elif func_single:
-                    #                 record.append(func_single(values))
-                    #             else:
-                    #                 for _, func in func_map:
-                    #                     record.append(func(values))
-                    #         yield label, record
-
-                    sub_frame = Frame.from_records_items(
-                            pivot_records_items(
-                                    frame=sub,
-                                    group_fields=index_fields,
-                                    group_depth=index_depth,
-                                    data_fields=data_fields,
-                                    func_single=func_single,
-                                    func_map=func_map,
-                                    ),
-                            columns=sub_columns)
+                    if len(sub_columns) == 1:
+                        sub_frame = Frame.from_series(
+                                Series.from_items(
+                                        pivot_items(frame=sub,
+                                                group_fields=index_fields,
+                                                group_depth=index_depth,
+                                                data_fields=data_fields,
+                                                func_single=func_single,
+                                                ),
+                                        name=sub_columns[0]))
+                    else:
+                        sub_frame = Frame.from_records_items(
+                                pivot_records_items(
+                                        frame=sub,
+                                        group_fields=index_fields,
+                                        group_depth=index_depth,
+                                        data_fields=data_fields,
+                                        func_single=func_single,
+                                        func_map=func_map),
+                                columns=sub_columns)
                 else:
                     if func_single: # assume no aggregation necessary
                         data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
