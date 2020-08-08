@@ -30,13 +30,12 @@ unsafe-load-any-extension=no
 #bad-classmethod-argument                 C0202
 #bad-mcs-method-argument                  C0203
 #bad-mcs-classmethod-argument             C0204
-#C0411
-#C0410
-#C0403
-#C0328
-#C0327
-#C0325
-
+#superfluous-parens                       C0325
+#mixed-line-endings                       C0327
+#unexpected-line-ending-format            C0328
+#invalid-characters-in-docstring          C0403
+#multiple-imports                         C0410
+#wrong-import-order                       C0411
 
 #unreachable                              W0101
 #dangerous-default-value                  W0102

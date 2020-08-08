@@ -5,12 +5,10 @@ This module us for utilty functions that take as input and / or return Container
 from collections import defaultdict
 from itertools import zip_longest
 from functools import partial
+import typing as tp
 
 import numpy as np
 from numpy import char as npc
-
-import typing as tp
-
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
