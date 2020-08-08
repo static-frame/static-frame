@@ -70,7 +70,7 @@ def pivot_records_items(
         group_depth: int,
         data_fields: tp.Iterable[tp.Hashable],
         func_single: UFunc,
-        func_map: tp.Sequence[tp.Tuple[tp.Hashable, tp.Callable]]
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
 
     take_group_index = group_depth > 1
@@ -93,7 +93,7 @@ def pivot_items(
         frame: 'Frame',
         group_fields: tp.Iterable[tp.Hashable],
         group_depth: int,
-        data_fields: tp.Iterable[tp.Hashable],
+        data_fields: tp.Sequence[tp.Hashable],
         func_single: UFunc,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''
