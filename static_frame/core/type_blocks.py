@@ -2095,7 +2095,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     # only collect rows that have a sided NaN
                     # could use np.nonzero()
-                    candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                    candidates = (i for i, j in enumerate(isna_entry) if j)
                     sels_nonzero = ((i, sel[i]) for i in candidates)
 
                     for idx, sel_nonzero in sels_nonzero:
@@ -2325,7 +2325,7 @@ class TypeBlocks(ContainerOperand):
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
                         # get a row of Booleans for plausible candidates
-                        candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                        candidates = (i for i, j in enumerate(isna_entry) if j)
                         sels_nonzero = ((i, sel[i]) for i in candidates)
 
                         # get appropriate leading slice to cover nan region

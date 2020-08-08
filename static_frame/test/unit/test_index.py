@@ -1,10 +1,10 @@
-
 import unittest
-import numpy as np
 import pickle
 import datetime
 import typing as tp
 from io import StringIO
+
+import numpy as np
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -12,17 +12,11 @@ from static_frame import IndexDate
 from static_frame import IndexDateGO
 from static_frame import IndexHierarchy
 from static_frame import Series
-# from static_frame import Frame
 from static_frame import IndexYear
 from static_frame import Frame
-
-# from static_frame import HLoc
 from static_frame import ILoc
-
-
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
-
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.index import PositionsAllocator
 from static_frame.core.util import mloc

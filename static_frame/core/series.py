@@ -994,7 +994,7 @@ class Series(ContainerOperand):
 
         sided_index = 0 if sided_leading else -1
 
-        if sel[sided_index] == False:
+        if not sel[sided_index]:
             # sided value is not null: nothing to do
             return array # assume immutable
 

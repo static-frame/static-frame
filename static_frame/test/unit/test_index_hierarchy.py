@@ -2,10 +2,9 @@
 import unittest
 import pickle
 import datetime
-import numpy as np
-
 from collections import OrderedDict
 
+import numpy as np
 
 from static_frame import DisplayConfig
 from static_frame import Frame
@@ -19,11 +18,9 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexYearMonth
 from static_frame import Series
-
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexLevel
-
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase

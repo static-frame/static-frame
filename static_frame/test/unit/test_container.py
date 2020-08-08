@@ -1,9 +1,6 @@
-
-
-
+import unittest
 
 import numpy as np
-import unittest
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container import UFUNC_AXIS_SKIPNA

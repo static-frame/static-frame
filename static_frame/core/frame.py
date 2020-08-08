@@ -128,7 +128,6 @@ from static_frame.core.util import PathSpecifierOrFileLikeOrIterator
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
-# from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 

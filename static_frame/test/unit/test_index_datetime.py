@@ -1,8 +1,9 @@
 
 import unittest
-import numpy as np
 import datetime
 from  itertools import product
+
+import numpy as np
 
 from static_frame import Index
 from static_frame import IndexGO

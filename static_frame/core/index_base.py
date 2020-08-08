@@ -351,3 +351,5 @@ class IndexBase(ContainerOperand):
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover
+
+

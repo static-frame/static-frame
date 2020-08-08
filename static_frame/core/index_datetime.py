@@ -501,3 +501,4 @@ def _dtype_to_index_cls(static: bool, dtype: np.dtype) -> tp.Type[Index]:
     if static:
         return Index
     return IndexGO
+

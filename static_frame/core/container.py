@@ -674,3 +674,4 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
                 )
         # modify the active display to be for HTML
         return repr(self.display(config))
+

@@ -16,16 +16,14 @@
 import typing as tp
 import os
 import pickle
-# import datetime
 from urllib import request
 from typing import NamedTuple
 import functools
 
-
 import numpy as np
-import static_frame as sf
 import pandas as pd
 
+import static_frame as sf
 from static_frame.performance.perf_test import PerfTest
 
 

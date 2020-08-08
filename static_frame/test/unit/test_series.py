@@ -13,14 +13,11 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 import static_frame as sf
-# assuming located in the same directory
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-# from static_frame import TypeBlocks
-# from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
@@ -404,9 +401,9 @@ class TestUnit(TestCase):
         self.assertEqual((s1 == s2).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', False)))
 
-        self.assertEqual((s1 == True).to_pairs(),
+        self.assertEqual((s1 == True).to_pairs(), #pylint: disable=C0121
                 (('a', False), ('b', True), ('c', False), ('d', True)))
-        self.assertEqual((s1 == True).name, 'foo')
+        self.assertEqual((s1 == True).name, 'foo') #pylint: disable=C0121
 
         # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
 

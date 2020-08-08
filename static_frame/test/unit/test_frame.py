@@ -7,15 +7,12 @@ import string
 import pickle
 import sqlite3
 import datetime
-
-import numpy as np
 import typing as tp
 
-import static_frame as sf
+import numpy as np
 
-# assuming located in the same directory
+import static_frame as sf
 from static_frame import Index
-# from static_frame import IndexGO
 from static_frame import IndexHierarchy
 from static_frame import IndexHierarchyGO
 from static_frame import IndexYearMonth
@@ -23,28 +20,22 @@ from static_frame import IndexYearGO
 from static_frame import IndexYear
 from static_frame import IndexDate
 from static_frame import IndexDateGO
-
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
 from static_frame import TypeBlocks
-# from static_frame import Display
 from static_frame import mloc
 from static_frame import ILoc
 from static_frame import HLoc
 from static_frame import DisplayConfig
 from static_frame import IndexAutoFactory
-
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
 from static_frame.core.store_filter import StoreFilter
-
 from static_frame.core.frame import FrameAssign
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import skip_linux_no_display
-
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -2192,7 +2183,7 @@ class TestUnit(TestCase):
     def test_frame_loc_g(self) -> None:
         f = Frame.from_dict(dict(a=[None], b=[1]))
         self.assertEqual(f.shape, (1, 2))
-        post = f.loc[f['a'] == True]
+        post = f.loc[f['a'] == True] # pylint: disable=C0121
         self.assertEqual(post.shape, (0, 2))
 
     def test_frame_loc_h(self) -> None:
@@ -3568,11 +3559,11 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r'))
 
-        self.assertEqual((f1['q'] == True).to_pairs(),
+        self.assertEqual((f1['q'] == True).to_pairs(), # pylint: disable=C0121
                 ((0, True),))
 
         # this handles the case where, because we are comparing to an empty string, NumPy returns a single Boolean. This is manually handled in Series._ufunc_binary_operator
-        self.assertEqual((f1['r'] == True).to_pairs(),
+        self.assertEqual((f1['r'] == True).to_pairs(), # pylint: disable=C0121
                 ((0, False),))
 
 

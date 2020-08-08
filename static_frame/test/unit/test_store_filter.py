@@ -1,14 +1,13 @@
 import unittest
-import numpy as np
 from io import StringIO
 import datetime
+
+import numpy as np
 
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import STORE_FILTER_DISABLE
 from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
-
-
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
