@@ -4580,6 +4580,8 @@ class Frame(ContainerOperand):
                         group,
                         data_fields,
                         func_fields)
+                if len(sub_columns) == 1:
+                    import ipdb; ipdb.set_trace()
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
                     # def records_items() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
