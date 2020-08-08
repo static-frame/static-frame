@@ -70,7 +70,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.pivot import extrapolate_column_fields
-from static_frame.core.pivot import pivot_get_records_items
+from static_frame.core.pivot import pivot_records_items
 
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _read_url
@@ -4533,22 +4533,29 @@ class Frame(ContainerOperand):
                         columns_constructor=columns_constructor,
                         )
             else:
-                def records_items():
-                    for group, sub in self.iter_group_items(group_fields):
-                        record = []
-                        for field in data_fields:
-                            values = sub[field].values
-                            if func_single and len(values) == 1:
-                                record.append(values[0])
-                            elif func_single:
-                                record.append(func_single(values))
-                            else:
-                                for _, func in func_map:
-                                    record.append(func(values))
-                        yield group, record
+                # def records_items():
+                #     for group, sub in self.iter_group_items(group_fields):
+                #         record = []
+                #         for field in data_fields:
+                #             values = sub[field].values
+                #             if func_single and len(values) == 1:
+                #                 record.append(values[0])
+                #             elif func_single:
+                #                 record.append(func_single(values))
+                #             else:
+                #                 for _, func in func_map:
+                #                     record.append(func(values))
+                #         yield group, record
 
                 f = self.from_records_items(
-                        records_items(),
+                        pivot_records_items(
+                                frame=self,
+                                group_fields=group_fields,
+                                group_depth=np.inf, # avoid reducing labels
+                                data_fields=data_fields,
+                                func_single=func_single,
+                                func_map=func_map,
+                        ),
                         columns_constructor=columns_constructor,
                         columns=columns,
                         index_constructor=index_constructor,
@@ -4591,10 +4598,10 @@ class Frame(ContainerOperand):
                     #         yield label, record
 
                     sub_frame = Frame.from_records_items(
-                            pivot_get_records_items(
+                            pivot_records_items(
                                     frame=sub,
                                     group_fields=index_fields,
-                                    index_depth=index_depth,
+                                    group_depth=index_depth,
                                     data_fields=data_fields,
                                     func_single=func_single,
                                     func_map=func_map,

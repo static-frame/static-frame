@@ -61,17 +61,19 @@ def extrapolate_column_fields(
     return sub_columns
 
 
-def pivot_get_records_items(
-        frame: Frame,
+def pivot_records_items(
+        frame: 'Frame',
         group_fields: tp.Iterable[tp.Hashable],
-        index_depth: int,
+        group_depth: int,
         data_fields: tp.Iterable[tp.Hashable],
         func_single: UFunc,
         func_map: tp.Sequence[tp.Tuple[tp.Hashable, tp.Callable]]
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
 
+    take_group_index = group_depth > 1
+
     for group_index, part in frame.iter_group_items(group_fields):
-        label = group_index if index_depth > 1 else group_index[0]
+        label = group_index if take_group_index else group_index[0]
         record = []
         for field in data_fields:
             values = part[field].values
