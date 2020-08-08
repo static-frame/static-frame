@@ -1526,7 +1526,7 @@ class Series(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[np.ndarray, 'Series']:
+            ) -> tp.Iterator[tp.Union[np.ndarray, 'Series']]:
         yield from (x for _, x in self._axis_window_items(
                 axis=axis,
                 size=size,
