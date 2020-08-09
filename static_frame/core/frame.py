@@ -30,7 +30,7 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
-from static_frame.core.container_util import name_from_rows
+from static_frame.core.container_util import apex_to_name
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
@@ -1509,7 +1509,7 @@ class Frame(ContainerOperand):
                 name=name
                 )
 
-        index_name = name_from_rows(rows=apex_rows,
+        index_name = apex_to_name(rows=apex_rows,
                 depth_level=index_name_depth_level,
                 axis=0,
                 axis_depth=index_depth)
