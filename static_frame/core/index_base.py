@@ -264,22 +264,33 @@ class IndexBase(ContainerOperand):
             ) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', 'Series']) -> I:
         '''
-        Perform intersection with another Index, container, or NumPy array. Identical comparisons retain order.
+        Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
         # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        return self._ufunc_set(
-                self.__class__._UFUNC_INTERSECTION,
-                other)
+        func = self.__class__._UFUNC_INTERSECTION
+        if len(others) == 1:
+            return self._ufunc_set(func, others[0])
 
-    def union(self: I, other: 'IndexBase') -> I:
+        post = self
+        for other in others:
+            post = post._ufunc_set(func, other)
+        return post
+
+    def union(self: I, *others: 'IndexBase') -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        return self._ufunc_set(
-                self.__class__._UFUNC_UNION,
-                other)
+        func = self.__class__._UFUNC_UNION
+        if len(others) == 1:
+            return self._ufunc_set(func, others[0])
+
+        post = self
+        for other in others:
+            post = post._ufunc_set(func, other)
+        return post
+
 
     def difference(self: I, other: 'IndexBase') -> I:
         '''

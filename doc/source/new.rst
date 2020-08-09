@@ -4,6 +4,8 @@ What is New in Static Frame
 0.6.28
 ----------
 
+``Index`` and ``IndexHierarchy`` ``intersection()`` and ``union()`` now accept ``*args``, performing the set operation iteratively on all arguments.
+
 Revised default aggregation function to ``Frame.pivot``.
 
 

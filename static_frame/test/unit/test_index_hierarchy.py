@@ -1523,6 +1523,46 @@ class TestUnit(TestCase):
             _ = ih1.intersection(['a', 'b']) #type: ignore
 
 
+    def test_hierarchy_set_operators_m(self) -> None:
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                ('II', 'A'),
+                ('II', 'B'),
+                ('III', 'A'),
+                ('III', 'B'),
+                )
+
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                ('II', 'A'),
+                ('II', 'B'),
+                ('IV', 'A'),
+                ('IV', 'B'),
+                )
+
+        ih3 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.intersection(ih2, ih3)
+        self.assertEqual(post1.values.tolist(),
+                [['II', 'A'], ['II', 'B']])
+
+
+        post2 = ih1.union(ih2, ih3)
+
+        self.assertEqual(post2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
+                )
+
+
 
     #---------------------------------------------------------------------------
 

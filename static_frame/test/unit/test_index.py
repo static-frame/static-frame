@@ -928,6 +928,16 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
                 )
 
+    def test_index_intersection_g(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('b', 'a', 'r'))
+        idx3 = Index(('w', 'b', 'x'))
+
+        idx4 = idx1.intersection(idx2, idx3)
+        self.assertEqual(idx4.values.tolist(), ['b'])
+
+
     #---------------------------------------------------------------------------
 
     def test_index_union_a(self) -> None:
@@ -951,6 +961,21 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.values.tolist(),
                 ['c', 'b', 'a']
                 )
+
+
+    def test_index_union_c(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('r', 'b', 'x'))
+        idx3 = Index(('t', 's'))
+        idx4 = Index(('t', 'q'))
+
+        idx5 = idx1.union(idx2, idx3, idx4)
+        self.assertEqual(idx5.values.tolist(),
+                ['a', 'b', 'c', 'q', 'r', 's', 't', 'x']
+                )
+
+    #---------------------------------------------------------------------------
 
     def test_index_difference_a(self) -> None:
         idx1 = Index(('c', 'b', 'a'))
