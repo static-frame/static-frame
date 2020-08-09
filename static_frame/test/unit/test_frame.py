@@ -5617,6 +5617,26 @@ class TestUnit(TestCase):
                     )
 
 
+    def test_frame_from_tsv_h(self) -> None:
+
+        f1 = Frame.from_element(1, index=Index([1], name='foo'), columns=['a'])
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp) # this writes the index
+            # index name is gone
+            f2 = Frame.from_delimited(fp, delimiter='\t', index_depth=1,
+                    index_name_depth_level=-1)
+
+            self.assertEqual(f2.index.name, 'foo')
+
+            # provide a list means that we want each label to be atuple
+            f3 = Frame.from_delimited(fp, delimiter='\t', index_depth=1,
+                    index_name_depth_level=[0])
+            self.assertEqual(f3.index.name, ('foo',))
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pairs_a(self) -> None:

@@ -33,6 +33,8 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NameType
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -885,5 +887,62 @@ def index_many_set(
             union=union,
             assume_unique=True)
     return _index_many_to_one(indices, cls_default, array_processor)
+
+
+#-------------------------------------------------------------------------------
+def name_from_rows(
+        rows: tp.Sequence[tp.Sequence[tp.Hashable]],
+        depth_level: tp.Optional[DepthLevelSpecifier],
+        axis: int, # 0 is by row (for index, 1 is by column (for columns)
+        axis_depth: int,
+        ) -> NameType:
+    '''
+    Utility for translating apex values (the upper left corner created be index/columns) in the appropriate name.
+    '''
+    if depth_level is None:
+        return None
+    if axis == 0:
+        if isinstance(depth_level, INT_TYPES):
+            row = rows[depth_level] # gets one row
+            if axis_depth == 1: # return a single label
+                return row[0] if row[0] != '' else None
+            else:
+                return tuple(row)
+        else: # its a list selection
+            targets = [rows[r] for r in depth_level]
+            # combine into tuples
+            if axis_depth == 1:
+                return next(zip(*targets))
+            else:
+                return tuple(zip(*targets))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -30,6 +30,7 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
+from static_frame.core.container_util import name_from_rows
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
@@ -1348,7 +1349,9 @@ class Frame(ContainerOperand):
             delimiter: str,
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             skip_header: int = 0,
             skip_footer: int = 0,
             quote_char: str = '"',
@@ -1366,7 +1369,9 @@ class Frame(ContainerOperand):
             delimiter: The character used to seperate row elements.
             index_depth: Specify the number of columns used to create the index labels; a value greater than 1 will attempt to create a hierarchical index.
             index_column_first: Optionally specify a column, by position or name, to become the start of the index if index_depth is greater than 0. If not set and index_depth is greater than 0, the first column will be used.
+            index_name_depth_level: If columns_depth is greater than 0, interpret values over index as the index name.
             columns_depth: Specify the number of rows after the skip_header used to create the column labels. A value of 0 will be no header; a value greater than 1 will attempt to create a hierarchical index.
+            columns_name_depth_level: If index_depth is greater than 0, interpret values over index as the columns name.
             skip_header: Number of leading lines to skip.
             skip_footer: Number of trailing lines to skip.
             store_filter: A StoreFilter instance, defining translation between unrepresentable types. Presently nly the ``to_nan`` attributes is used.
@@ -1409,6 +1414,7 @@ class Frame(ContainerOperand):
                         yield row
 
         # always accumulate columns rows, as np.genfromtxt will mutate the headers: adding enderscore, removing invalid characters, etc.
+        apex_rows = []
         columns_rows = []
 
         def row_source() -> tp.Iterator[str]:
@@ -1457,7 +1463,10 @@ class Frame(ContainerOperand):
                         invalid_raise=False,
                         )
                 # the array might be ndim=1, or ndim=0; must get a list before slicing
-                columns_arrays.append(columns_array.tolist()[index_depth:])
+                # using the array directly for a string type might not hold the rights size after slicing
+                columns_list = columns_array.tolist()
+                apex_rows.append(columns_list[:index_depth])
+                columns_arrays.append(columns_list[index_depth:])
 
             if columns_depth == 1:
                 columns_constructor = cls._COLUMNS_CONSTRUCTOR
@@ -1485,7 +1494,7 @@ class Frame(ContainerOperand):
                     dtypes=dtypes,
                     consolidate_blocks=consolidate_blocks,
                     store_filter=store_filter,
-                    columns = columns
+                    columns=columns
                     )
         else: # only column data in table
             if index_depth > 0:
@@ -1500,13 +1509,20 @@ class Frame(ContainerOperand):
                 name=name
                 )
 
+        index_name = name_from_rows(rows=apex_rows,
+                depth_level=index_name_depth_level,
+                axis=0,
+                axis_depth=index_depth)
+
         if index_depth == 0:
             return cls(
                 index=None,
                 **kwargs)
         if index_depth == 1:
+            index_constructor = partial(Index, name=index_name)
             return cls(
                 index=index_arrays[0],
+                index_constructor=index_constructor,
                 **kwargs)
         return cls(
                 index=zip(*index_arrays),
@@ -1531,7 +1547,7 @@ class Frame(ContainerOperand):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
-        Specialized version of :py:meth:`Frame.from_delimited` for CSV files.
+        Specialized version of :obj:`Frame.from_delimited` for CSV files.
 
         Returns:
             :obj:`Frame`
@@ -1568,7 +1584,7 @@ class Frame(ContainerOperand):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
         '''
-        Specialized version of :py:meth:`Frame.from_delimited` for TSV files.
+        Specialized version of :obj:`Frame.from_delimited` for TSV files.
 
         Returns:
             :obj:`static_frame.Frame`
