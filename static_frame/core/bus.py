@@ -12,7 +12,6 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
-from static_frame.core.hloc import HLoc
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store

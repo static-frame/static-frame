@@ -798,7 +798,7 @@ class TestUnit(TestCase):
 
             # only show memory locations for loaded Frames
             self.assertTrue(b2.iloc[1].equals(f2))
-            self.assertEqual((b2.mloc == None).to_pairs(),
+            self.assertEqual((b2.mloc == None).to_pairs(), #pylint: disable=C0121
                     (('f1', True), ('f2', False)))
 
     def test_bus_mloc_c(self) -> None:
