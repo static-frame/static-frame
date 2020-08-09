@@ -1045,6 +1045,8 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             next(idx1.label_widths_at_depth(1))
 
+
+
     #---------------------------------------------------------------------------
 
     def test_index_bool_a(self) -> None:
@@ -1088,6 +1090,21 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c'])
         with self.assertRaises(RuntimeError):
             idx1.values_at_depth(1)
+
+
+    def test_index_values_at_depth_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+
+        with self.assertRaises(RuntimeError):
+            idx1.values_at_depth([3, 4])
+
+        post = idx1.values_at_depth([0])
+
+        self.assertEqual(post.tolist(),
+                ['a', 'b', 'c', 'd', 'e'])
+
+
 
     #---------------------------------------------------------------------------
 
