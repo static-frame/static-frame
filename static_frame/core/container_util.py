@@ -905,7 +905,7 @@ def apex_to_name(
         return None
     if axis == 0:
         if isinstance(depth_level, INT_TYPES):
-            row = rows[depth_level] # gets one row
+            row = rows[depth_level]
             if axis_depth == 1: # return a single label
                 return row[0] if row[0] != '' else None
             else:

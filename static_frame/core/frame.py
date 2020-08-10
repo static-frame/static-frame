@@ -1450,6 +1450,10 @@ class Frame(ContainerOperand):
             columns = None
             own_columns = False
         else:
+            columns_name = apex_to_name(rows=apex_rows,
+                    depth_level=columns_name_depth_level,
+                    axis=1,
+                    axis_depth=columns_depth)
             # Process each row one at a time, as types align by row.
             columns_arrays = []
             for row in columns_rows:
@@ -1470,14 +1474,14 @@ class Frame(ContainerOperand):
 
             if columns_depth == 1:
                 columns_constructor = cls._COLUMNS_CONSTRUCTOR
-                columns = columns_constructor(columns_arrays[0])
-                own_columns = True
+                columns = columns_constructor(columns_arrays[0], name=columns_name)
             else:
                 columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
                 columns = columns_constructor(
                         zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
+                        name=columns_name,
                         )
-                own_columns = True
+            own_columns = True
 
         if array.dtype.names is None: # not a structured array
             # genfromtxt may, in some situations, not return a structured array
