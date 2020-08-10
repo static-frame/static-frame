@@ -36,6 +36,8 @@ from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
 
+from static_frame.core.exception import AxisInvalid
+
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
@@ -909,12 +911,32 @@ def apex_to_name(
             else:
                 return tuple(row)
         else: # its a list selection
-            targets = [rows[r] for r in depth_level]
+            targets = [rows[level] for level in depth_level]
             # combine into tuples
             if axis_depth == 1:
                 return next(zip(*targets))
             else:
                 return tuple(zip(*targets))
+    elif axis == 1:
+        if isinstance(depth_level, INT_TYPES):
+            # depth_level refers to position in inner row
+            row = [r[depth_level] for r in rows]
+            if axis_depth == 1: # return a single label
+                return row[0] if row[0] != '' else None
+            else:
+                return tuple(row)
+        else: # its a list selection
+            targets = []
+            for row in rows:
+                targets.append([row[level] for level in depth_level])
+
+            # combine into tuples
+            if axis_depth == 1:
+                return tuple(next(iter(targets)))
+            else:
+                return tuple(tuple(t) for t in targets)
+
+    raise AxisInvalid(f'invalid axis: {axis}')
 
 
 

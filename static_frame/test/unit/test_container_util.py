@@ -520,12 +520,10 @@ class TestUnit(TestCase):
                 apex_to_name([['foo', 'bar']], depth_level=-1, axis=0, axis_depth=2),
                 ('foo', 'bar'),
                 )
-
         self.assertEqual(
                 apex_to_name([['', ''], ['foo', 'bar']], depth_level=-1, axis=0, axis_depth=2),
                 ('foo', 'bar'),
                 )
-
         self.assertEqual(
                 apex_to_name([['', ''], ['foo', 'bar']], depth_level=0, axis=0, axis_depth=2),
                 ('', ''),
@@ -538,6 +536,32 @@ class TestUnit(TestCase):
                 apex_to_name([['a', 'b'], ['c', 'd']], depth_level=[1, 0], axis=0, axis_depth=2),
                 (('c', 'a'), ('d', 'b')),
                 )
+
+    def test_apex_to_name_b(self) -> None:
+        self.assertEqual(
+                apex_to_name([['foo']], depth_level=-1, axis=1, axis_depth=1),
+                'foo',
+                )
+        self.assertEqual(
+                apex_to_name([['foo'], ['bar']], depth_level=-1, axis=1, axis_depth=2),
+                ('foo', 'bar'),
+                )
+
+        self.assertEqual(
+                apex_to_name([['', 'foo'], ['', 'bar']], depth_level=-1, axis=1, axis_depth=2),
+                ('foo', 'bar'),
+                )
+
+        self.assertEqual(
+                apex_to_name([['', 'foo'], ['', 'bar']], depth_level=0, axis=1, axis_depth=2),
+                ('', ''),
+                )
+
+        self.assertEqual(
+                apex_to_name([['a', 'b'], ['c', 'd']], depth_level=[0, 1], axis=1, axis_depth=2),
+                (('a', 'b'), ('c', 'd')),
+                )
+
 
 if __name__ == '__main__':
     unittest.main()
