@@ -16,6 +16,7 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apex_to_name
 from static_frame.test.test_case import TestCase
+from static_frame.core.exception import AxisInvalid
 
 from static_frame import Frame
 from static_frame import Index
@@ -566,6 +567,10 @@ class TestUnit(TestCase):
                 apex_to_name([['a', 'b'], ['c', 'd']], depth_level=[1, 0], axis=1, axis_depth=2),
                 (('b', 'a'), ('d', 'c')),
                 )
+
+    def test_apex_to_name_c(self) -> None:
+        with self.assertRaises(AxisInvalid):
+            _ = apex_to_name([['foo']], depth_level=-1, axis=3, axis_depth=1)
 
 if __name__ == '__main__':
     unittest.main()
