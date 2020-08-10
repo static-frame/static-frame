@@ -926,15 +926,12 @@ def apex_to_name(
             else:
                 return tuple(row)
         else: # its a list selection
-            targets = []
-            for row in rows:
-                targets.append([row[level] for level in depth_level])
-
+            targets = (tuple(row[level] for level in depth_level) for row in rows)
             # combine into tuples
             if axis_depth == 1:
                 return tuple(next(iter(targets)))
             else:
-                return tuple(tuple(t) for t in targets)
+                return tuple(targets)
 
     raise AxisInvalid(f'invalid axis: {axis}')
 

@@ -562,6 +562,10 @@ class TestUnit(TestCase):
                 (('a', 'b'), ('c', 'd')),
                 )
 
+        self.assertEqual(
+                apex_to_name([['a', 'b'], ['c', 'd']], depth_level=[1, 0], axis=1, axis_depth=2),
+                (('b', 'a'), ('d', 'c')),
+                )
 
 if __name__ == '__main__':
     unittest.main()
