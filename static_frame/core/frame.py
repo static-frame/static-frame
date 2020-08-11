@@ -1450,10 +1450,6 @@ class Frame(ContainerOperand):
             columns = None
             own_columns = False
         else:
-            columns_name = apex_to_name(rows=apex_rows,
-                    depth_level=columns_name_depth_level,
-                    axis=1,
-                    axis_depth=columns_depth)
             # Process each row one at a time, as types align by row.
             columns_arrays = []
             for row in columns_rows:
@@ -1472,13 +1468,18 @@ class Frame(ContainerOperand):
                 apex_rows.append(columns_list[:index_depth])
                 columns_arrays.append(columns_list[index_depth:])
 
+            columns_name = None if index_depth == 0 else apex_to_name(rows=apex_rows,
+                    depth_level=columns_name_depth_level,
+                    axis=1,
+                    axis_depth=columns_depth)
+
             if columns_depth == 1:
                 columns_constructor = cls._COLUMNS_CONSTRUCTOR
                 columns = columns_constructor(columns_arrays[0], name=columns_name)
             else:
                 columns_constructor = cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels
                 columns = columns_constructor(
-                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays))
+                        zip(*(store_filter.to_type_filter_iterable(x) for x in columns_arrays)),
                         name=columns_name,
                         )
             own_columns = True
@@ -1513,24 +1514,25 @@ class Frame(ContainerOperand):
                 name=name
                 )
 
-        index_name = apex_to_name(rows=apex_rows,
+        if index_depth == 0:
+            return cls(index=None, **kwargs)
+
+        index_name = None if columns_depth == 0 else apex_to_name(rows=apex_rows,
                 depth_level=index_name_depth_level,
                 axis=0,
                 axis_depth=index_depth)
 
-        if index_depth == 0:
-            return cls(
-                index=None,
-                **kwargs)
         if index_depth == 1:
             index_constructor = partial(Index, name=index_name)
             return cls(
                 index=index_arrays[0],
                 index_constructor=index_constructor,
                 **kwargs)
+
+        index_constructor = partial(IndexHierarchy.from_labels, name=index_name)
         return cls(
                 index=zip(*index_arrays),
-                index_constructor=IndexHierarchy.from_labels,
+                index_constructor=index_constructor,
                 **kwargs
                 )
 

@@ -5617,16 +5617,14 @@ class TestUnit(TestCase):
                     )
 
 
-    def test_frame_from_tsv_h(self) -> None:
+    def test_frame_from_tsv_i(self) -> None:
 
         f1 = Frame.from_element(1, index=Index([1], name='foo'), columns=['a'])
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp) # this writes the index
-            # index name is gone
             f2 = Frame.from_delimited(fp, delimiter='\t', index_depth=1,
                     index_name_depth_level=-1)
-
             self.assertEqual(f2.index.name, 'foo')
 
             # provide a list means that we want each label to be atuple
@@ -5635,6 +5633,42 @@ class TestUnit(TestCase):
             self.assertEqual(f3.index.name, ('foo',))
 
 
+
+    def test_frame_from_tsv_j(self) -> None:
+
+        f1 = Frame.from_element(1, index=Index([1], name='foo'), columns=['a'])
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp) # this writes the index
+
+            f2 = Frame.from_delimited(fp,
+                    delimiter='\t',
+                    index_depth=1,
+                    columns_name_depth_level=-1)
+            self.assertEqual(f2.columns.name, 'foo')
+            self.assertEqual(f2.index.name, None)
+
+            f3 = Frame.from_delimited(fp,
+                    delimiter='\t',
+                    index_depth=0,
+                    columns_name_depth_level=-1)
+
+            self.assertEqual(f3.index.name, None)
+
+    def test_frame_from_tsv_k(self) -> None:
+
+        index = IndexHierarchy.from_labels((('a', 1), ('a', 2)), name=('foo', 'bar'))
+        f1 = Frame(np.arange(4).reshape(2, 2), index=index, columns=('x', 'y'))
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp) # this writes the index
+
+            f2 = Frame.from_delimited(fp,
+                    delimiter='\t',
+                    index_depth=2,
+                    index_name_depth_level=-1)
+
+            self.assertEqual(f2.index.name, ('foo', 'bar'))
 
 
     #---------------------------------------------------------------------------
