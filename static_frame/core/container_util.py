@@ -929,7 +929,7 @@ def apex_to_name(
             targets = (tuple(row[level] for level in depth_level) for row in rows) #type: ignore
             # combine into tuples
             if axis_depth == 1:
-                return tuple(next(iter(targets)))
+                return tuple(next(targets))
             else:
                 return tuple(targets)
 
