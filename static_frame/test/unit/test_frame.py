@@ -5623,12 +5623,14 @@ class TestUnit(TestCase):
 
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp) # this writes the index
-            f2 = Frame.from_delimited(fp, delimiter='\t', index_depth=1,
+            f2 = Frame.from_tsv(fp,
+                    index_depth=1,
                     index_name_depth_level=-1)
             self.assertEqual(f2.index.name, 'foo')
 
             # provide a list means that we want each label to be atuple
-            f3 = Frame.from_delimited(fp, delimiter='\t', index_depth=1,
+            f3 = Frame.from_tsv(fp,
+                    index_depth=1,
                     index_name_depth_level=[0])
             self.assertEqual(f3.index.name, ('foo',))
 
@@ -5641,15 +5643,13 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp) # this writes the index
 
-            f2 = Frame.from_delimited(fp,
-                    delimiter='\t',
+            f2 = Frame.from_tsv(fp,
                     index_depth=1,
                     columns_name_depth_level=-1)
             self.assertEqual(f2.columns.name, 'foo')
             self.assertEqual(f2.index.name, None)
 
-            f3 = Frame.from_delimited(fp,
-                    delimiter='\t',
+            f3 = Frame.from_tsv(fp,
                     index_depth=0,
                     columns_name_depth_level=-1)
 
@@ -5663,12 +5663,30 @@ class TestUnit(TestCase):
         with temp_file('.txt', path=True) as fp:
             f1.to_tsv(fp) # this writes the index
 
-            f2 = Frame.from_delimited(fp,
-                    delimiter='\t',
+            f2 = Frame.from_tsv(fp,
                     index_depth=2,
                     index_name_depth_level=-1)
 
             self.assertEqual(f2.index.name, ('foo', 'bar'))
+
+
+    def test_frame_from_tsv_m(self) -> None:
+
+        index = IndexHierarchy.from_labels((('a', 1), ('a', 2)), name=('up', 'down'))
+        columns = IndexHierarchy.from_product(('x', 'y'), (10, 20))
+
+        f1 = Frame(np.arange(8).reshape(2, 4), index=index, columns=columns)
+
+        with temp_file('.txt', path=True) as fp:
+            f1.to_tsv(fp) # this writes the index
+
+            f2 = Frame.from_tsv(fp,
+                    index_depth=2,
+                    index_name_depth_level=0,
+                    columns_depth=2,
+                    )
+            self.assertEqual(f2.index.name, ('up', 'down'))
+            self.assertEqual(f2.columns.name, None)
 
 
     #---------------------------------------------------------------------------
