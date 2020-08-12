@@ -67,7 +67,7 @@ class TestUnit(TestCase):
                         x=(Fraction(3,2), Fraction(1,2), Fraction(2,3), Fraction(3,7)),
                         y=(3,4,-5,-3000)),
                 index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                name='f1')
+                name='f1-dash')
 
         frames = (f1,)
 
