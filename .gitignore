@@ -11,3 +11,6 @@ dist
 
 *.egg-info
 *.so
+
+# Wing
+*.wp[ur]

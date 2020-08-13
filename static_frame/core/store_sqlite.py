@@ -89,13 +89,13 @@ class StoreSQLite(Store):
                 )
 
         create_fields = ', '.join(f'{k} {v}' for k, v in field_name_to_field_type)
-        create = f'CREATE TABLE {label} ({create_fields}{create_primary_key})'
+        create = f'CREATE TABLE "{label}" ({create_fields}{create_primary_key})'
         cursor.execute(create)
 
         # works for IndexHierarchy too
         insert_fields = ', '.join(f'{k}' for k in field_names)
         insert_template = ', '.join('?' for _ in field_names)
-        insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
+        insert = f'INSERT INTO "{label}" ({insert_fields}) VALUES ({insert_template})'
 
         values = cls._get_row_iterator(frame=frame, include_index=include_index)
         cursor.executemany(insert, values())
@@ -175,7 +175,7 @@ class StoreSQLite(Store):
                 detect_types=sqlite3.PARSE_DECLTYPES
                 ) as conn:
             # cursor = conn.cursor()
-            query = f'SELECT * from {label}'
+            query = f'SELECT * from "{label}"'
             return tp.cast(Frame, container_type.from_sql(query=query,
                     connection=conn,
                     index_depth=config.index_depth,
