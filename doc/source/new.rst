@@ -10,6 +10,7 @@ Revised default aggregation function to ``Frame.pivot``.
 
 Added `index_name_depth_level` and `columns_name_depth_level` to `Frame.from_delimted` and related methods.
 
+Fixed issue in writing SQLite stores from ``Frame`` labelled with strings containing hyphens.
 
 
 0.6.27

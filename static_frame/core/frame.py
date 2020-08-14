@@ -5497,7 +5497,9 @@ class Frame(ContainerOperand):
             *,
             delimiter: str,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -5507,8 +5509,13 @@ class Frame(ContainerOperand):
 
         Args:
             delimiter: character to be used for delimiterarating elements.
+            include_index_name: if including columns, populate the row above the index with the ``name``. Cannot be True if ``include_columns_name`` is True.
+            incldue_columns_nmae: if including index, populate the column to the left of the columns with the ``name``. Cannot be True if ``include_index_name`` is True.
         '''
         fp = path_filter(fp)
+
+        if sum((include_columns_name, include_index_name)) > 1:
+            raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
 
         if isinstance(fp, str):
             f = open(fp, 'w', encoding=encoding)
@@ -5523,6 +5530,10 @@ class Frame(ContainerOperand):
         if include_index:
             index_values = index.values # get once for caching
             index_names = index.names # normalized presentation
+            index_depth = index.depth
+
+        if include_columns:
+            columns_names = columns.names
 
         if store_filter:
             filter_func = store_filter.from_type_filter_element
@@ -5535,11 +5546,23 @@ class Frame(ContainerOperand):
                     columns_rows = columns.values.T
                 for row_idx, columns_row in enumerate(columns_rows):
                     if include_index:
-                        for name in index_names:
-                            if row_idx == 0:
-                                f.write(f'{name}{delimiter}')
-                            else:
-                                f.write(f'{delimiter}')
+                        if include_index_name:
+                            # index_names serves as a proxy for the index_depth
+                            for name in index_names:
+                                if row_idx == 0:
+                                    # we always write index name labels on the top-most row
+                                    f.write(f'{name}{delimiter}')
+                                else:
+                                    f.write(f'{delimiter}')
+                        elif include_columns_name:
+                            for col_idx in range(index_depth):
+                                if col_idx == 0:
+                                    f.write(f'{columns_names[row_idx]}{delimiter}')
+                                else:
+                                    f.write(f'{delimiter}')
+                        else:
+                            f.write(f'{delimiter * index_depth}')
+                    # write the rest of the line
                     if store_filter:
                         f.write(delimiter.join(f'{filter_func(x)}' for x in columns_row))
                     else:
@@ -5554,7 +5577,7 @@ class Frame(ContainerOperand):
                     if row_current_idx is not None:
                         f.write(line_terminator)
                     if include_index:
-                        if index.depth == 1:
+                        if index_depth == 1:
                             index_value = index_values[row_idx]
                             if store_filter:
                                 f.write(f'{filter_func(index_value)}{delimiter}')

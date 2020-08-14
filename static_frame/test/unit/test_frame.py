@@ -5792,7 +5792,85 @@ class TestUnit(TestCase):
                     'w|False|2.0000e-08|1.2300e-07\n',
                     'x|True|1.1190e-06|'])
 
+    @skip_win # type: ignore
+    def test_frame_to_delimited_d(self) -> None:
 
+        records = (
+                (2, None),
+                (3, 'a'),
+                (0, 'b'),
+                (3, 'x')
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's'),
+                index=IndexHierarchy.from_product((1, 2), ('a', 'b'), name=('foo', 'bar')))
+
+        with temp_file('.txt', path=True) as fp1:
+            f1.to_delimited(fp1, delimiter='|', store_filter=None)
+            f = open(fp1)
+            lines = f.readlines()
+            self.assertEqual(lines, [
+                    'foo|bar|r|s\n',
+                    '1|a|2|None\n',
+                    '1|b|3|a\n',
+                    '2|a|0|b\n',
+                    '2|b|3|x'
+                    ])
+
+        with temp_file('.txt', path=True) as fp2:
+            f1.to_delimited(fp2, delimiter='|', store_filter=None, include_index_name=False)
+            f = open(fp2)
+            lines = f.readlines()
+            self.assertEqual(lines, [
+                    '||r|s\n',
+                    '1|a|2|None\n',
+                    '1|b|3|a\n',
+                    '2|a|0|b\n',
+                    '2|b|3|x'
+                    ])
+
+
+    @skip_win # type: ignore
+    def test_frame_to_delimited_e(self) -> None:
+
+        records = (
+                (2, None, 20, False),
+                (3, 'a', 30, True),
+                )
+        f1 = Frame.from_records(records,
+                index=('r', 's'),
+                columns=IndexHierarchy.from_product((1, 2), ('a', 'b'), name=('foo', 'bar')))
+
+        with temp_file('.txt', path=True) as fp1:
+            f1.to_delimited(fp1, delimiter='|', store_filter=None, include_index_name=False)
+            f = open(fp1)
+            lines = f.readlines()
+            self.assertEqual(lines,
+                    ['|1|1|2|2\n',
+                    '|a|b|a|b\n',
+                    'r|2|None|20|False\n',
+                    's|3|a|30|True'])
+
+        with temp_file('.txt', path=True) as fp2:
+            f1.to_delimited(fp2, delimiter='|',
+                    store_filter=None,
+                    include_index_name=False,
+                    include_columns_name=True)
+            f = open(fp2)
+            lines = f.readlines()
+
+            self.assertEqual(lines,
+                    ['foo|1|1|2|2\n',
+                    'bar|a|b|a|b\n',
+                    'r|2|None|20|False\n',
+                    's|3|a|30|True'])
+
+        with temp_file('.txt', path=True) as fp3:
+            with self.assertRaises(RuntimeError):
+                f1.to_delimited(fp3, delimiter='|',
+                        store_filter=None,
+                        include_index_name=True,
+                        include_columns_name=True)
 
     #---------------------------------------------------------------------------
     def test_frame_to_csv_a(self) -> None:
