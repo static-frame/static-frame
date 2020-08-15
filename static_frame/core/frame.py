@@ -5630,7 +5630,9 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLike,
             *,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -5641,7 +5643,9 @@ class Frame(ContainerOperand):
         return self.to_delimited(fp=fp,
                 delimiter=',',
                 include_index=include_index,
+                include_index_name=include_index_name,
                 include_columns=include_columns,
+                include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
                 store_filter=store_filter
@@ -5651,7 +5655,9 @@ class Frame(ContainerOperand):
             fp: PathSpecifierOrFileLike,
             *,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -5662,7 +5668,9 @@ class Frame(ContainerOperand):
         return self.to_delimited(fp=fp,
                 delimiter='\t',
                 include_index=include_index,
+                include_index_name=include_index_name,
                 include_columns=include_columns,
+                include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
                 store_filter=store_filter
@@ -5672,7 +5680,9 @@ class Frame(ContainerOperand):
             *,
             delimiter='\t',
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             encoding: tp.Optional[str] = None,
             line_terminator: str = '\n',
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
@@ -5684,7 +5694,9 @@ class Frame(ContainerOperand):
         self.to_delimited(fp=sio,
                 delimiter=delimiter,
                 include_index=include_index,
+                include_index_name=include_index_name,
                 include_columns=include_columns,
+                include_columns_name=include_columns_name,
                 encoding=encoding,
                 line_terminator=line_terminator,
                 store_filter=store_filter
