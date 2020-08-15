@@ -10372,6 +10372,16 @@ class TestUnit(TestCase):
             ((('mass', 'lepton', 'muon'), ((0, 0.106),)), (('mass', 'lepton', 'tau'), ((0, 1.777),)), (('mass', 'quark', 'charm'), ((0, 1.3),)), (('mass', 'quark', 'strange'), ((0, 0.1),)), (('charge', 'lepton', 'muon'), ((0, -1.0),)), (('charge', 'lepton', 'tau'), ((0, -1.0),)), (('charge', 'quark', 'charm'), ((0, 0.666),)), (('charge', 'quark', 'strange'), ((0, -0.333),))))
 
     #---------------------------------------------------------------------------
+
+    def test_frame_from_group_a(self) -> None:
+
+        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
+
+        f2 = FrameGO.from_group(f1.iter_group('group'))['b'].sum()
+        self.assertEqual(f2.to_pairs(0),
+                (('b', ((0, 2), (1, 10))),)
+                )
+
     def test_frame_from_group_items_a(self) -> None:
 
         f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})

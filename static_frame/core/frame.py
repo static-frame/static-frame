@@ -523,8 +523,6 @@ class Frame(ContainerOperand):
             ):
         '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
         '''
-        # Frame.from_group_items(group_iter).loc[['b':], ['x', 'y']].sum()
-        # from_group_items(group_iter, 'loc', arg, 'sum')
         groups = ((i, f) for i, f in enumerate(groups))
         return InterfaceBatchQuartet(
                 container_items=groups,
@@ -537,8 +535,6 @@ class Frame(ContainerOperand):
             ):
         '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
         '''
-        # Frame.from_group_items(group_iter).loc[['b':], ['x', 'y']].sum()
-        # from_group_items(group_iter, 'loc', arg, 'sum')
         return InterfaceBatchQuartet(
                 container_items=groups,
                 constructor=cls,
