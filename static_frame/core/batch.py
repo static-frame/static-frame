@@ -43,10 +43,6 @@ class BatchProcessor(ContainerOperand):
         self._container_items = container_items
         self._constructor = constructor
 
-    def display(self,
-            config: tp.Optional[DisplayConfig] = None
-            ) -> Display:
-        return str(self.__class__.__name__)
 
 
     def _extract(self, frame: 'Frame') -> FrameOrSeries:
@@ -60,6 +56,21 @@ class BatchProcessor(ContainerOperand):
             return frame._extract_bloc(self._key)
         raise NotImplementedError(f'{self._selector} not handled')
 
+
+    def display(self,
+            config: tp.Optional[DisplayConfig] = None
+            ) -> Display:
+        from static_frame.core.series import Series
+
+        # realize generator
+        if not hasattr(self._container_items, '__len__'):
+            self._container_items = tuple(self._container_items)
+
+        items = ((label, self._extract(f).shape) for label, f in self._container_items)
+
+        return Series.from_items(items,
+                name=self.__class__.__name__
+                ).display(config=config)
 
     #---------------------------------------------------------------------------
     # operators
