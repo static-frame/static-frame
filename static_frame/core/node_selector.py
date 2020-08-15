@@ -1,13 +1,16 @@
 import typing as tp
-
 import numpy as np
-
+from functools import partial
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
+
+from static_frame.core.batch import BatchSelector
+from static_frame.core.batch import BatchProcessor
+from static_frame.core.container import ContainerOperand
 
 
 if tp.TYPE_CHECKING:
@@ -205,6 +208,47 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
                 )
         self.delegate = delegate #pylint: disable=E0237
 
+
+#-------------------------------------------------------------------------------
+
+class InterfaceBatchQuartet(InterfaceSelectQuartet[TContainer]):
+    '''For bulk operations on groups with __getitem__, iloc, loc, bloc.
+    '''
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            '_func_bloc',
+            'delegate'
+            )
+
+    def __init__(self, *,
+            container_items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
+            constructor: tp.Type[ContainerOperand]
+            ) -> None:
+        InterfaceSelectQuartet.__init__(self,
+                func_iloc=partial(BatchProcessor,
+                        selector=BatchSelector.ILoc,
+                        container_items=container_items,
+                        constructor=constructor,
+                        ),
+                func_loc=partial(BatchProcessor,
+                        selector=BatchSelector.Loc,
+                        container_items=container_items,
+                        constructor=constructor,
+                        ),
+                func_getitem=partial(BatchProcessor,
+                        selector=BatchSelector.GetItem,
+                        container_items=container_items,
+                        constructor=constructor,
+                        ),
+                func_bloc=partial(BatchProcessor,
+                        selector=BatchSelector.BLoc,
+                        container_items=container_items,
+                        constructor=constructor,
+                        ),
+                )
+        self.delegate = BatchProcessor #pylint: disable=E0237
 
 #-------------------------------------------------------------------------------
 

@@ -62,6 +62,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.node_selector import InterfaceBatchQuartet
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.series import RelabelInput
 from static_frame.core.series import Series
@@ -329,7 +330,7 @@ class Frame(ContainerOperand):
             union: If True, the union of the aligned indices is used; if False, the intersection is used.
             index: Optionally specify a new index.
             columns: Optionally specify new columns.
-            {name}
+            {name}f
             {consolidate_blocks}
 
         Returns:
@@ -479,7 +480,7 @@ class Frame(ContainerOperand):
         Produce a :obj:`Frame` with a hierarchical index from an iterable of pairs of labels, :obj:`Frame`. The :obj:`IndexHierarchy` is formed from the provided labels and the :obj:`Index` if each :obj:`Frame`.
 
         Args:
-            items: Iterable of pairs of label, :obj:`Series`
+            items: Iterable of pairs of label, :obj:`Frame`
         '''
         frames = []
 
@@ -515,6 +516,19 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 **kwargs
                 )
+
+    @classmethod
+    def from_group_items(cls,
+            groups: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']]
+            ):
+        # Frame.from_group_items(group_iter).loc[['b':], ['x', 'y']].sum()
+        # from_group_items(group_iter, 'loc', arg, 'sum')
+
+        return InterfaceBatchQuartet(
+                container_items=groups,
+                constructor=cls,
+                )
+
 
     @classmethod
     @doc_inject(selector='constructor_frame')

@@ -10371,7 +10371,33 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
             ((('mass', 'lepton', 'muon'), ((0, 0.106),)), (('mass', 'lepton', 'tau'), ((0, 1.777),)), (('mass', 'quark', 'charm'), ((0, 1.3),)), (('mass', 'quark', 'strange'), ((0, 0.1),)), (('charge', 'lepton', 'muon'), ((0, -1.0),)), (('charge', 'lepton', 'tau'), ((0, -1.0),)), (('charge', 'quark', 'charm'), ((0, 0.666),)), (('charge', 'quark', 'strange'), ((0, -0.333),))))
 
+    #---------------------------------------------------------------------------
+    def test_frame_from_group_items_a(self) -> None:
+
+        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
+
+        gi = f1.iter_group_items('group')
+        f2 = Frame.from_group_items(gi)[['a', 'b']].sum()
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 1), ('z', 5))), ('b', (('x', 2), ('z', 10))))
+                )
+
+        gi = f1.iter_group_items('group')
+        f3 = -Frame.from_group_items(gi)[['a', 'b']]
+        self.assertEqual(f3.to_pairs(0),
+                (('a', ((0, -1), (1, -2), (2, -3))), ('b', ((0, -2), (1, -4), (2, -6)))))
+
+
+    def test_frame_from_group_items_b(self) -> None:
+
+        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
+
+        f2 = Frame.from_group_items(f1.iter_group_items('group')).loc[:, 'b'].sum()
+        self.assertEqual(f2.to_pairs(0),
+                (('b', (('x', 2), ('z', 10))),))
+
         # import ipdb; ipdb.set_trace()
+
 
 
 
