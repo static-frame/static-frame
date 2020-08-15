@@ -3647,7 +3647,7 @@ class Frame(ContainerOperand):
         def extract_frame(key, index) -> 'Frame':
             if axis == 0:
                 return Frame(frame_sorted._blocks._extract(row_key=key),
-                        columns=self.columns,
+                        columns=self._columns,
                         index=index,
                         own_columns=self.STATIC, # own if static
                         own_index=True,
@@ -3656,7 +3656,7 @@ class Frame(ContainerOperand):
             else:
                 return Frame(frame_sorted._blocks._extract(column_key=key),
                         columns=index,
-                        index=self.index,
+                        index=self._index,
                         own_columns=True,
                         own_index=True,
                         own_data=True,
