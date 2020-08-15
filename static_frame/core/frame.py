@@ -3617,12 +3617,12 @@ class Frame(ContainerOperand):
             axis: int):
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
-
             if axis == 0:
                 # axis 0 is a row iter, so need to slice index, keep columns
                 yield group, self.__class__(tb,
                         index=self._index[selection],
-                        columns=self._columns, # let constructor determine ownership
+                        columns=self._columns,
+                        own_columns=self.STATIC, # own if static
                         own_index=True,
                         own_data=True)
             elif axis == 1:
@@ -3644,17 +3644,23 @@ class Frame(ContainerOperand):
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
-        def build_frame(key, index):
+        def extract_frame(key, index) -> 'Frame':
             if axis == 0:
                 return Frame(frame_sorted._blocks._extract(row_key=key),
                         columns=self.columns,
                         index=index,
-                        own_data=True)
+                        own_columns=self.STATIC, # own if static
+                        own_index=True,
+                        own_data=True,
+                        )
             else:
                 return Frame(frame_sorted._blocks._extract(column_key=key),
                         columns=index,
                         index=self.index,
-                        own_data=True)
+                        own_columns=True,
+                        own_index=True,
+                        own_data=True,
+                        )
 
         if axis == 0:
             max_iloc: int = len(self._index)
@@ -3677,13 +3683,13 @@ class Frame(ContainerOperand):
             if group != next_group:
                 slc: slice = slice(start, i)
                 sliced_index: Index = index[slc]
-                yield group, build_frame(slc, sliced_index)
+                yield group, extract_frame(slc, sliced_index)
 
                 start = i
                 group = next_group
             i += 1
 
-        yield group, build_frame(slice(start, None), index[start:])
+        yield group, extract_frame(slice(start, None), index[start:])
 
 
     def _axis_group_loc_items(self,
