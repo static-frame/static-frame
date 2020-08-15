@@ -14,7 +14,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series # pylint: disable=W0611 #pragma: no cover
 
-FrameOrSeries = tp.TypeVar('FrameOrSeries', 'Frame', 'Series')
+FrameOrSeries = tp.Union['Frame', 'Series']
 
 
 class BatchSelector(Enum):
@@ -36,7 +36,7 @@ class BatchProcessor(ContainerOperand):
             key: GetItemKeyType,
             selector: BatchSelector,
             container_items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
-            constructor: tp.Type[ContainerOperand],
+            constructor: tp.Type['Frame'],
             ):
         self._key = key
         self._selector = selector
@@ -51,7 +51,7 @@ class BatchProcessor(ContainerOperand):
         elif self._selector is BatchSelector.Loc:
             return frame._extract_loc(self._key)
         elif self._selector is BatchSelector.GetItem:
-            return frame.__getitem__(self._key)
+            return frame.__getitem__(self._key) #type: ignore
         elif self._selector is BatchSelector.BLoc:
             return frame._extract_bloc(self._key)
         raise NotImplementedError(f'{self._selector} not handled')
@@ -68,7 +68,7 @@ class BatchProcessor(ContainerOperand):
 
         items = ((label, self._extract(f).shape) for label, f in self._container_items)
 
-        return Series.from_items(items,
+        return Series.from_items(items, #type: ignore
                 name=self.__class__.__name__
                 ).display(config=config)
 
@@ -80,7 +80,7 @@ class BatchProcessor(ContainerOperand):
             ) -> np.ndarray:
         '''Cannot reduce dimensionality, so ignore labels.
         '''
-        def gen():
+        def gen() -> tp.Iterator[FrameOrSeries]:
             for _, frame in self._container_items:
                 yield self._extract(frame)._ufunc_unary_operator(
                         operator=operator,
@@ -136,7 +136,8 @@ class BatchProcessor(ContainerOperand):
         from static_frame.core.frame import Frame
         from static_frame.core.series import Series
         labels = []
-        def gen():
+
+        def gen() -> tp.Iterator[FrameOrSeries]:
             for label, frame in self._container_items:
                 labels.append(label)
                 extracted = self._extract(frame)
@@ -155,7 +156,7 @@ class BatchProcessor(ContainerOperand):
                 else:
                     yield part
 
-        return self._constructor.from_concat(gen(), index=labels)
+        return self._constructor.from_concat(gen(), index=labels) #type: ignore
 
     def _ufunc_shape_skipna(self, *,
             axis: int,

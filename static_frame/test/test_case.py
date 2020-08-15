@@ -19,6 +19,8 @@ import pytest
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
 from static_frame.core.index_base import IndexBase
+from static_frame.core.batch import BatchProcessor
+
 from static_frame.core.frame import Frame
 from static_frame.core.util import PathSpecifier
 
@@ -126,7 +128,7 @@ class TestCase(unittest.TestCase):
 
         def yield_sub(cls: tp.Type[ContainerOperand]) -> tp.Iterator[tp.Type[ContainerOperand]]:
             for cls in cls.__subclasses__():
-                if cls is not IndexBase:
+                if cls not in (IndexBase, BatchProcessor):
                     yield cls
                 if issubclass(cls, ContainerOperand):
                     yield from yield_sub(cls)

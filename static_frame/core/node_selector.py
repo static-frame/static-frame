@@ -1,6 +1,7 @@
 import typing as tp
-import numpy as np
 from functools import partial
+
+import numpy as np
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
@@ -25,7 +26,9 @@ if tp.TYPE_CHECKING:
 #-------------------------------------------------------------------------------
 
 TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'IndexHierarchy')
-GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
+GetItemFunc = tp.TypeVar('GetItemFunc',
+        bound=tp.Callable[[GetItemKeyType], TContainer]
+        )
 
 
 class Interface(tp.Generic[TContainer]):
@@ -226,7 +229,7 @@ class InterfaceBatchQuartet(InterfaceSelectQuartet[TContainer]):
             container_items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
             constructor: tp.Type[ContainerOperand]
             ) -> None:
-        InterfaceSelectQuartet.__init__(self,
+        InterfaceSelectQuartet.__init__(self, #type: ignore
                 func_iloc=partial(BatchProcessor,
                         selector=BatchSelector.ILoc,
                         container_items=container_items,

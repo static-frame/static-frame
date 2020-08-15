@@ -518,12 +518,27 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    def from_group(cls,
+            groups: tp.Iterable['Frame'],
+            ):
+        '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
+        '''
+        # Frame.from_group_items(group_iter).loc[['b':], ['x', 'y']].sum()
+        # from_group_items(group_iter, 'loc', arg, 'sum')
+        groups = ((i, f) for i, f in enumerate(groups))
+        return InterfaceBatchQuartet(
+                container_items=groups,
+                constructor=cls,
+                )
+
+    @classmethod
     def from_group_items(cls,
             groups: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']]
             ):
+        '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
+        '''
         # Frame.from_group_items(group_iter).loc[['b':], ['x', 'y']].sum()
         # from_group_items(group_iter, 'loc', arg, 'sum')
-
         return InterfaceBatchQuartet(
                 container_items=groups,
                 constructor=cls,
@@ -545,7 +560,7 @@ class Frame(ContainerOperand):
             own_index: bool = False,
             own_columns: bool = False
             ) -> 'Frame':
-        '''Construct a Frame from an iterable of rows, where rows are defined as iterables, including tuples, lists, and arrays. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields.
+        '''Construct a :obj:`Frame` from an iterable of rows, where rows are defined as iterables, including tuples, lists, and arrays. If each row is a NamedTuple, and ``columns`` is not provided, column names will be derived from the NamedTuple fields.
 
         Supplying ``dtypes`` will significantly improve performance, as otherwise columnar array types must be derived by element-wise examination.
 
