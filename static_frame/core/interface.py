@@ -16,6 +16,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
+from static_frame.core.batch import Batch
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
@@ -700,6 +701,8 @@ class InterfaceSummary(Features):
             elif target is Bus:
                 f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,)) #type: ignore
+            elif target is Batch:
+                instance = Batch(())
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):

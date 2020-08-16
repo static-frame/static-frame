@@ -79,31 +79,6 @@ _RIGHT_OPERATOR_MAP = {
 
 
 #-------------------------------------------------------------------------------
-# NOTE: this was an approach to doing nan propagation when skipna=False; this approach could not use the out argument, which is used in TypeBlocks. Forcing type coercion to object occasionally is hard to reason about, and makes TypeBlock implementation difficult. Thus, we raise a TypeError.
-
-# def _ufunc_logical_withna(
-#         array: np.ndarray,
-#         isna: np.ndarray,
-#         ufunc: AnyCallable,
-#         axis: int,
-#         element_missing: tp.Any,
-#         out: tp.Optional[np.ndarray] = None
-#         ) -> np.ndarray:
-#     '''
-#     Perform a logical (and, or) ufunc on an array that has already been identified as having a NULL (as given in the `isna` array), propagating `element_missing` (NaN or NaT) on an axis if ndim > 1.
-#     '''
-#     if array.ndim == 1:
-#         return element_missing
-#     if out is not None:
-#         # cann use out if we need to do an astype conversion
-#         raise NotImplementedError()
-#     # do not need fill values, as will set to nan after eval
-#     v = array.astype(bool) # object, datetime64 arrays can be converted to bool
-#     v = ufunc(v, axis=axis).astype(object) # get the axis result
-#     v[np.any(isna, axis=axis)] = np.nan # propagate NaN
-#     return v
-
-#-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(
         array: np.ndarray,
         ufunc: AnyCallable,

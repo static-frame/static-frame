@@ -10373,53 +10373,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_from_group_a(self) -> None:
-
-        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
-
-        f2 = FrameGO.from_group(f1.iter_group('group'))['b'].sum()
-        self.assertEqual(f2.to_pairs(0),
-                (('b', ((0, 2), (1, 10))),)
-                )
-
-    def test_frame_from_group_items_a(self) -> None:
-
-        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
-
-        gi = f1.iter_group_items('group')
-        f2 = Frame.from_group_items(gi)[['a', 'b']].sum()
-        self.assertEqual(f2.to_pairs(0),
-                (('a', (('x', 1), ('z', 5))), ('b', (('x', 2), ('z', 10))))
-                )
-
-        gi = f1.iter_group_items('group')
-        f3 = -Frame.from_group_items(gi)[['a', 'b']]
-        self.assertEqual(f3.to_pairs(0),
-                (('a', ((0, -1), (1, -2), (2, -3))), ('b', ((0, -2), (1, -4), (2, -6)))))
-
-
-    def test_frame_from_group_items_b(self) -> None:
-
-        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
-
-        f2 = Frame.from_group_items(f1.iter_group_items('group')).loc[:, 'b'].sum()
-        self.assertEqual(f2.to_pairs(0),
-                (('b', (('x', 2), ('z', 10))),))
-
-    def test_frame_from_group_items_c(self) -> None:
-
-        dc = DisplayConfig.from_default(type_color=False)
-        f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
-
-        gi = f1.iter_group_items('group')
-        d1 = Frame.from_group_items(gi)[['a', 'b']].display(dc)
-
-        self.assertEqual(d1.to_rows(),
-            ['<Series: BatchProcessor>',
-            '<Index>',
-            'x                        (1, 2)',
-            'z                        (2, 2)',
-            '<<U1>                    <object>'])
 
 
 

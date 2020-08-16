@@ -74,7 +74,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             config: StoreConfigMapInitializer = None,
             name: NameType = None,
             ) -> 'Bus':
-        '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
+        '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
         # could take a StoreConfigMap
         series = Series.from_items(

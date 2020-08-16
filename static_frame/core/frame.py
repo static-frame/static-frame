@@ -62,7 +62,7 @@ from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterfaceBatchQuartet
+# from static_frame.core.node_selector import InterfaceBatchQuartet
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.series import RelabelInput
 from static_frame.core.series import Series
@@ -517,28 +517,28 @@ class Frame(ContainerOperand):
                 **kwargs
                 )
 
-    @classmethod
-    def from_group(cls,
-            groups: tp.Iterable['Frame'],
-            ):
-        '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
-        '''
-        groups = ((i, f) for i, f in enumerate(groups))
-        return InterfaceBatchQuartet(
-                container_items=groups,
-                constructor=cls,
-                )
+    # @classmethod
+    # def from_group(cls,
+    #         groups: tp.Iterable['Frame'],
+    #         ):
+    #     '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
+    #     '''
+    #     groups = ((i, f) for i, f in enumerate(groups))
+    #     return InterfaceBatchQuartet(
+    #             container_items=groups,
+    #             constructor=cls,
+    #             )
 
-    @classmethod
-    def from_group_items(cls,
-            groups: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']]
-            ):
-        '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
-        '''
-        return InterfaceBatchQuartet(
-                container_items=groups,
-                constructor=cls,
-                )
+    # @classmethod
+    # def from_group_items(cls,
+    #         groups: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']]
+    #         ):
+    #     '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
+    #     '''
+    #     return InterfaceBatchQuartet(
+    #             container_items=groups,
+    #             constructor=cls,
+    #             )
 
 
     @classmethod
