@@ -148,16 +148,28 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    # def test_batch_parallel_a(self) -> None:
-    #     f1 = Frame(np.arange(100000000).reshape(10000000, 10), name='a')
-    #     f2 = Frame(np.arange(100000000).reshape(10000000, 10), name='b')
-    #     f3 = Frame(np.arange(100000000).reshape(10000000, 10), name='c')
-    #     f4 = Frame(np.arange(100000000).reshape(10000000, 10), name='d')
+    def test_batch_apply_a(self) -> None:
 
-    #     b1 = Batch.from_frames((f1, f2, f3, f4))
-    #     b2 = Batch.from_frames((f1, f2, f3, f4), max_workers=8)
-    #     # b2 = Batch._apply_parallel(b1.items())
-    #     import ipdb; ipdb.set_trace()
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        b1 = Batch.from_frames((f1, f2, f3))
+        b2 = b1.apply(lambda x: x.via_str.replace('4', '_'))
+
+        self.assertEqual(
+                Frame.from_concat(b2.values(), index=IndexAutoFactory, fill_value='').to_pairs(0),
+                (('a', ((0, '1'), (1, '2'), (2, ''), (3, ''), (4, ''), (5, ''), (6, ''))), ('b', ((0, '3'), (1, '_'), (2, '_'), (3, '5'), (4, '6'), (5, '50'), (6, '60'))), ('c', ((0, ''), (1, ''), (2, '1'), (3, '2'), (4, '3'), (5, ''), (6, ''))), ('d', ((0, ''), (1, ''), (2, ''), (3, ''), (4, ''), (5, '10'), (6, '20')))))
+
 
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import NameType
 from static_frame.core.util import IndexInitializer
 from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.util import AnyCallable
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -37,15 +38,12 @@ def call_attr(bundle) -> FrameOrSeries:
     if not isinstance(post, (Frame, Series)):
         # promote to a Series to permit concatenation
         return Series.from_element(post, index=(frame.name,))
-    else:
-        return post
-
-
+    return post
 
 
 class Batch(ContainerOperand):
     '''
-    A lazily evaluated container of Frames that broadcast operations on component Frames.
+    A lazily evaluated container of Frames that broadcasts operations on component Frames.
     '''
 
     __slots__ = (
@@ -107,7 +105,6 @@ class Batch(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-
     @property
     def shapes(self) -> Series:
         '''A :obj:`Series` describing the shape of each iterated :obj:`Frame`.
@@ -138,7 +135,6 @@ class Batch(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-
     def _apply_attr(self,
             *args,
             attr: str,
@@ -150,10 +146,8 @@ class Batch(ContainerOperand):
         if self._max_workers is None:
             def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
                 for label, frame in self._items:
-                    post = call_attr((frame, attr, args, kwargs))
-                    yield label, post
+                    yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
-
 
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
         print('using', pool_executor)
@@ -167,6 +161,31 @@ class Batch(ContainerOperand):
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
                         executor.map(call_attr, arg_gen(), chunksize=self._chunksize)
+                        )
+
+        return self._derive(gen)
+
+
+    def apply(self, func: AnyCallable) -> 'Batch':
+        if self._max_workers is None:
+            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+                for label, frame in self._items:
+                    yield label, func(frame)
+            return self._derive(gen)
+
+        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+        print('using', pool_executor)
+
+        labels = []
+        def arg_gen() -> tp.Iterator:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame
+
+        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+            with pool_executor(max_workers=self._max_workers) as executor:
+                yield from zip(labels,
+                        executor.map(func, arg_gen(), chunksize=self._chunksize)
                         )
 
         return self._derive(gen)
@@ -217,7 +236,6 @@ class Batch(ContainerOperand):
     #---------------------------------------------------------------------------
     # axis and shape ufunc methods
 
-
     def _ufunc_unary_operator(self,
             operator: UFunc
             ) -> 'Batch':
@@ -235,7 +253,6 @@ class Batch(ContainerOperand):
                 operator=operator,
                 other=other,
                 )
-
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -278,9 +295,7 @@ class Batch(ContainerOperand):
                 size_one_unity=size_one_unity,
                 )
 
-
     #---------------------------------------------------------------------------
-
     def keys(self) -> tp.Iterator[tp.Hashable]:
         for k, _ in self._items:
             yield k
