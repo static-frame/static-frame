@@ -1,35 +1,34 @@
-from enum import Enum
 import typing as tp
-
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import UFunc
+
 from static_frame.core.container import ContainerOperand
-from static_frame.core.display import DisplayConfig
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
+from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayHeader
-
-from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
-from static_frame.core.series import Series
-from static_frame.core.util import GetItemKeyTypeCompound
-from static_frame.core.util import Bloc2DKeyType
-from static_frame.core.util import NameType
-from static_frame.core.util import IndexInitializer
 from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.series import Series
 from static_frame.core.util import AnyCallable
+from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import GetItemKeyType
+from static_frame.core.util import GetItemKeyTypeCompound
+from static_frame.core.util import IndexInitializer
+from static_frame.core.util import NameType
+from static_frame.core.util import UFunc
 
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
+GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
-def call_attr(bundle) -> FrameOrSeries:
+def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSeries:
     # process pool requires a single argument
     frame, attr, args, kwargs = bundle
     func = getattr(frame, attr)
@@ -62,7 +61,7 @@ class Batch(ContainerOperand):
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
-            ):
+            ) -> 'Batch':
         '''Return a :obj:`Batch` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
         return cls(((f.name, f) for f in frames),
@@ -92,9 +91,9 @@ class Batch(ContainerOperand):
     def _realize(self) -> None:
         # realize generator
         if not hasattr(self._items, '__len__'):
-            self._items = tuple(self._items)
+            self._items = tuple(self._items) #type: ignore
 
-    def _derive(self, gen: IteratorFrameItems) -> 'Batch':
+    def _derive(self, gen: GeneratorFrameItems) -> 'Batch':
         '''Utility for creating derived Batch
         '''
         return self.__class__(gen(),
@@ -136,9 +135,9 @@ class Batch(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def _apply_attr(self,
-            *args,
+            *args: tp.Any,
             attr: str,
-            **kwargs,
+            **kwargs: tp.Any,
             ) -> 'Batch':
         '''
         Apply a method on a Frame given as an attr string.
@@ -152,18 +151,19 @@ class Batch(ContainerOperand):
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
         print('using', pool_executor)
         labels = []
-        def arg_gen() -> tp.Iterator:
+
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, attr, args, kwargs
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+        def gen_pool() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
                         executor.map(call_attr, arg_gen(), chunksize=self._chunksize)
                         )
 
-        return self._derive(gen)
+        return self._derive(gen_pool)
 
 
     def apply(self, func: AnyCallable) -> 'Batch':
@@ -177,18 +177,19 @@ class Batch(ContainerOperand):
         print('using', pool_executor)
 
         labels = []
-        def arg_gen() -> tp.Iterator:
+
+        def arg_gen() -> tp.Iterator[FrameOrSeries]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+        def gen_pool() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
                         executor.map(func, arg_gen(), chunksize=self._chunksize)
                         )
 
-        return self._derive(gen)
+        return self._derive(gen_pool)
 
 
     #---------------------------------------------------------------------------
@@ -230,7 +231,7 @@ class Batch(ContainerOperand):
         return InterfaceGetItem(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItem:
+    def bloc(self) -> InterfaceGetItem['Batch']:
         return InterfaceGetItem(self._extract_bloc)
 
     #---------------------------------------------------------------------------
@@ -300,17 +301,17 @@ class Batch(ContainerOperand):
         for k, _ in self._items:
             yield k
 
-    def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
         '''
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         '''
         yield from self.keys()
 
-    def values(self) -> tp.Iterator[Frame]:
+    def values(self) -> tp.Iterator[FrameOrSeries]:
         for _, v in self._items:
             yield v
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Frame]]:
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
         '''
         Iterator of labels, :obj:`Frame`.
         '''
@@ -322,9 +323,9 @@ class Batch(ContainerOperand):
     def to_frame(self, *,
             axis: int = 0,
             union: bool = True,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            name: tp.Hashable = None,
+            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            columns: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
+            name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
         ) -> Frame:
@@ -342,7 +343,7 @@ class Batch(ContainerOperand):
         if axis == 1 and columns is None:
             columns = labels
 
-        return Frame.from_concat(gen(),
+        return Frame.from_concat(gen(), #type: ignore
                 axis=axis,
                 union=union,
                 index=index,

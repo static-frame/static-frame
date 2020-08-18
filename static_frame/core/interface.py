@@ -702,7 +702,7 @@ class InterfaceSummary(Features):
                 f = Frame.from_elements((0,), name='frame')
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
-                instance = Batch(())
+                instance = Batch(iter(()))
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):

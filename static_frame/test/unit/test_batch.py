@@ -35,7 +35,7 @@ class TestUnit(TestCase):
         b2 = b1 * 3
 
         post = tuple(b2.items())
-        self.assertEqual(post[0][1].to_pairs(0),
+        self.assertEqual(post[0][1].to_pairs(0), #type: ignore
                 (('a', (('r', 3), ('s', 147))), ('b', (('r', 6), ('s', 12))), ('group', (('r', 'xxx'), ('s', 'xxx')))),
                 )
 

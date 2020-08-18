@@ -1,5 +1,4 @@
 import typing as tp
-from functools import partial
 
 import numpy as np
 
@@ -9,12 +8,8 @@ from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 
-# from static_frame.core.batch import BatchSelector
-# from static_frame.core.batch import BatchProcessor
-from static_frame.core.container import ContainerOperand
-
-
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.bus import Bus  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  #pylint: disable = W0611 #pragma: no cover
@@ -25,7 +20,7 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 
-TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'IndexHierarchy')
+TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'Batch', 'IndexHierarchy')
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
         )
