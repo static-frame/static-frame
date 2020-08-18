@@ -446,7 +446,7 @@ class Series(ContainerOperand):
 
     @property
     @doc_inject()
-    def name(self) -> tp.Hashable:
+    def name(self) -> NameType:
         '''{}'''
         return self._name
 

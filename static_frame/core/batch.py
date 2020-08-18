@@ -6,6 +6,7 @@ import numpy as np
 
 
 from static_frame.core.container import ContainerOperand
+from static_frame.core.bus import Bus
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
@@ -22,6 +23,7 @@ from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
+from static_frame.core.util import DTYPE_OBJECT
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -85,7 +87,6 @@ class Batch(ContainerOperand):
         self._chunksize = chunksize
         self._use_threads = use_threads
 
-
     #---------------------------------------------------------------------------
 
     def _realize(self) -> None:
@@ -93,15 +94,35 @@ class Batch(ContainerOperand):
         if not hasattr(self._items, '__len__'):
             self._items = tuple(self._items) #type: ignore
 
-    def _derive(self, gen: GeneratorFrameItems) -> 'Batch':
+    def _derive(self,
+            gen: GeneratorFrameItems,
+            name: NameType = None,
+            ) -> 'Batch':
         '''Utility for creating derived Batch
         '''
         return self.__class__(gen(),
-                name=self._name,
+                name=name if name is not None else self._name,
                 max_workers=self._max_workers,
                 chunksize=self._chunksize,
                 use_threads=self._use_threads,
                 )
+
+    #---------------------------------------------------------------------------
+    # name interface
+
+    @property #type: ignore
+    @doc_inject()
+    def name(self) -> NameType:
+        '''{}'''
+        return self._name
+
+    def rename(self, name: NameType) -> 'Batch':
+        '''
+        Return a new Batch with an updated name attribute.
+        '''
+        def gen() -> IteratorFrameItems:
+            yield from self._items
+        return self._derive(gen, name=name)
 
     #---------------------------------------------------------------------------
     @property
@@ -114,7 +135,7 @@ class Batch(ContainerOperand):
         self._realize()
 
         items = ((label, f.shape) for label, f in self._items)
-        return Series.from_items(items, name='shape')
+        return Series.from_items(items, name='shape', dtype=DTYPE_OBJECT)
 
 
     def display(self,
@@ -143,7 +164,7 @@ class Batch(ContainerOperand):
         Apply a method on a Frame given as an attr string.
         '''
         if self._max_workers is None:
-            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+            def gen() -> IteratorFrameItems:
                 for label, frame in self._items:
                     yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
@@ -157,7 +178,7 @@ class Batch(ContainerOperand):
                 labels.append(label)
                 yield frame, attr, args, kwargs
 
-        def gen_pool() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+        def gen_pool() -> IteratorFrameItems:
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
                         executor.map(call_attr, arg_gen(), chunksize=self._chunksize)
@@ -168,7 +189,7 @@ class Batch(ContainerOperand):
 
     def apply(self, func: AnyCallable) -> 'Batch':
         if self._max_workers is None:
-            def gen() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+            def gen() -> IteratorFrameItems:
                 for label, frame in self._items:
                     yield label, func(frame)
             return self._derive(gen)
@@ -183,7 +204,7 @@ class Batch(ContainerOperand):
                 labels.append(label)
                 yield frame
 
-        def gen_pool() -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+        def gen_pool() -> IteratorFrameItems:
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
                         executor.map(func, arg_gen(), chunksize=self._chunksize)
@@ -311,7 +332,7 @@ class Batch(ContainerOperand):
         for _, v in self._items:
             yield v
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]:
+    def items(self) -> IteratorFrameItems:
         '''
         Iterator of labels, :obj:`Frame`.
         '''
@@ -352,4 +373,11 @@ class Batch(ContainerOperand):
                 fill_value=fill_value,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+    def to_bus(self) -> 'Bus':
+        '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
+        '''
+        return Bus(Series.from_items(self.items(), name=self._name, dtype=DTYPE_OBJECT))
+
 
