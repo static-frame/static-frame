@@ -28,7 +28,7 @@ def timer(f):
 
 def func_b(frame: Frame) -> Frame:
     for row in frame.iter_series():
-        if row[10] > 10000:
+        if row[10] > 1000:
             print(row)
     return frame
 
