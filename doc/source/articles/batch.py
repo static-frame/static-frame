@@ -28,8 +28,8 @@ def timer(f): # type: ignore
 
 def func_b(frame: Frame) -> Frame:
     for row in frame.iter_series():
-        if row[10] > 1000: # type: ignore
-            print(row)
+        pass
+        # if row[10] > 1000: # type: ignore
     return frame
 
 
@@ -58,8 +58,8 @@ def main() -> None:
         batch2 = (batch1 * 100).sum()
         _ = tuple(batch2.items())
 
-    # post_a1 = a1()
-    # post_a2 = a2()
+    a1()
+    a2()
 
     @timer #type: ignore
     def b1() -> None:
