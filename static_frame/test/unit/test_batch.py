@@ -188,6 +188,8 @@ class TestUnit(TestCase):
 
         b2 = b1.rename('bar')
         self.assertEqual(b2.name, 'bar')
+        self.assertEqual(tuple(b2.keys()), ('f1', 'f2'))
+
 
     #---------------------------------------------------------------------------
     def test_batch_to_bus_a(self) -> None:
@@ -207,6 +209,22 @@ class TestUnit(TestCase):
         self.assertEqual(Frame.from_concat_items(bus1.items(), fill_value=0).to_pairs(0),
                 (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3))))
                 )
+
+    #---------------------------------------------------------------------------
+    def test_batch_iloc_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Batch.from_frames((f1, f2))
+        b2 = b1.iloc[1, 1]
+        post = list(s.values.tolist() for s in b2.values())
+        self.assertEqual(post, [[4], [5]])
 
 
 
