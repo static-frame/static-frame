@@ -130,15 +130,21 @@ class StoreXLSX(Store):
             ws: 'Worksheet',
             *,
             include_columns: bool,
+            include_columns_name: bool = False,
             include_index: bool,
+            include_index_name: bool = True,
             format_columns: 'Format',
             format_index: 'Format',
             merge_hierarchical_labels: bool,
             store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
+        if sum((include_columns_name, include_index_name)) > 1:
+            raise RuntimeError('cannot set both `include_columns_name` and `include_index_name`')
+
         index_depth = frame._index.depth
         index_depth_effective = 0 if not include_index else index_depth
+        index_names = frame._index.names # normalized presentation
 
         columns_iter = cls.get_column_iterator(frame=frame,
                 include_index=include_index)
@@ -160,13 +166,17 @@ class StoreXLSX(Store):
                 columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
 
-        # TODO: need to determine if .name attr on index or columns should be populated in upper left corner "dead" zone.
-
         # write by column
         for col, values in enumerate(columns_iter):
             if include_columns:
                 # The col integers will include index depth, so if including index, must wait until after index depth to write column field names; if include_index is False, can begin reading from columns_values
-                if col >= index_depth_effective:
+                if col < index_depth_effective:
+                    if include_index_name:
+                        writer_columns(0, # always populate in top-most row
+                                col,
+                                index_names[col],
+                                format_columns)
+                else:
                     if columns_depth == 1:
                         writer_columns(0,
                                 col,
@@ -180,6 +190,7 @@ class StoreXLSX(Store):
                                     columns_values[col - index_depth_effective, i],
                                     format_columns
                                     )
+
             if store_filter:
                 # thi might change the dtype
                 values = store_filter.from_type_filter_array(values)
@@ -215,11 +226,6 @@ class StoreXLSX(Store):
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
             config: StoreConfigMapInitializer = None,
-            # include_index: bool = True,
-            # include_columns: bool = True,
-            # format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            # format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            # merge_hierarchical_labels: bool = True,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
         '''
@@ -248,7 +254,9 @@ class StoreXLSX(Store):
                     format_columns=format_columns,
                     format_index=format_index,
                     include_index=c.include_index,
+                    include_index_name=c.include_index_name,
                     include_columns=c.include_columns,
+                    include_columns_name=c.include_columns_name,
                     merge_hierarchical_labels=c.merge_hierarchical_labels,
                     store_filter=store_filter
                     )

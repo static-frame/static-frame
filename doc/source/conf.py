@@ -99,6 +99,7 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
             sf.Series,
             sf.Frame,
             sf.FrameGO,
+            sf.Batch,
             sf.Bus,
             sf.Index,
             sf.IndexGO,

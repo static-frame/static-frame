@@ -318,18 +318,24 @@ class Batch(ContainerOperand):
 
     #---------------------------------------------------------------------------
     def keys(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Iterator of :obj:`Frame` labels/
+        '''
         for k, _ in self._items:
             yield k
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Iterator of column labels, same as :py:meth:`Frame.keys`.
+        Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
         '''
         yield from self.keys()
 
+    @property
     def values(self) -> tp.Iterator[FrameOrSeries]:
-        for _, v in self._items:
-            yield v
+        '''
+        Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
+        '''
+        return (v for _, v in self._items)
 
     def items(self) -> IteratorFrameItems:
         '''
@@ -349,7 +355,9 @@ class Batch(ContainerOperand):
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
         ) -> Frame:
-
+        '''
+        Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to single dimension along the provided `axis`.
+        '''
         labels = []
         def gen() -> tp.Iterator[FrameOrSeries]:
             for label, frame in self._items:

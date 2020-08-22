@@ -104,7 +104,7 @@ class TestUnit(TestCase):
                 )
 
         gi = f1.iter_group_items('group')
-        f3 = Frame.from_concat((-Batch(gi)[['a', 'b']]).values())
+        f3 = Frame.from_concat((-Batch(gi)[['a', 'b']]).values)
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((0, -1), (1, -2), (2, -3))), ('b', ((0, -2), (1, -4), (2, -6)))))
 
@@ -167,7 +167,7 @@ class TestUnit(TestCase):
         b2 = b1.apply(lambda x: x.via_str.replace('4', '_'))
 
         self.assertEqual(
-                Frame.from_concat(b2.values(), index=IndexAutoFactory, fill_value='').to_pairs(0),
+                Frame.from_concat(b2.values, index=IndexAutoFactory, fill_value='').to_pairs(0),
                 (('a', ((0, '1'), (1, '2'), (2, ''), (3, ''), (4, ''), (5, ''), (6, ''))), ('b', ((0, '3'), (1, '_'), (2, '_'), (3, '5'), (4, '6'), (5, '50'), (6, '60'))), ('c', ((0, ''), (1, ''), (2, '1'), (3, '2'), (4, '3'), (5, ''), (6, ''))), ('d', ((0, ''), (1, ''), (2, ''), (3, ''), (4, ''), (5, '10'), (6, '20')))))
 
 
@@ -281,7 +281,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.iloc[1, 1]
-        post = list(s.values.tolist() for s in b2.values())
+        post = list(s.values.tolist() for s in b2.values)
         self.assertEqual(post, [[4], [5]])
 
 
@@ -297,7 +297,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2), max_workers=8, use_threads=True)
         b2 = b1.iloc[1, 1]
-        post = list(s.values.tolist() for s in b2.values())
+        post = list(s.values.tolist() for s in b2.values)
         self.assertEqual(post, [[4], [5]])
 
 
@@ -314,7 +314,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         b2 = b1.bloc[f2 >= 2]
-        post = list(s.values.tolist() for s in b2.values())
+        post = list(s.values.tolist() for s in b2.values)
         self.assertEqual(post, [[30, 40, 50], [4, 2, 5, 3, 6]])
 
 

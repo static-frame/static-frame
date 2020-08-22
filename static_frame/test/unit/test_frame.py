@@ -6167,8 +6167,48 @@ class TestUnit(TestCase):
             f2 = st.read(label=None, config=config)
             self.assertEqualFrames(f1, f2)
 
+    def test_frame_to_xlsx_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=Index(('w', 'x', 'y', 'z'), name='foo'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp)
+            self.assertEqual(f2.columns.values.tolist(),
+                    ['foo', 'p', 'q', 'r', 's', 't'])
 
 
+    def test_frame_to_xlsx_c(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index= IndexHierarchy.from_product(('a', 'b'), (1, 2), name=('foo', 'bar')))
+
+        with temp_file('.xlsx') as fp:
+
+            with self.assertRaises(RuntimeError):
+                _ = f1.to_xlsx(fp, include_index_name=True, include_columns_name=True)
+
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp)
+            self.assertEqual(f2.columns.values.tolist(),
+                    ['foo', 'bar', 'p', 'q', 'r', 's', 't'])
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_xlsx_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),

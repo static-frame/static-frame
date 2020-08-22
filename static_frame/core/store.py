@@ -54,7 +54,9 @@ class StoreConfig:
             'dtypes',
             'consolidate_blocks',
             'include_index',
+            'include_index_name',
             'include_columns',
+            'include_columns_name',
             'format_index',
             'format_columns',
             'merge_hierarchical_labels',
@@ -68,7 +70,9 @@ class StoreConfig:
             consolidate_blocks: bool = False,
             # exporters
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             # not used by all exporters
             format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
             format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
@@ -90,7 +94,9 @@ class StoreConfig:
 
         # exporter
         self.include_index = include_index
+        self.include_index_name = include_index_name
         self.include_columns = include_columns
+        self.include_columns_name = include_columns_name
 
         self.format_index = format_index
         self.format_columns = format_columns

@@ -5720,7 +5720,9 @@ class Frame(ContainerOperand):
             *,
             label: tp.Optional[str] = None,
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             merge_hierarchical_labels: bool = True
             ) -> None:
         '''
@@ -5731,7 +5733,9 @@ class Frame(ContainerOperand):
 
         config = StoreConfig(
                 include_index=include_index,
+                include_index_name=include_index_name,
                 include_columns=include_columns,
+                include_columns_name=include_columns_name,
                 merge_hierarchical_labels=merge_hierarchical_labels
                 )
         st = StoreXLSX(fp)
