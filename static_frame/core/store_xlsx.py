@@ -150,6 +150,7 @@ class StoreXLSX(Store):
                 include_index=include_index)
 
         columns_depth = frame._columns.depth
+        columns_names = frame._columns.names
         columns_depth_effective = 0 if not include_columns else columns_depth
 
         columns_total = frame.shape[1] + index_depth_effective
@@ -176,7 +177,14 @@ class StoreXLSX(Store):
                                 col,
                                 index_names[col],
                                 format_columns)
-                else:
+                    if include_columns_name and col == 0:
+                        # TODO: write columns names in first column
+                        for i in range(columns_depth):
+                            writer_columns(i,
+                                    col, # always 0, populate in left-most colum
+                                    columns_names[i],
+                                    format_columns)
+                else: # col >= index_depth_effective:
                     if columns_depth == 1:
                         writer_columns(0,
                                 col,
@@ -188,8 +196,7 @@ class StoreXLSX(Store):
                             writer_columns(i,
                                     col,
                                     columns_values[col - index_depth_effective, i],
-                                    format_columns
-                                    )
+                                    format_columns)
 
             if store_filter:
                 # thi might change the dtype

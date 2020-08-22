@@ -8,9 +8,13 @@ What is New in Static Frame
 
 Revised default aggregation function to ``Frame.pivot``.
 
+Fixed issue in writing SQLite stores from ``Frame`` labelled with strings containing hyphens.
+
 Added `index_name_depth_level` and `columns_name_depth_level` to `Frame.from_delimted` and related methods.
 
-Fixed issue in writing SQLite stores from ``Frame`` labelled with strings containing hyphens.
+Added `include_index_name`, `include_columns_name` to ``Frame.to_delimited``.
+
+Added `include_index_name`, `include_columns_name` to ``StoreConfig`` and ``Frame.to_xlsx`` interfaces.
 
 
 0.6.27

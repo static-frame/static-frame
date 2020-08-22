@@ -6207,6 +6207,29 @@ class TestUnit(TestCase):
                     ['foo', 'bar', 'p', 'q', 'r', 's', 't'])
 
 
+    def test_frame_to_xlsx_d(self) -> None:
+        records = (
+                (2, 2, 'a', False),
+                (30, 34, 'b', True),
+                (2, 95, 'c', False),
+                (30, 73, 'd', True),
+                )
+        f1 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product(('a', 'b'), (1, 2), name=('foo', 'bar')),
+                index=('p', 'q', 'r', 's'))
+
+        with temp_file('.xlsx') as fp:
+
+            f1.to_xlsx(fp, include_index_name=False, include_columns_name=True)
+            f2 = Frame.from_xlsx(fp, columns_depth=2)
+
+            # loads labels over index in as first column header
+            self.assertEqual(f2.to_pairs(0),
+                    ((('foo', 'bar'), ((0, 'p'), (1, 'q'), (2, 'r'), (3, 's'))), (('a', 1), ((0, 2), (1, 30), (2, 2), (3, 30))), (('a', 2), ((0, 2), (1, 34), (2, 95), (3, 73))), (('b', 1), ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), (('b', 2), ((0, False), (1, True), (2, False), (3, True))))
+                    )
+
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_xlsx_a(self) -> None:
