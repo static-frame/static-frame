@@ -171,6 +171,28 @@ class TestUnit(TestCase):
                 (('a', ((0, '1'), (1, '2'), (2, ''), (3, ''), (4, ''), (5, ''), (6, ''))), ('b', ((0, '3'), (1, '_'), (2, '_'), (3, '5'), (4, '6'), (5, '50'), (6, '60'))), ('c', ((0, ''), (1, ''), (2, '1'), (3, '2'), (4, '3'), (5, ''), (6, ''))), ('d', ((0, ''), (1, ''), (2, ''), (3, ''), (4, ''), (5, '10'), (6, '20')))))
 
 
+    def test_batch_apply_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8)
+        b2 = b1.apply(lambda x: x.shape)
+        self.assertEqual(dict(b2.items()),
+                {'f1': (2, 2), 'f2': (3, 2), 'f3': (2, 2)}
+)
+
+
     #---------------------------------------------------------------------------
     def test_batch_name_a(self) -> None:
 
@@ -189,6 +211,42 @@ class TestUnit(TestCase):
         b2 = b1.rename('bar')
         self.assertEqual(b2.name, 'bar')
         self.assertEqual(tuple(b2.keys()), ('f1', 'f2'))
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_ufunc_shape_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Batch.from_frames((f1, f2), name='foo').cumsum()
+
+        f1 = Frame.from_concat_items(b1.items(), fill_value=0)
+
+        self.assertEqual(f1.to_pairs(0),
+                (('a', ((('f1', 'x'), 1), (('f1', 'y'), 3), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 7), (('f2', 'x'), 4), (('f2', 'y'), 9), (('f2', 'z'), 15))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 3), (('f2', 'z'), 6))))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_batch_iter_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Batch.from_frames((f1, f2), name='foo').cumsum()
+        self.assertEqual(list(b1), ['f1', 'f2'])
 
 
     #---------------------------------------------------------------------------
@@ -225,6 +283,39 @@ class TestUnit(TestCase):
         b2 = b1.iloc[1, 1]
         post = list(s.values.tolist() for s in b2.values())
         self.assertEqual(post, [[4], [5]])
+
+
+    def test_batch_iloc_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Batch.from_frames((f1, f2), max_workers=8, use_threads=True)
+        b2 = b1.iloc[1, 1]
+        post = list(s.values.tolist() for s in b2.values())
+        self.assertEqual(post, [[4], [5]])
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_bloc_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(10,20,0), b=(30,40,50)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Batch.from_frames((f1, f2))
+        b2 = b1.bloc[f2 >= 2]
+        post = list(s.values.tolist() for s in b2.values())
+        self.assertEqual(post, [[30, 40, 50], [4, 2, 5, 3, 6]])
 
 
 

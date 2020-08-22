@@ -155,6 +155,8 @@ class Batch(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
+    # core function application routines
+
     def _apply_attr(self,
             *args: tp.Any,
             attr: str,
@@ -170,9 +172,8 @@ class Batch(ContainerOperand):
             return self._derive(gen)
 
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-        print('using', pool_executor)
-        labels = []
 
+        labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
             for label, frame in self._items:
                 labels.append(label)
@@ -195,10 +196,8 @@ class Batch(ContainerOperand):
             return self._derive(gen)
 
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-        print('using', pool_executor)
 
         labels = []
-
         def arg_gen() -> tp.Iterator[FrameOrSeries]:
             for label, frame in self._items:
                 labels.append(label)

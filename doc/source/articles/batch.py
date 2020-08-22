@@ -54,9 +54,9 @@ def main() -> None:
 
     @timer #type: ignore
     def a2() -> None:
-        batch1 = Batch.from_frames((f1, f2, f3, f4, f5, f6, f7, f8), max_workers=8, use_threads=True, chunksize=2)
+        batch1 = Batch.from_frames((f1, f2, f3, f4, f5, f6, f7, f8), max_workers=8, use_threads=True)
         batch2 = (batch1 * 100).sum()
-        _ = tuple(batch2.items())
+        post = dict(batch2.items())
 
     a1()
     a2()
@@ -73,8 +73,8 @@ def main() -> None:
         batch2 = batch1.apply(func_b)
         _ = tuple(batch2.items())
 
-    b1()
-    b2()
+    # b1()
+    # b2()
 
 
 
