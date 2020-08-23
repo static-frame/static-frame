@@ -1376,7 +1376,7 @@ class Series(ContainerOperand):
 
     def _drop_iloc(self, key: GetItemKeyType) -> 'Series':
         if isinstance(key, np.ndarray) and key.dtype == bool:
-            # use Boolean area to select indices from Index positions, as np.delete does not work with arrays
+            # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
         else:
             values = np.delete(self.values, key)
@@ -1557,7 +1557,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> Index:
+    def keys(self) -> IndexBase:
         '''
         Iterator of index labels.
 
@@ -1689,8 +1689,8 @@ class Series(ContainerOperand):
 
     @doc_inject(class_name='Series')
     def clip(self, *,
-            lower: tp.Union[float, 'Series'] = None,
-            upper: tp.Union[float, 'Series'] = None,
+            lower: tp.Optional[tp.Union[float, 'Series']] = None,
+            upper: tp.Optional[tp.Union[float, 'Series']] = None,
             ) -> 'Series':
         '''{}
 
@@ -1891,11 +1891,11 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        return self.iloc[:count]
+        return self.iloc[:count] #type: ignore
 
     @doc_inject(selector='tail', class_name='Series')
     def tail(self, count: int = 5) -> 'Series':
-        '''{doc}
+        '''{doc}s
 
         Args:
             {count}
@@ -1903,7 +1903,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        return self.iloc[-count:]
+        return self.iloc[-count:] #type: ignore
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
@@ -1937,7 +1937,7 @@ class Series(ContainerOperand):
         Returns:
             int
         '''
-        return argmin_1d(self.values, skipna=skipna)
+        return argmin_1d(self.values, skipna=skipna) #type: ignore
 
     @doc_inject(selector='argminmax')
     def loc_max(self, *,
@@ -1970,7 +1970,7 @@ class Series(ContainerOperand):
         Returns:
             int
         '''
-        return argmax_1d(self.values, skipna=skipna)
+        return argmax_1d(self.values, skipna=skipna) #type: ignore
 
     #---------------------------------------------------------------------------
     def _insert(self,
@@ -1999,7 +1999,7 @@ class Series(ContainerOperand):
 
         index = self._index.__class__.from_labels(chain(
                 labels_prior[:key],
-                container._index.__iter__(),
+                container._index.__iter__(), #type: ignore
                 labels_prior[key:],
                 ))
 
@@ -2103,7 +2103,7 @@ class Series(ContainerOperand):
 
         # NOTE: will only be False, or an array
         if eq is False:
-            return eq
+            return eq #type: ignore
 
         if skipna:
             isna_both = (isna_array(self.values, include_none=False) &
@@ -2147,6 +2147,8 @@ class Series(ContainerOperand):
         Common Frame construction utilities.
         '''
         from static_frame import TypeBlocks
+        columns: tp.Optional[IndexInitializer]
+        index: tp.Optional[IndexInitializer]
 
         if axis == 1:
             # present as a column
@@ -2229,7 +2231,7 @@ class Series(ContainerOperand):
             fp: tp.Optional[PathSpecifierOrFileLike] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
-            ) -> str:
+            ) -> tp.Optional[str]:
         '''
         {}
         '''

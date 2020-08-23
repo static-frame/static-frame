@@ -824,8 +824,9 @@ class Index(IndexBase):
 
     @property
     def positions(self) -> np.ndarray:
-        '''Return the immutable positions array. This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
+        '''Return the immutable positions array.
         '''
+        # This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
         if self._recache:
             self._update_array_cache()
         return self._positions
@@ -974,7 +975,7 @@ class Index(IndexBase):
     def _extract_loc(self: I,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:
-        return self._extract_iloc(self.loc_to_iloc(key)) #type: ignore
+        return self._extract_iloc(self.loc_to_iloc(key))
 
     def __getitem__(self: I,
             key: GetItemKeyType

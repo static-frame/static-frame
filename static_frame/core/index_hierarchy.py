@@ -25,6 +25,7 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
@@ -856,6 +857,12 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
         return self._blocks.values
+
+    @property
+    def positions(self) -> np.ndarray:
+        '''Return the immutable positions array.
+        '''
+        return PositionsAllocator.get(self.__len__())
 
     @property
     def depth(self) -> int: #type: ignore

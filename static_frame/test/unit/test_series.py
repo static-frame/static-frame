@@ -3540,8 +3540,22 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             s1.insert_after(slice('a', 'c'), s2)
 
+    #---------------------------------------------------------------------------
 
+    def test_series_drop_a(self) -> None:
+        s1 = Series(['a', 'b', 'c'],
+            index=IndexHierarchy.from_labels([('X', 1), ('X', 2), ('Y', 1)]))
 
+        s2 = s1.drop[np.array((True, False, True))]
+        self.assertEqual(s2.to_pairs(),
+                ((('X', 2), 'b'),))
+
+    def test_series_drop_b(self) -> None:
+        s1 = Series(['a', 'b', 'c'])
+
+        s2 = s1.drop[np.array((True, False, True))]
+        self.assertEqual(s2.to_pairs(),
+                ((1, 'b'),))
 
 
 if __name__ == '__main__':

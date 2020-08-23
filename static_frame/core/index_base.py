@@ -84,11 +84,6 @@ class IndexBase(ContainerOperand):
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
-    loc_to_iloc: tp.Callable[
-            [GetItemKeyType, tp.Optional[int], KeyTransformType, bool],
-            GetItemKeyType
-            ]
-
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy
 
@@ -155,10 +150,15 @@ class IndexBase(ContainerOperand):
         # trivial init for mypy; not called by derived class
         pass
 
+    #---------------------------------------------------------------------------
+
     def __len__(self) -> int:
         raise NotImplementedError() #pragma: no cover
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
+    def __contains__(self, value: tp.Hashable) -> bool:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -197,8 +197,30 @@ class IndexBase(ContainerOperand):
     def relabel(self: I, mapper: CallableOrMapping) -> I:
         raise NotImplementedError() #pragma: no cover
 
+    def _drop_iloc(self: I, key: GetItemKeyType) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def roll(self: I, shift: int) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+        raise NotImplementedError() #pragma: no cover
+
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
+            ) -> GetItemKeyType:
+        raise NotImplementedError()
+
+    def __getitem__(self: I,
+            key: GetItemKeyType
+            ) -> tp.Union[I, tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
 
     #---------------------------------------------------------------------------
     # name interface
@@ -369,9 +391,6 @@ class IndexBase(ContainerOperand):
             webbrowser.open_new_tab(fp) #pragma: no cover
 
         return fp
-
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
-        raise NotImplementedError() #pragma: no cover
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover

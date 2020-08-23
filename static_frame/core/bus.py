@@ -268,7 +268,7 @@ class Bus(ContainerBase): # not a ContainerOperand
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
-        iloc_key = self._series._index.loc_to_iloc(key) #type: ignore
+        iloc_key = self._series._index.loc_to_iloc(key)
 
         # NOTE: if we update before slicing, we change the local and the object handed back
         self._update_series_cache_iloc(key=iloc_key)
