@@ -3,7 +3,7 @@ import typing as tp
 
 import numpy as np
 
-
+from static_frame.core.container_util import apex_to_name
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
@@ -20,21 +20,14 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-# from static_frame.core.util import DT64_DAY
-# from static_frame.core.util import DT64_S
-# from static_frame.core.util import DT64_H
-# from static_frame.core.util import DT64_M
-
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_YEAR
-
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
 
 if tp.TYPE_CHECKING:
@@ -298,7 +291,9 @@ class StoreXLSX(Store):
             config = StoreConfig() # get default
 
         index_depth = config.index_depth
+        index_name_depth_level = config.index_name_depth_level
         columns_depth = config.columns_depth
+        columns_name_depth_level = config.columns_name_depth_level
 
         wb = self._load_workbook(self._fp)
 
@@ -321,6 +316,7 @@ class StoreXLSX(Store):
         columns_values: tp.List[tp.Any] = []
 
         data = [] # pre-size with None?
+        apex_rows = []
 
         for row_count, row in enumerate(ws.iter_rows(max_row=max_row)):
             if store_filter is None:
@@ -329,6 +325,7 @@ class StoreXLSX(Store):
                 row = tuple(store_filter.to_type_filter_element(c.value) for c in row)
 
             if row_count <= columns_depth - 1:
+                apex_rows.append(row[:index_depth])
                 if columns_depth == 1:
                     columns_values.extend(row[index_depth:])
                 elif columns_depth > 1:
@@ -372,32 +369,48 @@ class StoreXLSX(Store):
                 index_values = index_values[:empty_row_idx]
 
         # continue with Index and Frame creation
+        index_name = None if columns_depth == 0 else apex_to_name(
+                rows=apex_rows,
+                depth_level=index_name_depth_level,
+                axis=0,
+                axis_depth=index_depth)
+
         index: tp.Optional[IndexBase] = None
         own_index = False
         if index_depth == 1:
-            index = Index(index_values)
+            index = Index(index_values, name=index_name)
             own_index = True
         elif index_depth > 1:
             index = IndexHierarchy.from_labels(
                     index_values,
-                    continuation_token=None
+                    continuation_token=None,
+                    name=index_name,
                     )
             own_index = True
+
+        columns_name = None if index_depth == 0 else apex_to_name(
+                    rows=apex_rows,
+                    depth_level=columns_name_depth_level,
+                    axis=1,
+                    axis_depth=columns_depth)
 
         columns: tp.Optional[IndexBase] = None
         own_columns = False
         if columns_depth == 1:
-            columns = container_type._COLUMNS_CONSTRUCTOR(columns_values)
+            columns = container_type._COLUMNS_CONSTRUCTOR(
+                    columns_values,
+                    name=columns_name)
             own_columns = True
         elif columns_depth > 1:
             columns = container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels(
                     zip(*columns_values),
-                    continuation_token=None
+                    continuation_token=None,
+                    name=columns_name,
                     )
             own_columns = True
 
         # NOTE: this might be a Frame or a FrameGO
-        return tp.cast(Frame, container_type.from_records(data,
+        return container_type.from_records(data, #type: ignore
                         index=index,
                         columns=columns,
                         dtypes=config.dtypes,
@@ -405,7 +418,7 @@ class StoreXLSX(Store):
                         own_columns=own_columns,
                         name=name,
                         consolidate_blocks=config.consolidate_blocks
-                        ))
+                        )
 
     @store_coherent_non_write
     def labels(self, strip_ext: bool = True) -> tp.Iterator[str]:

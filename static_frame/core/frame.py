@@ -517,30 +517,6 @@ class Frame(ContainerOperand):
                 **kwargs
                 )
 
-    # @classmethod
-    # def from_group(cls,
-    #         groups: tp.Iterable['Frame'],
-    #         ):
-    #     '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
-    #     '''
-    #     groups = ((i, f) for i, f in enumerate(groups))
-    #     return InterfaceBatchQuartet(
-    #             container_items=groups,
-    #             constructor=cls,
-    #             )
-
-    # @classmethod
-    # def from_group_items(cls,
-    #         groups: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']]
-    #         ):
-    #     '''Construct a :obj:`Frame` from an iterable of pairs, where each pair is label and a :obj:`Frame`.
-    #     '''
-    #     return InterfaceBatchQuartet(
-    #             container_items=groups,
-    #             constructor=cls,
-    #             )
-
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records(cls,
@@ -1493,7 +1469,8 @@ class Frame(ContainerOperand):
                 apex_rows.append(columns_list[:index_depth])
                 columns_arrays.append(columns_list[index_depth:])
 
-            columns_name = None if index_depth == 0 else apex_to_name(rows=apex_rows,
+            columns_name = None if index_depth == 0 else apex_to_name(
+                    rows=apex_rows,
                     depth_level=columns_name_depth_level,
                     axis=1,
                     axis_depth=columns_depth)
@@ -1542,7 +1519,8 @@ class Frame(ContainerOperand):
         if index_depth == 0:
             return cls(index=None, **kwargs)
 
-        index_name = None if columns_depth == 0 else apex_to_name(rows=apex_rows,
+        index_name = None if columns_depth == 0 else apex_to_name(
+                rows=apex_rows,
                 depth_level=index_name_depth_level,
                 axis=0,
                 axis_depth=index_depth)
@@ -1701,7 +1679,9 @@ class Frame(ContainerOperand):
             *,
             label: tp.Optional[str] = None,
             index_depth: int = 0,
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             ) -> 'Frame':
@@ -1717,7 +1697,9 @@ class Frame(ContainerOperand):
         st = StoreXLSX(fp)
         config = StoreConfig(
                 index_depth=index_depth,
+                index_name_depth_level=index_name_depth_level,
                 columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )

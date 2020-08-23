@@ -6206,6 +6206,15 @@ class TestUnit(TestCase):
             self.assertEqual(f2.columns.values.tolist(),
                     ['foo', 'bar', 'p', 'q', 'r', 's', 't'])
 
+            f3 = Frame.from_xlsx(fp, index_depth=2, index_name_depth_level=0)
+            self.assertEqual(f3.index.name, ('foo', 'bar'))
+
+            f4 = Frame.from_xlsx(fp, index_depth=2, columns_name_depth_level=0)
+            self.assertEqual(f4.columns.name, 'foo')
+
+            f5 = Frame.from_xlsx(fp, index_depth=2, columns_name_depth_level=(0, 1))
+            self.assertEqual(f5.columns.name, ('foo', 'bar'))
+
 
     def test_frame_to_xlsx_d(self) -> None:
         records = (
@@ -6227,6 +6236,12 @@ class TestUnit(TestCase):
             self.assertEqual(f2.to_pairs(0),
                     ((('foo', 'bar'), ((0, 'p'), (1, 'q'), (2, 'r'), (3, 's'))), (('a', 1), ((0, 2), (1, 30), (2, 2), (3, 30))), (('a', 2), ((0, 2), (1, 34), (2, 95), (3, 73))), (('b', 1), ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), (('b', 2), ((0, False), (1, True), (2, False), (3, True))))
                     )
+
+            f3 = Frame.from_xlsx(fp, columns_depth=2, index_depth=1, columns_name_depth_level=0)
+            self.assertEqual(f3.columns.name, ('foo', 'bar'))
+
+            f4 = Frame.from_xlsx(fp, columns_depth=2, index_depth=1, index_name_depth_level=(0, 1))
+            self.assertEqual(f4.index.name, ('foo', 'bar'))
 
 
     def test_frame_to_xlsx_e(self) -> None:

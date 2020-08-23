@@ -18,6 +18,7 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import DepthLevelSpecifier
 
 
 #-------------------------------------------------------------------------------
@@ -50,7 +51,9 @@ class StoreConfig:
 
     __slots__ = (
             'index_depth',
+            'index_name_depth_level',
             'columns_depth',
+            'columns_name_depth_level',
             'dtypes',
             'consolidate_blocks',
             'include_index',
@@ -65,7 +68,9 @@ class StoreConfig:
     def __init__(self, *,
             # constructors
             index_depth: int = 0, # this default does not permit round trip
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
             # exporters
@@ -88,7 +93,9 @@ class StoreConfig:
 
         # constructor
         self.index_depth = index_depth
+        self.index_name_depth_level = index_name_depth_level
         self.columns_depth = columns_depth
+        self.columns_name_depth_level = columns_name_depth_level
         self.dtypes = dtypes
         self.consolidate_blocks = consolidate_blocks
 
