@@ -33,6 +33,7 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
+from static_frame.core.util import DTYPE_OBJECT
 
 from static_frame.core.util import NUMERIC_TYPES
 
@@ -112,7 +113,7 @@ class StoreXLSX(Store):
                 return ws.write_string(row, col, str(value), cell_format)
 
             if writer_attr == 'write':
-                # determine type for aach value
+                # determine type for each value
                 if isinstance(value, BOOL_TYPES):
                     return ws.write_boolean(row, col, value, cell_format)
                 if isinstance(value, str):
@@ -166,6 +167,8 @@ class StoreXLSX(Store):
             if store_filter:
                 columns_values = store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
+            # for labels in acme, do not know type
+            writer_names = cls._get_writer(DTYPE_OBJECT, ws)
 
         # write by column
         for col, values in enumerate(columns_iter):
@@ -173,14 +176,13 @@ class StoreXLSX(Store):
                 # The col integers will include index depth, so if including index, must wait until after index depth to write column field names; if include_index is False, can begin reading from columns_values
                 if col < index_depth_effective:
                     if include_index_name:
-                        writer_columns(0, # always populate in top-most row
+                        writer_names(0, # always populate in top-most row
                                 col,
                                 index_names[col],
-                                format_columns)
+                                format_index)
                     if include_columns_name and col == 0:
-                        # TODO: write columns names in first column
                         for i in range(columns_depth):
-                            writer_columns(i,
+                            writer_names(i,
                                     col, # always 0, populate in left-most colum
                                     columns_names[i],
                                     format_columns)
@@ -197,7 +199,6 @@ class StoreXLSX(Store):
                                     col,
                                     columns_values[col - index_depth_effective, i],
                                     format_columns)
-
             if store_filter:
                 # thi might change the dtype
                 values = store_filter.from_type_filter_array(values)

@@ -6229,6 +6229,18 @@ class TestUnit(TestCase):
                     )
 
 
+    def test_frame_to_xlsx_e(self) -> None:
+
+        f1 = Frame.from_element(0.0,
+                columns=(0.0,),
+                index=(0.0,))
+
+        with temp_file('.xlsx') as fp:
+
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp)
+            self.assertEqual(f2.columns.values.tolist(),
+                    ['__index0__', 0])
 
 
     #---------------------------------------------------------------------------
