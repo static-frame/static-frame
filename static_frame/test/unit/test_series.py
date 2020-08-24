@@ -1190,7 +1190,7 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(
-                s1.assign.loc[['b', 'd']](3000).values.tolist(),
+                s1.assign.loc[['b', 'd']](3000).values.tolist(), #type: ignore
                 [0, 3000, 2, 3000])
 
         self.assertEqual(

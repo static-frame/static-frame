@@ -29,6 +29,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 
@@ -92,7 +93,6 @@ if tp.TYPE_CHECKING:
     import pandas # pylint: disable=W0611 #pragma: no cover
 
 
-RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]
 
 
 #-------------------------------------------------------------------------------
@@ -106,7 +106,6 @@ class Series(ContainerOperand):
             '_name',
             )
 
-    sum: tp.Callable[['Series'], tp.Any]
 
     values: np.ndarray
 
@@ -122,7 +121,7 @@ class Series(ContainerOperand):
             index: IndexInitializer,
             dtype: DtypeSpecifier = None,
             name: NameType = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False,
             ) -> 'Series':
         '''
@@ -139,7 +138,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
         array = np.full(
-                len(index_final),
+                len(index_final), #type: ignore
                 fill_value=element,
                 dtype=dtype)
         array.flags.writeable = False
@@ -207,7 +206,7 @@ class Series(ContainerOperand):
     def from_concat(cls,
             containers: tp.Iterable['Series'],
             *,
-            index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
+            index: tp.Optional[tp.Union[IndexInitializer, IndexAutoFactoryType]] = None,
             name: NameType = None
             ) -> 'Series':
         '''
@@ -237,8 +236,8 @@ class Series(ContainerOperand):
 
         if index is None:
             index = concat_resolved(array_index)
-            if index.ndim == 2:
-                index = IndexHierarchy.from_labels(index)
+            if index.ndim == 2: #type: ignore
+                index = IndexHierarchy.from_labels(index) #type: ignore
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
@@ -267,13 +266,13 @@ class Series(ContainerOperand):
 
         try:
             # populates array_values as side effect
-            ih = IndexHierarchy.from_index_items(gen())
+            ih = IndexHierarchy.from_index_items(gen()) #type: ignore
             # returns immutable array
             values = concat_resolved(array_values)
             own_index = True
         except StopIteration:
             # Default to empty when given an empty iterable
-            ih = None
+            ih = None #type: ignore
             values = EMPTY_TUPLE
             own_index= False
 
@@ -285,7 +284,7 @@ class Series(ContainerOperand):
     def from_pandas(cls,
             value: 'pandas.Series',
             *,
-            index_constructor: IndexConstructor = None,
+            index_constructor: tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]] = None,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
@@ -311,7 +310,7 @@ class Series(ContainerOperand):
             index = None
             own_index = False
         elif index_constructor is not None:
-            index = index_constructor(value.index)
+            index = index_constructor(value.index) #type: ignore
         else: # if None
             index = Index.from_pandas(value.index)
 
@@ -330,7 +329,7 @@ class Series(ContainerOperand):
             index: tp.Union[IndexInitializer, IndexAutoFactoryType, None] = None,
             name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None,
-            index_constructor: IndexConstructor = None,
+            index_constructor: tp.Optional[IndexConstructor] = None,
             own_index: bool = False
             ) -> None:
         '''Initializer.
@@ -364,7 +363,7 @@ class Series(ContainerOperand):
                     name = values.name # propagate Series.name
             elif hasattr(values, '__iter__') and not isinstance(values, str):
                 # returned array is already immutable
-                self.values, _ = iterable_to_array_1d(values, dtype=dtype)
+                self.values, _ = iterable_to_array_1d(values, dtype=dtype) #type: ignore
             else: # it must be an element, or a string
                 raise ErrorInitSeries('Use Series.from_element to create a Series from an element.')
 
@@ -385,7 +384,7 @@ class Series(ContainerOperand):
         # index assignment
 
         if own_index:
-            self._index = index
+            self._index = index #type: ignore
         elif index is None or index is IndexAutoFactory:
             # if a values constructor is defined, self.values is not yet defined, and no index is supplied, the resultant shape will be of length 1. (If an index is supplied, the shape might be larger than one if an array element was given
             if values_constructor:
@@ -398,7 +397,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
         else: # an iterable of labels, or an index subclass
-            self._index = index_from_optional_constructor(index,
+            self._index = index_from_optional_constructor(index, #type: ignore
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
@@ -430,7 +429,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`static_frame.Series`
         '''
-        return reversed(self._index)
+        return reversed(self._index) #type: ignore
 
     #---------------------------------------------------------------------------
     def __setstate__(self, state: tp.Any) -> None:
@@ -444,7 +443,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # name interface
 
-    @property
+    @property #type: ignore
     @doc_inject()
     def name(self) -> NameType:
         '''{}'''
@@ -463,43 +462,43 @@ class Series(ContainerOperand):
     # interfaces
 
     @property
-    def loc(self) -> InterfaceGetItem:
+    def loc(self) -> InterfaceGetItem['Series']:
         '''
         Interface for label-based selection.
         '''
         return InterfaceGetItem(self._extract_loc)
 
     @property
-    def iloc(self) -> InterfaceGetItem:
+    def iloc(self) -> InterfaceGetItem['Series']:
         '''
         Interface for position-based selection.
         '''
         return InterfaceGetItem(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio:
+    def drop(self) -> InterfaceSelectTrio['Series']:
         '''
         Interface for dropping elements from :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( #type: ignore
                 func_iloc=self._drop_iloc,
                 func_loc=self._drop_loc,
                 func_getitem=self._drop_loc
                 )
 
     @property
-    def mask(self) -> InterfaceSelectTrio:
+    def mask(self) -> InterfaceSelectTrio['Series']:
         '''
         Interface for extracting Boolean :obj:`static_frame.Series`.
         '''
-        return InterfaceSelectTrio(
+        return InterfaceSelectTrio( #type: ignore
                 func_iloc=self._extract_iloc_mask,
                 func_loc=self._extract_loc_mask,
                 func_getitem=self._extract_loc_mask
                 )
 
     @property
-    def masked_array(self) -> InterfaceSelectTrio:
+    def masked_array(self) -> InterfaceSelectTrio['Series']:
         '''
         Interface for extracting NumPy Masked Arrays.
         '''
@@ -510,12 +509,12 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def assign(self) -> InterfaceAssignTrio:
+    def assign(self) -> InterfaceAssignTrio['Series']:
         '''
         Interface for doing assignment-like selection and replacement.
         '''
         # NOTE: this is not a InterfaceAssignQuartet, like on Frame
-        return InterfaceAssignTrio(
+        return InterfaceAssignTrio( #type: ignore
                 func_iloc=self._extract_iloc_assign,
                 func_loc=self._extract_loc_assign,
                 func_getitem=self._extract_loc_assign,
@@ -530,7 +529,7 @@ class Series(ContainerOperand):
         '''
         blocks = (self.values,)
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -550,7 +549,7 @@ class Series(ContainerOperand):
         '''
         blocks = (self.values,)
 
-        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Frame':
+        def blocks_to_container(blocks: tp.Iterator[np.ndarray]) -> 'Series':
             return self.__class__(
                 next(blocks), # assume only one
                 index=self._index,
@@ -565,7 +564,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group(self) -> IterNodeGroup:
+    def iter_group(self) -> IterNodeGroup['Series']:
         '''
         Iterator of :obj:`static_frame.Series`, where each :obj:`static_frame.Series` is matches unique values.
         '''
@@ -577,7 +576,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_group_items(self) -> IterNodeGroup:
+    def iter_group_items(self) -> IterNodeGroup['Series']:
         return IterNodeGroup(
                 container=self,
                 function_items=self._axis_group_items,
@@ -587,7 +586,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_labels(self) -> IterNodeDepthLevel:
+    def iter_group_labels(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_labels_items,
@@ -597,7 +596,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_group_labels_items(self) -> IterNodeDepthLevel:
+    def iter_group_labels_items(self) -> IterNodeDepthLevel['Series']:
         return IterNodeDepthLevel(
                 container=self,
                 function_items=self._axis_group_labels_items,
@@ -608,7 +607,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg:
+    def iter_element(self) -> IterNodeNoArg['Series']:
         '''
         Iterator of elements.
         '''
@@ -620,7 +619,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg:
+    def iter_element_items(self) -> IterNodeNoArg['Series']:
         '''
         Iterator of label, element pairs.
         '''
@@ -633,7 +632,7 @@ class Series(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_window(self) -> IterNodeWindow:
+    def iter_window(self) -> IterNodeWindow['Series']:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -644,7 +643,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_window_items(self) -> IterNodeWindow:
+    def iter_window_items(self) -> IterNodeWindow['Series']:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -656,7 +655,7 @@ class Series(ContainerOperand):
 
 
     @property
-    def iter_window_array(self) -> IterNodeWindow:
+    def iter_window_array(self) -> IterNodeWindow['Series']:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -667,7 +666,7 @@ class Series(ContainerOperand):
                 )
 
     @property
-    def iter_window_array_items(self) -> IterNodeWindow:
+    def iter_window_array_items(self) -> IterNodeWindow['Series']:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -686,7 +685,7 @@ class Series(ContainerOperand):
             ) -> 'Series':
         '''Given a value that is a Series, reindex it to the index components, drawn from this Series, that are specified by the iloc_key.
         '''
-        return value.reindex(
+        return value.reindex( #type: ignore
                 self._index._extract_iloc(iloc_key),
                 fill_value=fill_value
                 )
@@ -721,7 +720,7 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        ic = IndexCorrespondence.from_correspondence(self._index, index)
+        ic = IndexCorrespondence.from_correspondence(self._index, index) #type: ignore
 
         if ic.is_subset: # must have some common
             values = self.values[ic.iloc_src]
@@ -732,7 +731,7 @@ class Series(ContainerOperand):
                     own_index=True,
                     name=self._name)
 
-        values = full_for_fill(self.values.dtype, len(index), fill_value)
+        values = full_for_fill(self.values.dtype, len(index), fill_value) #type: ignore
         # if some intersection of values
         if ic.has_common:
             values[ic.iloc_dst] = self.values[ic.iloc_src]
@@ -745,24 +744,24 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            index: RelabelInput
+            mapper: RelabelInput
             ) -> 'Series':
         '''
         {doc}
 
         Args:
-            index: {relabel_input}
+            mapper: {relabel_input}
         '''
         own_index = False
-        if index is IndexAutoFactory:
+        if mapper is IndexAutoFactory:
             index = None
-        elif is_callable_or_mapping(index):
-            index = self._index.relabel(index)
+        elif is_callable_or_mapping(mapper): #type: ignore
+            index = self._index.relabel(mapper)
             own_index = True
-        elif index is None:
+        elif mapper is None:
             index = self._index
-        # else: # assume index IndexInitializer
-        #     index = index
+        else:
+            index = mapper #type: ignore
 
         return self.__class__(self.values,
                 index=index,
@@ -814,7 +813,7 @@ class Series(ContainerOperand):
 
 
     def rehierarch(self,
-            depth_map: tp.Iterable[int]
+            depth_map: tp.Sequence[int]
             ) -> 'Series':
         '''
         Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
@@ -823,7 +822,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot rehierarch when there is no hierarchy')
 
         index, iloc_map = rehierarch_from_index_hierarchy(
-                labels=self._index,
+                labels=self._index, #type: ignore
                 depth_map=depth_map,
                 name=self._index.name,
                 )
@@ -932,11 +931,11 @@ class Series(ContainerOperand):
         '''
         sel = isna_array(array)
         if not np.any(sel):
-            return array # assume immutable
+            return array
 
         def slice_condition(target_slice: slice) -> bool:
             # NOTE: start is never None
-            return sel[target_slice.start]
+            return sel[target_slice.start] #type: ignore
 
         # type is already compatible, no need for check
         assigned = array.copy()
@@ -1062,7 +1061,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # operators
 
-    def _ufunc_unary_operator(self, operator: tp.Callable) -> 'Series':
+    def _ufunc_unary_operator(self, operator: UFunc) -> 'Series':
         '''
         For unary operations, the `name` attribute propagates.
         '''
@@ -1074,7 +1073,7 @@ class Series(ContainerOperand):
                 )
 
     def _ufunc_binary_operator(self, *,
-            operator: tp.Callable,
+            operator: UFunc,
             other: tp.Any,
             ) -> 'Series':
         '''
@@ -1082,9 +1081,9 @@ class Series(ContainerOperand):
         '''
         # get both reverse and regular
         if operator.__name__ == 'matmul':
-            return matmul(self, other)
+            return matmul(self, other) #type: ignore
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, self)
+            return matmul(other, self) #type: ignore
 
         values = self.values
         index = self._index
@@ -1169,7 +1168,7 @@ class Series(ContainerOperand):
     def __len__(self) -> int:
         '''Length of values.
         '''
-        return self.values.__len__()
+        return self.values.__len__() #type: ignore
 
     def _display(self,
             config: DisplayConfig,
@@ -1260,7 +1259,7 @@ class Series(ContainerOperand):
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
-    @property
+    @property #type: ignore
     @doc_inject()
     def mloc(self) -> int:
         '''{doc_int}
@@ -1285,7 +1284,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Tuple[int]`
         '''
-        return self.values.shape
+        return self.values.shape #type: ignore
 
     @property
     def ndim(self) -> int:
@@ -1305,7 +1304,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.size
+        return self.values.size #type: ignore
 
     @property
     def nbytes(self) -> int:
@@ -1315,7 +1314,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`int`
         '''
-        return self.values.nbytes
+        return self.values.nbytes #type: ignore
 
     def __bool__(self) -> bool:
         '''
@@ -1332,7 +1331,7 @@ class Series(ContainerOperand):
         values = self.values[key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            return values
+            return values #type: ignore
         return self.__class__(
                 values,
                 index=self._index.iloc[key],
@@ -1352,7 +1351,7 @@ class Series(ContainerOperand):
             #     # must return a Series, even though we do not have an array
             #     values = np.array(values)
             #     values.flags.writeable = False
-            return values
+            return values #type: ignore
 
         return self.__class__(values,
                 index=self._index.iloc[iloc_key],
@@ -1891,7 +1890,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        return self.iloc[:count] #type: ignore
+        return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Series')
     def tail(self, count: int = 5) -> 'Series':
@@ -1903,7 +1902,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
-        return self.iloc[-count:] #type: ignore
+        return self.iloc[-count:]
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,

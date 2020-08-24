@@ -18,11 +18,12 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import CallableOrMapping
 
 
+
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-
+    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -39,6 +40,7 @@ class IndexBase(ContainerOperand):
     _recache: bool
     _name: NameType
     values: np.ndarray
+    positions: np.ndarray
     depth: int
 
     loc: tp.Any
@@ -194,13 +196,16 @@ class IndexBase(ContainerOperand):
     def copy(self: I) -> I:
         raise NotImplementedError()
 
-    def relabel(self: I, mapper: CallableOrMapping) -> I:
+    def relabel(self: I, mapper: 'RelabelInput') -> I:
         raise NotImplementedError() #pragma: no cover
 
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def roll(self: I, shift: int) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
     def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':

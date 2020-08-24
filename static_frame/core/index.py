@@ -80,7 +80,7 @@ if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-
+    from static_frame.core.index_auto import RelabelInput
 
 I = tp.TypeVar('I', bound=IndexBase)
 
@@ -672,7 +672,7 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the loc key.
         '''
         if self._recache:
@@ -875,7 +875,7 @@ class Index(IndexBase):
 
         return self.__class__(self, name=self._name)
 
-    def relabel(self, mapper: CallableOrMapping) -> 'Index':
+    def relabel(self, mapper: 'RelabelInput') -> 'Index':
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -891,7 +891,7 @@ class Index(IndexBase):
                     )
 
         return self.__class__(
-                (mapper(x) for x in self._labels),
+                (mapper(x) for x in self._labels), #type: ignore
                 name=self._name
                 )
 

@@ -8,6 +8,8 @@ from static_frame.core.index import PositionsAllocator
 from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import IndexInitializer
 
 
 IndexAutoInitializer = int
@@ -41,3 +43,4 @@ class IndexAutoFactory:
 
 
 IndexAutoFactoryType = tp.Type[IndexAutoFactory]
+RelabelInput = tp.Union[CallableOrMapping, IndexAutoFactoryType, IndexInitializer]

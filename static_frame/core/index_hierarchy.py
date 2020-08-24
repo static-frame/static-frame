@@ -30,6 +30,7 @@ from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
+from static_frame.core.index_auto import RelabelInput
 
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
@@ -826,7 +827,7 @@ class IndexHierarchy(IndexBase):
 
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         if self._recache:
@@ -841,7 +842,7 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self.loc_to_iloc(key))
@@ -939,7 +940,7 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-    def relabel(self, mapper: CallableOrMapping) -> 'IndexHierarchy':
+    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
@@ -964,7 +965,7 @@ class IndexHierarchy(IndexBase):
                     )
 
         return self.__class__.from_labels(
-                (mapper(x) for x in self._blocks.axis_values(axis=1)),
+                (mapper(x) for x in self._blocks.axis_values(axis=1)), #type: ignore
                 name=self._name,
                 index_constructors=index_constructors,
                 )
@@ -990,7 +991,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def loc_to_iloc(self, #type: ignore
+    def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
             ) -> GetItemKeyType:
         '''
@@ -1161,7 +1162,7 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self,
+    def __contains__(self, #type: ignore
             value: tp.Tuple[tp.Hashable]
             ) -> bool:
         '''Determine if a leaf loc is contained in this Index.
