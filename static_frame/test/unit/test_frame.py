@@ -51,7 +51,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_element(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
-            f1.g = 30 #pylint: disable=E0237
+            f1.g = 30 #type: ignore #pylint: disable=E0237
         with self.assertRaises(AttributeError):
             f1.__dict__ #pylint: disable=W0104
 
@@ -745,7 +745,7 @@ class TestUnit(TestCase):
 
     def test_frame_to_pandas_c(self) -> None:
         f = sf.FrameGO.from_elements(['a' for x in range(5)], columns=['a'])
-        f['b'] = [1.0 for i in range(5)]
+        f['b'] = [1.0 for i in range(5)] #type: ignore
         df = f.to_pandas()
         self.assertEqual(df.dtypes.tolist(), [np.dtype(object), np.dtype(np.float64)])
 
@@ -1542,10 +1542,10 @@ class TestUnit(TestCase):
         # 3d array raises exception
         f = sf.FrameGO.from_element('a', index=range(3), columns=sf.IndexHierarchy.from_labels((('a', 1),)))
 
-        f[sf.HLoc['a', 2]] = 3
+        f[sf.HLoc['a', 2]] = 3 #type: ignore
         # this was resulting in a mal-formed blocks
         with self.assertRaises(RuntimeError):
-            f[sf.HLoc['a', 2]] = False
+            f[sf.HLoc['a', 2]] = False #type: ignore
 
         self.assertEqual(f.shape, (3, 2))
         self.assertEqual(f.columns.shape, (2, 2))
@@ -1642,7 +1642,7 @@ class TestUnit(TestCase):
                 index=range(3),
                 columns=sf.IndexHierarchy.from_labels((('a', 'b'),)))
         with self.assertRaises(RuntimeError):
-            f['s'] = f
+            f['s'] = f #type: ignore
 
 
     def test_frame_setitem_o(self) -> None:
@@ -3663,7 +3663,7 @@ class TestUnit(TestCase):
 
         f1 = sf.FrameGO.from_element('q', index=range(3), columns=('x', 'y'))
 
-        f1['z'] = 'foo'
+        f1['z'] = 'foo' #type: ignore
 
         f2 = f1 + '_'
         self.assertEqual(f2.to_pairs(0),
@@ -3975,7 +3975,7 @@ class TestUnit(TestCase):
 
         def gen() -> tp.Iterator[tp.Tuple[int, tp.Tuple[int, int]]]:
             for i in range(2):
-                yield i, Frame.from_element('x', index=('a',), columns=('a',))
+                yield i, Frame.from_element('x', index=('a',), columns=('a',)) #type: ignore
 
         with self.assertRaises(ErrorInitFrame):
             # must provide an index
@@ -4828,7 +4828,7 @@ class TestUnit(TestCase):
     def test_frame_relabel_g(self) -> None:
 
         f1 = FrameGO.from_elements([1, 2], columns=['a'])
-        f1['b'] = f1['a']
+        f1['b'] = f1['a'] #type: ignore
         f2 = f1.relabel(columns={'a': 'c',})
         self.assertEqual(f2.to_pairs(0),
                 (('c', ((0, 1), (1, 2))), ('b', ((0, 1), (1, 2))))

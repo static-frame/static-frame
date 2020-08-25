@@ -3619,14 +3619,16 @@ class Frame(ContainerOperand):
                 raise AxisInvalid(f'invalid axis: {axis}') #pragma: no cover (already caught above)
 
     def _axis_group_sort_items(self,
-            key,
-            iloc_key,
+            key: GetItemKeyType,
+            iloc_key: GetItemKeyType,
             axis: int
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
-        def extract_frame(key, index) -> 'Frame':
+        def extract_frame(key: GetItemKeyType,
+                index: IndexBase,
+                ) -> 'Frame':
             if axis == 0:
                 return Frame(frame_sorted._blocks._extract(row_key=key),
                         columns=self._columns,
@@ -3678,7 +3680,7 @@ class Frame(ContainerOperand):
             key: GetItemKeyType,
             *,
             axis: int = 0
-            ):
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
         '''
         Args:
             key: We accept any thing that can do loc to iloc. Note that a tuple is permitted as key, where it would be interpreted as a single label for an IndexHierarchy.
@@ -3715,14 +3717,15 @@ class Frame(ContainerOperand):
             key: GetItemKeyType,
             *,
             axis: int = 0
-            ):
+            ) -> tp.Iterator['Frame']:
         yield from (x for _, x in self._axis_group_loc_items(key=key, axis=axis))
 
 
     def _axis_group_labels_items(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
-            axis=0):
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
         if axis == 0: # maintain columns, group by index
             ref_index = self._index
@@ -3761,7 +3764,8 @@ class Frame(ContainerOperand):
     def _axis_group_labels(self,
             depth_level: DepthLevelSpecifier = 0,
             *,
-            axis=0):
+            axis: int = 0,
+            ) -> tp.Iterator['Frame']:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level, axis=axis))
 
@@ -3806,7 +3810,7 @@ class Frame(ContainerOperand):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ):
+            ) -> tp.Iterator['Frame']:
         yield from (x for _, x in self._axis_window_items(
                 size=size,
                 axis=axis,
@@ -3823,7 +3827,8 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _iter_element_iloc_items(self):
+    def _iter_element_iloc_items(self) -> tp.Iterator[
+            tp.Tuple[tp.Tuple[int, int], tp.Any]]:
         yield from self._blocks.element_items()
 
     # def _iter_element_iloc(self):
@@ -3839,7 +3844,7 @@ class Frame(ContainerOperand):
                 for k, v in self._blocks.element_items()
                 )
 
-    def _iter_element_loc(self):
+    def _iter_element_loc(self) -> tp.Iterator[tp.Any]:
         yield from (x for _, x in self._iter_element_loc_items())
 
 
