@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.29
+----------
+
+Fixed issue in ``Series.drop`` when the ``Series`` has an ``IndexHierarchy``.
+
+
 0.6.28
 ----------
 

@@ -10,7 +10,7 @@ import typing as tp
 
 
 import numpy as np
-from numpy.ma import MaskedArray
+from numpy.ma import MaskedArray #type: ignore
 
 
 from static_frame.core.assign import Assign
@@ -46,6 +46,7 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoFactoryType
+from static_frame.core.index_auto import RelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -64,7 +65,6 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 # from static_frame.core.node_selector import InterfaceBatchQuartet
 from static_frame.core.node_str import InterfaceString
-from static_frame.core.series import RelabelInput
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -171,7 +171,7 @@ class Frame(ContainerOperand):
             *,
             name: tp.Hashable = None,
             columns_constructor: IndexConstructor = None,
-            ):
+            ) -> 'Frame':
         '''
         Frame constructor from a Series:
 
@@ -199,7 +199,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ):
+            ) -> 'Frame':
         '''
         Create a Frame from an element, i.e., a single value stored in a single cell. Both ``index`` and ``columns`` are required, and cannot be specified with ``IndexAutoFactory``.
         '''
@@ -246,7 +246,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             own_columns: bool = False
-            ):
+            ) -> 'Frame':
         '''
         Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
         '''
@@ -379,7 +379,7 @@ class Frame(ContainerOperand):
                         )
                 own_index = True
 
-            def blocks():
+            def blocks() -> tp.Iterator[np.ndarray]:
                 for frame in frames:
                     if len(frame.index) != len(index) or (frame.index != index).any():
                         frame = frame.reindex(index=index, fill_value=fill_value)
@@ -406,7 +406,7 @@ class Frame(ContainerOperand):
                         )
                 own_columns = True
 
-            def blocks():
+            def blocks() -> tp.Iterator[np.ndarray]:
                 aligned_frames = []
                 previous_frame = None
                 block_compatible = True
@@ -484,7 +484,7 @@ class Frame(ContainerOperand):
         '''
         frames = []
 
-        def gen():
+        def gen() -> tp.Tuple[tp.Hashable, IndexBase]:
             for label, frame in items:
                 # must normalize Series here to avoid down-stream confusion
                 if isinstance(frame, Series):
@@ -603,7 +603,7 @@ class Frame(ContainerOperand):
         # NOTE: row data by definition here does not have Index data, so col count is length of row
         col_count = len(row_reference)
 
-        def get_value_iter(col_key):
+        def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
             rows_iter = rows if not rows_to_iter else iter(rows)
             # this is possible to support ragged lists, but it noticeably reduces performance
             return (row[col_key] for row in rows_iter)
@@ -691,11 +691,11 @@ class Frame(ContainerOperand):
         col_count = len(row_reference)
 
         # define function to get generator of row values; may need to call twice, so need to get fresh row_iter each time
-        def get_value_iter(col_key):
+        def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
             rows_iter = rows if not rows_to_iter else iter(rows)
             return (row.get(col_key, fill_value) for row in rows_iter)
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over final column order, yielding 1D arrays
             for col_idx, col_key in enumerate(row_reference.keys()):
                 columns.append(col_key)
@@ -752,7 +752,7 @@ class Frame(ContainerOperand):
         '''
         index = []
 
-        def gen():
+        def gen() -> tp.Iterator[np.ndarray]:
             for label, values in items:
                 index.append(label)
                 yield values
@@ -790,7 +790,7 @@ class Frame(ContainerOperand):
         '''
         index = []
 
-        def gen():
+        def gen() -> tp.Iterator[np.ndarray]:
             for label, values in items:
                 index.append(label)
                 yield values
@@ -816,7 +816,7 @@ class Frame(ContainerOperand):
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
             consolidate_blocks: bool = False
-            ):
+            ) -> 'Frame':
         '''Frame constructor from an iterator of pairs, where the first value is the column label and the second value is an iterable of column values. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
@@ -843,7 +843,7 @@ class Frame(ContainerOperand):
 
         get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (k, v) in enumerate(pairs):
                 columns.append(k) # side effect of generator!
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
@@ -992,7 +992,7 @@ class Frame(ContainerOperand):
                 dtypes,
                 columns_by_col_idx)
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over column names and yield one at a time for block construction; collect index arrays and column labels as we go
             for col_idx, name in enumerate(names):
                 if use_dtype_names:
@@ -1131,12 +1131,12 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_element_iloc_items(cls,
-            items,
+            items: tp.Iterable[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]],
             *,
-            index,
-            columns,
-            dtype,
-            name: tp.Hashable = None
+            index: IndexInitializer,
+            columns: IndexInitializer,
+            dtype: DtypeSpecifier,
+            name: NameType = None
             ) -> 'Frame':
         '''
         Given an iterable of pairs of iloc coordinates and values, populate a Frame as defined by the given index and columns. The dtype must be specified, and must be the same for all values.
@@ -1165,8 +1165,8 @@ class Frame(ContainerOperand):
             *,
             index: IndexInitializer,
             columns: IndexInitializer,
-            dtype=None,
-            name: tp.Hashable = None,
+            dtype: DtypeSpecifier = None,
+            name: NameType = None,
             fill_value: object = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
@@ -1624,7 +1624,7 @@ class Frame(ContainerOperand):
     @classmethod
     def from_clipboard(cls,
             *,
-            delimiter='\t',
+            delimiter: str = '\t',
             index_depth: int = 0,
             index_column_first: tp.Optional[tp.Union[int, str]] = None,
             index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
@@ -1635,7 +1635,7 @@ class Frame(ContainerOperand):
             quote_char: str = '"',
             encoding: tp.Optional[str] = None,
             dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
+            name: NameType = None,
             consolidate_blocks: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> 'Frame':
@@ -1777,7 +1777,7 @@ class Frame(ContainerOperand):
         '''
         pdvu1 = pandas_version_under_1()
 
-        def part_to_array(part):
+        def part_to_array(part: 'pandas.DataFrame') -> np.ndarray:
             if pdvu1:
                 array = part.values
                 if own_data:
@@ -1897,7 +1897,7 @@ class Frame(ContainerOperand):
 
         pdvu1 = pandas_version_under_1()
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
                 # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
@@ -1985,7 +1985,7 @@ class Frame(ContainerOperand):
             {name}
             {consolidate_blocks}
         '''
-        import pyarrow.parquet as pq
+        import pyarrow.parquet as pq #type: ignore
 
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
@@ -2050,7 +2050,7 @@ class Frame(ContainerOperand):
             self._blocks = TypeBlocks.from_blocks(data)
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
-            def blocks_constructor(shape): #pylint: disable=E0102
+            def blocks_constructor(shape: tp.Tuple[int, ...]) -> None: #pylint: disable=E0102
                 if shape[0] > 0 and shape[1] > 0:
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')
@@ -2452,7 +2452,7 @@ class Frame(ContainerOperand):
     def _reindex_other_like_iloc(self,
             value: tp.Union[Series, 'Frame'],
             iloc_key: GetItemKeyTypeCompound,
-            fill_value=np.nan
+            fill_value: object = np.nan
             ) -> 'Frame':
         '''Given a value that is a Series or Frame, reindex it to the index components, drawn from this Frame, that are specified by the iloc_key.
         '''
@@ -2496,7 +2496,7 @@ class Frame(ContainerOperand):
             index: tp.Optional[IndexInitializer] = None,
             columns: tp.Optional[IndexInitializer] = None,
             *,
-            fill_value=np.nan,
+            fill_value: object = np.nan,
             own_index: bool = False,
             own_columns: bool = False,
             check_equals: bool = True,
@@ -3088,8 +3088,8 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_axis_not_multi(
-                row_key,
-                column_key,
+                row_key: tp.Hashable,
+                column_key: tp.Hashable,
                 ) -> tp.Tuple[bool, bool]:
         '''
         If either row or column is given with a non-multiple type of selection (a single scalar), reduce dimensionality.
@@ -3352,31 +3352,31 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self):
+    def keys(self) -> tp.Iterable[tp.Hashable]:
         '''Iterator of column labels.
         '''
         return self._columns
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterable[tp.Hashable]:
         '''
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         '''
         return self._columns.__iter__()
 
-    def __contains__(self, value) -> bool:
+    def __contains__(self, value: tp.Hashable) -> bool:
         '''
         Inclusion of value in column labels.
         '''
         return self._columns.__contains__(value)
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[tp.Hashable, Series]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
         for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
-    def get(self, key, default=None):
+    def get(self, key: tp.Hashable, default: tp.Optional[Series] = None) -> Series:
         '''
         Return the value found at the columns key, else the default if the key is not found. This method is implemented to complete the dictionary-like interface.
         '''
@@ -3399,8 +3399,8 @@ class Frame(ContainerOperand):
                 )
 
     def _ufunc_binary_operator(self, *,
-            operator,
-            other
+            operator: UFunc,
+            other: tp.Any,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -3506,10 +3506,10 @@ class Frame(ContainerOperand):
         return Series(post, index=self._index)
 
     def _ufunc_shape_skipna(self, *,
-            axis,
-            skipna,
-            ufunc,
-            ufunc_skipna,
+            axis: int,
+            skipna: bool,
+            ufunc: UFunc,
+            ufunc_skipna: UFunc,
             composable: bool,
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
@@ -3541,17 +3541,17 @@ class Frame(ContainerOperand):
     # axis iterators
     # NOTE: if there is more than one argument, the axis argument needs to be key-word only
 
-    def _axis_array(self, axis):
+    def _axis_array(self, axis: int) -> tp.Iterator[np.ndarray]:
         '''Generator of arrays across an axis
         '''
         yield from self._blocks.axis_values(axis)
 
-    def _axis_array_items(self, axis):
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._blocks.axis_values(axis))
 
 
-    def _axis_tuple(self, axis):
+    def _axis_tuple(self, axis: int) -> tp.NamedTuple:
         '''Generator of named tuples across an axis.
 
         Args:
@@ -3567,12 +3567,12 @@ class Frame(ContainerOperand):
         for axis_values in self._blocks.axis_values(axis):
             yield Tuple(*axis_values)
 
-    def _axis_tuple_items(self, axis):
+    def _axis_tuple_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_tuple(axis=axis))
 
 
-    def _axis_series(self, axis):
+    def _axis_series(self, axis: int) -> tp.Iterator[Series]:
         '''Generator of Series across an axis
         '''
         # reference the indices and let the constructor reuse what is reusable
@@ -3585,7 +3585,7 @@ class Frame(ContainerOperand):
         for label, axis_values in zip(labels, self._blocks.axis_values(axis)):
             yield Series(axis_values, index=index, name=label)
 
-    def _axis_series_items(self, axis):
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -3594,9 +3594,9 @@ class Frame(ContainerOperand):
     # grouping methods naturally return their "index" as the group element
 
     def _axis_group_iloc_items(self,
-            key,
+            key: GetItemKeyType,
             *,
-            axis: int):
+            axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
             if axis == 0:
@@ -4253,7 +4253,7 @@ class Frame(ContainerOperand):
             names: An iterable of hashables to be used to name the unset index. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
         '''
 
-        def blocks():
+        def blocks() -> tp.Iterator[np.ndarray]:
             yield self.index.values # 2D immutable array
             for b in self._blocks._blocks:
                 yield b

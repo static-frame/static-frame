@@ -43,7 +43,6 @@ from static_frame.core.node_str import InterfaceString
 
 from static_frame.core.type_blocks import TypeBlocks
 
-from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier

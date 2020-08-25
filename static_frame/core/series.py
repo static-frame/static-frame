@@ -53,7 +53,6 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
-from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier

@@ -9,13 +9,11 @@ from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import CallableOrMapping
 
 
 
