@@ -333,7 +333,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''A 1D array of values.
         '''
         self._update_series_cache_all()
-        return self._seires.values
+        return self._series.values
 
     #---------------------------------------------------------------------------
     @doc_inject()

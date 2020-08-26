@@ -897,6 +897,23 @@ class TestUnit(TestCase):
             b1 = Bus(s1)
 
 
+    #---------------------------------------------------------------------------
+    def test_bus_values_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        post = b1.values.tolist()
+        self.assertTrue(f1.equals(post[0]))
+        self.assertTrue(f2.equals(post[1]))
+
 
 if __name__ == '__main__':
 
