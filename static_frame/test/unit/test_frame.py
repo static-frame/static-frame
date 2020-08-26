@@ -393,7 +393,7 @@ class TestUnit(TestCase):
     def test_frame_from_series_c(self) -> None:
         f1 = Frame.from_element(None, index=tuple('abc'), columns=('a',))
         with self.assertRaises(RuntimeError):
-            f2 = Frame.from_series(f1)
+            f2 = Frame.from_series(f1) #type: ignore
 
 
     #---------------------------------------------------------------------------
