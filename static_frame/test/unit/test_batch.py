@@ -226,7 +226,6 @@ class TestUnit(TestCase):
                 name='f2')
 
         b1 = Batch.from_frames((f1, f2), name='foo').cumsum()
-
         f1 = Frame.from_concat_items(b1.items(), fill_value=0)
 
         self.assertEqual(f1.to_pairs(0),

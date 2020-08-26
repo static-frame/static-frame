@@ -54,7 +54,7 @@ def main() -> None:
 
     @timer #type: ignore
     def a2() -> None:
-        batch1 = Batch.from_frames((f1, f2, f3, f4, f5, f6, f7, f8), max_workers=8, use_threads=True)
+        batch1 = Batch.from_frames((f1, f2, f3, f4, f5, f6, f7, f8), max_workers=6, use_threads=True)
         batch2 = (batch1 * 100).sum()
         post = dict(batch2.items())
 
