@@ -747,24 +747,25 @@ class Series(ContainerOperand):
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(self,
-            mapper: RelabelInput
+            index: RelabelInput
             ) -> 'Series':
         '''
         {doc}
 
         Args:
-            mapper: {relabel_input}
+            index: {relabel_input}
         '''
+        #NOTE: we name the parameter index for alignment with the corresponding Frame method
+
         own_index = False
-        if mapper is IndexAutoFactory:
+        if index is IndexAutoFactory:
             index = None
-        elif is_callable_or_mapping(mapper): #type: ignore
-            index = self._index.relabel(mapper)
+        elif is_callable_or_mapping(index): #type: ignore
+            index = self._index.relabel(index)
             own_index = True
-        elif mapper is None:
+        elif index is None:
             index = self._index
-        else:
-            index = mapper #type: ignore
+        # else: attempt to use the index as is
 
         return self.__class__(self.values,
                 index=index,

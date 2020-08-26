@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.30
+----------
+
+Restored parameter name in ``Series.relabel`` to be ``index``.
+
 
 0.6.29
 ----------
