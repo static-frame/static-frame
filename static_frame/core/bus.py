@@ -486,10 +486,6 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         return True
 
-
-
-
-
     #---------------------------------------------------------------------------
     # exporters
 
@@ -523,7 +519,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreXLSX(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)
 
     def to_sqlite(self,
             fp: PathSpecifier,
@@ -531,7 +527,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreSQLite(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)
 
     def to_hdf5(self,
             fp: PathSpecifier,
@@ -539,4 +535,4 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreHDF5(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)

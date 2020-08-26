@@ -539,6 +539,31 @@ class TestUnit(TestCase):
             tuple(b2.items())
 
 
+    def test_bus_to_xlsx_e(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+
+            config = StoreConfig(include_index=True, index_depth=1)
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2):
+            self.assertTrue(frame.equals(b2[frame.name]))
+
+
+
     #---------------------------------------------------------------------------
     def test_bus_to_sqlite_a(self) -> None:
         f1 = Frame.from_dict(

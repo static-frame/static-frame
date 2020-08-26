@@ -390,6 +390,12 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 ((np.datetime64('2018-05'), (('a', False), ('b', True), ('c', False))),))
 
+    def test_frame_from_series_c(self) -> None:
+        f1 = Frame.from_element(None, index=tuple('abc'), columns=('a',))
+        with self.assertRaises(RuntimeError):
+            f2 = Frame.from_series(f1)
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_element_a(self) -> None:
 
@@ -698,6 +704,16 @@ class TestUnit(TestCase):
         pd_idx = pd.MultiIndex([[]], [[]])
         with self.assertRaises(ErrorInitIndex):
             _ = sf.IndexHierarchy.from_pandas(pd_idx)
+
+
+    def test_frame_from_pandas_o(self) -> None:
+        f1 = Frame.from_records(
+                [(1,2), ('3','4'), (1.5, 2.5), ('a','b')],
+                index=('2012', '2013', '2014', '2015'),
+                columns=('2020-01', '2020-02')
+                )
+        with self.assertRaises(ErrorInitFrame):
+            Frame.from_pandas(f1)
 
 
 

@@ -6,6 +6,12 @@ What is New in Static Frame
 
 Fixed issue in ``Series.drop`` when the ``Series`` has an ``IndexHierarchy``.
 
+Calling ``Frame.from_series`` with something other than a ``Series`` will now raise.
+
+Calling ``Index.from_pandas``, ``Series.from_pandas``, and ``Frame.from_pandas`` now raise when given a non-Pandas object.
+
+``StoreConfig`` given to ``Bus.to_xlsx``, ``Bus.to_sqlite``, and ``Bus.to_hdf5`` are now properly used.
+
 
 0.6.28
 ----------

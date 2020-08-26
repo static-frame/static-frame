@@ -178,6 +178,8 @@ class Frame(ContainerOperand):
         Args:
             series: A Series instance, to be realized as single column, with the column label taken from the `name` attribute.
         '''
+        if not isinstance(series, Series):
+            raise RuntimeError('from_series must be called with a Series')
         return cls(TypeBlocks.from_blocks(series.values),
                 index=series.index,
                 columns=(series.name,),
@@ -1775,6 +1777,10 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`Frame`
         '''
+        import pandas
+        if not isinstance(value, pandas.DataFrame):
+            raise ErrorInitFrame('from_pandas must be called with a Pandas object')
+
         pdvu1 = pandas_version_under_1()
 
         def part_to_array(part: 'pandas.DataFrame') -> np.ndarray:

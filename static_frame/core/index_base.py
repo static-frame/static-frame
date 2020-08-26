@@ -14,6 +14,7 @@ from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.exception import ErrorInitIndex
 
 
 
@@ -92,12 +93,15 @@ class IndexBase(ContainerOperand):
 
     @classmethod
     def from_pandas(cls,
-            value: 'pandas.DataFrame',
+            value: 'pandas.Index',
             ) -> 'IndexBase':
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
         import pandas
+        if not isinstance(value, pandas.Index):
+            raise ErrorInitIndex('from_pandas must be called with a Pandas object')
+
         from static_frame import Index
         from static_frame import IndexGO
         from static_frame import IndexHierarchy
@@ -107,7 +111,7 @@ class IndexBase(ContainerOperand):
         from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.MultiIndex):
-            # iterating over a hierarchucal index will iterate over labels
+            # iterating over a hierarchical index will iterate over labels
             name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
             # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
             if all(n is None for n in name): #type: ignore

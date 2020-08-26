@@ -25,9 +25,6 @@ class StoreHDF5(Store):
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
             config: StoreConfigMapInitializer = None
-            # include_index: bool = True,
-            # include_columns: bool = True,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
         config_map = StoreConfigMap.from_initializer(config)

@@ -2105,6 +2105,9 @@ class TestUnit(TestCase):
                 (np.datetime64('2014'), None))
                 )
 
+    def test_series_from_pandas_g(self) -> None:
+        with self.assertRaises(ErrorInitSeries):
+            Series.from_pandas(Series(['a', 'b', None], index=list('abc')))
 
 
     #---------------------------------------------------------------------------

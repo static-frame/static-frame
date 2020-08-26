@@ -295,6 +295,10 @@ class Series(ContainerOperand):
         Returns:
             :obj:`static_frame.Series`
         '''
+        import pandas
+        if not isinstance(value, pandas.Series):
+            raise ErrorInitSeries('from_pandas must be called with a Pandas object')
+
         if pandas_version_under_1():
             if own_data:
                 data = value.values
