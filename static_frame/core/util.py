@@ -22,14 +22,12 @@ import numpy as np
 
 
 if tp.TYPE_CHECKING:
-
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
-
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -50,9 +48,6 @@ if tp.TYPE_CHECKING:
 
 DEFAULT_SORT_KIND = 'mergesort'
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
-
-# ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
-# ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
 
 DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
 DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
@@ -103,6 +98,8 @@ EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 NAT = np.datetime64('nat')
+NAT_STR = 'NaT'
+
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 

@@ -1,6 +1,7 @@
 import unittest
 # from io import StringIO
 import numpy as np
+from datetime import date
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -13,6 +14,8 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
 from static_frame.core.display import DisplayConfig
+
+
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -431,7 +434,7 @@ class TestUnit(TestCase):
                     (('f2', True), ('f3', True))
                     )
 
-
+    #---------------------------------------------------------------------------
     def test_bus_to_xlsx_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -561,6 +564,20 @@ class TestUnit(TestCase):
 
         for frame in (f1, f2):
             self.assertTrue(frame.equals(b2[frame.name]))
+
+
+    def test_bus_to_xlsx_f(self) -> None:
+        f = Frame.from_records([
+                [np.datetime64(date(2020, 7, 31)), np.datetime64(date(2020, 8, 1))]
+                ], name='frame')
+        bus = Bus.from_frames([f])
+
+        with temp_file('.xlsx') as fp:
+            # bus.to_xlsx(fp)
+            pass
+
+            # import ipdb; ipdb.set_trace()
+
 
 
 
