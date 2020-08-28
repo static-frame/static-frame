@@ -1721,7 +1721,7 @@ class Frame(ContainerOperand):
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an SQLite database file.
@@ -1739,7 +1739,7 @@ class Frame(ContainerOperand):
         return st.read(label,
                 config=config,
                 container_type=cls,
-                store_filter=store_filter,
+                # store_filter=store_filter,
                 )
 
     @classmethod
@@ -1750,7 +1750,7 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             columns_depth: int = 1,
             consolidate_blocks: bool = False,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an HDF5 file.
@@ -1767,7 +1767,7 @@ class Frame(ContainerOperand):
         return st.read(label,
                 config=config,
                 container_type=cls,
-                store_filter=store_filter,
+                # store_filter=store_filter,
                 )
 
     @classmethod
@@ -5760,7 +5760,7 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
         '''
         Write the Frame as single-table SQLite file.
@@ -5776,7 +5776,7 @@ class Frame(ContainerOperand):
         st = StoreSQLite(fp)
         st.write(((label, self),),
                 config=config,
-                store_filter=store_filter,
+                # store_filter=store_filter,
                 )
 
     def to_hdf5(self,
@@ -5785,7 +5785,7 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
         '''
         Write the Frame as single-table SQLite file.
@@ -5806,7 +5806,7 @@ class Frame(ContainerOperand):
         st = StoreHDF5(fp)
         st.write(((label, self),),
                 config=config,
-                store_filter=store_filter,
+                # store_filter=store_filter,
                 )
 
 

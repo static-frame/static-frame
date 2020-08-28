@@ -27,7 +27,7 @@ class StoreHDF5(Store):
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
             config: StoreConfigMapInitializer = None,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
         config_map = StoreConfigMap.from_initializer(config)
@@ -71,7 +71,7 @@ class StoreHDF5(Store):
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
-            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
         Args:
