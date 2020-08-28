@@ -28,8 +28,8 @@ class StoreConfig:
     dtypes: DtypesSpecifier
     include_index: bool
     include_columns: bool
-    format_index: tp.Optional[tp.Dict[str, tp.Any]]
-    format_columns: tp.Optional[tp.Dict[str, tp.Any]]
+    # format_index: tp.Optional[tp.Dict[str, tp.Any]]
+    # format_columns: tp.Optional[tp.Dict[str, tp.Any]]
     merge_hierarchical_labels: bool
 
     @classmethod
@@ -60,8 +60,8 @@ class StoreConfig:
             'include_index_name',
             'include_columns',
             'include_columns_name',
-            'format_index',
-            'format_columns',
+            # 'format_index',
+            # 'format_columns',
             'merge_hierarchical_labels',
             )
 
@@ -79,16 +79,14 @@ class StoreConfig:
             include_columns: bool = True,
             include_columns_name: bool = False,
             # not used by all exporters
-            format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
+            # format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
+            # format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
             ):
         '''
         Args:
             include_index: Boolean to determine if the ``index`` is included in output.
             include_columns: Boolean to determine if the ``columns`` is included in output.
-            format_index: dictionary of writer format specifications.
-            format_columns: dictionary of writer format specifications.
         '''
 
         # constructor
@@ -105,8 +103,8 @@ class StoreConfig:
         self.include_columns = include_columns
         self.include_columns_name = include_columns_name
 
-        self.format_index = format_index
-        self.format_columns = format_columns
+        # self.format_index = format_index
+        # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
 # NOTE: key should be tp.Optional[str], but cannot get mypy to accept

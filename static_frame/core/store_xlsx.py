@@ -310,11 +310,11 @@ class StoreXLSX(Store):
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
             format_columns = FormatDefaults.get_format_or_default(
                     wb,
-                    c.format_columns,
+                    None,
                     format_funcs=(FormatDefaults.label,))
             format_index = FormatDefaults.get_format_or_default(
                     wb,
-                    c.format_index,
+                    None,
                     format_funcs=(FormatDefaults.label,))
 
             # NOTE: note yet using StoreConfig
