@@ -247,7 +247,7 @@ class TestUnit(TestCase):
         attr2, switch2 = StoreXLSX._dtype_to_writer_attr(
                 np.array(('2020-01-01', '2021-01-01'), dtype=np.datetime64).dtype)
 
-        self.assertEqual(attr2, 'write_datetime')
+        self.assertEqual(attr2, 'write')
         self.assertEqual(switch2, True)
 
 if __name__ == '__main__':

@@ -6274,6 +6274,26 @@ class TestUnit(TestCase):
                     ['__index0__', 0])
 
 
+    def test_frame_to_xlsx_f(self) -> None:
+
+        f1 = Frame.from_element('',
+                columns=('a', 'b'),
+                index=('x', 'y'))
+
+        with temp_file('.xlsx') as fp:
+
+            f1.to_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, index_depth=1)
+            self.assertEqual(f2.fillna(0).to_pairs(0),
+                    (('a', (('x', 0.0), ('y', 0.0))), ('b', (('x', 0.0), ('y', 0.0))))
+                    )
+
+            f3 = Frame.from_xlsx(fp, index_depth=1, store_filter=StoreFilter(to_nan=set()))
+            self.assertEqual(f3.to_pairs(0),
+                    (('a', (('x', ''), ('y', ''))), ('b', (('x', ''), ('y', '')))))
+
+
+
     #---------------------------------------------------------------------------
     def test_frame_from_xlsx_a(self) -> None:
         records = (

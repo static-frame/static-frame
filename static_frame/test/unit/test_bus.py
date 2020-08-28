@@ -1,7 +1,8 @@
 import unittest
+from datetime import date
+from datetime import datetime
 # from io import StringIO
 import numpy as np
-from datetime import date
 
 from static_frame.core.frame import Frame
 from static_frame.core.bus import Bus
@@ -568,15 +569,32 @@ class TestUnit(TestCase):
 
     def test_bus_to_xlsx_f(self) -> None:
         f = Frame.from_records([
-                [np.datetime64(date(2020, 7, 31)), np.datetime64(date(2020, 8, 1))]
-                ], name='frame')
-        bus = Bus.from_frames([f])
+                [np.datetime64('1983-02-20 05:34:18.763'), np.datetime64('2020-08-01')],
+                [np.datetime64('1975-03-20 05:20:18.001'), np.datetime64('2020-07-31')]
+                ],
+                columns=(date(2020, 7, 31), date(2020, 8, 1)),
+                index=(datetime(2020, 7, 31, 14, 20, 8), datetime(2017, 4, 28, 2, 30, 2)),
+                name='frame')
+        b1 = Bus.from_frames([f])
 
         with temp_file('.xlsx') as fp:
-            # bus.to_xlsx(fp)
-            pass
+            b1.to_xlsx(fp)
 
-            # import ipdb; ipdb.set_trace()
+            config = StoreConfig(include_index=True, index_depth=1)
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        self.assertEqual(b2['frame'].index.values.tolist(),
+                [datetime(2020, 7, 31, 14, 20, 8),
+                datetime(2017, 4, 28, 2, 30, 2)])
+
+        self.assertEqual(b2['frame'].index.values.tolist(),
+                [datetime(2020, 7, 31, 14, 20, 8),
+                datetime(2017, 4, 28, 2, 30, 2)])
+
+        self.assertEqual(b2['frame'].values.tolist(),
+                [[datetime(1983, 2, 20, 5, 34, 18, 763000), datetime(2020, 8, 1, 0, 0)], [datetime(1975, 3, 20, 5, 20, 18, 1000), datetime(2020, 7, 31, 0, 0)]]
+)
 
 
 

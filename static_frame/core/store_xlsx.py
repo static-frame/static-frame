@@ -1,5 +1,6 @@
 
 import typing as tp
+import datetime
 
 import numpy as np
 
@@ -40,6 +41,39 @@ MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384 #1024 on libre office
 
 
+class FormatDefaults:
+
+    @staticmethod
+    def label(f: 'Format'):
+        f.set_bold()
+        return f
+
+    @staticmethod
+    def date(f: 'Format'):
+        f.set_num_format('yyyy-mm-dd')
+        return f
+
+    @staticmethod
+    def datetime(f: 'Format'):
+        f.set_num_format('yyyy-mm-ddThh:mm:ss.000') # ISO 8601 requires the T
+        return f
+
+    @staticmethod
+    def get_format_or_default(
+            workbook: 'Workbook', # do not want module level import o
+            format_specifier: tp.Optional[tp.Dict[str, tp.Any]],
+            format_funcs: tp.Iterable[tp.Callable[['Format'], None]]
+            ) -> 'Format':
+        if format_specifier:
+            return workbook.add_format(format_specifier)
+        f = workbook.add_format()
+        for func in format_funcs:
+            f = func(f)
+        return f
+
+
+
+
 class StoreXLSX(Store):
 
     _EXT: tp.FrozenSet[str] =  frozenset(('.xlsx',))
@@ -55,10 +89,11 @@ class StoreXLSX(Store):
         '''
         kind = dtype.kind
 
-        if kind in DTYPE_NAT_KINDS and dtype != DT64_MONTH and dtype != DT64_YEAR:
-            # NOTE: not certain if this is a benefit
-            return 'write_datetime', True
-        elif dtype == DTYPE_BOOL:
+        # NOTE: xlsxwriter cannot handle datetime64, raises TypeError("Unknown or unsupported datetime type")
+        # if kind in DTYPE_NAT_KINDS and dtype != DT64_MONTH and dtype != DT64_YEAR:
+        #     return 'write_datetime', True
+
+        if dtype == DTYPE_BOOL:
             return 'write_boolean', False
         elif kind in DTYPE_STR_KINDS:
             return 'write_string', False
@@ -67,17 +102,6 @@ class StoreXLSX(Store):
         elif kind in DTYPE_INEXACT_KINDS:
             return 'write_number', True
         return 'write', True
-
-    @staticmethod
-    def _get_format_or_default(
-            workbook: 'Workbook', # do not want module level import o
-            format_specifier: tp.Optional[tp.Dict[str, tp.Any]]
-            ) -> 'Format':
-        if format_specifier:
-            return workbook.add_format(format_specifier)
-        f = workbook.add_format()
-        f.set_bold()
-        return f
 
     @classmethod
     def _get_writer(cls,
@@ -98,24 +122,29 @@ class StoreXLSX(Store):
                 row: int,
                 col: int,
                 value: tp.Any,
-                cell_format: tp.Optional[xlsxwriter.format.Format] = None
+                format_date: xlsxwriter.format.Format,
+                format_datetime: xlsxwriter.format.Format,
+                format_cell: tp.Optional[xlsxwriter.format.Format] = None,
                 ) -> tp.Any:
 
             # cannot yet write complex types directly, so covert to string
             if isinstance(value, COMPLEX_TYPES):
-                return ws.write_string(row, col, str(value), cell_format)
+                return ws.write_string(row, col, str(value), format_cell)
 
             if writer_attr == 'write':
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
-                    return ws.write_boolean(row, col, value, cell_format)
+                    return ws.write_boolean(row, col, value, format_cell)
                 if isinstance(value, str):
-                    return ws.write_string(row, col, value, cell_format)
+                    return ws.write_string(row, col, value, format_cell)
                 if isinstance(value, NUMERIC_TYPES):
-                    return ws.write_number(row, col, value, cell_format)
-
+                    return ws.write_number(row, col, value, format_cell)
+                if isinstance(value, datetime.datetime): # NOTE: must come before date isinstance check
+                    return ws.write_datetime(row, col, value, format_datetime)
+                if isinstance(value, datetime.date):
+                    return ws.write_datetime(row, col, value, format_date)
             # use the type specific writer_native
-            return writer_native(row, col, value, cell_format)
+            return writer_native(row, col, value, format_cell)
         return writer
 
     @classmethod
@@ -129,6 +158,12 @@ class StoreXLSX(Store):
             include_index_name: bool = True,
             format_columns: 'Format',
             format_index: 'Format',
+            format_date: 'Format',
+            format_datetime: 'Format',
+            format_columns_date: 'Format',
+            format_columns_datetime: 'Format',
+            format_index_date: 'Format',
+            format_index_datetime: 'Format',
             merge_hierarchical_labels: bool,
             store_filter: tp.Optional[StoreFilter]
             ) -> None:
@@ -172,36 +207,60 @@ class StoreXLSX(Store):
                         writer_names(0, # always populate in top-most row
                                 col,
                                 index_names[col],
-                                format_index)
+                                format_cell=format_index,
+                                format_date=format_index_date,
+                                format_datetime=format_index_datetime,
+                                )
                     if include_columns_name and col == 0:
                         for i in range(columns_depth):
                             writer_names(i,
                                     col, # always 0, populate in left-most colum
                                     columns_names[i],
-                                    format_columns)
+                                    format_cell=format_columns,
+                                    format_date=format_columns_date,
+                                    format_datetime=format_columns_datetime,
+                                    )
                 else: # col >= index_depth_effective:
                     if columns_depth == 1:
                         writer_columns(0,
                                 col,
                                 columns_values[col - index_depth_effective],
-                                format_columns)
+                                format_cell=format_columns,
+                                format_date=format_columns_date,
+                                format_datetime=format_columns_datetime,
+                                )
                     elif columns_depth > 1:
                         for i in range(columns_depth):
                             # here, row selection is column count, column selection is depth
                             writer_columns(i,
                                     col,
                                     columns_values[col - index_depth_effective, i],
-                                    format_columns)
+                                    format_cell=format_columns,
+                                    format_date=format_columns_date,
+                                    format_datetime=format_columns_datetime,
+                                    )
             if store_filter:
                 # thi might change the dtype
                 values = store_filter.from_type_filter_array(values)
             writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the effective column depth
             for row, v in enumerate(values, columns_depth_effective):
-                writer(row,
-                        col,
-                        v,
-                        format_index if col < index_depth_effective else None)
+                if col < index_depth_effective:
+                    writer(row,
+                            col,
+                            v,
+                            format_cell=format_index,
+                            format_date=format_index_date,
+                            format_datetime=format_index_datetime,
+                            )
+                else:
+                    writer(row,
+                            col,
+                            v,
+                            format_cell=None,
+                            format_date=format_date,
+                            format_datetime=format_datetime,
+                            )
 
         # post process to merge cells; need to get width of at depth
         if include_columns and merge_hierarchical_labels and columns_depth > 1:
@@ -219,7 +278,7 @@ class StoreXLSX(Store):
                 col = depth
                 for label, width in frame._index.label_widths_at_depth(depth):
                     # TODO: use store_filter
-                    ws.merge_range(row, col, row + width - 1, col, label, format_columns)
+                    ws.merge_range(row, col, row + width - 1, col, label, format_index)
                     row += width
 
     @store_coherent_write
@@ -242,18 +301,62 @@ class StoreXLSX(Store):
 
         import xlsxwriter
 
-        wb = xlsxwriter.Workbook(self._fp)
+        # NOTE: can supply second argument: {'default_date_format': 'dd/mm/yy'}
+        wb = xlsxwriter.Workbook(self._fp, {'remove_timezone': True})
 
         for label, frame in items:
             c = config_map[label]
-            format_columns = self._get_format_or_default(wb, c.format_columns)
-            format_index = self._get_format_or_default(wb, c.format_index)
+
+            # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
+            format_columns = FormatDefaults.get_format_or_default(
+                    wb,
+                    c.format_columns,
+                    format_funcs=(FormatDefaults.label,))
+            format_index = FormatDefaults.get_format_or_default(
+                    wb,
+                    c.format_index,
+                    format_funcs=(FormatDefaults.label,))
+
+            # NOTE: note yet using StoreConfig
+            format_date = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.date,))
+            format_datetime = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.datetime,))
+
+            format_columns_date = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.label, FormatDefaults.date))
+            format_columns_datetime = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
+
+            format_index_date = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.label, FormatDefaults.date))
+            format_index_datetime = FormatDefaults.get_format_or_default(
+                    wb,
+                    None,
+                    format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
+
 
             ws = wb.add_worksheet(label)
             self._frame_to_worksheet(frame,
                     ws,
                     format_columns=format_columns,
                     format_index=format_index,
+                    format_date=format_date,
+                    format_datetime=format_datetime,
+                    format_columns_date=format_columns_date,
+                    format_columns_datetime=format_columns_datetime,
+                    format_index_date=format_index_date,
+                    format_index_datetime=format_index_datetime,
                     include_index=c.include_index,
                     include_index_name=c.include_index_name,
                     include_columns=c.include_columns,

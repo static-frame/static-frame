@@ -1686,6 +1686,7 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a sheet in an XLSX workbook.
@@ -1705,7 +1706,11 @@ class Frame(ContainerOperand):
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, config=config, container_type=cls)
+        return st.read(label,
+                config=config,
+                store_filter=store_filter,
+                container_type=cls,
+                )
 
     @classmethod
     def from_sqlite(cls,
@@ -1716,6 +1721,7 @@ class Frame(ContainerOperand):
             columns_depth: int = 1,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an SQLite database file.
@@ -1730,7 +1736,11 @@ class Frame(ContainerOperand):
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, config=config, container_type=cls)
+        return st.read(label,
+                config=config,
+                container_type=cls,
+                store_filter=store_filter,
+                )
 
     @classmethod
     def from_hdf5(cls,
@@ -1740,6 +1750,7 @@ class Frame(ContainerOperand):
             index_depth: int = 0,
             columns_depth: int = 1,
             consolidate_blocks: bool = False,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
         Load Frame from the contents of a table in an HDF5 file.
@@ -1753,7 +1764,11 @@ class Frame(ContainerOperand):
                 columns_depth=columns_depth,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, config=config, container_type=cls)
+        return st.read(label,
+                config=config,
+                container_type=cls,
+                store_filter=store_filter,
+                )
 
     @classmethod
     @doc_inject()
@@ -5716,7 +5731,8 @@ class Frame(ContainerOperand):
             include_index_name: bool = True,
             include_columns: bool = True,
             include_columns_name: bool = False,
-            merge_hierarchical_labels: bool = True
+            merge_hierarchical_labels: bool = True,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
         '''
         Write the Frame as single-sheet XLSX file.
@@ -5732,7 +5748,10 @@ class Frame(ContainerOperand):
                 merge_hierarchical_labels=merge_hierarchical_labels
                 )
         st = StoreXLSX(fp)
-        st.write(((label, self),), config=config)
+        st.write(((label, self),),
+                config=config,
+                store_filter=store_filter,
+                )
 
 
     def to_sqlite(self,
@@ -5741,6 +5760,7 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
         '''
         Write the Frame as single-table SQLite file.
@@ -5754,7 +5774,10 @@ class Frame(ContainerOperand):
                 )
 
         st = StoreSQLite(fp)
-        st.write(((label, self),), config=config)
+        st.write(((label, self),),
+                config=config,
+                store_filter=store_filter,
+                )
 
     def to_hdf5(self,
             fp: PathSpecifier, # not sure file-like StringIO works
@@ -5762,6 +5785,7 @@ class Frame(ContainerOperand):
             label: tp.Optional[str] = None,
             include_index: bool = True,
             include_columns: bool = True,
+            store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
         '''
         Write the Frame as single-table SQLite file.
@@ -5780,7 +5804,10 @@ class Frame(ContainerOperand):
             label = self.name
 
         st = StoreHDF5(fp)
-        st.write(((label, self),), config=config)
+        st.write(((label, self),),
+                config=config,
+                store_filter=store_filter,
+                )
 
 
     @doc_inject(class_name='Frame')

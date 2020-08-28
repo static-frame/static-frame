@@ -264,7 +264,6 @@ class StoreFilter:
 
         if kind in DTYPE_NAT_KINDS:
             post = None
-
             if array.dtype == DT64_YEAR or array.dtype == DT64_MONTH:
                 post = array.astype(str) # nat will go to "NaT"
 
@@ -273,8 +272,9 @@ class StoreFilter:
             else: # still datetime
                 is_nat = np.isnat(array)
 
+            # we always force datetime64 to object, as most formats (i.e., XLSX) are not prepared to write them
+            post = post if post is not None else array.astype(DTYPE_OBJECT)
             if is_nat.any():
-                post = post if post is not None else array.astype(DTYPE_OBJECT)
                 post[is_nat] = self.from_nat
             return post if post is not None else array
 

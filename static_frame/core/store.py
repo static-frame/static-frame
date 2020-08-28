@@ -87,8 +87,8 @@ class StoreConfig:
         Args:
             include_index: Boolean to determine if the ``index`` is included in output.
             include_columns: Boolean to determine if the ``columns`` is included in output.
-            format_index: dictionary of writer format specfications.
-            format_columns: dictionary of writer format specfications.
+            format_index: dictionary of writer format specifications.
+            format_columns: dictionary of writer format specifications.
         '''
 
         # constructor

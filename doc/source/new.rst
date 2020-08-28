@@ -6,6 +6,10 @@ What is New in Static Frame
 
 Restored parameter name in ``Series.relabel`` to be ``index``.
 
+Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.
+
+Exposed ``store_filter`` parameters in ``Frame.from_xlsx``, ``Frame.from_sqlite``, ``Frame.from_hdf5``, ``Frame.to_xlsx``, ``Frame.to_sqlite``, ``Frame.to_hdf5``.
+
 
 0.6.29
 ----------
