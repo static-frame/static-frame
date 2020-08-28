@@ -15,8 +15,8 @@ from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
 
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-from static_frame.core.store_filter import StoreFilter
+# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+# from static_frame.core.store_filter import StoreFilter
 
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS

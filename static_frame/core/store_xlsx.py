@@ -21,12 +21,12 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_YEAR
+# from static_frame.core.util import DT64_MONTH
+# from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
+# from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
@@ -61,11 +61,11 @@ class FormatDefaults:
     @staticmethod
     def get_format_or_default(
             workbook: 'Workbook', # do not want module level import o
-            format_specifier: tp.Optional[tp.Dict[str, tp.Any]],
+            # format_specifier: tp.Optional[tp.Dict[str, tp.Any]],
             format_funcs: tp.Iterable[tp.Callable[['Format'], None]]
             ) -> 'Format':
-        if format_specifier:
-            return workbook.add_format(format_specifier)
+        # if format_specifier:
+        #     return workbook.add_format(format_specifier)
         f = workbook.add_format()
         for func in format_funcs:
             f = func(f)
@@ -310,39 +310,30 @@ class StoreXLSX(Store):
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
             format_columns = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label,))
             format_index = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label,))
 
-            # NOTE: note yet using StoreConfig
             format_date = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.date,))
             format_datetime = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.datetime,))
 
             format_columns_date = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label, FormatDefaults.date))
             format_columns_datetime = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
 
             format_index_date = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label, FormatDefaults.date))
             format_index_datetime = FormatDefaults.get_format_or_default(
                     wb,
-                    None,
                     format_funcs=(FormatDefaults.label, FormatDefaults.datetime,))
 
 
