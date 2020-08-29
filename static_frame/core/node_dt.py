@@ -24,7 +24,7 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import EMPTY_TUPLE
-
+from static_frame.core.util import DTYPE_STR_KINDS
 
 if tp.TYPE_CHECKING:
 
@@ -60,7 +60,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
     DT64_EXCLUDE_YEAR = (DT64_YEAR,)
     DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
-    DT64_TIME = {
+    DT64_TIME = frozenset((
             DT64_H,
             DT64_M,
             DT64_S,
@@ -70,16 +70,16 @@ class InterfaceDatetime(Interface[TContainer]):
             DT64_PS,
             DT64_FS,
             DT64_AS,
-            }
+            ))
 
-    DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO = {
+    DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO = frozenset((
             DT64_YEAR,
             DT64_MONTH,
             DT64_NS,
             DT64_PS,
             DT64_FS,
             DT64_AS,
-            }
+            ))
 
     def __init__(self,
             blocks: BlocksType,
@@ -89,11 +89,30 @@ class InterfaceDatetime(Interface[TContainer]):
         self._blocks_to_container: ToContainerType[TContainer] = blocks_to_container
 
     @staticmethod
-    def _validate_dtype(
+    def _validate_dtype_non_str(
             dtype: np.dtype,
             exclude: tp.Iterable[np.dtype] = EMPTY_TUPLE,
             ) -> None:
+        '''
+        Only support dtypes that are (or contain) datetime64 types. This is because most conversions from string can be done simply with astype().
+        '''
         if ((dtype.kind == DTYPE_DATETIME_KIND
+                or dtype == DTYPE_OBJECT)
+                and dtype not in exclude
+                ):
+            return
+        raise RuntimeError(f'invalid dtype ({dtype}) for date operation')
+
+
+    @staticmethod
+    def _validate_dtype_str(
+            dtype: np.dtype,
+            exclude: tp.Iterable[np.dtype] = EMPTY_TUPLE,
+            ) -> None:
+        '''
+        Only support dtypes that are (or contain) strings.
+        '''
+        if ((dtype.kind in DTYPE_STR_KINDS
                 or dtype == DTYPE_OBJECT)
                 and dtype not in exclude
                 ):
@@ -108,7 +127,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype)
+                self._validate_dtype_non_str(block.dtype)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
@@ -130,7 +149,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_INT_DEFAULT) % 12 + 1
@@ -152,7 +171,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY:
@@ -171,6 +190,7 @@ class InterfaceDatetime(Interface[TContainer]):
         return self._blocks_to_container(blocks())
 
 
+
     #---------------------------------------------------------------------------
 
     # replace: akward to implement, as cannot provide None for the parameters that you do not want to set
@@ -182,7 +202,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
-                self._validate_dtype(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY: # go to day first, then object
@@ -213,8 +233,8 @@ class InterfaceDatetime(Interface[TContainer]):
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
 
-                # NOTE: nanosecond and lower will return integers; should exclud
-                self._validate_dtype(block.dtype,
+                # NOTE: nanosecond and lower will return integers; should exclude
+                self._validate_dtype_non_str(block.dtype,
                         exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
@@ -240,7 +260,7 @@ class InterfaceDatetime(Interface[TContainer]):
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
 
-                self._validate_dtype(block.dtype,
+                self._validate_dtype_non_str(block.dtype,
                         exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 args = EMPTY_TUPLE
@@ -264,6 +284,29 @@ class InterfaceDatetime(Interface[TContainer]):
 
         return self._blocks_to_container(blocks())
 
+
+    def fromisoformat(self) -> TContainer:
+        '''
+        Return a :obj:`datetime.date` object from an ISO 8601 format.
+        '''
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for block in self._blocks:
+                self._validate_dtype_str(block.dtype)
+
+                # NOTE: might use fromisoformat on date/datetime objects directly; assumed to be faster to go through datetime64 objects, fromisoformat is only available on python 3.7
+
+                dt64_array = block.astype(np.datetime64)
+                if dt64_array.dtype in self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO:
+                    raise RuntimeError(f'invalid derived dtype ({dt64_array.dtype}) for iso format')
+                array = dt64_array.astype(object)
+                array.flags.writeable = False
+                yield array
+
+        return self._blocks_to_container(blocks())
+
+
+
     def strftime(self, format: str) -> TContainer:
         '''
         Return a string representing the date, controlled by an explicit format string.
@@ -273,7 +316,7 @@ class InterfaceDatetime(Interface[TContainer]):
             for block in self._blocks:
 
                 # NOTE: nanosecond and lower will return integers; should exclud
-                self._validate_dtype(block.dtype,
+                self._validate_dtype_non_str(block.dtype,
                         exclude=self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:

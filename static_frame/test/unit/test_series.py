@@ -3383,6 +3383,27 @@ class TestUnit(TestCase):
             s1.via_dt.isoformat()
 
 
+    def test_series_via_dt_fromisoformat_a(self) -> None:
+        s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'))
+        post = s1.via_dt.fromisoformat()
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
+
+        with self.assertRaises(RuntimeError):
+            _ = Series(('2014-02', '2013-11'), index=('x', 'y')).via_dt.fromisoformat()
+
+        with self.assertRaises(RuntimeError):
+            _ = Series(('2014', '2013'), index=('x', 'y')).via_dt.fromisoformat()
+
+    def test_series_via_dt_fromisoformat_b(self) -> None:
+        s1 = Series(('2014-02-12T05:03:20', '2013-11-28T23:45:34'), index=('x', 'y'))
+        post = s1.via_dt.fromisoformat()
+        self.assertEqual(post.values.tolist(),
+                [datetime.datetime(2014, 2, 12, 5, 3, 20),
+                datetime.datetime(2013, 11, 28, 23, 45, 34)])
+
+
 
     #---------------------------------------------------------------------------
 
