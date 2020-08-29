@@ -4,6 +4,8 @@ What is New in Static Frame
 0.6.30
 ----------
 
+Added ``via_dt.fromisoformat()`` to all containers, supporting creation of date/datetime objects from ISO 8601 strings.
+
 Restored parameter name in ``Series.relabel`` to be ``index``.
 
 Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.
