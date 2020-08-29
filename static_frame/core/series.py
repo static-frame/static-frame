@@ -759,16 +759,17 @@ class Series(ContainerOperand):
 
         own_index = False
         if index is IndexAutoFactory:
-            index = None
+            index_init = None
         elif is_callable_or_mapping(index): #type: ignore
-            index = self._index.relabel(index)
+            index_init = self._index.relabel(index)
             own_index = True
         elif index is None:
-            index = self._index
-        # else: attempt to use the index as is
+            index_init = self._index
+        else:
+            index_init = index #type: ignore
 
         return self.__class__(self.values,
-                index=index,
+                index=index_init,
                 own_index=own_index,
                 name=self._name)
 

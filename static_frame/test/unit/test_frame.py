@@ -6288,7 +6288,7 @@ class TestUnit(TestCase):
                     (('a', (('x', 0.0), ('y', 0.0))), ('b', (('x', 0.0), ('y', 0.0))))
                     )
 
-            f3 = Frame.from_xlsx(fp, index_depth=1, store_filter=StoreFilter(to_nan=set()))
+            f3 = Frame.from_xlsx(fp, index_depth=1, store_filter=StoreFilter(to_nan=frozenset()))
             self.assertEqual(f3.to_pairs(0),
                     (('a', (('x', ''), ('y', ''))), ('b', (('x', ''), ('y', '')))))
 

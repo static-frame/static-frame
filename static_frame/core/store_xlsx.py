@@ -44,17 +44,17 @@ MAX_XLSX_COLUMNS = 16384 #1024 on libre office
 class FormatDefaults:
 
     @staticmethod
-    def label(f: 'Format'):
+    def label(f: 'Format') -> 'Format':
         f.set_bold()
         return f
 
     @staticmethod
-    def date(f: 'Format'):
+    def date(f: 'Format') -> 'Format':
         f.set_num_format('yyyy-mm-dd')
         return f
 
     @staticmethod
-    def datetime(f: 'Format'):
+    def datetime(f: 'Format') -> 'Format':
         f.set_num_format('yyyy-mm-ddThh:mm:ss.000') # ISO 8601 requires the T
         return f
 

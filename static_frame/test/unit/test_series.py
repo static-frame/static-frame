@@ -3404,6 +3404,12 @@ class TestUnit(TestCase):
                 datetime.datetime(2013, 11, 28, 23, 45, 34)])
 
 
+    def test_series_via_dt_fromisoformat_c(self) -> None:
+        s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'), dtype=object)
+        post = s1.via_dt.fromisoformat()
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
 
     #---------------------------------------------------------------------------
 

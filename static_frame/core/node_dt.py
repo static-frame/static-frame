@@ -297,10 +297,10 @@ class InterfaceDatetime(Interface[TContainer]):
 
                 # NOTE: might use fromisoformat on date/datetime objects directly; assumed to be faster to go through datetime64 objects, fromisoformat is only available on python 3.7
 
-                dt64_array = block.astype(np.datetime64)
-                if dt64_array.dtype in self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO:
-                    raise RuntimeError(f'invalid derived dtype ({dt64_array.dtype}) for iso format')
-                array = dt64_array.astype(object)
+                array_dt64 = block.astype(np.datetime64)
+                if array_dt64.dtype in self.DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO:
+                    raise RuntimeError(f'invalid derived dtype ({array_dt64.dtype}) for iso format')
+                array = array_dt64.astype(object)
                 array.flags.writeable = False
                 yield array
 
