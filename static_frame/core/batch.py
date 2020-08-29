@@ -24,6 +24,9 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.node_selector import InterfaceSelectTrio
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import KeyOrKeys as KeyOrKeys
 
 
 FrameOrSeries = tp.Union[Frame, Series]
@@ -89,10 +92,10 @@ class Batch(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _realize(self) -> None:
-        # realize generator
-        if not hasattr(self._items, '__len__'):
-            self._items = tuple(self._items) #type: ignore
+    # def _realize(self) -> None:
+    #     # realize generator
+    #     if not hasattr(self._items, '__len__'):
+    #         self._items = tuple(self._items) #type: ignore
 
     def _derive(self,
             gen: GeneratorFrameItems,
@@ -132,8 +135,6 @@ class Batch(ContainerOperand):
         Returns:
             :obj:`tp.Tuple[int]`
         '''
-        self._realize()
-
         items = ((label, f.shape) for label, f in self._items)
         return Series.from_items(items, name='shape', dtype=DTYPE_OBJECT)
 
@@ -142,8 +143,6 @@ class Batch(ContainerOperand):
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
         config = config or DisplayActive.get()
-
-        self._realize()
 
         items = ((label, f.__class__) for label, f in self._items)
         series = Series.from_items(items, name=self._name)
@@ -232,13 +231,32 @@ class Batch(ContainerOperand):
                 key=key
                 )
 
-    @doc_inject(selector='selector')
     def __getitem__(self, key: GetItemKeyType) -> 'Batch':
         ''
         return self._apply_attr(
                 attr='__getitem__',
                 key=key
                 )
+
+    #---------------------------------------------------------------------------
+    def _drop_iloc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+        return self._apply_attr(
+                attr='_drop_iloc',
+                key=key
+                )
+
+    def _drop_loc(self, key: GetItemKeyTypeCompound) -> 'Batch':
+        return self._apply_attr(
+                attr='_drop_loc',
+                key=key
+                )
+
+    def _drop_getitem(self, key: GetItemKeyTypeCompound) -> 'Batch':
+        return self._apply_attr(
+                attr='_drop_getitem',
+                key=key
+                )
+
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -253,6 +271,45 @@ class Batch(ContainerOperand):
     @property
     def bloc(self) -> InterfaceGetItem['Batch']:
         return InterfaceGetItem(self._extract_bloc)
+
+    @property
+    def drop(self) -> InterfaceSelectTrio:
+        return InterfaceSelectTrio(
+            func_iloc=self._drop_iloc,
+            func_loc=self._drop_loc,
+            func_getitem=self._drop_getitem)
+
+    # NOTE: note sure if assign interfaces would work in this context
+
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+    # these methods operate on the Batch itself, not the contained Frames
+
+    def keys(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Iterator of :obj:`Frame` labels/
+        '''
+        for k, _ in self._items:
+            yield k
+
+    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+        '''
+        Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
+        '''
+        yield from self.keys()
+
+    @property
+    def values(self) -> tp.Iterator[FrameOrSeries]:
+        '''
+        Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
+        '''
+        return (v for _, v in self._items)
+
+    def items(self) -> IteratorFrameItems:
+        '''
+        Iterator of labels, :obj:`Frame`.
+        '''
+        return self._items.__iter__()
 
     #---------------------------------------------------------------------------
     # axis and shape ufunc methods
@@ -317,31 +374,142 @@ class Batch(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    def keys(self) -> tp.Iterator[tp.Hashable]:
-        '''
-        Iterator of :obj:`Frame` labels/
-        '''
-        for k, _ in self._items:
-            yield k
+    # transformations resulting in the same dimensionality
 
-    def __iter__(self) -> tp.Iterator[tp.Hashable]:
+    def sort_index(self,
+            *,
+            ascending: bool = True,
+            kind: str = DEFAULT_SORT_KIND
+            ) -> 'Batch':
         '''
-        Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
+        Return a new :obj:`Batch` with contained :obj;`Frame` ordered by the sorted ``index``.
         '''
-        yield from self.keys()
+        return self._apply_attr(
+                attr='sort_index',
+                ascending=ascending,
+                kind=kind,
+                )
+
+    def sort_columns(self,
+            *,
+            ascending: bool = True,
+            kind: str = DEFAULT_SORT_KIND
+            ) -> 'Batch':
+        '''
+        Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted ``columns``.
+        '''
+        return self._apply_attr(
+                attr='sort_columns',
+                ascending=ascending,
+                kind=kind,
+                )
+
+    def sort_values(self,
+            key: KeyOrKeys,
+            *,
+            ascending: bool = True,
+            axis: int = 1,
+            kind: str = DEFAULT_SORT_KIND) -> 'Batch':
+        '''
+        Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
+
+        Args:
+            key: a key or iterable of keys.
+        '''
+        return self._apply_attr(
+                attr='sort_values',
+                key=key,
+                ascending=ascending,
+                axis=axis,
+                kind=kind,
+                )
+
+    def isin(self, other: tp.Any) -> 'Batch':
+        '''
+        Return a new :obj:`Batch` with contained :obj:`Frame` as a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
+        '''
+        return self._apply_attr(
+                attr='isin',
+                other=other,
+                )
+
+    @doc_inject(class_name='Batch')
+    def clip(self, *,
+            lower=None,
+            upper=None,
+            axis: tp.Optional[int] = None):
+        '''{}
+
+        Args:
+            lower: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            upper: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
+            axis: required if ``lower`` or ``upper`` are given as a :obj:`static_frame.Series`.
+        '''
+        return self._apply_attr(
+                attr='clip',
+                lower=lower,
+                upper=upper,
+                axis=axis,
+                )
+
+    def transpose(self) -> 'Batch':
+        '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
+        '''
+        return self._apply_attr(attr='transpose')
 
     @property
-    def values(self) -> tp.Iterator[FrameOrSeries]:
+    def T(self) -> 'Batch':
+        '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
-        Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
-        '''
-        return (v for _, v in self._items)
+        return self._apply_attr(attr='transpose')
 
-    def items(self) -> IteratorFrameItems:
+
+
+    @doc_inject(selector='duplicated')
+    def duplicated(self, *,
+            axis=0,
+            exclude_first=False,
+            exclude_last=False) -> 'Batch':
         '''
-        Iterator of labels, :obj:`Frame`.
+        Return an axis-sized Boolean :obj:`Series` that shows True for all rows (axis 0) or columns (axis 1) duplicated.
+
+        Args:
+            {axis}
+            {exclude_first}
+            {exclude_last}
         '''
-        return self._items.__iter__()
+        return self._apply_attr(
+                attr='duplicated',
+                axis=axis,
+                exclude_first=exclude_first,
+                exclude_last=exclude_last,
+                )
+
+    @doc_inject(selector='duplicated')
+    def drop_duplicated(self, *,
+            axis=0,
+            exclude_first: bool = False,
+            exclude_last: bool = False
+            ) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contined :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
+
+        Args:
+            {axis}
+            {exclude_first}
+            {exclude_last}
+        '''
+        return self._apply_attr(
+                attr='drop_duplicated',
+                axis=axis,
+                exclude_first=exclude_first,
+                exclude_last=exclude_last,
+                )
+
+    # as only useful on Frame, perhaps skip?
+    # def set_index(self,
+    # def set_index_hierarchy(self,
+    # def unset_index(self, *,
 
     #---------------------------------------------------------------------------
     # exporter
@@ -359,28 +527,44 @@ class Batch(ContainerOperand):
         Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to single dimension along the provided `axis`.
         '''
         labels = []
-        def gen() -> tp.Iterator[FrameOrSeries]:
-            for label, frame in self._items:
-                labels.append(label)
-                yield frame
+        containers = []
+        ndim1d = True
+        for label, container in self._items:
+            labels.append(label)
+            ndim1d &= container.ndim == 1
+            containers.append(container)
 
         name = name if name is not None else self._name
 
-        if axis == 0 and index is None:
-            index = labels
-        if axis == 1 and columns is None:
-            columns = labels
+        if ndim1d:
+            if axis == 0 and index is None:
+                index = labels
+            if axis == 1 and columns is None:
+                columns = labels
 
-        return Frame.from_concat(gen(), #type: ignore
+            return Frame.from_concat(
+                    containers, #type: ignore
+                    axis=axis,
+                    union=union,
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    fill_value=fill_value,
+                    consolidate_blocks=consolidate_blocks,
+                    )
+        # produce a hierarchical index to return all Frames
+        f = Frame.from_concat_items(
+                zip(labels, containers), #type: ignore
                 axis=axis,
                 union=union,
-                index=index,
-                columns=columns,
                 name=name,
                 fill_value=fill_value,
                 consolidate_blocks=consolidate_blocks,
                 )
-
+        if index is not None or columns is not None:
+            # this relabels, as that is how Frame.from_concat works
+            f = f.relabel(index=index, columns=columns)
+        return f
 
     def to_bus(self) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)

@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``via_dt.fromisoformat()`` to all containers, supporting creation of date/datetime objects from ISO 8601 strings.
 
+``Batch.to_frame`` now returns a `Frame` with an `IndexHierarchy` if all ``Batch`` operations retain one or more ``Frame``.
+
 Restored parameter name in ``Series.relabel`` to be ``index``.
 
 Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.

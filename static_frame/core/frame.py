@@ -804,8 +804,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
-
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_items(cls,
@@ -1648,7 +1646,6 @@ class Frame(ContainerOperand):
             :obj:`static_frame.Frame`
         '''
         # HOTE: this uses tk for now, as this is simpler than pyperclip, as used by pandas
-
         import tkinter as tk
         root = tk.Tk()
         root.withdraw()
@@ -3409,7 +3406,6 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     # operator functions
 
-
     def _ufunc_unary_operator(self, operator: tp.Callable) -> 'Frame':
         # call the unary operator on _blocks
         return self.__class__(
@@ -3884,7 +3880,7 @@ class Frame(ContainerOperand):
             kind: str = DEFAULT_SORT_KIND
             ) -> 'Frame':
         '''
-        Return a new Frame ordered by the sorted Index.
+        Return a new :obj:`Frame` ordered by the sorted Index.
         '''
         if self._index.depth > 1:
             v = self._index.values
@@ -3914,7 +3910,7 @@ class Frame(ContainerOperand):
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
-        Return a new Frame ordered by the sorted Columns.
+        Return a new :obj:`Frame` ordered by the sorted ``columns``.
         '''
         if self._columns.depth > 1:
             v = self._columns.values
@@ -3944,9 +3940,9 @@ class Frame(ContainerOperand):
             *,
             ascending: bool = True,
             axis: int = 1,
-            kind=DEFAULT_SORT_KIND) -> 'Frame':
+            kind: str = DEFAULT_SORT_KIND) -> 'Frame':
         '''
-        Return a new Frame ordered by the sorted values, where values is given by single column or iterable of columns.
+        Return a new :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
         Args:
             key: a key or iterable of keys.
@@ -4012,9 +4008,9 @@ class Frame(ContainerOperand):
                 own_index=True
                 )
 
-    def isin(self, other) -> 'Frame':
+    def isin(self, other: tp.Any) -> 'Frame':
         '''
-        Return a same-sized Boolean Frame that shows if the same-positioned element is in the iterable passed to the function.
+        Return a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         '''
         array = isin(self.values, other)
         return self.__class__(array, columns=self._columns, index=self._index)
@@ -4072,7 +4068,7 @@ class Frame(ContainerOperand):
 
 
     def transpose(self) -> 'Frame':
-        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
+        '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.__class__(self._blocks.transpose(),
                 index=self._columns,
@@ -4082,17 +4078,17 @@ class Frame(ContainerOperand):
 
     @property
     def T(self) -> 'Frame':
-        '''Transpose. Return a :obj:`static_frame.Frame` with ``index`` as ``columns`` and vice versa.
+        '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
         return self.transpose()
 
     @doc_inject(selector='duplicated')
     def duplicated(self, *,
-            axis=0,
-            exclude_first=False,
-            exclude_last=False) -> 'Series':
+            axis: int = 0,
+            exclude_first: bool = False,
+            exclude_last: bool = False) -> 'Series':
         '''
-        Return an axis-sized Boolean Series that shows True for all rows (axis 0) or columns (axis 1) duplicated.
+        Return an axis-sized Boolean :obj:`Series` that shows True for all rows (axis 0) or columns (axis 1) duplicated.
 
         Args:
             {axis}
@@ -4111,12 +4107,12 @@ class Frame(ContainerOperand):
 
     @doc_inject(selector='duplicated')
     def drop_duplicated(self, *,
-            axis=0,
+            axis: int = 0,
             exclude_first: bool = False,
             exclude_last: bool = False
             ) -> 'Frame':
         '''
-        Return a Frame with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
+        Return a :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
 
         Args:
             {axis}
