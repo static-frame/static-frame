@@ -292,6 +292,7 @@ class InterfaceDatetime(Interface[TContainer]):
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for block in self._blocks:
+                # permit only string types, or objects types that contain strings
                 self._validate_dtype_str(block.dtype)
 
                 # NOTE: might use fromisoformat on date/datetime objects directly; assumed to be faster to go through datetime64 objects, fromisoformat is only available on python 3.7
