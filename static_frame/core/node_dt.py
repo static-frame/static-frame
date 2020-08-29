@@ -117,7 +117,7 @@ class InterfaceDatetime(Interface[TContainer]):
                 and dtype not in exclude
                 ):
             return
-        raise RuntimeError(f'invalid dtype ({dtype}) for date operation')
+        raise RuntimeError(f'invalid dtype ({dtype}) for operation on string types')
 
     #---------------------------------------------------------------------------
 

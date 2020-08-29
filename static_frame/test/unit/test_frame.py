@@ -9707,6 +9707,47 @@ class TestUnit(TestCase):
                 (('w', (('a', '12|04|05'), ('b', '14|01|01'))), ('x', (('a', '12|04|02'), ('b', '12|04|01'))), ('y', (('a', '20|05|03'), ('b', '20|01|03'))), ('z', (('a', '17|05|02'), ('b', '25|03|02'))))
                 )
 
+    def test_frame_as_dt_fromisoformat_a(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.via_dt.fromisoformat()
+
+    def test_frame_as_dt_fromisoformat_b(self) -> None:
+
+        dt64 = np.datetime64
+
+        f1 = Frame.from_records(
+                [['2020-05-03T20:30', ('2017-05-02T05:55')],
+                ['2020-01-03T20:30','2025-03-02T03:20']],
+                index=('a', 'b'),
+                columns=('w', 'x'),
+                consolidate_blocks=True
+                )
+
+        f2 = f1.via_dt.fromisoformat()
+
+        self.assertEqual(f2.to_pairs(0),
+                (('w', (('a', datetime.datetime(2020, 5, 3, 20, 30)), ('b', datetime.datetime(2020, 1, 3, 20, 30)))), ('x', (('a', datetime.datetime(2017, 5, 2, 5, 55)), ('b', datetime.datetime(2025, 3, 2, 3, 20)))))
+                )
+
 
     #---------------------------------------------------------------------------
     def test_frame_equals_a(self) -> None:
