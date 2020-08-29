@@ -273,8 +273,8 @@ class Batch(ContainerOperand):
         return InterfaceGetItem(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio:
-        return InterfaceSelectTrio(
+    def drop(self) -> InterfaceSelectTrio['Batch']:
+        return InterfaceSelectTrio( #type: ignore
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
             func_getitem=self._drop_getitem)
@@ -435,15 +435,16 @@ class Batch(ContainerOperand):
 
     @doc_inject(class_name='Batch')
     def clip(self, *,
-            lower=None,
-            upper=None,
-            axis: tp.Optional[int] = None):
+            lower: tp.Optional[tp.Union[float, Series, Frame]] = None,
+            upper: tp.Optional[tp.Union[float, Series, Frame]] = None,
+            axis: tp.Optional[int] = None
+            ) -> 'Batch':
         '''{}
 
         Args:
-            lower: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
-            upper: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
-            axis: required if ``lower`` or ``upper`` are given as a :obj:`static_frame.Series`.
+            lower: value, :obj:`Series`, :obj:`Frame`
+            upper: value, :obj:`Series`, :obj:`Frame`
+            axis: required if ``lower`` or ``upper`` are given as a :obj:`Series`.
         '''
         return self._apply_attr(
                 attr='clip',
@@ -467,9 +468,9 @@ class Batch(ContainerOperand):
 
     @doc_inject(selector='duplicated')
     def duplicated(self, *,
-            axis=0,
-            exclude_first=False,
-            exclude_last=False) -> 'Batch':
+            axis: int = 0,
+            exclude_first: bool = False,
+            exclude_last: bool = False) -> 'Batch':
         '''
         Return an axis-sized Boolean :obj:`Series` that shows True for all rows (axis 0) or columns (axis 1) duplicated.
 
@@ -486,7 +487,7 @@ class Batch(ContainerOperand):
                 )
 
     @doc_inject(selector='duplicated')
-    def drop_duplicated(self, *,
+    def drop_duplicated(self, *, #type: ignore
             axis=0,
             exclude_first: bool = False,
             exclude_last: bool = False
@@ -527,7 +528,7 @@ class Batch(ContainerOperand):
         Consolidate stored :obj:`Frame` into a new :obj:`Frame` using the stored labels as the index on the provided ``axis`` using :obj:`Frame.from_concat`. This assumes that that the contained :obj:`Frame` have been reduced to single dimension along the provided `axis`.
         '''
         labels = []
-        containers = []
+        containers: tp.List[FrameOrSeries] = []
         ndim1d = True
         for label, container in self._items:
             labels.append(label)
@@ -542,8 +543,8 @@ class Batch(ContainerOperand):
             if axis == 1 and columns is None:
                 columns = labels
 
-            return Frame.from_concat(
-                    containers, #type: ignore
+            return Frame.from_concat( #type: ignore
+                    containers,
                     axis=axis,
                     union=union,
                     index=index,
@@ -554,7 +555,7 @@ class Batch(ContainerOperand):
                     )
         # produce a hierarchical index to return all Frames
         f = Frame.from_concat_items(
-                zip(labels, containers), #type: ignore
+                zip(labels, containers),
                 axis=axis,
                 union=union,
                 name=name,

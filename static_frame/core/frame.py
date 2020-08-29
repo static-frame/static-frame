@@ -319,7 +319,7 @@ class Frame(ContainerOperand):
             union: bool = True,
             index: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
             columns: tp.Union[IndexInitializer, IndexAutoFactoryType] = None,
-            name: tp.Hashable = None,
+            name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
             ) -> 'Frame':
@@ -470,11 +470,11 @@ class Frame(ContainerOperand):
 
     @classmethod
     def from_concat_items(cls,
-            items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
+            items: tp.Iterable[tp.Tuple[tp.Hashable, tp.Union['Frame', Series]]],
             *,
             axis: int = 0,
             union: bool = True,
-            name: tp.Hashable = None,
+            name: NameType = None,
             fill_value: object = np.nan,
             consolidate_blocks: bool = False
             ) -> 'Frame':
@@ -4017,15 +4017,16 @@ class Frame(ContainerOperand):
 
     @doc_inject(class_name='Frame')
     def clip(self, *,
-            lower=None,
-            upper=None,
-            axis: tp.Optional[int] = None):
+            lower: tp.Optional[tp.Union[float, Series, 'Frame']] = None,
+            upper: tp.Optional[tp.Union[float, Series, 'Frame']] = None,
+            axis: tp.Optional[int] = None
+            ) -> 'Frame':
         '''{}
 
         Args:
-            lower: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
-            upper: value, :obj:`static_frame.Series`, :obj:`static_frame.Frame`
-            axis: required if ``lower`` or ``upper`` are given as a :obj:`static_frame.Series`.
+            lower: value, :obj:`Series`, :obj:`Frame`
+            upper: value, :obj:`Series`, :obj:`Frame`
+            axis: required if ``lower`` or ``upper`` are given as a :obj:`Series`.
         '''
         if lower is None and upper is None:
             return self.__class__(self._blocks.copy(),

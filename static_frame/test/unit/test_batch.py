@@ -360,7 +360,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         b1 = Batch.from_frames((f1, f2))
-        f3 = b1.loc['y':].to_frame(fill_value=0)
+        f3 = b1.loc['y':].to_frame(fill_value=0) #type: ignore
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((('f1', 'y'), 20), (('f1', 'z'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'y'), 40), (('f1', 'z'), 50), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'y'), 0), (('f1', 'z'), 0), (('f2', 'y'), 2), (('f2', 'z'), 3)))))
 
@@ -375,7 +375,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         b1 = Batch.from_frames((f1, f2))
-        f3 = b1.loc['y':].to_frame(fill_value=0, index=IndexAutoFactory)
+        f3 = b1.loc['y':].to_frame(fill_value=0, index=IndexAutoFactory) #type: ignore
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((0, 20), (1, 0), (2, 0), (3, 0))), ('b', ((0, 40), (1, 50), (2, 5), (3, 6))), ('c', ((0, 0), (1, 0), (2, 2), (3, 3)))))

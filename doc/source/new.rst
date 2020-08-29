@@ -8,6 +8,8 @@ Added ``via_dt.fromisoformat()`` to all containers, supporting creation of date/
 
 ``Batch.to_frame`` now returns a `Frame` with an `IndexHierarchy` if all ``Batch`` operations retain one or more ``Frame``.
 
+``Batch`` interface extended with core ``Frame`` methods.
+
 Restored parameter name in ``Series.relabel`` to be ``index``.
 
 Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.
