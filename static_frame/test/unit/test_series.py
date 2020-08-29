@@ -3514,6 +3514,37 @@ class TestUnit(TestCase):
                 ((Bar.b, Bar.b), (Bar.c, Bar.c))
                 )
 
+
+    def test_series_enum_c(self) -> None:
+        # see: https://github.com/InvestmentSystems/static-frame/issues/239
+
+        class Bar(str, Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s1 = sf.Series(Bar)
+
+        # for str Enum, must compare to .value
+        self.assertEqual((s1 == Bar.c).values.tolist(),
+                [False, False, False])
+        self.assertEqual((s1 == Bar.c.value).values.tolist(),
+                [False, False, True])
+
+        # comparisons to normal Enum's work as expected
+        class Foo(Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s2 = sf.Series(Foo)
+        self.assertEqual((s2 == Foo.c).values.tolist(),
+                [False, False, True])
+        self.assertEqual((s2 == Foo.c.value).values.tolist(),
+                [False, False, False])
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_insert_a(self) -> None:
