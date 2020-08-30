@@ -1,21 +1,16 @@
 import typing as tp
-
 from itertools import chain
 from itertools import product
 from functools import wraps
-
 import operator as operator_mod
-from collections import namedtuple
 
 import numpy as np
-
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayConfig
 from static_frame.core.display import DisplayFormats
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import DOC_TEMPLATE
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_INT_KINDS

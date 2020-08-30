@@ -2272,7 +2272,7 @@ class TypeBlocks(ContainerOperand):
                             sel_sided[bridging_count >= limit] = False # type: ignore
 
                         # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
-                        assigned[sel_sided] = bridging_values[sel_sided]
+                        assigned[sel_sided] = bridging_values[sel_sided] #pylint: disable=E1136
                         # only increment positions that are NaN here and have not-nan bridging values
                         sel_count_increment = sel & bridging_isnotna
                         bridging_count[sel_count_increment] += 1 # type: ignore
@@ -2335,7 +2335,7 @@ class TypeBlocks(ContainerOperand):
 
                             # update with full length or limited length?
                             bridging_count[idx] += sided_len # type: ignore
-                            assigned[idx, sel_slice] = bridging_values[idx]
+                            assigned[idx, sel_slice] = bridging_values[idx] #pylint: disable=E1136
 
                     # handle each row (going horizontally) in isolation
                     target_indexes = binary_transition(sel, axis=1)
