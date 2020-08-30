@@ -5,8 +5,8 @@ import numpy as np
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayFormats
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NameType

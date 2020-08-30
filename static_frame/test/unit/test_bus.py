@@ -14,7 +14,7 @@ from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 
 
 

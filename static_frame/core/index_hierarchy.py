@@ -15,7 +15,7 @@ from static_frame.core.container_util import key_from_container_key
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 

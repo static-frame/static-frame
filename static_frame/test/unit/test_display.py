@@ -23,7 +23,7 @@ from static_frame import DisplayConfigs
 from static_frame import DisplayFormats
 from static_frame import DisplayActive
 
-from static_frame.core.display import DisplayFormatLaTeX
+from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
 from static_frame.core.display import terminal_ansi
 # from static_frame.core.display import DisplayTypeBool

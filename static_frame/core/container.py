@@ -8,8 +8,8 @@ import numpy as np
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayFormats
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -22,6 +22,7 @@ from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import isna_array
 from static_frame.core.util import UFunc
+from static_frame.core.interface_meta import InterfaceMeta
 
 
 if tp.TYPE_CHECKING:
@@ -201,19 +202,8 @@ def _nanany(array: np.ndarray,
             out=out)
 
 #-------------------------------------------------------------------------------
-class ContainerMeta(type):
-    '''Lowest level metaclass for providing interface property on class.
-    '''
 
-    @property #type: ignore
-    @doc_inject()
-    def interface(cls) -> 'Frame':
-        '''{}'''
-        from static_frame.core.interface import InterfaceSummary
-        return InterfaceSummary.to_frame(cls) #type: ignore
-
-
-class ContainerOperandMeta(ContainerMeta):
+class ContainerOperandMeta(InterfaceMeta):
     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
     '''
 
@@ -282,7 +272,7 @@ class ContainerOperandMeta(ContainerMeta):
         return type.__new__(mcs, name, bases, attrs)
 
 
-class ContainerBase(metaclass=ContainerMeta):
+class ContainerBase(metaclass=InterfaceMeta):
     '''
     Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperand; only Bus inherits from ContainerBase.
     '''

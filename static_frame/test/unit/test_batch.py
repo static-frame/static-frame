@@ -17,7 +17,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.batch import Batch
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 
 
 class TestUnit(TestCase):

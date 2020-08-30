@@ -6,9 +6,10 @@ from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
 from static_frame.core.display import Display as Display
 from static_frame.core.display import DisplayActive as DisplayActive
-from static_frame.core.display import DisplayConfig as DisplayConfig
-from static_frame.core.display import DisplayConfigs as DisplayConfigs
-from static_frame.core.display import DisplayFormats as DisplayFormats
+from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
+from static_frame.core.display_config import DisplayConfig as DisplayConfig
+from static_frame.core.display_config import DisplayConfigs as DisplayConfigs
+from static_frame.core.display_config import DisplayFormats as DisplayFormats
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInit
 from static_frame.core.exception import ErrorInitBus
