@@ -213,14 +213,6 @@ UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
         'size_one_unity', # if the result of the operation on size 1 objects is that value
 ))
 
-# class UfuncSkipnaAttrs(tp.NamedTuple):
-#     ufunc: AnyCallable
-#     ufunc_skipna: AnyCallable
-#     dtypes: tp.Tuple[np.dtype, ...] # iterable of valid dtypes that can be returned; first is default of not match
-#     composable: bool # if partial solutions can be processed per block
-#     doc_header: str
-#     size_one_unity: bool # if the result of the operation on size 1 objects is that value
-
 # ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemetned on derived containers
 UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
         'all': UfuncSkipnaAttrs(
@@ -480,7 +472,7 @@ class ContainerOperandMeta(ContainerMeta):
 
 class ContainerBase(metaclass=ContainerMeta):
     '''
-    Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperaand; only Bus inherits from ContainerBase.
+    Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperand; only Bus inherits from ContainerBase.
     '''
     __slots__ = EMPTY_TUPLE
 
