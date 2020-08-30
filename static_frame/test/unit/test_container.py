@@ -2,17 +2,16 @@ import unittest
 
 import numpy as np
 
-from static_frame.core.container import ContainerOperand
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
-from static_frame.core.container import UFUNC_SHAPE_SKIPNA
-from static_frame.core.container import _any
+
 from static_frame.core.container import _all
+from static_frame.core.container import _any
 from static_frame.core.container import _nanall
 from static_frame.core.container import _nanany
 from static_frame.core.container import _ufunc_logical_skipna
-
+from static_frame.core.container import ContainerOperand
 from static_frame.test.test_case import TestCase
-
+from static_frame.test.test_case import UFUNC_AXIS_SKIPNA
+from static_frame.test.test_case import UFUNC_SHAPE_SKIPNA
 
 
 class TestUnit(TestCase):

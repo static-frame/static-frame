@@ -178,17 +178,6 @@ class IndexBase(ContainerOperand):
             ) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def _ufunc_axis_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        raise NotImplementedError()
-
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 

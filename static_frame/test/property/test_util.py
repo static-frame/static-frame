@@ -27,7 +27,7 @@ from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
 # from static_frame.test.property.strategies import get_blocks
 
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
+from static_frame.test.test_case import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.test_case import TestCase
 from static_frame.core import util

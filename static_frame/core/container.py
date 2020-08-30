@@ -205,31 +205,6 @@ def _nanany(array: np.ndarray,
             axis=axis,
             out=out)
 
-UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', (
-        'ufunc',
-        'ufunc_skipna',
-))
-
-UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
-        'all': UfuncSkipnaAttrs(_all, _nanall),
-        'any': UfuncSkipnaAttrs(_any, _nanany),
-        'sum': UfuncSkipnaAttrs(np.sum, np.nansum),
-        'min': UfuncSkipnaAttrs( np.min, np.nanmin),
-        'max': UfuncSkipnaAttrs(np.max, np.nanmax),
-        'mean': UfuncSkipnaAttrs(np.mean, np.nanmean),
-        'median': UfuncSkipnaAttrs(np.median, np.nanmedian),
-        'std': UfuncSkipnaAttrs(np.std, np.nanstd),
-        'var': UfuncSkipnaAttrs(np.var, np.nanvar),
-        'prod': UfuncSkipnaAttrs(np.prod, np.nanprod),
-        }
-
-# ufuncs that retain the shape and dimensionality
-UFUNC_SHAPE_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
-        'cumsum': UfuncSkipnaAttrs(np.cumsum, np.nancumsum),
-        'cumprod': UfuncSkipnaAttrs(np.cumprod, np.nancumprod),
-        }
-
-
 #-------------------------------------------------------------------------------
 class ContainerMeta(type):
     '''Lowest level metaclass for providing interface property on class.
@@ -287,70 +262,6 @@ class ContainerOperandMeta(ContainerMeta):
         f.__name__ = func_name
         return f
 
-    # @staticmethod
-    # def create_ufunc_axis_skipna(func_name: str) -> AnyCallable:
-    #     nt = UFUNC_AXIS_SKIPNA[func_name]
-    #     ufunc = nt.ufunc
-    #     ufunc_skipna = nt.ufunc_skipna
-    #     dtypes = nt.dtypes
-    #     composable = nt.composable
-    #     doc = nt.doc_header
-    #     size_one_unity = nt.size_one_unity
-
-    #     # these become the common defaults for all of these functions
-    #     def func(self: tp.Any,
-    #             axis: int = 0,
-    #             skipna: bool = True,
-    #             out: tp.Optional[np.ndarray] = None,
-    #             ) -> tp.Any:
-    #         # some NP contexts might call this function with out given as a kwarg; add it here for compatibility, but ensrue it is not being used
-    #         assert out is None
-    #         return self._ufunc_axis_skipna(
-    #                 axis=axis,
-    #                 skipna=skipna,
-    #                 ufunc=ufunc,
-    #                 ufunc_skipna=ufunc_skipna,
-    #                 composable=composable,
-    #                 dtypes=dtypes,
-    #                 size_one_unity=size_one_unity
-    #                 )
-
-    #     func.__name__ = func_name
-    #     func.__doc__ = DOC_TEMPLATE.ufunc_skipna.format(header=doc)
-    #     return func
-
-
-    # @staticmethod
-    # def create_ufunc_shape_skipna(func_name: str) -> AnyCallable:
-    #     # ufunc, ufunc_skipna, dtypes, composable, doc, suze_one_unity = UFUNC_SHAPE_SKIPNA[func_name]
-    #     nt = UFUNC_SHAPE_SKIPNA[func_name]
-    #     ufunc = nt.ufunc
-    #     ufunc_skipna = nt.ufunc_skipna
-    #     dtypes = nt.dtypes
-    #     composable = nt.composable
-    #     doc = nt.doc_header
-    #     size_one_unity = nt.size_one_unity
-
-    #     # these become the common defaults for all of these functions
-    #     def func(self: tp.Any,
-    #             axis: int = 0,
-    #             skipna: bool = True,
-    #             ) -> tp.Any:
-    #         return self._ufunc_shape_skipna(
-    #                 axis=axis,
-    #                 skipna=skipna,
-    #                 ufunc=ufunc,
-    #                 ufunc_skipna=ufunc_skipna,
-    #                 composable=composable,
-    #                 dtypes=dtypes,
-    #                 size_one_unity=size_one_unity
-    #                 )
-
-    #     func.__name__ = func_name
-    #     func.__doc__ = DOC_TEMPLATE.ufunc_skipna.format(header=doc)
-    #     return func
-
-
     def __new__(mcs, #type: ignore
             name: str,
             bases: tp.Tuple[type, ...],
@@ -372,12 +283,6 @@ class ContainerOperandMeta(ContainerMeta):
                     func_name,
                     opperand_count=2,
                     reverse=True)
-
-        # for func_name in UFUNC_AXIS_SKIPNA:
-        #     attrs[func_name] = mcs.create_ufunc_axis_skipna(func_name)
-
-        # for func_name in UFUNC_SHAPE_SKIPNA:
-        #     attrs[func_name] = mcs.create_ufunc_shape_skipna(func_name)
 
         return type.__new__(mcs, name, bases, attrs)
 

@@ -1905,33 +1905,6 @@ class TypeBlocks(ContainerOperand):
                 apply_column_2d_filter=apply_column_2d_filter,
                 ))
 
-
-
-    # def _ufunc_axis_skipna(self, *,
-    #         axis: int,
-    #         skipna: bool,
-    #         ufunc: UFunc,
-    #         ufunc_skipna: UFunc,
-    #         composable: bool,
-    #         dtypes: tp.Tuple[np.dtype, ...],
-    #         size_one_unity: bool
-    #         ) -> np.ndarray:
-    #     # not sure if these make sense on TypeBlocks, as they reduce dimensionality
-    #     raise NotImplementedError() #pragma: no cover
-
-    # def _ufunc_shape_skipna(self, *,
-    #         axis: int,
-    #         skipna: bool,
-    #         ufunc: UFunc,
-    #         ufunc_skipna: UFunc,
-    #         composable: bool,
-    #         dtypes: tp.Tuple[np.dtype, ...],
-    #         size_one_unity: bool
-    #         ) -> np.ndarray:
-    #     # not sure if these make sense on TypeBlocks, as they reduce dimensionality
-    #     raise NotImplementedError() #pragma: no cover
-
-
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 

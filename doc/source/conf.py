@@ -75,20 +75,6 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
     post['performance_cls'] = performance_cls
 
-    # def get_func_doc(cls: type, func_iter: tp.Iterable[str]) -> tp.List[tp.Tuple[str, str]]:
-    #     return [(f, getattr(cls, f).__doc__) for f in sorted(func_iter)]
-
-    # for cls in (sf.Index, sf.Series, sf.Frame):
-    #     label = cls.__name__
-    #     post[label + '_operator_unary'] = get_func_doc(cls,
-    #             _UFUNC_UNARY_OPERATORS)
-    #     post[label + '_operator_binary'] = get_func_doc(cls,
-    #             _UFUNC_BINARY_OPERATORS)
-
-    # for cls in (sf.Index, sf.Series, sf.Frame):
-    #     label = cls.__name__
-    #     post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
-
     # for docs
     post['examples_defined'] = get_defined()
     # post['interface_groups'] = INTERFACE_GROUP_ORDER

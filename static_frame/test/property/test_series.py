@@ -9,7 +9,7 @@ from hypothesis import given
 
 from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import _UFUNC_BINARY_OPERATORS
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
+from static_frame.test.test_case import UFUNC_AXIS_SKIPNA
 
 from static_frame.test.property import strategies as sfst
 
