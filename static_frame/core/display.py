@@ -1,20 +1,13 @@
 import sys
 import typing as tp
-import json
 import os
 import html
 import inspect
 import platform
-import re
-
-
-from enum import Enum
-
 from functools import partial
 from collections import namedtuple
 
 import numpy as np
-
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import _gen_skip_middle
@@ -23,7 +16,6 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import DisplayFormats
 from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
 from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
 from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL

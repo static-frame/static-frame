@@ -1,5 +1,5 @@
 import unittest
-import typing as tp
+# import typing as tp
 
 from static_frame.test.test_case import TestCase
 
