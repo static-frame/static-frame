@@ -14,9 +14,9 @@ Restored parameter name in ``Series.relabel`` to be ``index``.
 
 Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.
 
-Exposed ``store_filter`` parameters in ``Frame.from_xlsx``,``Frame.to_xlsx``.
+Exposed ``store_filter`` parameter in ``Frame.from_xlsx``,``Frame.to_xlsx``.
 
-Removed  ``format_index``, ``format_columns`` from ``StoreConfig``.
+Removed  ``format_index``, ``format_columns`` attributes from ``StoreConfig``.
 
 
 0.6.29
