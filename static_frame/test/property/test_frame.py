@@ -228,7 +228,7 @@ class TestUnit(TestCase):
     def test_frame_to_pandas(self, f1: Frame) -> None:
         post = f1.to_pandas()
         self.assertTrue(post.shape == f1.shape)
-        if not f1.isna().any().any(): # type: ignore
+        if not f1.isna().any().any():
             self.assertTrue((post.values == f1.values).all())
 
 

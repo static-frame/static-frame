@@ -69,7 +69,6 @@ DTYPE_INT_DEFAULT = np.dtype(np.int64)
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
 
-# used in UFUNC_AXIS_SKIPNA defintion
 DTYPES_BOOL = (DTYPE_BOOL,)
 DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
 
@@ -112,7 +111,7 @@ TIME_DELTA_ATTR_MAP = (
         ('microseconds', 'us')
         )
 
-# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
+# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 #-------------------------------------------------------------------------------

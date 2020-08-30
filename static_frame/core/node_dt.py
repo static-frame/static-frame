@@ -54,6 +54,7 @@ class InterfaceDatetime(Interface[TContainer]):
             'day',
             'weekday',
             'timetuple',
+            'fromisoformat',
             'isoformat',
             'strftime',
             )

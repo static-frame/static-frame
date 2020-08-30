@@ -1167,7 +1167,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # should raise with bad keyword argumenty
-            s2.median(skip_na=False) #type: ignore
+            s2.median(skip_na=False)
 
     #---------------------------------------------------------------------------
 

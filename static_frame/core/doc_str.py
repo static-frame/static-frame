@@ -48,36 +48,28 @@ class DOC_TEMPLATE:
     # functions
 
     to_html = '''
-    Return an HTML table representation of this :obj:`static_frame.{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
+    Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
 
     Args:
-        config: Optional :obj:`static_frame.DisplayConfig` instance.
+        config: Optional :obj:`DisplayConfig` instance.
 
     Returns:
         :obj:`str`
     '''
 
     to_html_datatables = '''
-    Return a complete HTML representation of this :obj:`static_frame.{class_name}` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
+    Return a complete HTML representation of this :obj:`{class_name}` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
 
     Args:
         fp: optional file path to write; if not provided, a temporary file will be created. Note: the caller is responsible for deleting this file.
         show: if True, the file will be opened with a webbrowser.
-        config: Optional :obj:`static_frame.DisplayConfig` instance.
+        config: Optional :obj:`DisplayConfig` instance.
 
     Returns:
         :obj:`str`, absolute file path to the file written.
     '''
 
-    clip = '''Apply a clip opertion to this :obj:`static_frame.{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
-
-    ufunc_skipna = '''{header}
-
-    Args:
-        axis: Axis, defaulting to axis 0.
-        skipna: Skip missing (NaN) values, defaulting to True.
-
-    '''
+    clip = '''Apply a clip opertion to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
     label_widths_at_depth = '''
     A generator of pairs, where each pair is the label and the count of that label found at the depth specified by  ``depth_level``.
@@ -87,7 +79,7 @@ class DOC_TEMPLATE:
     '''
 
     interface = '''
-    A :obj:`static_frame.Frame` documenting the interface of this class.
+    A :obj:`Frame` documenting the interface of this class.
     '''
 
     name = '''
@@ -272,7 +264,6 @@ class DOC_TEMPLATE:
             '''
             )
 
-
     mloc = dict(
             doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
             doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
@@ -298,7 +289,12 @@ class DOC_TEMPLATE:
             dtype=DTYPE_SPECIFIER
             )
 
-
+    ufunc_skipna = dict(
+            args = '''
+    Args:
+        axis: Axis, defaulting to axis 0.
+        skipna: Skip missing (NaN) values, defaulting to True.
+    ''')
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,
