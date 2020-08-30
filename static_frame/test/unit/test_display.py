@@ -26,7 +26,6 @@ from static_frame import DisplayActive
 from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.display import DisplayTypeCategoryFactory
 from static_frame.core.display import terminal_ansi
-# from static_frame.core.display import DisplayTypeBool
 from static_frame.core.display import DisplayTypeInt
 from static_frame.test.test_case import temp_file
 

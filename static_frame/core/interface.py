@@ -14,6 +14,7 @@ from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
 from static_frame.core.batch import Batch
@@ -703,6 +704,8 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
+            elif target is DisplayConfig:
+                instance = DisplayConfig()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):

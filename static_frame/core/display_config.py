@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-# from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core import display_html_datatables
 
 
@@ -273,7 +273,7 @@ _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
 
 
 #-------------------------------------------------------------------------------
-class DisplayConfig:
+class DisplayConfig(metaclass=InterfaceMeta):
     '''
     Storage container for all display settings.
     '''

@@ -15,9 +15,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from static_frame.core import display_html_datatables
 
-from static_frame.core import display_html_datatables
 from static_frame.core.display_color import HexColor
 from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import COMPLEX_TYPES
