@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.6.31
+----------
+
+Fixed issue when loading pickled containers where Boolean selection would not be properly identified.
+
+
 0.6.30
 ----------
 
@@ -20,7 +27,7 @@ Removed  ``format_index``, ``format_columns`` attributes from ``StoreConfig``.
 
 
 0.6.29
-----------
+----------h
 
 Fixed issue in ``Series.drop`` when the ``Series`` has an ``IndexHierarchy``.
 

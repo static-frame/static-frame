@@ -236,7 +236,7 @@ class LocMap:
                     # let Boolean key advance to next branch
                     key = reduce(operator_mod.or_, (labels_ref == k for k in key))
 
-            if is_array and key.dtype is DTYPE_BOOL:
+            if is_array and key.dtype == DTYPE_BOOL:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
