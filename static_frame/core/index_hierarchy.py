@@ -785,7 +785,7 @@ class IndexHierarchy(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand):
+        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
             operand = other.values
             assume_unique = False
         else:
