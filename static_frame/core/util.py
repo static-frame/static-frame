@@ -535,6 +535,9 @@ def dtype_kind_to_na(kind: str) -> tp.Any:
         return None
     if kind in DTYPE_INEXACT_KINDS:
         return np.nan
+    if kind in DTYPE_INT_KINDS:
+        # allow integers to go to float rather than object
+        return np.nan
     if kind in DTYPE_NAT_KINDS:
         return NAT
     raise NotImplementedError('no support for this dtype', kind)

@@ -1500,14 +1500,14 @@ class TypeBlocks(ContainerOperand):
                 yield b # no change
 
     #---------------------------------------------------------------------------
-    # There are two approaches to setting values from Boolean indicators; the difference is if the Booleans are given in a single array, or in block-aligned arrays.
+    # There are three approaches to setting values from Boolean indicators; the difference between the first two is if the Booleans are given in a single array, or in block-aligned arrays. The third approach uses block-alinged arrays, but values are provided as an iterable of arrays.
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
             value: object,
             value_valid: tp.Optional[np.ndarray]
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
+        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
             value: Must be a single value or an array
@@ -1517,7 +1517,8 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
-            assert value_valid.shape == self.shape #type: ignore
+            if value_valid is not None:
+                assert value_valid.shape == self.shape #type: ignore
         else: # assumed to be non-string, non-iterable
             # value_dtype = dtype_from_element(value)
             value_dtype = np.array(value).dtype
@@ -1539,8 +1540,10 @@ class TypeBlocks(ContainerOperand):
                     value_slice = slice(start, end)
 
                 # update target to valid values
-                value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
-                target &= value_valid_part
+                if value_valid is not None:
+                    value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
+                    target &= value_valid_part
+
                 value_part = value[NULL_SLICE, value_slice][target] #type: ignore
                 start = end # always update start
             else:
@@ -1560,6 +1563,49 @@ class TypeBlocks(ContainerOperand):
                 assigned[target] = value_part
                 assigned.flags.writeable = False
                 yield assigned
+
+
+    def _assign_blocks_from_boolean_blocks_and_value_arrays(self,
+            targets: tp.Iterable[np.ndarray],
+            values: tp.Sequence[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
+        '''Assign values (derived from an iterable of arrays) into all blocks based on a Bolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
+
+        Args:
+            value: Must be a single value or an array
+        '''
+
+        start = 0
+
+        for block, target in zip_longest(self._blocks, targets):
+            if block is None or target is None:
+                raise RuntimeError('blocks or targets do not align')
+
+            if block.ndim == 1:
+                end = start + 1
+            else:
+                end = start + block.shape[1]
+
+            if not target.any(): # works for ndim 1 and 2
+                yield block
+            else:
+                # need to collect all values
+                values_for_block = values[start: end]
+
+                # get dtype for values_for block
+                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
+                if block.dtype == assigned_dtype:
+                    assigned = block.copy()
+                else:
+                    assigned = block.astype(assigned_dtype)
+
+                # TODO: iter over values_for block
+                assigned[target] = value_part
+                assigned.flags.writeable = False
+                yield assigned
+
+
+            start = end # always update start
 
 
     def _assign_blocks_from_bloc_key(self,

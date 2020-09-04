@@ -10540,7 +10540,50 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_from_overlay_a(self) -> None:
 
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        f4 = sf.Frame.from_overlay((f1, f2, f3), name='foo')
+        self.assertEqual(f4.fillna(-1).to_pairs(0),
+                (('a', (('q', -1.0), ('x', 1.0), ('y', 2.0), ('z', -1.0))), ('b', (('q', 60.0), ('x', 3.0), ('y', 4.0), ('z', 6.0))), ('c', (('q', -1.0), ('x', 1.0), ('y', 2.0), ('z', 3.0))), ('d', (('q', 20.0), ('x', 10.0), ('y', -1.0), ('z', -1.0))))
+                )
+        self.assertEqual(f4.name, 'foo')
+
+    def test_frame_from_overlay_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1, np.nan), b=(np.nan, np.nan), c=(False, True)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1, np.nan), b=(4, 6), c=(False, True)),
+                index=('x', 'y'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10, 20), b=(50, 60), c=(False, True)),
+                index=('x', 'y'),
+                name='f3')
+
+        f4 = sf.Frame.from_overlay((f1, f2, f3))
+
+        self.assertEqual(f4.to_pairs(0),
+                (('a', (('x', 1.0), ('y', 20))), ('b', (('x', 4), ('y', 6))), ('c', (('x', False), ('y', True)))))
+
+        # that these first cols are object is undersirable!
+        self.assertEqual([dt.kind for dt in f4.dtypes.values],
+                ['O', 'O', 'b'])
 
 
 if __name__ == '__main__':

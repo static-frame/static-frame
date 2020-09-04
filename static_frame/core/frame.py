@@ -132,6 +132,10 @@ from static_frame.core.util import reversed_iter
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import resolve_dtype_iter
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_INT_KINDS
 
 # Alias str for type annotations so as to not get confused with str property on
 String = str
@@ -543,12 +547,24 @@ class Frame(ContainerOperand):
         else:
             columns = columns.intersection(*columns_iter)
 
-        post = None
+        # TODO: extract columns one at a time to supply to fillna instead of reindexing the whole frame, reindex each column. fill_value can be determined per column
 
+
+        # could get fill values based on dtypes accross all blocks, all containers; but this does not handle cases such as integers: we would pick None, but a user might want floats
+        dtype_iter = iter(c._blocks._row_dtype for c in containers)
+        dtype = resolve_dtype_iter(dtype_iter)
+        dtype_kind = dtype.kind
+        if dtype_kind in DTYPE_NA_KINDS or dtype_kind in DTYPE_INT_KINDS:
+            # allow int to go to float rather than object
+            fill_value = dtype_kind_to_na(dtype_kind)
+        else:
+            fill_value = None # may force object coercion
+
+        post = None
         for container in containers:
             #NOTE: similar approach is Frame.fillna
             # get a dummy fill_value to use during reindex and avoid undesirable type cooercions
-            fill_value = dtype_to_fill_value(container._blocks._row_dtype)
+            # fill_value = dtype_to_fill_value(container._blocks._row_dtype)
             filled = container.reindex(
                     index=index,
                     columns=columns,
@@ -558,14 +574,8 @@ class Frame(ContainerOperand):
                 post = filled
                 continue
 
-            # Boolean mask including row/cols found in the frame before reindexing; using this allows us to ignore fill values provided just for reindexing
-            fill_valid = post._blocks.extract_iloc_mask((
-                    post.index.isin(container.index.values),
-                    post.columns.isin(container.columns.values)
-                    )).values
-
-            post = self.__class__(
-                    blocks=post._blocks.fillna(filled, fill_valid),
+            post = cls(
+                    post._blocks.fillna(filled.values),
                     index=index,
                     columns=columns,
                     name=name,

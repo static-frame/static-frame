@@ -314,6 +314,7 @@ class Series(ContainerOperand):
         container_first = next(container_iter)
 
         if container_first.index.equals(index) and container_first.dtype == dtype:
+            # NOTE: post may not be of type cls
             post = container_first.rename(name)
             # keep container_iter
         elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
