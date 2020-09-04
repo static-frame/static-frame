@@ -1862,7 +1862,7 @@ def isin(
     '''
     result: tp.Optional[np.ndarray] = None
 
-    if isinstance(other, abc.Sized) and len(other) == 0:
+    if hasattr(other, '__len__') and len(other) == 0:
         result = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result

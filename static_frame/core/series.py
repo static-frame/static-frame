@@ -307,15 +307,26 @@ class Series(ContainerOperand):
         dtype = resolve_dtype_iter(dtype_iter)
         dtype_kind = dtype.kind
 
-        if dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
+        # we create an empty Series of compatible type for NA, and then iterative fillna on the iterated containers; this creates one more Serires than needed; however, if try to use the first series we have to reindex, and if that reindex introduces missing values, it is not clear what missing value should be put there, as a subsequent overlap may also have a missing values.
+
+        container_iter = iter(containers)
+        container_first = next(container_iter)
+
+        if container_first.index.equals(index) and container_first.dtype == dtype:
+            post = container_first
+            # keep container_iter
+        elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
             post = cls.from_element(dtype_kind_to_na(dtype_kind), index=index, dtype=dtype)
+            container_iter = containers
         else:
-            # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by reindexing
+            # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by taking the union index
             post = cls.from_element(None, index=index, dtype=object)
-        targets = np.full(len(index), True)
+            container_iter = containers
 
         for container in containers:
             post = post.fillna(container)
+            if not post.isna().values.any():
+                break
 
         if post.dtype != dtype:
             # we should always be able to get back to this type
@@ -942,8 +953,8 @@ class Series(ContainerOperand):
             # choose a fill value that will not force a type coercion
             fill_value = dtype_to_fill_value(value_dtype)
             # find targets that are NaN in self and have labels in value; otherwise, might fill values after reindexing, and end up filling a fill_value rather than keeping original (na) value
-            sel = self.index.isin(
-                    intersect1d(self.index.values[sel], value.index.values))
+            labels_common = intersect1d(self.index.values[sel], value.index.values)
+            sel = self.index.isin(labels_common)
             if not np.any(sel): # avoid copying, retyping
                 return self
 
