@@ -56,7 +56,7 @@ from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import EMPTY_TUPLE
@@ -85,6 +85,10 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
+from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import resolve_dtype_iter
+
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame # pylint: disable=W0611 #pragma: no cover
@@ -276,6 +280,48 @@ class Series(ContainerOperand):
             own_index= False
 
         return cls(values, index=ih, own_index=own_index)
+
+    @classmethod
+    def from_overlay(cls,
+            containers: tp.Iterable['Series'],
+            *,
+            union: bool = True,
+            ) -> 'Series':
+        '''Return a new Series made by overlaying containers, filling in missing values with subsequent containers.
+
+        Args:
+            containers: Iterable of Series.
+            union: If True, a union index will be used; if False, the intersection index will be used.
+        '''
+        if not hasattr(containers, '__len__'):
+            containers = tuple(containers) # exhaust a generator
+
+        index_iter = iter(c.index for c in containers)
+        index = next(index_iter)
+        if union:
+            index = index.union(*index_iter)
+        else:
+            index = index.intersection(*index_iter)
+
+        dtype_iter = iter(c.dtype for c in containers)
+        dtype = resolve_dtype_iter(dtype_iter)
+        dtype_kind = dtype.kind
+
+        if dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
+            post = cls.from_element(dtype_kind_to_na(dtype_kind), index=index, dtype=dtype)
+        else:
+            # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by reindexing
+            post = cls.from_element(None, index=index, dtype=object)
+        targets = np.full(len(index), True)
+
+        for container in containers:
+            post = post.fillna(container)
+
+        if post.dtype != dtype:
+            # we should always be able to get back to this type
+            return post.astype(dtype)
+        return post
+
 
 
     @classmethod
@@ -894,7 +940,7 @@ class Series(ContainerOperand):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Series')
             value_dtype = value.dtype
             # choose a fill value that will not force a type coercion
-            fill_value = dtype_to_na(value_dtype)
+            fill_value = dtype_to_fill_value(value_dtype)
             # find targets that are NaN in self and have labels in value; otherwise, might fill values after reindexing, and end up filling a fill_value rather than keeping original (na) value
             sel = self.index.isin(
                     intersect1d(self.index.values[sel], value.index.values))
@@ -2277,7 +2323,7 @@ class SeriesAssign(Assign):
             fill_value: If the ``value`` parameter has to be reindexed, this element will be used to fill newly created elements.
         '''
         if isinstance(value, Series):
-            # instead of using fill_value here, might be better to use dtype_to_na, so as to not coerce the type of the value to be assigned
+            # instead of using fill_value here, might be better to use dtype_to_fill_value, so as to not coerce the type of the value to be assigned
             value = self.container._reindex_other_like_iloc(value,
                     self.iloc_key,
                     fill_value=fill_value).values

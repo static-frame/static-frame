@@ -49,18 +49,26 @@ if tp.TYPE_CHECKING:
 DEFAULT_SORT_KIND = 'mergesort'
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 
-DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
-DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
-DTYPE_INEXACT_KINDS = ('f', 'c') # kinds that support NaN values
-DTYPE_NAT_KINDS = ('M', 'm')
-
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_COMPLEX_KIND = 'c'
 DTYPE_FLOAT_KIND = 'f'
 DTYPE_OBJECT_KIND = 'O'
+DTYPE_BOOL_KIND = 'b'
 
-# DTYPE_BOOL_KIND = ('b',)
+DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
+DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
+DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that support NaN values
+DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
+
+# all kinds that can have NaN, NaT, or None
+DTYPE_NA_KINDS = frozenset((
+        DTYPE_FLOAT_KIND,
+        DTYPE_COMPLEX_KIND,
+        DTYPE_DATETIME_KIND,
+        DTYPE_TIMEDELTA_KIND,
+        DTYPE_OBJECT_KIND,
+        ))
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -495,7 +503,7 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
+def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
     '''Given a dtype, return an appropriate and compatible null value.
     '''
     if not isinstance(dtype, np.dtype):
@@ -506,21 +514,30 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
 
     if kind in DTYPE_INT_KINDS:
         return 0 # cannot support NaN
-    elif kind == 'b':
+    if kind == DTYPE_BOOL_KIND:
         return False
-    elif kind in DTYPE_INEXACT_KINDS:
+    if kind in DTYPE_INEXACT_KINDS:
         return np.nan
-    elif kind == 'O':
+    if kind == DTYPE_OBJECT_KIND:
         return None
-    elif kind in DTYPE_STR_KINDS:
+    if kind in DTYPE_STR_KINDS:
         return ''
-    elif kind in DTYPE_DATETIME_KIND:
+    if kind in DTYPE_DATETIME_KIND:
         return NAT
-    elif kind in DTYPE_TIMEDELTA_KIND:
+    if kind in DTYPE_TIMEDELTA_KIND:
         return EMPTY_TIMEDELTA
-
     raise NotImplementedError('no support for this dtype', kind)
 
+def dtype_kind_to_na(kind: str) -> tp.Any:
+    '''Given a dtype kind, return an appropriate null value.
+    '''
+    if kind == DTYPE_OBJECT_KIND:
+        return None
+    if kind in DTYPE_INEXACT_KINDS:
+        return np.nan
+    if kind in DTYPE_NAT_KINDS:
+        return NAT
+    raise NotImplementedError('no support for this dtype', kind)
 
 def ufunc_axis_skipna(
         array: np.ndarray,

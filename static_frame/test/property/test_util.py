@@ -106,7 +106,7 @@ class TestUnit(TestCase):
 
     @given(get_dtype())
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
-        post = util.dtype_to_na(dtype)
+        post = util.dtype_to_fill_value(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 
 

@@ -27,7 +27,7 @@ from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
@@ -170,7 +170,7 @@ class TypeBlocks(ContainerOperand):
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
         fill_value = (fill_value if fill_value is not FILL_VALUE_DEFAULT
-                else dtype_to_na(dtype))
+                else dtype_to_fill_value(dtype))
 
         a = np.full(shape, fill_value=fill_value, dtype=dtype)
         for iloc, v in items:

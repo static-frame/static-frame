@@ -3618,6 +3618,64 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((1, 'b'),))
 
+    #---------------------------------------------------------------------------
+    def test_series_from_overlay_a(self) -> None:
+        s1 = Series((1, None, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3), index=('a', 'b', 'c'))
+
+        # NOTE: even though the result is all-integer, the dtype is int; this is the same with Pandas combine-first
+        s3 = Series.from_overlay((s1, s2))
+        self.assertEqual(s3.to_pairs(),
+                (('a', 1), ('b', 30), ('c', 5)))
+        self.assertEqual(s3.dtype.kind, 'O')
+
+
+    def test_series_from_overlay_b(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3))
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
+        s5 = Series.from_overlay((s3, s1, s2))
+        self.assertEqual(s5.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 199.0), ('d', 3.1))
+                )
+        self.assertEqual(s5.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_c(self) -> None:
+        s1 = Series(('er', np.nan, 'pq'), index=('a', 'b', 'c'))
+        s2 = Series(('io', 'tw', 'wf', None), index=('a', 'b', 'c', 'd'))
+        s3 = Series(('mn', 'dd'), index=('e', 'd'))
+
+        s4 = Series.from_overlay((s1, s2, s3))
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 'er'), ('b', 'tw'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
+                )
+        self.assertEqual(s4.dtype.kind, 'O')
+
+    def test_series_from_overlay_d(self) -> None:
+        s1 = Series(('er', 'xx', 'pq'), index=('a', 'b', 'c'))
+        s2 = Series(('io', 'tw', 'wf', 'ge'), index=('a', 'b', 'c', 'd'))
+        s3 = Series(('mn', 'dd'), index=('e', 'd'))
+
+        s4 = Series.from_overlay((s3, s1, s3))
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 'er'), ('b', 'xx'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
+                )
+        self.assertEqual(s4.dtype.kind, 'U')
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

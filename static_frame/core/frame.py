@@ -92,7 +92,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import EMPTY_TUPLE
@@ -2801,7 +2801,7 @@ class Frame(ContainerOperand):
             if not isinstance(value, Frame):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
             # not sure what fill_value is best here, as value Frame might have hetergenous types; this might result in some undesirable type coercion
-            fill_value = dtype_to_na(value._blocks._row_dtype)
+            fill_value = dtype_to_fill_value(value._blocks._row_dtype)
 
             fill = value.reindex(
                     index=self.index,

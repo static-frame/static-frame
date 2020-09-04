@@ -26,7 +26,7 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import isin
@@ -1069,14 +1069,14 @@ class TestUnit(TestCase):
 
     def test_dtype_to_na_a(self) -> None:
 
-        self.assertEqual(dtype_to_na(np.dtype(int)), 0)
-        self.assertTrue(np.isnan(dtype_to_na(np.dtype(float))))
-        self.assertEqual(dtype_to_na(np.dtype(bool)), False)
-        self.assertEqual(dtype_to_na(np.dtype(object)), None)
-        self.assertEqual(dtype_to_na(np.dtype(str)), '')
+        self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
+        self.assertTrue(np.isnan(dtype_to_fill_value(np.dtype(float))))
+        self.assertEqual(dtype_to_fill_value(np.dtype(bool)), False)
+        self.assertEqual(dtype_to_fill_value(np.dtype(object)), None)
+        self.assertEqual(dtype_to_fill_value(np.dtype(str)), '')
 
         with self.assertRaises(NotImplementedError):
-            _ = dtype_to_na(np.dtype('V'))
+            _ = dtype_to_fill_value(np.dtype('V'))
 
     #---------------------------------------------------------------------------
 
