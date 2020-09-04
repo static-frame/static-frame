@@ -3672,10 +3672,45 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(s4.dtype.kind, 'U')
 
+    def test_series_from_overlay_e(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3))
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
+        s5 = Series.from_overlay((s3, s1, s2))
+        self.assertEqual(s5.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 199.0), ('d', 3.1))
+                )
+        self.assertEqual(s5.dtype.kind, 'f')
 
 
+    def test_series_from_overlay_f(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
 
+        s4 = Series.from_overlay((s1, s2, s3), union=False)
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('c', 5.0))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
 
+    def test_series_from_overlay_g(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, np.nan), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), union=False)
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('c', 199.0))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
 
 if __name__ == '__main__':
     unittest.main()
