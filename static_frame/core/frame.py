@@ -520,6 +520,64 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    def from_overlay(cls,
+            containers: tp.Iterable['Frame'],
+            *,
+            union: bool = True,
+            name: NameType = None,
+            ) -> 'Frame':
+        if not hasattr(containers, '__len__'):
+            containers = tuple(containers) # exhaust a generator
+
+        index_iter = iter(c.index for c in containers)
+        index = next(index_iter)
+        if union:
+            index = index.union(*index_iter)
+        else:
+            index = index.intersection(*index_iter)
+
+        columns_iter = iter(c.columns for c in containers)
+        columns = next(columns_iter)
+        if union:
+            columns = columns.union(*columns_iter)
+        else:
+            columns = columns.intersection(*columns_iter)
+
+        post = None
+
+        for container in containers:
+            #NOTE: similar approach is Frame.fillna
+            # get a dummy fill_value to use during reindex and avoid undesirable type cooercions
+            fill_value = dtype_to_fill_value(container._blocks._row_dtype)
+            filled = container.reindex(
+                    index=index,
+                    columns=columns,
+                    fill_value=fill_value
+                    )
+            if post is None:
+                post = filled
+                continue
+
+            # Boolean mask including row/cols found in the frame before reindexing; using this allows us to ignore fill values provided just for reindexing
+            fill_valid = post._blocks.extract_iloc_mask((
+                    post.index.isin(container.index.values),
+                    post.columns.isin(container.columns.values)
+                    )).values
+
+            post = self.__class__(
+                    blocks=post._blocks.fillna(filled, fill_valid),
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_data=True,
+                    own_index=True,
+                    own_columns=True,
+                    )
+
+        return post
+
+
+    @classmethod
     @doc_inject(selector='constructor_frame')
     def from_records(cls,
             records: tp.Iterable[tp.Any],
@@ -2800,7 +2858,7 @@ class Frame(ContainerOperand):
         if hasattr(value, '__iter__') and not isinstance(value, str):
             if not isinstance(value, Frame):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Frame')
-            # not sure what fill_value is best here, as value Frame might have hetergenous types; this might result in some undesirable type coercion
+            # get a dummy fill_value to use during reindex and avoid undesirable type cooercions
             fill_value = dtype_to_fill_value(value._blocks._row_dtype)
 
             fill = value.reindex(

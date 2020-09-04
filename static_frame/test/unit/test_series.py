@@ -3653,12 +3653,13 @@ class TestUnit(TestCase):
         s2 = Series(('io', 'tw', 'wf', None), index=('a', 'b', 'c', 'd'))
         s3 = Series(('mn', 'dd'), index=('e', 'd'))
 
-        s4 = Series.from_overlay((s1, s2, s3))
+        s4 = Series.from_overlay((s1, s2, s3), name='foo')
 
         self.assertEqual(s4.to_pairs(),
                 (('a', 'er'), ('b', 'tw'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
                 )
         self.assertEqual(s4.dtype.kind, 'O')
+        self.assertEqual(s4.name, 'foo')
 
     def test_series_from_overlay_d(self) -> None:
         s1 = Series(('er', 'xx', 'pq'), index=('a', 'b', 'c'))
@@ -3677,11 +3678,12 @@ class TestUnit(TestCase):
         s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
         s3 = Series((199, 230), index=('c', 'b'))
 
-        s4 = Series.from_overlay((s1, s2, s3))
+        s4 = Series.from_overlay((s1, s2, s3), name='foo')
         self.assertEqual(s4.to_pairs(),
                 (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
                 )
         self.assertEqual(s4.dtype.kind, 'f')
+        self.assertEqual(s4.name, 'foo')
 
         s5 = Series.from_overlay((s3, s1, s2))
         self.assertEqual(s5.to_pairs(),
@@ -3711,6 +3713,10 @@ class TestUnit(TestCase):
                 (('b', 30.0), ('c', 199.0))
                 )
         self.assertEqual(s4.dtype.kind, 'f')
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

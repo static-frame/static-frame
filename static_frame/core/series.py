@@ -286,6 +286,7 @@ class Series(ContainerOperand):
             containers: tp.Iterable['Series'],
             *,
             union: bool = True,
+            name: NameType = None,
             ) -> 'Series':
         '''Return a new Series made by overlaying containers, filling in missing values with subsequent containers.
 
@@ -307,20 +308,27 @@ class Series(ContainerOperand):
         dtype = resolve_dtype_iter(dtype_iter)
         dtype_kind = dtype.kind
 
-        # we create an empty Series of compatible type for NA, and then iterative fillna on the iterated containers; this creates one more Serires than needed; however, if try to use the first series we have to reindex, and if that reindex introduces missing values, it is not clear what missing value should be put there, as a subsequent overlap may also have a missing values.
+        # we can create an empty Series of compatible type for NA, and then iterative fillna on the iterated containers; this creates one more Serires than needed; however, if try to use the first series we have to reindex, and if that reindex introduces missing values, it is not clear what missing value should be put there, as a subsequent overlap may also have a missing values.
 
         container_iter = iter(containers)
         container_first = next(container_iter)
 
         if container_first.index.equals(index) and container_first.dtype == dtype:
-            post = container_first
+            post = container_first.rename(name)
             # keep container_iter
         elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
-            post = cls.from_element(dtype_kind_to_na(dtype_kind), index=index, dtype=dtype)
+            post = cls.from_element(
+                    dtype_kind_to_na(dtype_kind),
+                    index=index,
+                    dtype=dtype,
+                    name=name)
             container_iter = containers
         else:
             # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by taking the union index
-            post = cls.from_element(None, index=index, dtype=object)
+            post = cls.from_element(None,
+                    index=index,
+                    dtype=object,
+                    name=name)
             container_iter = containers
 
         for container in containers:
