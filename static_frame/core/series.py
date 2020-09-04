@@ -319,7 +319,7 @@ class Series(ContainerOperand):
 
         if post.dtype != dtype:
             # we should always be able to get back to this type
-            return post.astype(dtype)
+            return post.astype(dtype) #type: ignore
         return post
 
 
