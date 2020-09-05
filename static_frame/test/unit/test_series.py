@@ -3715,7 +3715,13 @@ class TestUnit(TestCase):
         self.assertEqual(s4.dtype.kind, 'f')
 
 
+    def test_series_from_overlay_h(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((None, 'foo'), index=('c', 'b'))
 
+        s4 = Series.from_overlay((s1, s2, s3), union=False)
+        import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
