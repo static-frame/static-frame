@@ -108,6 +108,9 @@ def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
             sf.IndexMicrosecondGO,
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
+            sf.DisplayConfig,
+            sf.StoreConfig,
+            sf.StoreFilter,
             ):
 
         inter = InterfaceSummary.to_frame(target, #type: ignore

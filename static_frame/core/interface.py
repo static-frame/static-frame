@@ -15,6 +15,8 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.store import StoreConfig
+from static_frame.core.store_filter import StoreFilter
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
 from static_frame.core.batch import Batch
@@ -704,8 +706,8 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target is DisplayConfig: #type: ignore
-                instance = DisplayConfig()
+            elif target in (DisplayConfig, StoreFilter, StoreConfig): #type: ignore
+                instance = target()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
@@ -789,9 +791,9 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_display(**kwargs)
             elif name == 'astype':
                 yield from InterfaceRecord.gen_from_astype(**kwargs)
-            elif name.startswith('from_') or name == '__init__':
+            elif callable(obj) and name.startswith('from_') or name == '__init__':
                 yield from InterfaceRecord.gen_from_constructor(**kwargs)
-            elif name.startswith('to_'):
+            elif callable(obj) and name.startswith('to_'):
                 yield from InterfaceRecord.gen_from_exporter(**kwargs)
             elif name.startswith('iter_'):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs)

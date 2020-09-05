@@ -23,7 +23,7 @@ from static_frame.core.util import DepthLevelSpecifier
 
 
 #-------------------------------------------------------------------------------
-class StoreConfig(InterfaceMeta):
+class StoreConfig(metaclass=InterfaceMeta):
     index_depth: int
     columns_depth: int
     dtypes: DtypesSpecifier
@@ -32,6 +32,22 @@ class StoreConfig(InterfaceMeta):
     # format_index: tp.Optional[tp.Dict[str, tp.Any]]
     # format_columns: tp.Optional[tp.Dict[str, tp.Any]]
     merge_hierarchical_labels: bool
+
+    __slots__ = (
+            'index_depth',
+            'index_name_depth_level',
+            'columns_depth',
+            'columns_name_depth_level',
+            'dtypes',
+            'consolidate_blocks',
+            'include_index',
+            'include_index_name',
+            'include_columns',
+            'include_columns_name',
+            # 'format_index',
+            # 'format_columns',
+            'merge_hierarchical_labels',
+            )
 
     @classmethod
     def from_frame(cls, frame: Frame) -> 'StoreConfig':
@@ -49,22 +65,6 @@ class StoreConfig(InterfaceMeta):
                 include_index=include_index,
                 include_columns=include_columns
                 )
-
-    __slots__ = (
-            'index_depth',
-            'index_name_depth_level',
-            'columns_depth',
-            'columns_name_depth_level',
-            'dtypes',
-            'consolidate_blocks',
-            'include_index',
-            'include_index_name',
-            'include_columns',
-            'include_columns_name',
-            # 'format_index',
-            # 'format_columns',
-            'merge_hierarchical_labels',
-            )
 
     def __init__(self, *,
             # constructors

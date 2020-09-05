@@ -267,11 +267,6 @@ _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
         }
 
 
-
-
-
-
-
 #-------------------------------------------------------------------------------
 class DisplayConfig(metaclass=InterfaceMeta):
     '''

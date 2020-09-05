@@ -24,7 +24,7 @@ from static_frame.core.util import DT64_MONTH
 
 # from static_frame.core.util import InexactTypes
 
-class StoreFilter(InterfaceMeta):
+class StoreFilter(metaclass=InterfaceMeta):
     '''
     Utility for defining and applying translation of values going to and from a data store, as needed for XLSX and other writers.
     '''

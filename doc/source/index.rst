@@ -70,6 +70,9 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_overview/index_microsecond_go
    api_overview/index_nanosecond
    api_overview/index_nanosecond_go
+   api_overview/display_config
+   api_overview/store_config
+   api_overview/store_filter
 
 .. toctree::
    :maxdepth: 1
@@ -102,6 +105,8 @@ Immutable data structures for one- and two-dimensional calculations with self-al
    api_detail/index_microsecond_go
    api_detail/index_nanosecond
    api_detail/index_nanosecond_go
-
+   api_detail/display_config
+   api_detail/store_config
+   api_detail/store_filter
 
 :ref:`genindex`
