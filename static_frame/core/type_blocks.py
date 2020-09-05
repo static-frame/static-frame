@@ -1518,7 +1518,7 @@ class TypeBlocks(ContainerOperand):
             is_element = False
             assert value.shape == self.shape
             if value_valid is not None:
-                assert value_valid.shape == self.shape #type: ignore
+                assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
             # value_dtype = dtype_from_element(value)
             value_dtype = np.array(value).dtype
@@ -1541,7 +1541,7 @@ class TypeBlocks(ContainerOperand):
 
                 # update target to valid values
                 if value_valid is not None:
-                    value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
+                    value_valid_part = value_valid[NULL_SLICE, value_slice]
                     target &= value_valid_part
 
                 value_part = value[NULL_SLICE, value_slice][target] #type: ignore

@@ -304,13 +304,8 @@ class Series(ContainerOperand):
         else:
             index = index.intersection(*index_iter)
 
-        # dtype_iter = iter(c.dtype for c in containers)
-        # dtype = resolve_dtype_iter(dtype_iter)
-        # dtype_kind = dtype.kind
-
         container_iter = iter(containers)
         container_first = next(container_iter)
-        dtypes = [container_first.dtype]
 
         if container_first.index.equals(index):
             post = cls(container_first.values, index=index, own_index=True, name=name)
@@ -318,23 +313,7 @@ class Series(ContainerOperand):
             fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 
-        # elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
-        #     post = cls.from_element(
-        #             dtype_kind_to_na(dtype_kind),
-        #             index=index,
-        #             dtype=dtype,
-        #             name=name)
-        #     container_iter = containers
-        # else:
-        #     # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by taking the union index
-        #     post = cls.from_element(None,
-        #             index=index,
-        #             dtype=object,
-        #             name=name)
-        #     container_iter = containers
-
         for container in containers:
-            dtypes.append(container.dtype) # only collect relevant
             post = post.fillna(container)
             if not post.isna().values.any():
                 break

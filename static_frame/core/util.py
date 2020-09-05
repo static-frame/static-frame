@@ -1863,7 +1863,7 @@ def isin(
     '''
     result: tp.Optional[np.ndarray] = None
 
-    if hasattr(other, '__len__') and len(other) == 0:
+    if hasattr(other, '__len__') and len(other) == 0: #type: ignore
         result = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result

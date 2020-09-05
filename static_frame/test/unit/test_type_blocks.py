@@ -1281,7 +1281,7 @@ class TestUnit(TestCase):
                 [[4.0, 100, True, 'fooo', None], [1.5, True, True, 'bar', 700]]
                 )
 
-    def test_type_blocks_assign_blocks_value_arrays_a(self) -> None:
+    def test_type_blocks_assign_blocks_value_arrays_c(self) -> None:
 
         a1 = np.array([[3, 20, -5], [4, 80, -20],])
         a2 = np.array([['df', 'er', 'er'], ['fd', 'ij', 'we'],])
