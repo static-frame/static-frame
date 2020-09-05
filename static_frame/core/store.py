@@ -8,6 +8,7 @@ from functools import partial
 from functools import wraps
 import numpy as np
 
+from static_frame.core.interface_meta import InterfaceMeta
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
@@ -22,7 +23,7 @@ from static_frame.core.util import DepthLevelSpecifier
 
 
 #-------------------------------------------------------------------------------
-class StoreConfig:
+class StoreConfig(InterfaceMeta):
     index_depth: int
     columns_depth: int
     dtypes: DtypesSpecifier

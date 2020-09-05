@@ -3,7 +3,7 @@ import typing as tp
 
 import numpy as np
 
-
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_INT_KINDS
@@ -24,7 +24,7 @@ from static_frame.core.util import DT64_MONTH
 
 # from static_frame.core.util import InexactTypes
 
-class StoreFilter:
+class StoreFilter(InterfaceMeta):
     '''
     Utility for defining and applying translation of values going to and from a data store, as needed for XLSX and other writers.
     '''
