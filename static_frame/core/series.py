@@ -313,7 +313,7 @@ class Series(ContainerOperand):
 
         for container in containers:
             post = post.fillna(container)
-            if not post.isna().values.any():
+            if not post.isna().any():
                 break
 
         return post
