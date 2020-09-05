@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.6.32
+----------
+
+Added ``Frame.from_overlay``, ``Series.from_overlay`` constructors.
+
 
 0.6.31
 ----------
