@@ -706,7 +706,7 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target in (DisplayConfig, StoreFilter, StoreConfig): #type: ignore
+            elif target in (DisplayConfig, StoreFilter, StoreConfig):
                 instance = target()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
