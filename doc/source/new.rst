@@ -32,7 +32,7 @@ Removed  ``format_index``, ``format_columns`` attributes from ``StoreConfig``.
 
 
 0.6.29
-----------h
+----------
 
 Fixed issue in ``Series.drop`` when the ``Series`` has an ``IndexHierarchy``.
 
