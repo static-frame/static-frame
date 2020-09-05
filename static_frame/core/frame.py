@@ -133,9 +133,6 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import resolve_dtype_iter
-from static_frame.core.util import DTYPE_NA_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
 
 # Alias str for type annotations so as to not get confused with str property on
 String = str

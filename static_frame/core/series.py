@@ -85,9 +85,7 @@ from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
-from static_frame.core.util import DTYPE_NA_KINDS
 from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import resolve_dtype_iter
 
 
 if tp.TYPE_CHECKING:
