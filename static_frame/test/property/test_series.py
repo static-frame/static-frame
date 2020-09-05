@@ -110,6 +110,24 @@ class TestUnit(TestCase):
             self.assertTrue(s1.isin((value,)).iloc[0])
 
 
+#     @given(sfst.get_series(min_size=1), sfst.get_series(min_size=1), sfst.get_series(min_size=1))
+#     def test_from_overlay(self,
+#                 s1: Series,
+#                 s2: Series,
+#                 s3: Series,
+#                 ) -> None:
+
+#         # NOTE: this fails dues to numpy doing this:
+# #         In : np.array(9007199268722005).astype(float).tolist()
+#  # 9007199268722004.0
+#         # this happens in calls to np.union1d
+
+#         post = Series.from_overlay((s1, s2, s3))
+#         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

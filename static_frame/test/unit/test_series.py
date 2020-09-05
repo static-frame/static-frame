@@ -3717,11 +3717,29 @@ class TestUnit(TestCase):
 
     def test_series_from_overlay_h(self) -> None:
         s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
-        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s2 = Series((10, 30, 1.1, 3.1), index=('a', 'b', 'c', 'd'))
         s3 = Series((None, 'foo'), index=('c', 'b'))
 
-        s4 = Series.from_overlay((s1, s2, s3), union=False)
-        import ipdb; ipdb.set_trace()
+        # last series does not force a type coercion
+        s4 = Series.from_overlay((s1, s2, s3))
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
+        self.assertEqual(s4.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_i(self) -> None:
+        s1 = Series(('2020', None, None, '1999'), index=('a', 'd', 'c', 'b'), dtype=np.datetime64)
+        s2 = Series(('2020-05-03', None, '1983-09-21', '1830-05-02'), index=('a', 'b', 'c', 'd'), dtype=np.datetime64)
+
+        s3 = Series(('1233-05-03', '1444-01-04', '1322-09-21', '2834-05-02'), index=('a', 'b', 'c', 'd'), dtype=np.datetime64)
+
+        # year gets coerced to date going from s1 to s2
+        s4 = Series.from_overlay((s1, s2, s3))
+        self.assertEqual(s4.to_pairs(),
+                (('a', np.datetime64('2020-01-01')), ('b', np.datetime64('1999-01-01')), ('c', np.datetime64('1983-09-21')), ('d', np.datetime64('1830-05-02')))
+                )
+
 
 
 if __name__ == '__main__':
