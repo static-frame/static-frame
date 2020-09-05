@@ -504,7 +504,7 @@ def full_for_fill(
 
 
 def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
-    '''Given a dtype, return an appropriate and compatible null value.
+    '''Given a dtype, return an appropriate and compatible null value. This used to provide temporary, "dummy" fill values that reduce type coercions.
     '''
     if not isinstance(dtype, np.dtype):
         # we permit things like object, float, etc.
@@ -529,10 +529,8 @@ def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
     raise NotImplementedError('no support for this dtype', kind)
 
 def dtype_kind_to_na(kind: str) -> tp.Any:
-    '''Given a dtype kind, return an appropriate null value.
+    '''Given a dtype kind, return an a NA value to do the least invasive type coercion.
     '''
-    if kind == DTYPE_OBJECT_KIND:
-        return None
     if kind in DTYPE_INEXACT_KINDS:
         return np.nan
     if kind in DTYPE_INT_KINDS:
@@ -540,7 +538,7 @@ def dtype_kind_to_na(kind: str) -> tp.Any:
         return np.nan
     if kind in DTYPE_NAT_KINDS:
         return NAT
-    raise NotImplementedError('no support for this dtype', kind)
+    return None
 
 def ufunc_axis_skipna(
         array: np.ndarray,

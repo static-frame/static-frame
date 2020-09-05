@@ -1571,12 +1571,12 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[np.ndarray]:
         '''Assign values (derived from an iterable of arrays) into all blocks based on a Bolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
 
+        This approach minimizes type coercion by reducing assigned values to columnar types.
+
         Args:
             value: Must be a single value or an array
         '''
-
         start = 0
-
         for block, target in zip_longest(self._blocks, targets):
             if block is None or target is None:
                 raise RuntimeError('blocks or targets do not align')
@@ -1589,22 +1589,33 @@ class TypeBlocks(ContainerOperand):
             if not target.any(): # works for ndim 1 and 2
                 yield block
             else:
-                # need to collect all values
-                values_for_block = values[start: end]
+                values_for_block = values[start: end] # get 1D array from tuple
+                # target and block must be ndim=2
+                for i in range(end - start):
+                    if block.ndim == 1: # will only do one iteration
+                        assert len(values_for_block) == 1
+                        target_sub = target
+                        block_sub = block
+                    else:
+                        target_sub = target[:, i]
+                        block_sub = block[:, i]
 
-                # get dtype for values_for block
-                assigned_dtype = resolve_dtype(value_dtype, block.dtype)
-                if block.dtype == assigned_dtype:
-                    assigned = block.copy()
-                else:
-                    assigned = block.astype(assigned_dtype)
-
-                # TODO: iter over values_for block
-                assigned[target] = value_part
-                assigned.flags.writeable = False
-                yield assigned
-
-
+                    if not target_sub.any():
+                        yield block_sub
+                    else:
+                        values_to_assign = values_for_block[i]
+                        if target_sub.all():
+                            # will be made immutable of not already
+                            yield values_to_assign
+                        else:
+                            assigned_dtype = resolve_dtype(values_to_assign.dtype, block.dtype)
+                            if block.dtype == assigned_dtype:
+                                assigned = block_sub.copy()
+                            else:
+                                assigned = block_sub.astype(assigned_dtype)
+                            assigned[target_sub] = values_to_assign[target_sub]
+                            assigned.flags.writeable = False
+                            yield assigned
             start = end # always update start
 
 
@@ -2516,6 +2527,22 @@ class TypeBlocks(ContainerOperand):
                         targets=(isna_array(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
+                        )
+                )
+
+    def fillna_by_values(self,
+            values: tp.Sequence[np.ndarray],
+            ) -> 'TypeBlocks':
+        '''
+        Return a new TypeBlocks instance that fills missing values with the aligned columnar arrays.
+
+        Args:
+            values: iterable of arrays to be aligned as columns.
+        '''
+        return self.from_blocks(
+                self._assign_blocks_from_boolean_blocks_and_value_arrays(
+                        targets=(isna_array(b) for b in self._blocks),
+                        values=values,
                         )
                 )
 

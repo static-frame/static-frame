@@ -3671,7 +3671,7 @@ class TestUnit(TestCase):
         self.assertEqual(s4.to_pairs(),
                 (('a', 'er'), ('b', 'xx'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
                 )
-        self.assertEqual(s4.dtype.kind, 'U')
+        self.assertEqual(s4.dtype.kind, 'O')
 
     def test_series_from_overlay_e(self) -> None:
         s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))

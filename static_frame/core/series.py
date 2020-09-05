@@ -304,42 +304,41 @@ class Series(ContainerOperand):
         else:
             index = index.intersection(*index_iter)
 
-        dtype_iter = iter(c.dtype for c in containers)
-        dtype = resolve_dtype_iter(dtype_iter)
-        dtype_kind = dtype.kind
-
-        # we can create an empty Series of compatible type for NA, and then iterative fillna on the iterated containers; this creates one more Serires than needed; however, if try to use the first series we have to reindex, and if that reindex introduces missing values, it is not clear what missing value should be put there, as a subsequent overlap may also have a missing values.
+        # dtype_iter = iter(c.dtype for c in containers)
+        # dtype = resolve_dtype_iter(dtype_iter)
+        # dtype_kind = dtype.kind
 
         container_iter = iter(containers)
         container_first = next(container_iter)
+        dtypes = [container_first.dtype]
 
-        if container_first.index.equals(index) and container_first.dtype == dtype:
-            # NOTE: post may not be of type cls
-            post = container_first.rename(name)
-            # keep container_iter
-        elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
-            post = cls.from_element(
-                    dtype_kind_to_na(dtype_kind),
-                    index=index,
-                    dtype=dtype,
-                    name=name)
-            container_iter = containers
+        if container_first.index.equals(index):
+            post = cls(container_first.values, index=index, own_index=True, name=name)
         else:
-            # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by taking the union index
-            post = cls.from_element(None,
-                    index=index,
-                    dtype=object,
-                    name=name)
-            container_iter = containers
+            fill_value = dtype_kind_to_na(container_first.dtype.kind)
+            post = container_first.reindex(index, fill_value=fill_value).rename(name)
+
+        # elif dtype_kind in DTYPE_NA_KINDS: # if resolved can hold NaN, we can keep it
+        #     post = cls.from_element(
+        #             dtype_kind_to_na(dtype_kind),
+        #             index=index,
+        #             dtype=dtype,
+        #             name=name)
+        #     container_iter = containers
+        # else:
+        #     # assume we have to go to object array while processing, as we have to use None to signal empty spaces caused by taking the union index
+        #     post = cls.from_element(None,
+        #             index=index,
+        #             dtype=object,
+        #             name=name)
+        #     container_iter = containers
 
         for container in containers:
+            dtypes.append(container.dtype) # only collect relevant
             post = post.fillna(container)
             if not post.isna().values.any():
                 break
 
-        if post.dtype != dtype:
-            # we should always be able to get back to this type
-            return post.astype(dtype) #type: ignore
         return post
 
 

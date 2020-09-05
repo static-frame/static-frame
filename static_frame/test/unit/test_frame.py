@@ -10581,9 +10581,8 @@ class TestUnit(TestCase):
         self.assertEqual(f4.to_pairs(0),
                 (('a', (('x', 1.0), ('y', 20))), ('b', (('x', 4), ('y', 6))), ('c', (('x', False), ('y', True)))))
 
-        # that these first cols are object is undersirable!
         self.assertEqual([dt.kind for dt in f4.dtypes.values],
-                ['O', 'O', 'b'])
+                ['f', 'i', 'b'])
 
 
 if __name__ == '__main__':
