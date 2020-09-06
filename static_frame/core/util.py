@@ -1549,21 +1549,21 @@ def _ufunc_set_1d(
             result = sorted(result) #type: ignore
         except TypeError:
             pass
-        v, _ = iterable_to_array_1d(result, dtype)
+        post, _ = iterable_to_array_1d(result, dtype)
     else:
         if is_union:
-            v = func(array, other)
+            post = func(array, other)
         else:
-            v = func(array, other, assume_unique=assume_unique) #type: ignore
+            post = func(array, other, assume_unique=assume_unique) #type: ignore
 
     # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present; and this cannot be avoided by using frozenset
-    if is_union and v.dtype.kind in DTYPE_NA_KINDS:
-        isna = isna_array(v)
+    if is_union and post.dtype.kind in DTYPE_NA_KINDS:
+        isna = isna_array(post, include_none=False)
         if isna.sum() > 1:
             # keep only one nan
             isna[np.nonzero(isna)[0][0]] = False
-            v = v[~isna]
-    return v
+            post = post[~isna]
+    return post
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
