@@ -8,30 +8,25 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given
 
+# from static_frame.test.property.strategies import get_arrays_2d_aligned
+# from static_frame.test.property.strategies import get_blocks
+# from static_frame.test.property.strategies import get_label
+from static_frame.core import util
+from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property.strategies import DTGroup
-
-from static_frame.test.property.strategies import get_shape_1d2d
 from static_frame.test.property.strategies import get_array_1d
 from static_frame.test.property.strategies import get_array_1d2d
 from static_frame.test.property.strategies import get_array_2d
-from static_frame.test.property.strategies import get_dtype_pairs
-
-from static_frame.test.property.strategies import get_dtype
-from static_frame.test.property.strategies import get_dtypes
-# from static_frame.test.property.strategies import get_label
-from static_frame.test.property.strategies import get_value
-from static_frame.test.property.strategies import get_labels
-# from static_frame.test.property.strategies import get_arrays_2d_aligned
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
-# from static_frame.test.property.strategies import get_blocks
-
-from static_frame.test.interface import UFUNC_AXIS_SKIPNA
-
+from static_frame.test.property.strategies import get_dtype
+from static_frame.test.property.strategies import get_dtype_pairs
+from static_frame.test.property.strategies import get_dtypes
+from static_frame.test.property.strategies import get_labels
+from static_frame.test.property.strategies import get_shape_1d2d
+from static_frame.test.property.strategies import get_value
 from static_frame.test.test_case import TestCase
-from static_frame.core import util
-
 
 class TestUnit(TestCase):
 

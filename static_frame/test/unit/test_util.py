@@ -12,6 +12,7 @@ from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
 from static_frame.core.util import _isin_2d
 from static_frame.core.util import _read_url
+from static_frame.core.util import _ufunc_logical_skipna
 from static_frame.core.util import _ufunc_set_1d
 from static_frame.core.util import _ufunc_set_2d
 from static_frame.core.util import argmax_1d
@@ -47,18 +48,15 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import ufunc_all
+from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import ufunc_nanall
+from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-from static_frame.core.util import _ufunc_logical_skipna
-from static_frame.core.util import ufunc_any
-from static_frame.core.util import ufunc_nanany
-from static_frame.core.util import ufunc_all
-from static_frame.core.util import ufunc_nanall
-
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -1964,7 +1962,7 @@ class TestUnit(TestCase):
         self.assertEqual(post4.tolist(),
                 [False, True, True, True, False])
 
-
+    #---------------------------------------------------------------------------
     def test_ufunc_set_1d_a(self) -> None:
         with self.assertRaises(NotImplementedError):
             _ufunc_set_1d(np.any, np.arange(3), np.arange(3))
@@ -1990,6 +1988,15 @@ class TestUnit(TestCase):
     def test_ufunc_set_1d_d(self) -> None:
         post = _ufunc_set_1d(np.setdiff1d, np.arange(3), np.arange(3), assume_unique=True)
         self.assertEqual(len(post), 0)
+
+    def test_ufunc_set_1d_e(self) -> None:
+        post1 = _ufunc_set_1d(np.union1d, np.array((np.nan, 1)), np.array((np.nan, 1)))
+        self.assertEqual(np.isnan(post1).sum(), 1)
+
+    def test_ufunc_set_1d_f(self) -> None:
+        post1 = _ufunc_set_1d(np.union1d, np.array((np.nan, 1), dtype=object), np.array((np.nan, 1)))
+        self.assertEqual(len(post1), 2)
+
 
     #---------------------------------------------------------------------------
 

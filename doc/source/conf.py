@@ -21,12 +21,11 @@ import typing as tp
 
 import static_frame as sf
 
+from static_frame.core.interface import INTERFACE_GROUP_ORDER
+from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
-from static_frame.core.interface import InterfaceSummary
-from static_frame.core.interface import INTERFACE_GROUP_ORDER
-
 from static_frame.test.unit.test_doc import api_example_str
 
 PREFIX_START = '#start_'

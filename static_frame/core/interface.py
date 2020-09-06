@@ -8,16 +8,14 @@ from collections import namedtuple
 
 import numpy as np
 
+from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.store import StoreConfig
-from static_frame.core.store_filter import StoreFilter
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameAsType
-from static_frame.core.batch import Batch
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexYear
@@ -34,6 +32,8 @@ from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.store import StoreConfig
+from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S

@@ -405,7 +405,7 @@ class Index(IndexBase):
         self._map: tp.Optional[FrozenAutoMap] = None
 
         positions = None
-        is_typed = self._DTYPE is not None
+        is_typed = self._DTYPE is not None # only True for datetime64 indices
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
         if dtype is None:
@@ -438,7 +438,7 @@ class Index(IndexBase):
                 labels = array2d_to_tuples(labels.__iter__())
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
-            array = labels.values
+            array = labels.values # NOTE: should we take values or keys here?
             if array.ndim == 1:
                 labels = array
             else:
@@ -663,7 +663,6 @@ class Index(IndexBase):
 
         # using assume_unique will permit retaining order when operands are identical
         labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-
         if id(labels) == id(self.values):
             # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
             return cls(self)

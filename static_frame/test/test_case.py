@@ -3,7 +3,6 @@ import unittest
 import os
 import sys
 from itertools import zip_longest
-from collections import namedtuple
 import typing as tp
 import itertools as it
 import string
@@ -19,9 +18,8 @@ import pytest
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
-from static_frame.core.index_base import IndexBase
-
 from static_frame.core.frame import Frame
+from static_frame.core.index_base import IndexBase
 from static_frame.core.util import PathSpecifier
 
 

@@ -134,9 +134,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import dtype_kind_to_na
 
-# Alias str for type annotations so as to not get confused with str property on
-String = str
-
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from xarray import Dataset #pylint: disable=W0611 #pragma: no cover

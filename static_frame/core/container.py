@@ -8,19 +8,12 @@ from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.util import AnyCallable
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
 from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import isna_array
 from static_frame.core.util import UFunc
-from static_frame.core.interface_meta import InterfaceMeta
-
 from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
@@ -230,13 +223,9 @@ class ContainerOperand(ContainerBase):
         operator.__name__ = 'r' + operator_mod.__floordiv__.__name__
         return self._ufunc_binary_operator(operator=operator, other=other)
 
-
-
-    # ufunc axis skipna methods ------------------------------------------------
-    # ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemented on derived containers
-    # dtypes: iterable of valid dtypes that can be returned; first is default of not match
-    # composable: if partial solutions can be processed per block for axis 1 computations
-    # size_one_unity: if the result of the operation on size 1 objects is that value
+    # --------------------------------------------------------------------------
+    # ufunc axis skipna methods: applied along an axis, reducing dimensionality.
+    # NOTE: as argmin and argmax have iloc/loc interetaions, they are implemented on derived containers
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
@@ -247,6 +236,12 @@ class ContainerOperand(ContainerBase):
             dtypes: tp.Tuple[np.dtype, ...],
             size_one_unity: bool
             ) -> np.ndarray:
+        '''
+        Args:
+            dtypes: iterable of valid dtypes that can be returned; first is default of not match
+            composable: if partial solutions can be processed per block for axis 1 computations
+            size_one_unity: if the result of the operation on size 1 objects is that value
+        '''
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
         raise NotImplementedError() #pragma: no cover
 

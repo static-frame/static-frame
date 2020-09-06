@@ -1,4 +1,3 @@
-
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
@@ -8,7 +7,6 @@ from functools import reduce
 from io import StringIO
 from itertools import chain
 from itertools import zip_longest
-# from pathlib import Path
 from os import PathLike
 from urllib import request
 import datetime
@@ -1479,7 +1477,7 @@ def _ufunc_set_1d(
         array: np.ndarray,
         other: np.ndarray,
         *,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Peform 1D set operations. When possible, short-circuit comparison and return array with original order.
@@ -1552,11 +1550,20 @@ def _ufunc_set_1d(
         except TypeError:
             pass
         v, _ = iterable_to_array_1d(result, dtype)
-        return v
+    else:
+        if is_union:
+            v = func(array, other)
+        else:
+            v = func(array, other, assume_unique=assume_unique) #type: ignore
 
-    if is_union:
-        return func(array, other)
-    return func(array, other, assume_unique=assume_unique) #type: ignore
+    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present; and this cannot be avoided by using frozenset
+    if is_union and v.dtype.kind in DTYPE_NA_KINDS:
+        isna = isna_array(v)
+        if isna.sum() > 1:
+            # keep only one nan
+            isna[np.nonzero(isna)[0][0]] = False
+            v = v[~isna]
+    return v
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],

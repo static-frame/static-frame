@@ -979,6 +979,12 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c', 'q', 'r', 's', 't', 'x']
                 )
 
+    @unittest.skip('pending resolution of AutoMap issue')
+    def test_index_union_d(self) -> None:
+        # with self.assertRaises(RuntimeError):
+        idx = Index.from_labels(np.array((np.nan, np.nan)))
+        self.assertEqual(len(idx), 1)
+
     #---------------------------------------------------------------------------
 
     def test_index_difference_a(self) -> None:
@@ -1269,7 +1275,6 @@ class TestUnit(TestCase):
         b = IndexGO([1, 2, 3])
         b.append(4)
         self.assertFalse(a.equals(b))
-
 
 
 
