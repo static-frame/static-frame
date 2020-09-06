@@ -1,7 +1,4 @@
 import typing as tp
-from itertools import chain
-from itertools import product
-from functools import wraps
 import operator as operator_mod
 
 import numpy as np
@@ -198,76 +195,6 @@ def _nanany(array: np.ndarray,
             out=out)
 
 #-------------------------------------------------------------------------------
-
-# class ContainerOperandMeta(InterfaceMeta):
-#     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
-#     '''
-
-#     @staticmethod
-#     def create_ufunc_operator(
-#             func_name: str,
-#             opperand_count: int = 1,
-#             reverse: bool = False,
-#             ) -> tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]:
-#         '''
-#         Given a func_name, derive the method to live on the Container.
-#         '''
-#         # operator module defines alias to funcs with names like __add__, etc
-#         if not reverse:
-#             operator_func = getattr(operator_mod, func_name)
-#             func_wrapper = operator_func
-#         else:
-#             unreversed_operator_func = getattr(
-#                     operator_mod,
-#                     _RIGHT_OPERATOR_MAP[func_name])
-#             # flip the order of the arguments
-#             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
-#             # construct a __name__ that will look the name we get from for the unreversed operator; these are names without the leading and trailing dunders, like "matmul", we we just add an r for reverse.
-#             operator_func.__name__ = 'r' + unreversed_operator_func.__name__
-#             func_wrapper = unreversed_operator_func
-
-#         func: tp.Union[tp.Callable[[tp.Any], tp.Any],
-#                 tp.Callable[[tp.Any, tp.Any], tp.Any]]
-
-#         if opperand_count == 1:
-#             assert not reverse # cannot reverse a single operand
-#             def func(self: tp.Any) -> tp.Any: #pylint: disable=E0102
-#                 return self._ufunc_unary_operator(operator_func)
-#         elif opperand_count == 2:
-#             def func(self: tp.Any, other: tp.Any) -> tp.Any: #pylint: disable=E0102
-#                 return self._ufunc_binary_operator(operator=operator_func, other=other)
-#         else:
-#             raise NotImplementedError() #pragma: no cover
-
-#         f = wraps(func_wrapper)(func)
-#         f.__name__ = func_name
-#         return f
-
-#     def __new__(mcs, #type: ignore
-#             name: str,
-#             bases: tp.Tuple[type, ...],
-#             attrs: tp.Dict[str, object
-#             ]) -> type: #must return a subtype of "ContainerOperandMeta"
-#         '''
-#         Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
-#         '''
-#         for opperand_count, func_name in chain(
-#                 product((1,), _UFUNC_UNARY_OPERATORS),
-#                 product((2,), _UFUNC_BINARY_OPERATORS)):
-
-#             attrs[func_name] = mcs.create_ufunc_operator(
-#                     func_name,
-#                     opperand_count=opperand_count)
-
-#         for func_name in _RIGHT_OPERATOR_MAP:
-#             attrs[func_name] = mcs.create_ufunc_operator(
-#                     func_name,
-#                     opperand_count=2,
-#                     reverse=True)
-
-#         return type.__new__(mcs, name, bases, attrs)
-
-
 class ContainerBase(metaclass=InterfaceMeta):
     '''
     Root of all containers. Most containers, like Series, Frame, and Index, inherit from ContainerOperand; only Bus inherits from ContainerBase.
@@ -345,8 +272,6 @@ class ContainerBase(metaclass=InterfaceMeta):
         raise NotImplementedError() #pragma: no cover
 
 
-
-
 class ContainerOperand(ContainerBase):
     '''Base class of all containers that support opperators.'''
 
@@ -355,49 +280,26 @@ class ContainerOperand(ContainerBase):
     interface: 'Frame' # property that returns a Frame
     values: np.ndarray
 
-    # __pos__: tp.Callable[[T], T]
-    # __neg__: tp.Callable[[T], T]
-    # __abs__: tp.Callable[[T], T]
-    # __invert__: tp.Callable[[T], T]
-    # __add__: tp.Callable[[T, object], T]
-    # __sub__: tp.Callable[[T, object], T]
-    # __mul__: tp.Callable[[T, object], T]
-    # __matmul__: tp.Callable[[T, object], T]
-    # __truediv__: tp.Callable[[T, object], T]
-    # __floordiv__: tp.Callable[[T, object], T]
-    # __mod__: tp.Callable[[T, object], T]
-    # # __divmod__: tp.Callable[[T, object], T]
-    # __pow__: tp.Callable[[T, object], T]
-    # __lshift__: tp.Callable[[T, object], T]
-    # __rshift__: tp.Callable[[T, object], T]
-    # __and__: tp.Callable[[T, object], T]
-    # __xor__: tp.Callable[[T, object], T]
-    # __or__: tp.Callable[[T, object], T]
-    # __lt__: tp.Callable[[T, object], T]
-    # __le__: tp.Callable[[T, object], T]
-    # __eq__: tp.Callable[[T, object], T]  #type: ignore
-    # __ne__: tp.Callable[[T, object], T]  #type: ignore
-    # __gt__: tp.Callable[[T, object], T]
-    # __ge__: tp.Callable[[T, object], T]
-    # __radd__: tp.Callable[[T, object], T]
-    # __rsub__: tp.Callable[[T, object], T]
-    # __rmul__: tp.Callable[[T, object], T]
-    # __rtruediv__: tp.Callable[[T, object], T]
-    # __rfloordiv__: tp.Callable[[T, object], T]
+    def _ufunc_unary_operator(self: T, operator: UFunc) -> T:
+        raise NotImplementedError() #pragma: no cover
 
-
+    def _ufunc_binary_operator(self: T, *,
+            operator: UFunc,
+            other: tp.Any,
+            ) -> T:
+        raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
-    def __pos__(self: T) -> T:
+    def __pos__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(operator_mod.__pos__)
 
-    def __neg__(self: T) -> T:
+    def __neg__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(operator_mod.__neg__)
 
-    def __abs__(self: T) -> T:
+    def __abs__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(operator_mod.__abs__)
 
-    def __invert__(self: T) -> T:
+    def __invert__(self) -> 'ContainerOperand':
         return self._ufunc_unary_operator(operator_mod.__invert__)
 
     #---------------------------------------------------------------------------

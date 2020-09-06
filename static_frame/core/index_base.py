@@ -34,7 +34,7 @@ class IndexBase(ContainerOperand):
     __slots__ = () # defined in dervied classes
 
     #---------------------------------------------------------------------------
-    # type defs
+    # type defsn
 
     _recache: bool
     _name: NameType
@@ -49,31 +49,31 @@ class IndexBase(ContainerOperand):
     __neg__: tp.Callable[['IndexBase'], np.ndarray]
     __abs__: tp.Callable[['IndexBase'], np.ndarray]
     __invert__: tp.Callable[['IndexBase'], np.ndarray]
-    __add__: tp.Callable[['IndexBase', object], np.ndarray]
-    __sub__: tp.Callable[['IndexBase', object], np.ndarray]
-    __mul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __matmul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __truediv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __floordiv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __mod__: tp.Callable[['IndexBase', object], np.ndarray]
-    # __divmod__: tp.Callable[['IndexBase', object], np.ndarray]
-    __pow__: tp.Callable[['IndexBase', object], np.ndarray]
-    __lshift__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rshift__: tp.Callable[['IndexBase', object], np.ndarray]
-    __and__: tp.Callable[['IndexBase', object], np.ndarray]
-    __xor__: tp.Callable[['IndexBase', object], np.ndarray]
-    __or__: tp.Callable[['IndexBase', object], np.ndarray]
-    __lt__: tp.Callable[['IndexBase', object], np.ndarray]
-    __le__: tp.Callable[['IndexBase', object], np.ndarray]
-    __eq__: tp.Callable[['IndexBase', object], np.ndarray]
-    __ne__: tp.Callable[['IndexBase', object], np.ndarray]
-    __gt__: tp.Callable[['IndexBase', object], np.ndarray]
-    __ge__: tp.Callable[['IndexBase', object], np.ndarray]
-    __radd__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rsub__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __floordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __mod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    # __divmod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __pow__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __lshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __and__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __xor__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __or__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __lt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __le__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __eq__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __ne__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __gt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __ge__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __radd__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rsub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
