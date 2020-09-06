@@ -60,10 +60,6 @@ _UFUNC_BINARY_OPERATORS = (
         '__ge__',
         )
 
-_UFUNC_OPERATORS_MAP = {k: getattr(operator_mod, k)
-        for k in chain(_UFUNC_UNARY_OPERATORS, _UFUNC_BINARY_OPERATORS)
-        }
-
 # all right are binary
 _RIGHT_OPERATOR_MAP = {
         '__radd__': '__add__',
@@ -203,73 +199,73 @@ def _nanany(array: np.ndarray,
 
 #-------------------------------------------------------------------------------
 
-class ContainerOperandMeta(InterfaceMeta):
-    '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
-    '''
+# class ContainerOperandMeta(InterfaceMeta):
+#     '''Auto-populate binary and unary methods based on instance methods named `_ufunc_unary_operator` and `_ufunc_binary_operator`.
+#     '''
 
-    @staticmethod
-    def create_ufunc_operator(
-            func_name: str,
-            opperand_count: int = 1,
-            reverse: bool = False,
-            ) -> tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]:
-        '''
-        Given a func_name, derive the method to live on the Container.
-        '''
-        # operator module defines alias to funcs with names like __add__, etc
-        if not reverse:
-            operator_func = getattr(operator_mod, func_name)
-            func_wrapper = operator_func
-        else:
-            unreversed_operator_func = getattr(
-                    operator_mod,
-                    _RIGHT_OPERATOR_MAP[func_name])
-            # flip the order of the arguments
-            operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
-            # construct a __name__ that will look the name we get from for the unreversed operator; these are names without the leading and trailing dunders, like "matmul", we we just add an r for reverse.
-            operator_func.__name__ = 'r' + unreversed_operator_func.__name__
-            func_wrapper = unreversed_operator_func
+#     @staticmethod
+#     def create_ufunc_operator(
+#             func_name: str,
+#             opperand_count: int = 1,
+#             reverse: bool = False,
+#             ) -> tp.Union[tp.Callable[[tp.Any], tp.Any], tp.Callable[[tp.Any, tp.Any], tp.Any]]:
+#         '''
+#         Given a func_name, derive the method to live on the Container.
+#         '''
+#         # operator module defines alias to funcs with names like __add__, etc
+#         if not reverse:
+#             operator_func = getattr(operator_mod, func_name)
+#             func_wrapper = operator_func
+#         else:
+#             unreversed_operator_func = getattr(
+#                     operator_mod,
+#                     _RIGHT_OPERATOR_MAP[func_name])
+#             # flip the order of the arguments
+#             operator_func = lambda rhs, lhs: unreversed_operator_func(lhs, rhs)
+#             # construct a __name__ that will look the name we get from for the unreversed operator; these are names without the leading and trailing dunders, like "matmul", we we just add an r for reverse.
+#             operator_func.__name__ = 'r' + unreversed_operator_func.__name__
+#             func_wrapper = unreversed_operator_func
 
-        func: tp.Union[tp.Callable[[tp.Any], tp.Any],
-                tp.Callable[[tp.Any, tp.Any], tp.Any]]
+#         func: tp.Union[tp.Callable[[tp.Any], tp.Any],
+#                 tp.Callable[[tp.Any, tp.Any], tp.Any]]
 
-        if opperand_count == 1:
-            assert not reverse # cannot reverse a single operand
-            def func(self: tp.Any) -> tp.Any: #pylint: disable=E0102
-                return self._ufunc_unary_operator(operator_func)
-        elif opperand_count == 2:
-            def func(self: tp.Any, other: tp.Any) -> tp.Any: #pylint: disable=E0102
-                return self._ufunc_binary_operator(operator=operator_func, other=other)
-        else:
-            raise NotImplementedError() #pragma: no cover
+#         if opperand_count == 1:
+#             assert not reverse # cannot reverse a single operand
+#             def func(self: tp.Any) -> tp.Any: #pylint: disable=E0102
+#                 return self._ufunc_unary_operator(operator_func)
+#         elif opperand_count == 2:
+#             def func(self: tp.Any, other: tp.Any) -> tp.Any: #pylint: disable=E0102
+#                 return self._ufunc_binary_operator(operator=operator_func, other=other)
+#         else:
+#             raise NotImplementedError() #pragma: no cover
 
-        f = wraps(func_wrapper)(func)
-        f.__name__ = func_name
-        return f
+#         f = wraps(func_wrapper)(func)
+#         f.__name__ = func_name
+#         return f
 
-    def __new__(mcs, #type: ignore
-            name: str,
-            bases: tp.Tuple[type, ...],
-            attrs: tp.Dict[str, object
-            ]) -> type: #must return a subtype of "ContainerOperandMeta"
-        '''
-        Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
-        '''
-        for opperand_count, func_name in chain(
-                product((1,), _UFUNC_UNARY_OPERATORS),
-                product((2,), _UFUNC_BINARY_OPERATORS)):
+#     def __new__(mcs, #type: ignore
+#             name: str,
+#             bases: tp.Tuple[type, ...],
+#             attrs: tp.Dict[str, object
+#             ]) -> type: #must return a subtype of "ContainerOperandMeta"
+#         '''
+#         Create and assign all autopopulated functions. This __new__ is on the metaclass, not the class, and is thus only called once per class.
+#         '''
+#         for opperand_count, func_name in chain(
+#                 product((1,), _UFUNC_UNARY_OPERATORS),
+#                 product((2,), _UFUNC_BINARY_OPERATORS)):
 
-            attrs[func_name] = mcs.create_ufunc_operator(
-                    func_name,
-                    opperand_count=opperand_count)
+#             attrs[func_name] = mcs.create_ufunc_operator(
+#                     func_name,
+#                     opperand_count=opperand_count)
 
-        for func_name in _RIGHT_OPERATOR_MAP:
-            attrs[func_name] = mcs.create_ufunc_operator(
-                    func_name,
-                    opperand_count=2,
-                    reverse=True)
+#         for func_name in _RIGHT_OPERATOR_MAP:
+#             attrs[func_name] = mcs.create_ufunc_operator(
+#                     func_name,
+#                     opperand_count=2,
+#                     reverse=True)
 
-        return type.__new__(mcs, name, bases, attrs)
+#         return type.__new__(mcs, name, bases, attrs)
 
 
 class ContainerBase(metaclass=InterfaceMeta):
@@ -351,7 +347,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
 
 
-class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
+class ContainerOperand(ContainerBase):
     '''Base class of all containers that support opperators.'''
 
     __slots__ = EMPTY_TUPLE
@@ -359,38 +355,143 @@ class ContainerOperand(ContainerBase, metaclass=ContainerOperandMeta):
     interface: 'Frame' # property that returns a Frame
     values: np.ndarray
 
-    __pos__: tp.Callable[[T], T]
-    __neg__: tp.Callable[[T], T]
-    __abs__: tp.Callable[[T], T]
-    __invert__: tp.Callable[[T], T]
-    __add__: tp.Callable[[T, object], T]
-    __sub__: tp.Callable[[T, object], T]
-    __mul__: tp.Callable[[T, object], T]
-    __matmul__: tp.Callable[[T, object], T]
-    __truediv__: tp.Callable[[T, object], T]
-    __floordiv__: tp.Callable[[T, object], T]
-    __mod__: tp.Callable[[T, object], T]
-    # __divmod__: tp.Callable[[T, object], T]
-    __pow__: tp.Callable[[T, object], T]
-    __lshift__: tp.Callable[[T, object], T]
-    __rshift__: tp.Callable[[T, object], T]
-    __and__: tp.Callable[[T, object], T]
-    __xor__: tp.Callable[[T, object], T]
-    __or__: tp.Callable[[T, object], T]
-    __lt__: tp.Callable[[T, object], T]
-    __le__: tp.Callable[[T, object], T]
-    __eq__: tp.Callable[[T, object], T]  #type: ignore
-    __ne__: tp.Callable[[T, object], T]  #type: ignore
-    __gt__: tp.Callable[[T, object], T]
-    __ge__: tp.Callable[[T, object], T]
-    __radd__: tp.Callable[[T, object], T]
-    __rsub__: tp.Callable[[T, object], T]
-    __rmul__: tp.Callable[[T, object], T]
-    __rtruediv__: tp.Callable[[T, object], T]
-    __rfloordiv__: tp.Callable[[T, object], T]
+    # __pos__: tp.Callable[[T], T]
+    # __neg__: tp.Callable[[T], T]
+    # __abs__: tp.Callable[[T], T]
+    # __invert__: tp.Callable[[T], T]
+    # __add__: tp.Callable[[T, object], T]
+    # __sub__: tp.Callable[[T, object], T]
+    # __mul__: tp.Callable[[T, object], T]
+    # __matmul__: tp.Callable[[T, object], T]
+    # __truediv__: tp.Callable[[T, object], T]
+    # __floordiv__: tp.Callable[[T, object], T]
+    # __mod__: tp.Callable[[T, object], T]
+    # # __divmod__: tp.Callable[[T, object], T]
+    # __pow__: tp.Callable[[T, object], T]
+    # __lshift__: tp.Callable[[T, object], T]
+    # __rshift__: tp.Callable[[T, object], T]
+    # __and__: tp.Callable[[T, object], T]
+    # __xor__: tp.Callable[[T, object], T]
+    # __or__: tp.Callable[[T, object], T]
+    # __lt__: tp.Callable[[T, object], T]
+    # __le__: tp.Callable[[T, object], T]
+    # __eq__: tp.Callable[[T, object], T]  #type: ignore
+    # __ne__: tp.Callable[[T, object], T]  #type: ignore
+    # __gt__: tp.Callable[[T, object], T]
+    # __ge__: tp.Callable[[T, object], T]
+    # __radd__: tp.Callable[[T, object], T]
+    # __rsub__: tp.Callable[[T, object], T]
+    # __rmul__: tp.Callable[[T, object], T]
+    # __rtruediv__: tp.Callable[[T, object], T]
+    # __rfloordiv__: tp.Callable[[T, object], T]
 
 
-    # methods are overwritten by metaclass, but defined here for typing
+
+    #---------------------------------------------------------------------------
+    def __pos__(self: T) -> T:
+        return self._ufunc_unary_operator(operator_mod.__pos__)
+
+    def __neg__(self: T) -> T:
+        return self._ufunc_unary_operator(operator_mod.__neg__)
+
+    def __abs__(self: T) -> T:
+        return self._ufunc_unary_operator(operator_mod.__abs__)
+
+    def __invert__(self: T) -> T:
+        return self._ufunc_unary_operator(operator_mod.__invert__)
+
+    #---------------------------------------------------------------------------
+    def __add__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__add__, other=other)
+
+    def __sub__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__sub__, other=other)
+
+    def __mul__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__mul__, other=other)
+
+    def __matmul__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__matmul__, other=other)
+
+    def __truediv__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__truediv__, other=other)
+
+    def __floordiv__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__floordiv__, other=other)
+
+    def __mod__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__mod__, other=other)
+
+    # def __divmod__:
+
+    def __pow__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__pow__, other=other)
+
+    def __lshift__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__lshift__, other=other)
+
+    def __rshift__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__rshift__, other=other)
+
+    def __and__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__and__, other=other)
+
+    def __xor__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__xor__, other=other)
+
+    def __or__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__or__, other=other)
+
+    def __lt__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__lt__, other=other)
+
+    def __le__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__le__, other=other)
+
+    def __eq__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__eq__, other=other)
+
+    def __ne__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__ne__, other=other)
+
+    def __gt__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__gt__, other=other)
+
+    def __ge__(self, other: tp.Any) -> tp.Any:
+        return self._ufunc_binary_operator(operator=operator_mod.__ge__, other=other)
+
+    #---------------------------------------------------------------------------
+    def __radd__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__add__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__add__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+    def __rsub__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__sub__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__sub__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+    def __rmul__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__mul__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__mul__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+    def __rmatmul__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__matmul__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+    def __rtruediv__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__truediv__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__truediv__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+    def __rfloordiv__(self, other: tp.Any) -> tp.Any:
+        operator = lambda rhs, lhs: operator_mod.__floordiv__(lhs, rhs)
+        operator.__name__ = 'r' + operator_mod.__floordiv__.__name__
+        return self._ufunc_binary_operator(operator=operator, other=other)
+
+
 
     # ufunc axis skipna methods ------------------------------------------------
     # ufuncs that are applied along an axis, reducing dimensionality. NOTE: as argmin and argmax have iloc/loc interetaions, they are implemented on derived containers
