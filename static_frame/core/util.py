@@ -1529,13 +1529,9 @@ def _ufunc_set_1d(
                     return np.array(EMPTY_TUPLE, dtype=dtype)
                 return array
 
-    set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
-
-    if array_is_str ^ other_is_str:
-        # if only one is string
-        set_compare = True
+    set_compare = array_is_str ^ other_is_str
 
     if set_compare or dtype.kind == 'O':
         if is_union:
@@ -1550,17 +1546,16 @@ def _ufunc_set_1d(
         except TypeError:
             pass
         post, _ = iterable_to_array_1d(result, dtype)
+    elif is_union:
+        post = func(array, other)
     else:
-        if is_union:
-            post = func(array, other)
-        else:
-            post = func(array, other, assume_unique=assume_unique) #type: ignore
+        post = func(array, other, assume_unique=assume_unique) #type: ignore
 
-    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present; and this cannot be avoided by using frozenset
+    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present; and this cannot always be avoided by using frozenset; this does add additional performance overhead.
     if is_union and post.dtype.kind in DTYPE_NA_KINDS:
         isna = isna_array(post, include_none=False)
         if isna.sum() > 1:
-            # keep only one nan
+            # keep only one nan by marking the first found False
             isna[np.nonzero(isna)[0][0]] = False
             post = post[~isna]
     return post
