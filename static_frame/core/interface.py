@@ -4,13 +4,11 @@ Tools for documenting the SF interface.
 import typing as tp
 import inspect
 from itertools import chain
+from collections import namedtuple
 
 import numpy as np
 
 from static_frame.core.bus import Bus
-from static_frame.core.container import _RIGHT_OPERATOR_MAP
-from static_frame.core.container import _UFUNC_BINARY_OPERATORS
-from static_frame.core.container import _UFUNC_UNARY_OPERATORS
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
@@ -40,6 +38,70 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import DT64_S
 
+
+
+#-------------------------------------------------------------------------------
+
+UFUNC_UNARY_OPERATORS = frozenset((
+        '__pos__',
+        '__neg__',
+        '__abs__',
+        '__invert__',
+        ))
+
+UFUNC_BINARY_OPERATORS = frozenset((
+        '__add__',
+        '__sub__',
+        '__mul__',
+        '__matmul__',
+        '__truediv__',
+        '__floordiv__',
+        '__mod__',
+        #'__divmod__', this returns two np.arrays when called on an np array
+        '__pow__',
+        '__lshift__',
+        '__rshift__',
+        '__and__',
+        '__xor__',
+        '__or__',
+        '__lt__',
+        '__le__',
+        '__eq__',
+        '__ne__',
+        '__gt__',
+        '__ge__',
+        ))
+
+RIGHT_OPERATOR_MAP = frozenset((
+        '__radd__',
+        '__rsub__',
+        '__rmul__',
+        '__rmatmul__',
+        '__rtruediv__',
+        '__rfloordiv__',
+        ))
+
+# reference attributes for ufunc interface testing
+UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', ('ufunc', 'ufunc_skipna'))
+
+UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
+        # 'all': UfuncSkipnaAttrs(ufunc_all, ufunc_nanall),
+        # 'any': UfuncSkipnaAttrs(ufunc_any, ufunc_nanany),
+        'sum': UfuncSkipnaAttrs(np.sum, np.nansum),
+        'min': UfuncSkipnaAttrs( np.min, np.nanmin),
+        'max': UfuncSkipnaAttrs(np.max, np.nanmax),
+        'mean': UfuncSkipnaAttrs(np.mean, np.nanmean),
+        'median': UfuncSkipnaAttrs(np.median, np.nanmedian),
+        'std': UfuncSkipnaAttrs(np.std, np.nanstd),
+        'var': UfuncSkipnaAttrs(np.var, np.nanvar),
+        'prod': UfuncSkipnaAttrs(np.prod, np.nanprod),
+        }
+
+# ufuncs that retain the shape and dimensionality
+UFUNC_SHAPE_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
+        'cumsum': UfuncSkipnaAttrs(np.cumsum, np.nancumsum),
+        'cumprod': UfuncSkipnaAttrs(np.cumprod, np.nancumprod),
+        }
 
 #-------------------------------------------------------------------------------
 # function inspection utilities
@@ -652,7 +714,7 @@ class InterfaceRecord(tp.NamedTuple):
 
         signature, signature_no_args = _get_signatures(name, obj, max_args=max_args)
 
-        if name in _UFUNC_UNARY_OPERATORS:
+        if name in UFUNC_UNARY_OPERATORS:
             yield InterfaceRecord(cls_name,
                     InterfaceGroup.OperatorUnary,
                     signature,
@@ -660,7 +722,7 @@ class InterfaceRecord(tp.NamedTuple):
                     reference,
                     signature_no_args=signature_no_args
                     )
-        elif name in _UFUNC_BINARY_OPERATORS or name in _RIGHT_OPERATOR_MAP:
+        elif name in UFUNC_BINARY_OPERATORS or name in RIGHT_OPERATOR_MAP:
             yield InterfaceRecord(cls_name,
                     InterfaceGroup.OperatorBinary,
                     signature,

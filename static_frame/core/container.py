@@ -21,178 +21,15 @@ from static_frame.core.util import isna_array
 from static_frame.core.util import UFunc
 from static_frame.core.interface_meta import InterfaceMeta
 
+from static_frame.core.util import ufunc_all
+from static_frame.core.util import ufunc_any
+from static_frame.core.util import ufunc_nanall
+from static_frame.core.util import ufunc_nanany
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
 T = tp.TypeVar('T')
-
-
-_UFUNC_UNARY_OPERATORS = (
-        '__pos__',
-        '__neg__',
-        '__abs__',
-        '__invert__')
-
-_UFUNC_BINARY_OPERATORS = (
-        '__add__',
-        '__sub__',
-        '__mul__',
-        '__matmul__',
-        '__truediv__',
-        '__floordiv__',
-        '__mod__',
-        #'__divmod__', this returns two np.arrays when called on an np array
-        '__pow__',
-        '__lshift__',
-        '__rshift__',
-        '__and__',
-        '__xor__',
-        '__or__',
-        '__lt__',
-        '__le__',
-        '__eq__',
-        '__ne__',
-        '__gt__',
-        '__ge__',
-        )
-
-# all right are binary
-_RIGHT_OPERATOR_MAP = {
-        '__radd__': '__add__',
-        '__rsub__': '__sub__',
-        '__rmul__': '__mul__',
-        '__rmatmul__': '__matmul__',
-        '__rtruediv__': '__truediv__',
-        '__rfloordiv__': '__floordiv__',
-        }
-
-
-#-------------------------------------------------------------------------------
-def _ufunc_logical_skipna(
-        array: np.ndarray,
-        ufunc: AnyCallable,
-        skipna: bool,
-        axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    '''
-    Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
-    '''
-    if ufunc != np.all and ufunc != np.any:
-        raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
-
-    if len(array) == 0:
-        # TODO: handle if this is ndim == 2 and has no length
-        # any() of an empty array is False
-        return ufunc == np.all
-
-    kind = array.dtype.kind
-
-    #---------------------------------------------------------------------------
-    # types that cannot have NA
-    if kind == 'b':
-        return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_INT_KINDS:
-        return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_STR_KINDS:
-        # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
-        return ufunc(array != '', axis=axis, out=out)
-
-    #---------------------------------------------------------------------------
-    # types that can have NA
-
-    if kind in DTYPE_INEXACT_KINDS:
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        if hasna and skipna:
-            fill_value = 0.0 if ufunc == np.any else 1.0
-            v = array.copy()
-            v[isna] = fill_value
-            return ufunc(v, axis=axis, out=out)
-        elif hasna and not skipna:
-            # if array.ndim == 1:
-            #     return np.nan
-            raise TypeError('cannot propagate NaN without expanding to object array result')
-        return ufunc(array, axis=axis, out=out)
-
-    if kind in DTYPE_NAT_KINDS:
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        # all dates are truthy, special handling only to propagate NaNs
-        if hasna and not skipna:
-            # if array.ndim == 1:
-            #     return NAT
-            raise TypeError('cannot propagate NaN without expanding to object array result')
-        # to ignore NaN, simply fall back on all-truth behavior, below
-
-    if kind == 'O':
-        # all object types: convert to boolean aray then process
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        if hasna and skipna:
-            # supply True for np.all, False for np.any
-            fill_value = False if ufunc == np.any else True
-            v = array.copy()
-            v = v.astype(bool) # nan will be converted to True
-            v[isna] = fill_value
-        elif hasna and not skipna:
-            # if array.ndim == 1:
-            #     return np.nan
-            raise TypeError('cannot propagate NaN without expanding to object array result')
-        else:
-            v = array.astype(bool)
-        return ufunc(v, axis=axis, out=out)
-
-    # all types other than strings or objects assume truthy
-    if array.ndim == 1:
-        return True
-    return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
-
-
-def _all(array: np.ndarray,
-        axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.all,
-            skipna=False,
-            axis=axis,
-            out=out)
-
-_all.__doc__ = np.all.__doc__
-
-def _any(array: np.ndarray,
-        axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.any,
-            skipna=False,
-            axis=axis,
-            out=out)
-
-_any.__doc__ = np.any.__doc__
-
-def _nanall(array: np.ndarray,
-        axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.all,
-            skipna=True,
-            axis=axis,
-            out=out)
-
-def _nanany(array: np.ndarray,
-        axis: int = 0,
-        out: tp.Optional[np.ndarray] = None
-        ) -> np.ndarray:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.any,
-            skipna=True,
-            axis=axis,
-            out=out)
 
 #-------------------------------------------------------------------------------
 class ContainerBase(metaclass=InterfaceMeta):
@@ -427,8 +264,8 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=_all,
-                ufunc_skipna=_nanall,
+                ufunc=ufunc_all,
+                ufunc_skipna=ufunc_nanall,
                 composable=True,
                 dtypes=DTYPES_BOOL,
                 size_one_unity=False
@@ -447,8 +284,8 @@ class ContainerOperand(ContainerBase):
         return self._ufunc_axis_skipna(
                 axis=axis,
                 skipna=skipna,
-                ufunc=_any,
-                ufunc_skipna=_nanany,
+                ufunc=ufunc_any,
+                ufunc_skipna=ufunc_nanany,
                 composable=True,
                 dtypes=DTYPES_BOOL,
                 size_one_unity=False # Overflow amongst heterogenous types accross columns

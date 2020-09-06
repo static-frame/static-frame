@@ -21,10 +21,7 @@ import typing as tp
 
 import static_frame as sf
 
-from static_frame.core.container import _UFUNC_UNARY_OPERATORS
-from static_frame.core.container import _UFUNC_BINARY_OPERATORS
 from static_frame.core.util import AnyCallable
-
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
 from static_frame.core.interface import InterfaceSummary

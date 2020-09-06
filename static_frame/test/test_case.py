@@ -42,29 +42,6 @@ skip_linux_no_display = pytest.mark.skipif(
         )
 
 #-------------------------------------------------------------------------------
-# reference attributes for ufunc interface testing
-
-UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', ('ufunc', 'ufunc_skipna'))
-
-UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
-        # 'all': UfuncSkipnaAttrs(_all, _nanall),
-        # 'any': UfuncSkipnaAttrs(_any, _nanany),
-        'sum': UfuncSkipnaAttrs(np.sum, np.nansum),
-        'min': UfuncSkipnaAttrs( np.min, np.nanmin),
-        'max': UfuncSkipnaAttrs(np.max, np.nanmax),
-        'mean': UfuncSkipnaAttrs(np.mean, np.nanmean),
-        'median': UfuncSkipnaAttrs(np.median, np.nanmedian),
-        'std': UfuncSkipnaAttrs(np.std, np.nanstd),
-        'var': UfuncSkipnaAttrs(np.var, np.nanvar),
-        'prod': UfuncSkipnaAttrs(np.prod, np.nanprod),
-        }
-
-# ufuncs that retain the shape and dimensionality
-UFUNC_SHAPE_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
-        'cumsum': UfuncSkipnaAttrs(np.cumsum, np.nancumsum),
-        'cumprod': UfuncSkipnaAttrs(np.cumprod, np.nancumprod),
-        }
-
 
 @contextlib.contextmanager
 def temp_file(suffix: tp.Optional[str] = None,
