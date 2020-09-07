@@ -6,7 +6,7 @@ What is New in Static Frame
 
 Added ``Frame.from_overlay``, ``Series.from_overlay`` constructors.
 
-Added support for Dataclasses as records in ``Frame.from_records`` and ``Frame.from_records_items``.
+Added support for ``dataclass`` as records in ``Frame.from_records`` and ``Frame.from_records_items``.
 
 Additional delegated ``Frame`` methods added to ``Batch``.
 
