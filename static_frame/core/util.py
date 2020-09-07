@@ -1482,6 +1482,15 @@ def _ufunc_set_1d(
     '''
     Peform 1D set operations. When possible, short-circuit comparison and return array with original order.
 
+    NOTE: there are known issues with how NP handles NaN and NaT with set operations, for example:
+
+    >>> np.intersect1d((np.nan, 3), (np.nan, 3))
+    array([3.])
+    >>> np.union1d((np.nan, 3), (np.nan, 3))
+    array([ 3., nan, nan])
+
+    For unions, and for float and datetime64 types, a correction is made, but of object types, no efficient solution is available.
+
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
     '''
@@ -1517,7 +1526,6 @@ def _ufunc_set_1d(
         if len(array) == len(other):
             arrays_are_equal = False
             compare = array == other
-
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
             if isinstance(compare, BOOL_TYPES) and compare:
                 arrays_are_equal = True #pragma: no cover
