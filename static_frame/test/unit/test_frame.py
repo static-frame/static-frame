@@ -7660,22 +7660,22 @@ class TestUnit(TestCase):
                 )
 
 
-    @skip_pylt37
+    @skip_pylt37 #type: ignore
     def test_frame_from_records_r(self) -> None:
         import dataclasses
         @dataclasses.dataclass
-        class Foo:
-            bar: str
-            baz: int
+        class Item:
+            left: str
+            right: int
 
-        records = (Foo('a', 3), Foo('b', 20), Foo('c', -34))
+        records = (Item('a', 3), Item('b', 20), Item('c', -34))
         f1 = Frame.from_records(records, index=tuple('xyz'))
         self.assertEqual(f1.to_pairs(0),
-                (('bar', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('baz', (('x', 3), ('y', 20), ('z', -34))))
+                (('left', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('right', (('x', 3), ('y', 20), ('z', -34))))
                 )
         f2 = Frame.from_records_items(zip(tuple('xyz'), records))
         self.assertEqual(f2.to_pairs(0),
-                (('bar', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('baz', (('x', 3), ('y', 20), ('z', -34))))
+                (('left', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('right', (('x', 3), ('y', 20), ('z', -34))))
                 )
 
 

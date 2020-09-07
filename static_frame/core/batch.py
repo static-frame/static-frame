@@ -548,7 +548,7 @@ class Batch(ContainerOperand):
     def shift(self,
             index: int = 0,
             columns: int = 0,
-            fill_value=np.nan) -> 'Batch':
+            fill_value: tp.Any = np.nan) -> 'Batch':
         '''
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
         '''
