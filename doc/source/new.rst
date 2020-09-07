@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added ``Frame.from_overlay``, ``Series.from_overlay`` constructors.
 
+Additional delegated ``Frame`` methods added to ``Batch``.
+
 
 0.6.31
 ----------

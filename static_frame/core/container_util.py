@@ -95,6 +95,17 @@ def is_static(value: IndexConstructor) -> bool:
     return getattr(value.__self__, STATIC_ATTR) #type: ignore
 
 
+def is_dataclass(value: tp.Any) -> bool:
+    '''Determine if dataclasses are available. Might be installed via a pip package.
+    '''
+    # introduced in Python 3.7; remove special handling when min req is 3.7
+    try:
+        import dataclasses
+    except ImportError:
+        return False
+    return dataclasses.is_dataclass(value)
+
+
 def pandas_version_under_1() -> bool:
     import pandas
     return not hasattr(pandas, 'NA') # object introduced in 1.0
