@@ -1560,18 +1560,19 @@ def _ufunc_set_1d(
         post = func(array, other, assume_unique=assume_unique) #type: ignore
 
     # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present, and using frozenset does not solve the issue; for object dtypes there is no ideal solution, as we do not have an efficient way to distinguish NaN from NaT.
-    if is_union:
-        func_na = None
-        if post.dtype.kind in DTYPE_INEXACT_KINDS:
-            func_na = np.isnan
-        elif post.dtype.kind in DTYPE_NAT_KINDS:
-            func_na = np.isnat
-        if func_na:
-            isna = func_na(post)
-            if isna.sum() > 1:
-                # keep only one nan by marking the first found False
-                isna[np.nonzero(isna)[0][0]] = False
-                post = post[~isna]
+    # if is_union:
+    #     func_na = None
+    #     if post.dtype.kind in DTYPE_INEXACT_KINDS:
+    #         func_na = np.isnan
+    #     elif post.dtype.kind in DTYPE_NAT_KINDS:
+    #         func_na = np.isnat
+    #     if func_na:
+    #         isna = func_na(post)
+    #         if isna.sum() > 1:
+    #             # keep only one nan by marking the first found False
+    #             isna[np.nonzero(isna)[0][0]] = False
+    #             post = post[~isna]
+
     return post
 
 def _ufunc_set_2d(

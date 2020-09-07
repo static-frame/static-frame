@@ -302,9 +302,9 @@ class TestUnit(TestCase):
                 arrays[1],
                 assume_unique=False)
         self.assertTrue(post.ndim == 1)
-        # nan values in complex numbers make direct comparison tricky
-        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
 
+        # this includes cases where there are more than one NaN
+        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):
