@@ -493,7 +493,7 @@ class Batch(ContainerOperand):
             exclude_last: bool = False
             ) -> 'Batch':
         '''
-        Return a :obj:`Batch` with contined :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
+        Return a :obj:`Batch` with contained :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
 
         Args:
             {axis}
@@ -511,6 +511,152 @@ class Batch(ContainerOperand):
     # def set_index(self,
     # def set_index_hierarchy(self,
     # def unset_index(self, *,
+
+    def __round__(self, decimals: int = 0) -> 'Batch':
+        '''
+        Return a :obj:`Batch` with contained :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
+
+        Args:
+            decimals: number of decimals to round to.
+        '''
+        return self._apply_attr(
+                attr='__round__',
+                decimals=decimals,
+                )
+
+    def roll(self,
+            index: int = 0,
+            columns: int = 0,
+            include_index: bool = False,
+            include_columns: bool = False,
+            ) -> 'Batch':
+        '''
+        Roll columns and/or rows by positive or negative integer counts, where columns and/or rows roll around the axis.
+
+        Args:
+            include_index: Determine if index is included in index-wise rotation.
+            include_columns: Determine if column index is included in index-wise rotation.
+        '''
+        return self._apply_attr(
+                attr='roll',
+                index=index,
+                columns=columns,
+                include_index=include_index,
+                include_columns=include_columns,
+                )
+
+    def shift(self,
+            index: int = 0,
+            columns: int = 0,
+            fill_value=np.nan) -> 'Batch':
+        '''
+        Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
+        '''
+        return self._apply_attr(
+                attr='shift',
+                index=index,
+                columns=columns,
+                fill_value=fill_value,
+                )
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+
+    @doc_inject(selector='head', class_name='Batch')
+    def head(self, count: int = 5) -> 'Batch':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self._apply_attr(
+                attr='head',
+                count=count,
+                )
+
+    @doc_inject(selector='tail', class_name='Batch')
+    def tail(self, count: int = 5) -> 'Batch':
+        '''{doc}
+
+        Args:
+            {count}
+        '''
+        return self._apply_attr(
+                attr='tail',
+                count=count,
+                )
+
+    @doc_inject(selector='argminmax')
+    def loc_min(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> 'Batch':
+        '''
+        Return the labels corresponding to the minimum value found.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._apply_attr(
+                attr='loc_min',
+                skipna=skipna,
+                axis=axis,
+                )
+
+    @doc_inject(selector='argminmax')
+    def iloc_min(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> 'Batch':
+        '''
+        Return the integer indices corresponding to the minimum values found.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._apply_attr(
+                attr='iloc_min',
+                skipna=skipna,
+                axis=axis,
+                )
+
+    @doc_inject(selector='argminmax')
+    def loc_max(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> 'Batch':
+        '''
+        Return the labels corresponding to the maximum values found.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._apply_attr(
+                attr='loc_max',
+                skipna=skipna,
+                axis=axis,
+                )
+
+    @doc_inject(selector='argminmax')
+    def iloc_max(self, *,
+            skipna: bool = True,
+            axis: int = 0
+            ) -> 'Batch':
+        '''
+        Return the integer indices corresponding to the maximum values found.
+
+        Args:
+            {skipna}
+            {axis}
+        '''
+        return self._apply_attr(
+                attr='iloc_max',
+                skipna=skipna,
+                axis=axis,
+                )
 
     #---------------------------------------------------------------------------
     # exporter

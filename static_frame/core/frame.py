@@ -4387,6 +4387,8 @@ class Frame(ContainerOperand):
             include_index: bool = False,
             include_columns: bool = False) -> 'Frame':
         '''
+        Roll columns and/or rows by positive or negative integer counts, where columns and/or rows roll around the axis.
+
         Args:
             include_index: Determine if index is included in index-wise rotation.
             include_columns: Determine if column index is included in index-wise rotation.
@@ -4428,6 +4430,9 @@ class Frame(ContainerOperand):
             index: int = 0,
             columns: int = 0,
             fill_value=np.nan) -> 'Frame':
+        '''
+        Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
+        '''
 
         shift_index = index
         shift_column = columns

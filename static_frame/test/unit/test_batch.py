@@ -548,8 +548,153 @@ class TestUnit(TestCase):
                 (('b', ((('f1', 'x'), 0), (('f2', 'z'), 20))), ('a', ((('f1', 'x'), 50), (('f2', 'z'), 50))))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_batch_round_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20, 20.234, 0), a=(20.234, 20.234, 50.828)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1, 20.234, 1.043), a=(1.043, 50.828, 1.043)),
+                index=('y', 'z', 'x'),
+                name='f2')
 
-        # import ipdb; ipdb.set_trace()
+        f3 = round(Batch.from_frames((f1, f2)), 1).to_frame()
+        self.assertEqual(f3.to_pairs(0),
+                (('b', ((('f1', 'z'), 20.0), (('f1', 'y'), 20.2), (('f1', 'x'), 0.0), (('f2', 'y'), 1.0), (('f2', 'z'), 20.2), (('f2', 'x'), 1.0))), ('a', ((('f1', 'z'), 20.2), (('f1', 'y'), 20.2), (('f1', 'x'), 50.8), (('f2', 'y'), 1.0), (('f2', 'z'), 50.8), (('f2', 'x'), 1.0))))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_batch_roll_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).roll(index=1, columns=-1).to_frame()
+
+        self.assertEqual(f3.to_pairs(0),
+                (('b', ((('f1', 'z'), 50), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 1), (('f2', 'z'), 1), (('f2', 'x'), 50))), ('a', ((('f1', 'z'), 0), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 1), (('f2', 'z'), 1), (('f2', 'x'), 20))))
+                )
+
+    #---------------------------------------------------------------------------
+    def test_batch_shift_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).shift(index=1, columns=-1, fill_value=0).to_frame()
+
+        self.assertEqual(f3.to_pairs(0),
+                (('b', ((('f1', 'z'), 0), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 0), (('f2', 'z'), 1), (('f2', 'x'), 50))), ('a', ((('f1', 'z'), 0), (('f1', 'y'), 0), (('f1', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0), (('f2', 'x'), 0))))
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_head_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).head(1).to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', ((('f1', 'z'), 20), (('f2', 'y'), 1))), ('a', ((('f1', 'z'), 20), (('f2', 'y'), 1))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_tail_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).tail(1).to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', ((('f1', 'x'), 0), (('f2', 'x'), 1))), ('a', ((('f1', 'x'), 50), (('f2', 'x'), 1))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_loc_min_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).loc_min().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', (('f1', 'x'), ('f2', 'y'))), ('a', (('f1', 'z'), ('f2', 'y'))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_iloc_min_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).iloc_min().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', (('f1', 2), ('f2', 0))), ('a', (('f1', 0), ('f2', 0))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_loc_max_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).loc_max().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', (('f1', 'z'), ('f2', 'z'))), ('a', (('f1', 'x'), ('f2', 'z'))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_batch_iloc_max_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(b=(20,20,0), a=(20,20,50)),
+                index=('z', 'y', 'x'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(b=(1,20,1), a=(1,50,1)),
+                index=('y', 'z', 'x'),
+                name='f2')
+
+        f3 = Batch.from_frames((f1, f2)).iloc_max().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+            (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
