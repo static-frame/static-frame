@@ -60,13 +60,13 @@ DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that suppor
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
 # all kinds that can have NaN, NaT, or None
-DTYPE_NA_KINDS = frozenset((
-        DTYPE_FLOAT_KIND,
-        DTYPE_COMPLEX_KIND,
-        DTYPE_DATETIME_KIND,
-        DTYPE_TIMEDELTA_KIND,
-        DTYPE_OBJECT_KIND,
-        ))
+# DTYPE_NA_KINDS = frozenset((
+#         DTYPE_FLOAT_KIND,
+#         DTYPE_COMPLEX_KIND,
+#         DTYPE_DATETIME_KIND,
+#         DTYPE_TIMEDELTA_KIND,
+#         DTYPE_OBJECT_KIND,
+#         ))
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -1551,13 +1551,19 @@ def _ufunc_set_1d(
     else:
         post = func(array, other, assume_unique=assume_unique) #type: ignore
 
-    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present; and this cannot always be avoided by using frozenset; this does add additional performance overhead.
-    if is_union and post.dtype.kind in DTYPE_NA_KINDS:
-        isna = isna_array(post, include_none=False)
-        if isna.sum() > 1:
-            # keep only one nan by marking the first found False
-            isna[np.nonzero(isna)[0][0]] = False
-            post = post[~isna]
+    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present, and using frozenset does not solve the issue; for object dtypes there is no ideal solution, as we do not have an efficient way to distinguish NaN from NaT.
+    if is_union:
+        func_na = None
+        if post.dtype.kind in DTYPE_INEXACT_KINDS:
+            func_na = np.isnan
+        elif post.dtype.kind in DTYPE_NAT_KINDS:
+            func_na = np.isnat
+        if func_na:
+            isna = func_na(post)
+            if isna.sum() > 1:
+                # keep only one nan by marking the first found False
+                isna[np.nonzero(isna)[0][0]] = False
+                post = post[~isna]
     return post
 
 def _ufunc_set_2d(
