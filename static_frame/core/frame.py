@@ -31,6 +31,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
+
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -612,7 +613,7 @@ class Frame(ContainerOperand):
         Returns:
             :obj:`static_frame.Frame`
         '''
-        # if records is np; we can just pass it to constructor, as is alrady a consolidate type
+        # if records is np; we can just pass it to constructor, as is already a consolidated type
         if isinstance(records, np.ndarray):
             if dtypes is not None:
                 raise ErrorInitFrame('specifying dtypes when using NP records is not permitted')
@@ -655,28 +656,43 @@ class Frame(ContainerOperand):
         if isinstance(row_reference, dict):
             raise ErrorInitFrame('Frame.from_records() does not support dictionary records. Use Frame.from_dict_records() instead.')
 
+        is_dataclass = hasattr(row_reference, '__dataclass_fields__')
+        if is_dataclass:
+            fields_dc = tuple(row_reference.__dataclass_fields__.keys())
+
         column_name_getter = None
+        # NOTE: even if getter is defined, columns list is needed to be available to get_col_dtype after it is populated
         if columns is None and hasattr(row_reference, '_fields'): # NamedTuple
             column_name_getter = row_reference._fields.__getitem__
-            # NOTE: this empty list needs to be available to get_col_dtype after it is populated
+            columns = []
+        elif columns is None and is_dataclass:
+            column_name_getter = fields_dc.__getitem__
             columns = []
 
         get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
-        # NOTE: row data by definition here does not have Index data, so col count is length of row
-        col_count = len(row_reference)
+        # NOTE: row data by definition does not have Index data, so col count is length of row
+        if hasattr(row_reference, '__len__'):
+            col_count = len(row_reference)
+        elif is_dataclass:
+            col_count = len(fields_dc) # defined in branch above
+        else:
+            raise NotImplementedError(f'cannot get col_count from {row_reference}')
 
-        def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
-            rows_iter = rows if not rows_to_iter else iter(rows)
-            # this is possible to support ragged lists, but it noticeably reduces performance
-            return (row[col_key] for row in rows_iter)
+        if not is_dataclass:
+            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+                rows_iter = rows if not rows_to_iter else iter(rows)
+                return (row[col_key] for row in rows_iter)
+        else:
+            def get_value_iter(col_key: tp.Hashable) -> tp.Iterator[tp.Any]:
+                rows_iter = rows if not rows_to_iter else iter(rows)
+                return (getattr(row, fields_dc[col_key]) for row in rows_iter)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             # iterate over final column order, yielding 1D arrays
             for col_idx in range(col_count):
                 if column_name_getter: # append as side effect of generator!
                     columns.append(column_name_getter(col_idx))
-
                 values = array_from_value_iter(
                         key=col_idx,
                         idx=col_idx, # integer used
@@ -716,7 +732,7 @@ class Frame(ContainerOperand):
             columns_constructor: IndexConstructor = None,
             own_index: bool = False,
             ) -> 'Frame':
-        '''Frame constructor from an iterable of dictionaries; column names will be derived from the union of all keys.
+        '''Frame constructor from an iterable of dictionaries, where each dictionary represents a row; column names will be derived from the union of all row dictionary keys.
 
         Args:
             records: Iterable of row values, where row values are dictionaries.
@@ -839,7 +855,7 @@ class Frame(ContainerOperand):
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
             consolidate_blocks: bool = False) -> 'Frame':
-        '''Frame constructor from iterable of pairs of index value, row (where row is an iterable).
+        '''Frame constructor from iterable of pairs of index label, row, where row is a dictionary. Column names will be derived from the union of all row dictionary keys.
 
         Args:
             items: Iterable of pairs of index label, row values, where row values are arrays, tuples, lists, dictionaries, or namedtuples.

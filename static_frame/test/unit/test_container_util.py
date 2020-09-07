@@ -15,10 +15,8 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apex_to_name
-from static_frame.core.container_util import is_dataclass
 
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_pylt37
 
 from static_frame.core.exception import AxisInvalid
 
@@ -613,18 +611,6 @@ class TestUnit(TestCase):
             _ = apex_to_name([['foo']], depth_level=-1, axis=3, axis_depth=1)
 
 
-    #---------------------------------------------------------------------------
-    @skip_pylt37
-    def test_is_dataclass_a(self) -> None:
-        import dataclasses
-
-        @dataclasses.dataclass
-        class Foo:
-            bar: str
-            baz: int
-
-        f = Foo('q', 30)
-        self.assertTrue(is_dataclass(f))
 
 
 

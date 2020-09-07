@@ -36,6 +36,7 @@ from static_frame.core.frame import FrameAssign
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import skip_linux_no_display
+from static_frame.test.test_case import skip_pylt37
 from static_frame.test.test_case import temp_file
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
@@ -7659,7 +7660,23 @@ class TestUnit(TestCase):
                 )
 
 
+    @skip_pylt37
+    def test_frame_from_records_r(self) -> None:
+        import dataclasses
+        @dataclasses.dataclass
+        class Foo:
+            bar: str
+            baz: int
 
+        records = (Foo('a', 3), Foo('b', 20), Foo('c', -34))
+        f1 = Frame.from_records(records, index=tuple('xyz'))
+        self.assertEqual(f1.to_pairs(0),
+                (('bar', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('baz', (('x', 3), ('y', 20), ('z', -34))))
+                )
+        f2 = Frame.from_records_items(zip(tuple('xyz'), records))
+        self.assertEqual(f2.to_pairs(0),
+                (('bar', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('baz', (('x', 3), ('y', 20), ('z', -34))))
+                )
 
 
     #---------------------------------------------------------------------------
