@@ -1507,10 +1507,14 @@ def _ufunc_set_1d(
     if is_intersection:
         if len(array) == 0 or len(other) == 0:
             # not sure what DTYPE is correct to return here
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post.flags.writeable = False
+            return post
     elif is_difference:
         if len(array) == 0:
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post.flags.writeable = False
+            return post
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1534,7 +1538,9 @@ def _ufunc_set_1d(
 
             if arrays_are_equal:
                 if is_difference:
-                    return np.array(EMPTY_TUPLE, dtype=dtype)
+                    post = np.array(EMPTY_TUPLE, dtype=dtype)
+                    post.flags.writeable = False
+                    return post
                 return array
 
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
@@ -1553,26 +1559,15 @@ def _ufunc_set_1d(
             result = sorted(result) #type: ignore
         except TypeError:
             pass
-        post, _ = iterable_to_array_1d(result, dtype)
-    elif is_union:
+        post, _ = iterable_to_array_1d(result, dtype) # return immutable array
+        return post
+
+    if is_union:
         post = func(array, other)
     else:
         post = func(array, other, assume_unique=assume_unique) #type: ignore
 
-    # np.union1d, np.intersect1d, np.unique do not give expected results with NaN present, and using frozenset does not solve the issue; for object dtypes there is no ideal solution, as we do not have an efficient way to distinguish NaN from NaT.
-    # if is_union:
-    #     func_na = None
-    #     if post.dtype.kind in DTYPE_INEXACT_KINDS:
-    #         func_na = np.isnan
-    #     elif post.dtype.kind in DTYPE_NAT_KINDS:
-    #         func_na = np.isnat
-    #     if func_na:
-    #         isna = func_na(post)
-    #         if isna.sum() > 1:
-    #             # keep only one nan by marking the first found False
-    #             isna[np.nonzero(isna)[0][0]] = False
-    #             post = post[~isna]
-
+    post.flags.writeable = False
     return post
 
 def _ufunc_set_2d(
@@ -1593,7 +1588,7 @@ def _ufunc_set_2d(
     Returns:
         Either a 2D array (if both operands are 2D), or a 1D object array of tuples (if one or both are 1d tuple arrays).
     '''
-    # NOTE: diversity if ruturned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
+    # NOTE: diversity if returned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
 
     is_union = func == np.union1d
     is_intersection = func == np.intersect1d
@@ -1609,14 +1604,18 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
             if is_2d:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+                post = post.reshape(0, 0)
+            post.flags.writeable = False
+            return post
     elif is_difference:
         if len(array) == 0:
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
             if is_2d:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+                post = post.reshape(0, 0)
+            post.flags.writeable = False
+            return post
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1639,9 +1638,11 @@ def _ufunc_set_2d(
                 arrays_are_equal = True
             if arrays_are_equal:
                 if is_difference:
+                    post = np.array(EMPTY_TUPLE, dtype=dtype)
                     if is_2d:
-                        return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-                    return np.array(EMPTY_TUPLE, dtype=dtype)
+                        post = post.reshape(0, 0)
+                    post.flags.writeable = False
+                    return post
                 return array
 
     if dtype.kind == 'O':
@@ -1663,7 +1664,7 @@ def _ufunc_set_2d(
         else:
             result = array_set.difference(other_set)
 
-        # NOTE: this sort may not always be succesful
+        # NOTE: this sort may not always be successful
         try:
             values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
         except TypeError:
@@ -1671,11 +1672,15 @@ def _ufunc_set_2d(
 
         if is_2d:
             if len(values) == 0:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(values, dtype=object)
+                post = np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
+            else:
+                post = np.array(values, dtype=object)
+            post.flags.writeable = False
+            return post
 
         post = np.empty(len(values), dtype=object)
         post[:] = values
+        post.flags.writeable = False
         return post
 
     # from here, we assume we have two 2D arrays
@@ -1696,7 +1701,9 @@ def _ufunc_set_2d(
     if width == 1:
         # let the function flatten the array, then reshape into 2D
         post = func(array, other, **func_kwargs)  # type: ignore
-        return post.reshape(len(post), width)
+        post = post.reshape(len(post), width)
+        post.flags.writeable = False
+        return post
 
     # this approach based on https://stackoverflow.com/questions/9269681/intersection-of-2d-numpy-ndarrays
     # we can use a the 1D function on the rows, once converted to a structured array
@@ -1705,9 +1712,9 @@ def _ufunc_set_2d(
     # creates a view of tuples for 1D operation
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
-
-    return func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
-
+    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
+    post.flags.writeable = False
+    return post
 
 def union1d(array: np.ndarray,
         other: np.ndarray,
