@@ -2015,7 +2015,7 @@ class TestUnit(TestCase):
 
     @unittest.skip('not handling duplicated NaTs in arrays yet')
     def test_ufunc_set_1d_h(self) -> None:
-        from static_frame import nat
+        nat = np.datetime64('NaT')
         post1 = _ufunc_set_1d(np.union1d,
                 np.array((nat, '2020'), dtype=np.datetime64),
                 np.array((nat, '1927'), dtype=np.datetime64),
