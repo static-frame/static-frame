@@ -80,7 +80,7 @@ if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import RelabelInput
+    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound=IndexBase)
 
