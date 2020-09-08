@@ -168,6 +168,9 @@ def main() -> None:
         if module == 'core':
             from static_frame.performance import core
             module_targets.append(core)
+        elif module == 'adhoc':
+            from static_frame.performance import adhoc
+            module_targets.append(adhoc)
         elif module == 'pydata_2018':
             from static_frame.performance import pydata_2018
             module_targets.append(pydata_2018)

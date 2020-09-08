@@ -93,7 +93,7 @@ class ILocMeta(type):
         return cls(key) #type: ignore
 
 class ILoc(metaclass=ILocMeta):
-    '''A wrapper for embedding ``iloc`` specificiations within a single axis argument of a ``loc`` selection.
+    '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
     '''
 
     __slots__ = (
