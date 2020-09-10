@@ -5976,12 +5976,12 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def cast_msgpack(input):
             try:
-                data = msgpack.packb(input, use_bin_type=True)
+                data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
             except:
                 try:
-                    data = msgpack.packb(input, default=msgpack_numpy.encode)
+                    data = msgpack.packb(input, default=msgpack_numpy.encode) #else try coercing numpy datatypes
                 except:
-                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True)
+                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
         data = {
             '_index' : cast_msgpack(index for index in self._index),
