@@ -1413,7 +1413,7 @@ class Frame(ContainerOperand):
         records = []
         for block in unpacked['_blocks']:
             records.append(msgpack.unpackb(block, object_hook=msgpack_numpy.decode))
-        unpacked['_blocks'] = records        
+        unpacked['_blocks'] = records
         print('unpacked', unpacked)
         
         return cls.from_records(records,
@@ -6018,7 +6018,7 @@ class Frame(ContainerOperand):
         print(result)
         return result
         
-    
+    """
     def to_msgpackPD(self) -> 'msgpack':
         '''
         Return a msgpack.
@@ -6028,7 +6028,7 @@ class Frame(ContainerOperand):
         #requires cython
         #requires pandas-compat
         return to_msgpack(None, self.to_pandas())
- 
+    """
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
