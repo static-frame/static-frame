@@ -4736,8 +4736,10 @@ class Frame(ContainerOperand):
                         def columns() -> tp.Iterator[np.ndarray]:
                             for field in data_fields:
                                 for _, func in func_map:
-                                    # why apply func to elements?
-                                    yield sub[field].iter_element().apply(func).values
+                                    yield sub._blocks._extract_array(row_key=None,
+                                            column_key=sub.columns.loc_to_iloc(field))
+                                    # do no apply func to elements
+                                    # yield sub[field].iter_element().apply(func).values
                         sub_frame = Frame.from_items(
                                 zip(sub_columns, columns()),
                                 index=sub_index_labels)
