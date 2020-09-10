@@ -5968,6 +5968,29 @@ class Frame(ContainerOperand):
                 )
         return repr(self.display(config))
 
+    def to_msgpack(self) -> 'msgpack.':
+        '''
+        Return a msgpack ?.
+        '''
+        import msgpack
+        import msgpack_numpy
+        def cast_msgpack(input):
+            try:
+                data = msgpack.packb(input, use_bin_type=True)
+            except:
+                try:
+                    data = msgpack.packb(input, default=msgpack_numpy.encode)
+                except:
+                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True)
+            return data
+        data = {
+            '_index' : cast_msgpack(index for index in self._index),
+            '_columns' : cast_msgpack(column for column in self._columns),
+            '_name' : cast_msgpack(self._name),
+            '_blocks' : [cast_msgpack(value[0] for value in block.values) for block in self._blocks],
+        }
+        return data
+ 
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
