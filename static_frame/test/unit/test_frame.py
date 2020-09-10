@@ -6170,8 +6170,8 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
         post = f1.to_msgpack()
-        print('post', post)
-        #self.assertEqualLines(post, msg)
+        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x93\xc4\x05\x92\xa12\xa13\xc4\x05\x92\xa1a\xa1b\xc4\r\x92\xa5False\xa5False'
+        self.assertEqual(post, msg)
     #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:

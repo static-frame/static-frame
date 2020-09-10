@@ -5983,13 +5983,12 @@ class Frame(ContainerOperand):
                 except:
                     data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
-        data = {
+        return cast_msgpack({
             '_index' : cast_msgpack(index for index in self._index),
             '_columns' : cast_msgpack(column for column in self._columns),
             '_name' : cast_msgpack(self._name),
             '_blocks' : [cast_msgpack(value[0] for value in block.values) for block in self._blocks],
-        }
-        return data
+        })
  
 #-------------------------------------------------------------------------------
 
