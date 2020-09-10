@@ -1392,7 +1392,58 @@ class Frame(ContainerOperand):
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
                 )
-
+    
+    @classmethod
+    def from_msgpack(cls,
+            msgpack_data: bin,
+            *,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            consolidate_blocks: bool = True
+            ) -> 'Frame':
+        '''
+        Return a msgpack.
+        '''
+        
+        import msgpack
+        import msgpack_numpy
+        
+        unpacked = msgpack.unpackb(msgpack_data, object_hook=msgpack_numpy.decode)
+        for key in ['_name','_index','_columns']:
+            unpacked[key] = msgpack.unpackb(unpacked[key], object_hook=msgpack_numpy.decode)
+        records = []
+        for block in unpacked['_blocks']:
+            records.append(msgpack.unpackb(block, object_hook=msgpack_numpy.decode))
+        unpacked['_blocks'] = records        
+        print('unpacked', unpacked)
+        
+        if consolidate_blocks:
+            blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(block for block in records))
+        else:
+            blocks = TypeBlocks.from_blocks(blocks())
+        
+        return cls.from_records(blocks,
+                columns=unpacked['_columns'],
+                index=unpacked['_index'],
+                name=unpacked['_name'])
+        
+        def uncast_msgpack(input):
+            try:
+                data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
+            except:
+                try:
+                    data = msgpack.packb(input, default=msgpack_numpy.encode) #else try coercing numpy datatypes
+                except:
+                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
+            return data
+        '''
+        return cls.from_dict_records(data,
+                name=name,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks
+                )
+        '''
+    
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
@@ -5976,13 +6027,11 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def cast_msgpack(input):
             try:
-                data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
+                data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
             except:
-                try:
-                    data = msgpack.packb(input, default=msgpack_numpy.encode) #else try coercing numpy datatypes
-                except:
-                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
+                data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
+        
         return cast_msgpack({
             '_index' : cast_msgpack(index for index in self._index),
             '_columns' : cast_msgpack(column for column in self._columns),
