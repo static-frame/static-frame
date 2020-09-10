@@ -5968,9 +5968,9 @@ class Frame(ContainerOperand):
                 )
         return repr(self.display(config))
 
-    def to_msgpack(self) -> 'msgpack.':
+    def to_msgpack(self) -> 'msgpack':
         '''
-        Return a msgpack ?.
+        Return a msgpack.
         '''
         import msgpack
         import msgpack_numpy
