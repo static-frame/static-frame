@@ -6172,6 +6172,20 @@ class TestUnit(TestCase):
         post = f1.to_msgpack()
         msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x93\xc4\x05\x92\xa12\xa13\xc4\x05\x92\xa1a\xa1b\xc4\r\x92\xa5False\xa5False'
         self.assertEqual(post, msg)
+        
+        
+    def test_frame_to_msgpack_b(self) -> None:
+        records = (
+                np.array([1.0, 2.0, 3.0], dtype=np.float64),
+                np.array([4, 5, 6], dtype=np.int64),
+                )
+        f1 = Frame.from_records(records,
+                columns=('r', 's', 't'),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        post = f1.to_msgpack()
+        msg = b'\x84\xa6_index\xc4\x17\x92\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x93\xc4\t\x92\xa31.0\xa34.0\xc4\t\x92\xa32.0\xa35.0\xc4\t\x92\xa33.0\xa36.0'
+        self.assertEqual(post, msg)
     #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:
