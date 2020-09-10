@@ -1392,7 +1392,7 @@ class Frame(ContainerOperand):
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks
                 )
-    
+
     @classmethod
     def from_msgpack(cls,
             msgpack_data: bin,
@@ -1404,7 +1404,6 @@ class Frame(ContainerOperand):
         '''
         Return a msgpack.
         '''
-        
         import msgpack
         import msgpack_numpy
         
@@ -1417,33 +1416,11 @@ class Frame(ContainerOperand):
         unpacked['_blocks'] = records        
         print('unpacked', unpacked)
         
-        if consolidate_blocks:
-            blocks = TypeBlocks.from_blocks(TypeBlocks.consolidate_blocks(block for block in records))
-        else:
-            blocks = TypeBlocks.from_blocks(blocks())
-        
-        return cls.from_records(blocks,
+        return cls.from_records(records,
                 columns=unpacked['_columns'],
                 index=unpacked['_index'],
                 name=unpacked['_name'])
-        
-        def uncast_msgpack(input):
-            try:
-                data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
-            except:
-                try:
-                    data = msgpack.packb(input, default=msgpack_numpy.encode) #else try coercing numpy datatypes
-                except:
-                    data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
-            return data
-        '''
-        return cls.from_dict_records(data,
-                name=name,
-                dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks
-                )
-        '''
-    
+
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
@@ -6032,12 +6009,25 @@ class Frame(ContainerOperand):
                 data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
         
-        return cast_msgpack({
+        result = cast_msgpack({
             '_index' : cast_msgpack(index for index in self._index),
             '_columns' : cast_msgpack(column for column in self._columns),
             '_name' : cast_msgpack(self._name),
-            '_blocks' : [cast_msgpack(value[0] for value in block.values) for block in self._blocks],
+            '_blocks' : [cast_msgpack(value[0] for value in block.values) for block in self.transpose()._blocks],
         })
+        print(result)
+        return result
+        
+    
+    def to_msgpackPD(self) -> 'msgpack':
+        '''
+        Return a msgpack.
+        '''
+        import msgpack
+        from pandas_msgpack import to_msgpack, read_msgpack
+        #requires cython
+        #requires pandas-compat
+        return to_msgpack(None, self.to_pandas())
  
 #-------------------------------------------------------------------------------
 
