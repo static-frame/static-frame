@@ -4643,7 +4643,8 @@ class Frame(ContainerOperand):
 
         columns_depth = len(columns_name)
         if columns_depth == 1:
-            columns_constructor = partial(self._COLUMNS_CONSTRUCTOR, name=columns_name[0])
+            columns_name = columns_name[0]
+            columns_constructor = partial(self._COLUMNS_CONSTRUCTOR, name=columns_name)
         else:
             columns_constructor = partial(self._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                     depth_reference=columns_depth,
@@ -4689,6 +4690,7 @@ class Frame(ContainerOperand):
             else:
                 fgo = FrameGO(index=index_inner)
 
+            sub_frames = []
             for group, sub in self.iter_group_items(columns_fields):
                 if len(index_fields) == 1:
                     sub_index_labels = sub[index_fields[0]].values
@@ -4712,6 +4714,7 @@ class Frame(ContainerOperand):
                                                 ),
                                         name=sub_columns[0]))
                     else:
+                        # TODO: provide dtypes based on existing fields
                         sub_frame = Frame.from_records_items(
                                 pivot_records_items(
                                         frame=sub,
@@ -4733,17 +4736,22 @@ class Frame(ContainerOperand):
                         def columns() -> tp.Iterator[np.ndarray]:
                             for field in data_fields:
                                 for _, func in func_map:
+                                    # why apply func to elements?
                                     yield sub[field].iter_element().apply(func).values
                         sub_frame = Frame.from_items(
                                 zip(sub_columns, columns()),
                                 index=sub_index_labels)
-
-                fgo.extend(sub_frame, fill_value=fill_value)
-
-            f = fgo if not self.STATIC else fgo.to_frame()
+                sub_frames.append(sub_frame)
+                # fgo.extend(sub_frame, fill_value=fill_value)
+            # f = fgo if not self.STATIC else fgo.to_frame()
+            f = self.__class__.from_concat(sub_frames, index=index_inner, axis=1, fill_value=fill_value)
 
         index_final = None if index_depth == 1 else index
-        columns_final = None if columns_depth == 1 else columns_constructor(f.columns)
+
+        # have to rename columns if derived in from_concat
+        columns_final = (f.columns.rename(columns_name) if columns_depth == 1
+                else columns_constructor(f.columns))
+
         if index_final or columns_final:
             f = f.relabel(index=index_final, columns=columns_final)
 
