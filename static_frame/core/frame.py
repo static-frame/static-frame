@@ -1410,22 +1410,17 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def uncast_msgpack(input):
             data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
-            if not data or isinstance(data, dict):
+            if not isinstance(data, list):
                 return data
                 
             #This is the parser portion of the magic character hack to handle any arbitrary datatypes
             #TODO: Is this attempting to handle too much? Is there a better way?
             if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
                 import sys
-                evaldata = []
                 clsname = data[0][1:]
                 m, c = clsname.split('.',1)
                 cls = getattr(sys.modules[m], c)
-                #cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
-                
-                for d in data[1:]:
-                    evaldata.append(cls.__new__(cls, d))
-                return evaldata
+                return [cls(d) for d in data[1:]]
             return data
         unpacked = uncast_msgpack(msgpack_data)
         for key in ['_name','_index','_columns']:
