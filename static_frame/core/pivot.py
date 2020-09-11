@@ -94,8 +94,12 @@ def pivot_records_items(
     for group_index, part in frame.iter_group_items(group_fields):
         label = group_index if take_group_index else group_index[0]
         record = []
+        part_columns_loc_to_iloc = part.columns.loc_to_iloc
         for field in data_fields:
-            values = part[field].values
+            values = part._blocks._extract_array(
+                    row_key=None,
+                    column_key=part_columns_loc_to_iloc(field),
+                    )
             if func_single:
                 if len(values) == 1:
                     record.append(values[0])
@@ -103,7 +107,10 @@ def pivot_records_items(
                     record.append(func_single(values))
             else:
                 for _, func in func_map:
-                    record.append(func(values))
+                    if len(values) == 1:
+                        record.append(values[0])
+                    else:
+                        record.append(func(values))
         yield label, record
 
 def pivot_items(
@@ -120,8 +127,10 @@ def pivot_items(
 
     for group, sub in frame.iter_group_items(group_fields):
         label = group if take_group else group[0]
-
-        values = sub[data_fields[0]].values # only 1 data field
+        values = sub._blocks._extract_array(
+                row_key=None,
+                column_key=sub.columns.loc_to_iloc(data_fields[0]),
+                )
         if len(values) == 1:
             yield label, values[0]
         else: # can be sure we only have func_single

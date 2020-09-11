@@ -4694,22 +4694,19 @@ class Frame(ContainerOperand):
                 f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
-            if columns_depth == 1:
-                fgo = FrameGO(index=index_inner, columns=columns_constructor(EMPTY_TUPLE))
-            else:
-                fgo = FrameGO(index=index_inner)
-
             sub_frames = []
             for group, sub in self.iter_group_items(columns_fields):
                 if len(index_fields) == 1:
                     sub_index_labels = sub[index_fields[0]].values
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
+
                 sub_columns = extrapolate_column_fields(
                         columns_fields,
                         group,
                         data_fields,
                         func_fields)
+
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
                     if len(sub_columns) == 1:
@@ -4723,9 +4720,6 @@ class Frame(ContainerOperand):
                                                 ),
                                         name=sub_columns[0]))
                     else:
-                        # TODO: provide dtypes based on existing fields
-                        # import ipdb; ipdb.set_trace()
-                        # dtypes = sub.dtypes.values[sub.columns.loc_to_iloc(data_fields)]
                         dtypes = tuple(pivot_records_dtypes(
                                 frame=self,
                                 data_fields=data_fields,
@@ -4763,9 +4757,11 @@ class Frame(ContainerOperand):
                                 zip(sub_columns, columns()),
                                 index=sub_index_labels)
                 sub_frames.append(sub_frame)
-                # fgo.extend(sub_frame, fill_value=fill_value)
-            # f = fgo if not self.STATIC else fgo.to_frame()
-            f = self.__class__.from_concat(sub_frames, index=index_inner, axis=1, fill_value=fill_value)
+
+            f = self.__class__.from_concat(sub_frames,
+                    index=index_inner,
+                    axis=1,
+                    fill_value=fill_value)
 
         index_final = None if index_depth == 1 else index
 
