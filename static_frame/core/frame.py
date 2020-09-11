@@ -1423,16 +1423,16 @@ class Frame(ContainerOperand):
                 return [cls(d) for d in data[1:]]
             return data
         unpacked = uncast_msgpack(msgpack_data)
-        for key in ['_name','_index','_columns']:
-            unpacked[key] = uncast_msgpack(unpacked[key])
-        for i in range(len(unpacked['_blocks'])):
-            unpacked['_blocks'][i] = uncast_msgpack(unpacked['_blocks'][i])
+        _name = uncast_msgpack(unpacked['_name'])
+        _index = uncast_msgpack(unpacked['_index'])
+        _columns = uncast_msgpack(unpacked['_columns'])
+        _blocks = TypeBlocks.from_blocks(uncast_msgpack(unpacked['_blocks']))
         
-        return cls.from_records(unpacked['_blocks'],
-                columns=unpacked['_columns'],
-                index=unpacked['_index'],
-                name=unpacked['_name'])
-
+        return cls(_blocks,
+                columns=_columns,
+                index=_index,
+                name=_name)
+        
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
@@ -6023,11 +6023,24 @@ class Frame(ContainerOperand):
                 clsname = '∞'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
                 data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
+        print('_blocks1', self._blocks)
+        print('_blocks2', self._blocks._blocks)
+        print('_blocks3', type(self._blocks._blocks))
+        
         return cast_msgpack({
             '_index' : cast_msgpack([index for index in self._index]),
             '_columns' : cast_msgpack([column for column in self._columns]),
             '_name' : cast_msgpack(self._name),
-            '_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self.transpose()._blocks],
+            
+            #v1 452 chars
+            #'_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self.transpose()._blocks],
+            
+            #v2 463 chars
+            #'_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self._blocks],
+            
+            #v3 695 chars
+            #'_blocks' : [cast_msgpack(block) for block in self._blocks._blocks],
+            '_blocks' : cast_msgpack(self._blocks._blocks),
         })
 #-------------------------------------------------------------------------------
 
