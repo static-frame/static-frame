@@ -1414,13 +1414,19 @@ class Frame(ContainerOperand):
         def uncast_msgpack(input):
             try:
                 data = msgpack.unpackb(input, raw=False) #try coercing standard datatypes
+                
                 #This is the even dirtier part of the dirty hack to handle any unsupported datatypes
                 #TODO: Is this attempting to handle too much? Is there a better way?
-                if isinstance(data[0], str) and data[0][0] == '>':
+                if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
                     evaldata = []
                     clsname = data[0][1:].replace('numpy','np')
+                    
+                    #import sys
+                    #m, c = d.split('.',1)
+                    #getattr(sys.modules[m], c)
+                    cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
+                    
                     for d in data[1:]:
-                        cls = eval(clsname)
                         evaldata.append(cls.__new__(cls, d))
                     return evaldata
             except:
@@ -6021,7 +6027,7 @@ class Frame(ContainerOperand):
         def cast_msgpack(input):
             try:
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
-            except:
+            except TypeError:
                 #This is a dirty hack to handle any unsupported datatypes
                 #TODO: Is this attempting to handle too much? Is there a better way?
                 clsname = '>'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
