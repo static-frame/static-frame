@@ -6167,9 +6167,9 @@ class TestUnit(TestCase):
                 (3, 'b', False),
                 )
         f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
+                columns=(1, 2, 3),
                 index=('w', 'x'))
-        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
+        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4U\x93\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x01\x00\x00\x00\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x02\x00\x00\x00\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x03\x00\x00\x00\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
         self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
         f2 = Frame.from_msgpack(msg)
@@ -7832,9 +7832,10 @@ class TestUnit(TestCase):
                 (3, 'b', False),
                 )
         f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
+                columns=(1, 2, 3),
                 index=('w', 'x'))
-        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
+        print(f1.to_msgpack())
+        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4U\x93\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x01\x00\x00\x00\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x02\x00\x00\x00\x83\xc4\x02nd\xc2\xc4\x04type\xa3<i4\xc4\x04data\xc4\x04\x03\x00\x00\x00\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
         self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
         f2 = Frame.from_msgpack(msg)
@@ -7845,14 +7846,62 @@ class TestUnit(TestCase):
 
     def test_frame_from_msgpack_b(self) -> None:
         records = (
-                np.array([1.0, 2.0, 3.0], dtype=np.float64),
-                np.array([4, 5, 6], dtype=np.int64),
+                [np.float64(128), np.float64(50), np.float64(60)],
+                [np.float64(256), np.float64(5), np.float64(6)],
                 )
         f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
+                columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x84\xa6_index\xc4+\x93\xb3\xe2\x88\x9enumpy.datetime64\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb?\xf0\x00\x00\x00\x00\x00\x00\xcb@\x00\x00\x00\x00\x00\x00\x00\xcb@\x08\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@\x10\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
+        msg = b'\x84\xa6_index\xc4+\x93\xb3\xe2\x88\x9enumpy.datetime64\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x1c\x93\xcbQ\x92I\xad%\x94\xc3}\xcbit\xe7\x18\xd7\xd7bZ\xcb@\xf5\xf9\x00\x00\x00\x00\x00\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb@`\x00\x00\x00\x00\x00\x00\xcb@I\x00\x00\x00\x00\x00\x00\xcb@N\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@p\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
+        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+    def test_frame_from_msgpack_c(self) -> None:
+        #ISSUE: numerical datatypes are getting converted to float64
+        records = (
+                [np.short(128), np.int64(50), np.float64(60)],
+                [np.short(256), np.int64(5), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = b'\x84\xa6_index\xc4+\x93\xb3\xe2\x88\x9enumpy.datetime64\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x1c\x93\xcbQ\x92I\xad%\x94\xc3}\xcbit\xe7\x18\xd7\xd7bZ\xcb@\xf5\xf9\x00\x00\x00\x00\x00\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb@`\x00\x00\x00\x00\x00\x00\xcb@I\x00\x00\x00\x00\x00\x00\xcb@N\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@p\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
+        
+        print(f1.to_msgpack())
+        print('f1', f1)
+        print('f2', Frame.from_msgpack(msg))
+        
+        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_d(self) -> None:
+        #ISSUE: timedelta does not work with magic character hack because it can't reconstruct itself from __str__()
+        records = (
+                [np.timedelta64(1, 'Y'), np.int64(50), np.float64(60)],
+                [np.timedelta64(2, 'Y'), np.int64(5), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = b'\x84\xa6_index\xc4+\x93\xb3\xe2\x88\x9enumpy.datetime64\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x1c\x93\xcbQ\x92I\xad%\x94\xc3}\xcbit\xe7\x18\xd7\xd7bZ\xcb@\xf5\xf9\x00\x00\x00\x00\x00\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x0c\x93\x012\xcb@N\x00\x00\x00\x00\x00\x00\xc4\x0c\x93\x02\x05\xcb@\x18\x00\x00\x00\x00\x00\x00'
+        
+        print(f1.to_msgpack())
+        print('f1', f1)
+        print('f2', Frame.from_msgpack(msg))
+        
         self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
         f2 = Frame.from_msgpack(msg)
