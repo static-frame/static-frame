@@ -1402,9 +1402,6 @@ class Frame(ContainerOperand):
 
         Args:
             msgpack_data: a binary msgpack object, encoding a static_frame as produced from Frame.to_msgpack.
-            {dtypes}
-            {name}
-            {consolidate_blocks}
 
         Returns:
             :obj:`static_frame.Frame`
@@ -1412,25 +1409,24 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def uncast_msgpack(input):
-            try:
-                data = msgpack.unpackb(input, raw=False) #try coercing standard datatypes
+            data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
+            if not data or isinstance(data, dict):
+                return data
                 
-                #This is the parser portion of the magic character hack to handle any arbitrary datatypes
-                #TODO: Is this attempting to handle too much? Is there a better way?
-                if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
-                    evaldata = []
-                    clsname = data[0][1:].replace('numpy','np')
-                    
-                    #import sys
-                    #m, c = d.split('.',1)
-                    #getattr(sys.modules[m], c)
-                    cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
-                    
-                    for d in data[1:]:
-                        evaldata.append(cls.__new__(cls, d))
-                    return evaldata
-            except:
-                data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
+            #This is the parser portion of the magic character hack to handle any arbitrary datatypes
+            #TODO: Is this attempting to handle too much? Is there a better way?
+            if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
+                evaldata = []
+                clsname = data[0][1:].replace('numpy','np')
+                
+                #import sys
+                #m, c = clsname.split('.',1)
+                #getattr(sys.modules[m], c)
+                cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
+                
+                for d in data[1:]:
+                    evaldata.append(cls.__new__(cls, d))
+                return evaldata
             return data
         unpacked = uncast_msgpack(msgpack_data)
         for key in ['_name','_index','_columns']:
