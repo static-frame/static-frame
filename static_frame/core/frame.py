@@ -6013,29 +6013,20 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def cast_msgpack(input):
-            print('input', input)
-            #try:
-            #    data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
-            #except:
             try:
-                #print('cast try')
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
             except:
-                #print('cast exception')
-                data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
-            print('cast data', data)
+                #This is a dirty hack to handle any unsupported datatypes
+                #TODO: Is this attempting to handle too much? Is there a better way?
+                clsname = '>'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
+                data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
-        
-        result = {
+        return cast_msgpack({
             '_index' : cast_msgpack([index for index in self._index]),
             '_columns' : cast_msgpack([column for column in self._columns]),
             '_name' : cast_msgpack(self._name),
             '_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self.transpose()._blocks],
-        }
-        result = cast_msgpack(result)
-        print('~~result~~')
-        print(result)
-        return result
+        })
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
