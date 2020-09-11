@@ -1394,6 +1394,7 @@ class Frame(ContainerOperand):
                 )
 
     @classmethod
+    @doc_inject(selector='constructor_frame')
     def from_msgpack(cls,
             msgpack_data: bin,
             ) -> 'Frame':
@@ -1412,12 +1413,18 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def uncast_msgpack(input):
             try:
-                print('uncast try!')
                 data = msgpack.unpackb(input, raw=False) #try coercing standard datatypes
-                print('data', data)
+                #This is the even dirtier part of the dirty hack to handle any unsupported datatypes
+                #TODO: Is this attempting to handle too much? Is there a better way?
+                if isinstance(data[0], str) and data[0][0] == '>':
+                    evaldata = []
+                    clsname = data[0][1:].replace('numpy','np')
+                    for d in data[1:]:
+                        cls = eval(clsname)
+                        evaldata.append(cls.__new__(cls, d))
+                    return evaldata
             except:
-                print('uncast exception!')
-                data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing standard and numpy datatypes
+                data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
             return data
         unpacked = uncast_msgpack(msgpack_data)
         for key in ['_name','_index','_columns']:
@@ -1425,7 +1432,6 @@ class Frame(ContainerOperand):
         for i in range(len(unpacked['_blocks'])):
             unpacked['_blocks'][i] = uncast_msgpack(unpacked['_blocks'][i])
         
-        print('unpacked', unpacked)
         return cls.from_records(unpacked['_blocks'],
                 columns=unpacked['_columns'],
                 index=unpacked['_index'],
