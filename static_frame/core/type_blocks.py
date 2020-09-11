@@ -1709,7 +1709,7 @@ class TypeBlocks(ContainerOperand):
                     block_sliced = b[row_key] # slow from line profiler
             else: # given 2D, use row key and column slice
                 if row_key_null:
-                    block_sliced = b[:, slc]
+                    block_sliced = b[NULL_SLICE, slc]
                 else:
                     block_sliced = b[row_key, slc]
 
@@ -1724,6 +1724,7 @@ class TypeBlocks(ContainerOperand):
                         and not single_row):
                     block_sliced = block_sliced[0]
             else: # a single element, wrap back up in array
+                # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
                 block_sliced = np.array((block_sliced,), dtype=b.dtype)
 
             yield block_sliced
