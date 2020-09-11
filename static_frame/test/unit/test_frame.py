@@ -7825,13 +7825,13 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
         msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
-        f2 = Frame.from_msgpack(msg)
+        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
-        self.assertEqual(f1._columns.all(), f2._columns.all())
-        self.assertEqual(f1._name, f2._name)
-        self.assertEqual(f1._index.all(), f2._index.all())
-        for blocka, blockb in zip(f1._blocks, f2._blocks):
-            self.assertEqual(blocka, blockb)
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     def test_frame_from_msgpack_b(self) -> None:
         records = (
@@ -7843,13 +7843,13 @@ class TestUnit(TestCase):
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
         msg = b'\x84\xa6_index\xc4)\x93\xb1>numpy.datetime64\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb?\xf0\x00\x00\x00\x00\x00\x00\xcb@\x00\x00\x00\x00\x00\x00\x00\xcb@\x08\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@\x10\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
-        f2 = Frame.from_msgpack(msg)
+        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
-        self.assertEqual(f1._columns.all(), f2._columns.all())
-        self.assertEqual(f1._name, f2._name)
-        self.assertEqual(f1._index.all(), f2._index.all())
-        for blocka, blockb in zip(f1._blocks, f2._blocks):
-            self.assertEqual(blocka, blockb)
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     #---------------------------------------------------------------------------
 
