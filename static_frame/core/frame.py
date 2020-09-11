@@ -1396,27 +1396,37 @@ class Frame(ContainerOperand):
     @classmethod
     def from_msgpack(cls,
             msgpack_data: bin,
-            *,
-            dtypes: DtypesSpecifier = None,
-            name: tp.Hashable = None,
-            consolidate_blocks: bool = True
             ) -> 'Frame':
-        '''
-        Return a msgpack.
+        '''Frame constructor from an in-memory binary object formatted as a msgpack.
+
+        Args:
+            msgpack_data: a binary msgpack object, encoding a static_frame as produced from Frame.to_msgpack.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`static_frame.Frame`
         '''
         import msgpack
         import msgpack_numpy
-        
-        unpacked = msgpack.unpackb(msgpack_data, object_hook=msgpack_numpy.decode)
+        def uncast_msgpack(input):
+            try:
+                print('uncast try!')
+                data = msgpack.unpackb(input, raw=False) #try coercing standard datatypes
+                print('data', data)
+            except:
+                print('uncast exception!')
+                data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing standard and numpy datatypes
+            return data
+        unpacked = uncast_msgpack(msgpack_data)
         for key in ['_name','_index','_columns']:
-            unpacked[key] = msgpack.unpackb(unpacked[key], object_hook=msgpack_numpy.decode)
-        records = []
-        for block in unpacked['_blocks']:
-            records.append(msgpack.unpackb(block, object_hook=msgpack_numpy.decode))
-        unpacked['_blocks'] = records
-        print('unpacked', unpacked)
+            unpacked[key] = uncast_msgpack(unpacked[key])
+        for i in range(len(unpacked['_blocks'])):
+            unpacked['_blocks'][i] = uncast_msgpack(unpacked['_blocks'][i])
         
-        return cls.from_records(records,
+        print('unpacked', unpacked)
+        return cls.from_records(unpacked['_blocks'],
                 columns=unpacked['_columns'],
                 index=unpacked['_index'],
                 name=unpacked['_name'])
@@ -6003,32 +6013,29 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def cast_msgpack(input):
+            print('input', input)
+            #try:
+            #    data = msgpack.packb(input, use_bin_type=True) #try coercing standard datatypes
+            #except:
             try:
+                #print('cast try')
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
             except:
+                #print('cast exception')
                 data = msgpack.packb([a.__str__() for a in input], use_bin_type=True) #else cast to string
+            print('cast data', data)
             return data
         
-        result = cast_msgpack({
-            '_index' : cast_msgpack(index for index in self._index),
-            '_columns' : cast_msgpack(column for column in self._columns),
+        result = {
+            '_index' : cast_msgpack([index for index in self._index]),
+            '_columns' : cast_msgpack([column for column in self._columns]),
             '_name' : cast_msgpack(self._name),
-            '_blocks' : [cast_msgpack(value[0] for value in block.values) for block in self.transpose()._blocks],
-        })
+            '_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self.transpose()._blocks],
+        }
+        result = cast_msgpack(result)
+        print('~~result~~')
         print(result)
         return result
-        
-    """
-    def to_msgpackPD(self) -> 'msgpack':
-        '''
-        Return a msgpack.
-        '''
-        import msgpack
-        from pandas_msgpack import to_msgpack, read_msgpack
-        #requires cython
-        #requires pandas-compat
-        return to_msgpack(None, self.to_pandas())
-    """
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):

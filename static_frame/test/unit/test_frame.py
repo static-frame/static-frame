@@ -6170,9 +6170,8 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
         post = f1.to_msgpack()
-        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x0b\x93\xa12\xa1a\xa5False\xc4\x0b\x93\xa13\xa1b\xa5False'
+        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
         self.assertEqual(post, msg)
-        
         
     def test_frame_to_msgpack_b(self) -> None:
         records = (
@@ -6184,7 +6183,7 @@ class TestUnit(TestCase):
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
         post = f1.to_msgpack()
-        msg = b'\x84\xa6_index\xc4\x17\x92\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\r\x93\xa31.0\xa32.0\xa33.0\xc4\r\x93\xa34.0\xa35.0\xa36.0'
+        msg = b'\x84\xa6_index\xc4\x17\x92\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb?\xf0\x00\x00\x00\x00\x00\x00\xcb@\x00\x00\x00\x00\x00\x00\x00\xcb@\x08\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@\x10\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
         self.assertEqual(post, msg)
     #---------------------------------------------------------------------------
 
@@ -7824,16 +7823,14 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('r', 's', 't'),
                 index=('w', 'x'))
-        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x0b\x93\xa12\xa1a\xa5False\xc4\x0b\x93\xa13\xa1b\xa5False'
+        msg = b'\x84\xa6_index\xc4\x05\x92\xa1w\xa1x\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x05\x93\x02\xa1a\xc2\xc4\x05\x93\x03\xa1b\xc2'
         f2 = Frame.from_msgpack(msg)
         
-        print('f1', f1)
-        print('f2', f2)
         self.assertEqual(f1._columns.all(), f2._columns.all())
         self.assertEqual(f1._name, f2._name)
         self.assertEqual(f1._index.all(), f2._index.all())
         for blocka, blockb in zip(f1._blocks, f2._blocks):
-            self.assertEqual(blocka.all(), blockb.all())
+            self.assertEqual(blocka, blockb)
 
     def test_frame_from_msgpack_b(self) -> None:
         records = (
@@ -7844,9 +7841,17 @@ class TestUnit(TestCase):
                 columns=('r', 's', 't'),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x84\xa6_index\xc4\x17\x92\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\r\x93\xa31.0\xa32.0\xa33.0\xc4\r\x93\xa34.0\xa35.0\xa36.0'
+        msg = b'\x84\xa6_index\xc4\x17\x92\xaa1999-12-31\xaa2000-01-01\xa8_columns\xc4\x07\x93\xa1r\xa1s\xa1t\xa5_name\xc4\x01\xc0\xa7_blocks\x92\xc4\x1c\x93\xcb?\xf0\x00\x00\x00\x00\x00\x00\xcb@\x00\x00\x00\x00\x00\x00\x00\xcb@\x08\x00\x00\x00\x00\x00\x00\xc4\x1c\x93\xcb@\x10\x00\x00\x00\x00\x00\x00\xcb@\x14\x00\x00\x00\x00\x00\x00\xcb@\x18\x00\x00\x00\x00\x00\x00'
         f2 = Frame.from_msgpack(msg)
-        self.assertEqual(f1, f2) #Equal? DeepEqual??
+        
+        print('f1', f1)
+        print('f2', f2)
+        self.assertEqual(f1._columns.all(), f2._columns.all())
+        self.assertEqual(f1._name, f2._name)
+        self.assertEqual(f1._index.all(), f2._index.all())
+        for blocka, blockb in zip(f1._blocks, f2._blocks):
+            self.assertEqual(blocka, blockb)
+        #self.assertEqual(False, True)
 
     #---------------------------------------------------------------------------
 
