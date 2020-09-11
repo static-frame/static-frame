@@ -1415,7 +1415,7 @@ class Frame(ContainerOperand):
                 
             #This is the parser portion of the magic character hack to handle any arbitrary datatypes
             #TODO: Is this attempting to handle too much? Is there a better way?
-            if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
+            if isinstance(data[0], str) and data[0][0] == '∞': #if we detect the magic character, evaluate class
                 import sys
                 clsname = data[0][1:]
                 m, c = clsname.split('.',1)
@@ -6020,7 +6020,7 @@ class Frame(ContainerOperand):
             except TypeError:
                 #This inserts a magic character with any arbitrary datatype that msgpack_numpy doesn't support
                 #TODO: Is this attempting to handle too much? Is there a better way?
-                clsname = '>'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
+                clsname = '∞'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
                 data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
         return cast_msgpack({
