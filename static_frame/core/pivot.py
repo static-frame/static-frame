@@ -64,6 +64,22 @@ def extrapolate_column_fields(
     return sub_columns
 
 
+def pivot_records_dtypes(
+        frame: 'Frame',
+        data_fields: tp.Iterable[tp.Hashable],
+        func_single: UFunc,
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
+        ) -> tp.Iterator[np.dtype]:
+    dtypes = frame.dtypes
+    for field in data_fields:
+        dtype = dtypes[field]
+        if func_single:
+            yield dtype
+        else: # we assume
+            for _, func in func_map:
+                yield None # do not know what func result will be
+
+
 def pivot_records_items(
         frame: 'Frame',
         group_fields: tp.Iterable[tp.Hashable],
@@ -80,10 +96,11 @@ def pivot_records_items(
         record = []
         for field in data_fields:
             values = part[field].values
-            if len(values) == 1:
-                record.append(values[0])
-            elif func_single:
-                record.append(func_single(values))
+            if func_single:
+                if len(values) == 1:
+                    record.append(values[0])
+                else:
+                    record.append(func_single(values))
             else:
                 for _, func in func_map:
                     record.append(func(values))

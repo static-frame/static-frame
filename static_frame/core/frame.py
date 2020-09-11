@@ -74,6 +74,7 @@ from static_frame.core.pivot import pivot_derive_constructors
 from static_frame.core.pivot import pivot_index_map
 from static_frame.core.pivot import extrapolate_column_fields
 from static_frame.core.pivot import pivot_records_items
+from static_frame.core.pivot import pivot_records_dtypes
 from static_frame.core.pivot import pivot_items
 
 from static_frame.core.util import _gen_skip_middle
@@ -4668,6 +4669,12 @@ class Frame(ContainerOperand):
                                 index_constructor=index_constructor),
                         columns_constructor=columns_constructor)
             else:
+                dtypes = tuple(pivot_records_dtypes(
+                                frame=self,
+                                data_fields=data_fields,
+                                func_single=func_single,
+                                func_map=func_map,
+                                ))
                 f = self.from_records_items(
                         pivot_records_items(
                                 frame=self,
@@ -4679,7 +4686,9 @@ class Frame(ContainerOperand):
                         ),
                         columns_constructor=columns_constructor,
                         columns=columns,
-                        index_constructor=index_constructor)
+                        index_constructor=index_constructor,
+                        dtypes=dtypes,
+                        )
             # if we have an IH, we will relabel with that IH, and might have a different order than the order here; thus, reindex. This is not observed with the present implementation of iter_group_items, but that might change.
             if index_depth > 1 and not f.index.equals(index_inner):
                 f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
@@ -4715,6 +4724,14 @@ class Frame(ContainerOperand):
                                         name=sub_columns[0]))
                     else:
                         # TODO: provide dtypes based on existing fields
+                        # import ipdb; ipdb.set_trace()
+                        # dtypes = sub.dtypes.values[sub.columns.loc_to_iloc(data_fields)]
+                        dtypes = tuple(pivot_records_dtypes(
+                                frame=self,
+                                data_fields=data_fields,
+                                func_single=func_single,
+                                func_map=func_map,
+                                ))
                         sub_frame = Frame.from_records_items(
                                 pivot_records_items(
                                         frame=sub,
@@ -4723,7 +4740,9 @@ class Frame(ContainerOperand):
                                         data_fields=data_fields,
                                         func_single=func_single,
                                         func_map=func_map),
-                                columns=sub_columns)
+                                columns=sub_columns,
+                                dtypes=dtypes,
+                                )
                 else:
                     if func_single: # assume no aggregation necessary
                         data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
