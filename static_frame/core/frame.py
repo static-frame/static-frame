@@ -4607,6 +4607,7 @@ class Frame(ContainerOperand):
             func_map = tuple(func.items())
 
         func_single = func_map[0][1] if len(func_map) == 1 else None
+
         func_fields = EMPTY_TUPLE if func_single else tuple(label for label, _ in func_map)
         index_fields = key_normalize(index_fields)
         columns_fields = key_normalize(columns_fields)
@@ -4628,6 +4629,7 @@ class Frame(ContainerOperand):
                         column_key=self._columns.loc_to_iloc(index_loc)),
                 axis=0)
 
+        # index_inner is used for avoiding dealing with IndexHierarchy
         if index_depth == 1:
             index = Index(index_values, name=index_fields[0])
             index_inner = index
@@ -4694,10 +4696,13 @@ class Frame(ContainerOperand):
                 f = f.reindex(index_inner, own_index=True, check_equals=False) #pragma: no cover
         else:
             # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
+            index_fields_len = len(index_fields)
             sub_frames = []
+            sub_columns_collected = []
             for group, sub in self.iter_group_items(columns_fields):
-                if len(index_fields) == 1:
-                    sub_index_labels = sub[index_fields[0]].values
+                if index_fields_len == 1:
+                    sub_index_labels = sub._blocks._extract_array(row_key=None,
+                            column_key=sub.columns.loc_to_iloc(index_fields[0]))
                 else: # match to an index of tuples; the order might not be the same as IH
                     sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
 
@@ -4706,6 +4711,7 @@ class Frame(ContainerOperand):
                         group,
                         data_fields,
                         func_fields)
+                sub_columns_collected.extend(sub_columns)
 
                 # if sub_index_labels are not unique we need to aggregate
                 if len(set(sub_index_labels)) != len(sub_index_labels):
@@ -4718,7 +4724,7 @@ class Frame(ContainerOperand):
                                                 data_fields=data_fields,
                                                 func_single=func_single,
                                                 ),
-                                        name=sub_columns[0]))
+                                        ))
                     else:
                         dtypes = tuple(pivot_records_dtypes(
                                 frame=self,
@@ -4734,32 +4740,41 @@ class Frame(ContainerOperand):
                                         data_fields=data_fields,
                                         func_single=func_single,
                                         func_map=func_map),
-                                columns=sub_columns,
                                 dtypes=dtypes,
                                 )
                 else:
                     if func_single: # assume no aggregation necessary
-                        data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
+                        if len(data_fields) == 1:
+                            data_fields_iloc = sub.columns.loc_to_iloc(data_fields[0])
+                        else:
+                            data_fields_iloc = sub.columns.loc_to_iloc(data_fields)
                         sub_frame = Frame(
-                                sub._blocks._extract(row_key=None, column_key=data_fields_iloc),
-                                columns=sub_columns,
+                                sub._blocks._extract(row_key=None,
+                                        column_key=data_fields_iloc),
                                 index=sub_index_labels,
                                 own_data=True)
                     else:
-                        def columns() -> tp.Iterator[np.ndarray]:
+                        # def columns() -> tp.Iterator[np.ndarray]:
+                        #     for field in data_fields:
+                        #         for _, func in func_map:
+                        #             yield sub._blocks._extract_array(row_key=None,
+                        #                     column_key=sub.columns.loc_to_iloc(field))
+                                    # yield sub[field].iter_element().apply(func).values
+                        def blocks() -> tp.Iterator[np.ndarray]:
                             for field in data_fields:
                                 for _, func in func_map:
                                     yield sub._blocks._extract_array(row_key=None,
                                             column_key=sub.columns.loc_to_iloc(field))
-                                    # do no apply func to elements
-                                    # yield sub[field].iter_element().apply(func).values
-                        sub_frame = Frame.from_items(
-                                zip(sub_columns, columns()),
-                                index=sub_index_labels)
+                        sub_frame = Frame(
+                                TypeBlocks.from_blocks(blocks()),
+                                index=sub_index_labels,
+                                own_data=True,
+                                )
                 sub_frames.append(sub_frame)
 
             f = self.__class__.from_concat(sub_frames,
                     index=index_inner,
+                    columns=sub_columns_collected,
                     axis=1,
                     fill_value=fill_value)
 
