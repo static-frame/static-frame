@@ -1416,13 +1416,12 @@ class Frame(ContainerOperand):
             #This is the parser portion of the magic character hack to handle any arbitrary datatypes
             #TODO: Is this attempting to handle too much? Is there a better way?
             if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
+                import sys
                 evaldata = []
-                clsname = data[0][1:].replace('numpy','np')
-                
-                #import sys
-                #m, c = clsname.split('.',1)
-                #getattr(sys.modules[m], c)
-                cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
+                clsname = data[0][1:]
+                m, c = clsname.split('.',1)
+                cls = getattr(sys.modules[m], c)
+                #cls = eval(clsname) #replacement code above, leaving this in so that it's obvious what's going on.
                 
                 for d in data[1:]:
                     evaldata.append(cls.__new__(cls, d))
