@@ -1415,7 +1415,7 @@ class Frame(ContainerOperand):
             try:
                 data = msgpack.unpackb(input, raw=False) #try coercing standard datatypes
                 
-                #This is the even dirtier part of the dirty hack to handle any unsupported datatypes
+                #This is the parser portion of the magic character hack to handle any arbitrary datatypes
                 #TODO: Is this attempting to handle too much? Is there a better way?
                 if isinstance(data[0], str) and data[0][0] == '>': #if we detect the magic character, evaluate class
                     evaldata = []
@@ -6028,7 +6028,7 @@ class Frame(ContainerOperand):
             try:
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
             except TypeError:
-                #This is a dirty hack to handle any unsupported datatypes
+                #This inserts a magic character with any arbitrary datatype that msgpack_numpy doesn't support
                 #TODO: Is this attempting to handle too much? Is there a better way?
                 clsname = '>'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
                 data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
