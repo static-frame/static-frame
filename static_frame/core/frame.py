@@ -1424,7 +1424,8 @@ class Frame(ContainerOperand):
         return cls(TypeBlocks.from_blocks(blocks),
                 columns=columns,
                 index=index,
-                name=name)
+                name=name,
+                own_data=True)
         
     @classmethod
     @doc_inject(selector='constructor_frame')
