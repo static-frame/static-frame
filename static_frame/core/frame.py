@@ -1415,7 +1415,6 @@ class Frame(ContainerOperand):
             if not isinstance(data, list):
                 return data
             #Magic Character Hack:
-            #if we detect the magic character, call classname
             if isinstance(data[0], str) and data[0][0] == '∞': 
                 import sys
                 clsname = data[0][1:]
@@ -1423,12 +1422,12 @@ class Frame(ContainerOperand):
                 cls = getattr(sys.modules[m], c)
                 if m == 'numpy':
                     return np.array([cls(d) for d in data[1:]])
-                    
                     #return np.fromiter(data[1:], cls) #I think this would work if the data type wasn't weird
-                    #Error: Cannot create a NumPy datetime other than NaT with generic units
-                    #I think this fails because fromiter initializes the array first with the type
+                    #    Error: Cannot create a NumPy datetime other than NaT with generic units
+                    #    I think this fails because np.fromiter initializes the array first with the type
                 else:
                     return [cls(d) for d in data[1:]]
+                    #Last resort, try calling the user's datatype with the result of __str__()
             return data
         index_name, index_values, columns, name, blocks = map(
                 uncast_msgpack,
