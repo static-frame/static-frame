@@ -703,7 +703,7 @@ class TypeBlocks(ContainerOperand):
             key: iloc selector on opposite axis
 
         Returns:
-            Generator of group, selection pairs, where selection is an np.ndaarray. Returned is as an np.ndarray if key is more than one column.
+            Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
         '''
         # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
         unique_axis = None
@@ -726,6 +726,7 @@ class TypeBlocks(ContainerOperand):
                 unique_axis)
 
         if unique_axis is not None:
+            # NOTE: this is expensive!
             # make the groups hashable for usage in index construction
             if axis == 0:
                 groups = array2d_to_tuples(groups)

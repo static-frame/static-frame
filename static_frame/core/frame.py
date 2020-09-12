@@ -4699,16 +4699,29 @@ class Frame(ContainerOperand):
             index_fields_len = len(index_fields)
             sub_frames = []
             sub_columns_collected = []
-            for group, sub in self.iter_group_items(columns_fields):
+
+            # import ipdb; ipdb.set_trace()
+            # avoid doing a multi-column-style selection if not needed
+            if len(columns_fields) == 1:
+                columns_group = columns_fields[0]
+                retuple_group_label = True
+            else:
+                columns_group = columns_fields
+                retuple_group_label = False
+
+            for group, sub in self.iter_group_items(columns_group):
                 if index_fields_len == 1:
                     sub_index_labels = sub._blocks._extract_array(row_key=None,
                             column_key=sub.columns.loc_to_iloc(index_fields[0]))
                 else: # match to an index of tuples; the order might not be the same as IH
-                    sub_index_labels = tuple(zip(*(sub[f].values for f in index_fields)))
+                    sub_index_labels = tuple(zip(*(
+                            sub._blocks._extract_array(row_key=None,
+                                    column_key=sub.columns.loc_to_iloc(f))
+                            for f in index_fields)))
 
                 sub_columns = extrapolate_column_fields(
                         columns_fields,
-                        group,
+                        group if not retuple_group_label else (group,),
                         data_fields,
                         func_fields)
                 sub_columns_collected.extend(sub_columns)
@@ -4754,12 +4767,6 @@ class Frame(ContainerOperand):
                                 index=sub_index_labels,
                                 own_data=True)
                     else:
-                        # def columns() -> tp.Iterator[np.ndarray]:
-                        #     for field in data_fields:
-                        #         for _, func in func_map:
-                        #             yield sub._blocks._extract_array(row_key=None,
-                        #                     column_key=sub.columns.loc_to_iloc(field))
-                                    # yield sub[field].iter_element().apply(func).values
                         def blocks() -> tp.Iterator[np.ndarray]:
                             for field in data_fields:
                                 for _, func in func_map:
