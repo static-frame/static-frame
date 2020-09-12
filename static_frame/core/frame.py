@@ -1417,17 +1417,23 @@ class Frame(ContainerOperand):
             #Magic Character Hack:
             if isinstance(data[0], str) and data[0][0] == '∞': 
                 import sys
-                clsname = data[0][1:]
-                m, c = clsname.split('.',1)
-                cls = getattr(sys.modules[m], c)
-                if m == 'numpy':
-                    return np.array([cls(d) for d in data[1:]])
+                module_name, class_name = data[0][1:].split('.',1)
+                if module_name == 'numpy':
+                    if '[' in class_name:
+                        unit = class_name.split('[',1)[-1].split(']',1)[0]
+                        cls = getattr(
+                                sys.modules[module_name],
+                                class_name.split('[',1)[0])
+                        return np.array([cls(d, unit) for d in data[1:]])
+                    #return np.array([cls(d) for d in data[1:]])
                     #return np.fromiter(data[1:], cls) #I think this would work if the data type wasn't weird
                     #    Error: Cannot create a NumPy datetime other than NaT with generic units
                     #    I think this fails because np.fromiter initializes the array first with the type
                 else:
+                    cls = getattr(sys.modules[module_name], class_name)
                     return [cls(d) for d in data[1:]]
-                    #Last resort, try calling the user's datatype with the result of __str__()
+                    #Last resort, try calling the user's data
+                    #type with the result of __str__()
             return data
         index_name, index_values, columns, name, blocks = map(
                 uncast_msgpack,
@@ -6028,12 +6034,21 @@ class Frame(ContainerOperand):
                         ) 
             except ValueError:
                 #Magic Character Hack
-                clsname = '∞'+input[0].__class__.__module__
-                clsname += '.'+input[0].__class__.__name__
-                data = msgpack.packb(
-                        [clsname]+[a.__str__() for a in input],
-                        use_bin_type=True
-                        ) #else cast to string
+                cls = input[0].__class__
+                clsname = '∞'+cls.__module__
+                if hasattr(cls, 'dtype'): #try dtype
+                    clsname += '.'+str(input[0].dtype)
+                    data = msgpack.packb(
+                            [clsname]+[int(a.astype(int)) for a in input],
+                            use_bin_type=True
+                            ) #cast to int if class implements dtype,
+                              #ie timedelta64, datetime64
+                else: #As str, last resort
+                    clsname += '.'+cls.__name__
+                    data = msgpack.packb(
+                            [clsname]+[a.__str__() for a in input],
+                            use_bin_type=True
+                            ) #else cast to string
             return data
         return cast_msgpack([
             cast_msgpack(self._index.name),
