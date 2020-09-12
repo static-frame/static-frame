@@ -1420,11 +1420,11 @@ class Frame(ContainerOperand):
                 cls = getattr(sys.modules[m], c)
                 return [cls(d) for d in data[1:]]
             return data
-        _index, _columns, _name, _blocks = map(uncast_msgpack, uncast_msgpack(msgpack_data))
-        return cls(TypeBlocks.from_blocks(_blocks),
-                columns=_columns,
-                index=_index,
-                name=_name)
+        index, columns, name, blocks = map(uncast_msgpack, uncast_msgpack(msgpack_data))
+        return cls(TypeBlocks.from_blocks(blocks),
+                columns=columns,
+                index=index,
+                name=name)
         
     @classmethod
     @doc_inject(selector='constructor_frame')
