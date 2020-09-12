@@ -45,7 +45,8 @@ class SampleData:
         value_values = sf.Series(np.random.random(len(group_values)), name='data')
         frame = sf.Frame.from_concat((group_values, group_unique_values, value_values), axis=1)
 
-        cls._store['pivot_a'] = frame
+        cls._store['pivot_a_sf'] = frame
+        cls._store['pivot_a_df'] = frame.to_pandas()
 
     @classmethod
     def get(cls, key: str) -> tp.Any:
@@ -59,5 +60,12 @@ class Pivot(PerfTest):
 
     @classmethod
     def sf(cls) -> None:
-        f1 = SampleData.get('pivot_a')
+        f1 = SampleData.get('pivot_a_sf')
         f2 = f1.pivot(index_fields='group_unique', columns_fields='group', data_fields='data')
+        assert f2.shape == (50, 37000)
+
+    @classmethod
+    def pd(cls) -> None:
+        df1 = SampleData.get('pivot_a_df')
+        df2 = df1.pivot(index='group_unique', columns='group', values='data')
+        assert df2.shape == (50, 37000)

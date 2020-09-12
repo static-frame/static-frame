@@ -10,6 +10,8 @@ import cmath
 import sqlite3
 import contextlib
 import tempfile
+import time
+import datetime
 from pathlib import Path
 
 import numpy as np
@@ -43,6 +45,21 @@ skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,
         reason='No display available'
         )
+
+#-------------------------------------------------------------------------------
+class Timer():
+
+    def __init__(self, label: str = ''):
+        self._start = time.time()
+        self._label = label
+
+    def __call__(self) -> float:
+        return time.time() - self._start
+
+    def __str__(self) -> str:
+        if self._label:
+            return f'{self._label}: {datetime.timedelta(seconds=self.__call__())}'
+        return str(datetime.timedelta(seconds=self.__call__()))
 
 #-------------------------------------------------------------------------------
 
