@@ -1421,7 +1421,11 @@ class Frame(ContainerOperand):
                 clsname = data[0][1:]
                 m, c = clsname.split('.',1)
                 cls = getattr(sys.modules[m], c)
-                return [cls(d) for d in data[1:]] #should this be a numpy array?
+                if m == 'numpy':
+                    #return np.fromiter((cls(d) for d in data[1:]), np.dtype(cls))
+                    return np.array([cls(d) for d in data[1:]])
+                else:
+                    return [cls(d) for d in data[1:]]
             return data
         index_name, index_values, columns, name, blocks = map(uncast_msgpack,
                 uncast_msgpack(msgpack_data))
