@@ -32,11 +32,11 @@ class SampleData:
         for k, v in size_map.items():
             group_sizes.extend([k] * v)
 
-        def gen_group_values():
+        def gen_group_values() -> tp.Iterator[np.ndarray]:
             for group in groups:
                 yield np.full(group_sizes[group], group)
 
-        def gen_group_unique_values():
+        def gen_group_unique_values() -> tp.Iterator[np.ndarray]:
             for group in groups:
                 yield np.arange(group_sizes[group])
 
