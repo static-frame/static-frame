@@ -1412,9 +1412,7 @@ class Frame(ContainerOperand):
             data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
             if not isinstance(data, list):
                 return data
-                
-            #This is the parser portion of the magic character hack to handle any arbitrary datatypes
-            #TODO: Is this attempting to handle too much? Is there a better way?
+            #Magic Character Hack:
             if isinstance(data[0], str) and data[0][0] == '∞': #if we detect the magic character, evaluate class
                 import sys
                 clsname = data[0][1:]
@@ -1422,13 +1420,8 @@ class Frame(ContainerOperand):
                 cls = getattr(sys.modules[m], c)
                 return [cls(d) for d in data[1:]]
             return data
-        unpacked = uncast_msgpack(msgpack_data)
-        _name = uncast_msgpack(unpacked['_name'])
-        _index = uncast_msgpack(unpacked['_index'])
-        _columns = uncast_msgpack(unpacked['_columns'])
-        _blocks = TypeBlocks.from_blocks(uncast_msgpack(unpacked['_blocks']))
-        
-        return cls(_blocks,
+        _index, _columns, _name, _blocks = map(uncast_msgpack, uncast_msgpack(msgpack_data))
+        return cls(TypeBlocks.from_blocks(_blocks),
                 columns=_columns,
                 index=_index,
                 name=_name)
@@ -6018,30 +6011,17 @@ class Frame(ContainerOperand):
             try:
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
             except TypeError:
-                #This inserts a magic character with any arbitrary datatype that msgpack_numpy doesn't support
-                #TODO: Is this attempting to handle too much? Is there a better way?
+                #Magic Character Hack
                 clsname = '∞'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
                 data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
-        print('_blocks1', self._blocks)
-        print('_blocks2', self._blocks._blocks)
-        print('_blocks3', type(self._blocks._blocks))
-        
-        return cast_msgpack({
-            '_index' : cast_msgpack([index for index in self._index]),
-            '_columns' : cast_msgpack([column for column in self._columns]),
-            '_name' : cast_msgpack(self._name),
-            
-            #v1 452 chars
-            #'_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self.transpose()._blocks],
-            
-            #v2 463 chars
-            #'_blocks' : [cast_msgpack([value[0] for value in block.values]) for block in self._blocks],
-            
-            #v3 695 chars
-            #'_blocks' : [cast_msgpack(block) for block in self._blocks._blocks],
-            '_blocks' : cast_msgpack(self._blocks._blocks),
-        })
+        return cast_msgpack([
+            cast_msgpack([index for index in self._index]),
+            cast_msgpack([column for column in self._columns]),
+            cast_msgpack(self._name),
+            cast_msgpack(self._blocks._blocks),
+        ])
+
 #-------------------------------------------------------------------------------
 
 class FrameGO(Frame):
