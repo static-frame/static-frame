@@ -6002,7 +6002,7 @@ class Frame(ContainerOperand):
                 )
         return repr(self.display(config))
 
-    def to_msgpack(self) -> 'msgpack':
+    def to_msgpack(self) -> 'bin':
         '''
         Return a msgpack.
         '''
