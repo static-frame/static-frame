@@ -1422,8 +1422,11 @@ class Frame(ContainerOperand):
                 m, c = clsname.split('.',1)
                 cls = getattr(sys.modules[m], c)
                 if m == 'numpy':
-                    #return np.fromiter((cls(d) for d in data[1:]), np.dtype(cls))
                     return np.array([cls(d) for d in data[1:]])
+                    
+                    #return np.fromiter(data[1:], cls) #I think this would work if the data type wasn't weird
+                    #Error: Cannot create a NumPy datetime other than NaT with generic units
+                    #I think this fails because fromiter initializes the array first with the type
                 else:
                     return [cls(d) for d in data[1:]]
             return data
