@@ -1430,7 +1430,8 @@ class Frame(ContainerOperand):
                 else:
                     return [cls(d) for d in data[1:]]
             return data
-        index_name, index_values, columns, name, blocks = map(uncast_msgpack,
+        index_name, index_values, columns, name, blocks = map(
+                uncast_msgpack,
                 uncast_msgpack(msgpack_data))
         index = Index(index_values, name=index_name)
         return cls(TypeBlocks.from_blocks(blocks),
