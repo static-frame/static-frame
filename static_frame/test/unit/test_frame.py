@@ -7897,6 +7897,30 @@ class TestUnit(TestCase):
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
+    def test_frame_from_msgpack_e(self) -> None:
+        #ISSUE: dtype hack only works with 1D arrays
+        records = (
+                [np.timedelta64(3, 'Y'), np.datetime64('1999-12-31'), np.float64(60)],
+                [np.timedelta64(4, 'Y'), np.datetime64('2000-01-01'), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = b'\x95\xc4\x01\xc0\xc4\x1e\x93\xb6\xe2\x88\x9enumpy.datetime64[D]\xcd*\xcc\xcd*\xcd\xc4\x1c\x94\xb7\xe2\x88\x9enumpy.timedelta64[Y]\x01\x02\x03\xc4\x01\xc0\xc4\xa0\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i2\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x04\x01\x00\x02\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x102\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00N@\x00\x00\x00\x00\x00\x00\x18@'
+        
+        print(f1.to_msgpack())
+        print('f1', f1)
+        print('f2', Frame.from_msgpack(msg))
+        
+        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_flat_a(self) -> None:
