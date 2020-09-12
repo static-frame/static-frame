@@ -1409,7 +1409,8 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def uncast_msgpack(input):
-            data = msgpack.unpackb(input, object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
+            data = msgpack.unpackb(input,
+                    object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
             if not isinstance(data, list):
                 return data
             #Magic Character Hack:
@@ -1420,7 +1421,8 @@ class Frame(ContainerOperand):
                 cls = getattr(sys.modules[m], c)
                 return [cls(d) for d in data[1:]]
             return data
-        index, columns, name, blocks = map(uncast_msgpack, uncast_msgpack(msgpack_data))
+        index, columns, name, blocks = map(uncast_msgpack,
+                uncast_msgpack(msgpack_data))
         return cls(TypeBlocks.from_blocks(blocks),
                 columns=columns,
                 index=index,
