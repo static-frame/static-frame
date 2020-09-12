@@ -69,3 +69,4 @@ class Pivot(PerfTest):
         df1 = SampleData.get('pivot_a_df')
         df2 = df1.pivot(index='group_unique', columns='group', values='data')
         assert df2.shape == (50, 37000)
+
