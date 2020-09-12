@@ -182,7 +182,7 @@ muon    NaN    -1.0
 tau   1.777    -1.0
 
 
-Similarly, sometimes NumPy arrays exposed from the ``values`` attribute of a ``pd.Series`` or a ``pd.DataFrame`` can be mutated, changing the values within the ``DataFrame``.
+Similarly, sometimes NumPy arrays exposed from the ``values`` attribute of a ``pd.Series`` or a ``pd.DataFrame`` can be mutated, changing the values within the ``pd.DataFrame``.
 
 >>> a2 = df['charge'].values
 >>> a2
@@ -526,7 +526,7 @@ quark                              strange 0.1
 No. 9: Indices are Always Unique
 _______________________________________________
 
-It is natural to think index and column labels on a ``pd.DataFrame`` are unique identifiers: their interfaces suggest that they are like Python dictionaries, where keys are always unique. Pandas indices, however, are not constrained to unique values. Creating an index on a ``pd.Frame`` with duplicates means that, for some single-label selections, a ``pd.Series`` will be returned, but for other single-label selections, a ``pd.DataFrame`` will be returned.
+It is natural to think index and column labels on a ``pd.DataFrame`` are unique identifiers: their interfaces suggest that they are like Python dictionaries, where keys are always unique. Pandas indices, however, are not constrained to unique values. Creating an index on a ``pd.DataFrame`` with duplicates means that, for some single-label selections, a ``pd.Series`` will be returned, but for other single-label selections, a ``pd.DataFrame`` will be returned.
 
 
 >>> df = pd.DataFrame.from_records([('muon', 0.106, -1.0, 'lepton'), ('tau', 1.777, -1.0, 'lepton'), ('charm', 1.3, 0.666, 'quark'), ('strange', 0.1, -0.333, 'quark')], columns=('name', 'mass', 'charge', 'type'))
