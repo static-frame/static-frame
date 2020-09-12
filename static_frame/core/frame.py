@@ -6011,14 +6011,14 @@ class Frame(ContainerOperand):
         def cast_msgpack(input):
             try:
                 data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
-            except TypeError:
+            except ValueError:
                 #Magic Character Hack
                 clsname = '∞'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
                 data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
             return data
         return cast_msgpack([
-            cast_msgpack([index for index in self._index]),
-            cast_msgpack([column for column in self._columns]),
+            cast_msgpack(self._index.values),
+            cast_msgpack(self._columns.values),
             cast_msgpack(self._name),
             cast_msgpack(self._blocks._blocks),
         ])
