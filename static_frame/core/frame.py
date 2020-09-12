@@ -1410,16 +1410,18 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def uncast_msgpack(input):
             data = msgpack.unpackb(input,
-                    object_hook=msgpack_numpy.decode) #try coercing numpy datatypes
+                    object_hook=msgpack_numpy.decode
+                    ) #try coercing standard and numpy datatypes
             if not isinstance(data, list):
                 return data
             #Magic Character Hack:
-            if isinstance(data[0], str) and data[0][0] == '∞': #if we detect the magic character, evaluate class
+            #if we detect the magic character, call classname
+            if isinstance(data[0], str) and data[0][0] == '∞': 
                 import sys
                 clsname = data[0][1:]
                 m, c = clsname.split('.',1)
                 cls = getattr(sys.modules[m], c)
-                return [cls(d) for d in data[1:]]
+                return [cls(d) for d in data[1:]] #should this be a numpy array?
             return data
         index, columns, name, blocks = map(uncast_msgpack,
                 uncast_msgpack(msgpack_data))
@@ -6012,11 +6014,15 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def cast_msgpack(input):
             try:
-                data = msgpack.packb(input, default=msgpack_numpy.encode) #try coercing standard and numpy datatypes
+                #try coercing standard and numpy datatypes
+                data = msgpack.packb(input, default=msgpack_numpy.encode) 
             except ValueError:
                 #Magic Character Hack
                 clsname = '∞'+input[0].__class__.__module__+'.'+input[0].__class__.__name__                
-                data = msgpack.packb([clsname]+[a.__str__() for a in input], use_bin_type=True) #else cast to string
+                data = msgpack.packb(
+                        [clsname]+[a.__str__() for a in input],
+                        use_bin_type=True
+                        ) #else cast to string
             return data
         return cast_msgpack([
             cast_msgpack(self._index.values),
