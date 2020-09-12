@@ -1423,8 +1423,9 @@ class Frame(ContainerOperand):
                 cls = getattr(sys.modules[m], c)
                 return [cls(d) for d in data[1:]] #should this be a numpy array?
             return data
-        index, columns, name, blocks = map(uncast_msgpack,
+        index_name, index_values, columns, name, blocks = map(uncast_msgpack,
                 uncast_msgpack(msgpack_data))
+        index = Index(index_values, name=index_name)
         return cls(TypeBlocks.from_blocks(blocks),
                 columns=columns,
                 index=index,
@@ -6028,6 +6029,7 @@ class Frame(ContainerOperand):
                         ) #else cast to string
             return data
         return cast_msgpack([
+            cast_msgpack(self._index.name),
             cast_msgpack(self._index.values),
             cast_msgpack(self._columns.values),
             cast_msgpack(self._name),
