@@ -1409,16 +1409,10 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def decode(obj, chain=msgpack_numpy.decode):
-            if b'datetime64' in obj:
+            if b'np' in obj:
                 data = msgpack.unpackb(obj[b'data'])
-                array = np.array(
-                        [np.datetime64(d, unit) for d, unit in data])
-                array.flags.writeable = False
-                return array
-            elif b'timedelta64' in obj:
-                data = msgpack.unpackb(obj[b'data'])
-                array = np.array(
-                        [np.timedelta64(d, unit) for d, unit in data])
+                cls = getattr(np, obj[b'np'])
+                array = np.array([cls(d, unit) for d, unit in data])
                 array.flags.writeable = False
                 return array
             else:
@@ -6023,8 +6017,8 @@ class Frame(ContainerOperand):
                     #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
                     unit = str(obj[0].dtype).split('[',1)[-1].split(']',1)[0]
                     data = [[int(a.astype(int)), unit] for a in obj]
-                    clsname = obj[0].__class__.__name__.encode('utf-8')
-                    return {clsname: True,
+                    clsname = obj[0].__class__.__name__
+                    return {b'np': clsname,
                             b'data': msgpack.packb(data)}
             return chain(obj)
         packb = partial(msgpack.packb, default=encode)
