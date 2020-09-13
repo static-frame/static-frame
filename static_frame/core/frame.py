@@ -1761,6 +1761,8 @@ class Frame(ContainerOperand):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            skip_header: int = 0,
+            skip_footer: int = 0,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
@@ -1780,6 +1782,8 @@ class Frame(ContainerOperand):
                 columns_name_depth_level=columns_name_depth_level,
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
                 )
         return st.read(label,
                 config=config,

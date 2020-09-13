@@ -389,6 +389,9 @@ class StoreXLSX(Store):
         columns_depth = config.columns_depth
         columns_name_depth_level = config.columns_name_depth_level
 
+        skip_header = config.skip_header
+        skip_footer = config.skip_footer
+
         wb = self._load_workbook(self._fp)
 
         if label is None:
@@ -400,11 +403,14 @@ class StoreXLSX(Store):
 
         if ws.max_column <= 1 or ws.max_row <= 1:
             # https://openpyxl.readthedocs.io/en/stable/optimized.html
-            # says that some clients might not repare correct dimensions; not sure what conditions are best to show this
+            # says that some clients might not report correct dimensions
             ws.calculate_dimension()
 
         max_column = ws.max_column
         max_row = ws.max_row
+
+        # adjust for downward shift for skipping header, then reduce for footer; at this value and beyond we stop
+        last_row_count = max_row - skip_header - skip_footer
 
         index_values: tp.List[tp.Any] = []
         columns_values: tp.List[tp.Any] = []
@@ -412,7 +418,12 @@ class StoreXLSX(Store):
         data = [] # pre-size with None?
         apex_rows = []
 
-        for row_count, row in enumerate(ws.iter_rows(max_row=max_row)):
+        for row_count, row in enumerate(ws.iter_rows(max_row=max_row), start=-skip_header):
+            if row_count < 0:
+                continue # due to skip header; perserves comparison to columns_depth
+            if row_count >= last_row_count:
+                break
+
             if store_filter is None:
                 row = tuple(c.value for c in row)
             else: # only need to filter string values, but probably too expensive to pre-check
@@ -522,7 +533,4 @@ class StoreXLSX(Store):
         yield from labels
 
 
-# p q I I II II
-# r s A B A  B
-# 1 A 0 0 0  0
-# 1 B 0 0 0  0
+

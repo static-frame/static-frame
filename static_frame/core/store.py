@@ -24,13 +24,15 @@ from static_frame.core.util import DepthLevelSpecifier
 
 #-------------------------------------------------------------------------------
 class StoreConfig(metaclass=InterfaceMeta):
+    '''
+    A read-only container of parameters used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
+    '''
+
     index_depth: int
     columns_depth: int
     dtypes: DtypesSpecifier
     include_index: bool
     include_columns: bool
-    # format_index: tp.Optional[tp.Dict[str, tp.Any]]
-    # format_columns: tp.Optional[tp.Dict[str, tp.Any]]
     merge_hierarchical_labels: bool
 
     __slots__ = (
@@ -46,8 +48,6 @@ class StoreConfig(metaclass=InterfaceMeta):
             'include_index_name',
             'include_columns',
             'include_columns_name',
-            # 'format_index',
-            # 'format_columns',
             'merge_hierarchical_labels',
             )
 
@@ -84,8 +84,6 @@ class StoreConfig(metaclass=InterfaceMeta):
             include_columns: bool = True,
             include_columns_name: bool = False,
             # not used by all exporters
-            # format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            # format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
             ):
         '''
@@ -93,7 +91,6 @@ class StoreConfig(metaclass=InterfaceMeta):
             include_index: Boolean to determine if the ``index`` is included in output.
             include_columns: Boolean to determine if the ``columns`` is included in output.
         '''
-
         # constructor
         self.index_depth = index_depth
         self.index_name_depth_level = index_name_depth_level
