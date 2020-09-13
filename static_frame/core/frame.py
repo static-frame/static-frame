@@ -1424,7 +1424,10 @@ class Frame(ContainerOperand):
                         cls = getattr(
                                 sys.modules[module_name],
                                 class_name.split('[',1)[0])
-                        return np.array([cls(d, unit) for d in data[1:]])
+                        array = np.array(
+                            [cls(d, unit) for d in data[1:]])
+                        array.flags.writeable = False
+                        return array
                     #return np.array([cls(d) for d in data[1:]])
                     #return np.fromiter(data[1:], cls) #I think this would work if the data type wasn't weird
                     #    Error: Cannot create a NumPy datetime other than NaT with generic units
