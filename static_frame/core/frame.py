@@ -1438,10 +1438,12 @@ class Frame(ContainerOperand):
                     #Last resort, try calling the user's data
                     #type with the result of __str__()
             return data
-        index_name, index_values, columns, name, blocks = map(
+        index_name, index_values, columns_name, columns, name, blocks = map(
                 uncast_msgpack,
                 uncast_msgpack(msgpack_data))
         index = Index(index_values, name=index_name)
+        columns_constructor = cls._COLUMNS_CONSTRUCTOR
+        columns = columns_constructor(columns, name=columns_name)
         return cls(TypeBlocks.from_blocks(blocks),
                 columns=columns,
                 index=index,
@@ -6056,6 +6058,7 @@ class Frame(ContainerOperand):
         return cast_msgpack([
             cast_msgpack(self._index.name),
             cast_msgpack(self._index.values),
+            cast_msgpack(self._columns.name),
             cast_msgpack(self._columns.values),
             cast_msgpack(self._name),
             cast_msgpack(self._blocks._blocks),
