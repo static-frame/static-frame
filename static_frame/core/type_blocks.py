@@ -696,8 +696,9 @@ class TypeBlocks(ContainerOperand):
 
     def group(self,
             axis: int,
-            key: GetItemKeyTypeCompound
-            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            key: GetItemKeyTypeCompound,
+            # drop: bool = False,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         Args:
             key: iloc selector on opposite axis
@@ -987,7 +988,6 @@ class TypeBlocks(ContainerOperand):
         '''
         if key is None or (isinstance(key, slice) and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
-
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
@@ -1012,7 +1012,6 @@ class TypeBlocks(ContainerOperand):
                 else:
                     raise NotImplementedError('Cannot handle key', key)
                 yield from self._indices_to_contiguous_pairs(indices)
-
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
@@ -1269,7 +1268,7 @@ class TypeBlocks(ContainerOperand):
                     # yield retained components before and after
                     parts.append(b[:, slice(part_start_last, target_start)])
                 part_start_last = target_stop
-                # reset target block index, forcing fetchin next target info
+                # reset target block index, forcing fetching next target info
                 target_block_idx = target_slice = None
 
             # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action

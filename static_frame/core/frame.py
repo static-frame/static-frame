@@ -3732,14 +3732,13 @@ class Frame(ContainerOperand):
                         own_index=True,
                         own_data=True,
                         )
-            else:
-                return Frame(frame_sorted._blocks._extract(column_key=key),
-                        columns=index,
-                        index=self._index,
-                        own_columns=True,
-                        own_index=True,
-                        own_data=True,
-                        )
+            return Frame(frame_sorted._blocks._extract(column_key=key),
+                    columns=index,
+                    index=self._index,
+                    own_columns=True,
+                    own_index=True,
+                    own_data=True,
+                    )
 
         if axis == 0:
             max_iloc: int = len(self._index)

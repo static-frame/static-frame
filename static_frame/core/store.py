@@ -40,6 +40,8 @@ class StoreConfig(metaclass=InterfaceMeta):
             'columns_name_depth_level',
             'dtypes',
             'consolidate_blocks',
+            'skip_header',
+            'skip_footer',
             'include_index',
             'include_index_name',
             'include_columns',
@@ -74,6 +76,8 @@ class StoreConfig(metaclass=InterfaceMeta):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            skip_header: int = 0,
+            skip_footer: int = 0,
             # exporters
             include_index: bool = True,
             include_index_name: bool = True,
@@ -97,6 +101,8 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.columns_name_depth_level = columns_name_depth_level
         self.dtypes = dtypes
         self.consolidate_blocks = consolidate_blocks
+        self.skip_header = skip_header
+        self.skip_footer = skip_footer
 
         # exporter
         self.include_index = include_index
