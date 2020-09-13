@@ -6417,10 +6417,11 @@ class TestUnit(TestCase):
                     index_depth=1,
                     skip_header=3, # include the column that was added
                     skip_footer=1)
-            self.assertEqual(f2.shape, (2, 5))
-            self.assertEqual(f2.columns.values.tolist(),
-                    [2, 95, 'c', 'k', 'r'])
-            self.assertEqual(f2.index.values.tolist(), ['x', 'y'])
+
+        self.assertEqual(f2.shape, (2, 5))
+        self.assertEqual(f2.columns.values.tolist(),
+                [2, 95, 'c', 'k', 'r'])
+        self.assertEqual(f2.index.values.tolist(), ['x', 'y'])
 
 
     def test_frame_from_xlsx_i(self) -> None:
@@ -6439,14 +6440,15 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
 
-            f3 = Frame.from_xlsx(fp,
+            f2 = Frame.from_xlsx(fp,
                     columns_depth=0,
                     skip_header=4, # include the column that was added
                     skip_footer=2)
-            self.assertEqual(f3.shape, (1, 6))
-            self.assertEqual(f3.columns.values.tolist(),
-                    list(range(6)))
-            self.assertEqual(f3.index.values.tolist(), [0])
+
+        self.assertEqual(f2.shape, (1, 6))
+        self.assertEqual(f2.columns.values.tolist(),
+                list(range(6)))
+        self.assertEqual(f2.index.values.tolist(), [0])
 
 
     #---------------------------------------------------------------------------
