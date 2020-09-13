@@ -77,8 +77,10 @@ def temp_file(suffix: tp.Optional[str] = None,
             yield tmp_name
     finally:
         if os.path.exists(tmp_name):
-            os.unlink(tmp_name)
-
+            try:
+                os.unlink(tmp_name)
+            except PermissionError: # happens on Windows sometimes
+                pass
 
 class TestCase(unittest.TestCase):
     '''
