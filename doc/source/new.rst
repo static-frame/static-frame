@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Performance improvements to ``Frame.pivot``.
 
+``Frame.from_xlsx`` now exposes ``skip_header`` and ``skip_footer`` parameters.
+
 
 0.6.32
 ----------

@@ -1365,8 +1365,8 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        value_dtype = np.array(value).dtype
-        # value_dtype = dtype_from_element(value)
+        # value_dtype = np.array(value).dtype
+        value_dtype = dtype_from_element(value)
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = iter(self._key_to_block_slices(
@@ -1520,8 +1520,8 @@ class TypeBlocks(ContainerOperand):
             if value_valid is not None:
                 assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
-            # value_dtype = dtype_from_element(value)
-            value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
+            # value_dtype = np.array(value).dtype
             is_element = True
 
         start = 0
@@ -1631,8 +1631,8 @@ class TypeBlocks(ContainerOperand):
             is_element = False
             assert value.shape == self.shape
         else:
-            value_dtype = np.array(value).dtype
-            # value_dtype = dtype_from_element(value)
+            # value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
             is_element = True
 
         start = 0
