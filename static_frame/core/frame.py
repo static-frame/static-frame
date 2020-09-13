@@ -1408,39 +1408,25 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        def uncast_msgpack(input):
-            data = msgpack.unpackb(input,
-                    object_hook=msgpack_numpy.decode
-                    ) #try coercing standard and numpy datatypes
-            if not isinstance(data, list):
-                return data
-            #Magic Character Hack:
-            if isinstance(data[0], str) and data[0][0] == '∞': 
-                import sys
-                module_name, class_name = data[0][1:].split('.',1)
-                if module_name == 'numpy':
-                    if '[' in class_name:
-                        unit = class_name.split('[',1)[-1].split(']',1)[0]
-                        cls = getattr(
-                                sys.modules[module_name],
-                                class_name.split('[',1)[0])
-                        array = np.array(
-                            [cls(d, unit) for d in data[1:]])
-                        array.flags.writeable = False
-                        return array
-                    #return np.array([cls(d) for d in data[1:]])
-                    #return np.fromiter(data[1:], cls) #I think this would work if the data type wasn't weird
-                    #    Error: Cannot create a NumPy datetime other than NaT with generic units
-                    #    I think this fails because np.fromiter initializes the array first with the type
-                else:
-                    cls = getattr(sys.modules[module_name], class_name)
-                    return [cls(d) for d in data[1:]]
-                    #Last resort, try calling the user's data
-                    #type with the result of __str__()
-            return data
+        def decode(obj, chain=msgpack_numpy.decode):
+            if b'datetime64' in obj:
+                data = msgpack.unpackb(obj[b'data'])
+                array = np.array(
+                        [np.datetime64(d, unit) for d, unit in data])
+                array.flags.writeable = False
+                return array
+            elif b'timedelta64' in obj:
+                data = msgpack.unpackb(obj[b'data'])
+                array = np.array(
+                        [np.timedelta64(d, unit) for d, unit in data])
+                array.flags.writeable = False
+                return array
+            else:
+                return chain(obj)
+        unpackb = partial(msgpack.unpackb, object_hook=decode)
         index_name, index_values, columns_name, columns, name, blocks = map(
-                uncast_msgpack,
-                uncast_msgpack(msgpack_data))
+                unpackb,
+                unpackb(msgpack_data))
         index = Index(index_values, name=index_name)
         columns_constructor = cls._COLUMNS_CONSTRUCTOR
         columns = columns_constructor(columns, name=columns_name)
@@ -6031,31 +6017,17 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        def cast_msgpack(input):
-            #Magic Character Hack
-            cls = input[0].__class__
-            clsname = '∞'+cls.__module__
-            if hasattr(cls, 'dtype'): #try dtype
-                clsname += '.'+str(input[0].dtype)
-                data = msgpack.packb(
-                        [clsname]+[int(a.astype(int)) for a in input],
-                        use_bin_type=True
-                        ) #cast to int if class implements dtype,
-                          #ie timedelta64, datetime64
-            else: #As str, last resort
-                clsname += '.'+cls.__name__
-                data = msgpack.packb(
-                        [clsname]+[a.__str__() for a in input],
-                        use_bin_type=True
-                        ) #else cast to string
-            return data
-        def packb(input):
-            try:
-                #try coercing standard and numpy datatypes
-                return msgpack.packb(input,
-                        default=msgpack_numpy.encode)
-            except ValueError:
-                return cast_msgpack(input)
+        def encode(obj, chain=msgpack_numpy.encode):
+            if isinstance(obj, np.ndarray):
+                if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
+                    #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
+                    unit = str(obj[0].dtype).split('[',1)[-1].split(']',1)[0]
+                    data = [[int(a.astype(int)), unit] for a in obj]
+                    clsname = obj[0].__class__.__name__.encode('utf-8')
+                    return {clsname: True,
+                            b'data': msgpack.packb(data)}
+            return chain(obj)
+        packb = partial(msgpack.packb, default=encode)
         return packb([
             packb(self._index.name),
             packb(self._index.values),
