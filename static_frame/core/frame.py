@@ -6032,36 +6032,37 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def cast_msgpack(input):
+            #Magic Character Hack
+            cls = input[0].__class__
+            clsname = '∞'+cls.__module__
+            if hasattr(cls, 'dtype'): #try dtype
+                clsname += '.'+str(input[0].dtype)
+                data = msgpack.packb(
+                        [clsname]+[int(a.astype(int)) for a in input],
+                        use_bin_type=True
+                        ) #cast to int if class implements dtype,
+                          #ie timedelta64, datetime64
+            else: #As str, last resort
+                clsname += '.'+cls.__name__
+                data = msgpack.packb(
+                        [clsname]+[a.__str__() for a in input],
+                        use_bin_type=True
+                        ) #else cast to string
+            return data
+        def packb(input):
             try:
                 #try coercing standard and numpy datatypes
-                data = msgpack.packb(input,
-                        default=msgpack_numpy.encode
-                        ) 
+                return msgpack.packb(input,
+                        default=msgpack_numpy.encode)
             except ValueError:
-                #Magic Character Hack
-                cls = input[0].__class__
-                clsname = '∞'+cls.__module__
-                if hasattr(cls, 'dtype'): #try dtype
-                    clsname += '.'+str(input[0].dtype)
-                    data = msgpack.packb(
-                            [clsname]+[int(a.astype(int)) for a in input],
-                            use_bin_type=True
-                            ) #cast to int if class implements dtype,
-                              #ie timedelta64, datetime64
-                else: #As str, last resort
-                    clsname += '.'+cls.__name__
-                    data = msgpack.packb(
-                            [clsname]+[a.__str__() for a in input],
-                            use_bin_type=True
-                            ) #else cast to string
-            return data
-        return cast_msgpack([
-            cast_msgpack(self._index.name),
-            cast_msgpack(self._index.values),
-            cast_msgpack(self._columns.name),
-            cast_msgpack(self._columns.values),
-            cast_msgpack(self._name),
-            cast_msgpack(self._blocks._blocks),
+                return cast_msgpack(input)
+        return packb([
+            packb(self._index.name),
+            packb(self._index.values),
+            packb(self._columns.name),
+            packb(self._columns.values),
+            packb(self._name),
+            packb(self._blocks._blocks),
         ])
 
 #-------------------------------------------------------------------------------
