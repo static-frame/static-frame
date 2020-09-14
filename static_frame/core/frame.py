@@ -1393,18 +1393,22 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
-    @classmethod
+    
+    #@classmethod
+    #@doc_inject(selector='constructor_frame')
+    #def from_msgpack(cls,
+    #        msgpack_data: bin,
+    #        ) -> 'Frame':
+    @staticmethod
     @doc_inject(selector='constructor_frame')
-    def from_msgpack(cls,
-            msgpack_data: bin,
-            ) -> 'Frame':
+    def from_msgpack(msgpack_data: bin):
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
-            msgpack_data: a binary msgpack object, encoding a static_frame as produced from Frame.to_msgpack.
+            msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
 
         Returns:
-            :obj:`static_frame.Frame`
+            :obj
         '''
         import msgpack
         import msgpack_numpy
