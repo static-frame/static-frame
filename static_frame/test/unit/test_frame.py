@@ -7876,15 +7876,9 @@ class TestUnit(TestCase):
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     def test_frame_from_msgpack_f(self) -> None:
-        records = (
-                [np.timedelta64(3, 'Y'), np.datetime64('1000-12-31'), np.float64(60)],
-                [np.timedelta64(4, 'Y'), np.datetime64('3000-01-01'), np.float64(6)],
-                )
-        #ih1 = sf.IndexHierarchy.from_product(tuple('xy'), tuple('ABCD'))
-        f1 = Frame.from_records(records,
-                columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
-                index=((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
-                )
+        ih1 = sf.IndexHierarchy.from_product(tuple('ABCD'), tuple('1234'))
+        ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
+        f1 = sf.Frame(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
         
         print('f1.columns', f1.columns)
         print('f1.index', f1.index)
@@ -7895,7 +7889,7 @@ class TestUnit(TestCase):
         print('f2', Frame.from_msgpack(msg))
         
         f2 = Frame.from_msgpack(msg)
-        assert isinstance(f2.index, sf.Index)
+        assert isinstance(f2.index, sf.IndexHierarchy)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         
         f2 = Frame.from_msgpack(f1.to_msgpack())
