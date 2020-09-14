@@ -1395,12 +1395,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
-    
-    #@classmethod
-    #@doc_inject(selector='constructor_frame')
-    #def from_msgpack(cls,
-    #        msgpack_data: bin,
-    #        ) -> 'Frame':
     @staticmethod
     @doc_inject(selector='constructor_frame')
     def from_msgpack(msgpack_data: bin):
@@ -1418,7 +1412,6 @@ class Frame(ContainerOperand):
             if b'sf' in obj:
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
-                print('clsname', clsname)
                 if clsname in ['Frame']:
                     data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
@@ -1434,17 +1427,10 @@ class Frame(ContainerOperand):
                             name=obj[b'name'])
                 elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
                     data = unpackb(obj[b'data']) #recurse unpackb
-                    print('IndexHierarchy', IndexHierarchy)
-                    print('IndexHierarchy', obj[b'levels'])
-                    return cls(
-                            levels=unpackb(obj[b'levels']), #recurse unpackb
-                            name=obj[b'name'],
+                    return cls._from_type_blocks(
                             blocks=TypeBlocks.from_blocks(data),
+                            name=obj[b'name'],
                             own_blocks=True)
-                elif clsname in ['IndexLevel']:
-                    return cls(
-                            unpackb(obj[b'index']), #recurse unpackb
-                            offset=unpackb(obj[b'offset'])) #recurse unpackb
             elif b'np' in obj:
                 cls = getattr(np, obj[b'np'])
                 unit = obj[b'unit']
@@ -6052,18 +6038,7 @@ class Frame(ContainerOperand):
                         obj._update_array_cache()
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks), #recurse packb
-                            b'levels':packb(obj._levels)} #recurse packb
-                elif clsname in ['IndexLevel']:
-                    #print('to IndexLevel!', obj)
-                    #print('to IndexLevel!', dir(obj))
-                    #print('to IndexLevel!', (obj.index))
-                    #print('to IndexLevel!', (obj.offset))
-                    #print('to IndexLevel!', (obj._depth))
-                    return {b'sf':clsname,
-                            b'index':packb(obj.index), #recurse packb
-                            b'offset':packb(obj.offset), #recurse packb
-                            b'depth':packb(obj._depth)} #recurse packb
+                            b'data':packb(obj._blocks._blocks)} #recurse packb
                 elif clsname in ['Frame']:
                     return {b'sf':clsname,
                             b'name':obj.name,
