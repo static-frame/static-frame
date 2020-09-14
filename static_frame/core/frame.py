@@ -1446,9 +1446,10 @@ class Frame(ContainerOperand):
                             unpackb(obj[b'index']), #recurse unpackb
                             offset=unpackb(obj[b'offset'])) #recurse unpackb
             elif b'np' in obj:
-                data = msgpack.unpackb(obj[b'data']) #recurse unpackb
                 cls = getattr(np, obj[b'np'])
-                array = np.array([cls(d, unit) for d, unit in data])
+                unit = obj[b'unit']
+                data = unpackb(obj[b'data']) #recurse unpackb
+                array = np.array([cls(int(d), unit) for d in data])
                 array.flags.writeable = False
                 return array
             else:
@@ -6081,11 +6082,11 @@ class Frame(ContainerOperand):
                         #unit = str(obj.dtype)           # TypeError: Invalid datetime unit "datetime64[D]"
                         #unit = str(obj.dtype.descr)     # [('', '<M8[D]')]
                         unit = str(obj.dtype.descr[0][1][4:-1]) # This is the best I could get working
-                        print('unit', unit)
-                        data = [[int(a.astype(int)), unit] for a in obj]
+                        data = obj.astype(int)
                         clsname = obj[0].__class__.__name__
                         return {b'np': clsname,
-                                b'data': msgpack.packb(data)} #recursively call packb to nest msgpacks within
+                                b'unit': unit,
+                                b'data': packb(data)} #recurse packb
             return chain(obj) #let msgpack_numpy.encode take over
         packb = partial(msgpack.packb, default=encode)
         return packb(self)
