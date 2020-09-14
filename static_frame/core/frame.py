@@ -1433,9 +1433,9 @@ class Frame(ContainerOperand):
                             own_blocks=True)
             elif b'np' in obj:
                 cls = getattr(np, obj[b'np'])
-                unit = obj[b'unit']
+                dtype = obj[b'dtype']
                 data = unpackb(obj[b'data']) #recurse unpackb
-                array = np.array([cls(int(d), unit) for d in data])
+                array = np.array(data, dtype=dtype)
                 array.flags.writeable = False
                 return array
             else:
@@ -6051,15 +6051,11 @@ class Frame(ContainerOperand):
             if package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
-                        #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
-                        #unit = str(obj.dtype).split('[',1)[-1].split(']',1)[0]
-                        #unit = str(obj.dtype)                  # TypeError: Invalid datetime unit "datetime64[D]"
-                        #unit = str(obj.dtype.descr)            # [('', '<M8[D]')]
-                        unit = str(obj.dtype.descr[0][1][4:-1]) # This is the best I could get working
+                        dtype = str(obj.dtype)
                         data = obj.astype(int)
                         clsname = obj[0].__class__.__name__
                         return {b'np': clsname,
-                                b'unit': unit,
+                                b'dtype': dtype,
                                 b'data': packb(data)} #recurse packb
             return chain(obj) #let msgpack_numpy.encode take over
         packb = partial(msgpack.packb, default=encode)
