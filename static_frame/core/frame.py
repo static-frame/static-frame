@@ -52,6 +52,8 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.index_level import IndexLevel
+from static_frame.core.index_level import IndexLevelGO
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
@@ -1414,29 +1416,37 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         def decode(obj, chain=msgpack_numpy.decode):
             if b'sf' in obj:
-                data = unpackb(obj[b'data']) #recursively call unpackb to deal with msgpacks within
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
                 print('clsname', clsname)
                 if clsname in ['Frame']:
+                    data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
                             TypeBlocks.from_blocks(data),
-                            name = obj[b'name'],
-                            index = unpackb(obj[b'index']),
-                            columns = unpackb(obj[b'columns']),
+                            name=obj[b'name'],
+                            index=unpackb(obj[b'index']), #recurse unpackb
+                            columns=unpackb(obj[b'columns']), #recurse unpackb
                             own_data=True)
                 elif clsname in ['Index', 'IndexBase']:
-                    return cls(data, name = obj[b'name'])
-                elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
+                    data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
-                            levels=unpackb(obj[b'levels']),
+                            data,
+                            name=obj[b'name'])
+                elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
+                    data = unpackb(obj[b'data']) #recurse unpackb
+                    print('IndexHierarchy', IndexHierarchy)
+                    print('IndexHierarchy', obj[b'levels'])
+                    return cls(
+                            levels=unpackb(obj[b'levels']), #recurse unpackb
                             name=obj[b'name'],
                             blocks=TypeBlocks.from_blocks(data),
                             own_blocks=True)
                 elif clsname in ['IndexLevel']:
-                    return cls(unpackb(obj[b'index']))
+                    return cls(
+                            unpackb(obj[b'index']), #recurse unpackb
+                            offset=unpackb(obj[b'offset'])) #recurse unpackb
             elif b'np' in obj:
-                data = msgpack.unpackb(obj[b'data'])
+                data = msgpack.unpackb(obj[b'data']) #recurse unpackb
                 cls = getattr(np, obj[b'np'])
                 array = np.array([cls(d, unit) for d, unit in data])
                 array.flags.writeable = False
@@ -6035,33 +6045,43 @@ class Frame(ContainerOperand):
                 if clsname in ['Index', 'IndexBase']:
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj.values)} #recursively call packb to nest msgpacks within
+                            b'data':packb(obj.values)} #recurse packb
                 elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
                     if obj._recache:
                         obj._update_array_cache()
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks), #recursively call packb to nest msgpacks within
-                            b'levels':packb(obj._levels)} #recursively call packb to nest msgpacks within
+                            b'data':packb(obj._blocks._blocks), #recurse packb
+                            b'levels':packb(obj._levels)} #recurse packb
                 elif clsname in ['IndexLevel']:
+                    #print('to IndexLevel!', obj)
+                    #print('to IndexLevel!', dir(obj))
+                    #print('to IndexLevel!', (obj.index))
+                    #print('to IndexLevel!', (obj.offset))
+                    #print('to IndexLevel!', (obj._depth))
                     return {b'sf':clsname,
-                            b'index':packb(obj.index), #recursively call packb to nest msgpacks within
-                            b'_depth':obj._depth,
-                            b'_length':obj._length}
+                            b'index':packb(obj.index), #recurse packb
+                            b'offset':packb(obj.offset), #recurse packb
+                            b'depth':packb(obj._depth)} #recurse packb
                 elif clsname in ['Frame']:
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks), #recursively call packb to nest msgpacks within
-                            b'index':packb(obj.index), #recursively call packb to nest msgpacks within
-                            b'columns':packb(obj.columns)} #recursively call packb to nest msgpacks within
+                            b'data':packb(obj._blocks._blocks), #recurse packb
+                            b'index':packb(obj.index), #recurse packb
+                            b'columns':packb(obj.columns)} #recurse packb
                 elif clsname in ['IndexDate']:
                     return {b'sf':clsname,
                            }
+                           
             if package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
                         #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
-                        unit = str(obj[0].dtype).split('[',1)[-1].split(']',1)[0]
+                        #unit = str(obj.dtype).split('[',1)[-1].split(']',1)[0]
+                        #unit = str(obj.dtype)           # TypeError: Invalid datetime unit "datetime64[D]"
+                        #unit = str(obj.dtype.descr)     # [('', '<M8[D]')]
+                        unit = str(obj.dtype.descr[0][1][4:-1]) # This is the best I could get working
+                        print('unit', unit)
                         data = [[int(a.astype(int)), unit] for a in obj]
                         clsname = obj[0].__class__.__name__
                         return {b'np': clsname,
