@@ -6160,42 +6160,7 @@ class TestUnit(TestCase):
                 \end{table}
                 '''
         self.assertEqualLines(post, msg)
-    
-    def test_frame_to_msgpack_a(self) -> None:
-        records = (
-                (2, 'a', False),
-                (3, 'b', False),
-                )
-        f1 = Frame.from_records(records,
-                columns=(1, 2, 3),
-                index=('w', 'x'))
-        msg = b'\x96\xc4\x01\xc0\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08w\x00\x00\x00x\x00\x00\x00\xc4\x01\xc0\xc45\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x03\xc4\x04data\xc4\x0c\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\xc4\x01\xc0\xc4\x8e\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08\x02\x00\x00\x00\x03\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3|b1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x02\x00\x00'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
         
-        f2 = Frame.from_msgpack(msg)
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
-        f2 = Frame.from_msgpack(f1.to_msgpack())
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
-    def test_frame_to_msgpack_b(self) -> None:
-        records = (
-                np.array([1.0, 2.0, 3.0], dtype=np.float64),
-                np.array([4, 5, 6], dtype=np.int64),
-                )
-        f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
-                )
-        msg = b'\x96\xc4\x01\xc0\xc4%\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\xc4\x01\xc0\xc45\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x03\xc4\x04data\xc4\x0cr\x00\x00\x00s\x00\x00\x00t\x00\x00\x00\xc4\x01\xc0\xc4\xac\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00\xf0?\x00\x00\x00\x00\x00\x00\x10@\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00\x00@\x00\x00\x00\x00\x00\x00\x14@\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00\x08@\x00\x00\x00\x00\x00\x00\x18@'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
-        
-        f2 = Frame.from_msgpack(msg)
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
-        f2 = Frame.from_msgpack(f1.to_msgpack())
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
     #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:
@@ -7834,8 +7799,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=(1, 2, 3),
                 index=('w', 'x'))
-        msg = b'\x96\xc4\x01\xc0\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08w\x00\x00\x00x\x00\x00\x00\xc4\x01\xc0\xc45\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x03\xc4\x04data\xc4\x0c\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\xc4\x01\xc0\xc4\x8e\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08\x02\x00\x00\x00\x03\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3|b1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x02\x00\x00'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        msg = f1.to_msgpack()
         
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
@@ -7852,8 +7816,7 @@ class TestUnit(TestCase):
                 columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x96\xc4\x01\xc0\xc4%\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\xc4\x01\xc0\xc4A\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x03\xc4\x04data\xc4\x18}\xc3\x94%\xadI\x92QZb\xd7\xd7\x18\xe7ti\x00\x00\x00\x00\x00\xf9\xf5@\xc4\x01\xc0\xc4\xac\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00`@\x00\x00\x00\x00\x00\x00p@\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00I@\x00\x00\x00\x00\x00\x00\x14@\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00N@\x00\x00\x00\x00\x00\x00\x18@'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        msg = f1.to_msgpack()
         
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
@@ -7870,8 +7833,7 @@ class TestUnit(TestCase):
                 columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x96\xc4\x01\xc0\xc4%\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\xc4\x01\xc0\xc4A\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x03\xc4\x04data\xc4\x18}\xc3\x94%\xadI\x92QZb\xd7\xd7\x18\xe7ti\x00\x00\x00\x00\x00\xf9\xf5@\xc4\x01\xc0\xc4\xa0\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i2\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x04\x80\x00\x00\x01\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x102\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00N@\x00\x00\x00\x00\x00\x00\x18@'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        msg = f1.to_msgpack()
         
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
@@ -7888,8 +7850,7 @@ class TestUnit(TestCase):
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x96\xc4\x01\xc0\xc4%\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\xc4\x01\xc0\xc4&\x82\xc4\x02np\xabtimedelta64\xc4\x04data\xc4\r\x93\x92\x01\xa1Y\x92\x02\xa1Y\x92\x03\xa1Y\xc4\x01\xc0\xc4\xa0\x93\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i2\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x04\x01\x00\x02\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x102\x00\x00\x00\x00\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00N@\x00\x00\x00\x00\x00\x00\x18@'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        msg = f1.to_msgpack()
         
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
@@ -7898,7 +7859,6 @@ class TestUnit(TestCase):
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     def test_frame_from_msgpack_e(self) -> None:
-        #ISSUE: dtype hack only works with 1D arrays
         records = (
                 [np.timedelta64(3, 'Y'), np.datetime64('1999-12-31'), np.float64(60)],
                 [np.timedelta64(4, 'Y'), np.datetime64('2000-01-01'), np.float64(6)],
@@ -7907,8 +7867,7 @@ class TestUnit(TestCase):
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
-        msg = b'\x96\xc4\x01\xc0\xc4%\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\xc4\x01\xc0\xc4&\x82\xc4\x02np\xabtimedelta64\xc4\x04data\xc4\r\x93\x92\x01\xa1Y\x92\x02\xa1Y\x92\x03\xa1Y\xc4\x01\xc0\xc4\x81\x93\x82\xc4\x02np\xabtimedelta64\xc4\x04data\xc4\t\x92\x92\x03\xa1Y\x92\x04\xa1Y\x82\xc4\x02np\xaadatetime64\xc4\x04data\xc4\r\x92\x92\xcd*\xcc\xa1D\x92\xcd*\xcd\xa1D\x85\xc4\x02nd\xc3\xc4\x04type\xa3<f8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x10\x00\x00\x00\x00\x00\x00N@\x00\x00\x00\x00\x00\x00\x18@'
-        self.assertEqual(msg, f1.to_msgpack()) #make sure hardcoded string matches to_msgpack() result
+        msg = f1.to_msgpack()
         
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
@@ -7917,7 +7876,6 @@ class TestUnit(TestCase):
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     def test_frame_from_msgpack_f(self) -> None:
-        #ISSUE: dtype hack only works with 1D arrays
         records = (
                 [np.timedelta64(3, 'Y'), np.datetime64('1000-12-31'), np.float64(60)],
                 [np.timedelta64(4, 'Y'), np.datetime64('3000-01-01'), np.float64(6)],
