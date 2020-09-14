@@ -7916,6 +7916,33 @@ class TestUnit(TestCase):
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
+    def test_frame_from_msgpack_f(self) -> None:
+        #ISSUE: dtype hack only works with 1D arrays
+        records = (
+                [np.timedelta64(3, 'Y'), np.datetime64('1000-12-31'), np.float64(60)],
+                [np.timedelta64(4, 'Y'), np.datetime64('3000-01-01'), np.float64(6)],
+                )
+        #ih1 = sf.IndexHierarchy.from_product(tuple('xy'), tuple('ABCD'))
+        f1 = Frame.from_records(records,
+                columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
+                index=((np.datetime64('1999-12-31'), np.datetime64('2000-01-01')))
+                )
+        
+        print('f1.columns', f1.columns)
+        print('f1.index', f1.index)
+        
+        msg = f1.to_msgpack()
+        print('msg', msg)
+        print('f1', f1)
+        print('f2', Frame.from_msgpack(msg))
+        
+        f2 = Frame.from_msgpack(msg)
+        assert isinstance(f2.index, sf.Index)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        #assert False
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_flat_a(self) -> None:

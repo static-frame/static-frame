@@ -1409,7 +1409,16 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def decode(obj, chain=msgpack_numpy.decode):
-            if b'np' in obj:
+            if b'sf' in obj:
+                data = unpackb(obj[b'data']) #recursively call unpackb to deal with msgpacks within
+                clsname = obj[b'sf']
+                cls = globals()[clsname]
+                print('clsname', clsname)
+                if clsname in ['Index', 'IndexBase']:
+                    return cls(data, name = obj[b'name'])
+                if clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
+                    return cls(TypeBlocks.from_blocks(data), name = obj[b'name'])
+            elif b'np' in obj:
                 data = msgpack.unpackb(obj[b'data'])
                 cls = getattr(np, obj[b'np'])
                 array = np.array([cls(d, unit) for d, unit in data])
@@ -1418,12 +1427,13 @@ class Frame(ContainerOperand):
             else:
                 return chain(obj)
         unpackb = partial(msgpack.unpackb, object_hook=decode)
-        index_name, index_values, columns_name, columns, name, blocks = map(
+        index, columns, name, blocks = map(
                 unpackb,
                 unpackb(msgpack_data))
-        index = Index(index_values, name=index_name)
-        columns_constructor = cls._COLUMNS_CONSTRUCTOR
-        columns = columns_constructor(columns, name=columns_name)
+        #index = Index(index_values, name=index_name)
+        #columns = cls._COLUMNS_CONSTRUCTOR(
+        #        columns,
+        #        name=columns_name)
         return cls(TypeBlocks.from_blocks(blocks),
                 columns=columns,
                 index=index,
@@ -6012,7 +6022,28 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def encode(obj, chain=msgpack_numpy.encode):
+            if isinstance(obj, IndexBase):
+                print('isinstance IndexBase')
+                clsname = obj.__class__.__name__
+                
+                if isinstance(obj, Index):
+                    print('isinstance Index')
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)} #recursively call packb to nest msgpacks within
+                if isinstance(obj, IndexHierarchy):
+                    print('isinstance IndexHierarchy')
+                    if obj._recache:
+                        obj._update_array_cache() 
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj._blocks._blocks)} #recursively call packb to nest msgpacks within
+                if isinstance(obj, IndexHierarchyGO):
+                    print('isinstance IndexHierarchyGO')
+                #if isinstance(obj, IndexDate):
+                #    print('isinstance IndexDate', obj)
             if isinstance(obj, np.ndarray):
+                print('isinstance np.ndarray', obj)
                 if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
                     #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
                     unit = str(obj[0].dtype).split('[',1)[-1].split(']',1)[0]
@@ -6023,10 +6054,8 @@ class Frame(ContainerOperand):
             return chain(obj)
         packb = partial(msgpack.packb, default=encode)
         return packb([
-            packb(self._index.name),
-            packb(self._index.values),
-            packb(self._columns.name),
-            packb(self._columns.values),
+            packb(self.index),
+            packb(self.columns),
             packb(self._name),
             packb(self._blocks._blocks),
         ])
