@@ -6048,14 +6048,13 @@ class Frame(ContainerOperand):
                 elif clsname in ['IndexDate']:
                     return {b'sf':clsname,
                            }
-                           
             if package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
                         #TODO: Couldn't find an attribute for unit, just splitting it from the name for now
                         #unit = str(obj.dtype).split('[',1)[-1].split(']',1)[0]
-                        #unit = str(obj.dtype)           # TypeError: Invalid datetime unit "datetime64[D]"
-                        #unit = str(obj.dtype.descr)     # [('', '<M8[D]')]
+                        #unit = str(obj.dtype)                  # TypeError: Invalid datetime unit "datetime64[D]"
+                        #unit = str(obj.dtype.descr)            # [('', '<M8[D]')]
                         unit = str(obj.dtype.descr[0][1][4:-1]) # This is the best I could get working
                         data = obj.astype(int)
                         clsname = obj[0].__class__.__name__
