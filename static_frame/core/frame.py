@@ -6046,7 +6046,7 @@ class Frame(ContainerOperand):
                 elif clsname in ['IndexDate']:
                     return {b'sf':clsname,
                            }
-            if package == 'numpy':
+            elif package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     #msgpack_numpy is breaking with these data types, overriding here
                     #if obj.dtype.kind in ['M', 'm']:
