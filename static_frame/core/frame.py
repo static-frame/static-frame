@@ -1413,9 +1413,9 @@ class Frame(ContainerOperand):
                 if clsname in [
                         'Frame',
                         'FrameGO']:
-                    data = unpackb(obj[b'data']) #recurse unpackb
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls(
-                            TypeBlocks.from_blocks(data),
+                            blocks,
                             name=obj[b'name'],
                             index=unpackb(obj[b'index']), #recurse unpackb
                             columns=unpackb(obj[b'columns']), #recurse unpackb
@@ -1434,18 +1434,17 @@ class Frame(ContainerOperand):
                 elif clsname in [
                         'IndexHierarchy',
                         'IndexHierarchyGO']:
-                    data = unpackb(obj[b'data']) #recurse unpackb
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls._from_type_blocks(
-                            blocks=TypeBlocks.from_blocks(data),
+                            blocks=blocks,
                             name=obj[b'name'],
                             own_blocks=True)
                 elif clsname in [
                         'TypeBlocks']:
                         #'ContainerBase',
                         #'ContainerOperand',
-                    data = unpackb(obj[b'data']) #recurse unpackb
-                    return cls._from_blocks(
-                            raw_blocks=data)
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls.from_blocks(blocks)
             elif b'np' in obj:
                 data = unpackb(obj[b'data']) #recurse unpackb
                 array = np.array(data, dtype=obj[b'dtype'])
@@ -6047,7 +6046,7 @@ class Frame(ContainerOperand):
                         'FrameGO']:
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks), #recurse packb
+                            b'blocks':packb(obj._blocks), #recurse packb
                             b'index':packb(obj.index), #recurse packb
                             b'columns':packb(obj.columns)} #recurse packb
                 elif clsname in [
@@ -6067,7 +6066,7 @@ class Frame(ContainerOperand):
                         obj._update_array_cache()
                     return {b'sf':clsname,
                             b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks)} #recurse packb
+                            b'blocks':packb(obj._blocks)} #recurse packb
                 elif clsname in [
                         'TypeBlocks']:
                         #'ContainerBase',
