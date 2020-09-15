@@ -6050,13 +6050,12 @@ class Frame(ContainerOperand):
                            }
             if package == 'numpy':
                 if isinstance(obj, np.ndarray):
-                    if isinstance(obj[0], np.datetime64) or isinstance(obj[0], np.timedelta64):
-                        dtype = str(obj.dtype)
-                        data = obj.astype(int)
-                        clsname = obj[0].__class__.__name__
-                        return {b'np': clsname,
-                                b'dtype': dtype,
-                                b'data': packb(data)} #recurse packb
+                    #msgpack_numpy is breaking with these data types, overriding here
+                    #if obj.dtype.kind in ['M', 'm']:
+                    if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
+                        return {b'np': obj.dtype.type.__name__,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(obj.astype(int))} #recurse packb
             return chain(obj) #let msgpack_numpy.encode take over
         packb = partial(msgpack.packb, default=encode)
         return packb(self)
