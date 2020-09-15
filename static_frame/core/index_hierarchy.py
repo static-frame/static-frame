@@ -696,13 +696,13 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
         return self._blocks.nbytes
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        if self._recache:
-            return bool(self._levels.__len__()) and bool(self._levels.depth)
-        return bool(self._blocks.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     if self._recache:
+    #         return bool(self._levels.__len__()) and bool(self._levels.depth)
+    #     return bool(self._blocks.size)
 
     #---------------------------------------------------------------------------
 

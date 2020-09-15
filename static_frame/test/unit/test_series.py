@@ -1672,7 +1672,7 @@ class TestUnit(TestCase):
 
         post = s.sort_values(ascending=False)
 
-        self.assertEqual(post,
+        self.assertEqual(post.to_pairs(),
                 (((1, 20), 'd'), ((1, 10), 'c'), ((0, 20), 'b'), ((0, 10), 'a'))
                 )
 
@@ -3022,10 +3022,9 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_series_bool_a(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20))
-        self.assertTrue(bool(s1))
+        with self.assertRaises(ValueError):
+            bool(s1)
 
-        s2 = Series(())
-        self.assertFalse(bool(s2))
 
     #---------------------------------------------------------------------------
     def test_series_round_a(self) -> None:

@@ -1087,17 +1087,14 @@ class TestUnit(TestCase):
     def test_index_bool_a(self) -> None:
 
         idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
-        self.assertTrue(bool(idx1))
-
-        idx2 = IndexGO(())
-        self.assertFalse(bool(idx2))
+        with self.assertRaises(ValueError):
+            bool(idx1)
 
     def test_index_bool_b(self) -> None:
 
         idx1 = IndexGO(())
-        self.assertFalse(bool(idx1))
-        idx1.append('a')
-        self.assertTrue(bool(idx1))
+        with self.assertRaises(ValueError):
+            bool(idx1)
 
     def test_index_astype_a(self) -> None:
 

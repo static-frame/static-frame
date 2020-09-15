@@ -223,10 +223,9 @@ class TestUnit(TestCase):
                 )
 
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
-        self.assertTrue(bool(ih1))
-        # post array caching
-        ih1._update_array_cache()
-        self.assertTrue(bool(ih1))
+
+        with self.assertRaises(ValueError):
+            bool(ih1)
 
     #---------------------------------------------------------------------------
 

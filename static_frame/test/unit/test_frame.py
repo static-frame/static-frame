@@ -1515,7 +1515,7 @@ class TestUnit(TestCase):
         # 3d array raises exception
         f = sf.FrameGO(index=range(3))
         f['a'] = 5
-        self.assertEqual(f.sum(), 15)
+        self.assertEqual(f.sum().values[0], 15)
 
 
 
@@ -9437,16 +9437,17 @@ class TestUnit(TestCase):
                 columns=('a', 'b'),
                 index=('x', 'y', 'z')
                 )
-        self.assertTrue(bool(f1))
-        self.assertTrue(bool(f1.T))
+        with self.assertRaises(ValueError):
+            bool(f1)
 
 
 
     def test_frame_bool_b(self) -> None:
         f1 = Frame(columns=('a', 'b'))
 
-        self.assertFalse(bool(f1))
-        self.assertFalse(bool(f1.T))
+        with self.assertRaises(ValueError):
+            bool(f1)
+
 
 
     #---------------------------------------------------------------------------

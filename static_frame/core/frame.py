@@ -3177,11 +3177,11 @@ class Frame(ContainerOperand):
         '''
         return self._blocks.nbytes
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        return bool(self._blocks.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     return bool(self._blocks.size)
 
 
 
@@ -4794,8 +4794,7 @@ class Frame(ContainerOperand):
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
                 else columns_constructor(f.columns))
 
-        if index_final or columns_final:
-            f = f.relabel(index=index_final, columns=columns_final)
+        f = f.relabel(index=index_final, columns=columns_final)
 
         return f
 

@@ -102,6 +102,15 @@ class ContainerBase(metaclass=InterfaceMeta):
         raise NotImplementedError() #pragma: no cover
 
 
+    #---------------------------------------------------------------------------
+    def __bool__(self) -> bool:
+        '''
+        Raises ValueError to prohibit ambiguous use of truethy evaluation.
+        '''
+        raise ValueError('The truth value of a container is ambiguous.')
+
+
+
 class ContainerOperand(ContainerBase):
     '''Base class of all containers that support opperators.'''
 

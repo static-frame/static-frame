@@ -565,7 +565,7 @@ def key_to_ascending_key(key: GetItemKeyType, size: int) -> GetItemKeyType:
         # array first as not truthy
         return np.sort(key, kind=DEFAULT_SORT_KIND)
 
-    if not key:
+    if not len(key):
         return key
 
     if isinstance(key, list):

@@ -1363,11 +1363,11 @@ class Series(ContainerOperand):
         '''
         return self.values.nbytes #type: ignore
 
-    def __bool__(self) -> bool:
-        '''
-        True if this container has size.
-        '''
-        return bool(self.values.size)
+    # def __bool__(self) -> bool:
+    #     '''
+    #     True if this container has size.
+    #     '''
+    #     return bool(self.values.size)
 
 
     #---------------------------------------------------------------------------
