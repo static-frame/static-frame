@@ -1410,7 +1410,9 @@ class Frame(ContainerOperand):
             if b'sf' in obj:
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
-                if clsname in ['Frame']:
+                if clsname in [
+                        'Frame',
+                        'FrameGO']:
                     data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
                             TypeBlocks.from_blocks(data),
@@ -1418,17 +1420,32 @@ class Frame(ContainerOperand):
                             index=unpackb(obj[b'index']), #recurse unpackb
                             columns=unpackb(obj[b'columns']), #recurse unpackb
                             own_data=True)
-                elif clsname in ['Index', 'IndexBase']:
+                elif clsname in [
+                        'Index',
+                        'IndexBase',
+                        'IndexDateTime',
+                        'IndexDate',
+                        'IndexYearMonthGO',
+                        'IndexNanosecond']:
                     data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
                             data,
                             name=obj[b'name'])
-                elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
+                elif clsname in [
+                        'IndexHierarchy',
+                        'IndexHierarchyGO']:
                     data = unpackb(obj[b'data']) #recurse unpackb
                     return cls._from_type_blocks(
                             blocks=TypeBlocks.from_blocks(data),
                             name=obj[b'name'],
                             own_blocks=True)
+                elif clsname in [
+                        'TypeBlocks']:
+                        #'ContainerBase',
+                        #'ContainerOperand',
+                    data = unpackb(obj[b'data']) #recurse unpackb
+                    return cls._from_blocks(
+                            raw_blocks=data)
             elif b'np' in obj:
                 data = unpackb(obj[b'data']) #recurse unpackb
                 array = np.array(data, dtype=obj[b'dtype'])
@@ -6026,27 +6043,37 @@ class Frame(ContainerOperand):
             print('package, clsname', package, clsname)
             if package == 'static_frame':
                 if clsname in [
-                        'Index',
-                        'IndexBase',
-                        'IndexDateTime',
-                        'IndexDate',
-                        'IndexYearMonthGO',
-                        'IndexNanosecond']:
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'data':packb(obj.values)} #recurse packb
-                elif clsname in ['IndexHierarchy', 'IndexHierarchyGO']:
-                    if obj._recache:
-                        obj._update_array_cache()
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'data':packb(obj._blocks._blocks)} #recurse packb
-                elif clsname in ['Frame']:
+                        'Frame',
+                        'FrameGO']:
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'data':packb(obj._blocks._blocks), #recurse packb
                             b'index':packb(obj.index), #recurse packb
                             b'columns':packb(obj.columns)} #recurse packb
+                elif clsname in [
+                        'Index',
+                        'IndexBase',
+                        'IndexDateTime',
+                        'IndexDate',
+                        'IndexYearMonthGO', #just listing some interesting ones.
+                        'IndexNanosecond']:
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)} #recurse packb
+                elif clsname in [
+                        'IndexHierarchy',
+                        'IndexHierarchyGO']:
+                    if obj._recache:
+                        obj._update_array_cache()
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj._blocks._blocks)} #recurse packb
+                elif clsname in [
+                        'TypeBlocks']:
+                        #'ContainerBase',
+                        #'ContainerOperand',
+                    return {b'sf':clsname,
+                            b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     #msgpack_numpy is breaking with these data types, overriding here
