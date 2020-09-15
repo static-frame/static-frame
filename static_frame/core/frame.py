@@ -5635,7 +5635,8 @@ class Frame(ContainerOperand):
                         Frame
                         FrameGO
                     '''
-                    print('isinstance', 'Frame')
+                    print('Frame###############')
+                    print('obj', obj)
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks), #recurse packb
@@ -5682,9 +5683,13 @@ class Frame(ContainerOperand):
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
                 if isinstance(obj, np.ndarray):
+                    #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
+                    print('dtype', obj.dtype, obj)
+                    
                     #msgpack_numpy is breaking with these data types, overriding here
                     #if obj.dtype.kind in ['M', 'm']:
                     if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
+                        
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(obj.astype(int))} #recurse packb
