@@ -6025,7 +6025,13 @@ class Frame(ContainerOperand):
             package = obj.__class__.__module__.split('.',1)[0]
             print('package, clsname', package, clsname)
             if package == 'static_frame':
-                if clsname in ['Index', 'IndexBase']:
+                if clsname in [
+                        'Index',
+                        'IndexBase',
+                        'IndexDateTime',
+                        'IndexDate',
+                        'IndexYearMonthGO',
+                        'IndexNanosecond']:
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'data':packb(obj.values)} #recurse packb
@@ -6041,9 +6047,6 @@ class Frame(ContainerOperand):
                             b'data':packb(obj._blocks._blocks), #recurse packb
                             b'index':packb(obj.index), #recurse packb
                             b'columns':packb(obj.columns)} #recurse packb
-                elif clsname in ['IndexDate']:
-                    return {b'sf':clsname,
-                           }
             elif package == 'numpy':
                 if isinstance(obj, np.ndarray):
                     #msgpack_numpy is breaking with these data types, overriding here
