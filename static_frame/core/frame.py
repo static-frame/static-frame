@@ -1432,9 +1432,8 @@ class Frame(ContainerOperand):
                             name=obj[b'name'],
                             own_blocks=True)
             elif b'np' in obj:
-                dtype = obj[b'dtype']
                 data = unpackb(obj[b'data']) #recurse unpackb
-                array = np.array(data, dtype=dtype)
+                array = np.array(data, dtype=obj[b'dtype'])
                 array.flags.writeable = False
                 return array
             else:
