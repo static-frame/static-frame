@@ -2115,9 +2115,14 @@ class Frame(ContainerOperand):
             if b'sf' in obj:
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
-                if clsname in [
-                        'Frame',
-                        'FrameGO']:
+                if issubclass(cls, Frame):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        Frame
+                        FrameGO
+                    '''
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls(
                             blocks,
@@ -2125,29 +2130,44 @@ class Frame(ContainerOperand):
                             index=unpackb(obj[b'index']), #recurse unpackb
                             columns=unpackb(obj[b'columns']), #recurse unpackb
                             own_data=True)
-                elif clsname in [
-                        'Index',
-                        'IndexBase',
-                        'IndexDateTime',
-                        'IndexDate',
-                        'IndexYearMonthGO',
-                        'IndexNanosecond']:
-                    data = unpackb(obj[b'data']) #recurse unpackb
-                    return cls(
-                            data,
-                            name=obj[b'name'])
-                elif clsname in [
-                        'IndexHierarchy',
-                        'IndexHierarchyGO']:
+                elif issubclass(cls, IndexHierarchy):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        *IndexBase            #CONFLICT: IndexBase must come after IndexHierarchy.
+                        IndexHierarchy
+                        IndexHierarchyGO
+                    '''
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls._from_type_blocks(
                             blocks=blocks,
                             name=obj[b'name'],
                             own_blocks=True)
-                elif clsname in [
-                        'TypeBlocks']:
-                        #'ContainerBase',
-                        #'ContainerOperand',
+                elif issubclass(cls, IndexBase):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        IndexBase
+                        Index
+                        IndexGO
+                        IndexDate
+                        IndexDateTime
+                        IndexYearMonthGO
+                        IndexNanosecond #just listing some interesting ones.
+                    '''
+                    data = unpackb(obj[b'data']) #recurse unpackb
+                    return cls(
+                            data,
+                            name=obj[b'name'])
+                elif issubclass(cls, TypeBlocks):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        TypeBlocks
+                    '''
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
@@ -5607,7 +5627,7 @@ class Frame(ContainerOperand):
             package = obj.__class__.__module__.split('.',1)[0]
             print('package, clsname', package, clsname)
             if package == 'static_frame':
-                if isinstance(obj, self.__class__):
+                if isinstance(obj, Frame):
                     '''
                     Classes:
                         *ContainerBase
