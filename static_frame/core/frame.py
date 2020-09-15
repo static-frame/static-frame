@@ -1432,7 +1432,6 @@ class Frame(ContainerOperand):
                             name=obj[b'name'],
                             own_blocks=True)
             elif b'np' in obj:
-                cls = getattr(np, obj[b'np'])
                 dtype = obj[b'dtype']
                 data = unpackb(obj[b'data']) #recurse unpackb
                 array = np.array(data, dtype=dtype)
@@ -6053,7 +6052,7 @@ class Frame(ContainerOperand):
                     #msgpack_numpy is breaking with these data types, overriding here
                     #if obj.dtype.kind in ['M', 'm']:
                     if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
-                        return {b'np': obj.dtype.type.__name__,
+                        return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(obj.astype(int))} #recurse packb
             return chain(obj) #let msgpack_numpy.encode take over
