@@ -1393,68 +1393,6 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks
                 )
 
-    @staticmethod
-    @doc_inject(selector='constructor_frame')
-    def from_msgpack(msgpack_data: bin):
-        '''Frame constructor from an in-memory binary object formatted as a msgpack.
-
-        Args:
-            msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
-
-        Returns:
-            :obj
-        '''
-        import msgpack
-        import msgpack_numpy
-        def decode(obj, chain=msgpack_numpy.decode):
-            if b'sf' in obj:
-                clsname = obj[b'sf']
-                cls = globals()[clsname]
-                if clsname in [
-                        'Frame',
-                        'FrameGO']:
-                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
-                    return cls(
-                            blocks,
-                            name=obj[b'name'],
-                            index=unpackb(obj[b'index']), #recurse unpackb
-                            columns=unpackb(obj[b'columns']), #recurse unpackb
-                            own_data=True)
-                elif clsname in [
-                        'Index',
-                        'IndexBase',
-                        'IndexDateTime',
-                        'IndexDate',
-                        'IndexYearMonthGO',
-                        'IndexNanosecond']:
-                    data = unpackb(obj[b'data']) #recurse unpackb
-                    return cls(
-                            data,
-                            name=obj[b'name'])
-                elif clsname in [
-                        'IndexHierarchy',
-                        'IndexHierarchyGO']:
-                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
-                    return cls._from_type_blocks(
-                            blocks=blocks,
-                            name=obj[b'name'],
-                            own_blocks=True)
-                elif clsname in [
-                        'TypeBlocks']:
-                        #'ContainerBase',
-                        #'ContainerOperand',
-                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
-                    return cls.from_blocks(blocks)
-            elif b'np' in obj:
-                data = unpackb(obj[b'data']) #recurse unpackb
-                array = np.array(data, dtype=obj[b'dtype'])
-                array.flags.writeable = False
-                return array
-            else:
-                return chain(obj)
-        unpackb = partial(msgpack.unpackb, object_hook=decode)
-        return unpackb(msgpack_data)
-
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_json_url(cls,
@@ -2159,6 +2097,68 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
+
+    @staticmethod
+    @doc_inject(selector='constructor_frame')
+    def from_msgpack(msgpack_data: bin):
+        '''Frame constructor from an in-memory binary object formatted as a msgpack.
+
+        Args:
+            msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
+
+        Returns:
+            :obj
+        '''
+        import msgpack
+        import msgpack_numpy
+        def decode(obj, chain=msgpack_numpy.decode):
+            if b'sf' in obj:
+                clsname = obj[b'sf']
+                cls = globals()[clsname]
+                if clsname in [
+                        'Frame',
+                        'FrameGO']:
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls(
+                            blocks,
+                            name=obj[b'name'],
+                            index=unpackb(obj[b'index']), #recurse unpackb
+                            columns=unpackb(obj[b'columns']), #recurse unpackb
+                            own_data=True)
+                elif clsname in [
+                        'Index',
+                        'IndexBase',
+                        'IndexDateTime',
+                        'IndexDate',
+                        'IndexYearMonthGO',
+                        'IndexNanosecond']:
+                    data = unpackb(obj[b'data']) #recurse unpackb
+                    return cls(
+                            data,
+                            name=obj[b'name'])
+                elif clsname in [
+                        'IndexHierarchy',
+                        'IndexHierarchyGO']:
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls._from_type_blocks(
+                            blocks=blocks,
+                            name=obj[b'name'],
+                            own_blocks=True)
+                elif clsname in [
+                        'TypeBlocks']:
+                        #'ContainerBase',
+                        #'ContainerOperand',
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls.from_blocks(blocks)
+            elif b'np' in obj:
+                data = unpackb(obj[b'data']) #recurse unpackb
+                array = np.array(data, dtype=obj[b'dtype'])
+                array.flags.writeable = False
+                return array
+            else:
+                return chain(obj)
+        unpackb = partial(msgpack.unpackb, object_hook=decode)
+        return unpackb(msgpack_data)
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Frame')
@@ -5596,6 +5596,61 @@ class Frame(ContainerOperand):
         fp = path_filter(fp)
         pq.write_table(table, fp)
 
+    def to_msgpack(self) -> 'bin':
+        '''
+        Return a msgpack.
+        '''
+        import msgpack
+        import msgpack_numpy
+        def encode(obj, chain=msgpack_numpy.encode):
+            clsname = obj.__class__.__name__
+            package = obj.__class__.__module__.split('.',1)[0]
+            print('package, clsname', package, clsname)
+            if package == 'static_frame':
+                if clsname in [
+                        'Frame',
+                        'FrameGO']:
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'blocks':packb(obj._blocks), #recurse packb
+                            b'index':packb(obj.index), #recurse packb
+                            b'columns':packb(obj.columns)} #recurse packb
+                elif clsname in [
+                        'Index',
+                        'IndexBase',
+                        'IndexDateTime',
+                        'IndexDate',
+                        'IndexYearMonthGO', #just listing some interesting ones.
+                        'IndexNanosecond']:
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)} #recurse packb
+                elif clsname in [
+                        'IndexHierarchy',
+                        'IndexHierarchyGO']:
+                    if obj._recache:
+                        obj._update_array_cache()
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'blocks':packb(obj._blocks)} #recurse packb
+                elif clsname in [
+                        'TypeBlocks']:
+                        #'ContainerBase',
+                        #'ContainerOperand',
+                    return {b'sf':clsname,
+                            b'blocks':packb(obj._blocks)} #recurse packb
+            elif package == 'numpy':
+                if isinstance(obj, np.ndarray):
+                    #msgpack_numpy is breaking with these data types, overriding here
+                    #if obj.dtype.kind in ['M', 'm']:
+                    if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(obj.astype(int))} #recurse packb
+            return chain(obj) #let msgpack_numpy.encode take over
+        packb = partial(msgpack.packb, default=encode)
+        return packb(self)
+
     def to_xarray(self) -> 'Dataset':
         '''
         Return an xarray Dataset.
@@ -6029,61 +6084,6 @@ class Frame(ContainerOperand):
                 type_delimiter_right='$>$',
                 )
         return repr(self.display(config))
-
-    def to_msgpack(self) -> 'bin':
-        '''
-        Return a msgpack.
-        '''
-        import msgpack
-        import msgpack_numpy
-        def encode(obj, chain=msgpack_numpy.encode):
-            clsname = obj.__class__.__name__
-            package = obj.__class__.__module__.split('.',1)[0]
-            print('package, clsname', package, clsname)
-            if package == 'static_frame':
-                if clsname in [
-                        'Frame',
-                        'FrameGO']:
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'blocks':packb(obj._blocks), #recurse packb
-                            b'index':packb(obj.index), #recurse packb
-                            b'columns':packb(obj.columns)} #recurse packb
-                elif clsname in [
-                        'Index',
-                        'IndexBase',
-                        'IndexDateTime',
-                        'IndexDate',
-                        'IndexYearMonthGO', #just listing some interesting ones.
-                        'IndexNanosecond']:
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'data':packb(obj.values)} #recurse packb
-                elif clsname in [
-                        'IndexHierarchy',
-                        'IndexHierarchyGO']:
-                    if obj._recache:
-                        obj._update_array_cache()
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'blocks':packb(obj._blocks)} #recurse packb
-                elif clsname in [
-                        'TypeBlocks']:
-                        #'ContainerBase',
-                        #'ContainerOperand',
-                    return {b'sf':clsname,
-                            b'blocks':packb(obj._blocks)} #recurse packb
-            elif package == 'numpy':
-                if isinstance(obj, np.ndarray):
-                    #msgpack_numpy is breaking with these data types, overriding here
-                    #if obj.dtype.kind in ['M', 'm']:
-                    if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
-                        return {b'np': True,
-                                b'dtype': str(obj.dtype),
-                                b'data': packb(obj.astype(int))} #recurse packb
-            return chain(obj) #let msgpack_numpy.encode take over
-        packb = partial(msgpack.packb, default=encode)
-        return packb(self)
 
 #-------------------------------------------------------------------------------
 
