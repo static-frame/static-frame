@@ -5607,36 +5607,57 @@ class Frame(ContainerOperand):
             package = obj.__class__.__module__.split('.',1)[0]
             print('package, clsname', package, clsname)
             if package == 'static_frame':
-                if clsname in [
-                        'Frame',
-                        'FrameGO']:
+                if isinstance(obj, self.__class__):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        Frame
+                        FrameGO
+                    '''
+                    print('isinstance', 'Frame')
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks), #recurse packb
                             b'index':packb(obj.index), #recurse packb
                             b'columns':packb(obj.columns)} #recurse packb
-                elif clsname in [
-                        'Index',
-                        'IndexBase',
-                        'IndexDateTime',
-                        'IndexDate',
-                        'IndexYearMonthGO', #just listing some interesting ones.
-                        'IndexNanosecond']:
-                    return {b'sf':clsname,
-                            b'name':obj.name,
-                            b'data':packb(obj.values)} #recurse packb
-                elif clsname in [
-                        'IndexHierarchy',
-                        'IndexHierarchyGO']:
+                elif isinstance(obj, IndexHierarchy):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        *IndexBase            #CONFLICT: IndexBase must come after IndexHierarchy.
+                        IndexHierarchy
+                        IndexHierarchyGO
+                    '''
                     if obj._recache:
                         obj._update_array_cache()
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks)} #recurse packb
-                elif clsname in [
-                        'TypeBlocks']:
-                        #'ContainerBase',
-                        #'ContainerOperand',
+                elif isinstance(obj, IndexBase):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        IndexBase
+                        Index
+                        IndexGO
+                        IndexDate
+                        IndexDateTime
+                        IndexYearMonthGO
+                        IndexNanosecond #just listing some interesting ones.
+                    '''
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)} #recurse packb
+                elif isinstance(obj, TypeBlocks):
+                    '''
+                    Classes:
+                        *ContainerBase
+                        *ContainerOperand
+                        TypeBlocks
+                    '''
                     return {b'sf':clsname,
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
