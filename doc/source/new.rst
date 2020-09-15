@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.7.0
+----------
+
+API change: `__bool__` of all containers now raises a ValueError.
+
+
+
 0.6.33
 ----------
 
