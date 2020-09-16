@@ -543,7 +543,9 @@ class Frame(ContainerOperand):
         else:
             columns = columns.intersection(*columns_iter)
 
-        post = None
+        fill_arrays = dict() # NOTE: we will hash to NaN and NaT, but can assume we are using the same instance
+
+        post = None # use iter of containers to handle first case
         for container in containers:
             if post is None:
                 fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
@@ -559,12 +561,17 @@ class Frame(ContainerOperand):
                 if col not in container:
                     # get fill value based on previous container
                     fill_value = dtype_kind_to_na(dtype_at_col.kind)
-                    values.append(np.full(len(index), fill_value))
+                    if fill_value not in fill_arrays:
+                        array = np.full(len(index), fill_value)
+                        array.flags.writeable = False
+                        fill_arrays[fill_value] = array
+                    array = fill_arrays[fill_value]
                 else:
                     col_series = container[col]
                     fill_value = dtype_kind_to_na(col_series.dtype.kind)
                     array = col_series.reindex(index, fill_value=fill_value).values
-                    values.append(array)
+                    array.flags.writeable = False
+                values.append(array)
 
             post = cls(
                     post._blocks.fillna_by_values(values),

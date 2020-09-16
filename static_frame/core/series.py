@@ -311,9 +311,9 @@ class Series(ContainerOperand):
             fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 
-        for container in containers:
+        for container in container_iter:
             post = post.fillna(container)
-            if not post.isna().any():
+            if not post.isna().any(): # NOTE: should we short circuit, or get more out of fillna?
                 break
 
         return post
