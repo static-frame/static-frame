@@ -244,8 +244,8 @@ class TestUnit(TestCase):
 
 
     @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.BASIC,
-            index_dtype_group=sfst.DTGroup.BASIC,
+            dtype_group=sfst.DTGroup.NUMERIC,
+            index_dtype_group=sfst.DTGroup.NUMERIC,
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
         msg = f1.to_msgpack()
