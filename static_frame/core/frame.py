@@ -5749,7 +5749,7 @@ class Frame(ContainerOperand):
             row_current_idx = None
             for (row_idx, col_idx), element in self._iter_element_iloc_items():
                 if row_idx != row_current_idx:
-                    if row_current_idx is not None:
+                    if row_current_idx is not None: # if not the first
                         f.write(line_terminator)
                     if include_index:
                         if index_depth == 1:
@@ -5764,7 +5764,6 @@ class Frame(ContainerOperand):
                                     f.write(f'{filter_func(index_value)}{delimiter}')
                                 else:
                                     f.write(f'{index_value}{delimiter}')
-
                     row_current_idx = row_idx
                 if store_filter:
                     f.write(f'{filter_func(element)}')
@@ -5772,6 +5771,8 @@ class Frame(ContainerOperand):
                     f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
+            if row_current_idx is not None: # if not an empty Frame, write the last terminator
+                f.write(line_terminator)
         finally:
             if is_file:
                 f.close()
