@@ -5656,12 +5656,12 @@ class Frame(ContainerOperand):
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks)} #recurse packb
-                elif isinstance(obj, IndexBase):
+                elif isinstance(obj, Index):
                     '''
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        IndexBase
+                        *IndexBase
                         Index
                         IndexGO
                         IndexDate
