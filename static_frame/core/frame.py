@@ -2135,21 +2135,25 @@ class Frame(ContainerOperand):
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        *IndexBase            #CONFLICT: IndexBase must come after IndexHierarchy.
+                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
                         IndexHierarchy
                         IndexHierarchyGO
                     '''
+                    index_constructors=[
+                            globals()[clsname] for clsname in unpackb(
+                                    obj[b'index_constructors'])] #recurse unpackb
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls._from_type_blocks(
                             blocks=blocks,
                             name=obj[b'name'],
+                            index_constructors=index_constructors,
                             own_blocks=True)
                 elif issubclass(cls, Index):
                     '''
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        *IndexBase
+                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
                         Index
                         IndexGO
                         IndexDate
@@ -5647,7 +5651,7 @@ class Frame(ContainerOperand):
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        *IndexBase            #CONFLICT: IndexBase must come after IndexHierarchy.
+                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
                         IndexHierarchy
                         IndexHierarchyGO
                     '''
@@ -5655,13 +5659,15 @@ class Frame(ContainerOperand):
                         obj._update_array_cache()
                     return {b'sf':clsname,
                             b'name':obj.name,
+                            b'index_constructors': packb([
+                                    a.__name__ for a in obj.index_types.values.tolist()]), #recurse packb
                             b'blocks':packb(obj._blocks)} #recurse packb
                 elif isinstance(obj, Index):
                     '''
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        *IndexBase
+                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
                         Index
                         IndexGO
                         IndexDate
