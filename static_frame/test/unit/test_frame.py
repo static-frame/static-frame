@@ -5744,7 +5744,7 @@ class TestUnit(TestCase):
             f = open(fp)
             lines = f.readlines()
             self.assertEqual(lines,
-                    ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan']
+                    ['__index0__|r|s\n', 'w|2|None\n', 'x|3|nan\n']
                     )
 
     @skip_win # type: ignore
@@ -5769,7 +5769,7 @@ class TestUnit(TestCase):
                     '1|a|2|None\n',
                     '1|b|3|nan\n',
                     '2|a|0|False\n',
-                    '2|b|3|x'
+                    '2|b|3|x\n'
                     ])
 
     @skip_win # type: ignore
@@ -5798,7 +5798,7 @@ class TestUnit(TestCase):
             self.assertEqual(lines1,
                     ['__index0__|r|s|t\n',
                     'w|False|0.00000002|0.00000012\n',
-                    'x|True|0.00000112|'])
+                    'x|True|0.00000112|\n'])
 
         with temp_file('.txt', path=True) as fp:
             f1.to_delimited(fp, delimiter='|', store_filter=sf2)
@@ -5807,7 +5807,7 @@ class TestUnit(TestCase):
             self.assertEqual(lines2,
                     ['__index0__|r|s|t\n',
                     'w|False|2.0000e-08|1.2300e-07\n',
-                    'x|True|1.1190e-06|'])
+                    'x|True|1.1190e-06|\n'])
 
     @skip_win # type: ignore
     def test_frame_to_delimited_d(self) -> None:
@@ -5831,7 +5831,7 @@ class TestUnit(TestCase):
                     '1|a|2|None\n',
                     '1|b|3|a\n',
                     '2|a|0|b\n',
-                    '2|b|3|x'
+                    '2|b|3|x\n'
                     ])
 
         with temp_file('.txt', path=True) as fp2:
@@ -5843,7 +5843,7 @@ class TestUnit(TestCase):
                     '1|a|2|None\n',
                     '1|b|3|a\n',
                     '2|a|0|b\n',
-                    '2|b|3|x'
+                    '2|b|3|x\n'
                     ])
 
 
@@ -5866,7 +5866,7 @@ class TestUnit(TestCase):
                     ['|1|1|2|2\n',
                     '|a|b|a|b\n',
                     'r|2|None|20|False\n',
-                    's|3|a|30|True'])
+                    's|3|a|30|True\n'])
 
         with temp_file('.txt', path=True) as fp2:
             f1.to_delimited(fp2, delimiter='|',
@@ -5880,7 +5880,7 @@ class TestUnit(TestCase):
                     ['foo|1|1|2|2\n',
                     'bar|a|b|a|b\n',
                     'r|2|None|20|False\n',
-                    's|3|a|30|True'])
+                    's|3|a|30|True\n'])
 
         with temp_file('.txt', path=True) as fp3:
             with self.assertRaises(RuntimeError):
@@ -5905,19 +5905,19 @@ class TestUnit(TestCase):
         f1.to_csv(file)
         file.seek(0)
         self.assertEqual(file.read(),
-'__index0__,p,q,r,s,t\nw,2,2,a,False,False\nx,30,34,b,True,False\ny,2,95,c,False,False\nz,30,73,d,True,True')
+'__index0__,p,q,r,s,t\nw,2,2,a,False,False\nx,30,34,b,True,False\ny,2,95,c,False,False\nz,30,73,d,True,True\n')
 
         file = StringIO()
         f1.to_csv(file, include_index=False)
         file.seek(0)
         self.assertEqual(file.read(),
-'p,q,r,s,t\n2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True')
+'p,q,r,s,t\n2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True\n')
 
         file = StringIO()
         f1.to_csv(file, include_index=False, include_columns=False)
         file.seek(0)
         self.assertEqual(file.read(),
-'2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True')
+'2,2,a,False,False\n30,34,b,True,False\n2,95,c,False,False\n30,73,d,True,True\n')
 
 
     def test_frame_to_csv_b(self) -> None:
@@ -5928,7 +5928,7 @@ class TestUnit(TestCase):
         file = StringIO()
         f.to_csv(file)
         file.seek(0)
-        self.assertEqual(file.read(), 'Important Name,a\n0,1\n1,2\n2,3')
+        self.assertEqual(file.read(), 'Important Name,a\n0,1\n1,2\n2,3\n')
 
 
     def test_frame_to_csv_c(self) -> None:
@@ -5949,7 +5949,7 @@ class TestUnit(TestCase):
                 lines = f.readlines()
                 # nan has been converted to string
                 self.assertEqual(lines[1], 'w,2,,a,False,None\n')
-                self.assertEqual(lines[4], 'z,30,-inf,d,True,None')
+                self.assertEqual(lines[4], 'z,30,-inf,d,True,None\n')
 
 
     def test_frame_to_csv_d(self) -> None:
@@ -5966,7 +5966,7 @@ class TestUnit(TestCase):
                 lines = f.readlines()
 
             self.assertEqual(lines,
-                    ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60']
+                    ['__index0__,I,I,II,II\n', ',a,b,a,b\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60\n']
                     )
 
             f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
@@ -5989,7 +5989,7 @@ class TestUnit(TestCase):
                 lines = f.readlines()
 
             self.assertEqual(lines,
-                    ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60']
+                    ['__index0__,10,10,20,20\n', ',I,II,I,II\n', 'p,10.0,20.0,50,60\n', 'q,50.0,60.4,-50,-60\n']
                     )
             f2 = Frame.from_csv(fp, columns_depth=2, index_depth=1)
             self.assertEqual(
@@ -6014,7 +6014,7 @@ class TestUnit(TestCase):
         f1.to_tsv(file)
         file.seek(0)
         self.assertEqual(file.read(),
-'__index0__\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue')
+'__index0__\tp\tq\tr\ts\tt\nw\t2\t2\ta\tFalse\tFalse\nx\t30\t34\tb\tTrue\tFalse\ny\t2\t95\tc\tFalse\tFalse\nz\t30\t73\td\tTrue\tTrue\n')
 
 
     def test_frame_to_tsv_b(self) -> None:
