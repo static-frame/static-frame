@@ -2144,12 +2144,12 @@ class Frame(ContainerOperand):
                             blocks=blocks,
                             name=obj[b'name'],
                             own_blocks=True)
-                elif issubclass(cls, IndexBase):
+                elif issubclass(cls, Index):
                     '''
                     Classes:
                         *ContainerBase
                         *ContainerOperand
-                        IndexBase
+                        *IndexBase
                         Index
                         IndexGO
                         IndexDate
