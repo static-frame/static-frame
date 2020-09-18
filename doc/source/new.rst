@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.34
+----------
+
+Updated all delimited text output formats to include a final line termination.
+
+
 0.6.33
 ----------
 
