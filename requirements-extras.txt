@@ -4,3 +4,5 @@ openpyxl>=3.0.0
 xarray>=0.13.0
 tables>=3.6.1
 pyarrow>=0.16.0
+msgpack>=0.6.2
+msgpack-numpy>=0.4.5
