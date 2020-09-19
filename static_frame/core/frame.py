@@ -2186,14 +2186,25 @@ class Frame(ContainerOperand):
                 elif typename in ['complex64', '>c8']:
                     print('complex64!!!', data)
                     array = np.array(data, dtype=obj[b'dtype'])
-                elif typename in ['date', 'datetime', 'datetime.date', 'datetime.datetime']:
-                    print('date!!!!!!')
-                    array = np.array(data)
+                #elif typename in ['date', 'datetime', 'datetime.date', 'datetime.datetime']:
+                elif typename == 'datetime':
+                    print('datetime!!`!!!!')
+                    array = np.array([
+                            datetime.datetime.strptime(
+                                    d, '%Y %a %b %d %H:%M:%S') for d in data])
+                    #data = [datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S') for d in data]
                     #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                elif typename in ['date', 'datetime']:
+                    print('date!!!!!!')
+                    array = np.array([
+                            datetime.datetime.strptime(
+                                    d, '%Y %a %b %d %H:%M:%S').date() for d in data])
                 elif typename in ['time']:
                     print('time!!!!!!')
-                    array = np.array(data)
-                    #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                    array = np.array([
+                            datetime.datetime.strptime(
+                                    d, '%Y %a %b %d %H:%M:%S').time() for d in data])
+                    #array = np.array(data)
                 elif typename in ['timedelta']:
                     print('timedelta!!!!!!')
                     array = np.array(data)
@@ -2225,10 +2236,11 @@ class Frame(ContainerOperand):
                         print('p, c, d', p, c, d)
                         if p == 'datetime':
                             print('multitype datetime!', c, d)
-                            if c == 'datetime':
-                                result.append(datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S'))
-                            elif c == 'date':
-                                result.append(datetime.datetime.strptime(d.rsplit(' ',1)[0], '%Y %a %b %d'))
+                            D = datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S')
+                            if c == 'date':
+                                D = D.date()
+                                print('as date!', D)
+                            result.append(D)
                         elif c == 'NoneType':
                             print('NoneType c')
                             result.append(None)
@@ -5787,11 +5799,13 @@ class Frame(ContainerOperand):
                                 c = a.__class__.__name__
                                 p = a.__class__.__module__.split('.',1)[0]
                                 if p == 'datetime':
+                                    #if c =='date' or d.rsplit(' ',1)[-1] == '00:00:00':
                                     d = a.strftime('%Y %a %b %d %H:%M:%S')
                                 elif c == 'bool':
                                     d = int(a)
                                 else:
                                     d = str(a)
+                                print("(p+'.'+c, d)", (p+'.'+c, d))
                                 data.append((p+'.'+c, d))
                             print('multitype data!', data)
                             return {b'np': True,
@@ -5800,9 +5814,11 @@ class Frame(ContainerOperand):
                         else:
                             t = typeset[0]
                             tname = t.__name__
-                            if tname in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
-                                data = [str(a) for a in obj]
-                                print('datetime found!', data)
+                            #if tname in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
+                            if tname in ['datetime', 'date']:
+                                #data = [str(a) for a in obj]
+                                data = [a.strftime('%Y %a %b %d %H:%M:%S') for a in obj]
+                                print(tname, 'found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
@@ -5821,7 +5837,7 @@ class Frame(ContainerOperand):
                                         b'data': packb(data)} #recurse packb
                             elif tname == 'ndarray':
                                 data = [a for a in obj]
-                                print('complex found!', data)
+                                print('ndarray found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
