@@ -2112,6 +2112,7 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         import datetime
+        import fractions
         def decode(obj, chain=msgpack_numpy.decode):
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -2182,7 +2183,7 @@ class Frame(ContainerOperand):
                     print('datetime64!!!')
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64']:
-                    print('complex64!!!')
+                    print('complex64!!!', data)
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['date']:
                     print('date!!!!!!')
@@ -2193,6 +2194,12 @@ class Frame(ContainerOperand):
                 elif typename in ['timedelta']:
                     print('timedelta!!!!!!')
                     array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                elif typename in ['Fraction']:
+                    print('Fraction!!!!!!')
+                    array = np.array([fractions.Fraction(a) for a in data])
+                elif typename in ['complex']:
+                    print('complex!!!!!!')
+                    array = np.array([complex(a) for a in data])
                 elif typename in ['NoneType']:
                     array = np.array(data)
                 else:
@@ -5730,7 +5737,20 @@ class Frame(ContainerOperand):
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
-                        #if t.__name__ in ['Fraction']:
+                        elif t.__name__ in ['Fraction']:
+                            print('Fraction found!', obj)
+                            data = [str(a) for a in obj]
+                            print('data', data)
+                            return {b'np': True,
+                                    b'dtype': t.__name__,
+                                    b'data': packb(data)} #recurse packb
+                        elif t.__name__ in ['complex']:
+                            print('complex found!', obj)
+                            data = [a.__str__() for a in obj]
+                            print('data', data)
+                            return {b'np': True,
+                                    b'dtype': t.__name__,
+                                    b'data': packb(data)} #recurse packb
                         else:
                             print('chaining22!', obj, type(obj), str(t.__name__))
                             print('chaining22!', obj, type(obj), type(obj[0]), type(obj[1]))
@@ -5746,9 +5766,10 @@ class Frame(ContainerOperand):
                                 b'data': packb(obj.astype(int))} #recurse packb
                     if obj.dtype.type in [np.complex64]: 
                         print('complex64!', obj)
+                        data = [a for a in obj]
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
-                                b'data': packb(str(obj))} #recurse packb
+                                b'data': packb(data)} #recurse packb
 
             print('chaining11!', type(obj), obj.dtype.type)
             return chain(obj) #let msgpack_numpy.encode take over
