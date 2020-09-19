@@ -2111,6 +2111,7 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
+        import datetime
         def decode(obj, chain=msgpack_numpy.decode):
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -2176,10 +2177,30 @@ class Frame(ContainerOperand):
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
                 data = unpackb(obj[b'data']) #recurse unpackb
-                array = np.array(data, dtype=obj[b'dtype'])
+                typename = obj[b'dtype'].split('[',1)[0]
+                if typename in ['datetime64', 'timedelta64']:
+                    print('datetime64!!!')
+                    array = np.array(data, dtype=obj[b'dtype'])
+                elif typename in ['complex64']:
+                    print('complex64!!!')
+                    array = np.array(data, dtype=obj[b'dtype'])
+                elif typename in ['date']:
+                    print('date!!!!!!')
+                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                elif typename in ['time']:
+                    print('time!!!!!!')
+                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                elif typename in ['timedelta']:
+                    print('timedelta!!!!!!')
+                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                elif typename in ['NoneType']:
+                    array = np.array(data)
+                else:
+                    print('uhoh!', obj[b'dtype'])
                 array.flags.writeable = False
                 return array
             else:
+                print('chaining!', obj)
                 return chain(obj)
         unpackb = partial(msgpack.unpackb, object_hook=decode)
         return unpackb(msgpack_data)
@@ -5626,6 +5647,7 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
+        import datetime
         def encode(obj, chain=msgpack_numpy.encode):
             clsname = obj.__class__.__name__
             package = obj.__class__.__module__.split('.',1)[0]
@@ -5688,17 +5710,47 @@ class Frame(ContainerOperand):
                     return {b'sf':clsname,
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
+                #msgpack_numpy is breaking with these data types, overriding here
+                #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
                 if isinstance(obj, np.ndarray):
-                    #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
-                    print('dtype', obj.dtype, obj)
-                    
-                    #msgpack_numpy is breaking with these data types, overriding here
-                    #if obj.dtype.kind in ['M', 'm']:
-                    if obj.dtype.type in [np.datetime64, np.timedelta64]: #I think this is more clear than kind
-                        
+                    print('dtype', type(obj.dtype), obj)
+                    print('dtype', obj.dtype.type, obj)
+                    t = obj.dtype.type
+                    print('dtype', t == np.object_, t)
+                    if t == np.object_:
+                        t = type(obj[0])
+                        print('t', t.__name__)
+                        if t.__name__ in ['date', 'time', 'timedelta']:
+                            data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
+                            return {b'np': True,
+                                    b'dtype': t.__name__,
+                                    b'data': packb(data)} #recurse packb
+                        elif t.__name__ in ['NoneType']:
+                            data = [None] * len(obj)
+                            return {b'np': True,
+                                    b'dtype': t.__name__,
+                                    b'data': packb(data)} #recurse packb
+                        #if t.__name__ in ['Fraction']:
+                        else:
+                            print('chaining22!', obj, type(obj), str(t.__name__))
+                            print('chaining22!', obj, type(obj), type(obj[0]), type(obj[1]))
+                            obj = obj.astype(str(t.__name__))
+                            return chain(obj) #let msgpack_numpy.encode take over
+                            #return {b'np': True,
+                            #        b'dtype': t.__name__,
+                            #        b'data': packb(obj)} #recurse packb
+                    if obj.dtype.type in [np.datetime64, np.timedelta64]: 
+                        print('datetime64!', obj)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(obj.astype(int))} #recurse packb
+                    if obj.dtype.type in [np.complex64]: 
+                        print('complex64!', obj)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(str(obj))} #recurse packb
+
+            print('chaining11!', type(obj), obj.dtype.type)
             return chain(obj) #let msgpack_numpy.encode take over
         packb = partial(msgpack.packb, default=encode)
         return packb(self)

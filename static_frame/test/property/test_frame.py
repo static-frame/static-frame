@@ -244,13 +244,15 @@ class TestUnit(TestCase):
 
 
     @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.NUMERIC,
-            index_dtype_group=sfst.DTGroup.NUMERIC,
+            dtype_group=sfst.DTGroup.BASIC,
+            index_dtype_group=sfst.DTGroup.BASIC,
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
         msg = f1.to_msgpack()
         
+        print('f1', f1)
         f2 = Frame.from_msgpack(msg)
+        print('f2', f2)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         
         f2 = Frame.from_msgpack(f1.to_msgpack())
