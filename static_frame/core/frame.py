@@ -2180,7 +2180,7 @@ class Frame(ContainerOperand):
             elif b'np' in obj:
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
-                if typename in ['datetime64', 'timedelta64', '>m8']:
+                if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
                     print('datetime64!!!')
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64', '>c8']:
