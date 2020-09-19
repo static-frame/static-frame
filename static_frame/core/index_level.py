@@ -261,7 +261,6 @@ class IndexLevel:
                         zip_longest(index, targets[1:], fillvalue=None)
                         ):
                     if level_next is not None:
-                        # print(label, level_next.offset, transversed)
                         # if the next offset is zero, we are moving to a component that is under a fresh hierarchy
                         if level_next.offset > 0:
                             delta = level_next.offset - transversed
@@ -285,11 +284,11 @@ class IndexLevel:
                 levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
-    def labels_at_depth(self,
+    def index_array_at_depth(self,
             depth_level: int = 0
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Generator of arrays found at a depth level.
+        Generator of arrays found at a depth level. Used in values_at_depth. This does not provide full-width representation.
         '''
         levels = deque(((self, 0),))
         while levels:
@@ -302,7 +301,7 @@ class IndexLevel:
                 levels.extend([(lvl, next_depth) for lvl in level.targets])
 
 
-    def label_nodes_at_depth(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
+    def index_at_depth(self, depth_level: int) -> tp.Iterator[tp.Hashable]:
         '''Given a depth position, iterate over label nodes at that depth. Only nodes will be provided, which for outer depths may not be of length equal to the entire index.
         '''
         if depth_level == 0:
@@ -590,7 +589,7 @@ class IndexLevel:
         dtype = tuple(self.dtype_per_depth())[depth_level]
 
         length = self.__len__()
-        # pre allocate array to ensure we use a resovled type
+        # pre allocate array to ensure we use a resolved type
         array = np.empty(length, dtype=dtype)
 
         if length == 0:
@@ -600,7 +599,7 @@ class IndexLevel:
         if depth_level == depth_count - 1:
             # at maximal depth, can concat underlying arrays
             np.concatenate(
-                    tuple(self.labels_at_depth(depth_level)),
+                    tuple(self.index_array_at_depth(depth_level)),
                     out=array
                     )
         else:
