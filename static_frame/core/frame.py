@@ -2113,6 +2113,7 @@ class Frame(ContainerOperand):
         import msgpack_numpy
         import datetime
         import fractions
+        import sys
         def decode(obj, chain=msgpack_numpy.decode):
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -2209,17 +2210,46 @@ class Frame(ContainerOperand):
                     print('multitype received', data)
                     result = []
                     for (typ, d) in data:
-                        print('typ, d', typ, d)
-                        if typ in globals()['__builtins__']:
-                            result.append(globals()['__builtins__'][typ](d))
-                        elif typ in globals():
-                            result.append(globals()[typ](d))
-                        elif typ == 'NoneType':
-                            print('NoneType')
+                        p = typ.split('.',1)[0]
+                        c = typ.split('.',1)[-1]
+                        print('p, c, d', p, c, d)
+                        print('locals', locals())
+                        print('locals', locals().keys())
+                        if p == 'datetime':
+                            print('multitype datetime!', c, d)
+                            #result.append(getattr(datetime, c).strptime(d, '%a %b %d %H:%M:%S %Y'))
+                            result.append(datetime.datetime.strptime(d, '%a %b %d %H:%M:%S %Y'))
+                        elif c == 'NoneType':
+                            print('NoneType c')
                             result.append(None)
+                        elif p == 'builtins':
+                            print('p builtins')
+                            result.append(globals()['__builtins__'][c](d))
+                        elif p in locals():
+                            print('p locals')
+                            result.append(getattr(locals()[p], c)(d))
+                        elif c in locals():
+                            print('c locals')
+                            result.append(locals()[c](d))
+                        elif typ in locals():
+                            print('typ locals')
+                            result.append(locals()[typ](d))
+                        elif p in globals():
+                            print('p globals')
+                            result.append(getattr(globals()[p], c)(d))
+                        elif c in globals():
+                            print('c globals')
+                            result.append(globals()[c](d))
+                        elif typ in globals():
+                            print('typ globals')
+                            result.append(globals()[typ](d))
+                        elif p in sys.modules:
+                            print('sys.modules!', p, c, d)
+                            result.append(getattr(sys.modules[p], c)(d))
                         else:
-                            raise Exception('missing type!', typ, d)
+                            raise Exception('missing type!', p, c, d)
                     array = np.array(result)
+                    print('multitype array', array)
                 else:
                     print('uhoh!', obj[b'dtype'], obj)
                     return chain(obj)
@@ -5756,7 +5786,18 @@ class Frame(ContainerOperand):
                         
                         if len(set(map(type, obj))) > 1:
                             #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
-                            data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
+                            #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
+                            
+                            data = []
+                            for a in obj:
+                                c = a.__class__.__name__
+                                p = a.__class__.__module__.split('.',1)[0]
+                                if p == 'datetime':
+                                    d = a.strftime('%a %b %d %H:%M:%S %Y')
+                                else:
+                                    d = str(a)
+                                print('c, p, a', c, p, a)
+                                data.append((p+'.'+c, d))
                             #ty = obj[0].__class__
                             #print('dir', ty.__name__)
                             #print('dir', dir(ty))
