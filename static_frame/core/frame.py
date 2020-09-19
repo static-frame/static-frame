@@ -5788,38 +5788,31 @@ class Frame(ContainerOperand):
                                     b'data': packb(data)} #recurse packb
                         else:
                             t = typeset[0]
-                            if type(obj).__module__ == 'datetime':
-                                t = 'datetime'
-                            
-                            elif t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
-                                print('dt obj', obj)
-                                #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
-                                #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj.astype(t)]
-                                #data = [a for a in obj.astype(t)]
+                            tname = t.__name__
+                            if tname in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
                                 data = [str(a) for a in obj]
-                                print('dt obj data', data)
+                                print('datetime found!', data)
                                 return {b'np': True,
-                                        b'dtype': t.__name__,
+                                        b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif t.__name__ in ['NoneType']:
+                            elif tname in ['NoneType']:
                                 data = [None] * len(obj)
                                 print('NoneType found!', data)
                                 return {b'np': True,
-                                        b'dtype': t.__name__,
+                                        b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif t.__name__ in ['Fraction']:
+                            elif tname in ['Fraction']:
                                 data = [str(a) for a in obj.astype(t)]
                                 print('Fraction found!', data)
                                 return {b'np': True,
-                                        b'dtype': t.__name__,
+                                        b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif t.__name__ in ['complex']:
+                            elif tname in ['complex']:
                                 #data = [a for a in obj.astype(t)]
                                 data = [str(a) for a in obj]
                                 print('complex found!', data)
-                                print('data', data)
                                 return {b'np': True,
-                                        b'dtype': t.__name__,
+                                        b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
                     elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
                         data = obj.astype(int)
