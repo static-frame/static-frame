@@ -2187,13 +2187,16 @@ class Frame(ContainerOperand):
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['date']:
                     print('date!!!!!!')
-                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                    array = np.array(data)
+                    #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
                 elif typename in ['time']:
                     print('time!!!!!!')
-                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                    array = np.array(data)
+                    #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
                 elif typename in ['timedelta']:
                     print('timedelta!!!!!!')
-                    array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
+                    array = np.array(data)
+                    #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
                 elif typename in ['Fraction']:
                     print('Fraction!!!!!!')
                     array = np.array([fractions.Fraction(a) for a in data])
@@ -5728,7 +5731,8 @@ class Frame(ContainerOperand):
                         t = type(obj[0])
                         print('t', t.__name__)
                         if t.__name__ in ['date', 'time', 'timedelta']:
-                            data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
+                            data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj.astype(t)]
+                            #data = [a for a in obj.astype(t)]
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
@@ -5739,23 +5743,22 @@ class Frame(ContainerOperand):
                                     b'data': packb(data)} #recurse packb
                         elif t.__name__ in ['Fraction']:
                             print('Fraction found!', obj)
-                            data = [str(a) for a in obj]
+                            data = [a for a in obj.astype(t)]
                             print('data', data)
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
                         elif t.__name__ in ['complex']:
                             print('complex found!', obj)
-                            data = [a.__str__() for a in obj]
+                            data = [a for a in obj.astype(t)]
                             print('data', data)
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
                         else:
-                            print('chaining22!', obj, type(obj), str(t.__name__))
-                            print('chaining22!', obj, type(obj), type(obj[0]), type(obj[1]))
-                            obj = obj.astype(str(t.__name__))
-                            return chain(obj) #let msgpack_numpy.encode take over
+                            obj = [a for a in obj]
+                            return chain(obj)
+                        #    return chain(obj) #let msgpack_numpy.encode take over
                             #return {b'np': True,
                             #        b'dtype': t.__name__,
                             #        b'data': packb(obj)} #recurse packb
@@ -5771,7 +5774,7 @@ class Frame(ContainerOperand):
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)} #recurse packb
 
-            print('chaining11!', type(obj), obj.dtype.type)
+            #print('chaining11!', type(obj), obj.dtype.type)
             return chain(obj) #let msgpack_numpy.encode take over
         packb = partial(msgpack.packb, default=encode)
         return packb(self)
