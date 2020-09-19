@@ -5768,7 +5768,6 @@ class Frame(ContainerOperand):
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
                 #msgpack_numpy is breaking with these data types, overriding here
-                #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
                 if isinstance(obj, np.ndarray):
                     if obj.dtype.type == np.object_:
                         typeset = list(set(map(type, obj)))
@@ -5795,12 +5794,6 @@ class Frame(ContainerOperand):
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif tname in ['NoneType']:
-                                data = [None] * len(obj)
-                                print('NoneType found!', data)
-                                return {b'np': True,
-                                        b'dtype': tname,
-                                        b'data': packb(data)} #recurse packb
                             elif tname in ['Fraction']:
                                 data = [str(a) for a in obj.astype(t)]
                                 print('Fraction found!', data)
@@ -5814,6 +5807,14 @@ class Frame(ContainerOperand):
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
+                            '''
+                            elif tname in ['NoneType']:
+                                data = [None] * len(obj)
+                                print('NoneType found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            '''
                     elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
                         data = obj.astype(int)
                         print('datetime64!', data)
