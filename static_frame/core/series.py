@@ -15,6 +15,7 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
+from static_frame.core.container_util import index_many_set
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -223,6 +224,7 @@ class Series(ContainerOperand):
         array_values = []
         if index is None:
             array_index = []
+
         for c in containers:
             array_values.append(c.values)
             if index is None:
@@ -283,6 +285,7 @@ class Series(ContainerOperand):
     def from_overlay(cls,
             containers: tp.Iterable['Series'],
             *,
+            index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             ) -> 'Series':
@@ -290,17 +293,21 @@ class Series(ContainerOperand):
 
         Args:
             containers: Iterable of Series.
-            union: If True, a union index will be used; if False, the intersection index will be used.
+            index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            union: If True, and no ``index`` argument is supplied, a union index will be used; if False, the intersection index will be used.
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
 
-        index_iter = iter(c.index for c in containers)
-        index = next(index_iter)
-        if union:
-            index = index.union(*index_iter)
-        else:
-            index = index.intersection(*index_iter)
+        if index is None:
+            index = index_many_set(
+                    (c.index for c in containers),
+                    cls_default=Index,
+                    union=union,
+                    )
+        else: # construct an index if not an index
+            if not isinstance(index, IndexBase):
+                index = Index(index)
 
         container_iter = iter(containers)
         container_first = next(container_iter)
