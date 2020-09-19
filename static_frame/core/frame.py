@@ -523,39 +523,50 @@ class Frame(ContainerOperand):
     def from_overlay(cls,
             containers: tp.Iterable['Frame'],
             *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
+        '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
 
-        index_iter = iter(c.index for c in containers)
-        index = next(index_iter)
-        if union:
-            index = index.union(*index_iter)
+        if index is None:
+            index = index_many_set(
+                    (c.index for c in containers),
+                    cls_default=Index,
+                    union=union,
+                    )
         else:
-            index = index.intersection(*index_iter)
-
-        columns_iter = iter(c.columns for c in containers)
-        columns = next(columns_iter)
-        if union:
-            columns = columns.union(*columns_iter)
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index
+                    )
+        if columns is None:
+            columns = index_many_set(
+                    (c.columns for c in containers),
+                    cls_default=cls._COLUMNS_CONSTRUCTOR,
+                    union=union,
+                    )
         else:
-            columns = columns.intersection(*columns_iter)
+            columns = index_from_optional_constructor(columns,
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR)
 
         fill_arrays = dict() # NOTE: we will hash to NaN and NaT, but can assume we are using the same instance
 
-        post = None # use iter of containers to handle first case
-        for container in containers:
-            if post is None:
-                fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
-                post = container.reindex(
-                        index=index,
-                        columns=columns,
-                        fill_value=fill_value
-                        )
-                continue
-
+        containers_iter = iter(containers)
+        container = next(containers_iter)
+        fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
+        post = container.reindex(
+                index=index,
+                columns=columns,
+                fill_value=fill_value,
+                own_index=True,
+                own_columns=True,
+                )
+        for container in containers_iter:
             values = []
             for col, dtype_at_col in post.dtypes.items():
                 if col not in container:

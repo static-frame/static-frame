@@ -10656,6 +10656,39 @@ class TestUnit(TestCase):
                 ['f', 'i', 'b'])
 
 
+    def test_frame_from_overlay_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1, np.nan), b=(np.nan, 20), c=(False, None)),
+                index=Index(('x', 'y'), name='foo'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1, 200), b=(4, 6), c=(False, False)),
+                index=Index(('x', 'y'), name='foo'),
+                name='f2')
+
+        f3 = sf.Frame.from_overlay((f1, f2))
+        self.assertEqual(f3.index.name, 'foo')
+
+        self.assertEqual(f3.to_pairs(0),
+                (('a', (('x', 1.0), ('y', 200.0))), ('b', (('x', 4.0), ('y', 20.0))), ('c', (('x', False), ('y', False)))))
+
+    def test_frame_from_overlay_d(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1, np.nan, 12), b=(np.nan, 20, 43), c=(False, None, False)),
+                index=Index(('x', 'y', 'z'), name='foo'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1, 200, 13), b=(4, 6, 23), c=(False, False, True)),
+                index=Index(('x', 'y', 'z'), name='foo'),
+                name='f2')
+
+        f3 = sf.Frame.from_overlay((f1, f2), index=('y', 'z'), columns=('b', 'c'))
+        self.assertEqual(f3.to_pairs(0),
+                (('b', (('y', 20.0), ('z', 43.0))), ('c', (('y', False), ('z', False)))))
+
+
 if __name__ == '__main__':
     unittest.main()
 

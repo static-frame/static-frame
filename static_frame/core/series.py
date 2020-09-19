@@ -288,7 +288,7 @@ class Series(ContainerOperand):
             union: bool = True,
             name: NameType = None,
             ) -> 'Series':
-        '''Return a new Series made by overlaying containers, filling in missing values with subsequent containers.
+        '''Return a new :obj:`Series` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
 
         Args:
             containers: Iterable of Series.
