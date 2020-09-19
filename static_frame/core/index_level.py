@@ -3,6 +3,7 @@
 import typing as tp
 from collections import deque
 from itertools import zip_longest
+from itertools import repeat
 
 import numpy as np
 
@@ -270,7 +271,7 @@ class IndexLevel:
                         # get only the incremental addition for this label
                         transversed += delta
                     else:
-                        # we cannot use offset; must to more expensive length of component Levels
+                        # we cannot use offset; get length of component Levels
                         yield label, len(targets[i])
 
         levels = deque(((self, 0),))
@@ -281,7 +282,43 @@ class IndexLevel:
                 continue # do not need to descend
             if level.targets is not None: # terminus
                 next_depth = depth + 1
-                levels.extend([(lvl, next_depth) for lvl in level.targets])
+                levels.extend((lvl, next_depth) for lvl in level.targets)
+
+    def labels_at_depth(self,
+            depth_level: int = 0
+            ) -> tp.Iterator[tp.Hashable]:
+        '''
+        Generator all labels found at a specified level, realized at full length.
+        '''
+        def get_labels(index: Index,
+                targets: tp.Optional[ArrayGO]
+                ) -> tp.Iterator[tp.Hashable]:
+            if targets is None:
+                yield from index
+            else: # observe the offsets of the next
+                transversed = 0
+                for i, (label, level_next) in enumerate(
+                        zip_longest(index, targets[1:], fillvalue=None)
+                        ):
+                    if level_next is not None:
+                        if level_next.offset > 0:
+                            delta = level_next.offset - transversed
+                        else:
+                            delta = len(targets[i])
+                        yield from repeat(label, delta)
+                        transversed += delta
+                    else:
+                        yield from repeat(label, len(targets[i]))
+
+        levels = deque(((self, 0),))
+        while levels:
+            level, depth = levels.popleft()
+            if depth == depth_level:
+                yield from get_labels(level.index, level.targets)
+                continue # do not need to descend
+            if level.targets is not None: # terminus
+                next_depth = depth + 1
+                levels.extend((lvl, next_depth) for lvl in level.targets)
 
 
     def index_array_at_depth(self,
@@ -519,7 +556,7 @@ class IndexLevel:
     @property
     def values(self) -> np.ndarray:
         '''
-        Return an immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coerce types.
+        Return a single immutable NumPy 2D array of all labels found in this IndexLevels instance. This may coerce types.
         '''
         depth_count = self.depth
         shape = self.__len__(), depth_count
@@ -556,7 +593,7 @@ class IndexLevel:
         return labels
 
     def __iter__(self) -> tp.Iterator[tp.Tuple[tp.Hashable, ...]]:
-        # NOTE: this implementation shown to be faster than a recursive purely recursive implementation.
+        # NOTE: this implementation shown to be faster than a purely recursive implementation.
         depth_count = self.depth
         levels = deque(((self, 0, None),)) # order matters
 
@@ -603,19 +640,19 @@ class IndexLevel:
                     out=array
                     )
         else:
-            def gen() -> tp.Iterator[np.ndarray]:
-                for value, size in self.label_widths_at_depth(
-                        depth_level=depth_level):
-                    if dtype.kind == 'O' and isinstance(value, tuple):
-                        # this appears to the only way to do this:
-                        part = np.empty(size, dtype=dtype)
-                        for i in range(size):
-                            part[i] = value
-                        yield part
-                    else:
-                        yield np.full(size, value, dtype=dtype)
+            arrays = []
+            for value, size in self.label_widths_at_depth(
+                    depth_level=depth_level):
+                if dtype.kind == 'O' and isinstance(value, tuple):
+                    # this appears to the only way to do this:
+                    part = np.empty(size, dtype=dtype)
+                    for i in range(size):
+                        part[i] = value
+                    arrays.append(part)
+                else:
+                    arrays.append(np.full(size, value, dtype=dtype))
 
-            np.concatenate(tuple(gen()), out=array)
+            np.concatenate(arrays, out=array)
 
             #NOTE: This alternative form produced a unicode error only on Windows up ot NP 1.17 for some tests
             # start = 0

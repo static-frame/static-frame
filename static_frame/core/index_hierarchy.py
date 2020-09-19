@@ -541,16 +541,21 @@ class IndexHierarchy(IndexBase):
     def iloc(self) -> InterfaceGetItem['IndexHierarchy']:
         return InterfaceGetItem(self._extract_iloc) #type: ignore
 
-    # NOTE: this is only nodes, not a the full realization; probably need both
+
     def _iter_label(self,
             depth_level: int = 0,
             ) -> tp.Iterator[tp.Hashable]:
-        yield from self._levels.index_at_depth(depth_level=depth_level)
+        # if no type blocks, use a levels
+        if self._recache:
+            yield from self._levels.labels_at_depth(depth_level=depth_level)
+        else:
+            yield from self._blocks._extract_array(column_key=depth_level)
 
     def _iter_label_items(self,
             depth_level: int = 0,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
-        yield from enumerate(self._levels.index_at_depth(depth_level=depth_level))
+        yield from enumerate(self._iter_label(depth_level=depth_level))
+
 
     @property
     def iter_label(self) -> IterNodeDepthLevel[tp.Any]:

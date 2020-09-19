@@ -2140,21 +2140,6 @@ class TestUnit(TestCase):
     def test_hierarchy_from_pandas_b(self) -> None:
         import pandas
 
-        idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
-
-        self.assertEqual(list(idx.iter_label(0)), ['I', 'II'])
-        self.assertEqual(list(idx.iter_label(1)), ['A', 'B', 'A', 'B'])
-        self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
-
-        post = idx.iter_label(1).apply(lambda x: x.lower())
-        self.assertEqual(post.to_pairs(),
-                ((0, 'a'), (1, 'b'), (2, 'a'), (3, 'b')))
-
-
-
-    def test_hierarchy_from_pandas_c(self) -> None:
-        import pandas
-
         pdidx = pandas.MultiIndex.from_product((('I', 'II'), ('A', 'B')))
 
         idx = IndexHierarchyGO.from_pandas(pdidx)
@@ -2172,6 +2157,7 @@ class TestUnit(TestCase):
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
 
 
+    #---------------------------------------------------------------------------
     def test_hierarchy_copy_a(self) -> None:
 
         labels = (
@@ -2668,6 +2654,26 @@ class TestUnit(TestCase):
         self.assertEqual(ih2.values.tolist(),
                 [['A', 10, False]])
 
+
+    #---------------------------------------------------------------------------
+
+    def test_hierarchy_iter_label_a(self) -> None:
+
+        idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+
+        self.assertEqual(list(idx.iter_label(0)), ['I', 'I', 'I', 'I', 'II', 'II', 'II', 'II'])
+        self.assertEqual(list(idx.iter_label(1)), ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B'])
+        self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
+
+        idx._update_array_cache()
+
+        self.assertEqual(list(idx.iter_label(0)), ['I', 'I', 'I', 'I', 'II', 'II', 'II', 'II'])
+        self.assertEqual(list(idx.iter_label(1)), ['A', 'A', 'B', 'B', 'A', 'A', 'B', 'B'])
+        self.assertEqual(list(idx.iter_label(2)), [1, 2, 1, 2, 1, 2, 1, 2])
+
+        post = idx.iter_label(1).apply(lambda x: x.lower())
+        self.assertEqual(post.to_pairs(),
+                ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'a'), (5, 'a'), (6, 'b'), (7, 'b')))
 
 if __name__ == '__main__':
     unittest.main()

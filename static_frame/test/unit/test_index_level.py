@@ -688,6 +688,32 @@ class TestUnit(TestCase):
         self.assertEqual(lvl1.depth, 4)
         self.assertEqual(len(lvl1), 0)
 
+    #---------------------------------------------------------------------------
+    def test_index_level_labels_at_depth_a(self) -> None:
+
+        OD = OrderedDict
+        tree = OD([
+                ('I', OD([
+                        ('A', (1, 2)), ('B', (1, 2, 3)), ('C', (2, 3))
+                        ])
+                ),
+                ('II', OD([
+                        ('A', (1,)), ('B', (1,))
+                        ])
+                ),
+                ('III', OD([
+                        ('A', (1, 2, 3)), ('B', (1,))
+                        ])
+                ),
+                ])
+        levels = IndexLevel.from_tree(tree)
+
+        self.assertEqual(tuple(levels.labels_at_depth(0)),
+                ('I', 'I', 'I', 'I', 'I', 'I', 'I', 'II', 'II', 'III', 'III', 'III', 'III'))
+        self.assertEqual(tuple(levels.labels_at_depth(1)),
+                ('A', 'A', 'B', 'B', 'B', 'C', 'C', 'A', 'B', 'A', 'A', 'A', 'B'))
+        self.assertEqual(tuple(levels.labels_at_depth(2)),
+                (1, 2, 1, 2, 3, 2, 3, 1, 1, 1, 2, 3, 1))
 
 
 
