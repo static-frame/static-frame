@@ -2225,7 +2225,10 @@ class Frame(ContainerOperand):
                         print('p, c, d', p, c, d)
                         if p == 'datetime':
                             print('multitype datetime!', c, d)
-                            result.append(datetime.datetime.strptime(d, '%a %b %d %H:%M:%S %Y'))
+                            if c == 'datetime':
+                                result.append(datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S'))
+                            elif c == 'date':
+                                result.append(datetime.datetime.strptime(d.rsplit(' ',1)[0], '%Y %a %b %d'))
                         elif c == 'NoneType':
                             print('NoneType c')
                             result.append(None)
@@ -5784,7 +5787,9 @@ class Frame(ContainerOperand):
                                 c = a.__class__.__name__
                                 p = a.__class__.__module__.split('.',1)[0]
                                 if p == 'datetime':
-                                    d = a.strftime('%a %b %d %H:%M:%S %Y')
+                                    d = a.strftime('%Y %a %b %d %H:%M:%S')
+                                elif c == 'bool':
+                                    d = int(a)
                                 else:
                                     d = str(a)
                                 data.append((p+'.'+c, d))
@@ -5845,8 +5850,8 @@ class Frame(ContainerOperand):
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
                             elif tname == 'bool':
-                                data = [str(a) for a in obj]
-                                print('str found!', data)
+                                data = [int(a) for a in obj]
+                                print('bool found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
