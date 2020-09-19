@@ -5737,7 +5737,14 @@ class Frame(ContainerOperand):
                         print('t', t.__name__)
                         data = [str(a) for a in obj]
                         print('dt obj data', data)
-                        if t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
+                        
+                        if len(set(map(type, obj))) > 1:
+                            data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
+                            print('multitype data!', data)
+                            return {b'np': True,
+                                    b'dtype': 'multitype',
+                                    b'data': packb(data)} #recurse packb
+                        elif t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
                             print('dt obj', obj)
                             #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
                             #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj.astype(t)]
@@ -5749,31 +5756,24 @@ class Frame(ContainerOperand):
                                     b'data': packb(data)} #recurse packb
                         elif t.__name__ in ['NoneType']:
                             data = [None] * len(obj)
+                            print('NoneType found!', data)
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
                         elif t.__name__ in ['Fraction']:
-                            print('Fraction found!', obj)
                             data = [str(a) for a in obj.astype(t)]
-                            print('data', data)
+                            print('Fraction found!', data)
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
                         elif t.__name__ in ['complex']:
-                            print('complex found!', obj)
                             #data = [a for a in obj.astype(t)]
                             data = [str(a) for a in obj]
+                            print('complex found!', data)
                             print('data', data)
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
-                        else:
-                            obj = [str(a) for a in obj] #change to tuples of type, data
-                            return chain(obj)
-                        #    return chain(obj) #let msgpack_numpy.encode take over
-                            #return {b'np': True,
-                            #        b'dtype': t.__name__,
-                            #        b'data': packb(obj)} #recurse packb
                     if obj.dtype.type in [np.datetime64, np.timedelta64]: 
                         print('datetime64!', obj)
                         return {b'np': True,
