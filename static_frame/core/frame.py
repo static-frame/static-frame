@@ -2208,6 +2208,8 @@ class Frame(ContainerOperand):
                     array = np.array(data)
                 elif typename in ['ndarray']:
                     array = np.array(data)
+                elif typename in ['int']:
+                    array = np.array([int(n) for n in data])
                 elif typename in ['multitype']:
                     print('multitype received', data)
                     result = []
@@ -5818,6 +5820,12 @@ class Frame(ContainerOperand):
                             elif tname == 'NoneType':
                                 data = [None] * len(obj)
                                 print('NoneType found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            elif tname == 'int':
+                                data = [str(a) for a in obj]
+                                print('int found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
