@@ -2180,7 +2180,7 @@ class Frame(ContainerOperand):
             elif b'np' in obj:
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
-                if typename in ['datetime64', 'timedelta64']:
+                if typename in ['datetime64', 'timedelta64', '>m8']:
                     print('datetime64!!!')
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64', '>c8']:
@@ -2210,6 +2210,12 @@ class Frame(ContainerOperand):
                     array = np.array(data)
                 elif typename in ['int']:
                     array = np.array([int(n) for n in data])
+                elif typename in ['float']:
+                    array = np.array([float(n) for n in data])
+                elif typename in ['str']:
+                    array = np.array([str(n) for n in data])
+                elif typename in ['bool']:
+                    array = np.array([bool(n) for n in data])
                 elif typename in ['multitype']:
                     print('multitype received', data)
                     result = []
@@ -2217,11 +2223,8 @@ class Frame(ContainerOperand):
                         p = typ.split('.',1)[0]
                         c = typ.split('.',1)[-1]
                         print('p, c, d', p, c, d)
-                        print('locals', locals())
-                        print('locals', locals().keys())
                         if p == 'datetime':
                             print('multitype datetime!', c, d)
-                            #result.append(getattr(datetime, c).strptime(d, '%a %b %d %H:%M:%S %Y'))
                             result.append(datetime.datetime.strptime(d, '%a %b %d %H:%M:%S %Y'))
                         elif c == 'NoneType':
                             print('NoneType c')
@@ -2260,7 +2263,7 @@ class Frame(ContainerOperand):
                 array.flags.writeable = False
                 return array
             else:
-                print('chaining!', obj)
+                print('chainingFrom!', obj)
                 return chain(obj)
         unpackb = partial(msgpack.unpackb, object_hook=decode)
         return unpackb(msgpack_data)
@@ -5826,6 +5829,24 @@ class Frame(ContainerOperand):
                             elif tname == 'int':
                                 data = [str(a) for a in obj]
                                 print('int found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            elif tname == 'float':
+                                data = [str(a) for a in obj]
+                                print('float found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            elif tname == 'str':
+                                data = [a for a in obj]
+                                print('str found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            elif tname == 'bool':
+                                data = [str(a) for a in obj]
+                                print('str found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
