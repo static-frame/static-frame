@@ -16,6 +16,7 @@ from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_concat
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -223,12 +224,12 @@ class Series(ContainerOperand):
         '''
         array_values = []
         if index is None:
-            array_index = []
+            indices = []
 
         for c in containers:
             array_values.append(c.values)
             if index is None:
-                array_index.append(c.index.values)
+                indices.append(c.index)
 
         # End quickly if empty iterable
         if not array_values:
@@ -238,9 +239,7 @@ class Series(ContainerOperand):
         values = concat_resolved(array_values)
 
         if index is None:
-            index = concat_resolved(array_index)
-            if index.ndim == 2: #type: ignore
-                index = IndexHierarchy.from_labels(index) #type: ignore
+            index = index_many_concat(indices, cls_default=Index)
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None

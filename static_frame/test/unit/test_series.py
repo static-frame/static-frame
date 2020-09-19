@@ -2628,6 +2628,17 @@ class TestUnit(TestCase):
         self.assertEqual('s4', s4.name)
 
 
+    def test_series_from_concat_h(self) -> None:
+        s1 = Series((2, 3, 0,), index=Index(list('abc'), name='foo'))
+        s2 = Series((10, 20), index=Index(list('de'), name='foo'))
+
+        s3 = Series.from_concat((s1, s2))
+        self.assertEqual(s3.index.name, 'foo')
+        self.assertEqual(s3.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_group_a(self) -> None:
