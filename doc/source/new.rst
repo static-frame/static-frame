@@ -6,6 +6,10 @@ What is New in Static Frame
 
 Updated all delimited text output formats to include a final line termination.
 
+``Frame.from_overlay`` now takes optional ``index`` and ``columns`` arguments; ``Series.from_overlay`` now takes an optional ``index`` argument.
+
+Improvements to union/intersection index formation in ``Frame.from_overlay`` and ``Series.from_overlay``.
+
 
 0.6.33
 ----------

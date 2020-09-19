@@ -530,6 +530,12 @@ class Frame(ContainerOperand):
             ) -> 'Frame':
         '''
         Return a new :obj:`Frame` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
+
+        Args:
+            containers: Iterable of :obj:`Frame`.
+            index: An optional :obj:`Index`, :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            columns: An optional :obj:`Index`, :obj:`IndexHierarchy`, or columns initializer, to be used as the columns upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            union: If True, and no ``index`` or ``columns`` argument is supplied, a union index or columns from ``containers`` will be used; if False, the intersection index or columns will be used.
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
