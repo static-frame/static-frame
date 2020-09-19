@@ -5770,11 +5770,12 @@ class Frame(ContainerOperand):
                 #msgpack_numpy is breaking with these data types, overriding here
                 #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
                 if isinstance(obj, np.ndarray):
-                    print('dtype', type(obj.dtype), obj)
-                    print('dtype', obj.dtype.type, obj)
-                    t = obj.dtype.type
-                    print('dtype', t == np.object_, t)
-                    if t == np.object_:
+                    if obj.dtype.type == np.object_:
+                        print('dtype', type(obj.dtype), obj)
+                        print('dtype', obj.dtype.type, obj)
+                        dt = obj.dtype.type
+                        print('dtype', dt == np.object_, dt)
+                        
                         t = type(obj[0])
                         if type(obj).__module__ == 'datetime':
                             t = 'datetime'
@@ -5782,7 +5783,7 @@ class Frame(ContainerOperand):
                         print('type(obj).__module__ ', type(obj).__module__ )
                         print('t', t.__name__)
                         data = [str(a) for a in obj]
-                        print('dt obj data', data)
+                        print('dt obj data', data, dt, t)
                         
                         if len(set(map(type, obj))) > 1:
                             #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
@@ -5837,17 +5838,22 @@ class Frame(ContainerOperand):
                             return {b'np': True,
                                     b'dtype': t.__name__,
                                     b'data': packb(data)} #recurse packb
-                    if obj.dtype.type in [np.datetime64, np.timedelta64]: 
-                        print('datetime64!', obj)
-                        return {b'np': True,
-                                b'dtype': str(obj.dtype),
-                                b'data': packb(obj.astype(int))} #recurse packb
-                    if obj.dtype.type in [np.complex64]: 
-                        print('complex64!', obj)
-                        data = [a for a in obj]
+                    elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
+                        data = obj.astype(int)
+                        print('datetime64!', data)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)} #recurse packb
+                    elif obj.dtype.type in [np.complex64]: 
+                        data = [a for a in obj]
+                        print('packing complex64!', data)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)} #recurse packb
+                    else:
+                        print('@$%@ chaining np.array!!!', obj.dtype.type, obj)
+                else:
+                    print('@$%@ chaining something else!!!')
             '''
             elif package == 'datetime':
                 if t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
