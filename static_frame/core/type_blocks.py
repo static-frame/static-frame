@@ -1569,7 +1569,7 @@ class TypeBlocks(ContainerOperand):
             targets: tp.Iterable[np.ndarray],
             values: tp.Sequence[np.ndarray],
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign values (derived from an iterable of arrays) into all blocks based on a Bolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
+        '''Assign values (derived from an iterable of arrays) into all blocks based on a Boolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
 
         This approach minimizes type coercion by reducing assigned values to columnar types.
 

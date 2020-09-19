@@ -2628,6 +2628,17 @@ class TestUnit(TestCase):
         self.assertEqual('s4', s4.name)
 
 
+    def test_series_from_concat_h(self) -> None:
+        s1 = Series((2, 3, 0,), index=Index(list('abc'), name='foo'))
+        s2 = Series((10, 20), index=Index(list('de'), name='foo'))
+
+        s3 = Series.from_concat((s1, s2))
+        self.assertEqual(s3.index.name, 'foo')
+        self.assertEqual(s3.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_group_a(self) -> None:
@@ -3738,6 +3749,33 @@ class TestUnit(TestCase):
         self.assertEqual(s4.to_pairs(),
                 (('a', np.datetime64('2020-01-01')), ('b', np.datetime64('1999-01-01')), ('c', np.datetime64('1983-09-21')), ('d', np.datetime64('1830-05-02')))
                 )
+
+
+    def test_series_from_overlay_j(self) -> None:
+
+        s1 = Series((1, np.nan, np.nan),
+                index=Index(('a', 'b', 'c'), name='foo'))
+        s2 = Series((10, 30, 1.1, 3.1),
+                index=Index(('a', 'b', 'c', 'd'), name='foo'))
+
+        # last series does not force a type coercion
+        s4 = Series.from_overlay((s1, s2))
+        self.assertEqual(s4.index.name, 'foo')
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
+        self.assertEqual(s4.dtype.kind, 'f')
+
+    def test_series_from_overlay_k(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, np.nan), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), index=('b', 'd'))
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
 
 
 if __name__ == '__main__':

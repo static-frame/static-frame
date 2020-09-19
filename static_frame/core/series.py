@@ -15,6 +15,8 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
+from static_frame.core.container_util import index_many_set
+from static_frame.core.container_util import index_many_concat
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -222,11 +224,12 @@ class Series(ContainerOperand):
         '''
         array_values = []
         if index is None:
-            array_index = []
+            indices = []
+
         for c in containers:
             array_values.append(c.values)
             if index is None:
-                array_index.append(c.index.values)
+                indices.append(c.index)
 
         # End quickly if empty iterable
         if not array_values:
@@ -236,9 +239,7 @@ class Series(ContainerOperand):
         values = concat_resolved(array_values)
 
         if index is None:
-            index = concat_resolved(array_index)
-            if index.ndim == 2: #type: ignore
-                index = IndexHierarchy.from_labels(index) #type: ignore
+            index = index_many_concat(indices, cls_default=Index)
         elif index is IndexAutoFactory:
             # set index arg to None to force IndexAutoFactory usage in creation
             index = None
@@ -283,24 +284,29 @@ class Series(ContainerOperand):
     def from_overlay(cls,
             containers: tp.Iterable['Series'],
             *,
+            index: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             ) -> 'Series':
-        '''Return a new Series made by overlaying containers, filling in missing values with subsequent containers.
+        '''Return a new :obj:`Series` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
 
         Args:
-            containers: Iterable of Series.
-            union: If True, a union index will be used; if False, the intersection index will be used.
+            containers: Iterable of :obj:`Series`.
+            index: An :obj:`Index` or :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            union: If True, and no ``index`` argument is supplied, a union index from ``containers`` will be used; if False, the intersection index will be used.
         '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
 
-        index_iter = iter(c.index for c in containers)
-        index = next(index_iter)
-        if union:
-            index = index.union(*index_iter)
-        else:
-            index = index.intersection(*index_iter)
+        if index is None:
+            index = index_many_set(
+                    (c.index for c in containers),
+                    cls_default=Index,
+                    union=union,
+                    )
+        else: # construct an index if not an index
+            if not isinstance(index, IndexBase):
+                index = Index(index)
 
         container_iter = iter(containers)
         container_first = next(container_iter)
@@ -311,9 +317,9 @@ class Series(ContainerOperand):
             fill_value = dtype_kind_to_na(container_first.dtype.kind)
             post = container_first.reindex(index, fill_value=fill_value).rename(name)
 
-        for container in containers:
+        for container in container_iter:
             post = post.fillna(container)
-            if not post.isna().any():
+            if not post.isna().any(): # NOTE: should we short circuit, or get more out of fillna?
                 break
 
         return post

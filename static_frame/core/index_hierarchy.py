@@ -808,7 +808,7 @@ class IndexHierarchy(IndexBase):
 
         if both_sized and isinstance(other, IndexHierarchy):
             index_constructors = []
-            # depth, and length of idnex_types, must be equal
+            # depth, and length of index_types, must be equal
             for cls_self, cls_other in zip(
                     self._levels.index_types(),
                     other._levels.index_types()):

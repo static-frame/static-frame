@@ -523,48 +523,72 @@ class Frame(ContainerOperand):
     def from_overlay(cls,
             containers: tp.Iterable['Frame'],
             *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
             union: bool = True,
             name: NameType = None,
             ) -> 'Frame':
+        '''
+        Return a new :obj:`Frame` made by overlaying containers, filling in missing values (None or NaN) with aligned values from subsequent containers.
+
+        Args:
+            containers: Iterable of :obj:`Frame`.
+            index: An optional :obj:`Index`, :obj:`IndexHierarchy`, or index initializer, to be used as the index upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            columns: An optional :obj:`Index`, :obj:`IndexHierarchy`, or columns initializer, to be used as the columns upon which all containers are aligned. :obj:`IndexAutoFactory` is not supported.
+            union: If True, and no ``index`` or ``columns`` argument is supplied, a union index or columns from ``containers`` will be used; if False, the intersection index or columns will be used.
+        '''
         if not hasattr(containers, '__len__'):
             containers = tuple(containers) # exhaust a generator
 
-        index_iter = iter(c.index for c in containers)
-        index = next(index_iter)
-        if union:
-            index = index.union(*index_iter)
+        if index is None:
+            index = index_many_set(
+                    (c.index for c in containers),
+                    cls_default=Index,
+                    union=union,
+                    )
         else:
-            index = index.intersection(*index_iter)
-
-        columns_iter = iter(c.columns for c in containers)
-        columns = next(columns_iter)
-        if union:
-            columns = columns.union(*columns_iter)
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index
+                    )
+        if columns is None:
+            columns = index_many_set(
+                    (c.columns for c in containers),
+                    cls_default=cls._COLUMNS_CONSTRUCTOR,
+                    union=union,
+                    )
         else:
-            columns = columns.intersection(*columns_iter)
+            columns = index_from_optional_constructor(columns,
+                    default_constructor=cls._COLUMNS_CONSTRUCTOR)
 
-        post = None
-        for container in containers:
-            if post is None:
-                fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
-                post = container.reindex(
-                        index=index,
-                        columns=columns,
-                        fill_value=fill_value
-                        )
-                continue
+        fill_arrays = dict() # NOTE: we will hash to NaN and NaT, but can assume we are using the same instance
 
+        containers_iter = iter(containers)
+        container = next(containers_iter)
+        fill_value = dtype_kind_to_na(container._blocks._row_dtype.kind)
+        post = container.reindex(
+                index=index,
+                columns=columns,
+                fill_value=fill_value,
+                own_index=True,
+                own_columns=True,
+                )
+        for container in containers_iter:
             values = []
             for col, dtype_at_col in post.dtypes.items():
                 if col not in container:
                     # get fill value based on previous container
                     fill_value = dtype_kind_to_na(dtype_at_col.kind)
-                    values.append(np.full(len(index), fill_value))
+                    if fill_value not in fill_arrays:
+                        array = np.full(len(index), fill_value)
+                        array.flags.writeable = False
+                        fill_arrays[fill_value] = array
+                    array = fill_arrays[fill_value]
                 else:
                     col_series = container[col]
                     fill_value = dtype_kind_to_na(col_series.dtype.kind)
                     array = col_series.reindex(index, fill_value=fill_value).values
-                    values.append(array)
+                    array.flags.writeable = False
+                values.append(array)
 
             post = cls(
                     post._blocks.fillna_by_values(values),
@@ -5741,7 +5765,7 @@ class Frame(ContainerOperand):
             row_current_idx = None
             for (row_idx, col_idx), element in self._iter_element_iloc_items():
                 if row_idx != row_current_idx:
-                    if row_current_idx is not None:
+                    if row_current_idx is not None: # if not the first
                         f.write(line_terminator)
                     if include_index:
                         if index_depth == 1:
@@ -5756,7 +5780,6 @@ class Frame(ContainerOperand):
                                     f.write(f'{filter_func(index_value)}{delimiter}')
                                 else:
                                     f.write(f'{index_value}{delimiter}')
-
                     row_current_idx = row_idx
                 if store_filter:
                     f.write(f'{filter_func(element)}')
@@ -5764,6 +5787,8 @@ class Frame(ContainerOperand):
                     f.write(f'{element}')
                 if col_idx != col_idx_last:
                     f.write(delimiter)
+            if row_current_idx is not None: # if not an empty Frame, write the last terminator
+                f.write(line_terminator)
         finally:
             if is_file:
                 f.close()

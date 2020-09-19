@@ -169,7 +169,7 @@ class TestUnit(TestCase):
         post = StringIO()
         f.to_csv(post, store_filter=store_filter, include_index=False)
         post.seek(0)
-        self.assertEqual(post.read(), '0,1\n!,&\n*,@')
+        self.assertEqual(post.read(), '0,1\n!,&\n*,@\n')
 
 
     #---------------------------------------------------------------------------
