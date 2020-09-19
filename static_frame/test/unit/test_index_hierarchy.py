@@ -2675,5 +2675,19 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'), (4, 'a'), (5, 'a'), (6, 'b'), (7, 'b')))
 
+    def test_hierarchy_iter_label_b(self) -> None:
+
+        idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+        self.assertEqual(list(idx.iter_label([0, 2])),
+                [('I', 1), ('I', 2), ('I', 1), ('I', 2), ('II', 1), ('II', 2), ('II', 1), ('II', 2)])
+
+        idx._update_array_cache()
+
+        self.assertEqual(list(idx.iter_label([0, 2])),
+                [('I', 1), ('I', 2), ('I', 1), ('I', 2), ('II', 1), ('II', 2), ('II', 1), ('II', 2)])
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

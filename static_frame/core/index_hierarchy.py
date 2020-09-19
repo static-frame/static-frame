@@ -62,6 +62,7 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
+from static_frame.core.util import array2d_to_tuples
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -543,16 +544,27 @@ class IndexHierarchy(IndexBase):
 
 
     def _iter_label(self,
-            depth_level: int = 0,
+            depth_level: DepthLevelSpecifier = 0,
             ) -> tp.Iterator[tp.Hashable]:
+
         # if no type blocks, use a levels
         if self._recache:
-            yield from self._levels.labels_at_depth(depth_level=depth_level)
+            if isinstance(depth_level, int):
+                yield from self._levels.labels_at_depth(depth_level=depth_level)
+            else:
+                yield from zip(
+                        *(self._levels.labels_at_depth(depth_level=d) for d in depth_level)
+                        )
         else:
-            yield from self._blocks._extract_array(column_key=depth_level)
+            if isinstance(depth_level, int):
+                yield from self._blocks._extract_array(column_key=depth_level)
+            else:
+                yield from array2d_to_tuples(
+                        self._blocks._extract_array(column_key=depth_level)
+                        )
 
     def _iter_label_items(self,
-            depth_level: int = 0,
+            depth_level: DepthLevelSpecifier = 0,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
         yield from enumerate(self._iter_label(depth_level=depth_level))
 
