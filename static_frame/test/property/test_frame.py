@@ -251,7 +251,7 @@ class TestUnit(TestCase):
         msg = f1.to_msgpack()
         
         print('f1', f1)
-        #f2 = Frame.from_msgpack(msg)
+        f2 = Frame.from_msgpack(msg)
         #print('f2', f2)
         #assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         

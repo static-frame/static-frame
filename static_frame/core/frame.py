@@ -2205,6 +2205,21 @@ class Frame(ContainerOperand):
                     array = np.array([complex(a) for a in data])
                 elif typename in ['NoneType']:
                     array = np.array(data)
+                elif typename in ['multitype']:
+                    print('multitype received', data)
+                    result = []
+                    for (typ, d) in data:
+                        print('typ, d', typ, d)
+                        if typ in globals()['__builtins__']:
+                            result.append(globals()['__builtins__'][typ](d))
+                        elif typ in globals():
+                            result.append(globals()[typ](d))
+                        elif typ == 'NoneType':
+                            print('NoneType')
+                            result.append(None)
+                        else:
+                            raise Exception('missing type!', typ, d)
+                    array = np.array(result)
                 else:
                     print('uhoh!', obj[b'dtype'], obj)
                     return chain(obj)
@@ -5659,6 +5674,7 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         import datetime
+        from pprint import pprint
         def encode(obj, chain=msgpack_numpy.encode):
             clsname = obj.__class__.__name__
             package = obj.__class__.__module__.split('.',1)[0]
@@ -5739,8 +5755,14 @@ class Frame(ContainerOperand):
                         print('dt obj data', data)
                         
                         if len(set(map(type, obj))) > 1:
+                            #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
                             data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
+                            #ty = obj[0].__class__
+                            #print('dir', ty.__name__)
+                            #print('dir', dir(ty))
+                            #pprint(globals()['__builtins__'])
                             print('multitype data!', data)
+                            #raise Exception('multitype')
                             return {b'np': True,
                                     b'dtype': 'multitype',
                                     b'data': packb(data)} #recurse packb
