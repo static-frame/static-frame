@@ -5771,24 +5771,8 @@ class Frame(ContainerOperand):
                 #TODO: np.complex64 is causing msgpack_numpy or hypothesis to choke. Or my code?
                 if isinstance(obj, np.ndarray):
                     if obj.dtype.type == np.object_:
-                        print('dtype', type(obj.dtype), obj)
-                        print('dtype', obj.dtype.type, obj)
-                        dt = obj.dtype.type
-                        print('dtype', dt == np.object_, dt)
-                        
-                        t = type(obj[0])
-                        if type(obj).__module__ == 'datetime':
-                            t = 'datetime'
-                        print('type(obj)', type(obj))
-                        print('type(obj).__module__ ', type(obj).__module__ )
-                        print('t', t.__name__)
-                        data = [str(a) for a in obj]
-                        print('dt obj data', data, dt, t)
-                        
-                        if len(set(map(type, obj))) > 1:
-                            #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
-                            #data = [(str(type(a).__name__), str(a)) for a in obj] #change to tuples of type, data
-                            
+                        typeset = list(set(map(type, obj)))
+                        if len(typeset) > 1:
                             data = []
                             for a in obj:
                                 c = a.__class__.__name__
@@ -5797,47 +5781,46 @@ class Frame(ContainerOperand):
                                     d = a.strftime('%a %b %d %H:%M:%S %Y')
                                 else:
                                     d = str(a)
-                                print('c, p, a', c, p, a)
                                 data.append((p+'.'+c, d))
-                            #ty = obj[0].__class__
-                            #print('dir', ty.__name__)
-                            #print('dir', dir(ty))
-                            #pprint(globals()['__builtins__'])
                             print('multitype data!', data)
-                            #raise Exception('multitype')
                             return {b'np': True,
                                     b'dtype': 'multitype',
                                     b'data': packb(data)} #recurse packb
-                        elif t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
-                            print('dt obj', obj)
-                            #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
-                            #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj.astype(t)]
-                            #data = [a for a in obj.astype(t)]
-                            data = [str(a) for a in obj]
-                            print('dt obj data', data)
-                            return {b'np': True,
-                                    b'dtype': t.__name__,
-                                    b'data': packb(data)} #recurse packb
-                        elif t.__name__ in ['NoneType']:
-                            data = [None] * len(obj)
-                            print('NoneType found!', data)
-                            return {b'np': True,
-                                    b'dtype': t.__name__,
-                                    b'data': packb(data)} #recurse packb
-                        elif t.__name__ in ['Fraction']:
-                            data = [str(a) for a in obj.astype(t)]
-                            print('Fraction found!', data)
-                            return {b'np': True,
-                                    b'dtype': t.__name__,
-                                    b'data': packb(data)} #recurse packb
-                        elif t.__name__ in ['complex']:
-                            #data = [a for a in obj.astype(t)]
-                            data = [str(a) for a in obj]
-                            print('complex found!', data)
-                            print('data', data)
-                            return {b'np': True,
-                                    b'dtype': t.__name__,
-                                    b'data': packb(data)} #recurse packb
+                        else:
+                            t = typeset[0]
+                            if type(obj).__module__ == 'datetime':
+                                t = 'datetime'
+                            
+                            elif t.__name__ in ['datetime', 'datetime.date', 'date', 'time', 'timedelta']:
+                                print('dt obj', obj)
+                                #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj]
+                                #data = [a.strftime('%a %b %d %H:%M:%S %Y') for a in obj.astype(t)]
+                                #data = [a for a in obj.astype(t)]
+                                data = [str(a) for a in obj]
+                                print('dt obj data', data)
+                                return {b'np': True,
+                                        b'dtype': t.__name__,
+                                        b'data': packb(data)} #recurse packb
+                            elif t.__name__ in ['NoneType']:
+                                data = [None] * len(obj)
+                                print('NoneType found!', data)
+                                return {b'np': True,
+                                        b'dtype': t.__name__,
+                                        b'data': packb(data)} #recurse packb
+                            elif t.__name__ in ['Fraction']:
+                                data = [str(a) for a in obj.astype(t)]
+                                print('Fraction found!', data)
+                                return {b'np': True,
+                                        b'dtype': t.__name__,
+                                        b'data': packb(data)} #recurse packb
+                            elif t.__name__ in ['complex']:
+                                #data = [a for a in obj.astype(t)]
+                                data = [str(a) for a in obj]
+                                print('complex found!', data)
+                                print('data', data)
+                                return {b'np': True,
+                                        b'dtype': t.__name__,
+                                        b'data': packb(data)} #recurse packb
                     elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
                         data = obj.astype(int)
                         print('datetime64!', data)
