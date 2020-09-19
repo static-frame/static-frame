@@ -244,14 +244,14 @@ class TestUnit(TestCase):
 
 
     @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.ALL,
-            index_dtype_group=sfst.DTGroup.ALL,
+            dtype_group=sfst.DTGroup.STRING,
+            index_dtype_group=sfst.DTGroup.STRING,
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
         msg = f1.to_msgpack()
         
         print('f1', f1)
-        #f2 = Frame.from_msgpack(msg)
+        f2 = Frame.from_msgpack(msg)
         #print('f2', f2)
         #assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         

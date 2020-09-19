@@ -2206,6 +2206,8 @@ class Frame(ContainerOperand):
                     array = np.array([complex(a) for a in data])
                 elif typename in ['NoneType']:
                     array = np.array(data)
+                elif typename in ['ndarray']:
+                    array = np.array(data)
                 elif typename in ['multitype']:
                     print('multitype received', data)
                     result = []
@@ -5794,27 +5796,34 @@ class Frame(ContainerOperand):
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif tname in ['Fraction']:
+                            elif tname == 'Fraction':
                                 data = [str(a) for a in obj.astype(t)]
                                 print('Fraction found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            elif tname in ['complex']:
+                            elif tname == 'complex':
                                 #data = [a for a in obj.astype(t)]
                                 data = [str(a) for a in obj]
                                 print('complex found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            '''
-                            elif tname in ['NoneType']:
+                            elif tname == 'ndarray':
+                                data = [a for a in obj]
+                                print('complex found!', data)
+                                return {b'np': True,
+                                        b'dtype': tname,
+                                        b'data': packb(data)} #recurse packb
+                            elif tname == 'NoneType':
                                 data = [None] * len(obj)
                                 print('NoneType found!', data)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                            '''
+                            else:
+                                print('@$%@ chaining np.object_!!!', obj.dtype.type, t, tname, obj)
+                            
                     elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
                         data = obj.astype(int)
                         print('datetime64!', data)
