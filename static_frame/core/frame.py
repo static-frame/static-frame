@@ -5885,9 +5885,15 @@ class Frame(ContainerOperand):
                             else:
                                 print('@$%@ chaining np.object_!!!', obj.dtype.type, t, tname, obj)
                             '''
-                    elif obj.dtype.type in [np.datetime64, np.timedelta64]: 
+                    elif obj.dtype.type in [np.datetime64]: 
+                        data = obj.astype(str)
+                        print('datetime64 found!', data)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)} #recurse packb
+                    elif obj.dtype.type in [np.timedelta64]: 
                         data = obj.astype(int)
-                        print('datetime64!', data)
+                        print('timedelta64 found!', data)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)} #recurse packb
