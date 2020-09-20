@@ -2210,6 +2210,8 @@ class Frame(ContainerOperand):
                     array = np.array(data)
                 elif typename == 'int':
                     array = np.array([int(n) for n in data], dtype=np.object_)
+                elif typename == 'float':
+                    array = np.array([float(n) for n in data], dtype=np.object_)
                 elif typename == 'multitype':
                     result = []
                     for (typ, d) in data:
