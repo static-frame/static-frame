@@ -6264,7 +6264,9 @@ class TestUnit(TestCase):
                 \end{table}
                 '''
         self.assertEqualLines(post, msg)
-        
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_xlsx_a(self) -> None:
@@ -7859,7 +7861,6 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-
     def test_frame_from_json_a(self) -> None:
 
         msg = """[
