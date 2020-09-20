@@ -884,14 +884,20 @@ class TestUnit(TestCase):
 
     def test_index_intersection_c(self) -> None:
         idx1 = Index((10, 20))
-        idx2 = idx1.intersection(Series([20, 30]))
+        with self.assertRaises(RuntimeError):
+            # raises as it identifies labelled data
+            _ = idx1.intersection(Series([20, 30]))
+
+        idx2 = idx1.intersection(Series([20, 30]).values)
         self.assertEqual(idx2.values.tolist(), [20])
 
+        idx3 = idx1.intersection([20, 30])
+        self.assertEqual(idx3.values.tolist(), [20])
 
     def test_index_intersection_d(self) -> None:
         idx1 = Index((10, 20))
-        with self.assertRaises(NotImplementedError):
-            idx2 = idx1.intersection('b') #type: ignore
+        idx2 = idx1.intersection('b') #type: ignore
+        self.assertEqual(len(idx2), 0)
 
     def test_index_intersection_e(self) -> None:
 

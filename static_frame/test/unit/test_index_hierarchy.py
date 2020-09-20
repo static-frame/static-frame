@@ -1479,8 +1479,10 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_records((('III', 1), ('III', 2)))
 
-        ih2 = ih1.union(f1)
+        with self.assertRaises(RuntimeError):
+            _ = ih1.union(f1)
 
+        ih2 = ih1.union(f1.values)
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 1], ['III', 2]]
                 )
@@ -1518,7 +1520,7 @@ class TestUnit(TestCase):
                 )
 
         ih1 = IndexHierarchy.from_labels(labels)
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(RuntimeError):
             _ = ih1.intersection(['a', 'b']) #type: ignore
 
 

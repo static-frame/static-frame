@@ -847,7 +847,7 @@ def resolve_type_iter(
 
 def iterable_to_array_1d(
         values: tp.Iterable[tp.Any],
-        dtype: DtypeSpecifier=None
+        dtype: DtypeSpecifier = None
         ) -> tp.Tuple[np.ndarray, bool]:
     '''
     Convert an arbitrary Python iterable to a 1D NumPy array without any undesirable type coercion.
@@ -856,6 +856,8 @@ def iterable_to_array_1d(
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
+        if values.ndim != 1:
+            raise RuntimeError('expected 1d array')
         if dtype is not None and dtype != values.dtype:
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
         return values, len(values) <= 1
@@ -870,7 +872,7 @@ def iterable_to_array_1d(
         return array, True
 
     if hasattr(values, 'values') and hasattr(values, 'index'):
-        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are not being used. Convert to a Series.')
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are ignored in this context. Convert to an array.')
 
     values_for_construct: tp.Sequence[tp.Any]
 
@@ -937,11 +939,16 @@ def iterable_to_array_2d(
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     '''
     if isinstance(values, np.ndarray):
-        # could check for ndim==2
+        if values.ndim != 2:
+            raise RuntimeError('expected 2d array')
         return values
 
+    if hasattr(values, 'values') and hasattr(values, 'index'):
+        raise RuntimeError(f'Supplied iterable {type(values)} appears to be labeled, though labels are ignored in this context. Convert to an array.')
+
     # consume values into a tuple
-    values = tuple(values)
+    if not hasattr(values, '__len__'):
+        values = tuple(values)
 
     # if we provide whole generator to resolve_type_iter, it will copy the entire sequence unless restrict copy is True
     dtype, _, _ = resolve_type_iter(

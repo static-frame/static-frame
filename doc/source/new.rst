@@ -5,7 +5,11 @@ What is New in Static Frame
 0.7.0
 ----------
 
-API change: `__bool__` of all containers now raises a ValueError.
+API change: ``__bool__`` of all containers now raises a ValueError.
+
+API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
+
+API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
 
 
 0.6.34

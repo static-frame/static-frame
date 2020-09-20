@@ -63,6 +63,7 @@ from static_frame.core.util import setdiff2d
 from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
+from static_frame.core.util import iterable_to_array_2d
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -802,11 +803,9 @@ class IndexHierarchy(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
-            operand = other.values
-            assume_unique = False
         else:
-            raise NotImplementedError(f'no support for {other}')
+            operand = iterable_to_array_2d(other)
+            assume_unique = False
 
         both_sized = len(operand) > 0 and len(self) > 0
 
