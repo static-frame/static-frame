@@ -778,7 +778,7 @@ class IndexHierarchy(IndexBase):
 
     def _ufunc_set(self,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> 'IndexHierarchy':
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.
@@ -804,7 +804,7 @@ class IndexHierarchy(IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
         else:
-            operand = iterable_to_array_2d(other)
+            operand = iterable_to_array_2d(other) #type: ignore
             assume_unique = False
 
         both_sized = len(operand) > 0 and len(self) > 0

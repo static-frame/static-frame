@@ -626,7 +626,7 @@ class Index(IndexBase):
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> I:
         '''
         Utility function for preparing and collecting values for Indices to produce a new Index.

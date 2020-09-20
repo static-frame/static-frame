@@ -278,11 +278,11 @@ class IndexBase(ContainerOperand):
 
     def _ufunc_set(self: I,
             func: tp.Callable[[np.ndarray, np.ndarray, bool], np.ndarray],
-            other: tp.Union['IndexBase', 'Series']
+            other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]
             ) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def intersection(self: I, *others: tp.Union['IndexBase', 'Series']) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
@@ -296,7 +296,7 @@ class IndexBase(ContainerOperand):
             post = post._ufunc_set(func, other)
         return post
 
-    def union(self: I, *others: 'IndexBase') -> I:
+    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
@@ -310,7 +310,7 @@ class IndexBase(ContainerOperand):
         return post
 
 
-    def difference(self: I, other: 'IndexBase') -> I:
+    def difference(self: I, other: tp.Union['IndexBase', tp.Iterable[tp.Hashable]]) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''

@@ -1521,7 +1521,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchy.from_labels(labels)
         with self.assertRaises(RuntimeError):
-            _ = ih1.intersection(['a', 'b']) #type: ignore
+            _ = ih1.intersection(['a', 'b'])
 
 
     def test_hierarchy_set_operators_m(self) -> None:

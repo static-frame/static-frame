@@ -896,7 +896,7 @@ class TestUnit(TestCase):
 
     def test_index_intersection_d(self) -> None:
         idx1 = Index((10, 20))
-        idx2 = idx1.intersection('b') #type: ignore
+        idx2 = idx1.intersection('b')
         self.assertEqual(len(idx2), 0)
 
     def test_index_intersection_e(self) -> None:
