@@ -2186,6 +2186,8 @@ class Frame(ContainerOperand):
                 elif typename in ['complex64', '>c8']:
                     array = np.array(data, dtype=obj[b'dtype'])
                 else:
+                    #Hypothesis coverage:
+
                     if typename == 'datetime':
                         data = [datetime.datetime.strptime(
                                 d, '%Y %a %b %d %H:%M:%S:%f') for d in data]
@@ -2217,7 +2219,9 @@ class Frame(ContainerOperand):
                             else:
                                 raise Exception('missing type!', p, c, d)
                         data = result
-                    array = np.array(data, dtype=np.object_)
+                    array = np.array(data, dtype=np.object_) #lots of hypothesis tests need to be 
+                                                             #explicitly cast back to object_
+                    #End Hypothesis coverage
                 array.flags.writeable = False
                 return array
             else:
@@ -5729,6 +5733,8 @@ class Frame(ContainerOperand):
             elif package == 'numpy':
                 #msgpack_numpy is breaking with these data types, overriding here
                 if isinstance(obj, np.ndarray):
+                    #Hypothesis coverage:
+                
                     if obj.dtype.type == np.object_:
                         typeset = list(set(map(type, obj)))
                         if len(typeset) > 1:
@@ -5760,6 +5766,9 @@ class Frame(ContainerOperand):
                             return {b'np': True,
                                     b'dtype': tname,
                                     b'data': packb(data)} #recurse packb
+                    
+                    #End Hypothesis coverage
+                    
                     elif obj.dtype.type in [np.datetime64]: 
                         data = obj.astype(str)
                         return {b'np': True,
