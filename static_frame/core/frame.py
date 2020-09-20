@@ -5744,6 +5744,8 @@ class Frame(ContainerOperand):
                                 p = a.__class__.__module__.split('.',1)[0]
                                 if p == 'datetime':
                                     d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
+                                    year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                                    d = year+' '+d.split(' ',1)[-1]
                                 elif c == 'bool':
                                     d = int(a)
                                 else:
@@ -5756,7 +5758,12 @@ class Frame(ContainerOperand):
                             t = typeset[0]
                             tname = t.__name__
                             if tname in ['datetime', 'date']:
-                                data = [a.strftime('%Y %a %b %d %H:%M:%S:%f') for a in obj]
+                                data = []
+                                for a in obj:
+                                    d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
+                                    year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                                    d = year+' '+d.split(' ',1)[-1]                              
+                                    data.append(d)
                             elif tname == 'int': #msgpack fails on a large number case from hypothesis here
                                 data = [str(a) for a in obj]
                             elif tname == 'Fraction':
