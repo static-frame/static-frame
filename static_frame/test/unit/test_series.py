@@ -519,6 +519,20 @@ class TestUnit(TestCase):
             _ = d < s2
 
 
+    def test_series_binary_operator_n(self) -> None:
+
+
+        s1 = Series([0, 1])
+        s2 = Series([1, 2, 3])
+        # when comparing reindexable containers, we get a result
+        s3 = s1 == s2
+        self.assertEqual(s3.to_pairs(),
+                ((0, False), (1, False), (2, False)))
+
+        with self.assertRaises(ValueError):
+            # an index is not a reindexable container, so this raises
+            _ = s1 == s2.index
+
 
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
