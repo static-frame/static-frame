@@ -2178,7 +2178,6 @@ class Frame(ContainerOperand):
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
                 if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
-                    print(typename, 'parsed!', data)
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64', '>c8']:
                     array = np.array(data, dtype=obj[b'dtype'])
@@ -5780,7 +5779,6 @@ class Frame(ContainerOperand):
                                 b'data': packb(data)} #recurse packb
                     elif obj.dtype.type in [np.timedelta64]: 
                         data = obj.astype(np.float64)
-                        print('timedelta64 found!', data)
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)} #recurse packb

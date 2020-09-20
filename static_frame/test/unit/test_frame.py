@@ -1244,14 +1244,7 @@ class TestUnit(TestCase):
         ih1 = sf.IndexHierarchy.from_product(tuple('ABCD'), tuple('1234'))
         ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
         f1 = sf.Frame(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
-        
-        print('f1.columns', f1.columns)
-        print('f1.index', f1.index)
-        
         msg = f1.to_msgpack()
-        print('msg', msg)
-        print('f1', f1)
-        print('f2', Frame.from_msgpack(msg))
         
         f2 = Frame.from_msgpack(msg)
         assert isinstance(f2.index, sf.IndexHierarchy)
@@ -1259,7 +1252,6 @@ class TestUnit(TestCase):
         
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        #assert False
 
     #---------------------------------------------------------------------------
 
