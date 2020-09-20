@@ -6,7 +6,6 @@ import numpy as np
 
 
 from static_frame.core.array_go import ArrayGO
-from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
