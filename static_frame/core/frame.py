@@ -2188,22 +2188,22 @@ class Frame(ContainerOperand):
                     array = np.array(data, dtype=obj[b'dtype'])
                 #elif typename in ['date', 'datetime', 'datetime.date', 'datetime.datetime']:
                 elif typename == 'datetime':
-                    print('datetime!!`!!!!')
+                    print('datetime!!!!!!')
                     array = np.array([
                             datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S') for d in data])
+                                    d, '%Y %a %b %d %H:%M:%S') for d in data], dtype=np.object_)
                     #data = [datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S') for d in data]
                     #array = np.array([datetime.datetime.strptime(a, '%a %b %d %H:%M:%S %Y') for a in data])
                 elif typename in ['date', 'datetime']:
                     print('date!!!!!!')
                     array = np.array([
                             datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S').date() for d in data])
+                                    d, '%Y %a %b %d %H:%M:%S').date() for d in data], dtype=np.object_)
                 elif typename in ['time']:
                     print('time!!!!!!')
                     array = np.array([
                             datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S').time() for d in data])
+                                    d, '%Y %a %b %d %H:%M:%S').time() for d in data], dtype=np.object_)
                     #array = np.array(data)
                 elif typename in ['timedelta']:
                     print('timedelta!!!!!!')
@@ -2212,22 +2212,22 @@ class Frame(ContainerOperand):
                 elif typename in ['Fraction']:
                     print('Fraction!!!!!!')
                     #array = np.array(data)
-                    array = np.array([fractions.Fraction(a) for a in data])
+                    array = np.array([fractions.Fraction(a) for a in data], dtype=np.object_)
                 elif typename in ['complex']:
                     print('complex!!!!!!')
                     array = np.array([complex(a) for a in data])
                 elif typename in ['NoneType']:
-                    array = np.array(data)
+                    array = np.array(data, dtype=np.object_)
                 elif typename in ['ndarray']:
                     array = np.array(data)
                 elif typename in ['int']:
-                    array = np.array([int(n) for n in data])
+                    array = np.array([int(n) for n in data], dtype=np.object_)
                 elif typename in ['float']:
-                    array = np.array([float(n) for n in data])
+                    array = np.array([float(n) for n in data], dtype=np.object_)
                 elif typename in ['str']:
-                    array = np.array([str(n) for n in data])
+                    array = np.array([str(n) for n in data], dtype=np.object_)
                 elif typename in ['bool']:
-                    array = np.array([bool(n) for n in data])
+                    array = np.array([bool(n) for n in data], dtype=np.object_)
                 elif typename in ['multitype']:
                     print('multitype received', data)
                     result = []
@@ -2271,7 +2271,7 @@ class Frame(ContainerOperand):
                             result.append(getattr(sys.modules[p], c)(d))
                         else:
                             raise Exception('missing type!', p, c, d)
-                    array = np.array(result)
+                    array = np.array(result, dtype=np.object_)
                     print('multitype array', array)
                 else:
                     print('uhoh!', obj[b'dtype'], obj)
@@ -5837,14 +5837,11 @@ class Frame(ContainerOperand):
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
                             else:
-                                #print('chainme!', obj.astype(t), obj.astype(t).dtype.type)
                                 data = [a for a in obj]
                                 print(tname, 'found else!', data, obj.dtype.type)
                                 return {b'np': True,
                                         b'dtype': tname,
                                         b'data': packb(data)} #recurse packb
-                                #print('chainme!', obj.astype(t), obj.astype(t).dtype.type)
-                                #return chain(obj.astype(t))
                             '''
                             if tname == 'complex':
                                 #data = [a for a in obj.astype(t)]
