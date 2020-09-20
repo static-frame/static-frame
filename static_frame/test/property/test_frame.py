@@ -256,7 +256,7 @@ class TestUnit(TestCase):
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         
         f2 = Frame.from_msgpack(f1.to_msgpack())
-        #assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
 
     @given(sfst.get_frame_or_frame_go(
