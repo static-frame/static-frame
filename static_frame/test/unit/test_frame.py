@@ -1179,7 +1179,7 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
-                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                index=(datetime.datetime(999, 1, 1, 0, 0), np.datetime64('2000-01-01'))
                 )
         msg = f1.to_msgpack()
         
