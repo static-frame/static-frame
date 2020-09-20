@@ -2100,14 +2100,11 @@ class Frame(ContainerOperand):
 
     @staticmethod
     @doc_inject(selector='constructor_frame')
-    def from_msgpack(msgpack_data: bin):
+    def from_msgpack(msgpack_data: bin) -> 'Frame':
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
             msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
-
-        Returns:
-            :obj
         '''
         import msgpack
         import msgpack_numpy
