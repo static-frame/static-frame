@@ -7896,6 +7896,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.name, msg)
 
+
     #---------------------------------------------------------------------------
 
     def test_frame_relabel_flat_a(self) -> None:
