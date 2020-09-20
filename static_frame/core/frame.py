@@ -2184,7 +2184,6 @@ class Frame(ContainerOperand):
                     print(typename, 'parsed!', data)
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64', '>c8']:
-                    print('complex64 parsed!', data)
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename == 'datetime':
                     array = np.array([
@@ -2194,16 +2193,8 @@ class Frame(ContainerOperand):
                     array = np.array([
                             datetime.datetime.strptime(
                                     d, '%Y %a %b %d %H:%M:%S:%f').date() for d in data], dtype=np.object_)
-                elif typename == 'time':
-                    array = np.array([
-                            datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S:%f').time() for d in data], dtype=np.object_)
-                elif typename == 'timedelta':
-                    array = np.array(data)
                 elif typename == 'Fraction':
                     array = np.array([fractions.Fraction(a) for a in data], dtype=np.object_)
-                elif typename == 'complex':
-                    array = np.array([complex(a) for a in data])
                 elif typename == 'NoneType':
                     array = np.array(data, dtype=np.object_)
                 elif typename == 'ndarray':
