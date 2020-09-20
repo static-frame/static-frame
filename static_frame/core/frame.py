@@ -2116,13 +2116,6 @@ class Frame(ContainerOperand):
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
                 if issubclass(cls, Frame):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        Frame
-                        FrameGO
-                    '''
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls(
                             blocks,
@@ -2131,14 +2124,6 @@ class Frame(ContainerOperand):
                             columns=unpackb(obj[b'columns']), #recurse unpackb
                             own_data=True)
                 elif issubclass(cls, IndexHierarchy):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
-                        IndexHierarchy
-                        IndexHierarchyGO
-                    '''
                     index_constructors=[
                             globals()[clsname] for clsname in unpackb(
                                     obj[b'index_constructors'])] #recurse unpackb
@@ -2149,29 +2134,11 @@ class Frame(ContainerOperand):
                             index_constructors=index_constructors,
                             own_blocks=True)
                 elif issubclass(cls, Index):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
-                        Index
-                        IndexGO
-                        IndexDate
-                        IndexDateTime
-                        IndexYearMonthGO
-                        IndexNanosecond #just listing some interesting ones.
-                    '''
                     data = unpackb(obj[b'data']) #recurse unpackb
                     return cls(
                             data,
                             name=obj[b'name'])
                 elif issubclass(cls, TypeBlocks):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        TypeBlocks
-                    '''
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
@@ -5673,27 +5640,12 @@ class Frame(ContainerOperand):
             package = obj.__class__.__module__.split('.',1)[0]
             if package == 'static_frame':
                 if isinstance(obj, Frame):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        Frame
-                        FrameGO
-                    '''
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'blocks':packb(obj._blocks), #recurse packb
                             b'index':packb(obj.index), #recurse packb
                             b'columns':packb(obj.columns)} #recurse packb
                 elif isinstance(obj, IndexHierarchy):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
-                        IndexHierarchy
-                        IndexHierarchyGO
-                    '''
                     if obj._recache:
                         obj._update_array_cache()
                     return {b'sf':clsname,
@@ -5702,28 +5654,10 @@ class Frame(ContainerOperand):
                                     a.__name__ for a in obj.index_types.values.tolist()]), #recurse packb
                             b'blocks':packb(obj._blocks)} #recurse packb
                 elif isinstance(obj, Index):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        *IndexBase            #CONFLICT: Index and IndexHierarchy both inherit from IndexBase.
-                        Index
-                        IndexGO
-                        IndexDate
-                        IndexDateTime
-                        IndexYearMonthGO
-                        IndexNanosecond #just listing some interesting ones.
-                    '''
                     return {b'sf':clsname,
                             b'name':obj.name,
                             b'data':packb(obj.values)} #recurse packb
                 elif isinstance(obj, TypeBlocks):
-                    '''
-                    Classes:
-                        *ContainerBase
-                        *ContainerOperand
-                        TypeBlocks
-                    '''
                     return {b'sf':clsname,
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
