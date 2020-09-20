@@ -718,9 +718,8 @@ def apply_binary_operator(*,
         result = operator(values, other)
 
     if result is False or result is True:
-        # in comparison to Booleans, if values is of length 1 and a character type, we will get a Boolean back, not an array; this issues the following warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-        # if the arguement is a tuple of length equal to an erray, NP will perform element wise comparison; but if the argment is a tuple of length greater or equal, each value in value will be compared to that tuple
-        result = np.full(values.shape, result)
+        raise ValueError('operands could not be broadcast together')
+        # in a number of situations due to dtype or unaligned shapes, NP returns a single Boolean; this is generally undesirable.
 
     result.flags.writeable = False
     return result

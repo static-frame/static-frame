@@ -1758,14 +1758,13 @@ class TestUnit(TestCase):
                 )
         ih2 = IndexHierarchy.from_labels(labels2)
 
-        # for now, this returns na array of the shape of the left-hand opperatnd
-        post1 = ih1 != ih2
-        self.assertEqual(post1.shape, (2, 2))
-        self.assertEqual(post1.all(), True)
+        with self.assertRaises(ValueError):
+            _ = ih1 != ih2
 
-        post2 = ih1 == ih2
-        self.assertEqual(post2.shape, (2, 2))
-        self.assertEqual(post2.any(), False)
+        with self.assertRaises(ValueError):
+            _ = ih1 == ih2
+
+        self.assertFalse(ih1.equals(ih2))
 
     def test_hierarchy_binary_operators_i(self) -> None:
 

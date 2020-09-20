@@ -405,20 +405,17 @@ class TestUnit(TestCase):
                 (('a', False), ('b', True), ('c', False), ('d', True)))
         self.assertEqual((s1 == True).name, 'foo') #pylint: disable=C0121
 
-        # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
-
         self.assertEqual((s1 == (True,)).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', True)))
-
-        self.assertEqual((s1 == (True, False)).to_pairs(),
-                (('a', False), ('b', False), ('c', False), ('d', False)))
-
         # as this is samed sized, NP does element wise comparison
         self.assertEqual((s1 == (False, True, False, True)).to_pairs(),
                 (('a', True), ('b', True), ('c', True), ('d', True)))
 
-        self.assertEqual((s1 == (False, True, False, True, False)).to_pairs(),
-                (('a', False), ('b', False), ('c', False), ('d', False)))
+        # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
+        with self.assertRaises(ValueError):
+            _ = s1 == (True, False)
+        with self.assertRaises(ValueError):
+            _ = s1 == (False, True, False, True, False)
 
     def test_series_binary_operator_f(self) -> None:
         r = Series(['100312', '101376', '100828', '101214', '100185'])

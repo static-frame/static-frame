@@ -3580,8 +3580,8 @@ class TestUnit(TestCase):
                 ((0, True),))
 
         # this handles the case where, because we are comparing to an empty string, NumPy returns a single Boolean. This is manually handled in Series._ufunc_binary_operator
-        self.assertEqual((f1['r'] == True).to_pairs(), # pylint: disable=C0121
-                ((0, False),))
+        with self.assertRaises(ValueError):
+            _ = f1['r'] == True
 
 
     def test_frame_binary_operator_e(self) -> None:

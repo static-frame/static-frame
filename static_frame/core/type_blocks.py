@@ -2579,7 +2579,11 @@ class TypeBlocks(ContainerOperand):
             return False
 
         # NOTE: TypeBlocks handles array operations that return Boolean
-        eq = self == other # returns a Boolean TypeBlocks instance
+        try:
+            eq = self == other # returns a Boolean TypeBlocks instance
+        except ValueError:
+            # this can happen due to NP returning singel Booleans instaed of arrays
+            return False
 
         if skipna:
             isna_self = self.isna(include_none=False) # returns type blocks
