@@ -5757,24 +5757,15 @@ class Frame(ContainerOperand):
                             tname = t.__name__
                             if tname in ['datetime', 'date']:
                                 data = [a.strftime('%Y %a %b %d %H:%M:%S:%f') for a in obj]
-                                return {b'np': True,
-                                        b'dtype': tname,
-                                        b'data': packb(data)} #recurse packb
-                            elif tname == 'int': #msgpack fails on a large number case here
+                            elif tname == 'int': #msgpack fails on a large number case from hypothesis here
                                 data = [str(a) for a in obj]
-                                return {b'np': True,
-                                        b'dtype': tname,
-                                        b'data': packb(data)} #recurse packb
                             elif tname == 'Fraction':
                                 data = [str(a) for a in obj.astype(t)]
-                                return {b'np': True,
-                                        b'dtype': tname,
-                                        b'data': packb(data)} #recurse packb
                             else:
                                 data = [a for a in obj]
-                                return {b'np': True,
-                                        b'dtype': tname,
-                                        b'data': packb(data)} #recurse packb
+                            return {b'np': True,
+                                    b'dtype': tname,
+                                    b'data': packb(data)} #recurse packb
                     elif obj.dtype.type in [np.datetime64]: 
                         data = obj.astype(str)
                         return {b'np': True,
