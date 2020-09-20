@@ -2230,18 +2230,6 @@ class Frame(ContainerOperand):
                             result.append(None)
                         elif p == 'builtins':
                             result.append(globals()['__builtins__'][c](d))
-                        elif p in locals():
-                            result.append(getattr(locals()[p], c)(d))
-                        elif c in locals():
-                            result.append(locals()[c](d))
-                        elif typ in locals():
-                            result.append(locals()[typ](d))
-                        elif p in globals():
-                            result.append(getattr(globals()[p], c)(d))
-                        elif c in globals():
-                            result.append(globals()[c](d))
-                        elif typ in globals():
-                            result.append(globals()[typ](d))
                         elif p in sys.modules:
                             result.append(getattr(sys.modules[p], c)(d))
                         else:
