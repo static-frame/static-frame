@@ -2185,45 +2185,39 @@ class Frame(ContainerOperand):
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename in ['complex64', '>c8']:
                     array = np.array(data, dtype=obj[b'dtype'])
-                elif typename == 'datetime':
-                    array = np.array([
-                            datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S:%f') for d in data], dtype=np.object_)
-                elif typename == 'date':
-                    array = np.array([
-                            datetime.datetime.strptime(
-                                    d, '%Y %a %b %d %H:%M:%S:%f').date() for d in data], dtype=np.object_)
-                elif typename == 'Fraction':
-                    array = np.array([fractions.Fraction(a) for a in data], dtype=np.object_)
-                elif typename == 'NoneType':
-                    array = np.array(data, dtype=np.object_)
-                elif typename == 'ndarray':
-                    array = np.array(data)
-                elif typename == 'int':
-                    array = np.array([int(n) for n in data], dtype=np.object_)
-                elif typename == 'float':
-                    array = np.array([float(n) for n in data], dtype=np.object_)
-                elif typename == 'multitype':
-                    result = []
-                    for (typ, d) in data:
-                        p = typ.split('.',1)[0]
-                        c = typ.split('.',1)[-1]
-                        if p == 'datetime':
-                            D = datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
-                            if c == 'date':
-                                D = D.date()
-                            result.append(D)
-                        elif c == 'NoneType':
-                            result.append(None)
-                        elif p == 'builtins':
-                            result.append(globals()['__builtins__'][c](d))
-                        elif p in sys.modules:
-                            result.append(getattr(sys.modules[p], c)(d))
-                        else:
-                            raise Exception('missing type!', p, c, d)
-                    array = np.array(result, dtype=np.object_)
                 else:
-                    return chain(obj)
+                    if typename == 'datetime':
+                        data = [datetime.datetime.strptime(
+                                d, '%Y %a %b %d %H:%M:%S:%f') for d in data]
+                    elif typename == 'date':
+                        data = [datetime.datetime.strptime(
+                                d, '%Y %a %b %d %H:%M:%S:%f').date() for d in data]
+                    elif typename == 'Fraction':
+                        data = [fractions.Fraction(a) for a in data]
+                    elif typename == 'int':
+                        data = [int(n) for n in data]
+                    elif typename == 'float':
+                        data = [float(n) for n in data]
+                    elif typename == 'multitype':
+                        result = []
+                        for (typ, d) in data:
+                            p = typ.split('.',1)[0]
+                            c = typ.split('.',1)[-1]
+                            if p == 'datetime':
+                                D = datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
+                                if c == 'date':
+                                    D = D.date()
+                                result.append(D)
+                            elif c == 'NoneType':
+                                result.append(None)
+                            elif p == 'builtins':
+                                result.append(globals()['__builtins__'][c](d))
+                            elif p in sys.modules:
+                                result.append(getattr(sys.modules[p], c)(d))
+                            else:
+                                raise Exception('missing type!', p, c, d)
+                        data = result
+                    array = np.array(data, dtype=np.object_)
                 array.flags.writeable = False
                 return array
             else:
