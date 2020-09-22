@@ -2108,7 +2108,7 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        import datetime
+        from datetime import datetime
         import fractions
         import sys
         def decode(obj, chain=msgpack_numpy.decode):
@@ -2142,46 +2142,40 @@ class Frame(ContainerOperand):
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
+                #Parse overridden numpy datatypes
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
+                
                 if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
                     array = np.array(data, dtype=obj[b'dtype'])
-                else:
+                elif typename == 'object_':
                     #Hypothesis coverage:
-
-                    if typename == 'datetime':
-                        data = [datetime.datetime.strptime(
-                                d, '%Y %a %b %d %H:%M:%S:%f') for d in data]
-                    elif typename == 'date':
-                        data = [datetime.datetime.strptime(
-                                d, '%Y %a %b %d %H:%M:%S:%f').date() for d in data]
-                    elif typename == 'Fraction':
-                        data = [fractions.Fraction(a) for a in data]
-                    elif typename == 'int':
-                        data = [int(n) for n in data]
-                    elif typename == 'float':
-                        data = [float(n) for n in data]
-                    elif typename == 'multitype':
-                        result = []
-                        for (typ, d) in data:
-                            p = typ.split('.',1)[0]
-                            c = typ.split('.',1)[-1]
-                            if p == 'datetime':
-                                D = datetime.datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
-                                if c == 'date':
-                                    D = D.date()
-                                result.append(D)
-                            elif c == 'NoneType':
-                                result.append(None)
-                            elif p == 'builtins':
-                                result.append(globals()['__builtins__'][c](d))
-                            elif p in sys.modules:
-                                result.append(getattr(sys.modules[p], c)(d))
-                            else:
-                                raise Exception('missing type!', p, c, d)
-                        data = result
-                    array = np.array(data, dtype=np.object_) #lots of hypothesis tests need to be 
-                                                             #explicitly cast back to object_
+                    
+                    result = []
+                    for (typ, d) in data:
+                        p = typ.split('.',1)[0]
+                        c = typ.split('.',1)[-1]
+                        if p == 'datetime':
+                            D = datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
+                            if c == 'date':
+                                D = D.date()
+                            result.append(D)
+                        elif c == 'NoneType':
+                            result.append(None)
+                        elif c == 'Fraction':
+                            result.append(fractions.Fraction(d)) 
+                        elif c == 'int':
+                            result.append(int(d)) 
+                        elif c == 'ndarray':
+                            result.append(unpackb(d)) #recurse unpackb
+                        elif p == 'builtins':
+                            result.append(globals()['__builtins__'][c](d))
+                        elif p in sys.modules:
+                            result.append(getattr(sys.modules[p], c)(d))
+                        else:
+                            raise Exception('missing type!', p, c, d)
+                    array = np.array(result, dtype=np.object_) #lots of hypothesis tests need to be 
+                                                               #explicitly cast back to object_
                     #End Hypothesis coverage
                 array.flags.writeable = False
                 return array
@@ -5662,48 +5656,33 @@ class Frame(ContainerOperand):
                 #msgpack_numpy is breaking with these data types, overriding here
                 if isinstance(obj, np.ndarray):
                     #Hypothesis coverage:
-                
+
                     if obj.dtype.type == np.object_:
-                        typeset = list(set(map(type, obj)))
-                        if len(typeset) > 1:
-                            data = []
-                            for a in obj:
-                                c = a.__class__.__name__
-                                p = a.__class__.__module__.split('.',1)[0]
-                                if p == 'datetime':
-                                    d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
-                                    year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-                                    d = year+' '+d.split(' ',1)[-1]
-                                elif c == 'bool':
-                                    d = int(a)
-                                else:
-                                    d = str(a)
-                                data.append((p+'.'+c, d))
-                            return {b'np': True,
-                                    b'dtype': 'multitype',
-                                    b'data': packb(data)} #recurse packb
-                        else:
-                            t = typeset[0]
-                            tname = t.__name__
-                            if tname in ['datetime', 'date']:
-                                data = []
-                                for a in obj:
-                                    d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
-                                    year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-                                    d = year+' '+d.split(' ',1)[-1]                              
-                                    data.append(d)
-                            elif tname == 'int': #msgpack fails on a large number case from hypothesis here
-                                data = [str(a) for a in obj]
-                            elif tname == 'Fraction':
-                                data = [str(a) for a in obj.astype(t)]
+                        result = []
+                        for a in obj:
+                            c = a.__class__.__name__
+                            p = a.__class__.__module__.split('.',1)[0]
+                            if p == 'datetime':
+                                d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
+                                year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                                d = year+' '+d.split(' ',1)[-1]
+                            elif c == 'bool':
+                                d = int(a)
+                            elif c == 'ndarray':
+                                d = packb(a) #recurse packb
+                                print('recurse packb', a, d)
+                            elif c == 'Fraction':
+                                d = str(a)
+                            elif c == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
+                                d = str(a)
                             else:
-                                data = [a for a in obj]
-                            return {b'np': True,
-                                    b'dtype': tname,
-                                    b'data': packb(data)} #recurse packb
-                    
+                                d = a
+                            result.append((p+'.'+c, d))
+                        return {b'np': True,
+                                b'dtype': 'object_',
+                                b'data': packb(result)} #recurse packb
+
                     #End Hypothesis coverage
-                    
                     elif obj.dtype.type in [np.datetime64]: 
                         data = obj.astype(str)
                         return {b'np': True,
