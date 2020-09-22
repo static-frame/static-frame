@@ -2111,6 +2111,20 @@ class Frame(ContainerOperand):
         from datetime import datetime
         import fractions
         import sys
+        def msgpack_fixes(typ, d):
+            #Hypothesis coverage
+            if typ == 'datetime':
+                return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
+            elif typ == 'date':
+                return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f').date()
+            elif typ == 'Fraction':
+                return fractions.Fraction(d)
+            elif typ == 'int':
+                return int(d)
+            elif typ == 'ndarray':
+                return unpackb(d) #recurse unpackb
+            else:
+                return d
         def decode(obj, chain=msgpack_numpy.decode):
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -2142,35 +2156,14 @@ class Frame(ContainerOperand):
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
-                #Parse overridden numpy datatypes
+                #Overridden numpy datatypes
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
-                
                 if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
                     array = np.array(data, dtype=obj[b'dtype'])
                 elif typename == 'object_':
-                    #Hypothesis coverage:
-                    
-                    result = []
-                    for (typ, d) in data:
-                        p = typ.split('.',1)[0]
-                        c = typ.split('.',1)[-1]
-                        if p == 'datetime':
-                            D = datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
-                            if c == 'date':
-                                D = D.date()
-                            result.append(D)
-                        elif c == 'Fraction':
-                            result.append(fractions.Fraction(d)) 
-                        elif c == 'int':
-                            result.append(int(d)) 
-                        elif c == 'ndarray':
-                            result.append(unpackb(d)) #recurse unpackb
-                        else:
-                            result.append(d)
-                    array = np.array(result, dtype=np.object_) #lots of hypothesis tests need to be 
-                                                               #explicitly cast back to object_
-                    #End Hypothesis coverage
+                    result = [msgpack_fixes(typ, d) for (typ, d) in data]
+                    array = np.array(result, dtype=np.object_)
                 array.flags.writeable = False
                 return array
             else:
@@ -5621,6 +5614,22 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         import datetime
+        def msgpack_fixes(a):
+            #Hypothesis coverage
+            typ = a.__class__.__name__
+            if typ in ['datetime', 'date']:
+                d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
+                year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                d = year+' '+d.split(' ',1)[-1]
+                return (typ, d)
+            elif typ == 'ndarray':
+                return (typ, packb(a)) #recurse packb
+            elif typ == 'Fraction':
+                return (typ,  str(a))
+            elif typ == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
+                return (typ, str(a))
+            else:
+                return ('', a)
         def encode(obj, chain=msgpack_numpy.encode):
             clsname = obj.__class__.__name__
             package = obj.__class__.__module__.split('.',1)[0]
@@ -5649,31 +5658,11 @@ class Frame(ContainerOperand):
             elif package == 'numpy':
                 #msgpack_numpy is breaking with these data types, overriding here
                 if isinstance(obj, np.ndarray):
-                    #Hypothesis coverage:
-
                     if obj.dtype.type == np.object_:
-                        def msgpack_fixes(a):
-                            c = a.__class__.__name__
-                            p = a.__class__.__module__.split('.',1)[0]
-                            if p == 'datetime':
-                                d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
-                                year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-                                d = year+' '+d.split(' ',1)[-1]
-                            elif c == 'ndarray':
-                                d = packb(a) #recurse packb
-                            elif c == 'Fraction':
-                                d = str(a)
-                            elif c == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
-                                d = str(a)
-                            else:
-                                d = a
-                            return (p+'.'+c, d)
                         data = [msgpack_fixes(a) for a in obj]
                         return {b'np': True,
                                 b'dtype': 'object_',
                                 b'data': packb(data)} #recurse packb
-
-                    #End Hypothesis coverage
                     elif obj.dtype.type in [np.datetime64]: 
                         data = obj.astype(str)
                         return {b'np': True,
