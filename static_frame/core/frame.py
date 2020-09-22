@@ -2160,20 +2160,14 @@ class Frame(ContainerOperand):
                             if c == 'date':
                                 D = D.date()
                             result.append(D)
-                        elif c == 'NoneType':
-                            result.append(None)
                         elif c == 'Fraction':
                             result.append(fractions.Fraction(d)) 
                         elif c == 'int':
                             result.append(int(d)) 
                         elif c == 'ndarray':
                             result.append(unpackb(d)) #recurse unpackb
-                        elif p == 'builtins':
-                            result.append(globals()['__builtins__'][c](d))
-                        elif p in sys.modules:
-                            result.append(getattr(sys.modules[p], c)(d))
                         else:
-                            raise Exception('missing type!', p, c, d)
+                            result.append(d)
                     array = np.array(result, dtype=np.object_) #lots of hypothesis tests need to be 
                                                                #explicitly cast back to object_
                     #End Hypothesis coverage
@@ -5666,8 +5660,6 @@ class Frame(ContainerOperand):
                                 d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
                                 year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
                                 d = year+' '+d.split(' ',1)[-1]
-                            elif c == 'bool':
-                                d = int(a)
                             elif c == 'ndarray':
                                 d = packb(a) #recurse packb
                             elif c == 'Fraction':
