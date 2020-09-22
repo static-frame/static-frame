@@ -5652,8 +5652,7 @@ class Frame(ContainerOperand):
                     #Hypothesis coverage:
 
                     if obj.dtype.type == np.object_:
-                        result = []
-                        for a in obj:
+                        def msgpack_fixes(a):
                             c = a.__class__.__name__
                             p = a.__class__.__module__.split('.',1)[0]
                             if p == 'datetime':
@@ -5668,10 +5667,11 @@ class Frame(ContainerOperand):
                                 d = str(a)
                             else:
                                 d = a
-                            result.append((p+'.'+c, d))
+                            return (p+'.'+c, d)
+                        data = [msgpack_fixes(a) for a in obj]
                         return {b'np': True,
                                 b'dtype': 'object_',
-                                b'data': packb(result)} #recurse packb
+                                b'data': packb(data)} #recurse packb
 
                     #End Hypothesis coverage
                     elif obj.dtype.type in [np.datetime64]: 
