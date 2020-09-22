@@ -1496,6 +1496,7 @@ class Frame(ContainerOperand):
 
     @classmethod
     @doc_inject(selector='constructor_frame')
+    @profile
     def from_delimited(cls,
             fp: PathSpecifierOrFileLikeOrIterator,
             *,
