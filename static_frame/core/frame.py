@@ -2146,8 +2146,6 @@ class Frame(ContainerOperand):
                 typename = obj[b'dtype'].split('[',1)[0]
                 if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
                     array = np.array(data, dtype=obj[b'dtype'])
-                elif typename in ['complex64', '>c8']:
-                    array = np.array(data, dtype=obj[b'dtype'])
                 else:
                     #Hypothesis coverage:
 
@@ -5713,11 +5711,6 @@ class Frame(ContainerOperand):
                                 b'data': packb(data)} #recurse packb
                     elif obj.dtype.type in [np.timedelta64]: 
                         data = obj.astype(np.float64)
-                        return {b'np': True,
-                                b'dtype': str(obj.dtype),
-                                b'data': packb(data)} #recurse packb
-                    elif obj.dtype.type in [np.complex64]: 
-                        data = [a for a in obj]
                         return {b'np': True,
                                 b'dtype': str(obj.dtype),
                                 b'data': packb(data)} #recurse packb
