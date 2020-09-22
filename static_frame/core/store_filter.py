@@ -3,7 +3,7 @@ import typing as tp
 
 import numpy as np
 
-
+from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_INT_KINDS
@@ -14,23 +14,29 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import EMPTY_SET
 from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-
+from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
+from static_frame.core.util import NAT
+from static_frame.core.util import NAT_STR
+from static_frame.core.util import DT64_YEAR
+from static_frame.core.util import DT64_MONTH
 
 # from static_frame.core.util import InexactTypes
 
-class StoreFilter:
+class StoreFilter(metaclass=InterfaceMeta):
     '''
     Utility for defining and applying translation of values going to and from a data store, as needed for XLSX and other writers.
     '''
 
     __slots__ = (
             'from_nan',
+            'from_nat',
             'from_none',
             'from_posinf',
             'from_neginf',
             'to_nan',
+            'to_nat',
             'to_none',
             'to_posinf',
             'to_neginf',
@@ -50,12 +56,14 @@ class StoreFilter:
 
     # from type to string (encoding into the data store)
     from_nan: tp.Optional[str]
+    from_nat: tp.Optional[str]
     from_none: tp.Optional[str]
     from_posinf: tp.Optional[str]
     from_neginf: tp.Optional[str]
 
     # from string to type (decoding from the data store)
     to_nan: tp.FrozenSet[str]
+    to_nat: tp.FrozenSet[str]
     to_none: tp.FrozenSet[str]
     to_posinf: tp.FrozenSet[str]
     to_neginf: tp.FrozenSet[str]
@@ -72,14 +80,16 @@ class StoreFilter:
     _TYPE_TO_TO_SET: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
     _TYPE_TO_TO_TUPLE: tp.Tuple[tp.Tuple[tp.Any, tp.Tuple[str, ...]], ...]
 
-    def __init__(self,
+    def __init__(self, *,
             # from type to str
             from_nan: tp.Optional[str] = '',
+            from_nat: tp.Optional[str] = '',
             from_none: tp.Optional[str] = 'None',
             from_posinf: tp.Optional[str] = 'inf',
             from_neginf: tp.Optional[str] = '-inf',
             # str to type
             to_nan: tp.FrozenSet[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
+            to_nat: tp.FrozenSet[str] = frozenset(EMPTY_TUPLE), # do not assume there are NaTs.
             to_none: tp.FrozenSet[str] = frozenset(('None',)),
             to_posinf: tp.FrozenSet[str] = frozenset(('inf',)),
             to_neginf: tp.FrozenSet[str] = frozenset(('-inf',)),
@@ -91,11 +101,13 @@ class StoreFilter:
             ) -> None:
 
         self.from_nan = from_nan
+        self.from_nat = from_nat
         self.from_none = from_none
         self.from_posinf = from_posinf
         self.from_neginf = from_neginf
 
         self.to_nan = to_nan
+        self.to_nat = to_nat
         self.to_none = to_none
         self.to_posinf = to_posinf
         self.to_neginf = to_neginf
@@ -129,8 +141,11 @@ class StoreFilter:
                 (lambda x: np.equal(x, -np.inf), self.from_neginf)
                 )
 
+        #-----------------------------------------------------------------------
+        # these are used for converting from strings to types
         self._TYPE_TO_TO_SET = (
                 (np.nan, self.to_nan),
+                (NAT, self.to_nat),
                 (None, self.to_none),
                 (np.inf, self.to_posinf),
                 (-np.inf, self.to_neginf)
@@ -139,6 +154,7 @@ class StoreFilter:
         # for using isin, cannot use a set, so pre-convert to tuples here
         self._TYPE_TO_TO_TUPLE = (
                 (np.nan, tuple(self.to_nan)),
+                (NAT, tuple(self.to_nat)),
                 (None, tuple(self.to_none)),
                 (np.inf, tuple(self.to_posinf)),
                 (-np.inf, tuple(self.to_neginf)),
@@ -247,7 +263,20 @@ class StoreFilter:
             return array_final
 
         if kind in DTYPE_NAT_KINDS:
-            raise NotImplementedError() # np.isnat
+            post = None
+            if array.dtype == DT64_YEAR or array.dtype == DT64_MONTH:
+                post = array.astype(str) # nat will go to "NaT"
+
+            if post is not None and post.dtype.kind in DTYPE_STR_KINDS:
+                is_nat = post == NAT_STR
+            else: # still datetime
+                is_nat = np.isnat(array)
+
+            # we always force datetime64 to object, as most formats (i.e., XLSX) are not prepared to write them
+            post = post if post is not None else array.astype(DTYPE_OBJECT)
+            if is_nat.any():
+                post[is_nat] = self.from_nat
+            return post if post is not None else array
 
         raise NotImplementedError(f'no handling for dtype {dtype}') #pragma: no cover
 
@@ -271,6 +300,11 @@ class StoreFilter:
                         continue
                     if func(value):
                         return value_replace
+        if isinstance(value, np.datetime64):
+            if np.isnat(value):
+                value = self.from_nat
+            elif value.dtype == DT64_YEAR or value.dtype == DT64_MONTH:
+                value = str(value) # convert year, month to string
 
         if self._value_format_active:
             if is_float:

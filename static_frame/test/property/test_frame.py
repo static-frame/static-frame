@@ -14,19 +14,15 @@ from hypothesis import given
 
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.interface import UFUNC_AXIS_SKIPNA
+from static_frame.core.interface import UFUNC_BINARY_OPERATORS
+from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.core.series import Series
-from static_frame.core.container import _UFUNC_UNARY_OPERATORS
-from static_frame.core.container import _UFUNC_BINARY_OPERATORS
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import isna_element
-
 from static_frame.test.property import strategies as sfst
-from static_frame.test.test_case import temp_file
-
-from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
-
-
+from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
@@ -50,7 +46,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_unary_operators_numeric(self, f1: Frame) -> None:
-        for op in _UFUNC_UNARY_OPERATORS:
+        for op in UFUNC_UNARY_OPERATORS:
             if op == '__invert__': # invalid on non Boolean
                 continue
             func = getattr(operator, op)
@@ -63,7 +59,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_unary_operators_boolean(self, f1: Frame) -> None:
-        for op in _UFUNC_UNARY_OPERATORS:
+        for op in UFUNC_UNARY_OPERATORS:
             if op != '__invert__': # valid on Boolean
                 continue
             func = getattr(operator, op)
@@ -74,7 +70,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.NUMERIC))
     def test_binary_operators_numeric(self, f1: Frame) -> None:
-        for op in _UFUNC_BINARY_OPERATORS:
+        for op in UFUNC_BINARY_OPERATORS:
             if op in {
                     '__matmul__',
                     '__pow__',
@@ -97,7 +93,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
     def test_binary_operators_boolean(self, f1: Frame) -> None:
-        for op in _UFUNC_BINARY_OPERATORS:
+        for op in UFUNC_BINARY_OPERATORS:
             if op not in {
                     '__and__',
                     '__xor__',
@@ -228,7 +224,7 @@ class TestUnit(TestCase):
     def test_frame_to_pandas(self, f1: Frame) -> None:
         post = f1.to_pandas()
         self.assertTrue(post.shape == f1.shape)
-        if not f1.isna().any().any(): # type: ignore
+        if not f1.isna().any().any():
             self.assertTrue((post.values == f1.values).all())
 
 

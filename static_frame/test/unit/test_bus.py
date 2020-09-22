@@ -1,4 +1,6 @@
 import unittest
+from datetime import date
+from datetime import datetime
 # from io import StringIO
 import numpy as np
 
@@ -7,18 +9,20 @@ from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred
 
 from static_frame.core.series import Series
-
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store_zip import StoreZipTSV
 
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfig
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
+
+
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_win
 
-# from static_frame.test.test_case import skip_win
+
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import StoreFileMutation
 
@@ -218,36 +222,6 @@ class TestUnit(TestCase):
             self.assertEqual(b2.dtypes.to_pairs(0),
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
-
-
-    def test_bus_mloc_a(self) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='f1')
-        f2 = Frame.from_dict(
-                dict(c=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='f2')
-        f3 = Frame.from_dict(
-                dict(d=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='f3')
-
-        b1 = Bus.from_frames((f1, f2, f3))
-
-        with temp_file('.zip') as fp:
-            b1.to_zip_pickle(fp)
-            b2 = Bus.from_zip_pickle(fp)
-
-            f2_loaded = b2['f2']
-
-            mloc1 = b2.mloc
-
-            f3_loaded = b2['f3']
-            f1_loaded = b2['f1']
-
-            self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
 
 
     @skip_win # type: ignore
@@ -461,7 +435,7 @@ class TestUnit(TestCase):
                     (('f2', True), ('f3', True))
                     )
 
-
+    #---------------------------------------------------------------------------
     def test_bus_to_xlsx_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -567,6 +541,62 @@ class TestUnit(TestCase):
 
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
+
+
+    def test_bus_to_xlsx_e(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+
+            config = StoreConfig(include_index=True, index_depth=1)
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2):
+            self.assertTrue(frame.equals(b2[frame.name]))
+
+
+    def test_bus_to_xlsx_f(self) -> None:
+        f = Frame.from_records([
+                [np.datetime64('1983-02-20 05:34:18.763'), np.datetime64('2020-08-01')],
+                [np.datetime64('1975-03-20 05:20:18.001'), np.datetime64('2020-07-31')]
+                ],
+                columns=(date(2020, 7, 31), date(2020, 8, 1)),
+                index=(datetime(2020, 7, 31, 14, 20, 8), datetime(2017, 4, 28, 2, 30, 2)),
+                name='frame')
+        b1 = Bus.from_frames([f])
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+
+            config = StoreConfig(include_index=True, index_depth=1)
+            b2 = Bus.from_xlsx(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        self.assertEqual(b2['frame'].index.values.tolist(),
+                [datetime(2020, 7, 31, 14, 20, 8),
+                datetime(2017, 4, 28, 2, 30, 2)])
+
+        self.assertEqual(b2['frame'].index.values.tolist(),
+                [datetime(2020, 7, 31, 14, 20, 8),
+                datetime(2017, 4, 28, 2, 30, 2)])
+
+        self.assertEqual(b2['frame'].values.tolist(),
+                [[datetime(1983, 2, 20, 5, 34, 18, 763000), datetime(2020, 8, 1, 0, 0)], [datetime(1975, 3, 20, 5, 20, 18, 1000), datetime(2020, 7, 31, 0, 0)]]
+)
+
+
 
 
     #---------------------------------------------------------------------------
@@ -715,6 +745,54 @@ class TestUnit(TestCase):
         self.assertFalse(b1.equals(b5))
         self.assertFalse(b1.equals(b6))
 
+    def test_bus_equals_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        self.assertTrue(b1.equals(b1))
+
+        class BusDerived(Bus): pass
+
+        b2 = BusDerived.from_frames((f1, f2, f3))
+
+        self.assertFalse(b1.equals(b2, compare_class=True))
+        self.assertTrue(b1.equals(b2, compare_class=False))
+        self.assertFalse(b1.equals('foo', compare_class=False))
+
+
+    def test_bus_equals_c(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2), name='foo')
+        self.assertEqual(b1.name, 'foo')
+
+        b2 = Bus.from_frames((f1, f2), name='bar')
+        self.assertEqual(b2.name, 'bar')
+
+        self.assertTrue(b1.equals(b2))
+        self.assertFalse(b1.equals(b2, compare_name=True))
+
+
     #---------------------------------------------------------------------------
 
 
@@ -740,7 +818,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_bus_mlox_a(self) -> None:
+    def test_bus_mloc_a(self) -> None:
 
         f1 = Frame.from_dict(
                 dict(a=(1,2,3)),
@@ -758,6 +836,118 @@ class TestUnit(TestCase):
             self.assertEqual(mloc.to_pairs(),
                     (('f1', None),))
 
+
+    def test_bus_mloc_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+
+        f2 = Frame.from_dict(
+                dict(x=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        b1 = Bus.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+            b2 = Bus.from_xlsx(fp, config=config)
+
+            # only show memory locations for loaded Frames
+            self.assertTrue(b2.iloc[1].equals(f2))
+            self.assertEqual((b2.mloc == None).to_pairs(), #pylint: disable=C0121
+                    (('f1', True), ('f2', False)))
+
+    def test_bus_mloc_c(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+
+            f2_loaded = b2['f2']
+
+            mloc1 = b2.mloc
+
+            f3_loaded = b2['f3']
+            f1_loaded = b2['f1']
+
+            self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
+
+    #---------------------------------------------------------------------------
+    def test_bus_update_series_cache_iloc(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+
+        # simulating a Bus with a FrameDefferred but no Store, just for testing
+        s1 = Series((f1, FrameDeferred), index=('p', 'q'))
+        b1 = Bus(s1, config=config)
+        self.assertFalse(b1._loaded_all)
+
+        with self.assertRaises(RuntimeError):
+            b1._update_series_cache_iloc(1)
+
+    #---------------------------------------------------------------------------
+    def test_bus_extract_loc_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+
+        # do not support IndexHierarchy, as lables are tuples, not strings
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus(s1)
+
+
+    #---------------------------------------------------------------------------
+    def test_bus_values_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2,3)),
+                index=('x', 'y', 'z'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(A=(10,20,30)),
+                index=('q', 'r', 's'),
+                name='f2')
+
+        b1 = Bus.from_frames((f1, f2))
+        post = b1.values.tolist()
+        self.assertTrue(f1.equals(post[0]))
+        self.assertTrue(f2.equals(post[1]))
 
 
 if __name__ == '__main__':

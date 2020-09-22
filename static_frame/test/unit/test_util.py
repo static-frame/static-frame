@@ -12,6 +12,7 @@ from static_frame.core.util import _gen_skip_middle
 from static_frame.core.util import _isin_1d
 from static_frame.core.util import _isin_2d
 from static_frame.core.util import _read_url
+from static_frame.core.util import _ufunc_logical_skipna
 from static_frame.core.util import _ufunc_set_1d
 from static_frame.core.util import _ufunc_set_2d
 from static_frame.core.util import argmax_1d
@@ -26,7 +27,7 @@ from static_frame.core.util import column_1d_filter
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import isin
@@ -47,12 +48,15 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import slices_from_targets
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import ufunc_all
+from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_axis_skipna
+from static_frame.core.util import ufunc_nanall
+from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
-
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 
@@ -1069,14 +1073,14 @@ class TestUnit(TestCase):
 
     def test_dtype_to_na_a(self) -> None:
 
-        self.assertEqual(dtype_to_na(np.dtype(int)), 0)
-        self.assertTrue(np.isnan(dtype_to_na(np.dtype(float))))
-        self.assertEqual(dtype_to_na(np.dtype(bool)), False)
-        self.assertEqual(dtype_to_na(np.dtype(object)), None)
-        self.assertEqual(dtype_to_na(np.dtype(str)), '')
+        self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
+        self.assertTrue(np.isnan(dtype_to_fill_value(np.dtype(float))))
+        self.assertEqual(dtype_to_fill_value(np.dtype(bool)), False)
+        self.assertEqual(dtype_to_fill_value(np.dtype(object)), None)
+        self.assertEqual(dtype_to_fill_value(np.dtype(str)), '')
 
         with self.assertRaises(NotImplementedError):
-            _ = dtype_to_na(np.dtype('V'))
+            _ = dtype_to_fill_value(np.dtype('V'))
 
     #---------------------------------------------------------------------------
 
@@ -1226,6 +1230,26 @@ class TestUnit(TestCase):
         # intersect 2D with 1D of tuples results in 1D of tuples
         post1 = _ufunc_set_2d(np.intersect1d, a1, a2)
         self.assertEqual(post1[0], (0, 1))
+
+    def test_set_ufunc2d_j(self) -> None:
+
+        a1 = np.empty(2, dtype=object)
+        a1[:] =((0, 1), (3, 4))
+        a2 = np.empty(2, dtype=object)
+        a2[:] =((0, 1), (3, 4))
+
+        post1 = _ufunc_set_2d(np.setdiff1d, a1, a2, assume_unique=True)
+        self.assertEqual(len(post1), 0)
+
+    def test_set_ufunc2d_k(self) -> None:
+
+        a1 = np.array(())
+        a2 = np.empty(2, dtype=object)
+        a2[:] =((0, 1), (3, 4))
+
+        post1 = _ufunc_set_2d(np.setdiff1d, a1, a2)
+        self.assertEqual(len(post1), 0)
+
 
     #---------------------------------------------------------------------------
 
@@ -1938,7 +1962,7 @@ class TestUnit(TestCase):
         self.assertEqual(post4.tolist(),
                 [False, True, True, True, False])
 
-
+    #---------------------------------------------------------------------------
     def test_ufunc_set_1d_a(self) -> None:
         with self.assertRaises(NotImplementedError):
             _ufunc_set_1d(np.any, np.arange(3), np.arange(3))
@@ -1959,6 +1983,45 @@ class TestUnit(TestCase):
 
         post2 = _ufunc_set_1d(np.union1d, np.array([False, True]), np.array(['a', 'b']), assume_unique=True)
         self.assertEqual(set(post2.tolist()), set((False, True, 'b', 'a')))
+
+
+    def test_ufunc_set_1d_d(self) -> None:
+        post = _ufunc_set_1d(np.setdiff1d, np.arange(3), np.arange(3), assume_unique=True)
+        self.assertEqual(len(post), 0)
+
+    @unittest.skip('not handling duplicated NaNs in arrays yet')
+    def test_ufunc_set_1d_e(self) -> None:
+        post1 = _ufunc_set_1d(np.union1d,
+                np.array((np.nan, 1)),
+                np.array((np.nan, 1)))
+        self.assertEqual(np.isnan(post1).sum(), 1)
+        self.assertEqual(len(post1), 2)
+
+    @unittest.skip('not handling duplicated NaNs in object arrays yet')
+    def test_ufunc_set_1d_f(self) -> None:
+        # NOTE: this produces a result with two NaN instances
+        post1 = _ufunc_set_1d(np.union1d,
+                np.array((np.nan, 1), dtype=object),
+                np.array((np.nan, 1)))
+        self.assertEqual(len(post1), 2)
+
+    def test_ufunc_set_1d_g(self) -> None:
+        post1 = _ufunc_set_1d(np.union1d,
+                np.array((np.nan, 1, None)),
+                np.array((np.nan, 1, None))
+                )
+        self.assertEqual(isna_array(post1, include_none=False).sum(), 1)
+        self.assertEqual(len(post1), 3)
+
+    @unittest.skip('not handling duplicated NaTs in arrays yet')
+    def test_ufunc_set_1d_h(self) -> None:
+        nat = np.datetime64('NaT')
+        post1 = _ufunc_set_1d(np.union1d,
+                np.array((nat, '2020'), dtype=np.datetime64),
+                np.array((nat, '1927'), dtype=np.datetime64),
+                )
+        self.assertEqual(np.isnat(post1).sum(), 1)
+        self.assertEqual(len(post1), 3)
 
 
     #---------------------------------------------------------------------------
@@ -2017,5 +2080,213 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(a2.tolist(), [300, 0])
 
+
+    #---------------------------------------------------------------------------
+    def test_ufunc_logical_skipna_a(self) -> None:
+
+        # empty arrays
+        a1 = np.array([], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False), True)
+
+        a1 = np.array([], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), False)
+
+
+        # float arrays 1d
+        a1 = np.array([2.4, 5.4], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=True), True)
+
+        # skippna is False, but there is non NaN, so we do not raise
+        a1 = np.array([2.4, 0], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False), False)
+
+        a1 = np.array([0, np.nan, 0], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=True), False)
+
+        with self.assertRaises(TypeError):
+            a1 = np.array([0, np.nan, 0], dtype=float)
+            self.assertEqual(_ufunc_logical_skipna(a1, np.any, skipna=False), True)
+
+
+        # float arrays 2d
+        a1 = np.array([[2.4, 5.4, 3.2], [2.4, 5.4, 3.2]], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+                [True, True, True])
+
+        a1 = np.array([[2.4, 5.4, 3.2], [2.4, 5.4, 3.2]], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+                [True, True])
+
+        a1 = np.array([[2.4, 5.4, 0], [2.4, 5.4, 3.2]], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+                [True, True, False])
+
+        a1 = np.array([[2.4, 5.4, 0], [2.4, 5.4, 3.2]], dtype=float)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+                [False, True])
+
+
+        # object arrays
+        a1 = np.array([[2.4, 5.4, 0], [2.4, None, 3.2]], dtype=object)
+
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(
+                    _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+                    [False, np.nan])
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(
+                    _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
+                    [True, np.nan])
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+                    [True, np.nan, False])
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(_ufunc_logical_skipna(a1, np.any, skipna=False, axis=0).tolist(),
+                    [True, np.nan, True])
+
+
+        a2 = np.array([[2.4, 5.4, 0], [2.4, np.nan, 3.2]], dtype=object)
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(
+                    _ufunc_logical_skipna(a2, np.any, skipna=False, axis=1).tolist(),
+                    [True, np.nan])
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(_ufunc_logical_skipna(a2, np.all, skipna=False, axis=0).tolist(),
+                    [True, np.nan, False])
+
+        with self.assertRaises(TypeError):
+            self.assertAlmostEqualValues(_ufunc_logical_skipna(a2, np.any, skipna=False, axis=0).tolist(),
+                    [True, np.nan, True])
+
+
+    def test_ufunc_logical_skipna_b(self) -> None:
+        # object arrays
+
+        a1 = np.array([['sdf', '', 'wer'], [True, False, True]], dtype=object)
+
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+                [True, False, True]
+                )
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+                [False, False]
+                )
+
+
+        # string arrays
+        a1 = np.array(['sdf', ''], dtype=str)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=False, axis=0), False)
+        self.assertEqual(_ufunc_logical_skipna(a1, np.all, skipna=True, axis=0), False)
+
+
+        a1 = np.array([['sdf', '', 'wer'], ['sdf', '', 'wer']], dtype=str)
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=0).tolist(),
+                [True,  False,  True])
+
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.all, skipna=False, axis=1).tolist(),
+                [False, False])
+
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.any, skipna=False, axis=0).tolist(),
+                [True,  False,  True])
+
+        self.assertEqual(
+                _ufunc_logical_skipna(a1, np.any, skipna=False, axis=1).tolist(),
+                [True, True])
+
+
+    def test_ufunc_logical_skipna_c(self) -> None:
+
+        a1 = np.array([], dtype=float)
+        with self.assertRaises(NotImplementedError):
+            _ufunc_logical_skipna(a1, np.sum, skipna=True)
+
+
+    def test_ufunc_logical_skipna_d(self) -> None:
+
+        a1 = np.array(['2018-01-01', '2018-02-01'], dtype=np.datetime64)
+        post1 = _ufunc_logical_skipna(a1, np.all, skipna=True)
+        self.assertTrue(post1)
+
+        a2 = np.array(['2018-01-01', '2018-02-01', None], dtype=np.datetime64)
+        with self.assertRaises(TypeError):
+            post2 = _ufunc_logical_skipna(a2, np.all, skipna=False)
+
+
+    def test_ufunc_logical_skipna_e(self) -> None:
+
+        a1 = np.array([['2018-01-01', '2018-02-01'],
+                ['2018-01-01', '2018-02-01']], dtype=np.datetime64)
+        post = _ufunc_logical_skipna(a1, np.all, skipna=True)
+        self.assertEqual(post.tolist(), [True, True])
+
+    #---------------------------------------------------------------------------
+
+    def test_container_any_a(self) -> None:
+
+        self.assertTrue(ufunc_nanany(np.array([np.nan, False, True])))
+        self.assertTrue(ufunc_nanany(np.array(['foo', '', np.nan], dtype=object)))
+        self.assertTrue(ufunc_nanany(np.array(['', None, 1], dtype=object)))
+
+        self.assertFalse(ufunc_nanany(np.array([False, np.nan], dtype=object)))
+        self.assertFalse(ufunc_nanany(np.array([False, None])))
+        self.assertFalse(ufunc_nanany(np.array(['', np.nan], dtype=object)))
+        self.assertFalse(ufunc_nanany(np.array(['', None], dtype=object)))
+
+
+    def test_container_any_b(self) -> None:
+
+        self.assertTrue(ufunc_any(np.array([False, True])))
+        self.assertTrue(ufunc_any(np.array([False, True])))
+        self.assertTrue(ufunc_any(np.array([False, True], dtype=object)))
+        self.assertTrue(ufunc_any(np.array(['foo', ''])))
+        self.assertTrue(ufunc_any(np.array(['foo', ''], dtype=object)))
+
+
+        self.assertFalse(ufunc_any(np.array([False, False])))
+        self.assertFalse(ufunc_any(np.array([False, False], dtype=object)))
+        self.assertFalse(ufunc_any(np.array(['', ''])))
+        self.assertFalse(ufunc_any(np.array(['', ''], dtype=object)))
+
+
+
+    def test_container_all_a(self) -> None:
+
+        self.assertTrue(ufunc_nanall(np.array([np.nan, True, True], dtype=object)))
+        self.assertTrue(ufunc_nanall(np.array([np.nan, True], dtype=object)))
+        self.assertTrue(ufunc_nanall(np.array([np.nan, 1.0])))
+
+
+        self.assertFalse(ufunc_nanall(np.array([None, False, False], dtype=object)))
+        self.assertFalse(ufunc_nanall(np.array([np.nan, False, False], dtype=object)))
+        self.assertFalse(ufunc_nanall(np.array([None, False, False], dtype=object)))
+
+
+    def test_container_all_b(self) -> None:
+        self.assertTrue(ufunc_all(np.array([True, True])))
+        self.assertTrue(ufunc_all(np.array([1, 2])))
+
+
+        self.assertFalse(ufunc_all(np.array([1, 0])))
+        self.assertFalse(ufunc_all(np.array([False, False])))
+
+        with self.assertRaises(TypeError):
+            np.isnan(ufunc_all(np.array([False, np.nan], dtype=object)))
+        with self.assertRaises(TypeError):
+            np.isnan(ufunc_all(np.array([False, None], dtype=object)))
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
+

@@ -5,22 +5,24 @@ import numpy as np
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
-from static_frame.core.display import DisplayFormats
+from static_frame.core.display_config import DisplayConfig
+from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import KeyTransformType
 from static_frame.core.util import NameType
 from static_frame.core.util import PathSpecifierOrFileLike
 from static_frame.core.util import UFunc
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import DepthLevelSpecifier
+from static_frame.core.exception import ErrorInitIndex
+
 
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
-
+    from static_frame.core.index_hierarchy import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -32,43 +34,46 @@ class IndexBase(ContainerOperand):
     __slots__ = () # defined in dervied classes
 
     #---------------------------------------------------------------------------
-    # type defs
+    # type defsn
 
     _recache: bool
     _name: NameType
     values: np.ndarray
+    positions: np.ndarray
     depth: int
+
+    loc: tp.Any
     iloc: tp.Any # this does not work: InterfaceGetItem[I]
 
     __pos__: tp.Callable[['IndexBase'], np.ndarray]
     __neg__: tp.Callable[['IndexBase'], np.ndarray]
     __abs__: tp.Callable[['IndexBase'], np.ndarray]
     __invert__: tp.Callable[['IndexBase'], np.ndarray]
-    __add__: tp.Callable[['IndexBase', object], np.ndarray]
-    __sub__: tp.Callable[['IndexBase', object], np.ndarray]
-    __mul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __matmul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __truediv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __floordiv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __mod__: tp.Callable[['IndexBase', object], np.ndarray]
-    # __divmod__: tp.Callable[['IndexBase', object], np.ndarray]
-    __pow__: tp.Callable[['IndexBase', object], np.ndarray]
-    __lshift__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rshift__: tp.Callable[['IndexBase', object], np.ndarray]
-    __and__: tp.Callable[['IndexBase', object], np.ndarray]
-    __xor__: tp.Callable[['IndexBase', object], np.ndarray]
-    __or__: tp.Callable[['IndexBase', object], np.ndarray]
-    __lt__: tp.Callable[['IndexBase', object], np.ndarray]
-    __le__: tp.Callable[['IndexBase', object], np.ndarray]
-    __eq__: tp.Callable[['IndexBase', object], np.ndarray]
-    __ne__: tp.Callable[['IndexBase', object], np.ndarray]
-    __gt__: tp.Callable[['IndexBase', object], np.ndarray]
-    __ge__: tp.Callable[['IndexBase', object], np.ndarray]
-    __radd__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rsub__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rmul__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rtruediv__: tp.Callable[['IndexBase', object], np.ndarray]
-    __rfloordiv__: tp.Callable[['IndexBase', object], np.ndarray]
+    __add__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __sub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __mul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __matmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __truediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __floordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __mod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    # __divmod__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __pow__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __lshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rshift__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __and__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __xor__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __or__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __lt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __le__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __eq__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __ne__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __gt__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __ge__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __radd__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rsub__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rmul__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
+    __rtruediv__: tp.Callable[['IndexBase', tp.Any], np.ndarray] #type: ignore
+    __rfloordiv__: tp.Callable[['IndexBase', tp.Any], np.ndarray]
     # __len__: tp.Callable[['IndexBase'], int]
 
     _IMMUTABLE_CONSTRUCTOR: tp.Callable[..., 'IndexBase']
@@ -80,11 +85,6 @@ class IndexBase(ContainerOperand):
 
     label_widths_at_depth: tp.Callable[[I, int], tp.Iterator[tp.Tuple[tp.Hashable, int]]]
 
-    loc_to_iloc: tp.Callable[
-            [GetItemKeyType, tp.Optional[int], KeyTransformType, bool],
-            GetItemKeyType
-            ]
-
     #---------------------------------------------------------------------------
     # base class interface, mostly for mypy
 
@@ -93,12 +93,15 @@ class IndexBase(ContainerOperand):
 
     @classmethod
     def from_pandas(cls,
-            value: 'pandas.DataFrame',
+            value: 'pandas.Index',
             ) -> 'IndexBase':
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
         '''
         import pandas
+        if not isinstance(value, pandas.Index):
+            raise ErrorInitIndex('from_pandas must be called with a Pandas object')
+
         from static_frame import Index
         from static_frame import IndexGO
         from static_frame import IndexHierarchy
@@ -108,7 +111,7 @@ class IndexBase(ContainerOperand):
         from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.MultiIndex):
-            # iterating over a hierarchucal index will iterate over labels
+            # iterating over a hierarchical index will iterate over labels
             name: tp.Optional[tp.Tuple[tp.Hashable, ...]] = tuple(value.names)
             # if not assigned Pandas returns None for all components, which will raise issue if trying to unset this index.
             if all(n is None for n in name): #type: ignore
@@ -151,12 +154,20 @@ class IndexBase(ContainerOperand):
         # trivial init for mypy; not called by derived class
         pass
 
+    #---------------------------------------------------------------------------
+
     def __len__(self) -> int:
         raise NotImplementedError() #pragma: no cover
 
     def __iter__(self) -> tp.Iterator[tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
+    def __contains__(self, value: tp.Hashable) -> bool:
+        raise NotImplementedError() #pragma: no cover
+
+    @property
+    def shape(self) -> tp.Tuple[int, ...]:
+        raise NotImplementedError() #pragma: no cover
 
     @property
     def ndim(self) -> int:
@@ -167,17 +178,6 @@ class IndexBase(ContainerOperand):
             ) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def _ufunc_axis_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        raise NotImplementedError()
-
     def _extract_iloc(self: I, key: GetItemKeyType) -> tp.Union[I, tp.Hashable]:
         raise NotImplementedError() #pragma: no cover
 
@@ -187,8 +187,36 @@ class IndexBase(ContainerOperand):
     def copy(self: I) -> I:
         raise NotImplementedError()
 
+    def relabel(self: I, mapper: 'RelabelInput') -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def _drop_iloc(self: I, key: GetItemKeyType) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def roll(self: I, shift: int) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+        raise NotImplementedError() #pragma: no cover
+
+    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+        raise NotImplementedError() #pragma: no cover
+
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+
+    def loc_to_iloc(self,
+            key: GetItemKeyType,
+            ) -> GetItemKeyType:
+        raise NotImplementedError()
+
+    def __getitem__(self: I,
+            key: GetItemKeyType
+            ) -> tp.Union[I, tp.Hashable]:
+        raise NotImplementedError() #pragma: no cover
+
 
     #---------------------------------------------------------------------------
     # name interface
@@ -254,22 +282,33 @@ class IndexBase(ContainerOperand):
             ) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def intersection(self: I, other: tp.Union['IndexBase', 'Series']) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', 'Series']) -> I:
         '''
-        Perform intersection with another Index, container, or NumPy array. Identical comparisons retain order.
+        Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
         # NOTE: must get UFunc off of class to avoid automatic addition of self to signature
-        return self._ufunc_set(
-                self.__class__._UFUNC_INTERSECTION,
-                other)
+        func = self.__class__._UFUNC_INTERSECTION
+        if len(others) == 1:
+            return self._ufunc_set(func, others[0])
 
-    def union(self: I, other: 'IndexBase') -> I:
+        post = self
+        for other in others:
+            post = post._ufunc_set(func, other)
+        return post
+
+    def union(self: I, *others: 'IndexBase') -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
-        return self._ufunc_set(
-                self.__class__._UFUNC_UNION,
-                other)
+        func = self.__class__._UFUNC_UNION
+        if len(others) == 1:
+            return self._ufunc_set(func, others[0])
+
+        post = self
+        for other in others:
+            post = post._ufunc_set(func, other)
+        return post
+
 
     def difference(self: I, other: 'IndexBase') -> I:
         '''
@@ -351,3 +390,5 @@ class IndexBase(ContainerOperand):
 
     def to_pandas(self) -> 'pandas.Series':
         raise NotImplementedError() #pragma: no cover
+
+

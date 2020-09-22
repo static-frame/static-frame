@@ -5,12 +5,10 @@ This module us for utilty functions that take as input and / or return Container
 from collections import defaultdict
 from itertools import zip_longest
 from functools import partial
+import typing as tp
 
 import numpy as np
 from numpy import char as npc
-
-import typing as tp
-
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import AnyCallable
@@ -35,6 +33,10 @@ from static_frame.core.util import slice_to_ascending_slice
 from static_frame.core.util import STATIC_ATTR
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_set_iter
+from static_frame.core.util import INT_TYPES
+from static_frame.core.util import NameType
+
+from static_frame.core.exception import AxisInvalid
 
 if tp.TYPE_CHECKING:
     import pandas as pd #pylint: disable=W0611 #pragma: no cover
@@ -91,6 +93,17 @@ def is_static(value: IndexConstructor) -> bool:
         pass
     # assume this is a class method
     return getattr(value.__self__, STATIC_ATTR) #type: ignore
+
+
+# def is_dataclass(value: tp.Any) -> bool:
+#     '''Determine if dataclasses are available. Might be installed via a pip package.
+#     '''
+#     # introduced in Python 3.7; remove special handling when min req is 3.7
+#     try:
+#         import dataclasses
+#     except ImportError:
+#         return False
+#     return dataclasses.is_dataclass(value)
 
 
 def pandas_version_under_1() -> bool:
@@ -579,7 +592,7 @@ def rehierarch_from_type_blocks(*,
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
     Args:
-        index_cls: provide a class, form which the constructor will be called.
+        index_cls: provide a class, from which the constructor will be called.
     '''
 
     depth = labels.shape[1] # number of columns
@@ -887,3 +900,79 @@ def index_many_set(
             union=union,
             assume_unique=True)
     return _index_many_to_one(indices, cls_default, array_processor)
+
+
+#-------------------------------------------------------------------------------
+def apex_to_name(
+        rows: tp.Sequence[tp.Sequence[tp.Hashable]],
+        depth_level: tp.Optional[DepthLevelSpecifier],
+        axis: int, # 0 is by row (for index, 1 is by column (for columns)
+        axis_depth: int,
+        ) -> NameType:
+    '''
+    Utility for translating apex values (the upper left corner created be index/columns) in the appropriate name.
+    '''
+    if depth_level is None:
+        return None
+    if axis == 0:
+        if isinstance(depth_level, INT_TYPES):
+            row = rows[depth_level]
+            if axis_depth == 1: # return a single label
+                return row[0] if row[0] != '' else None
+            else:
+                return tuple(row)
+        else: # its a list selection
+            targets = [rows[level] for level in depth_level]
+            # combine into tuples
+            if axis_depth == 1:
+                return next(zip(*targets))
+            else:
+                return tuple(zip(*targets))
+    elif axis == 1:
+        if isinstance(depth_level, INT_TYPES):
+            # depth_level refers to position in inner row
+            row = [r[depth_level] for r in rows]
+            if axis_depth == 1: # return a single label
+                return row[0] if row[0] != '' else None
+            else:
+                return tuple(row)
+        else: # its a list selection
+            targets = (tuple(row[level] for level in depth_level) for row in rows) #type: ignore
+            # combine into tuples
+            if axis_depth == 1:
+                return next(targets) #type: ignore
+            else:
+                return tuple(targets)
+
+    raise AxisInvalid(f'invalid axis: {axis}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

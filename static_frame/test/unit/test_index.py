@@ -1,10 +1,10 @@
-
 import unittest
-import numpy as np
 import pickle
 import datetime
 import typing as tp
 from io import StringIO
+
+import numpy as np
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -12,17 +12,11 @@ from static_frame import IndexDate
 from static_frame import IndexDateGO
 from static_frame import IndexHierarchy
 from static_frame import Series
-# from static_frame import Frame
 from static_frame import IndexYear
 from static_frame import Frame
-
-# from static_frame import HLoc
 from static_frame import ILoc
-
-
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
-
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.index import PositionsAllocator
 from static_frame.core.util import mloc
@@ -673,7 +667,7 @@ class TestUnit(TestCase):
 
     def test_index_fillna_a(self) -> None:
 
-        idx1 = Index(('a', 'b', 'c', None)) #type: ignore
+        idx1 = Index(('a', 'b', 'c', None))
         idx2 = idx1.fillna('d')
         self.assertEqual(idx2.values.tolist(),
                 ['a', 'b', 'c', 'd'])
@@ -719,10 +713,10 @@ class TestUnit(TestCase):
     def test_name_b(self) -> None:
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name=['x', 'y']) #type: ignore
+            Index(('a', 'b', 'c', 'd'), name=['x', 'y'])
 
         with self.assertRaises(TypeError):
-            Index(('a', 'b', 'c', 'd'), name={'x', 'y'}) #type: ignore
+            Index(('a', 'b', 'c', 'd'), name={'x', 'y'})
 
 
     def test_index_name_c(self) -> None:
@@ -824,6 +818,10 @@ class TestUnit(TestCase):
                 [1417392000000000000, 1417478400000000000, 1417564800000000000, 1417651200000000000, 1417737600000000000, 1417824000000000000, 1417910400000000000, 1417996800000000000, 1418083200000000000]
                 )
 
+    def test_index_from_pandas_f(self) -> None:
+        with self.assertRaises(ErrorInitIndex):
+            idx = Index.from_pandas(Index(('a', 'b')))
+
 
     #---------------------------------------------------------------------------
     def test_index_iter_a(self) -> None:
@@ -897,7 +895,7 @@ class TestUnit(TestCase):
 
     def test_index_intersection_e(self) -> None:
 
-        idx1 = Index((10, 'foo', None, 4.1)) #type: ignore
+        idx1 = Index((10, 'foo', None, 4.1))
         idx2 = idx1.union(idx1)
         self.assertEqual(id(idx1), id(idx2))
         self.assertTrue(idx1.equals(idx1))
@@ -934,6 +932,16 @@ class TestUnit(TestCase):
                 [datetime.date(2020, 1, 3), datetime.date(2020, 1, 4), datetime.date(2020, 1, 5), datetime.date(2020, 1, 6), datetime.date(2020, 1, 7), datetime.date(2020, 1, 8)]
                 )
 
+    def test_index_intersection_g(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('b', 'a', 'r'))
+        idx3 = Index(('w', 'b', 'x'))
+
+        idx4 = idx1.intersection(idx2, idx3)
+        self.assertEqual(idx4.values.tolist(), ['b'])
+
+
     #---------------------------------------------------------------------------
 
     def test_index_union_a(self) -> None:
@@ -957,6 +965,27 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.values.tolist(),
                 ['c', 'b', 'a']
                 )
+
+
+    def test_index_union_c(self) -> None:
+
+        idx1 = Index(('c', 'b', 'a'))
+        idx2 = Index(('r', 'b', 'x'))
+        idx3 = Index(('t', 's'))
+        idx4 = Index(('t', 'q'))
+
+        idx5 = idx1.union(idx2, idx3, idx4)
+        self.assertEqual(idx5.values.tolist(),
+                ['a', 'b', 'c', 'q', 'r', 's', 't', 'x']
+                )
+
+    @unittest.skip('pending resolution of AutoMap issue')
+    def test_index_union_d(self) -> None:
+        # with self.assertRaises(RuntimeError):
+        idx = Index.from_labels(np.array((np.nan, np.nan)))
+        self.assertEqual(len(idx), 1)
+
+    #---------------------------------------------------------------------------
 
     def test_index_difference_a(self) -> None:
         idx1 = Index(('c', 'b', 'a'))
@@ -982,7 +1011,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_c(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
         idx2 = Index((2, 3, '4', 'five', 6.6, object()))
 
         idx3 = idx1.difference(idx2)
@@ -992,7 +1021,7 @@ class TestUnit(TestCase):
 
     def test_index_difference_d(self) -> None:
         obj = object()
-        idx1 = Index((1, None, '3', np.nan, 4.4, obj)) # type: ignore
+        idx1 = Index((1, None, '3', np.nan, 4.4, obj))
         idx2 = Index((2, 1, '3', 'five', object()))
 
         idx3 = idx1.difference(idx2)
@@ -1051,6 +1080,8 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             next(idx1.label_widths_at_depth(1))
 
+
+
     #---------------------------------------------------------------------------
 
     def test_index_bool_a(self) -> None:
@@ -1094,6 +1125,21 @@ class TestUnit(TestCase):
                 ['a', 'b', 'c'])
         with self.assertRaises(RuntimeError):
             idx1.values_at_depth(1)
+
+
+    def test_index_values_at_depth_b(self) -> None:
+
+        idx1 = IndexGO(('a', 'b', 'c', 'd', 'e'))
+
+        with self.assertRaises(RuntimeError):
+            idx1.values_at_depth([3, 4])
+
+        post = idx1.values_at_depth([0])
+
+        self.assertEqual(post.tolist(),
+                ['a', 'b', 'c', 'd', 'e'])
+
+
 
     #---------------------------------------------------------------------------
 
@@ -1201,7 +1247,7 @@ class TestUnit(TestCase):
 
         idx1 = Index((5, 3, np.nan))
         idx2 = Index((5, 3, np.nan))
-        idx3 = Index((5, 3, None)) #type: ignore
+        idx3 = Index((5, 3, None))
 
         self.assertTrue(idx1.equals(idx2))
         self.assertFalse(idx1.equals(idx2, skipna=False))
@@ -1229,7 +1275,6 @@ class TestUnit(TestCase):
         b = IndexGO([1, 2, 3])
         b.append(4)
         self.assertFalse(a.equals(b))
-
 
 
 

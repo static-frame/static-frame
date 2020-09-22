@@ -17,7 +17,7 @@ from static_frame.core.container_util import key_from_container_key
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
@@ -38,6 +38,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -79,7 +80,7 @@ if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
     from static_frame import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame import IndexHierarchy #pylint: disable=W0611 #pragma: no cover
-
+    from static_frame.core.index_auto import RelabelInput #pylint: disable=W0611 #pragma: no cover
 
 I = tp.TypeVar('I', bound=IndexBase)
 
@@ -92,7 +93,7 @@ class ILocMeta(type):
         return cls(key) #type: ignore
 
 class ILoc(metaclass=ILocMeta):
-    '''A wrapper for embedding ``iloc`` specificiations within a single axis argument of a ``loc`` selection.
+    '''A wrapper for embedding ``iloc`` specifications within a single axis argument of a ``loc`` selection.
     '''
 
     __slots__ = (
@@ -235,7 +236,7 @@ class LocMap:
                     # let Boolean key advance to next branch
                     key = reduce(operator_mod.or_, (labels_ref == k for k in key))
 
-            if is_array and key.dtype is DTYPE_BOOL:
+            if is_array and key.dtype == DTYPE_BOOL:
                 if offset_apply:
                     return positions[key] + offset
                 return positions[key]
@@ -302,12 +303,8 @@ _INDEX_SLOTS = (
         '_name'
         )
 
-@doc_inject(selector='index_init')
 class Index(IndexBase):
-    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.
-
-    {args}
-    '''
+    '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
 
     __slots__ = _INDEX_SLOTS
 
@@ -392,6 +389,7 @@ class Index(IndexBase):
         return cls(labels, name=name)
 
     #---------------------------------------------------------------------------
+    @doc_inject(selector='index_init')
     def __init__(self,
             labels: IndexInitializer,
             *,
@@ -399,12 +397,15 @@ class Index(IndexBase):
             name: NameType = NAME_DEFAULT,
             dtype: DtypeSpecifier = None
             ) -> None:
+        '''Initializer.
 
+        {args}
+        '''
         self._recache: bool = False
         self._map: tp.Optional[FrozenAutoMap] = None
 
         positions = None
-        is_typed = self._DTYPE is not None
+        is_typed = self._DTYPE is not None # only True for datetime64 indices
 
         # resolve the targetted labels dtype, by lookin at the class attr _DTYPE and/or the passed dtype argument
         if dtype is None:
@@ -437,7 +438,7 @@ class Index(IndexBase):
                 labels = array2d_to_tuples(labels.__iter__())
         elif isinstance(labels, ContainerOperand):
             # it is a Series or similar
-            array = labels.values
+            array = labels.values # NOTE: should we take values or keys here?
             if array.ndim == 1:
                 labels = array
             else:
@@ -652,7 +653,7 @@ class Index(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand):
+        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
             operand = other.values
             assume_unique = False
         else:
@@ -662,7 +663,6 @@ class Index(IndexBase):
 
         # using assume_unique will permit retaining order when operands are identical
         labels = func(self.values, operand, assume_unique=assume_unique) # type: ignore
-
         if id(labels) == id(self.values):
             # NOTE: favor using cls constructor here as it permits maximal sharing of static resources and the underlying dictionary
             return cls(self)
@@ -671,7 +671,7 @@ class Index(IndexBase):
 
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_iloc(self, key: GetItemKeyType) -> 'Index':
         '''Create a new index after removing the values specified by the loc key.
         '''
         if self._recache:
@@ -823,8 +823,9 @@ class Index(IndexBase):
 
     @property
     def positions(self) -> np.ndarray:
-        '''Return the immutable positions array. This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
+        '''Return the immutable positions array.
         '''
+        # This is needed by some clients, such as Series and Frame, to support Boolean usage in drop.
         if self._recache:
             self._update_array_cache()
         return self._positions
@@ -873,7 +874,7 @@ class Index(IndexBase):
 
         return self.__class__(self, name=self._name)
 
-    def relabel(self, mapper: CallableOrMapping) -> 'Index':
+    def relabel(self, mapper: 'RelabelInput') -> 'Index':
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -889,7 +890,7 @@ class Index(IndexBase):
                     )
 
         return self.__class__(
-                (mapper(x) for x in self._labels),
+                (mapper(x) for x in self._labels), #type: ignore
                 name=self._name
                 )
 
@@ -973,7 +974,7 @@ class Index(IndexBase):
     def _extract_loc(self: I,
             key: GetItemKeyType
             ) -> tp.Union['Index', tp.Hashable]:
-        return self._extract_iloc(self.loc_to_iloc(key)) #type: ignore
+        return self._extract_iloc(self.loc_to_iloc(key))
 
     def __getitem__(self: I,
             key: GetItemKeyType
@@ -1191,7 +1192,7 @@ class Index(IndexBase):
         if not np.any(sel):
             return self if self.STATIC else self.copy()
 
-        value_dtype = np.array(value).dtype
+        value_dtype = dtype_from_element(value)
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
 
         if values.dtype == assignable_dtype:
@@ -1293,8 +1294,10 @@ class _IndexGOMixin:
                     self._labels.dtype,
                     self._labels_mutable_dtype)
 
-        self._labels = np.array(self._labels_mutable, dtype=self._labels_mutable_dtype)
-        self._labels.flags.writeable = False
+        # NOTE: necessary to support creation from iterable of tuples
+        self._labels, _ = iterable_to_array_1d(
+                self._labels_mutable,
+                dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
         self._recache = False
 
@@ -1318,10 +1321,10 @@ class _IndexGOMixin:
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(
-                    np.array(value).dtype,
+                    dtype_from_element(value),
                     self._labels_mutable_dtype)
         else:
-            self._labels_mutable_dtype = np.array(value).dtype
+            self._labels_mutable_dtype = dtype_from_element(value)
 
         self._labels_mutable.append(value)
 
@@ -1340,14 +1343,11 @@ class _IndexGOMixin:
             self.append(value)
 
 
-@doc_inject(selector='index_init')
 class IndexGO(_IndexGOMixin, Index):
     '''A mapping of labels to positions, immutable with grow-only size. Used as columns in :obj:`FrameGO`.
-
-    {args}
     '''
-    _IMMUTABLE_CONSTRUCTOR = Index
 
+    _IMMUTABLE_CONSTRUCTOR = Index
     __slots__ = _INDEX_GO_SLOTS
 
 

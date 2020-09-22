@@ -2,10 +2,9 @@
 import unittest
 import pickle
 import datetime
-import numpy as np
-
 from collections import OrderedDict
 
+import numpy as np
 
 from static_frame import DisplayConfig
 from static_frame import Frame
@@ -19,11 +18,9 @@ from static_frame import IndexHierarchyGO
 from static_frame import IndexLevel
 from static_frame import IndexYearMonth
 from static_frame import Series
-
 from static_frame.core.array_go import ArrayGO
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexLevel
-
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import TestCase
@@ -1526,6 +1523,46 @@ class TestUnit(TestCase):
             _ = ih1.intersection(['a', 'b']) #type: ignore
 
 
+    def test_hierarchy_set_operators_m(self) -> None:
+        labels = (
+                ('I', 'A'),
+                ('I', 'B'),
+                ('II', 'A'),
+                ('II', 'B'),
+                )
+
+        ih1 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                ('II', 'A'),
+                ('II', 'B'),
+                ('III', 'A'),
+                ('III', 'B'),
+                )
+
+        ih2 = IndexHierarchy.from_labels(labels)
+
+        labels = (
+                ('II', 'A'),
+                ('II', 'B'),
+                ('IV', 'A'),
+                ('IV', 'B'),
+                )
+
+        ih3 = IndexHierarchy.from_labels(labels)
+
+        post1 = ih1.intersection(ih2, ih3)
+        self.assertEqual(post1.values.tolist(),
+                [['II', 'A'], ['II', 'B']])
+
+
+        post2 = ih1.union(ih2, ih3)
+
+        self.assertEqual(post2.values.tolist(),
+                [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A'], ['III', 'B'], ['IV', 'A'], ['IV', 'B']]
+                )
+
+
 
     #---------------------------------------------------------------------------
 
@@ -1954,7 +1991,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         ih2 = ih1._drop_loc([('I', 'B', 1), ('II', 'B', 2)])
 
-        self.assertEqual(ih2.to_frame().to_pairs(0), #type: ignore
+        self.assertEqual(ih2.to_frame().to_pairs(0),
                 ((0, ((0, 'I'), (1, 'II'))), (1, ((0, 'A'), (1, 'A'))), (2, ((0, 1), (1, 1))))
                 )
 

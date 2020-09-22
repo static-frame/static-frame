@@ -5,11 +5,10 @@ from datetime import datetime
 from functools import partial
 
 import numpy as np
-import static_frame as sf
 import pandas as pd
 
+import static_frame as sf
 from static_frame.core.frame import Frame
-
 from static_frame.performance.perf_test import PerfTest
 
 

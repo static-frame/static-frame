@@ -15,7 +15,7 @@ from static_frame.core.container_util import key_from_container_key
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 
@@ -25,10 +25,12 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
+from static_frame.core.index import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel
 from static_frame.core.index_level import IndexLevelGO
+from static_frame.core.index_auto import RelabelInput
 
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
@@ -41,7 +43,6 @@ from static_frame.core.node_str import InterfaceString
 
 from static_frame.core.type_blocks import TypeBlocks
 
-from static_frame.core.util import CallableOrMapping
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import DtypeSpecifier
@@ -74,9 +75,8 @@ CONTINUATION_TOKEN_INACTIVE = object()
 
 #-------------------------------------------------------------------------------
 class IndexHierarchy(IndexBase):
-    '''
-    A hierarchy of :obj:`static_frame.Index` objects, defined as strict tree of uniform depth across all branches.
-    '''
+    '''A hierarchy of :obj:`Index` objects, defined as a strict tree of uniform depth across all branches.'''
+
     __slots__ = (
             '_levels',
             '_blocks',
@@ -479,9 +479,10 @@ class IndexHierarchy(IndexBase):
             own_blocks: bool = False,
             ):
         '''
+        Initializer.
+
         Args:
-            levels: IndexLevels instance, or, optionally, an IndexHierarchy to be used to construct a new IndexHierarchy.
-            labels: a client can optionally provide the labels used to construct the levels, as an optional optimization in forming the IndexHierarchy.
+            levels: :obj:`IndexLevels` instance, or, optionally, an :obj`IndexHierarchy` to be used to construct a new :obj`IndexHierarchy`.
         '''
 
         self._blocks = None #type: ignore
@@ -784,7 +785,7 @@ class IndexHierarchy(IndexBase):
         elif isinstance(other, IndexBase):
             operand = other.values
             assume_unique = True # can always assume unique
-        elif isinstance(other, ContainerOperand):
+        elif isinstance(other, ContainerOperand): # TODO 0.7: use iterable to array force user to provide values
             operand = other.values
             assume_unique = False
         else:
@@ -807,7 +808,7 @@ class IndexHierarchy(IndexBase):
 
         if both_sized and isinstance(other, IndexHierarchy):
             index_constructors = []
-            # depth, and length of idnex_types, must be equal
+            # depth, and length of index_types, must be equal
             for cls_self, cls_other in zip(
                     self._levels.index_types(),
                     other._levels.index_types()):
@@ -825,7 +826,7 @@ class IndexHierarchy(IndexBase):
 
 
     #---------------------------------------------------------------------------
-    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_iloc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         if self._recache:
@@ -840,7 +841,7 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-    def _drop_loc(self, key: GetItemKeyType) -> 'IndexBase':
+    def _drop_loc(self, key: GetItemKeyType) -> 'IndexHierarchy':
         '''Create a new index after removing the values specified by the loc key.
         '''
         return self._drop_iloc(self.loc_to_iloc(key))
@@ -856,6 +857,12 @@ class IndexHierarchy(IndexBase):
         if self._recache:
             self._update_array_cache()
         return self._blocks.values
+
+    @property
+    def positions(self) -> np.ndarray:
+        '''Return the immutable positions array.
+        '''
+        return PositionsAllocator.get(self.__len__())
 
     @property
     def depth(self) -> int: #type: ignore
@@ -932,7 +939,7 @@ class IndexHierarchy(IndexBase):
                 own_blocks=True
                 )
 
-    def relabel(self, mapper: CallableOrMapping) -> 'IndexHierarchy':
+    def relabel(self, mapper: RelabelInput) -> 'IndexHierarchy':
         '''
         Return a new IndexHierarchy with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping should map tuple representation of labels, and need not map all origin keys.
         '''
@@ -957,7 +964,7 @@ class IndexHierarchy(IndexBase):
                     )
 
         return self.__class__.from_labels(
-                (mapper(x) for x in self._blocks.axis_values(axis=1)),
+                (mapper(x) for x in self._blocks.axis_values(axis=1)), #type: ignore
                 name=self._name,
                 index_constructors=index_constructors,
                 )
@@ -983,7 +990,7 @@ class IndexHierarchy(IndexBase):
 
     #---------------------------------------------------------------------------
 
-    def loc_to_iloc(self, #type: ignore
+    def loc_to_iloc(self,
             key: tp.Union[GetItemKeyType, HLoc]
             ) -> GetItemKeyType:
         '''
@@ -1154,7 +1161,7 @@ class IndexHierarchy(IndexBase):
         for array in self._blocks.axis_values(1, reverse=True):
             yield tuple(array)
 
-    def __contains__(self,
+    def __contains__(self, #type: ignore
             value: tp.Tuple[tp.Hashable]
             ) -> bool:
         '''Determine if a leaf loc is contained in this Index.
@@ -1303,8 +1310,8 @@ class IndexHierarchy(IndexBase):
 
         return constructor(
                 self._blocks.copy(),
-                columns=None, #type: ignore
-                index=None, #type: ignore
+                columns=None,
+                index=None,
                 own_data=True
                 )
 

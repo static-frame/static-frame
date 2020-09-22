@@ -13,14 +13,11 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 import static_frame as sf
-# assuming located in the same directory
 from static_frame import Index
 from static_frame import IndexGO
 from static_frame import Series
 from static_frame import Frame
 from static_frame import FrameGO
-# from static_frame import TypeBlocks
-# from static_frame import Display
 from static_frame import mloc
 from static_frame import DisplayConfig
 from static_frame import IndexHierarchy
@@ -404,9 +401,9 @@ class TestUnit(TestCase):
         self.assertEqual((s1 == s2).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', False)))
 
-        self.assertEqual((s1 == True).to_pairs(),
+        self.assertEqual((s1 == True).to_pairs(), #pylint: disable=C0121
                 (('a', False), ('b', True), ('c', False), ('d', True)))
-        self.assertEqual((s1 == True).name, 'foo')
+        self.assertEqual((s1 == True).name, 'foo') #pylint: disable=C0121
 
         # NOTE: these are unexpected results that derive from NP Boolean operator behaviors
 
@@ -461,7 +458,7 @@ class TestUnit(TestCase):
 
     def test_series_binary_operator_i(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
-        post = [3, 4, 1, 2] @ s1 #type: ignore
+        post = [3, 4, 1, 2] @ s1
         self.assertEqual(post, 12)
 
 
@@ -501,6 +498,30 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 (('a', 0), ('b', 11), ('c', 24), ('d', 39)))
         self.assertEqual(s2.name, None)
+
+
+    def test_series_binary_operator_m(self) -> None:
+
+        s = Series((np.datetime64('2000-01-01'), np.datetime64('2001-01-01')))
+        d = np.datetime64('2000-12-31')
+
+        self.assertEqual((s > d).to_pairs(),
+                ((0, False), (1, True)))
+
+        with self.assertRaises(TypeError):
+            # TypeError: invalid type promotion
+            _ = d < s # why does this fail?
+
+        s2 = s.iloc[:1]
+
+        self.assertEqual((s2 < d).to_pairs(),
+                ((0, True),))
+
+        with self.assertRaises(TypeError):
+            # TypeError: int() argument must be a string, a bytes-like object or a number, not 'datetime.date'
+            _ = d < s2
+
+
 
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
@@ -1146,7 +1167,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # should raise with bad keyword argumenty
-            s2.median(skip_na=False) #type: ignore
+            s2.median(skip_na=False)
 
     #---------------------------------------------------------------------------
 
@@ -1169,7 +1190,7 @@ class TestUnit(TestCase):
 
 
         self.assertEqual(
-                s1.assign.loc[['b', 'd']](3000).values.tolist(),
+                s1.assign.loc[['b', 'd']](3000).values.tolist(), #type: ignore
                 [0, 3000, 2, 3000])
 
         self.assertEqual(
@@ -1723,6 +1744,32 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_series_relabel_flat_a(self) -> None:
+
+        s1 = Series(range(4), index=IndexHierarchy.from_product((10, 20), ('a', 'b')))
+
+        s2 = s1.relabel_flat()
+        self.assertEqual(s2.to_pairs(),
+                (((10, 'a'), 0), ((10, 'b'), 1), ((20, 'a'), 2), ((20, 'b'), 3)))
+
+        with self.assertRaises(RuntimeError):
+            _ = s2.relabel_flat()
+
+
+
+    def test_series_relabel_drop_level_a(self) -> None:
+
+        s1 = Series(range(2), index=IndexHierarchy.from_labels(((10, 20), ('a', 'b'))))
+
+        s2 = s1.relabel_drop_level()
+        self.assertEqual(s2.to_pairs(), ((20, 0), ('b', 1)))
+
+        with self.assertRaises(RuntimeError):
+            _ = s2.relabel_drop_level()
+
+
+    #---------------------------------------------------------------------------
+
     def test_series_rehierarch_a(self) -> None:
 
         colors = ('red', 'green')
@@ -2058,6 +2105,9 @@ class TestUnit(TestCase):
                 (np.datetime64('2014'), None))
                 )
 
+    def test_series_from_pandas_g(self) -> None:
+        with self.assertRaises(ErrorInitSeries):
+            Series.from_pandas(Series(['a', 'b', None], index=list('abc')))
 
 
     #---------------------------------------------------------------------------
@@ -2578,6 +2628,17 @@ class TestUnit(TestCase):
         self.assertEqual('s4', s4.name)
 
 
+    def test_series_from_concat_h(self) -> None:
+        s1 = Series((2, 3, 0,), index=Index(list('abc'), name='foo'))
+        s2 = Series((10, 20), index=Index(list('de'), name='foo'))
+
+        s3 = Series.from_concat((s1, s2))
+        self.assertEqual(s3.index.name, 'foo')
+        self.assertEqual(s3.to_pairs(),
+                (('a', 2), ('b', 3), ('c', 0), ('d', 10), ('e', 20))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_group_a(self) -> None:
@@ -2705,10 +2766,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=0))
 
         # first window has second label, and first two values
-        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][1].tolist(), [1, 2]) #type: ignore
         self.assertEqual(post[0][0], 'b')
 
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
         self.assertEqual(post[-1][0], 't')
 
 
@@ -2719,10 +2780,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=-1))
 
         # first window has first label, and first two values
-        self.assertEqual(post[0][1].tolist(), [1, 2])
+        self.assertEqual(post[0][1].tolist(), [1, 2]) #type: ignore
         self.assertEqual(post[0][0], 'a')
 
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
         self.assertEqual(post[-1][0], 's')
 
 
@@ -2735,10 +2796,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=1, step=0, size_increment=1))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), list(range(1, 21)))
+        self.assertEqual(post[-1][1].tolist(), list(range(1, 21))) #type: ignore
 
 
 
@@ -2749,13 +2810,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, start_shift=-5, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [1, 2])
+        self.assertEqual(post[1][1].tolist(), [1, 2]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20]) #type: ignore
 
 
 
@@ -2767,13 +2828,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [20])
+        self.assertEqual(post[-1][1].tolist(), [20]) #type: ignore
 
 
 
@@ -2785,13 +2846,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=5, label_shift=-4, window_sized=True))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3, 4, 5]) #type: ignore
 
         self.assertEqual(post[1][0], 'b')
-        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [2, 3, 4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 'p')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18, 19, 20]) #type: ignore
 
 
     def test_series_axis_window_items_g(self) -> None:
@@ -2811,10 +2872,10 @@ class TestUnit(TestCase):
 
         post = tuple(s1._axis_window_items(as_array=True, size=1))
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1])
+        self.assertEqual(post[0][1].tolist(), [1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [20])
+        self.assertEqual(post[-1][1].tolist(), [20]) #type: ignore
 
 
 
@@ -2825,13 +2886,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, step=3))
 
         self.assertEqual(post[0][0], 'c')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3]) #type: ignore
 
         self.assertEqual(post[1][0], 'f')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 'r')
-        self.assertEqual(post[-1][1].tolist(), [16, 17, 18])
+        self.assertEqual(post[-1][1].tolist(), [16, 17, 18]) #type: ignore
 
 
     def test_series_axis_window_items_j(self) -> None:
@@ -2841,13 +2902,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, step=3, label_shift=-2, window_sized=False))
 
         self.assertEqual(post[0][0], 'a')
-        self.assertEqual(post[0][1].tolist(), [1, 2, 3])
+        self.assertEqual(post[0][1].tolist(), [1, 2, 3]) #type: ignore
 
         self.assertEqual(post[1][0], 'd')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 's')
-        self.assertEqual(post[-1][1].tolist(), [19, 20])
+        self.assertEqual(post[-1][1].tolist(), [19, 20]) #type: ignore
 
 
 
@@ -2858,13 +2919,13 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=3, window_valid=lambda w: np.sum(w) % 2 == 1))
 
         self.assertEqual(post[0][0], 'd')
-        self.assertEqual(post[0][1].tolist(), [2, 3, 4])
+        self.assertEqual(post[0][1].tolist(), [2, 3, 4]) #type: ignore
 
         self.assertEqual(post[1][0], 'f')
-        self.assertEqual(post[1][1].tolist(), [4, 5, 6])
+        self.assertEqual(post[1][1].tolist(), [4, 5, 6]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [18, 19, 20])
+        self.assertEqual(post[-1][1].tolist(), [18, 19, 20]) #type: ignore
 
 
 
@@ -2876,10 +2937,10 @@ class TestUnit(TestCase):
         post = tuple(s1._axis_window_items(as_array=True, size=4, window_func=lambda a: a * weight))
 
         self.assertEqual(post[0][0], 'd')
-        self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1])
+        self.assertEqual(post[0][1].tolist(), [0.25, 1, 1.5, 1]) #type: ignore
 
         self.assertEqual(post[-1][0], 't')
-        self.assertEqual(post[-1][1].tolist(), [4.25, 9, 9.5, 5])
+        self.assertEqual(post[-1][1].tolist(), [4.25, 9, 9.5, 5]) #type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -3333,6 +3394,33 @@ class TestUnit(TestCase):
             s1.via_dt.isoformat()
 
 
+    def test_series_via_dt_fromisoformat_a(self) -> None:
+        s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'))
+        post = s1.via_dt.fromisoformat()
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
+
+        with self.assertRaises(RuntimeError):
+            _ = Series(('2014-02', '2013-11'), index=('x', 'y')).via_dt.fromisoformat()
+
+        with self.assertRaises(RuntimeError):
+            _ = Series(('2014', '2013'), index=('x', 'y')).via_dt.fromisoformat()
+
+    def test_series_via_dt_fromisoformat_b(self) -> None:
+        s1 = Series(('2014-02-12T05:03:20', '2013-11-28T23:45:34'), index=('x', 'y'))
+        post = s1.via_dt.fromisoformat()
+        self.assertEqual(post.values.tolist(),
+                [datetime.datetime(2014, 2, 12, 5, 3, 20),
+                datetime.datetime(2013, 11, 28, 23, 45, 34)])
+
+
+    def test_series_via_dt_fromisoformat_c(self) -> None:
+        s1 = Series(('2014-02-12', '2013-11-28'), index=('x', 'y'), dtype=object)
+        post = s1.via_dt.fromisoformat()
+
+        self.assertEqual(post.values.tolist(),
+                [datetime.date(2014, 2, 12), datetime.date(2013, 11, 28)])
 
     #---------------------------------------------------------------------------
 
@@ -3443,6 +3531,37 @@ class TestUnit(TestCase):
                 ((Bar.b, Bar.b), (Bar.c, Bar.c))
                 )
 
+
+    def test_series_enum_c(self) -> None:
+        # see: https://github.com/InvestmentSystems/static-frame/issues/239
+
+        class Bar(str, Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s1 = sf.Series(Bar)
+
+        # for str Enum, must compare to .value
+        self.assertEqual((s1 == Bar.c).values.tolist(),
+                [False, False, False])
+        self.assertEqual((s1 == Bar.c.value).values.tolist(),
+                [False, False, True])
+
+        # comparisons to normal Enum's work as expected
+        class Foo(Enum):
+            a = 'a'
+            b = 'b'
+            c = 'c'
+
+        s2 = sf.Series(Foo)
+        self.assertEqual((s2 == Foo.c).values.tolist(),
+                [False, False, True])
+        self.assertEqual((s2 == Foo.c.value).values.tolist(),
+                [False, False, False])
+
+
+
     #---------------------------------------------------------------------------
 
     def test_series_insert_a(self) -> None:
@@ -3492,6 +3611,172 @@ class TestUnit(TestCase):
             s1.insert_before(slice('a', 'c'), s2)
         with self.assertRaises(RuntimeError):
             s1.insert_after(slice('a', 'c'), s2)
+
+    #---------------------------------------------------------------------------
+
+    def test_series_drop_a(self) -> None:
+        s1 = Series(['a', 'b', 'c'],
+            index=IndexHierarchy.from_labels([('X', 1), ('X', 2), ('Y', 1)]))
+
+        s2 = s1.drop[np.array((True, False, True))]
+        self.assertEqual(s2.to_pairs(),
+                ((('X', 2), 'b'),))
+
+    def test_series_drop_b(self) -> None:
+        s1 = Series(['a', 'b', 'c'])
+
+        s2 = s1.drop[np.array((True, False, True))]
+        self.assertEqual(s2.to_pairs(),
+                ((1, 'b'),))
+
+    #---------------------------------------------------------------------------
+    def test_series_from_overlay_a(self) -> None:
+        s1 = Series((1, None, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3), index=('a', 'b', 'c'))
+
+        # NOTE: even though the result is all-integer, the dtype is int; this is the same with Pandas combine-first
+        s3 = Series.from_overlay((s1, s2))
+        self.assertEqual(s3.to_pairs(),
+                (('a', 1), ('b', 30), ('c', 5)))
+        self.assertEqual(s3.dtype.kind, 'O')
+
+
+    def test_series_from_overlay_b(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3))
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
+        s5 = Series.from_overlay((s3, s1, s2))
+        self.assertEqual(s5.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 199.0), ('d', 3.1))
+                )
+        self.assertEqual(s5.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_c(self) -> None:
+        s1 = Series(('er', np.nan, 'pq'), index=('a', 'b', 'c'))
+        s2 = Series(('io', 'tw', 'wf', None), index=('a', 'b', 'c', 'd'))
+        s3 = Series(('mn', 'dd'), index=('e', 'd'))
+
+        s4 = Series.from_overlay((s1, s2, s3), name='foo')
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 'er'), ('b', 'tw'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
+                )
+        self.assertEqual(s4.dtype.kind, 'O')
+        self.assertEqual(s4.name, 'foo')
+
+    def test_series_from_overlay_d(self) -> None:
+        s1 = Series(('er', 'xx', 'pq'), index=('a', 'b', 'c'))
+        s2 = Series(('io', 'tw', 'wf', 'ge'), index=('a', 'b', 'c', 'd'))
+        s3 = Series(('mn', 'dd'), index=('e', 'd'))
+
+        s4 = Series.from_overlay((s3, s1, s3))
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 'er'), ('b', 'xx'), ('c', 'pq'), ('d', 'dd'), ('e', 'mn'))
+                )
+        self.assertEqual(s4.dtype.kind, 'O')
+
+    def test_series_from_overlay_e(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), name='foo')
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+        self.assertEqual(s4.name, 'foo')
+
+        s5 = Series.from_overlay((s3, s1, s2))
+        self.assertEqual(s5.to_pairs(),
+                (('a', 1.0), ('b', 230.0), ('c', 199.0), ('d', 3.1))
+                )
+        self.assertEqual(s5.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_f(self) -> None:
+        s1 = Series((1, np.nan, 5), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, -3, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, 230), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), union=False)
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('c', 5.0))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
+    def test_series_from_overlay_g(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, np.nan), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), union=False)
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('c', 199.0))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_h(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, 1.1, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((None, 'foo'), index=('c', 'b'))
+
+        # last series does not force a type coercion
+        s4 = Series.from_overlay((s1, s2, s3))
+
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
+        self.assertEqual(s4.dtype.kind, 'f')
+
+
+    def test_series_from_overlay_i(self) -> None:
+        s1 = Series(('2020', None, None, '1999'), index=('a', 'd', 'c', 'b'), dtype=np.datetime64)
+        s2 = Series(('2020-05-03', None, '1983-09-21', '1830-05-02'), index=('a', 'b', 'c', 'd'), dtype=np.datetime64)
+
+        s3 = Series(('1233-05-03', '1444-01-04', '1322-09-21', '2834-05-02'), index=('a', 'b', 'c', 'd'), dtype=np.datetime64)
+
+        # year gets coerced to date going from s1 to s2
+        s4 = Series.from_overlay((s1, s2, s3))
+        self.assertEqual(s4.to_pairs(),
+                (('a', np.datetime64('2020-01-01')), ('b', np.datetime64('1999-01-01')), ('c', np.datetime64('1983-09-21')), ('d', np.datetime64('1830-05-02')))
+                )
+
+
+    def test_series_from_overlay_j(self) -> None:
+
+        s1 = Series((1, np.nan, np.nan),
+                index=Index(('a', 'b', 'c'), name='foo'))
+        s2 = Series((10, 30, 1.1, 3.1),
+                index=Index(('a', 'b', 'c', 'd'), name='foo'))
+
+        # last series does not force a type coercion
+        s4 = Series.from_overlay((s1, s2))
+        self.assertEqual(s4.index.name, 'foo')
+        self.assertEqual(s4.to_pairs(),
+                (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
+        self.assertEqual(s4.dtype.kind, 'f')
+
+    def test_series_from_overlay_k(self) -> None:
+        s1 = Series((1, np.nan, np.nan), index=('a', 'b', 'c'))
+        s2 = Series((10, 30, np.nan, 3.1), index=('a', 'b', 'c', 'd'))
+        s3 = Series((199, np.nan), index=('c', 'b'))
+
+        s4 = Series.from_overlay((s1, s2, s3), index=('b', 'd'))
+        self.assertEqual(s4.to_pairs(),
+                (('b', 30.0), ('d', 3.1))
+                )
+        self.assertEqual(s4.dtype.kind, 'f')
+
 
 
 if __name__ == '__main__':

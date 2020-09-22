@@ -73,7 +73,7 @@ def subset_contiguous_sum(target: int) -> tp.Tuple[tp.Tuple[int, ...], ...]:
     if target == 0:
         return ()
 
-    if not (0 < target <= 32):
+    if not 0 < target <= 32:
         # over sizes of 60 or so performance is noticieable
         raise RuntimeError(f'target is too large: {target}')
 

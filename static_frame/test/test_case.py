@@ -10,6 +10,8 @@ import cmath
 import sqlite3
 import contextlib
 import tempfile
+import time
+import datetime
 from pathlib import Path
 
 import numpy as np
@@ -18,8 +20,8 @@ import pytest
 
 from static_frame import TypeBlocks
 from static_frame.core.container import ContainerOperand
-from static_frame.core.index_base import IndexBase
 from static_frame.core.frame import Frame
+from static_frame.core.index_base import IndexBase
 from static_frame.core.util import PathSpecifier
 
 
@@ -30,15 +32,36 @@ from static_frame.core.util import PathSpecifier
 
 
 skip_win = pytest.mark.skipif(
-        sys.platform == 'win32',
+        sys.platform.startswith('win'),
         reason='Windows default dtypes'
         )
 
+skip_pylt37 = pytest.mark.skipif(
+        sys.version_info < (3, 7),
+        reason='Windows default dtypes'
+        )
 
 skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,
         reason='No display available'
         )
+
+#-------------------------------------------------------------------------------
+class Timer():
+
+    def __init__(self, label: str = ''):
+        self._start = time.time()
+        self._label = label
+
+    def __call__(self) -> float:
+        return time.time() - self._start
+
+    def __str__(self) -> str:
+        if self._label:
+            return f'{self._label}: {datetime.timedelta(seconds=self.__call__())}'
+        return str(datetime.timedelta(seconds=self.__call__()))
+
+#-------------------------------------------------------------------------------
 
 @contextlib.contextmanager
 def temp_file(suffix: tp.Optional[str] = None,
@@ -54,8 +77,10 @@ def temp_file(suffix: tp.Optional[str] = None,
             yield tmp_name
     finally:
         if os.path.exists(tmp_name):
-            os.unlink(tmp_name)
-
+            try:
+                os.unlink(tmp_name)
+            except PermissionError: # happens on Windows sometimes
+                pass
 
 class TestCase(unittest.TestCase):
     '''

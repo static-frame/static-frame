@@ -14,6 +14,10 @@ from static_frame.core.store import store_coherent_write
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
+
+# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+# from static_frame.core.store_filter import StoreFilter
+
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
@@ -89,13 +93,13 @@ class StoreSQLite(Store):
                 )
 
         create_fields = ', '.join(f'{k} {v}' for k, v in field_name_to_field_type)
-        create = f'CREATE TABLE {label} ({create_fields}{create_primary_key})'
+        create = f'CREATE TABLE "{label}" ({create_fields}{create_primary_key})'
         cursor.execute(create)
 
         # works for IndexHierarchy too
         insert_fields = ', '.join(f'{k}' for k in field_names)
         insert_template = ', '.join('?' for _ in field_names)
-        insert = f'INSERT INTO {label} ({insert_fields}) VALUES ({insert_template})'
+        insert = f'INSERT INTO "{label}" ({insert_fields}) VALUES ({insert_template})'
 
         values = cls._get_row_iterator(frame=frame, include_index=include_index)
         cursor.executemany(insert, values())
@@ -104,10 +108,8 @@ class StoreSQLite(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            config: StoreConfigMapInitializer = None
-            # include_index: bool = True,
-            # include_columns: bool = True,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
+            config: StoreConfigMapInitializer = None,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> None:
 
         config_map = StoreConfigMap.from_initializer(config)
@@ -175,7 +177,7 @@ class StoreSQLite(Store):
                 detect_types=sqlite3.PARSE_DECLTYPES
                 ) as conn:
             # cursor = conn.cursor()
-            query = f'SELECT * from {label}'
+            query = f'SELECT * from "{label}"'
             return tp.cast(Frame, container_type.from_sql(query=query,
                     connection=conn,
                     index_depth=config.index_depth,

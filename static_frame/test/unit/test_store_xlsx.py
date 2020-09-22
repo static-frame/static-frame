@@ -18,6 +18,7 @@ from static_frame.test.test_case import temp_file
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store import StoreConfig
 from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_filter import StoreFilter
 
 
 class TestUnit(TestCase):
@@ -182,6 +183,58 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_store_xlsx_read_d(self) -> None:
+
+        f1 = Frame.from_records(
+                ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
+                index=('p', 'q'),
+                columns=('a', 'b', 'c', 'd'),
+                name='f1')
+
+        sc1 = StoreConfig(include_index=False, include_columns=True)
+        sc2 = StoreConfig(columns_depth=0, index_depth=0)
+
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),), config=sc1)
+
+
+            f2 = st.read(None) #  get default config
+            self.assertEqual(f2.to_pairs(0),
+                    (('a', ((0, 10), (1, 50))), ('b', ((0, 20.0), (1, 60.4))), ('c', ((0, 50), (1, -50))), ('d', ((0, 60), (1, -60)))))
+
+            f3 = st.read(None, config=sc2)
+            self.assertEqual(f3.to_pairs(0),
+                    ((0, ((0, 'a'), (1, 10), (2, 50))), (1, ((0, 'b'), (1, 20), (2, 60.4))), (2, ((0, 'c'), (1, 50), (2, -50))), (3, ((0, 'd'), (1, 60), (2, -60)))))
+
+
+    def test_store_xlsx_read_e(self) -> None:
+
+        f1 = Frame.from_records(
+                ((np.inf, np.inf), (-np.inf, -np.inf)),
+                index=('p', 'q'),
+                columns=('a', 'b'),
+                name='f1')
+
+        sc1 = StoreConfig(columns_depth=1, index_depth=1)
+
+        with temp_file('.xlsx') as fp:
+
+            st = StoreXLSX(fp)
+            st.write(((None, f1),))
+
+            f1 = st.read(None, config=sc1, store_filter=None)
+            self.assertEqual(f1.to_pairs(0),
+                    (('a', (('p', 'inf'), ('q', '-inf'))), ('b', (('p', 'inf'), ('q', '-inf')))))
+
+            f2 = st.read(None, config=sc1, store_filter=StoreFilter())
+            self.assertEqual(f2.to_pairs(0),
+                    (('a', (('p', np.inf), ('q', -np.inf))),
+                    ('b', (('p', np.inf), ('q', -np.inf)))))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_dtype_to_writer_attr(self) -> None:
@@ -194,7 +247,7 @@ class TestUnit(TestCase):
         attr2, switch2 = StoreXLSX._dtype_to_writer_attr(
                 np.array(('2020-01-01', '2021-01-01'), dtype=np.datetime64).dtype)
 
-        self.assertEqual(attr2, 'write_datetime')
+        self.assertEqual(attr2, 'write')
         self.assertEqual(switch2, True)
 
 if __name__ == '__main__':

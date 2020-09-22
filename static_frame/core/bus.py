@@ -7,12 +7,11 @@ import numpy as np
 from static_frame.core.container import ContainerBase
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
-from static_frame.core.hloc import HLoc
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.series import Series
 from static_frame.core.store import Store
@@ -30,6 +29,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import NameType
 
 
 #-------------------------------------------------------------------------------
@@ -72,13 +72,15 @@ class Bus(ContainerBase): # not a ContainerOperand
             frames: tp.Iterable[Frame],
             *,
             config: StoreConfigMapInitializer = None,
+            name: NameType = None,
             ) -> 'Bus':
-        '''Return a ``Bus`` from an iterable of ``Frame``; labels will be drawn from :obj:`Frame.name`.
+        '''Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`.
         '''
         # could take a StoreConfigMap
         series = Series.from_items(
                     ((f.name, f) for f in frames),
-                    dtype=object
+                    dtype=object,
+                    name=name,
                     )
         return cls(series, config=config)
 
@@ -153,7 +155,6 @@ class Bus(ContainerBase): # not a ContainerOperand
                 config=config
                 )
 
-
     #---------------------------------------------------------------------------
     def __init__(self,
             series: Series,
@@ -196,9 +197,6 @@ class Bus(ContainerBase): # not a ContainerOperand
     # delegation
 
     def __getattr__(self, name: str) -> tp.Any:
-        # if name == 'interface':
-        #     return getattr(self.__class__, 'interface')
-
         try:
             return getattr(self._series, name)
         except AttributeError:
@@ -270,7 +268,7 @@ class Bus(ContainerBase): # not a ContainerOperand
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
 
-        iloc_key = self._series._index.loc_to_iloc(key) #type: ignore
+        iloc_key = self._series._index.loc_to_iloc(key)
 
         # NOTE: if we update before slicing, we change the local and the object handed back
         self._update_series_cache_iloc(key=iloc_key)
@@ -278,12 +276,11 @@ class Bus(ContainerBase): # not a ContainerOperand
         values = self._series.values[iloc_key]
 
         if not isinstance(values, np.ndarray): # if we have a single element
-            if isinstance(key, HLoc) and key.has_key_multiple():
-                # must return a Series, even though we do not have an array
-                values = np.array(values)
-                values.flags.writeable = False
-            else:
-                return values #type: ignore
+            # NOTE: only support str labels, not IndexHierarchy
+            # if isinstance(key, HLoc) and key.has_key_multiple():
+            #     values = np.array(values)
+            #     values.flags.writeable = False
+            return values #type: ignore
 
         series = Series(values,
                 index=self._series._index.iloc[iloc_key],
@@ -304,8 +301,6 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''
         return self._extract_loc(key)
 
-
-
     #---------------------------------------------------------------------------
     # interfaces
 
@@ -317,14 +312,12 @@ class Bus(ContainerBase): # not a ContainerOperand
     def iloc(self) -> InterfaceGetItem['Bus']:
         return InterfaceGetItem(self._extract_iloc)
 
-
     # ---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[tp.Hashable]:
         return reversed(self._series._index) #type: ignore
 
     def __len__(self) -> int:
         return self._series.__len__()
-
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -340,8 +333,7 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''A 1D array of values.
         '''
         self._update_series_cache_all()
-        return self._seires.values
-
+        return self._series.values
 
     #---------------------------------------------------------------------------
     @doc_inject()
@@ -359,7 +351,6 @@ class Bus(ContainerBase): # not a ContainerOperand
                 header=DisplayHeader(self.__class__, self._series._name),
                 config=config)
         return self._series._display(config, display_cls)
-
 
     #---------------------------------------------------------------------------
     # extended disciptors
@@ -495,10 +486,6 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         return True
 
-
-
-
-
     #---------------------------------------------------------------------------
     # exporters
 
@@ -532,7 +519,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreXLSX(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)
 
     def to_sqlite(self,
             fp: PathSpecifier,
@@ -540,7 +527,7 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreSQLite(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)
 
     def to_hdf5(self,
             fp: PathSpecifier,
@@ -548,4 +535,4 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreHDF5(fp)
         config = config if not None else self._config
-        store.write(self.items())
+        store.write(self.items(), config=config)

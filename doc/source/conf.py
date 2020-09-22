@@ -21,14 +21,37 @@ import typing as tp
 
 import static_frame as sf
 
-from static_frame.core.container import _UFUNC_UNARY_OPERATORS
-from static_frame.core.container import _UFUNC_BINARY_OPERATORS
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
+from static_frame.core.interface import INTERFACE_GROUP_ORDER
+from static_frame.core.interface import InterfaceSummary
 from static_frame.core.util import AnyCallable
-
 from static_frame.performance import core
 from static_frame.performance.perf_test import PerfTest
-from static_frame.core.interface import InterfaceSummary
+from static_frame.test.unit.test_doc import api_example_str
+
+PREFIX_START = '#start_'
+PREFIX_END = '#end_'
+
+def get_defined() -> tp.Set[str]:
+
+    defined = set()
+    signature_start = ''
+    signature_end = ''
+
+    for line in api_example_str.split('\n'):
+        if line.startswith(PREFIX_START):
+            signature_start = line.replace(PREFIX_START, '').strip()
+        elif line.startswith(PREFIX_END):
+            signature_end = line.replace(PREFIX_END, '').strip()
+            if signature_start == signature_end:
+                if signature_start in defined:
+                    raise RuntimeError(f'duplicate definition: {signature_start}')
+                defined.add(signature_start)
+                signature_start = ''
+                signature_end = ''
+            else:
+                raise RuntimeError(f'mismatched: {signature_start}: {signature_end}')
+
+    return defined
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -36,10 +59,9 @@ from static_frame.core.interface import InterfaceSummary
 #sys.path.insert(0, os.path.abspath('.'))
 
 
+def get_jinja_contexts() -> tp.Dict[str, tp.Any]:
 
-def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
-
-    post = {}
+    post: tp.Dict[str, tp.Any] = {}
 
     performance_cls = []
     for name in dir(core):
@@ -49,26 +71,16 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
 
     post['performance_cls'] = performance_cls
 
-    def get_func_doc(cls: type, func_iter: tp.Iterable[str]) -> tp.List[tp.Tuple[str, str]]:
-        return [(f, getattr(cls, f).__doc__) for f in sorted(func_iter)]
+    # for docs
+    post['examples_defined'] = get_defined()
+    # post['interface_groups'] = INTERFACE_GROUP_ORDER
 
-    for cls in (sf.Index, sf.Series, sf.Frame):
-        label = cls.__name__
-        post[label + '_operator_unary'] = get_func_doc(cls,
-                _UFUNC_UNARY_OPERATORS)
-        post[label + '_operator_binary'] = get_func_doc(cls,
-                _UFUNC_BINARY_OPERATORS)
-
-    for cls in (sf.Index, sf.Series, sf.Frame):
-        label = cls.__name__
-        post[label + '_ufunc_axis'] = sorted(UFUNC_AXIS_SKIPNA.keys())
-
-
-    post['interface'] = []
+    post['interface'] = {}
     for target in (
             sf.Series,
             sf.Frame,
             sf.FrameGO,
+            sf.Batch,
             sf.Bus,
             sf.Index,
             sf.IndexGO,
@@ -92,15 +104,26 @@ def get_jinja_contexts() -> tp.Dict[str, tp.List[tp.Tuple[str, str]]]:
             sf.IndexMicrosecondGO,
             sf.IndexNanosecond,
             sf.IndexNanosecondGO,
+            sf.DisplayConfig,
+            sf.StoreConfig,
+            sf.StoreFilter,
             ):
-        post['interface'].append((
-                target.__name__,
-                target,
-                InterfaceSummary.to_frame(target, #type: ignore
+
+        inter = InterfaceSummary.to_frame(target, #type: ignore
                         minimized=False,
                         max_args=99, # +inf, but keep as int
                         )
-                ))
+        # break into iterable of group, frame
+        inter_items = []
+        for g in INTERFACE_GROUP_ORDER:
+            inter_sub = inter.loc[inter['group'] == g]
+            if inter_sub: # some groups are empty
+                inter_items.append((g, inter_sub))
+        post['interface'][target.__name__] = (
+                target.__name__,
+                target,
+                inter_items,
+                )
     return post
 
 jinja_contexts = {'ctx': get_jinja_contexts()}

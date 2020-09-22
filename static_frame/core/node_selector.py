@@ -2,15 +2,14 @@ import typing as tp
 
 import numpy as np
 
-
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import EMPTY_TUPLE
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NULL_SLICE
 
-
 if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.bus import Bus  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  #pylint: disable = W0611 #pragma: no cover
@@ -21,8 +20,10 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 
-TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'IndexHierarchy')
-GetItemFunc = tp.TypeVar('GetItemFunc', bound=tp.Callable[[GetItemKeyType], TContainer])
+TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'Batch', 'IndexHierarchy')
+GetItemFunc = tp.TypeVar('GetItemFunc',
+        bound=tp.Callable[[GetItemKeyType], TContainer]
+        )
 
 
 class Interface(tp.Generic[TContainer]):
@@ -205,6 +206,47 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TContainer]):
                 )
         self.delegate = delegate #pylint: disable=E0237
 
+
+#-------------------------------------------------------------------------------
+
+# class InterfaceBatchQuartet(InterfaceSelectQuartet[TContainer]):
+#     '''For bulk operations on groups with __getitem__, iloc, loc, bloc.
+#     '''
+#     __slots__ = (
+#             '_func_iloc',
+#             '_func_loc',
+#             '_func_getitem',
+#             '_func_bloc',
+#             'delegate'
+#             )
+
+#     def __init__(self, *,
+#             container_items: tp.Iterable[tp.Tuple[tp.Hashable, 'Frame']],
+#             constructor: tp.Type[ContainerOperand]
+#             ) -> None:
+#         InterfaceSelectQuartet.__init__(self, #type: ignore
+#                 func_iloc=partial(BatchProcessor,
+#                         selector=BatchSelector.ILoc,
+#                         container_items=container_items,
+#                         constructor=constructor,
+#                         ),
+#                 func_loc=partial(BatchProcessor,
+#                         selector=BatchSelector.Loc,
+#                         container_items=container_items,
+#                         constructor=constructor,
+#                         ),
+#                 func_getitem=partial(BatchProcessor,
+#                         selector=BatchSelector.GetItem,
+#                         container_items=container_items,
+#                         constructor=constructor,
+#                         ),
+#                 func_bloc=partial(BatchProcessor,
+#                         selector=BatchSelector.BLoc,
+#                         container_items=container_items,
+#                         constructor=constructor,
+#                         ),
+#                 )
+#         self.delegate = BatchProcessor #pylint: disable=E0237
 
 #-------------------------------------------------------------------------------
 

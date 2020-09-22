@@ -1,6 +1,103 @@
 What is New in Static Frame
 ===============================
 
+0.6.34
+----------
+
+Updated all delimited text output formats to include a final line termination.
+
+``Frame.from_overlay`` now takes optional ``index`` and ``columns`` arguments; ``Series.from_overlay`` now takes an optional ``index`` argument.
+
+Improvements to union/intersection index formation in ``Frame.from_overlay`` and ``Series.from_overlay``.
+
+
+0.6.33
+----------
+
+Performance improvements to ``Frame.pivot``.
+
+``Frame.from_xlsx`` now exposes ``skip_header`` and ``skip_footer`` parameters.
+
+
+0.6.32
+----------
+
+Added ``Frame.from_overlay``, ``Series.from_overlay`` constructors.
+
+Added support for ``dataclass`` as records in ``Frame.from_records`` and ``Frame.from_records_items``.
+
+Additional delegated ``Frame`` methods added to ``Batch``.
+
+
+0.6.31
+----------
+
+Fixed issue when loading pickled containers where Boolean selection would not be properly identified.
+
+
+0.6.30
+----------
+
+Added ``via_dt.fromisoformat()`` to all containers, supporting creation of date/datetime objects from ISO 8601 strings.
+
+``Batch.to_frame`` now returns a `Frame` with an `IndexHierarchy` if all ``Batch`` operations retain one or more ``Frame``.
+
+``Batch`` interface extended with core ``Frame`` methods.
+
+Restored parameter name in ``Series.relabel`` to be ``index``.
+
+Support for writing date, datetime, and np.datetime64 via `Frame.to_xlsx`.
+
+Exposed ``store_filter`` parameter in ``Frame.from_xlsx``,``Frame.to_xlsx``.
+
+Removed  ``format_index``, ``format_columns`` attributes from ``StoreConfig``.
+
+
+0.6.29
+----------
+
+Fixed issue in ``Series.drop`` when the ``Series`` has an ``IndexHierarchy``.
+
+Calling ``Frame.from_series`` with something other than a ``Series`` will now raise.
+
+Calling ``Index.from_pandas``, ``Series.from_pandas``, and ``Frame.from_pandas`` now raise when given a non-Pandas object.
+
+``StoreConfig`` given to ``Bus.to_xlsx``, ``Bus.to_sqlite``, and ``Bus.to_hdf5`` are now properly used.
+
+
+0.6.28
+----------
+
+Introduced the ``Batch``, a lazy, parallel processor of groups of ``Frame``.
+
+``Index`` and ``IndexHierarchy`` ``intersection()`` and ``union()`` now accept ``*args``, performing the set operation iteratively on all arguments.
+
+Revised default aggregation function to ``Frame.pivot``.
+
+Fixed issue in writing SQLite stores from ``Frame`` labelled with strings containing hyphens.
+
+Added `include_index_name`, `include_columns_name` to ``Frame.to_delimited``.
+
+Added `include_index_name`, `include_columns_name` to ``StoreConfig`` and ``Frame.to_xlsx`` interfaces.
+
+Added `index_name_depth_level` and `columns_name_depth_level` to `Frame.from_delimited` and related methods.
+
+Added `index_name_depth_level`, `columns_name_depth_level` to ``StoreConfig`` and ``Frame.from_xlsx`` interfaces.
+
+
+0.6.27
+----------
+
+Improved implementation of ``Frame.pivot``.
+
+
+0.6.26
+----------
+
+Removed class-level documentation injection, permitting better static analysis.
+
+Corrected issue in appending tuples to an empty ``IndexGO``.
+
 
 0.6.25
 ----------

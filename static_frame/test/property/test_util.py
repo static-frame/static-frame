@@ -8,30 +8,25 @@ import numpy as np
 from hypothesis import strategies as st
 from hypothesis import given
 
+# from static_frame.test.property.strategies import get_arrays_2d_aligned
+# from static_frame.test.property.strategies import get_blocks
+# from static_frame.test.property.strategies import get_label
+from static_frame.core import util
+from static_frame.core.interface import UFUNC_AXIS_SKIPNA
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property.strategies import DTGroup
-
-from static_frame.test.property.strategies import get_shape_1d2d
 from static_frame.test.property.strategies import get_array_1d
 from static_frame.test.property.strategies import get_array_1d2d
 from static_frame.test.property.strategies import get_array_2d
-from static_frame.test.property.strategies import get_dtype_pairs
-
-from static_frame.test.property.strategies import get_dtype
-from static_frame.test.property.strategies import get_dtypes
-# from static_frame.test.property.strategies import get_label
-from static_frame.test.property.strategies import get_value
-from static_frame.test.property.strategies import get_labels
-# from static_frame.test.property.strategies import get_arrays_2d_aligned
 from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
 from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
-# from static_frame.test.property.strategies import get_blocks
-
-from static_frame.core.container import UFUNC_AXIS_SKIPNA
-
+from static_frame.test.property.strategies import get_dtype
+from static_frame.test.property.strategies import get_dtype_pairs
+from static_frame.test.property.strategies import get_dtypes
+from static_frame.test.property.strategies import get_labels
+from static_frame.test.property.strategies import get_shape_1d2d
+from static_frame.test.property.strategies import get_value
 from static_frame.test.test_case import TestCase
-from static_frame.core import util
-
 
 class TestUnit(TestCase):
 
@@ -106,7 +101,7 @@ class TestUnit(TestCase):
 
     @given(get_dtype())
     def test_dtype_to_na(self, dtype: util.DtypeSpecifier) -> None:
-        post = util.dtype_to_na(dtype)
+        post = util.dtype_to_fill_value(dtype)
         self.assertTrue(post in {0, False, None, '', np.nan, util.NAT})
 
 
@@ -307,9 +302,9 @@ class TestUnit(TestCase):
                 arrays[1],
                 assume_unique=False)
         self.assertTrue(post.ndim == 1)
-        # nan values in complex numbers make direct comparison tricky
-        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
 
+        # this includes cases where there are more than one NaN
+        self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
         if (post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
                 and not np.isnan(post).any()):

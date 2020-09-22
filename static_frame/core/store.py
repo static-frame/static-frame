@@ -8,6 +8,7 @@ from functools import partial
 from functools import wraps
 import numpy as np
 
+from static_frame.core.interface_meta import InterfaceMeta
 
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import ErrorInitStoreConfig
@@ -18,18 +19,37 @@ from static_frame.core.util import AnyCallable
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import path_filter
 from static_frame.core.util import PathSpecifier
+from static_frame.core.util import DepthLevelSpecifier
 
 
 #-------------------------------------------------------------------------------
-class StoreConfig:
+class StoreConfig(metaclass=InterfaceMeta):
+    '''
+    A read-only container of parameters used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
+    '''
+
     index_depth: int
     columns_depth: int
     dtypes: DtypesSpecifier
     include_index: bool
     include_columns: bool
-    format_index: tp.Optional[tp.Dict[str, tp.Any]]
-    format_columns: tp.Optional[tp.Dict[str, tp.Any]]
     merge_hierarchical_labels: bool
+
+    __slots__ = (
+            'index_depth',
+            'index_name_depth_level',
+            'columns_depth',
+            'columns_name_depth_level',
+            'dtypes',
+            'consolidate_blocks',
+            'skip_header',
+            'skip_footer',
+            'include_index',
+            'include_index_name',
+            'include_columns',
+            'include_columns_name',
+            'merge_hierarchical_labels',
+            )
 
     @classmethod
     def from_frame(cls, frame: Frame) -> 'StoreConfig':
@@ -48,52 +68,47 @@ class StoreConfig:
                 include_columns=include_columns
                 )
 
-    __slots__ = (
-            'index_depth',
-            'columns_depth',
-            'dtypes',
-            'consolidate_blocks',
-            'include_index',
-            'include_columns',
-            'format_index',
-            'format_columns',
-            'merge_hierarchical_labels',
-            )
-
     def __init__(self, *,
             # constructors
             index_depth: int = 0, # this default does not permit round trip
+            index_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             columns_depth: int = 1,
+            columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            skip_header: int = 0,
+            skip_footer: int = 0,
             # exporters
             include_index: bool = True,
+            include_index_name: bool = True,
             include_columns: bool = True,
+            include_columns_name: bool = False,
             # not used by all exporters
-            format_index: tp.Optional[tp.Dict[str, tp.Any]] = None,
-            format_columns: tp.Optional[tp.Dict[str, tp.Any]] = None,
             merge_hierarchical_labels: bool = True,
             ):
         '''
         Args:
             include_index: Boolean to determine if the ``index`` is included in output.
             include_columns: Boolean to determine if the ``columns`` is included in output.
-            format_index: dictionary of writer format specfications.
-            format_columns: dictionary of writer format specfications.
         '''
-
         # constructor
         self.index_depth = index_depth
+        self.index_name_depth_level = index_name_depth_level
         self.columns_depth = columns_depth
+        self.columns_name_depth_level = columns_name_depth_level
         self.dtypes = dtypes
         self.consolidate_blocks = consolidate_blocks
+        self.skip_header = skip_header
+        self.skip_footer = skip_footer
 
         # exporter
         self.include_index = include_index
+        self.include_index_name = include_index_name
         self.include_columns = include_columns
+        self.include_columns_name = include_columns_name
 
-        self.format_index = format_index
-        self.format_columns = format_columns
+        # self.format_index = format_index
+        # self.format_columns = format_columns
         self.merge_hierarchical_labels = merge_hierarchical_labels
 
 # NOTE: key should be tp.Optional[str], but cannot get mypy to accept

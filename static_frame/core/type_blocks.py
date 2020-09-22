@@ -13,7 +13,7 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayConfig
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitTypeBlocks
@@ -27,8 +27,9 @@ from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import dtype_to_na
+from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
 from static_frame.core.util import GetItemKeyType
@@ -169,7 +170,7 @@ class TypeBlocks(ContainerOperand):
         '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
         '''
         fill_value = (fill_value if fill_value is not FILL_VALUE_DEFAULT
-                else dtype_to_na(dtype))
+                else dtype_to_fill_value(dtype))
 
         a = np.full(shape, fill_value=fill_value, dtype=dtype)
         for iloc, v in items:
@@ -695,14 +696,15 @@ class TypeBlocks(ContainerOperand):
 
     def group(self,
             axis: int,
-            key: GetItemKeyTypeCompound
-            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, np.ndarray]]:
+            key: GetItemKeyTypeCompound,
+            # drop: bool = False,
+            ) -> tp.Iterator[tp.Tuple[np.ndarray, np.ndarray, 'TypeBlocks']]:
         '''
         Args:
             key: iloc selector on opposite axis
 
         Returns:
-            Generator of group, selection pairs, where selection is an np.ndaarray. Returned is as an np.ndarray if key is more than one column.
+            Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
         '''
         # in worse case this will make a copy of the values extracted; this is probably still cheaper than iterating manually through rows/columns
         unique_axis = None
@@ -725,6 +727,7 @@ class TypeBlocks(ContainerOperand):
                 unique_axis)
 
         if unique_axis is not None:
+            # NOTE: this is expensive!
             # make the groups hashable for usage in index construction
             if axis == 0:
                 groups = array2d_to_tuples(groups)
@@ -985,7 +988,6 @@ class TypeBlocks(ContainerOperand):
         '''
         if key is None or (isinstance(key, slice) and key == NULL_SLICE):
             yield from self._all_block_slices() # slow from line profiler, 80% of this function call
-
         else:
             if isinstance(key, INT_TYPES):
                 # the index has the pair block, column integer
@@ -1010,7 +1012,6 @@ class TypeBlocks(ContainerOperand):
                 else:
                     raise NotImplementedError('Cannot handle key', key)
                 yield from self._indices_to_contiguous_pairs(indices)
-
 
     #---------------------------------------------------------------------------
     def _mask_blocks(self,
@@ -1267,7 +1268,7 @@ class TypeBlocks(ContainerOperand):
                     # yield retained components before and after
                     parts.append(b[:, slice(part_start_last, target_start)])
                 part_start_last = target_stop
-                # reset target block index, forcing fetchin next target info
+                # reset target block index, forcing fetching next target info
                 target_block_idx = target_slice = None
 
             # if this is a 1D block we can rely on drop_block Boolean and parts list to determine action
@@ -1364,10 +1365,8 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
-        if isinstance(value, np.ndarray):
-            value_dtype = value.dtype
-        else:
-            value_dtype = np.array(value).dtype
+        # value_dtype = np.array(value).dtype
+        value_dtype = dtype_from_element(value)
 
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
         target_block_slices = iter(self._key_to_block_slices(
@@ -1501,14 +1500,14 @@ class TypeBlocks(ContainerOperand):
                 yield b # no change
 
     #---------------------------------------------------------------------------
-    # There are two approaches to setting values from Boolean indicators; the difference is if the Booleans are given in a single array, or in block-aligned arrays.
+    # There are three approaches to setting values from Boolean indicators; the difference between the first two is if the Booleans are given in a single array, or in block-aligned arrays. The third approach uses block-alinged arrays, but values are provided as an iterable of arrays.
 
     def _assign_blocks_from_boolean_blocks(self,
             targets: tp.Iterable[np.ndarray],
             value: object,
             value_valid: tp.Optional[np.ndarray]
             ) -> tp.Iterator[np.ndarray]:
-        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, returning blocks of the same size and shape. Value is set where the Boolean is True.
+        '''Assign value (a single element or a matching array) into all blocks based on a Bolean arrays of shape equal to each block in these blocks, yielding blocks of the same size and shape. Value is set where the Boolean is True.
 
         Args:
             value: Must be a single value or an array
@@ -1518,9 +1517,11 @@ class TypeBlocks(ContainerOperand):
             value_dtype = value.dtype
             is_element = False
             assert value.shape == self.shape
-            assert value_valid.shape == self.shape #type: ignore
+            if value_valid is not None:
+                assert value_valid.shape == self.shape
         else: # assumed to be non-string, non-iterable
-            value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
+            # value_dtype = np.array(value).dtype
             is_element = True
 
         start = 0
@@ -1539,8 +1540,10 @@ class TypeBlocks(ContainerOperand):
                     value_slice = slice(start, end)
 
                 # update target to valid values
-                value_valid_part = value_valid[NULL_SLICE, value_slice] #type: ignore
-                target &= value_valid_part
+                if value_valid is not None:
+                    value_valid_part = value_valid[NULL_SLICE, value_slice]
+                    target &= value_valid_part
+
                 value_part = value[NULL_SLICE, value_slice][target] #type: ignore
                 start = end # always update start
             else:
@@ -1562,6 +1565,60 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
 
 
+    def _assign_blocks_from_boolean_blocks_and_value_arrays(self,
+            targets: tp.Iterable[np.ndarray],
+            values: tp.Sequence[np.ndarray],
+            ) -> tp.Iterator[np.ndarray]:
+        '''Assign values (derived from an iterable of arrays) into all blocks based on a Boolean arrays of shape equal to each block in these blocks. This yields blocks of the same size and shape. Value is set where the Boolean is True.
+
+        This approach minimizes type coercion by reducing assigned values to columnar types.
+
+        Args:
+            value: Must be a single value or an array
+        '''
+        start = 0
+        for block, target in zip_longest(self._blocks, targets):
+            if block is None or target is None:
+                raise RuntimeError('blocks or targets do not align')
+
+            if block.ndim == 1:
+                end = start + 1
+            else:
+                end = start + block.shape[1]
+
+            if not target.any(): # works for ndim 1 and 2
+                yield block
+            else:
+                values_for_block = values[start: end] # get 1D array from tuple
+                # target and block must be ndim=2
+                for i in range(end - start):
+                    if block.ndim == 1: # will only do one iteration
+                        assert len(values_for_block) == 1
+                        target_sub = target
+                        block_sub = block
+                    else:
+                        target_sub = target[:, i]
+                        block_sub = block[:, i]
+
+                    if not target_sub.any():
+                        yield block_sub
+                    else:
+                        values_to_assign = values_for_block[i]
+                        if target_sub.all():
+                            # will be made immutable of not already
+                            yield values_to_assign
+                        else:
+                            assigned_dtype = resolve_dtype(values_to_assign.dtype, block.dtype)
+                            if block.dtype == assigned_dtype:
+                                assigned = block_sub.copy()
+                            else:
+                                assigned = block_sub.astype(assigned_dtype)
+                            assigned[target_sub] = values_to_assign[target_sub]
+                            assigned.flags.writeable = False
+                            yield assigned
+            start = end # always update start
+
+
     def _assign_blocks_from_bloc_key(self,
             bloc_key: np.ndarray,
             value: tp.Any # an array, or element for single assigment
@@ -1574,7 +1631,8 @@ class TypeBlocks(ContainerOperand):
             is_element = False
             assert value.shape == self.shape
         else:
-            value_dtype = np.array(value).dtype
+            # value_dtype = np.array(value).dtype
+            value_dtype = dtype_from_element(value)
             is_element = True
 
         start = 0
@@ -1651,7 +1709,7 @@ class TypeBlocks(ContainerOperand):
                     block_sliced = b[row_key] # slow from line profiler
             else: # given 2D, use row key and column slice
                 if row_key_null:
-                    block_sliced = b[:, slc]
+                    block_sliced = b[NULL_SLICE, slc]
                 else:
                     block_sliced = b[row_key, slc]
 
@@ -1666,6 +1724,7 @@ class TypeBlocks(ContainerOperand):
                         and not single_row):
                     block_sliced = block_sliced[0]
             else: # a single element, wrap back up in array
+                # NOTE: this is faster than using np.full(1, block_sliced, dtype=dtype)
                 block_sliced = np.array((block_sliced,), dtype=b.dtype)
 
             yield block_sliced
@@ -1904,33 +1963,6 @@ class TypeBlocks(ContainerOperand):
                 apply_column_2d_filter=apply_column_2d_filter,
                 ))
 
-
-
-    def _ufunc_axis_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        # not sure if these make sense on TypeBlocks, as they reduce dimensionality
-        raise NotImplementedError() #pragma: no cover
-
-    def _ufunc_shape_skipna(self, *,
-            axis: int,
-            skipna: bool,
-            ufunc: UFunc,
-            ufunc_skipna: UFunc,
-            composable: bool,
-            dtypes: tp.Tuple[np.dtype, ...],
-            size_one_unity: bool
-            ) -> np.ndarray:
-        # not sure if these make sense on TypeBlocks, as they reduce dimensionality
-        raise NotImplementedError() #pragma: no cover
-
-
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
@@ -2003,7 +2035,9 @@ class TypeBlocks(ContainerOperand):
                 # can use this last-row observation below
                 yield b
             else:
-                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                assignable_dtype = resolve_dtype(
+                        dtype_from_element(value),
+                        b.dtype)
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:
@@ -2078,7 +2112,9 @@ class TypeBlocks(ContainerOperand):
             if not isna_entry.any():
                 yield b
             else:
-                assignable_dtype = resolve_dtype(np.array(value).dtype, b.dtype)
+                assignable_dtype = resolve_dtype(
+                        dtype_from_element(value),
+                        b.dtype)
                 if b.dtype == assignable_dtype:
                     assigned = b.copy()
                 else:
@@ -2090,7 +2126,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     # only collect rows that have a sided NaN
                     # could use np.nonzero()
-                    candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                    candidates = (i for i, j in enumerate(isna_entry) if j)
                     sels_nonzero = ((i, sel[i]) for i in candidates)
 
                     for idx, sel_nonzero in sels_nonzero:
@@ -2294,7 +2330,7 @@ class TypeBlocks(ContainerOperand):
                             sel_sided[bridging_count >= limit] = False # type: ignore
 
                         # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
-                        assigned[sel_sided] = bridging_values[sel_sided]
+                        assigned[sel_sided] = bridging_values[sel_sided] #pylint: disable=E1136
                         # only increment positions that are NaN here and have not-nan bridging values
                         sel_count_increment = sel & bridging_isnotna
                         bridging_count[sel_count_increment] += 1 # type: ignore
@@ -2320,7 +2356,7 @@ class TypeBlocks(ContainerOperand):
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
                         # get a row of Booleans for plausible candidates
-                        candidates = (i for i, j in enumerate(isna_entry) if j == True)
+                        candidates = (i for i, j in enumerate(isna_entry) if j)
                         sels_nonzero = ((i, sel[i]) for i in candidates)
 
                         # get appropriate leading slice to cover nan region
@@ -2357,7 +2393,7 @@ class TypeBlocks(ContainerOperand):
 
                             # update with full length or limited length?
                             bridging_count[idx] += sided_len # type: ignore
-                            assigned[idx, sel_slice] = bridging_values[idx]
+                            assigned[idx, sel_slice] = bridging_values[idx] #pylint: disable=E1136
 
                     # handle each row (going horizontally) in isolation
                     target_indexes = binary_transition(sel, axis=1)
@@ -2492,6 +2528,22 @@ class TypeBlocks(ContainerOperand):
                         targets=(isna_array(b) for b in self._blocks),
                         value=value,
                         value_valid=value_valid
+                        )
+                )
+
+    def fillna_by_values(self,
+            values: tp.Sequence[np.ndarray],
+            ) -> 'TypeBlocks':
+        '''
+        Return a new TypeBlocks instance that fills missing values with the aligned columnar arrays.
+
+        Args:
+            values: iterable of arrays to be aligned as columns.
+        '''
+        return self.from_blocks(
+                self._assign_blocks_from_boolean_blocks_and_value_arrays(
+                        targets=(isna_array(b) for b in self._blocks),
+                        values=values,
                         )
                 )
 

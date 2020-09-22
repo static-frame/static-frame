@@ -2,6 +2,7 @@ import typing as tp
 from functools import partial
 from collections import defaultdict
 from itertools import repeat
+from itertools import product
 
 import numpy as np
 
@@ -13,11 +14,127 @@ from static_frame.core.util import DepthLevelSpecifier
 from static_frame.core.util import resolve_dtype
 from static_frame.core.util import resolve_dtype_iter
 from static_frame.core.util import IndexConstructor
+from static_frame.core.util import UFunc
 
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
 
+
+
+#-------------------------------------------------------------------------------
+# for Frame.pivot
+def extrapolate_column_fields(
+        columns_fields: tp.Sequence[tp.Hashable],
+        group: tp.Tuple[tp.Hashable, ...],
+        data_fields: tp.Sequence[tp.Hashable],
+        func_fields: tp.Iterable[tp.Hashable],
+        ) -> tp.Iterable[tp.Hashable]:
+    '''Used in Frame.pivot.
+
+    Args:
+        group: a unique label from the the result of doing a group-by with the `columns_fields`.
+    '''
+    columns_fields_len = len(columns_fields)
+    data_fields_len = len(data_fields)
+
+    sub_columns: tp.Iterable[tp.Hashable]
+
+    if columns_fields_len == 1 and data_fields_len == 1:
+        if not func_fields:
+            sub_columns = group # already a tuple
+        else:
+            sub_columns = [group + (label,) for label in func_fields]
+    elif columns_fields_len == 1 and data_fields_len > 1: # create a sub heading for each data field
+        if not func_fields:
+            sub_columns = list(product(group, data_fields))
+        else:
+            sub_columns = list(product(group, data_fields, func_fields))
+    elif columns_fields_len > 1 and data_fields_len == 1:
+        if not func_fields:
+            sub_columns = (group,)
+        else:
+            sub_columns = [group + (label,) for label in func_fields]
+    else: # group is already a tuple of the partial column label; need to extend with each data field
+        if not func_fields:
+            sub_columns = [group + (field,) for field in data_fields]
+        else:
+            sub_columns = [group + (field, label) for field in data_fields for label in func_fields]
+
+    return sub_columns
+
+
+def pivot_records_dtypes(
+        frame: 'Frame',
+        data_fields: tp.Iterable[tp.Hashable],
+        func_single: UFunc,
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
+        ) -> tp.Iterator[np.dtype]:
+    dtypes = frame.dtypes
+    for field in data_fields:
+        dtype = dtypes[field]
+        if func_single:
+            yield dtype
+        else: # we assume
+            for _, func in func_map:
+                yield None # do not know what func result will be
+
+
+def pivot_records_items(
+        frame: 'Frame',
+        group_fields: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_fields: tp.Iterable[tp.Hashable],
+        func_single: UFunc,
+        func_map: tp.Sequence[tp.Tuple[tp.Hashable, UFunc]]
+        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Sequence[tp.Any]]]:
+
+    take_group_index = group_depth > 1
+
+    for group_index, part in frame.iter_group_items(group_fields):
+        label = group_index if take_group_index else group_index[0]
+        record = []
+        part_columns_loc_to_iloc = part.columns.loc_to_iloc
+        for field in data_fields:
+            values = part._blocks._extract_array(
+                    row_key=None,
+                    column_key=part_columns_loc_to_iloc(field),
+                    )
+            if func_single:
+                if len(values) == 1:
+                    record.append(values[0])
+                else:
+                    record.append(func_single(values))
+            else:
+                for _, func in func_map:
+                    if len(values) == 1:
+                        record.append(values[0])
+                    else:
+                        record.append(func(values))
+        yield label, record
+
+def pivot_items(
+        frame: 'Frame',
+        group_fields: tp.Iterable[tp.Hashable],
+        group_depth: int,
+        data_fields: tp.Sequence[tp.Hashable],
+        func_single: UFunc,
+        ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
+    '''
+    Specialized generator of Pairs for when group_fields has been reduced to a single column.
+    '''
+    take_group = group_depth > 1
+
+    for group, sub in frame.iter_group_items(group_fields):
+        label = group if take_group else group[0]
+        values = sub._blocks._extract_array(
+                row_key=None,
+                column_key=sub.columns.loc_to_iloc(data_fields[0]),
+                )
+        if len(values) == 1:
+            yield label, values[0]
+        else: # can be sure we only have func_single
+            yield label, func_single(values)
 
 #-------------------------------------------------------------------------------
 class PivotIndexMap(tp.NamedTuple):
@@ -175,3 +292,5 @@ def pivot_derive_constructors(*,
             contract_constructor=contract_constructor,
             expand_constructor=expand_constructor,
             )
+
+

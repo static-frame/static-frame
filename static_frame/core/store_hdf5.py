@@ -15,6 +15,8 @@ from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
 
+# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
+# from static_frame.core.store_filter import StoreFilter
 
 class StoreHDF5(Store):
 
@@ -24,9 +26,7 @@ class StoreHDF5(Store):
     def write(self,
             items: tp.Iterable[tp.Tuple[tp.Optional[str], Frame]],
             *,
-            config: StoreConfigMapInitializer = None
-            # include_index: bool = True,
-            # include_columns: bool = True,
+            config: StoreConfigMapInitializer = None,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> None:
 
@@ -71,6 +71,7 @@ class StoreHDF5(Store):
             *,
             config: tp.Optional[StoreConfig] = None,
             container_type: tp.Type[Frame] = Frame,
+            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT
             ) -> Frame:
         '''
         Args:

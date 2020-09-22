@@ -475,14 +475,14 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertTypeBlocksArrayEqual(
-                -tb2[0:3],
+                -tb2[0:3], #type: ignore
                 [[-1, -2, -3],
                  [ 4, -5, -6],
                  [ 0,  0,  1]],
                 )
 
         self.assertTypeBlocksArrayEqual(
-                ~tb2[3:5],
+                ~tb2[3:5], #type: ignore
                 [[ True,  True],
                 [False,  True],
                 [False,  True]],
@@ -1215,6 +1215,99 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.values.tolist(),
                 [[0, 1, 2], [3, 'a', 'b'], [6, 7, 8]])
 
+
+
+    #--------------------------------------------------------------------------
+
+    def test_type_blocks_assign_blocks_value_arrays_a(self) -> None:
+
+        a1 = np.array([[3, 20], [4, 80],])
+        a2 = np.array([False, True])
+        a3 = np.array([['df', 'er'], ['fd', 'ij'],])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        targets = (np.array([[False, True], [False, True]]),
+                np.full(2, True),
+                np.array([[False, True], [True, False]]))
+
+        values = (np.array([None, None]),
+                np.array([100, 200]),
+                np.array([True, False]),
+                np.array([100, 200]),
+                np.array([500, 700]),
+                )
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_boolean_blocks_and_value_arrays(
+                       targets=targets,
+                       values=values
+                       ))
+
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['i', 'i', 'b', 'O', 'O'])
+        self.assertEqual(tb2.values.tolist(),
+                [[3, 100, True, 'df', 500], [4, 200, False, 200, 'ij']]
+                )
+
+    def test_type_blocks_assign_blocks_value_arrays_b(self) -> None:
+
+        a1 = np.array([4, 30])
+        a2 = np.array([False, True])
+        a3 = np.array([False, True])
+        a4 = np.array(['df', 'er'])
+        a5 = np.array([None, np.nan])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5))
+
+        targets = (np.array([False, True]),
+                np.array([True, False]),
+                np.array([True, False]),
+                np.array([True, True]),
+                np.array([False, True]),
+                )
+        values = (np.array([0, 1.5]),
+                np.array([100, 200]),
+                np.array([True, False]),
+                np.array(['fooo', 'bar']),
+                np.array([500, 700]),
+                )
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_boolean_blocks_and_value_arrays(
+                       targets=targets,
+                       values=values
+                       ))
+
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['f', 'O', 'b', 'U', 'O'])
+        self.assertEqual(tb2.values.tolist(),
+                [[4.0, 100, True, 'fooo', None], [1.5, True, True, 'bar', 700]]
+                )
+
+    def test_type_blocks_assign_blocks_value_arrays_c(self) -> None:
+
+        a1 = np.array([[3, 20, -5], [4, 80, -20],])
+        a2 = np.array([['df', 'er', 'er'], ['fd', 'ij', 'we'],])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        targets = (np.array([[False, True, False], [False, True, True]]),
+                np.array([[False, True, False], [False, True, True]]))
+
+        values = (np.array([None, None]),
+                np.array([True, False]),
+                np.array([1.5, 2.5]),
+                np.array([100, 200]),
+                np.array([500, 700]),
+                np.array([None, False]),
+                )
+        tb2 = TypeBlocks.from_blocks(
+                tb1._assign_blocks_from_boolean_blocks_and_value_arrays(
+                       targets=targets,
+                       values=values
+                       ))
+
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['i', 'b', 'f', 'U', 'i', 'O'])
+        self.assertEqual(tb2.values.tolist(),
+                [[3, True, -5.0, 'df', 500, 'er'], [4, False, 2.5, 'fd', 700, False]]
+                )
 
     #--------------------------------------------------------------------------
     def test_type_blocks_group_a(self) -> None:

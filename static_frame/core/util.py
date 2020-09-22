@@ -1,4 +1,3 @@
-
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
@@ -8,7 +7,6 @@ from functools import reduce
 from io import StringIO
 from itertools import chain
 from itertools import zip_longest
-# from pathlib import Path
 from os import PathLike
 from urllib import request
 import datetime
@@ -22,14 +20,12 @@ import numpy as np
 
 
 if tp.TYPE_CHECKING:
-
     from static_frame.core.index_base import IndexBase #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import Frame #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
-
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -51,21 +47,26 @@ if tp.TYPE_CHECKING:
 DEFAULT_SORT_KIND = 'mergesort'
 DEFAULT_STABLE_SORT_KIND = 'mergesort'
 
-# ARCHITECTURE_SIZE = struct.calcsize('P') * 8 # size of pointer
-# ARCHITECTURE_INT_DTYPE = np.int64 if ARCHITECTURE_SIZE == 64 else np.int32
-
-DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
-DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
-DTYPE_INEXACT_KINDS = ('f', 'c') # kinds that support NaN values
-DTYPE_NAT_KINDS = ('M', 'm')
-
 DTYPE_DATETIME_KIND = 'M'
 DTYPE_TIMEDELTA_KIND = 'm'
 DTYPE_COMPLEX_KIND = 'c'
 DTYPE_FLOAT_KIND = 'f'
 DTYPE_OBJECT_KIND = 'O'
+DTYPE_BOOL_KIND = 'b'
 
-# DTYPE_BOOL_KIND = ('b',)
+DTYPE_STR_KINDS = ('U', 'S') # S is np.bytes_
+DTYPE_INT_KINDS = ('i', 'u') # signed and unsigned
+DTYPE_INEXACT_KINDS = (DTYPE_FLOAT_KIND, DTYPE_COMPLEX_KIND) # kinds that support NaN values
+DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
+
+# all kinds that can have NaN, NaT, or None
+# DTYPE_NA_KINDS = frozenset((
+#         DTYPE_FLOAT_KIND,
+#         DTYPE_COMPLEX_KIND,
+#         DTYPE_DATETIME_KIND,
+#         DTYPE_TIMEDELTA_KIND,
+#         DTYPE_OBJECT_KIND,
+#         ))
 
 DTYPE_OBJECT = np.dtype(object)
 DTYPE_BOOL = np.dtype(bool)
@@ -74,7 +75,6 @@ DTYPE_INT_DEFAULT = np.dtype(np.int64)
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
 
-# used in UFUNC_AXIS_SKIPNA defintion
 DTYPES_BOOL = (DTYPE_BOOL,)
 DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
 
@@ -103,6 +103,8 @@ EMPTY_ARRAY_INT = np.array(EMPTY_TUPLE, dtype=DTYPE_INT_DEFAULT)
 EMPTY_ARRAY_INT.flags.writeable = False
 
 NAT = np.datetime64('nat')
+NAT_STR = 'NaT'
+
 # define missing for timedelta as an untyped 0
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
@@ -115,7 +117,7 @@ TIME_DELTA_ATTR_MAP = (
         ('microseconds', 'us')
         )
 
-# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays; see UFUNC_AXIS_SKIPNA for the matching functions
+# ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = {np.min, np.max, np.sum}
 
 #-------------------------------------------------------------------------------
@@ -374,6 +376,17 @@ def _gen_skip_middle(
     yield from reversed(values)
 
 
+def dtype_from_element(value: tp.Hashable) -> np.dtype:
+    '''Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object.
+    '''
+    if value is None:
+        return DTYPE_OBJECT
+    if isinstance(value, tuple):
+        return DTYPE_OBJECT
+    if hasattr(value, 'dtype'):
+        return value.dtype #type: ignore
+    return np.array(value).dtype
+
 def resolve_dtype(dt1: np.dtype, dt2: np.dtype) -> np.dtype:
     '''
     Given two dtypes, return a compatible dtype that can hold both contents without truncation.
@@ -488,8 +501,8 @@ def full_for_fill(
     return np.full(shape, fill_value, dtype=dtype)
 
 
-def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
-    '''Given a dtype, return an appropriate and compatible null value.
+def dtype_to_fill_value(dtype: DtypeSpecifier) -> tp.Any:
+    '''Given a dtype, return an appropriate and compatible null value. This used to provide temporary, "dummy" fill values that reduce type coercions.
     '''
     if not isinstance(dtype, np.dtype):
         # we permit things like object, float, etc.
@@ -499,21 +512,31 @@ def dtype_to_na(dtype: DtypeSpecifier) -> tp.Any:
 
     if kind in DTYPE_INT_KINDS:
         return 0 # cannot support NaN
-    elif kind == 'b':
+    if kind == DTYPE_BOOL_KIND:
         return False
-    elif kind in DTYPE_INEXACT_KINDS:
+    if kind in DTYPE_INEXACT_KINDS:
         return np.nan
-    elif kind == 'O':
+    if kind == DTYPE_OBJECT_KIND:
         return None
-    elif kind in DTYPE_STR_KINDS:
+    if kind in DTYPE_STR_KINDS:
         return ''
-    elif kind in DTYPE_DATETIME_KIND:
+    if kind in DTYPE_DATETIME_KIND:
         return NAT
-    elif kind in DTYPE_TIMEDELTA_KIND:
+    if kind in DTYPE_TIMEDELTA_KIND:
         return EMPTY_TIMEDELTA
-
     raise NotImplementedError('no support for this dtype', kind)
 
+def dtype_kind_to_na(kind: str) -> tp.Any:
+    '''Given a dtype kind, return an a NA value to do the least invasive type coercion.
+    '''
+    if kind in DTYPE_INEXACT_KINDS:
+        return np.nan
+    if kind in DTYPE_INT_KINDS:
+        # allow integers to go to float rather than object
+        return np.nan
+    if kind in DTYPE_NAT_KINDS:
+        return NAT
+    return None
 
 def ufunc_axis_skipna(
         array: np.ndarray,
@@ -1454,10 +1477,19 @@ def _ufunc_set_1d(
         array: np.ndarray,
         other: np.ndarray,
         *,
-        assume_unique: bool=False
+        assume_unique: bool = False
         ) -> np.ndarray:
     '''
     Peform 1D set operations. When possible, short-circuit comparison and return array with original order.
+
+    NOTE: there are known issues with how NP handles NaN and NaT with set operations, for example:
+
+    >>> np.intersect1d((np.nan, 3), (np.nan, 3))
+    array([3.])
+    >>> np.union1d((np.nan, 3), (np.nan, 3))
+    array([ 3., nan, nan])
+
+    For unions, and for float and datetime64 types, a correction is made, but of object types, no efficient solution is available.
 
     Args:
         assume_unique: if arguments are assumed unique, can implement optional identity filtering, which retains order (un sorted) for opperands that are equal. This is important in numerous operations on the matching Indices where order should not be perterbed.
@@ -1475,10 +1507,14 @@ def _ufunc_set_1d(
     if is_intersection:
         if len(array) == 0 or len(other) == 0:
             # not sure what DTYPE is correct to return here
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post.flags.writeable = False
+            return post
     elif is_difference:
         if len(array) == 0:
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
+            post.flags.writeable = False
+            return post
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1494,25 +1530,22 @@ def _ufunc_set_1d(
         if len(array) == len(other):
             arrays_are_equal = False
             compare = array == other
-
             # if sizes are the same, the result of == is mostly a bool array; comparison to some arrays (e.g. string), will result in a single Boolean, but it should always be False
             if isinstance(compare, BOOL_TYPES) and compare:
                 arrays_are_equal = True #pragma: no cover
             elif isinstance(compare, np.ndarray) and compare.all(axis=None):
                 arrays_are_equal = True
+
             if arrays_are_equal:
                 if is_difference:
-                    return np.array(EMPTY_TUPLE, dtype=dtype)
-                else:
-                    return array
+                    post = np.array(EMPTY_TUPLE, dtype=dtype)
+                    post.flags.writeable = False
+                    return post
+                return array
 
-    set_compare = False
     array_is_str = array.dtype.kind in DTYPE_STR_KINDS
     other_is_str = other.dtype.kind in DTYPE_STR_KINDS
-
-    if array_is_str ^ other_is_str:
-        # if only one is string
-        set_compare = True
+    set_compare = array_is_str ^ other_is_str
 
     if set_compare or dtype.kind == 'O':
         if is_union:
@@ -1526,12 +1559,16 @@ def _ufunc_set_1d(
             result = sorted(result) #type: ignore
         except TypeError:
             pass
-        v, _ = iterable_to_array_1d(result, dtype)
-        return v
+        post, _ = iterable_to_array_1d(result, dtype) # return immutable array
+        return post
 
     if is_union:
-        return func(array, other)
-    return func(array, other, assume_unique=assume_unique) #type: ignore
+        post = func(array, other)
+    else:
+        post = func(array, other, assume_unique=assume_unique) #type: ignore
+
+    post.flags.writeable = False
+    return post
 
 def _ufunc_set_2d(
         func: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
@@ -1551,7 +1588,7 @@ def _ufunc_set_2d(
     Returns:
         Either a 2D array (if both operands are 2D), or a 1D object array of tuples (if one or both are 1d tuple arrays).
     '''
-    # NOTE: diversity if ruturned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
+    # NOTE: diversity if returned values may be a problem; likely should always return 2D array, or follow pattern that if both operands are 2D, a 2D array is returned
 
     is_union = func == np.union1d
     is_intersection = func == np.intersect1d
@@ -1567,14 +1604,18 @@ def _ufunc_set_2d(
     # optimizations for empty arrays
     if is_intersection: # intersection with empty
         if len(array) == 0 or len(other) == 0:
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
             if is_2d:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+                post = post.reshape(0, 0)
+            post.flags.writeable = False
+            return post
     elif is_difference:
         if len(array) == 0:
+            post = np.array(EMPTY_TUPLE, dtype=dtype)
             if is_2d:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(EMPTY_TUPLE, dtype=dtype)
+                post = post.reshape(0, 0)
+            post.flags.writeable = False
+            return post
 
     if assume_unique:
         # can only return arguments, and use length to determine unique comparison condition, if arguments are assumed to already be unique
@@ -1597,9 +1638,11 @@ def _ufunc_set_2d(
                 arrays_are_equal = True
             if arrays_are_equal:
                 if is_difference:
+                    post = np.array(EMPTY_TUPLE, dtype=dtype)
                     if is_2d:
-                        return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-                    return np.array(EMPTY_TUPLE, dtype=dtype)
+                        post = post.reshape(0, 0)
+                    post.flags.writeable = False
+                    return post
                 return array
 
     if dtype.kind == 'O':
@@ -1621,7 +1664,7 @@ def _ufunc_set_2d(
         else:
             result = array_set.difference(other_set)
 
-        # NOTE: this sort may not always be succesful
+        # NOTE: this sort may not always be successful
         try:
             values: tp.Sequence[tp.Tuple[tp.Hashable, ...]] = sorted(result)
         except TypeError:
@@ -1629,11 +1672,15 @@ def _ufunc_set_2d(
 
         if is_2d:
             if len(values) == 0:
-                return np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
-            return np.array(values, dtype=object)
+                post = np.array(EMPTY_TUPLE, dtype=dtype).reshape(0, 0)
+            else:
+                post = np.array(values, dtype=object)
+            post.flags.writeable = False
+            return post
 
         post = np.empty(len(values), dtype=object)
         post[:] = values
+        post.flags.writeable = False
         return post
 
     # from here, we assume we have two 2D arrays
@@ -1654,7 +1701,9 @@ def _ufunc_set_2d(
     if width == 1:
         # let the function flatten the array, then reshape into 2D
         post = func(array, other, **func_kwargs)  # type: ignore
-        return post.reshape(len(post), width)
+        post = post.reshape(len(post), width)
+        post.flags.writeable = False
+        return post
 
     # this approach based on https://stackoverflow.com/questions/9269681/intersection-of-2d-numpy-ndarrays
     # we can use a the 1D function on the rows, once converted to a structured array
@@ -1663,9 +1712,9 @@ def _ufunc_set_2d(
     # creates a view of tuples for 1D operation
     array_view = array.view(dtype_view)
     other_view = other.view(dtype_view)
-
-    return func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
-
+    post = func(array_view, other_view, **func_kwargs).view(dtype).reshape(-1, width) # type: ignore
+    post.flags.writeable = False
+    return post
 
 def union1d(array: np.ndarray,
         other: np.ndarray,
@@ -1838,7 +1887,7 @@ def isin(
     '''
     result: tp.Optional[np.ndarray] = None
 
-    if isinstance(other, abc.Sized) and len(other) == 0:
+    if hasattr(other, '__len__') and len(other) == 0: #type: ignore
         result = np.full(array.shape, False, dtype=DTYPE_BOOL)
         result.flags.writeable = False
         return result
@@ -1865,6 +1914,133 @@ def isin(
 
     result.flags.writeable = False
     return result
+
+
+#-------------------------------------------------------------------------------
+def _ufunc_logical_skipna(
+        array: np.ndarray,
+        ufunc: AnyCallable,
+        skipna: bool,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    '''
+    Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
+    '''
+    if ufunc != np.all and ufunc != np.any:
+        raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
+
+    if len(array) == 0:
+        # TODO: handle if this is ndim == 2 and has no length
+        # any() of an empty array is False
+        return ufunc == np.all
+
+    kind = array.dtype.kind
+
+    #---------------------------------------------------------------------------
+    # types that cannot have NA
+    if kind == 'b':
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_INT_KINDS:
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_STR_KINDS:
+        # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
+        return ufunc(array != '', axis=axis, out=out)
+
+    #---------------------------------------------------------------------------
+    # types that can have NA
+
+    if kind in DTYPE_INEXACT_KINDS:
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            fill_value = 0.0 if ufunc == np.any else 1.0
+            v = array.copy()
+            v[isna] = fill_value
+            return ufunc(v, axis=axis, out=out)
+        elif hasna and not skipna:
+            # if array.ndim == 1:
+            #     return np.nan
+            raise TypeError('cannot propagate NaN without expanding to object array result')
+        return ufunc(array, axis=axis, out=out)
+
+    if kind in DTYPE_NAT_KINDS:
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        # all dates are truthy, special handling only to propagate NaNs
+        if hasna and not skipna:
+            # if array.ndim == 1:
+            #     return NAT
+            raise TypeError('cannot propagate NaN without expanding to object array result')
+        # to ignore NaN, simply fall back on all-truth behavior, below
+
+    if kind == 'O':
+        # all object types: convert to boolean aray then process
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            # supply True for np.all, False for np.any
+            fill_value = False if ufunc == np.any else True
+            v = array.copy()
+            v = v.astype(bool) # nan will be converted to True
+            v[isna] = fill_value
+        elif hasna and not skipna:
+            # if array.ndim == 1:
+            #     return np.nan
+            raise TypeError('cannot propagate NaN without expanding to object array result')
+        else:
+            v = array.astype(bool)
+        return ufunc(v, axis=axis, out=out)
+
+    # all types other than strings or objects assume truthy
+    if array.ndim == 1:
+        return True
+    return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
+
+
+def ufunc_all(array: np.ndarray,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=False,
+            axis=axis,
+            out=out)
+
+ufunc_all.__doc__ = np.all.__doc__
+
+def ufunc_any(array: np.ndarray,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=False,
+            axis=axis,
+            out=out)
+
+ufunc_any.__doc__ = np.any.__doc__
+
+def ufunc_nanall(array: np.ndarray,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=True,
+            axis=axis,
+            out=out)
+
+def ufunc_nanany(array: np.ndarray,
+        axis: int = 0,
+        out: tp.Optional[np.ndarray] = None
+        ) -> np.ndarray:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=True,
+            axis=axis,
+            out=out)
 
 #-------------------------------------------------------------------------------
 

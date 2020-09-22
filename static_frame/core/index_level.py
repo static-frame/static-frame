@@ -461,7 +461,7 @@ class IndexLevel:
             # NOTE: depth_key should not be Series or Index at this point; IndexHierarchy is responsible for unpacking / reindexing prior to this call
             next_offset = offset + level.offset
 
-            if isinstance(depth_key, np.ndarray) and depth_key.dtype is DTYPE_BOOL:
+            if isinstance(depth_key, np.ndarray) and depth_key.dtype == DTYPE_BOOL:
                 # NOTE: use length of level, not length of index, as need to observe all leafs covered at this node.
                 depth_key = depth_key[next_offset: next_offset + len(level)]
                 if len(depth_key) > len(level.index):

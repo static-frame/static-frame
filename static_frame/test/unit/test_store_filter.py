@@ -1,17 +1,17 @@
 import unittest
-import numpy as np
 from io import StringIO
 import datetime
+
+import numpy as np
 
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import STORE_FILTER_DISABLE
 from static_frame.core.store_filter import StoreFilter
 from static_frame.test.test_case import TestCase
-
-
 from static_frame.core.util import DTYPE_OBJECT_KIND
 from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import DTYPE_FLOAT_KIND
+from static_frame.core.util import NAT
 
 
 from static_frame.core.frame import Frame
@@ -84,10 +84,23 @@ class TestUnit(TestCase):
 
         sfd = STORE_FILTER_DEFAULT
 
-        with self.assertRaises(NotImplementedError):
-            sfd.from_type_filter_array(a1)
+        a2 = sfd.from_type_filter_array(a1)
+        self.assertEqual(a2.tolist(),
+                ['2012', '2013'])
+
+        a3 = np.array(['2012', '2013', NAT], dtype=np.datetime64)
+        a4 = sfd.from_type_filter_array(a3)
+        self.assertEqual(a4.tolist(),
+                ['2012', '2013', ''])
 
 
+    def test_store_from_type_filter_array_g(self) -> None:
+
+        sfd = STORE_FILTER_DEFAULT
+        a1 = np.array(['2012-02-05', '2013-05-21', NAT], dtype=np.datetime64)
+        a2 = sfd.from_type_filter_array(a1)
+        self.assertEqual(a2.tolist(),
+                [datetime.date(2012, 2, 5), datetime.date(2013, 5, 21), ''])
 
     #---------------------------------------------------------------------------
     def test_store_from_type_filter_element_a(self) -> None:
@@ -156,7 +169,7 @@ class TestUnit(TestCase):
         post = StringIO()
         f.to_csv(post, store_filter=store_filter, include_index=False)
         post.seek(0)
-        self.assertEqual(post.read(), '0,1\n!,&\n*,@')
+        self.assertEqual(post.read(), '0,1\n!,&\n*,@\n')
 
 
     #---------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 
 import unittest
-import numpy as np
 import datetime
 from  itertools import product
+
+import numpy as np
 
 from static_frame import Index
 from static_frame import IndexGO
@@ -85,7 +86,7 @@ class TestUnit(TestCase):
     def test_index_date_b(self) -> None:
 
         with self.assertRaises(Exception):
-            IndexDate([3,4,5], dtype=np.int64)  #type: ignore #pylint: disable=E1123
+            IndexDate([3,4,5], dtype=np.int64) #pylint: disable=E1123
 
         idx1 = IndexDate(['2017', '2018'])
         self.assertTrue(idx1[0].__class__ == np.datetime64)
@@ -142,7 +143,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
 
         post = index.loc['2018':'2018-01']  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(len(post), 31)
+        self.assertEqual(len(post), 31) #type: ignore
         self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
 
@@ -151,7 +152,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-12-15', '2018-02-15')
 
         post = index.loc['2018':'2018-01-15']  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(len(post), 15)
+        self.assertEqual(len(post), 15) #type: ignore
         self.assertEqual(post[0], np.datetime64('2018-01-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-15')) #type: ignore
 
@@ -160,7 +161,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
 
         post = index.loc['2017-12': '2018-01']  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(len(post), 62)
+        self.assertEqual(len(post), 62) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-01-31')) #type: ignore
 
@@ -169,7 +170,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
 
         post = index.loc['2017-12': '2018']  # type: ignore  # https://github.com/python/typeshed/pull/3024
-        self.assertEqual(len(post), 77)
+        self.assertEqual(len(post), 77) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
 
@@ -177,7 +178,7 @@ class TestUnit(TestCase):
     def test_index_date_k(self) -> None:
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         post = index.loc[['2017-12-10', '2018-02-06']]
-        self.assertEqual(len(post), 2)
+        self.assertEqual(len(post), 2) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-10')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-06')) #type: ignore
 
@@ -186,7 +187,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         # NOTE: this type of selection should possibly not be permitted
         post = index.loc[['2017', '2018']]
-        self.assertEqual(len(post), 93)
+        self.assertEqual(len(post), 93) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-11-15')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
 
@@ -194,7 +195,7 @@ class TestUnit(TestCase):
         index = IndexDate.from_date_range('2017-11-15', '2018-02-15')
         # NOTE: this type of selection should possibly not be permitted
         post = index.loc[['2017-12', '2018-02']]
-        self.assertEqual(len(post), 46)
+        self.assertEqual(len(post), 46) #type: ignore
         self.assertEqual(post[0], np.datetime64('2017-12-01')) #type: ignore
         self.assertEqual(post[-1], np.datetime64('2018-02-15')) #type: ignore
         self.assertEqual(
@@ -248,21 +249,21 @@ class TestUnit(TestCase):
 
         # can reuse the map if going from dt64 index to normal index
         idx2 = Index(s1.index)
-        self.assertTrue(id(idx2._map) == id(s1.index._map))
+        self.assertTrue(id(idx2._map) == id(s1.index._map)) #type: ignore
 
         idx3 = IndexDate(idx2)
-        self.assertTrue(id(idx3._map) == id(s1.index._map))
+        self.assertTrue(id(idx3._map) == id(s1.index._map)) #type: ignore
 
         with self.assertRaises(ErrorInitIndex):
             index = IndexYear(idx3) #type: ignore
 
         # from a date to a finer resolution has to create a new map
         idx4 = IndexMinute(idx3)
-        self.assertTrue(id(idx4._map) != id(s1.index._map))
+        self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # a GO has to create a new map
         idx5 = IndexGO(s1.index)
-        self.assertTrue(id(idx4._map) != id(s1.index._map))
+        self.assertTrue(id(idx4._map) != id(s1.index._map)) #type: ignore
 
         # supplying a dtype to coerce the labels
         with self.assertRaises(ErrorInitIndex):
@@ -587,8 +588,8 @@ class TestUnit(TestCase):
     def test_index_nanosecond_a(self) -> None:
 
         idx1 = IndexNanosecond(('2018-01-01T03:30', '2018-01-01T03:45', '2019-01-02T03:45'))
-        self.assertTrue(len(idx1.loc['2019']), 1)
-        self.assertTrue(len(idx1.loc['2018']), 2)
+        self.assertTrue(len(idx1.loc['2019']), 1) #type: ignore
+        self.assertTrue(len(idx1.loc['2018']), 2) #type: ignore
 
         # NP reduces nanoseconds to integers
         self.assertEqual(idx1.values.tolist(),
