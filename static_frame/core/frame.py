@@ -5670,7 +5670,6 @@ class Frame(ContainerOperand):
                                 d = int(a)
                             elif c == 'ndarray':
                                 d = packb(a) #recurse packb
-                                print('recurse packb', a, d)
                             elif c == 'Fraction':
                                 d = str(a)
                             elif c == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
