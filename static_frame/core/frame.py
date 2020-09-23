@@ -2114,15 +2114,15 @@ class Frame(ContainerOperand):
         def msgpack_fixes(tup):
             #Hypothesis coverage
             (typ, d) = tup
-            if typ == 'datetime': #msgpack-numpy has an issue with datetime
+            if typ == 'DT': #msgpack-numpy has an issue with datetime
                 return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
-            elif typ == 'date': #msgpack-numpy has an issue with datetime
+            elif typ == 'D': #msgpack-numpy has an issue with datetime
                 return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f').date()
-            elif typ == 'Fraction': #msgpack-numpy has an issue with fractions
+            elif typ == 'F': #msgpack-numpy has an issue with fractions
                 return fractions.Fraction(d)
-            elif typ == 'int': #msgpack-python has an issue with very large int values
+            elif typ == 'I': #msgpack-python has an issue with very large int values
                 return int(d)
-            elif typ == 'ndarray': #recursion not covered by msgpack-numpy
+            elif typ == 'A': #recursion not covered by msgpack-numpy
                 return unpackb(d) #recurse unpackb
             else:
                 return d
@@ -5622,13 +5622,16 @@ class Frame(ContainerOperand):
                 d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
                 year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
                 d = year+' '+d.split(' ',1)[-1]
-                return (typ, d)
+                if typ == 'datetime':
+                    return ('DT', d)
+                if typ == 'date':
+                    return ('D', d)
             elif typ == 'ndarray': #recursion not covered by msgpack-numpy
-                return (typ, packb(a)) #recurse packb
+                return ('A', packb(a)) #recurse packb
             elif typ == 'Fraction': #msgpack-numpy has an issue with fractions
-                return (typ,  str(a))
+                return ('F',  str(a))
             elif typ == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
-                return (typ, str(a))
+                return ('I', str(a))
             else:
                 return ('', a)
         def encode(obj, chain=msgpack_numpy.encode):
