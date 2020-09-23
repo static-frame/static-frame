@@ -2104,13 +2104,15 @@ class Frame(ContainerOperand):
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
-            msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
+            msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
         '''
         from datetime import datetime, date, time
         from fractions import Fraction
         import msgpack
         import msgpack_numpy
-        def msgpack_fixes(tup):
+        def msgpack_fixes(
+                tup: tuple
+                ) -> object:
             #Hypothesis coverage
             (typ, d) = tup
             if typ == 'DT': #msgpack-numpy has an issue with datetime
@@ -2127,7 +2129,9 @@ class Frame(ContainerOperand):
                 return unpackb(d) #recurse unpackb
             else:
                 return d
-        def decode(obj, chain=msgpack_numpy.decode):
+        def decode(obj: dict,
+                chain: object = msgpack_numpy.decode, #type should be function
+                ) -> object:
             if b'sf' in obj:
                 clsname = obj[b'sf']
                 cls = globals()[clsname]
@@ -5617,7 +5621,7 @@ class Frame(ContainerOperand):
         from fractions import Fraction
         import msgpack
         import msgpack_numpy
-        def msgpack_fixes(a):
+        def msgpack_fixes(a: object) -> tuple:
             #Hypothesis coverage
             if isinstance(a, datetime): #msgpack-numpy has an issue with datetime
                 year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
@@ -5637,7 +5641,9 @@ class Frame(ContainerOperand):
                 return ('I', str(a))
             else:
                 return ('', a)
-        def encode(obj, chain=msgpack_numpy.encode):
+        def encode(obj: object, 
+                chain: object = msgpack_numpy.encode, #type should be function, how do I get that?
+                ) -> dict:
             cls = obj.__class__
             clsname = cls.__name__
             package = cls.__module__.split('.',1)[0] #couldn't find a better way to do this
