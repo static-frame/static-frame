@@ -2108,8 +2108,8 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        from datetime import datetime
-        import fractions
+        from datetime import datetime, date, time
+        from fractions import Fraction
         import sys
         def msgpack_fixes(tup):
             #Hypothesis coverage
@@ -2117,9 +2117,11 @@ class Frame(ContainerOperand):
             if typ == 'DT': #msgpack-numpy has an issue with datetime
                 return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
             elif typ == 'D': #msgpack-numpy has an issue with datetime
-                return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f').date()
+                return datetime.strptime(d, '%Y %a %b %d').date()
+            elif typ == 'T': #msgpack-numpy has an issue with datetime
+                return datetime.strptime(d, '%H:%M:%S:%f').time()
             elif typ == 'F': #msgpack-numpy has an issue with fractions
-                return fractions.Fraction(d)
+                return Fraction(d)
             elif typ == 'I': #msgpack-python has an issue with very large int values
                 return int(d)
             elif typ == 'A': #recursion not covered by msgpack-numpy
@@ -2157,7 +2159,7 @@ class Frame(ContainerOperand):
                     blocks = unpackb(obj[b'blocks']) #recurse unpackb
                     return cls.from_blocks(blocks)
             elif b'np' in obj:
-                #Overridden numpy datatypes
+                #Overridden msgpack-numpy datatypes
                 data = unpackb(obj[b'data']) #recurse unpackb
                 typename = obj[b'dtype'].split('[',1)[0]
                 if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
@@ -5614,18 +5616,20 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        from datetime import datetime, date
+        from datetime import datetime, date, time
         from fractions import Fraction
         def msgpack_fixes(a):
             #Hypothesis coverage
-            if isinstance(a, datetime) or isinstance(a, date): #msgpack-numpy has an issue with datetime
-                d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
-                year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-                d = year+' '+d.split(' ',1)[-1]
-                if isinstance(a, datetime):
-                    return ('DT', d)
-                if isinstance(a, date):
-                    return ('D', d)
+            if isinstance(a, datetime): #msgpack-numpy has an issue with datetime
+                year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                d = year+' '+a.strftime('%a %b %d %H:%M:%S:%f')
+                return ('DT', d)
+            elif isinstance(a, date):
+                year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                d = year+' '+a.strftime('%a %b %d')
+                return ('D', d)
+            elif isinstance(a, time):
+                return ('T', a.strftime('%H:%M:%S:%f'))
             elif isinstance(a, np.ndarray): #recursion not covered by msgpack-numpy
                 return ('A', packb(a)) #recurse packb
             elif isinstance(a, Fraction): #msgpack-numpy has an issue with fractions
