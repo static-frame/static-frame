@@ -2131,7 +2131,7 @@ class Frame(ContainerOperand):
                 return unpackb(d) #recurse unpackb
             else:
                 return d
-        def decode(obj: dict, #dict produced by msgpack
+        def decode(obj: dict, #dict produced by msgpack-python
                 chain: tp.Callable = msgpack_numpy.decode,
                 ) -> object:
             if b'sf' in obj:
@@ -5674,7 +5674,7 @@ class Frame(ContainerOperand):
                     return {b'sf':clsname,
                             b'blocks':packb(obj._blocks)} #recurse packb
             elif package == 'numpy':
-                #msgpack_numpy is breaking with these data types, overriding here
+                #msgpack-numpy is breaking with these data types, overriding here
                 if isinstance(obj, np.ndarray):
                     if obj.dtype.type == np.object_:
                         data = list(map(msgpack_fixes, obj))
