@@ -2106,11 +2106,11 @@ class Frame(ContainerOperand):
         Args:
             msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
         '''
-        import msgpack
-        import msgpack_numpy
+        import sys
         from datetime import datetime, date, time
         from fractions import Fraction
-        import sys
+        import msgpack
+        import msgpack_numpy
         def msgpack_fixes(tup):
             #Hypothesis coverage
             (typ, d) = tup
@@ -5614,10 +5614,10 @@ class Frame(ContainerOperand):
         '''
         Return a msgpack.
         '''
-        import msgpack
-        import msgpack_numpy
         from datetime import datetime, date, time
         from fractions import Fraction
+        import msgpack
+        import msgpack_numpy
         def msgpack_fixes(a):
             #Hypothesis coverage
             if isinstance(a, datetime): #msgpack-numpy has an issue with datetime
@@ -5639,8 +5639,9 @@ class Frame(ContainerOperand):
             else:
                 return ('', a)
         def encode(obj, chain=msgpack_numpy.encode):
-            clsname = obj.__class__.__name__
-            package = obj.__class__.__module__.split('.',1)[0]
+            cls = obj.__class__
+            clsname = cls.__name__
+            package = cls.__module__.split('.',1)[0] #couldn't find a better way to do this
             if package == 'static_frame':
                 if isinstance(obj, Frame):
                     return {b'sf':clsname,

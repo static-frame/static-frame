@@ -248,13 +248,9 @@ class TestUnit(TestCase):
             index_dtype_group=sfst.DTGroup.CORE,
             ))
     def test_frame_to_msgpack(self, f1: Frame) -> None:
-        print('\n###########################################TEST#############################################')
         msg = f1.to_msgpack()
         
-        print('\nf1', f1)
-        print('\n')
         f2 = Frame.from_msgpack(msg)
-        print('\nf2', f2)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
         
         f2 = Frame.from_msgpack(f1.to_msgpack())
