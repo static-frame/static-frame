@@ -2100,7 +2100,9 @@ class Frame(ContainerOperand):
 
     @staticmethod
     @doc_inject(selector='constructor_frame')
-    def from_msgpack(msgpack_data: bin) -> 'Frame':
+    def from_msgpack(
+            msgpack_data: bin
+            ) -> 'Frame':
         '''Frame constructor from an in-memory binary object formatted as a msgpack.
 
         Args:
@@ -2111,8 +2113,8 @@ class Frame(ContainerOperand):
         import msgpack
         import msgpack_numpy
         def msgpack_fixes(
-                tup: tuple
-                ) -> object:
+                tup: tuple #tuple produced by to_msgpack.msgpack_fixes
+                ) -> object: #could be returning nested ndarrays or any other object type
             #Hypothesis coverage
             (typ, d) = tup
             if typ == 'DT': #msgpack-numpy has an issue with datetime
@@ -2129,8 +2131,8 @@ class Frame(ContainerOperand):
                 return unpackb(d) #recurse unpackb
             else:
                 return d
-        def decode(obj: dict,
-                chain: object = msgpack_numpy.decode, #type should be function
+        def decode(obj: dict, #dict produced by msgpack
+                chain: object = msgpack_numpy.decode, #type should be function?
                 ) -> object:
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -5621,7 +5623,9 @@ class Frame(ContainerOperand):
         from fractions import Fraction
         import msgpack
         import msgpack_numpy
-        def msgpack_fixes(a: object) -> tuple:
+        def msgpack_fixes(
+                a: object,
+                ) -> tuple: #returns tuple that from_msgpack.msgpack_fixes consumes
             #Hypothesis coverage
             if isinstance(a, datetime): #msgpack-numpy has an issue with datetime
                 year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
@@ -5641,9 +5645,9 @@ class Frame(ContainerOperand):
                 return ('I', str(a))
             else:
                 return ('', a)
-        def encode(obj: object, 
+        def encode(obj: object,
                 chain: object = msgpack_numpy.encode, #type should be function, how do I get that?
-                ) -> dict:
+                ) -> dict: #returns dict that msgpack-python consumes
             cls = obj.__class__
             clsname = cls.__name__
             package = cls.__module__.split('.',1)[0] #couldn't find a better way to do this
