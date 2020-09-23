@@ -5614,23 +5614,23 @@ class Frame(ContainerOperand):
         '''
         import msgpack
         import msgpack_numpy
-        import datetime
+        from datetime import datetime, date
+        from fractions import Fraction
         def msgpack_fixes(a):
             #Hypothesis coverage
-            typ = a.__class__.__name__
-            if typ in ['datetime', 'date']: #msgpack-numpy has an issue with datetime
+            if isinstance(a, datetime) or isinstance(a, date): #msgpack-numpy has an issue with datetime
                 d = a.strftime('%Y %a %b %d %H:%M:%S:%f')
                 year = d.split(' ',1)[0].zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
                 d = year+' '+d.split(' ',1)[-1]
-                if typ == 'datetime':
+                if isinstance(a, datetime):
                     return ('DT', d)
-                if typ == 'date':
+                if isinstance(a, date):
                     return ('D', d)
-            elif typ == 'ndarray': #recursion not covered by msgpack-numpy
+            elif isinstance(a, np.ndarray): #recursion not covered by msgpack-numpy
                 return ('A', packb(a)) #recurse packb
-            elif typ == 'Fraction': #msgpack-numpy has an issue with fractions
+            elif isinstance(a, Fraction): #msgpack-numpy has an issue with fractions
                 return ('F',  str(a))
-            elif typ == 'int' and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
+            elif isinstance(a, int) and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
                 return ('I', str(a))
             else:
                 return ('', a)
