@@ -2106,7 +2106,6 @@ class Frame(ContainerOperand):
         Args:
             msgpack_data: A binary msgpack object, encoding a object as produced from to_msgpack()
         '''
-        import sys
         from datetime import datetime, date, time
         from fractions import Fraction
         import msgpack
