@@ -1225,8 +1225,16 @@ class TestUnit(TestCase):
 
     def test_frame_from_msgpack_e(self) -> None:
         records = (
-                [np.timedelta64(3, 'Y'), np.datetime64('1999-12-31'), np.float64(60)],
-                [np.timedelta64(4, 'Y'), np.datetime64('2000-01-01'), np.float64(6)],
+                [
+                        np.timedelta64(3, 'Y'),
+                        np.datetime64('1999-12-31'),
+                        datetime.datetime.now().time()
+                ],
+                [
+                        np.timedelta64(4, 'Y'),
+                        np.datetime64('2000-01-01'),
+                        datetime.datetime.now().date()
+                ],
                 )
         f1 = Frame.from_records(records,
                 columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
