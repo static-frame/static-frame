@@ -2132,7 +2132,7 @@ class Frame(ContainerOperand):
             else:
                 return d
         def decode(obj: dict, #dict produced by msgpack
-                chain: object = msgpack_numpy.decode, #type should be function?
+                chain: tp.Callable = msgpack_numpy.decode,
                 ) -> object:
             if b'sf' in obj:
                 clsname = obj[b'sf']
@@ -5646,7 +5646,7 @@ class Frame(ContainerOperand):
             else:
                 return ('', a)
         def encode(obj: object,
-                chain: object = msgpack_numpy.encode, #type should be function, how do I get that?
+                chain: tp.Callable = msgpack_numpy.encode,
                 ) -> dict: #returns dict that msgpack-python consumes
             cls = obj.__class__
             clsname = cls.__name__
