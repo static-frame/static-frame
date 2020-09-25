@@ -2109,6 +2109,15 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitSeries):
             Series.from_pandas(Series(['a', 'b', None], index=list('abc')))
 
+    def test_series_from_pandas_h(self) -> None:
+        import pandas as pd
+
+        pds1 = pd.Series(['a', 'b', None], index=list('abc'), name='foo')
+
+        self.assertEqual(sf.Series.from_pandas(pds1).name, 'foo')
+        self.assertEqual(sf.Series.from_pandas(pds1, name=None).name, None)
+        self.assertEqual(sf.Series.from_pandas(pds1, name='bar').name, 'bar')
+
 
     #---------------------------------------------------------------------------
     def test_series_to_pandas_a(self) -> None:

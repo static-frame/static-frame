@@ -1947,10 +1947,10 @@ class Frame(ContainerOperand):
         else:
             blocks = TypeBlocks.from_blocks(blocks())
 
-        # avoid getting a Series if a column
         if name is not NAME_DEFAULT:
             pass # keep
         elif 'name' not in value.columns and hasattr(value, 'name'):
+            # avoid getting a Series if a column
             name = value.name
         else:
             name = None # do not keep as NAME_DEFAULT
