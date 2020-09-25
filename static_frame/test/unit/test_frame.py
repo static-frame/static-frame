@@ -1171,6 +1171,110 @@ class TestUnit(TestCase):
                     ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
                     )
 
+    def test_frame_from_msgpack_a(self) -> None:
+        records = (
+                (2, 'a', False),
+                (3, 'b', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=(1, 2, 3),
+                index=('w', 'x'))
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_b(self) -> None:
+        records = (
+                [np.float64(128), np.float64(50), np.float64(60)],
+                [np.float64(256), np.float64(5), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
+                index=(datetime.datetime(999, 1, 1, 0, 0), datetime.datetime(99, 1, 1, 0, 0))
+                )
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_c(self) -> None:
+        records = (
+                [np.short(128), np.int64(50), np.float64(60)],
+                [np.short(256), np.int64(5), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.power(50, 50, dtype=np.float64), np.power(100, 100, dtype=np.float64), np.float64(300*300)),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_d(self) -> None:
+        records = (
+                [np.short(1), np.int64(50), np.float64(60)],
+                [np.short(2), np.int64(5), np.float64(6)],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_e(self) -> None:
+        records = (
+                [
+                        np.timedelta64(3, 'Y'),
+                        np.datetime64('1999-12-31'),
+                        datetime.datetime.now().time()
+                ],
+                [
+                        np.timedelta64(4, 'Y'),
+                        np.datetime64('2000-01-01'),
+                        datetime.datetime.now().date()
+                ],
+                )
+        f1 = Frame.from_records(records,
+                columns=(np.timedelta64(1, 'Y'), np.timedelta64(2, 'Y'), np.timedelta64(3, 'Y')),
+                index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
+                )
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+    def test_frame_from_msgpack_f(self) -> None:
+        ih1 = sf.IndexHierarchy.from_product(tuple('ABCD'), tuple('1234'))
+        ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
+        f1 = sf.Frame(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
+        msg = f1.to_msgpack()
+        
+        f2 = Frame.from_msgpack(msg)
+        assert isinstance(f2.index, sf.IndexHierarchy)
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        
+        f2 = Frame.from_msgpack(f1.to_msgpack())
+        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
     #---------------------------------------------------------------------------
 

@@ -2129,6 +2129,87 @@ class Frame(ContainerOperand):
                 name=name
                 )
 
+    @staticmethod
+    @doc_inject(selector='constructor_frame')
+    def from_msgpack(
+            msgpack_data: bin
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory binary object formatted as a msgpack.
+
+        Args:
+            msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
+        '''
+        from datetime import datetime, date, time
+        from fractions import Fraction
+        import msgpack
+        import msgpack_numpy
+        def msgpack_fixes(
+                tup: tuple #tuple produced by to_msgpack.msgpack_fixes
+                ) -> object: #could be returning nested ndarrays or any other object type
+            #Hypothesis coverage
+            (typ, d) = tup
+            if typ == 'DT': #msgpack-numpy has an issue with datetime
+                return datetime.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
+            elif typ == 'D': #msgpack-numpy has an issue with datetime
+                return datetime.strptime(d, '%Y %a %b %d').date()
+            elif typ == 'T': #msgpack-numpy has an issue with datetime
+                return datetime.strptime(d, '%H:%M:%S:%f').time()
+            elif typ == 'F': #msgpack-numpy has an issue with fractions
+                return Fraction(d)
+            elif typ == 'I': #msgpack-python has an issue with very large int values
+                return int(d)
+            elif typ == 'A': #recursion not covered by msgpack-numpy
+                return unpackb(d) #recurse unpackb
+            else:
+                return d
+        def decode(obj: dict, #dict produced by msgpack-python
+                chain: tp.Callable = msgpack_numpy.decode,
+                ) -> object:
+            if b'sf' in obj:
+                clsname = obj[b'sf']
+                cls = globals()[clsname]
+                if issubclass(cls, Frame):
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls(
+                            blocks,
+                            name=obj[b'name'],
+                            index=unpackb(obj[b'index']), #recurse unpackb
+                            columns=unpackb(obj[b'columns']), #recurse unpackb
+                            own_data=True)
+                elif issubclass(cls, IndexHierarchy):
+                    index_constructors=[
+                            globals()[clsname] for clsname in unpackb(
+                                    obj[b'index_constructors'])] #recurse unpackb
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls._from_type_blocks(
+                            blocks=blocks,
+                            name=obj[b'name'],
+                            index_constructors=index_constructors,
+                            own_blocks=True)
+                elif issubclass(cls, Index):
+                    data = unpackb(obj[b'data']) #recurse unpackb
+                    return cls(
+                            data,
+                            name=obj[b'name'])
+                elif issubclass(cls, TypeBlocks):
+                    blocks = unpackb(obj[b'blocks']) #recurse unpackb
+                    return cls.from_blocks(blocks)
+            elif b'np' in obj:
+                #Overridden msgpack-numpy datatypes
+                data = unpackb(obj[b'data']) #recurse unpackb
+                typename = obj[b'dtype'].split('[',1)[0]
+                if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
+                    array = np.array(data, dtype=obj[b'dtype'])
+                elif typename == 'object_':
+                    array = list(map(msgpack_fixes, data))
+                    array = np.array(array, dtype=np.object_)
+                array.flags.writeable = False
+                return array
+            else:
+                return chain(obj)
+        unpackb = partial(msgpack.unpackb, object_hook=decode)
+        return unpackb(msgpack_data)
+
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Frame')
     def __init__(self,
@@ -5609,6 +5690,86 @@ class Frame(ContainerOperand):
                 )
         fp = path_filter(fp)
         pq.write_table(table, fp)
+
+    def to_msgpack(self) -> 'bin':
+        '''
+        Return a msgpack.
+        '''
+        from datetime import datetime, date, time
+        from fractions import Fraction
+        import msgpack
+        import msgpack_numpy
+        def msgpack_fixes(
+                a: object,
+                ) -> tuple: #returns tuple that from_msgpack.msgpack_fixes consumes
+            #Hypothesis coverage
+            if isinstance(a, datetime): #msgpack-numpy has an issue with datetime
+                year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                d = year+' '+a.strftime('%a %b %d %H:%M:%S:%f')
+                return ('DT', d)
+            elif isinstance(a, date):
+                year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
+                d = year+' '+a.strftime('%a %b %d')
+                return ('D', d)
+            elif isinstance(a, time):
+                return ('T', a.strftime('%H:%M:%S:%f'))
+            elif isinstance(a, np.ndarray): #recursion not covered by msgpack-numpy
+                return ('A', packb(a)) #recurse packb
+            elif isinstance(a, Fraction): #msgpack-numpy has an issue with fractions
+                return ('F',  str(a))
+            elif isinstance(a, int) and len(str(a)) >=19: #msgpack-python has an overflow issue with large ints
+                return ('I', str(a))
+            else:
+                return ('', a)
+        def encode(obj: object,
+                chain: tp.Callable = msgpack_numpy.encode,
+                ) -> dict: #returns dict that msgpack-python consumes
+            cls = obj.__class__
+            clsname = cls.__name__
+            package = cls.__module__.split('.',1)[0] #couldn't find a better way to do this
+            if package == 'static_frame':
+                if isinstance(obj, Frame):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'blocks':packb(obj._blocks), #recurse packb
+                            b'index':packb(obj.index), #recurse packb
+                            b'columns':packb(obj.columns)} #recurse packb
+                elif isinstance(obj, IndexHierarchy):
+                    if obj._recache:
+                        obj._update_array_cache()
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'index_constructors': packb([
+                                    a.__name__ for a in obj.index_types.values.tolist()]), #recurse packb
+                            b'blocks':packb(obj._blocks)} #recurse packb
+                elif isinstance(obj, Index):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)} #recurse packb
+                elif isinstance(obj, TypeBlocks):
+                    return {b'sf':clsname,
+                            b'blocks':packb(obj._blocks)} #recurse packb
+            elif package == 'numpy':
+                #msgpack-numpy is breaking with these data types, overriding here
+                if isinstance(obj, np.ndarray):
+                    if obj.dtype.type == np.object_:
+                        data = list(map(msgpack_fixes, obj))
+                        return {b'np': True,
+                                b'dtype': 'object_',
+                                b'data': packb(data)} #recurse packb
+                    elif obj.dtype.type in [np.datetime64]: 
+                        data = obj.astype(str)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)} #recurse packb
+                    elif obj.dtype.type in [np.timedelta64]: 
+                        data = obj.astype(np.float64)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)} #recurse packb
+            return chain(obj) #let msgpack_numpy.encode take over
+        packb = partial(msgpack.packb, default=encode)
+        return packb(self)
 
     def to_xarray(self) -> 'Dataset':
         '''
