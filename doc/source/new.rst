@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.35
+----------
+
+Added a ``name`` parameter to ``Series.from_pandas`` and ``Frame.from_pandas``.
+
+
 0.6.34
 ----------
 
