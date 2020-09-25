@@ -1,6 +1,7 @@
 
 from functools import partial
 from io import StringIO
+from io import BytesIO
 from itertools import chain
 from itertools import product
 import csv
@@ -8,10 +9,8 @@ import json
 import sqlite3
 import typing as tp
 
-
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
-
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -5594,7 +5593,7 @@ class Frame(ContainerOperand):
 
 
     def to_parquet(self,
-            fp: PathSpecifier,
+            fp: tp.Union[PathSpecifier, BytesIO],
             *,
             include_index: bool = True,
             include_columns: bool = True,

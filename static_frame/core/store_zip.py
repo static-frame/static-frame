@@ -181,7 +181,7 @@ class StoreZipParquet(_StoreZip):
                     name=label,
                     consolidate_blocks=config.consolidate_blocks,
                     )
-        return frame
+        return tp.cast(Frame, frame)
 
     @store_coherent_write
     def write(self,
