@@ -716,6 +716,21 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitFrame):
             Frame.from_pandas(f1)
 
+    def test_frame_from_pandas_p(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(dict(a=(1,2), b=(True, False)))
+        df.name = 'foo'
+
+        f1 = Frame.from_pandas(df, name='bar')
+        self.assertEqual(f1.name, 'bar')
+
+        f2 = Frame.from_pandas(df)
+        self.assertEqual(f2.name, 'foo')
+
+        # can override name attr on DF
+        f3 = Frame.from_pandas(df, name=None)
+        self.assertEqual(f3.name, None)
 
 
     #---------------------------------------------------------------------------

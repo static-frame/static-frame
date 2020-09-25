@@ -1880,6 +1880,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> 'Frame':
@@ -1947,10 +1948,12 @@ class Frame(ContainerOperand):
             blocks = TypeBlocks.from_blocks(blocks())
 
         # avoid getting a Series if a column
-        if 'name' not in value.columns and hasattr(value, 'name'):
+        if name is not NAME_DEFAULT:
+            pass # keep
+        elif 'name' not in value.columns and hasattr(value, 'name'):
             name = value.name
         else:
-            name = None
+            name = None # do not keep as NAME_DEFAULT
 
         own_index = True
         if index_constructor is IndexAutoFactory:
