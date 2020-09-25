@@ -43,8 +43,6 @@ COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor functi
 
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
-STORE_CONFIG = 'config: A :obj:`StoreConfig` instance.'
-
 STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
 
 class DOC_TEMPLATE:
@@ -276,7 +274,7 @@ class DOC_TEMPLATE:
             args = f'''
         Args:
             {FP}
-            {STORE_CONFIG}
+            {STORE_CONFIG_MAP}
             '''
             )
 

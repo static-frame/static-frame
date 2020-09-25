@@ -6,6 +6,8 @@ What is New in Static Frame
 
 Added a ``name`` parameter to ``Series.from_pandas`` and ``Frame.from_pandas``.
 
+Added ``Bus.to_zip_parquet`` and ``Bus.from_zip_parquet``.
+
 
 0.6.34
 ----------
