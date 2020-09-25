@@ -2,6 +2,7 @@ import typing as tp
 import zipfile
 import pickle
 from io import StringIO
+from io import BytesIO
 
 
 from static_frame.core.exception import ErrorInitStore
@@ -78,7 +79,9 @@ class _StoreZipDelimited(_StoreZip):
                 self.__class__._EXPORTER(frame,
                         dst,
                         include_index=c.include_index,
-                        include_columns=c.include_columns
+                        include_index_name=c.include_index_name,
+                        include_columns=c.include_columns,
+                        include_columns_name=c.include_columns_name
                         )
                 dst.seek(0)
                 # this will write it without a container
@@ -145,6 +148,63 @@ class StoreZipPickle(_StoreZip):
                 if isinstance(frame, FrameGO):
                     raise NotImplementedError('convert FrameGO to Frame before pickling.')
                 zf.writestr(label + self._EXT_CONTAINED, pickle.dumps(frame))
+
+
+
+
+#-------------------------------------------------------------------------------
+
+class StoreZipParquet(_StoreZip):
+    '''A zip of parquet files, permitting incremental loading of Frames.
+    '''
+
+    _EXT_CONTAINED = '.parquet'
+
+    @store_coherent_non_write
+    def read(self,
+            label: str,
+            *,
+            config: tp.Optional[StoreConfig] = None,
+            container_type: tp.Type[Frame] = Frame,
+            ) -> Frame:
+
+        if config is None:
+            raise ErrorInitStore('a StoreConfig is required on parquet Stores')
+
+        with zipfile.ZipFile(self._fp) as zf:
+            src = BytesIO(zf.read(label + self._EXT_CONTAINED))
+            frame = container_type.from_parquet(
+                    src,
+                    index_depth=config.index_depth,
+                    columns_depth=config.columns_depth,
+                    dtypes=config.dtypes,
+                    name=label,
+                    consolidate_blocks=config.consolidate_blocks,
+                    )
+        return frame
+
+    @store_coherent_write
+    def write(self,
+            items: tp.Iterable[tp.Tuple[str, Frame]],
+            *,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with zipfile.ZipFile(self._fp, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for label, frame in items:
+                c = config_map[label]
+                dst = BytesIO()
+                # call from class to explicitly pass self as frame
+                frame.to_parquet(
+                        dst,
+                        include_index=c.include_index,
+                        include_columns=c.include_columns
+                        )
+                dst.seek(0)
+                # this will write it without a container
+                zf.writestr(label + self._EXT_CONTAINED, dst.read())
 
 
 

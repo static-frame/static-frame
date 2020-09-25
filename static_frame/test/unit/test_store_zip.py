@@ -12,6 +12,7 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipPickle
+from static_frame.core.store_zip import StoreZipParquet
 
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -186,6 +187,40 @@ class TestUnit(TestCase):
                 st.write(((f1.name, f1),))
 
 
+    def test_store_zip_parquet_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='bar')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='baz')
+
+        config = StoreConfig(index_depth=1, include_index=True, columns_depth=1)
+
+        with temp_file('.zip') as fp:
+
+            st = StoreZipParquet(fp)
+            st.write((f.name, f) for f in (f1, f2, f3))
+
+            f1_post = st.read('foo', config=config)
+            self.assertTrue(f1.equals(f1_post, compare_name=True, compare_class=True))
+
+            f2_post = st.read('bar', config=config)
+            self.assertTrue(f2.equals(f2_post, compare_name=True, compare_class=True))
+
+            f3_post = st.read('baz', config=config)
+            self.assertTrue(f3.equals(f3_post, compare_name=True, compare_class=True))
+
+
 
 if __name__ == '__main__':
     unittest.main()
+
+
