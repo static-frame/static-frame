@@ -23,6 +23,7 @@ from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -116,6 +117,23 @@ class Bus(ContainerBase): # not a ContainerOperand
             config: StoreConfigMapInitializer = None
             ) -> 'Bus':
         store = StoreZipPickle(fp)
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config=config
+                )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_zip_parquet(cls,
+            fp: PathSpecifier,
+            config: StoreConfigMapInitializer = None
+            ) -> 'Bus':
+        '''
+        Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
+
+        {args}
+        '''
+        store = StoreZipParquet(fp)
         return cls(cls._deferred_series(store.labels()),
                 store=store,
                 config=config
@@ -511,6 +529,19 @@ class Bus(ContainerBase): # not a ContainerOperand
             ) -> None:
         store = StoreZipPickle(fp)
         # config must be None for pickels, will raise otherwise
+        store.write(self.items(), config=config)
+
+    @doc_inject(selector='bus_exporter')
+    def to_zip_parquet(self,
+            fp: PathSpecifier,
+            config: StoreConfigMapInitializer = None
+            ) -> None:
+        '''
+        Write the complete :obj:`Bus` as a zipped archive of parquet files.
+
+        {args}
+        '''
+        store = StoreZipParquet(fp)
         store.write(self.items(), config=config)
 
     def to_xlsx(self,

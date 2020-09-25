@@ -2430,15 +2430,16 @@ Saturn    120536   568.0     60268.0
 #start_Bus-interface
 >>> sf.Bus.interface.loc[sf.Bus.interface['group'] == 'Exporter']
 <Frame: Bus>
-<Index>                   cls_name group    doc    <<U18>
+<Index>                    cls_name group    doc                  <<U18>
 <Index: signature>
-to_hdf5(fp, config)       Bus      Exporter
-to_sqlite(fp, config)     Bus      Exporter
-to_xlsx(fp, config)       Bus      Exporter
-to_zip_csv(fp, config)    Bus      Exporter
-to_zip_pickle(fp, config) Bus      Exporter
-to_zip_tsv(fp, config)    Bus      Exporter
-<<U50>                    <<U3>    <<U15>   <<U83>
+to_hdf5(fp, config)        Bus      Exporter
+to_sqlite(fp, config)      Bus      Exporter
+to_xlsx(fp, config)        Bus      Exporter
+to_zip_csv(fp, config)     Bus      Exporter
+to_zip_parquet(fp, config) Bus      Exporter Write the complet...
+to_zip_pickle(fp, config)  Bus      Exporter
+to_zip_tsv(fp, config)     Bus      Exporter
+<<U50>                     <<U3>    <<U15>   <<U83>
 
 #end_Bus-interface
 
