@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 import unittest
 
 import numpy as np
@@ -18,6 +9,8 @@ from static_frame.core.batch import Batch
 from static_frame.test.test_case import TestCase
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.display_config import DisplayConfig
+from static_frame.test.test_case import temp_file
+from static_frame.core.store import StoreConfig
 
 
 class TestUnit(TestCase):
@@ -694,6 +687,40 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
             (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
             )
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_to_zip_pickle_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Batch.from_zip_pickle(fp, config=config)
+            frames = dict(b2.items())
+
+        for frame in (f1, f2, f3):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
 
 if __name__ == '__main__':

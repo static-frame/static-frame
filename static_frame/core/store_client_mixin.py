@@ -28,76 +28,63 @@ class StoreClientMixin:
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
-        # take and store a StoreConfigMap
         store = StoreZipTSV(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipCSV(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_pickle(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipPickle(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipParquet(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -105,44 +92,35 @@ class StoreClientMixin:
         '''
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreSQLite(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreHDF5(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
+        return cls._from_store(store, config)
 
     #---------------------------------------------------------------------------
     # exporters

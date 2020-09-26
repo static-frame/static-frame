@@ -16,7 +16,9 @@ from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
-from static_frame.core.store_client_base import StoreClientMixin
+from static_frame.core.store import Store
+from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -44,7 +46,7 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSe
     return post
 
 
-class Batch(ContainerOperand):
+class Batch(ContainerOperand, StoreClientMixin):
     '''
     A lazily evaluated container of Frames that broadcasts operations on component Frames.
     '''
@@ -74,6 +76,15 @@ class Batch(ContainerOperand):
                 chunksize=chunksize,
                 use_threads=use_threads,
                 )
+
+    @classmethod
+    def _from_store(cls,
+            store: Store,
+            config: StoreConfigMapInitializer = None
+            ) -> 'Batch':
+        return cls((label, store.read(label, config=config))
+                for label in store.labels())
+
 
     def __init__(self,
             items: IteratorFrameItems,

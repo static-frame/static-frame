@@ -17,7 +17,7 @@ from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.store_client_base import StoreClientMixin
+from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
@@ -57,7 +57,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
-        # make an object dtype
         return Series.from_element(FrameDeferred, index=labels, dtype=object)
 
     @classmethod
@@ -76,6 +75,16 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     name=name,
                     )
         return cls(series, config=config)
+
+    @classmethod
+    def _from_store(cls,
+            store: Store,
+            config: StoreConfigMapInitializer = None
+            ) -> 'Bus':
+        return cls(cls._deferred_series(store.labels()),
+                store=store,
+                config=config
+                )
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -113,7 +122,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
-
 
     #---------------------------------------------------------------------------
     # delegation
