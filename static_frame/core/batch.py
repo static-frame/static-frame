@@ -4,30 +4,29 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-
-from static_frame.core.container import ContainerOperand
 from static_frame.core.bus import Bus
+from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
+from static_frame.core.store_client_base import StoreClientMixin
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import KeyOrKeys as KeyOrKeys
-
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
