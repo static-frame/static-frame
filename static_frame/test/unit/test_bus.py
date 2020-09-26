@@ -965,11 +965,11 @@ class TestUnit(TestCase):
                 name='f3')
 
         config = StoreConfig(
-            index_depth=1,
-            columns_depth=1,
-            include_columns=True,
-            include_index=True
-            )
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
         b1 = Bus.from_frames((f1, f2, f3), config=config)
 
         with temp_file('.zip') as fp:

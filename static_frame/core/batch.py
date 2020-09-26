@@ -17,6 +17,7 @@ from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
 from static_frame.core.store import Store
+from static_frame.core.store import StoreConfigMap
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
@@ -54,10 +55,13 @@ class Batch(ContainerOperand, StoreClientMixin):
     __slots__ = (
             '_items',
             '_name',
+            '_config',
             '_max_workers',
             '_chunksize',
             '_use_threads',
             )
+
+    _config: StoreConfigMap
 
     @classmethod
     def from_frames(cls,
@@ -82,20 +86,25 @@ class Batch(ContainerOperand, StoreClientMixin):
             store: Store,
             config: StoreConfigMapInitializer = None
             ) -> 'Batch':
-        return cls((label, store.read(label, config=config))
+        config_map = StoreConfigMap.from_initializer(config)
+        items = ((label, store.read(label, config=config_map[label]))
                 for label in store.labels())
+        return cls(items, config=config)
 
 
     def __init__(self,
             items: IteratorFrameItems,
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
             ):
         self._items = items # might be a generator!
         self._name = name
+        self._config = config
+
         self._max_workers = max_workers
         self._chunksize = chunksize
         self._use_threads = use_threads
@@ -115,6 +124,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return self.__class__(gen(),
                 name=name if name is not None else self._name,
+                config=self._config,
                 max_workers=self._max_workers,
                 chunksize=self._chunksize,
                 use_threads=self._use_threads,
@@ -726,6 +736,11 @@ class Batch(ContainerOperand, StoreClientMixin):
     def to_bus(self) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
         '''
-        return Bus(Series.from_items(self.items(), name=self._name, dtype=DTYPE_OBJECT))
+        series = Series.from_items(
+                self.items(),
+                name=self._name,
+                dtype=DTYPE_OBJECT)
+
+        return Bus(series, config=self._config)
 
 

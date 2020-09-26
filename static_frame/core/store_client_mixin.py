@@ -136,7 +136,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipTSV(fp)
-        config = config if not None else self._config
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
 
     @doc_inject(selector='bus_exporter')
@@ -150,7 +150,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipCSV(fp)
-        config = config if not None else self._config
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
 
     @doc_inject(selector='bus_exporter')
@@ -178,6 +178,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipParquet(fp)
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
 
     @doc_inject(selector='bus_exporter')
@@ -191,7 +192,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreXLSX(fp)
-        config = config if not None else self._config
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
 
     @doc_inject(selector='bus_exporter')
@@ -205,7 +206,7 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreSQLite(fp)
-        config = config if not None else self._config
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
 
     @doc_inject(selector='bus_exporter')
@@ -219,5 +220,5 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreHDF5(fp)
-        config = config if not None else self._config
+        config = config if not config is None else self._config
         store.write(self.items(), config=config)
