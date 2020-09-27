@@ -10,6 +10,7 @@ import numpy as np
 
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
+from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
@@ -745,6 +746,15 @@ class InterfaceRecord(tp.NamedTuple):
 class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
+    _CLS_INIT_SIMPLE = frozenset((
+                    ContainerOperand,
+                    ContainerBase,
+                    IndexBase,
+                    StoreClientMixin,
+                    DisplayConfig,
+                    StoreFilter,
+                    StoreConfig
+                    ))
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -768,16 +778,14 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target in (DisplayConfig, StoreFilter, StoreConfig):
-                instance = target()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
                 instance = target(np.array((0,), dtype=DT64_S))
-            elif target in (ContainerOperand, ContainerBase, IndexBase):
-                instance = target()
             elif issubclass(target, Frame):
                 instance = target.from_elements((0,))
+            elif target in cls._CLS_INIT_SIMPLE:
+                instance = target()
             else:
                 instance = target((0,)) #type: ignore
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
