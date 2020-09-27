@@ -55,7 +55,7 @@ class SampleData:
                 np.nan, index=range(75), columns=range(50000))
         f2 = sf.FrameGO.from_element(
                 0, index=range(75), columns=range(50000, 100000))
-        f1.extend(f2)
+        f1.extend(f2) #type: ignore
         cls._store['to_pandas_b'] = f1
 
 

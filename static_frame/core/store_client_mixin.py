@@ -16,13 +16,10 @@ from static_frame.core.store import StoreConfigMap
 from static_frame.core.interface_meta import InterfaceMeta
 
 
-if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
 
+# NOTE: wanted this to inherit from tp.Generic[T], such that values returned from constructors would be known, but this breaks in 3.6 with: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 
-T = tp.TypeVar('T')
-
-class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
+class StoreClientMixin:
     '''
     Mixin class for multi-table IO via Store interfaces.
     '''
@@ -31,7 +28,7 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     __slots__ = ()
 
     _config: StoreConfigMap
-    _from_store: tp.Callable[..., T]
+    _from_store: tp.Callable[..., tp.Any]
     items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
     #---------------------------------------------------------------------------
@@ -39,45 +36,45 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_tsv(cls: tp.Type['StoreClientMixin[T]'],
+    def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipTSV(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_csv(cls: tp.Type['StoreClientMixin[T]'],
+    def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipCSV(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
     @classmethod
     @doc_inject(selector='bus_constructor')
     def from_zip_pickle(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipPickle(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
 
     @classmethod
@@ -85,14 +82,14 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreZipParquet(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
 
     @classmethod
@@ -100,7 +97,7 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -108,7 +105,7 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
         '''
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
 
     @classmethod
@@ -116,14 +113,14 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreSQLite(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
 
     @classmethod
@@ -131,14 +128,14 @@ class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> T:
+            ) -> 'StoreClientMixin':
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
 
         {args}
         '''
         store = StoreHDF5(fp)
-        return tp.cast(T, cls._from_store(store, config))
+        return cls._from_store(store, config) #type: ignore
 
 
     #---------------------------------------------------------------------------
