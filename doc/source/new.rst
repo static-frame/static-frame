@@ -12,6 +12,8 @@ Refactored ``Bus`` and ``Batch`` to use the mixin class ``StoreClientMixin`` to 
 
 Added ``StoreClientMixin.to_zip_parquet`` and ``StoreClientMixin.from_zip_parquet``.
 
+Performance improvements to ``Frame.to_pandas`` when a ``Frame`` has unified ``TypeBlocks``.
+
 
 0.6.34
 ----------
