@@ -13,6 +13,7 @@ from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import PathSpecifier
 from static_frame.core.store import StoreConfigMap
+from static_frame.core.interface_meta import InterfaceMeta
 
 
 if tp.TYPE_CHECKING:
@@ -21,15 +22,17 @@ if tp.TYPE_CHECKING:
 
 T = tp.TypeVar('T')
 
-class StoreClientMixin(tp.Generic[T]):
+class StoreClientMixin(tp.Generic[T], metaclass=InterfaceMeta):
     '''
     Mixin class for multi-table IO via Store interfaces.
     '''
+    # NOTE: assignment of metaclass above is only needed for Python 3.6
+
     __slots__ = ()
 
     _config: StoreConfigMap
-    items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
     _from_store: tp.Callable[..., T]
+    items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
 
     #---------------------------------------------------------------------------
     # constructors by data format
