@@ -41,11 +41,14 @@ INDEX_CONSTRUCTOR = "index_constructor: Optional class or constructor function t
 
 COLUMNS_CONSTRUCTOR = "columns_constructor: Optional class or constructor function to create the :obj:`Index` applied to the columns."
 
+FP = 'fp: A string file path or :obj:`Path` instance.'
+
+STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
 
 class DOC_TEMPLATE:
 
     #---------------------------------------------------------------------------
-    # functions
+    # complete function doc strings
 
     to_html = '''
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
@@ -68,6 +71,9 @@ class DOC_TEMPLATE:
     Returns:
         :obj:`str`, absolute file path to the file written.
     '''
+
+    #---------------------------------------------------------------------------
+    # common strings
 
     clip = '''Apply a clip opertion to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
 
@@ -152,7 +158,7 @@ class DOC_TEMPLATE:
             )
 
     from_any = dict(
-            fp='fp: A string or :obj:`Path` to read.',
+            fp=FP,
             index_depth='index_depth: integer specification of how many columns to use in forming the index. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
             columns_depth='columns_depth: integer specification of how many rows to use in forming the columns. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
             columns_select='columns_select: An optional iterable of column names to load.',
@@ -264,11 +270,26 @@ class DOC_TEMPLATE:
             '''
             )
 
+    bus_constructor = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            '''
+            )
+
+    bus_exporter = dict(
+            args = f'''
+        Args:
+            {FP}
+            {STORE_CONFIG_MAP}
+            '''
+            )
+
     mloc = dict(
             doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
             doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
-    )
-
+            )
 
     map_any = dict(
             doc='Apply a mapping; for values not in the mapping, the value is returned.',
@@ -295,6 +316,10 @@ class DOC_TEMPLATE:
         axis: Axis, defaulting to axis 0.
         skipna: Skip missing (NaN) values, defaulting to True.
     ''')
+
+
+# NOTE: F here should replace AnyCallable below
+F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
 def doc_inject(*,
         selector: tp.Optional[str] = None,

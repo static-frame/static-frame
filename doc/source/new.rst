@@ -11,6 +11,22 @@ API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
 
 API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
 
+API change: Container operands used with binary equality operators will raise if sizes are not equivalent
+
+
+0.6.35
+----------
+
+Added a ``name`` parameter to ``Series.from_pandas`` and ``Frame.from_pandas``.
+
+Added ``Frame.from_msgpack`` and ``Frame.to_msgpack``.
+
+Refactored ``Bus`` and ``Batch`` to use the mixin class ``StoreClientMixin`` to share exporters and constructors.
+
+Added ``StoreClientMixin.to_zip_parquet`` and ``StoreClientMixin.from_zip_parquet``.
+
+Performance improvements to ``Frame.to_pandas`` when a ``Frame`` has unified ``TypeBlocks``.
+
 
 0.6.34
 ----------

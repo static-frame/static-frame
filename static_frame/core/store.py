@@ -154,7 +154,7 @@ class StoreConfigMap:
         if isinstance(initializer, cls):
             # return same instance
             return initializer
-        if initializer is None: # will get default configurtation
+        if initializer is None: # will get default configuration
             return cls()
         assert isinstance(initializer, dict)
         return cls(initializer)

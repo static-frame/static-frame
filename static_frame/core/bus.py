@@ -7,8 +7,8 @@ import numpy as np
 from static_frame.core.container import ContainerBase
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.frame import Frame
@@ -17,20 +17,13 @@ from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store import StoreConfigMap
 from static_frame.core.store import StoreConfigMapInitializer
-from static_frame.core.store_hdf5 import StoreHDF5
-from static_frame.core.store_sqlite import StoreSQLite
-from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipPickle
-from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PathSpecifier
 from static_frame.core.util import NameType
-
+from static_frame.core.util import NULL_SLICE
 
 #-------------------------------------------------------------------------------
 class FrameDefferedMeta(type):
@@ -43,7 +36,10 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     '''
 
 #-------------------------------------------------------------------------------
-class Bus(ContainerBase): # not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
+    '''
+    A lazy, randomly-accessible container of :obj:`Frame`.
+    '''
 
     __slots__ = (
         '_loaded',
@@ -64,7 +60,6 @@ class Bus(ContainerBase): # not a ContainerOperand
         '''
         Return an object ``Series`` of ``FrameDeferred`` objects, based on the passed in ``labels``.
         '''
-        # make an object dtype
         return Series.from_element(FrameDeferred, index=labels, dtype=object)
 
     @classmethod
@@ -84,72 +79,11 @@ class Bus(ContainerBase): # not a ContainerOperand
                     )
         return cls(series, config=config)
 
-    #---------------------------------------------------------------------------
-    # constructors by data format
-
     @classmethod
-    def from_zip_tsv(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None,
-            ) -> 'Bus':
-        # take and store a StoreConfigMap
-        store = StoreZipTSV(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_zip_csv(cls,
-            fp: PathSpecifier,
+    def _from_store(cls,
+            store: Store,
             config: StoreConfigMapInitializer = None
             ) -> 'Bus':
-        store = StoreZipCSV(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_zip_pickle(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreZipPickle(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_xlsx(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        # how to pass configuration for multiple sheets?
-        store = StoreXLSX(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_sqlite(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreSQLite(fp)
-        return cls(cls._deferred_series(store.labels()),
-                store=store,
-                config=config
-                )
-
-    @classmethod
-    def from_hdf5(cls,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> 'Bus':
-        store = StoreHDF5(fp)
         return cls(cls._deferred_series(store.labels()),
                 store=store,
                 config=config
@@ -191,7 +125,6 @@ class Bus(ContainerBase): # not a ContainerOperand
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
-
 
     #---------------------------------------------------------------------------
     # delegation
@@ -322,7 +255,7 @@ class Bus(ContainerBase): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+    def items(self) -> tp.Iterator[tp.Tuple[str, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
         self._update_series_cache_all()
@@ -485,54 +418,3 @@ class Bus(ContainerBase): # not a ContainerOperand
                 return False
 
         return True
-
-    #---------------------------------------------------------------------------
-    # exporters
-
-    def to_zip_tsv(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipTSV(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_zip_csv(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipCSV(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_zip_pickle(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreZipPickle(fp)
-        # config must be None for pickels, will raise otherwise
-        store.write(self.items(), config=config)
-
-    def to_xlsx(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreXLSX(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_sqlite(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreSQLite(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)
-
-    def to_hdf5(self,
-            fp: PathSpecifier,
-            config: StoreConfigMapInitializer = None
-            ) -> None:
-        store = StoreHDF5(fp)
-        config = config if not None else self._config
-        store.write(self.items(), config=config)

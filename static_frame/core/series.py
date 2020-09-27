@@ -332,6 +332,7 @@ class Series(ContainerOperand):
             value: 'pandas.Series',
             *,
             index_constructor: tp.Optional[tp.Union[IndexConstructor, IndexAutoFactoryType]] = None,
+            name: NameType = NAME_DEFAULT,
             own_data: bool = False) -> 'Series':
         '''Given a Pandas Series, return a Series.
 
@@ -356,6 +357,8 @@ class Series(ContainerOperand):
         else:
             data = pandas_to_numpy(value, own_data=own_data)
 
+        name = name if name is not NAME_DEFAULT else value.name
+
         own_index = True
         if index_constructor is IndexAutoFactory:
             index = None
@@ -367,7 +370,7 @@ class Series(ContainerOperand):
 
         return cls(data,
                 index=index,
-                name=value.name,
+                name=name,
                 own_index=own_index
                 )
 

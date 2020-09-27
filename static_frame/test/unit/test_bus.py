@@ -949,6 +949,42 @@ class TestUnit(TestCase):
         self.assertTrue(f1.equals(post[0]))
         self.assertTrue(f2.equals(post[1]))
 
+    #---------------------------------------------------------------------------
+    def test_bus_to_parquet_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('p', 'q'),
+                name='f3')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+        b1 = Bus.from_frames((f1, f2, f3), config=config)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_parquet(fp)
+
+            b2 = Bus.from_zip_parquet(fp, config=config)
+            tuple(b2.items()) # force loading all
+
+        for frame in (f1, f2, f3):
+            # parquet brings in characters as objects, thus forcing different dtypes
+            self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
+
+
+
+
 
 if __name__ == '__main__':
 

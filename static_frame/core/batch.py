@@ -4,30 +4,32 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-
-from static_frame.core.container import ContainerOperand
 from static_frame.core.bus import Bus
+from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display import DisplayHeader
+from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactoryType
 from static_frame.core.node_selector import InterfaceGetItem
+from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.series import Series
+from static_frame.core.store import Store
+from static_frame.core.store import StoreConfigMap
+from static_frame.core.store_client_mixin import StoreClientMixin
+from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import Bloc2DKeyType
+from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import GetItemKeyTypeCompound
 from static_frame.core.util import IndexInitializer
+from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import KeyOrKeys as KeyOrKeys
-
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
@@ -45,24 +47,28 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSe
     return post
 
 
-class Batch(ContainerOperand):
+class Batch(ContainerOperand, StoreClientMixin):
     '''
-    A lazily evaluated container of Frames that broadcasts operations on component Frames.
+    A lazy, sequentially evaluated container of :obj:`Frame`s that broadcasts operations on contained :obj:`Frame`s by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
     '''
 
     __slots__ = (
             '_items',
             '_name',
+            '_config',
             '_max_workers',
             '_chunksize',
             '_use_threads',
             )
+
+    _config: StoreConfigMap
 
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[Frame],
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
@@ -71,21 +77,37 @@ class Batch(ContainerOperand):
         '''
         return cls(((f.name, f) for f in frames),
                 name=name,
+                config=config,
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
                 )
 
+    @classmethod
+    def _from_store(cls,
+            store: Store,
+            config: StoreConfigMapInitializer = None,
+            ) -> 'Batch':
+        config_map = StoreConfigMap.from_initializer(config)
+        items = ((label, store.read(label, config=config_map[label]))
+                for label in store.labels())
+        return cls(items, config=config)
+
+
     def __init__(self,
             items: IteratorFrameItems,
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
             ):
         self._items = items # might be a generator!
         self._name = name
+
+        self._config = StoreConfigMap.from_initializer(config)
+
         self._max_workers = max_workers
         self._chunksize = chunksize
         self._use_threads = use_threads
@@ -105,6 +127,7 @@ class Batch(ContainerOperand):
         '''
         return self.__class__(gen(),
                 name=name if name is not None else self._name,
+                config=self._config,
                 max_workers=self._max_workers,
                 chunksize=self._chunksize,
                 use_threads=self._use_threads,
@@ -716,6 +739,11 @@ class Batch(ContainerOperand):
     def to_bus(self) -> 'Bus':
         '''Realize the :obj:`Batch` as an :obj:`Bus`. Note that, as a :obj:`Bus` must have all labels (even if :obj:`Frame` are loaded lazily)
         '''
-        return Bus(Series.from_items(self.items(), name=self._name, dtype=DTYPE_OBJECT))
+        series = Series.from_items(
+                self.items(),
+                name=self._name,
+                dtype=DTYPE_OBJECT)
+
+        return Bus(series, config=self._config)
 
 

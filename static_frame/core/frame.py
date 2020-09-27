@@ -1,17 +1,17 @@
 
 from functools import partial
 from io import StringIO
+from io import BytesIO
 from itertools import chain
 from itertools import product
+
 import csv
 import json
 import sqlite3
 import typing as tp
 
-
 import numpy as np
 from numpy.ma import MaskedArray #type: ignore
-
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
@@ -31,6 +31,7 @@ from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import apex_to_name
+from static_frame.core.container_util import MessagePackElement
 
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1880,6 +1881,7 @@ class Frame(ContainerOperand):
             *,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
+            name: NameType = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             own_data: bool = False
             ) -> 'Frame':
@@ -1946,11 +1948,13 @@ class Frame(ContainerOperand):
         else:
             blocks = TypeBlocks.from_blocks(blocks())
 
-        # avoid getting a Series if a column
-        if 'name' not in value.columns and hasattr(value, 'name'):
+        if name is not NAME_DEFAULT:
+            pass # keep
+        elif 'name' not in value.columns and hasattr(value, 'name'):
+            # avoid getting a Series if a column
             name = value.name
         else:
-            name = None
+            name = None # do not keep as NAME_DEFAULT
 
         own_index = True
         if index_constructor is IndexAutoFactory:
@@ -2126,6 +2130,81 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
+
+    @staticmethod
+    @doc_inject(selector='constructor_frame')
+    def from_msgpack(
+            msgpack_data: bin
+            ) -> 'Frame':
+        '''Frame constructor from an in-memory binary object formatted as a msgpack.
+
+        Args:
+            msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
+        '''
+        import msgpack
+        import msgpack_numpy
+
+        def decode(obj: dict, #dict produced by msgpack-python
+                chain: tp.Callable = msgpack_numpy.decode,
+                ) -> object:
+
+            # NOTE: maybe this can be replaced by dictionary of SF containers provided by container_util
+            globals_ref = globals()
+
+            if b'sf' in obj:
+                clsname = obj[b'sf']
+                cls = globals_ref[clsname]
+
+                if issubclass(cls, Frame):
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls(
+                            blocks,
+                            name=obj[b'name'],
+                            index=unpackb(obj[b'index']),
+                            columns=unpackb(obj[b'columns']),
+                            own_data=True,
+                            )
+                elif issubclass(cls, IndexHierarchy):
+                    index_constructors=[
+                            globals_ref[clsname] for clsname in unpackb(
+                                   obj[b'index_constructors'])]
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls._from_type_blocks(
+                            blocks=blocks,
+                            name=obj[b'name'],
+                            index_constructors=index_constructors,
+                            own_blocks=True)
+                elif issubclass(cls, Index):
+                    data = unpackb(obj[b'data'])
+                    return cls(
+                            data,
+                            name=obj[b'name'])
+                elif issubclass(cls, TypeBlocks):
+                    blocks = unpackb(obj[b'blocks'])
+                    return cls.from_blocks(blocks)
+
+            elif b'np' in obj:
+                #Overridden msgpack-numpy datatypes
+                data = unpackb(obj[b'data'])
+                typename = obj[b'dtype'].split('[', 1)[0]
+
+                if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
+                    array = np.array(data, dtype=obj[b'dtype'])
+
+                elif typename == 'object_':
+                    array = np.array(
+                            list(map(element_decode, data)),
+                            dtype=DTYPE_OBJECT)
+
+                array.flags.writeable = False
+                return array
+            else:
+                return chain(obj)
+
+        unpackb = partial(msgpack.unpackb, object_hook=decode)
+        element_decode = partial(MessagePackElement.decode, unpackb=unpackb)
+
+        return unpackb(msgpack_data)
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='container_init', class_name='Frame')
@@ -5551,14 +5630,21 @@ class Frame(ContainerOperand):
         '''
         import pandas
 
-        df = pandas.DataFrame(index=self._index.to_pandas())
+        if self._blocks.unified:
+            # make copy to get writeable
+            array = self._blocks._blocks[0].copy()
+            df = pandas.DataFrame(array,
+                    index=self._index.to_pandas(),
+                    columns=self._columns.to_pandas()
+                    )
+        else:
+            df = pandas.DataFrame(index=self._index.to_pandas())
+            # use integer columns for initial loading, then replace
+            # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
+            for i, array in enumerate(self._blocks.axis_values(0)):
+                df[i] = array
 
-        # iter columns to preserve types
-        # use integer columns for initial loading
-        for i, array in enumerate(self._blocks.axis_values(0)):
-            df[i] = array
-
-        df.columns = self._columns.to_pandas()
+            df.columns = self._columns.to_pandas()
 
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name
@@ -5590,7 +5676,7 @@ class Frame(ContainerOperand):
 
 
     def to_parquet(self,
-            fp: PathSpecifier,
+            fp: tp.Union[PathSpecifier, BytesIO],
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -5606,6 +5692,68 @@ class Frame(ContainerOperand):
                 )
         fp = path_filter(fp)
         pq.write_table(table, fp)
+
+    def to_msgpack(self) -> 'bin':
+        '''
+        Return a msgpack.
+        '''
+        import msgpack
+        import msgpack_numpy
+
+        def encode(obj: object,
+                chain: tp.Callable = msgpack_numpy.encode,
+                ) -> dict: #returns dict that msgpack-python consumes
+            cls = obj.__class__
+            clsname = cls.__name__
+            package = cls.__module__.split('.', 1)[0]
+
+            if package == 'static_frame':
+                if isinstance(obj, Frame):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'blocks':packb(obj._blocks),
+                            b'index':packb(obj.index),
+                            b'columns':packb(obj.columns)}
+                elif isinstance(obj, IndexHierarchy):
+                    if obj._recache:
+                        obj._update_array_cache()
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'index_constructors': packb([
+                                    a.__name__ for a in obj.index_types.values.tolist()]),
+                            b'blocks':packb(obj._blocks)}
+                elif isinstance(obj, Index):
+                    return {b'sf':clsname,
+                            b'name':obj.name,
+                            b'data':packb(obj.values)}
+                elif isinstance(obj, TypeBlocks):
+                    return {b'sf':clsname,
+                            b'blocks':packb(obj._blocks)}
+
+            elif package == 'numpy':
+                #msgpack-numpy is breaking with these data types, overriding here
+                if isinstance(obj, np.ndarray):
+                    if obj.dtype.type == np.object_:
+                        data = list(map(element_encode, obj))
+                        return {b'np': True,
+                                b'dtype': 'object_',
+                                b'data': packb(data)}
+                    elif obj.dtype.type == np.datetime64:
+                        data = obj.astype(str)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)}
+                    elif obj.dtype.type == np.timedelta64:
+                        data = obj.astype(np.float64)
+                        return {b'np': True,
+                                b'dtype': str(obj.dtype),
+                                b'data': packb(data)}
+            return chain(obj) #let msgpack_numpy.encode take over
+
+        packb = partial(msgpack.packb, default=encode)
+        element_encode = partial(MessagePackElement.encode, packb=packb)
+
+        return packb(self)
 
     def to_xarray(self) -> 'Dataset':
         '''

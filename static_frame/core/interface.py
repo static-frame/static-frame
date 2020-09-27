@@ -745,6 +745,14 @@ class InterfaceRecord(tp.NamedTuple):
 class InterfaceSummary(Features):
 
     _CLS_TO_INSTANCE_CACHE: tp.Dict[tp.Type[ContainerBase], ContainerBase] = {}
+    _CLS_INIT_SIMPLE = frozenset((
+                    ContainerOperand,
+                    ContainerBase,
+                    IndexBase,
+                    DisplayConfig,
+                    StoreFilter,
+                    StoreConfig
+                    ))
 
     @classmethod
     def is_public(cls, field: str) -> bool:
@@ -753,7 +761,6 @@ class InterfaceSummary(Features):
         if field in cls.EXCLUDE_PRIVATE:
             return False
         return True
-
 
     @classmethod
     def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
@@ -768,16 +775,14 @@ class InterfaceSummary(Features):
                 instance = target.from_frames((f,)) #type: ignore
             elif target is Batch:
                 instance = Batch(iter(()))
-            elif target in (DisplayConfig, StoreFilter, StoreConfig):
-                instance = target()
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0,0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
                 instance = target(np.array((0,), dtype=DT64_S))
-            elif target in (ContainerOperand, ContainerBase, IndexBase):
-                instance = target()
             elif issubclass(target, Frame):
                 instance = target.from_elements((0,))
+            elif target in cls._CLS_INIT_SIMPLE:
+                instance = target()
             else:
                 instance = target((0,)) #type: ignore
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
