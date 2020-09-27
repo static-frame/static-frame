@@ -764,7 +764,6 @@ class InterfaceSummary(Features):
             return False
         return True
 
-
     @classmethod
     def get_instance(cls, target: tp.Type[ContainerBase]) -> ContainerBase:
         '''

@@ -5640,10 +5640,11 @@ class Frame(ContainerOperand):
                     )
         else:
             df = pandas.DataFrame(index=self._index.to_pandas())
-            # iter columns to preserve types
             # use integer columns for initial loading, then replace
+            # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
             for i, array in enumerate(self._blocks.axis_values(0)):
                 df[i] = array
+
             df.columns = self._columns.to_pandas()
 
         if 'name' not in df.columns and self._name is not None:

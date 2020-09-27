@@ -48,7 +48,17 @@ class SampleData:
         cls._store['pivot_sf'] = frame
         cls._store['pivot_df'] = frame.to_pandas()
 
-        cls._store['to_pandas'] = sf.Frame.from_element(np.nan, index=range(75), columns=range(75000))
+        cls._store['to_pandas_a'] = sf.Frame.from_element(
+                np.nan, index=range(75), columns=range(75000))
+
+        f1 = sf.FrameGO.from_element(
+                np.nan, index=range(75), columns=range(50000))
+        f2 = sf.FrameGO.from_element(
+                0, index=range(75), columns=range(50000, 100000))
+        f1.extend(f2)
+        cls._store['to_pandas_b'] = f1
+
+
 
 
     @classmethod
@@ -74,13 +84,22 @@ class Pivot(PerfTest):
         assert df2.shape == (50, 37000)
 
 
-class ToPandas(PerfTest):
+class ToPandasA(PerfTest):
 
     NUMBER = 1
 
     @classmethod
     def sf(cls) -> None:
-        f1 = SampleData.get('to_pandas')
+        f1 = SampleData.get('to_pandas_a')
         df = f1.to_pandas()
         assert df.shape == f1.shape
 
+class ToPandasB(PerfTest):
+
+    NUMBER = 1
+
+    @classmethod
+    def sf(cls) -> None:
+        f1 = SampleData.get('to_pandas_b')
+        df = f1.to_pandas()
+        assert df.shape == f1.shape
