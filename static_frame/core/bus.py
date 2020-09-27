@@ -36,7 +36,7 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
     '''
 
 #-------------------------------------------------------------------------------
-class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin['Bus']): # not a ContainerOperand
 
     __slots__ = (
         '_loaded',
@@ -252,7 +252,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def items(self) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
+    def items(self) -> tp.Iterator[tp.Tuple[str, tp.Any]]:
         '''Iterator of pairs of index label and value.
         '''
         self._update_series_cache_all()

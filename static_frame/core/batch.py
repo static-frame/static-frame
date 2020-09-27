@@ -103,7 +103,8 @@ class Batch(ContainerOperand, StoreClientMixin):
             ):
         self._items = items # might be a generator!
         self._name = name
-        self._config = config
+
+        self._config = StoreConfigMap.from_initializer(config)
 
         self._max_workers = max_workers
         self._chunksize = chunksize

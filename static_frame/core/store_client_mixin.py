@@ -1,5 +1,5 @@
 
-
+import typing as tp
 
 
 from static_frame.core.doc_str import doc_inject
@@ -12,13 +12,24 @@ from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import PathSpecifier
+from static_frame.core.store import StoreConfigMap
 
 
-class StoreClientMixin:
+if tp.TYPE_CHECKING:
+    from static_frame.core.frame import Frame # pylint: disable=W0611 #pragma: no cover
+
+
+T = tp.TypeVar('T')
+
+class StoreClientMixin(tp.Generic[T]):
     '''
     Mixin class for multi-table IO via Store interfaces.
     '''
     __slots__ = ()
+
+    _config: StoreConfigMap
+    # items: tp.Callable[[...], tp.Iterator[tp.Tuple[str, tp.Any]]]
+    _from_store: tp.Callable[..., T]
 
     #---------------------------------------------------------------------------
     # constructors by data format
@@ -28,7 +39,7 @@ class StoreClientMixin:
     def from_zip_tsv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to zipped TSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -42,7 +53,7 @@ class StoreClientMixin:
     def from_zip_csv(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to zipped CSV :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -56,7 +67,7 @@ class StoreClientMixin:
     def from_zip_pickle(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to zipped pickle :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -70,7 +81,7 @@ class StoreClientMixin:
     def from_zip_parquet(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to zipped parquet :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -84,7 +95,7 @@ class StoreClientMixin:
     def from_xlsx(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to an XLSX :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -99,7 +110,7 @@ class StoreClientMixin:
     def from_sqlite(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to an SQLite :obj:`Bus` store, return a :obj:`Bus` instance.
 
@@ -113,7 +124,7 @@ class StoreClientMixin:
     def from_hdf5(cls,
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
-            ) -> 'StoreClientMixin':
+            ) -> T:
         '''
         Given a file path to a HDF5 :obj:`Bus` store, return a :obj:`Bus` instance.
 
