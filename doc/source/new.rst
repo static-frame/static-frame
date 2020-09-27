@@ -6,9 +6,11 @@ What is New in Static Frame
 
 Added a ``name`` parameter to ``Series.from_pandas`` and ``Frame.from_pandas``.
 
-Added ``Bus.to_zip_parquet`` and ``Bus.from_zip_parquet``.
-
 Added ``Frame.from_msgpack`` and ``Frame.to_msgpack``.
+
+Refactored ``Bus`` and ``Batch`` to use the mixin class ``StoreClientMixin`` to share exporters and constructors.
+
+Added ``StoreClientMixin.to_zip_parquet`` and ``StoreClientMixin.from_zip_parquet``.
 
 
 0.6.34
