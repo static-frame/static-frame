@@ -5631,14 +5631,20 @@ class Frame(ContainerOperand):
         '''
         import pandas
 
-        df = pandas.DataFrame(index=self._index.to_pandas())
-
-        # iter columns to preserve types
-        # use integer columns for initial loading
-        for i, array in enumerate(self._blocks.axis_values(0)):
-            df[i] = array
-
-        df.columns = self._columns.to_pandas()
+        if self._blocks.unified:
+            # make copy to get writeable
+            array = self._blocks._blocks[0].copy()
+            df = pandas.DataFrame(array,
+                    index=self._index.to_pandas(),
+                    columns=self._columns.to_pandas()
+                    )
+        else:
+            df = pandas.DataFrame(index=self._index.to_pandas())
+            # iter columns to preserve types
+            # use integer columns for initial loading, then replace
+            for i, array in enumerate(self._blocks.axis_values(0)):
+                df[i] = array
+            df.columns = self._columns.to_pandas()
 
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name

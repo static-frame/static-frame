@@ -820,6 +820,16 @@ class TestUnit(TestCase):
         df = f.to_pandas()
         self.assertEqual(df.name, f.name)
 
+
+    def test_frame_to_pandas_g(self) -> None:
+        # check single block
+        f = Frame(np.arange(2000).reshape(100, 20))
+        self.assertTrue(f._blocks.unified)
+
+        df = f.to_pandas()
+        self.assertEqual(df.shape, (100, 20))
+
+
     #---------------------------------------------------------------------------
 
 
@@ -1180,10 +1190,10 @@ class TestUnit(TestCase):
                 columns=(1, 2, 3),
                 index=('w', 'x'))
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
@@ -1197,10 +1207,10 @@ class TestUnit(TestCase):
                 index=(datetime.datetime(999, 1, 1, 0, 0), datetime.datetime(99, 1, 1, 0, 0))
                 )
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
@@ -1214,10 +1224,10 @@ class TestUnit(TestCase):
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
@@ -1231,10 +1241,10 @@ class TestUnit(TestCase):
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
@@ -1256,10 +1266,10 @@ class TestUnit(TestCase):
                 index=(np.datetime64('1999-12-31'), np.datetime64('2000-01-01'))
                 )
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
@@ -1268,11 +1278,11 @@ class TestUnit(TestCase):
         ih2 = sf.IndexHierarchy.from_product(tuple('EFGH'), tuple('5678'))
         f1 = sf.Frame(np.arange(256).reshape(16, 16), index=ih1, columns=ih2)
         msg = f1.to_msgpack()
-        
+
         f2 = Frame.from_msgpack(msg)
         assert isinstance(f2.index, sf.IndexHierarchy)
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-        
+
         f2 = Frame.from_msgpack(f1.to_msgpack())
         assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
