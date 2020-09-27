@@ -317,6 +317,10 @@ class DOC_TEMPLATE:
         skipna: Skip missing (NaN) values, defaulting to True.
     ''')
 
+
+# NOTE: F here should replace AnyCallable below
+F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
+
 def doc_inject(*,
         selector: tp.Optional[str] = None,
         **kwargs: object

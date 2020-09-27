@@ -28,7 +28,7 @@ class StoreClientMixin(tp.Generic[T]):
     __slots__ = ()
 
     _config: StoreConfigMap
-    # items: tp.Callable[[...], tp.Iterator[tp.Tuple[str, tp.Any]]]
+    items: tp.Callable[..., tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]]
     _from_store: tp.Callable[..., T]
 
     #---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ class StoreClientMixin(tp.Generic[T]):
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_tsv(cls,
+    def from_zip_tsv(cls: tp.Type['StoreClientMixin[T]'],
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None,
             ) -> T:
@@ -46,11 +46,11 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreZipTSV(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
 
     @classmethod
     @doc_inject(selector='bus_constructor')
-    def from_zip_csv(cls,
+    def from_zip_csv(cls: tp.Type['StoreClientMixin[T]'],
             fp: PathSpecifier,
             config: StoreConfigMapInitializer = None
             ) -> T:
@@ -60,7 +60,7 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreZipCSV(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -74,7 +74,8 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreZipPickle(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
+
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -88,7 +89,8 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreZipParquet(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
+
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -103,7 +105,8 @@ class StoreClientMixin(tp.Generic[T]):
         '''
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
+
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -117,7 +120,8 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreSQLite(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
+
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -131,7 +135,8 @@ class StoreClientMixin(tp.Generic[T]):
         {args}
         '''
         store = StoreHDF5(fp)
-        return cls._from_store(store, config)
+        return tp.cast(T, cls._from_store(store, config))
+
 
     #---------------------------------------------------------------------------
     # exporters

@@ -15,6 +15,19 @@ from static_frame.core.store import StoreConfig
 
 class TestUnit(TestCase):
 
+    def test_batch_slotted_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='foo')
+
+        b1 = Batch.from_frames((f1,))
+
+        with self.assertRaises(AttributeError):
+            b1.g = 30 # type: ignore #pylint: disable=E0237
+        with self.assertRaises(AttributeError):
+            b1.__dict__ #pylint: disable=W0104
 
 
     def test_batch_a(self) -> None:
@@ -755,6 +768,32 @@ class TestUnit(TestCase):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
+
+    def test_batch_to_zip_parquet_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        b1 = Batch.from_frames((f1, f2), config=config)
+
+        with temp_file('.xlsx') as fp:
+            b1.to_xlsx(fp)
+            b2 = (Batch.from_xlsx(fp, config=config) * 20).sum()
+
+            self.assertEqual(b2.to_frame().to_pairs(0),
+                (('a', (('f1', 60), ('f2', 120))), ('b', (('f1', 140), ('f2', 300)))))
 
 
 

@@ -37,6 +37,9 @@ class FrameDeferred(metaclass=FrameDefferedMeta):
 
 #-------------------------------------------------------------------------------
 class Bus(ContainerBase, StoreClientMixin['Bus']): # not a ContainerOperand
+    '''
+    A lazy, randomly-accessible container of :obj:`Frame`.
+    '''
 
     __slots__ = (
         '_loaded',

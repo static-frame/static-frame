@@ -47,9 +47,9 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSe
     return post
 
 
-class Batch(ContainerOperand, StoreClientMixin):
+class Batch(ContainerOperand, StoreClientMixin['Batch']):
     '''
-    A lazily evaluated container of Frames that broadcasts operations on component Frames.
+    A lazy, sequentially evaluated container of :obj:`Frame`s that broadcasts operations on contained :obj:`Frame`s by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
     '''
 
     __slots__ = (
@@ -68,6 +68,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             frames: tp.Iterable[Frame],
             *,
             name: NameType = None,
+            config: StoreConfigMapInitializer = None,
             max_workers: tp.Optional[int] = None,
             chunksize: int = 1,
             use_threads: bool = False,
@@ -76,6 +77,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''
         return cls(((f.name, f) for f in frames),
                 name=name,
+                config=config,
                 max_workers=max_workers,
                 chunksize=chunksize,
                 use_threads=use_threads,
@@ -84,7 +86,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     @classmethod
     def _from_store(cls,
             store: Store,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
         items = ((label, store.read(label, config=config_map[label]))
