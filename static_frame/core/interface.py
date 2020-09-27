@@ -10,7 +10,6 @@ import numpy as np
 
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
-from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
@@ -750,7 +749,6 @@ class InterfaceSummary(Features):
                     ContainerOperand,
                     ContainerBase,
                     IndexBase,
-                    StoreClientMixin,
                     DisplayConfig,
                     StoreFilter,
                     StoreConfig

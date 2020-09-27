@@ -13,7 +13,6 @@ from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import PathSpecifier
 from static_frame.core.store import StoreConfigMap
-from static_frame.core.interface_meta import InterfaceMeta
 
 
 
