@@ -49,7 +49,7 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSe
 
 class Batch(ContainerOperand, StoreClientMixin):
     '''
-    A lazy, sequentially evaluated container of :obj:`Frame`s that broadcasts operations on contained :obj:`Frame`s by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
+    A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
     '''
 
     __slots__ = (
