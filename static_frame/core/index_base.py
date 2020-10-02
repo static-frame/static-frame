@@ -100,7 +100,7 @@ class IndexBase(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.Index):
-            raise ErrorInitIndex('from_pandas must be called with a Pandas Index object')
+            raise ErrorInitIndex(f'from_pandas must be called with a Pandas Index object, not: {type(value)}')
 
         from static_frame import Index
         from static_frame import IndexGO

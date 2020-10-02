@@ -346,7 +346,7 @@ class Series(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.Series):
-            raise ErrorInitSeries('from_pandas must be called with a Pandas Series object')
+            raise ErrorInitSeries(f'from_pandas must be called with a Pandas Series object, not: {type(value)}')
 
         if pandas_version_under_1():
             if own_data:
