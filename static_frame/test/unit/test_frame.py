@@ -740,7 +740,6 @@ class TestUnit(TestCase):
                            [1961, '001000', 900000.0],
                            [1962, '001002', 800000.0]],
                           columns=['col1', 'col2', 0])
-
         f = Frame.from_pandas(df)
         self.assertEqual(f.shape, df.shape)
         self.assertEqual(f.values.tolist(), df.values.tolist())
