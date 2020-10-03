@@ -733,6 +733,30 @@ class TestUnit(TestCase):
         self.assertEqual(f3.name, None)
 
 
+    def test_frame_from_pandas_q(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame([[1960, '001002', 9900000.0],
+                           [1961, '001000', 900000.0],
+                           [1962, '001002', 800000.0]],
+                          columns=['col1', 'col2', 0])
+
+        f = Frame.from_pandas(df)
+        self.assertEqual(f.shape, df.shape)
+        self.assertEqual(f.values.tolist(), df.values.tolist())
+
+    def test_frame_from_pandas_r(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame([[1960, '001002', 9900000.0, 1.0],
+                           [1961, '001000', 900000.0, 2.0],
+                           [1962, '001002', 800000.0, 3.0]],
+                          columns=['col1', 'col2', 0, 10])
+
+        f = Frame.from_pandas(df)
+        self.assertEqual(f.shape, df.shape)
+        self.assertEqual(f.values.tolist(), df.values.tolist())
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:

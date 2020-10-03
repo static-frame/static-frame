@@ -1915,7 +1915,7 @@ class Frame(ContainerOperand):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks() -> tp.Iterator[np.ndarray]:
-            pairs = value.dtypes.items()
+            pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
             yield_block = False
@@ -1929,8 +1929,8 @@ class Frame(ContainerOperand):
                     yield_block = True
 
                 if yield_block:
-                    # use loc to select before calling .values
-                    part = value.loc[NULL_SLICE, slice(column_start, column_last)]
+                    part = value.iloc[NULL_SLICE,
+                            slice(column_start, column_last + 1)]
                     yield part_to_array(part)
 
                     column_start = column
@@ -1940,7 +1940,7 @@ class Frame(ContainerOperand):
                 column_last = column
 
             # always have left over
-            part = value.loc[NULL_SLICE, slice(column_start, None)]
+            part = value.iloc[NULL_SLICE, slice(column_start, None)]
             yield part_to_array(part)
 
         if consolidate_blocks:
