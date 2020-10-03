@@ -1899,7 +1899,7 @@ class Frame(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.DataFrame):
-            raise ErrorInitFrame('from_pandas must be called with a Pandas object')
+            raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
 
         pdvu1 = pandas_version_under_1()
 
