@@ -6512,9 +6512,10 @@ class TestUnit(TestCase):
     @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
         # https://github.com/InvestmentSystems/static-frame/issues/146
+        # https://github.com/InvestmentSystems/static-frame/issues/252
         fp = '/tmp/bad_sheet.xlsx'
-        f2 = Frame.from_xlsx(fp)
-        self.assertEqual(f2.shape, (5, 6))
+        f = Frame.from_xlsx(fp, columns_depth=0)
+        self.assertEqual(f.shape, (5, 6))
 
     def test_frame_from_xlsx_d(self) -> None:
         # isolate case of all None data that has a valid index

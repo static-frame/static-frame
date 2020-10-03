@@ -21,12 +21,9 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.util import AnyCallable
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import COMPLEX_TYPES
-# from static_frame.core.util import DT64_MONTH
-# from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
-# from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
@@ -35,6 +32,10 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
     from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
+    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
+
+    # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
+    # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
 
 
 MAX_XLSX_ROWS = 1048576
@@ -423,7 +424,7 @@ class StoreXLSX(Store):
                 continue # due to skip header; perserves comparison to columns_depth
             if row_count >= last_row_count:
                 break
-
+            # NOTE: we can use len(row) to pre-size our containers
             if store_filter is None:
                 row = tuple(c.value for c in row)
             else: # only need to filter string values, but probably too expensive to pre-check
@@ -449,7 +450,7 @@ class StoreXLSX(Store):
 
         wb.close()
 
-        # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer; alos, evaluating all rows on forward iteration is expensive. Instead, after collecting all the data in a list and closing the wb, reverse iterate and find rows that are all empty.
+        # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer; also, evaluating all rows on forward iteration is expensive. Instead, after collecting all the data in a list and closing the wb, reverse iterate and find rows that are all empty.
         # NOTE: need to handle case where there are valid index values
 
         empty_token = (None if store_filter is None
