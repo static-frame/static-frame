@@ -1,6 +1,14 @@
 What is New in Static Frame
 ===============================
 
+0.6.36
+----------
+
+Fixed issue in ``Frame.from_pandas`` when the columns have mixed types including integers.
+
+Improved ``dtype`` preservation in zero-sized ``Series`` extraction from ``Frame``.
+
+
 0.6.35
 ----------
 
