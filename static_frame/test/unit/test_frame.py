@@ -2228,6 +2228,14 @@ class TestUnit(TestCase):
         self.assertEqual(len(f2.index), 0)
 
 
+    def test_frame_extract_d(self) -> None:
+        # examining cases where shape goes to zero in one dimension
+        f = sf.Frame.from_element(True, index=[1,2,3], columns=['a'])
+        target = sf.Series([False, False, False], index=[1,2,3])
+
+        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('bool'))
+        self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('bool')])
+
     #---------------------------------------------------------------------------
 
     def test_frame_loc_a(self) -> None:

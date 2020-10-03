@@ -99,6 +99,7 @@ from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import FrameInitializer
@@ -3348,12 +3349,13 @@ class Frame(ContainerOperand):
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
             # return a 0-sized Series
+            array = column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
             if axis_nm[0]: # if row not multi
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=immutable_index_filter(columns),
                         name=name_row)
             elif axis_nm[1]:
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=index,
                         name=name_column)
         elif blocks_shape == (1, 1):
