@@ -1789,7 +1789,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
-            trim_nadir: bool = True, # NOTE: set to False in 0.7
+            trim_nadir: bool = False,
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''

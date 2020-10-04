@@ -80,7 +80,7 @@ class StoreConfig(metaclass=InterfaceMeta):
             # not used by all constructors
             skip_header: int = 0,
             skip_footer: int = 0,
-            trim_nadir: bool = True, # NOTE: set to False in 0.7
+            trim_nadir: bool = False,
             # exporters
             include_index: bool = True,
             include_index_name: bool = True,
