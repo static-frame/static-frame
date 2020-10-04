@@ -1789,6 +1789,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
+            trim_nadir: bool = True, # NOTE: set to False in 0.7
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
@@ -1810,6 +1811,7 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
                 )
         return st.read(label,
                 config=config,

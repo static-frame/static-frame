@@ -8,6 +8,8 @@ Fixed issue in ``Frame.from_pandas`` when the columns have mixed types including
 
 Improved ``dtype`` preservation in zero-sized ``Series`` extraction from ``Frame``.
 
+Added ``trim_nadir`` parameter to ``StoreConfig`` and ``Frame.from_xlsx``: permits removing all-None trailing rows and columns resulting from XLSX styles being applied to empty cells.
+
 
 0.6.35
 ----------
