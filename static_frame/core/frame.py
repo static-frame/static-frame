@@ -99,6 +99,7 @@ from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import EMPTY_TUPLE
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 from static_frame.core.util import FrameInitializer
@@ -1788,6 +1789,7 @@ class Frame(ContainerOperand):
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
+            trim_nadir: bool = True, # NOTE: set to False in 0.7
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> 'Frame':
         '''
@@ -1809,6 +1811,7 @@ class Frame(ContainerOperand):
                 consolidate_blocks=consolidate_blocks,
                 skip_header=skip_header,
                 skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
                 )
         return st.read(label,
                 config=config,
@@ -1899,7 +1902,7 @@ class Frame(ContainerOperand):
         '''
         import pandas
         if not isinstance(value, pandas.DataFrame):
-            raise ErrorInitFrame('from_pandas must be called with a Pandas object')
+            raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
 
         pdvu1 = pandas_version_under_1()
 
@@ -1915,7 +1918,7 @@ class Frame(ContainerOperand):
         # create generator of contiguous typed data
         # calling .values will force type unification accross all columns
         def blocks() -> tp.Iterator[np.ndarray]:
-            pairs = value.dtypes.items()
+            pairs = enumerate(value.dtypes.values)
             column_start, dtype_current = next(pairs)
             column_last = column_start
             yield_block = False
@@ -1929,8 +1932,8 @@ class Frame(ContainerOperand):
                     yield_block = True
 
                 if yield_block:
-                    # use loc to select before calling .values
-                    part = value.loc[NULL_SLICE, slice(column_start, column_last)]
+                    part = value.iloc[NULL_SLICE,
+                            slice(column_start, column_last + 1)]
                     yield part_to_array(part)
 
                     column_start = column
@@ -1940,7 +1943,7 @@ class Frame(ContainerOperand):
                 column_last = column
 
             # always have left over
-            part = value.loc[NULL_SLICE, slice(column_start, None)]
+            part = value.iloc[NULL_SLICE, slice(column_start, None)]
             yield part_to_array(part)
 
         if consolidate_blocks:
@@ -3348,12 +3351,13 @@ class Frame(ContainerOperand):
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
             # return a 0-sized Series
+            array = column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
             if axis_nm[0]: # if row not multi
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=immutable_index_filter(columns),
                         name=name_row)
             elif axis_nm[1]:
-                return Series(EMPTY_TUPLE,
+                return Series(array,
                         index=index,
                         name=name_column)
         elif blocks_shape == (1, 1):

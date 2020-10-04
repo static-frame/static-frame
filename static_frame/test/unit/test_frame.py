@@ -733,6 +733,29 @@ class TestUnit(TestCase):
         self.assertEqual(f3.name, None)
 
 
+    def test_frame_from_pandas_q(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame([[1960, '001002', 9900000.0],
+                           [1961, '001000', 900000.0],
+                           [1962, '001002', 800000.0]],
+                          columns=['col1', 'col2', 0])
+        f = Frame.from_pandas(df)
+        self.assertEqual(f.shape, df.shape)
+        self.assertEqual(f.values.tolist(), df.values.tolist())
+
+    def test_frame_from_pandas_r(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame([[1960, '001002', 9900000.0, 1.0],
+                           [1961, '001000', 900000.0, 2.0],
+                           [1962, '001002', 800000.0, 3.0]],
+                          columns=['col1', 'col2', 0, 10])
+
+        f = Frame.from_pandas(df)
+        self.assertEqual(f.shape, df.shape)
+        self.assertEqual(f.values.tolist(), df.values.tolist())
+
     #---------------------------------------------------------------------------
 
     def test_frame_to_pandas_a(self) -> None:
@@ -2203,6 +2226,23 @@ class TestUnit(TestCase):
         self.assertEqual(f2.shape, (0, 2))
         self.assertEqual(len(f2.columns), 2)
         self.assertEqual(len(f2.index), 0)
+
+
+    def test_frame_extract_d(self) -> None:
+        # examining cases where shape goes to zero in one dimension
+        f = sf.Frame.from_element(True, index=[1,2,3], columns=['a'])
+        target = sf.Series([False, False, False], index=[1,2,3])
+
+        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('bool'))
+        self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('bool')])
+
+    def test_frame_extract_e(self) -> None:
+        # examining cases where shape goes to zero in one dimension
+        f = sf.Frame.from_element('fourty-two', index=[1,2,3], columns=['a'])
+        target = sf.Series([False, False, False], index=[1,2,3])
+
+        self.assertEqual(f.loc[target, 'a'].dtype, np.dtype('<U10'))
+        self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('<U10')])
 
 
     #---------------------------------------------------------------------------
@@ -6472,9 +6512,13 @@ class TestUnit(TestCase):
     @unittest.skip('need to progrmatically generate bad_sheet.xlsx')
     def test_frame_from_xlsx_c(self) -> None:
         # https://github.com/InvestmentSystems/static-frame/issues/146
+        # https://github.com/InvestmentSystems/static-frame/issues/252
         fp = '/tmp/bad_sheet.xlsx'
-        f2 = Frame.from_xlsx(fp)
-        self.assertEqual(f2.shape, (5, 6))
+        from static_frame.test.test_case import Timer
+        t = Timer()
+        f = Frame.from_xlsx(fp, trim_nadir=True)
+        print(t)
+        self.assertEqual(f.shape, (5, 6))
 
     def test_frame_from_xlsx_d(self) -> None:
         # isolate case of all None data that has a valid index
@@ -6503,7 +6547,7 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2)
 
-    def test_frame_from_xlsx_f(self) -> None:
+    def test_frame_from_xlsx_f1(self) -> None:
         # isolate case of all None data and only columns
         f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
 
@@ -6511,11 +6555,29 @@ class TestUnit(TestCase):
             f1.to_xlsx(fp, include_index=False)
             f2 = Frame.from_xlsx(fp,
                     index_depth=0,
-                    columns_depth=f1.columns.depth)
-            # with out the index, we only have columns, and drop all-empty rows
-            self.assertEqual(f2.shape, (0, 3))
+                    columns_depth=f1.columns.depth,
+                    trim_nadir=True,
+                    )
+        # with out the index, we only have columns, and drop all-empty rows
+        self.assertEqual(f2.shape, (0, 3))
 
-    def test_frame_from_xlsx_g(self) -> None:
+    def test_frame_from_xlsx_f2(self) -> None:
+        # isolate case of all None data and only columns
+        f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False)
+            f2 = Frame.from_xlsx(fp,
+                    index_depth=0,
+                    columns_depth=f1.columns.depth,
+                    trim_nadir=False,
+                    )
+        self.assertEqual(f2.shape, (3, 3))
+        self.assertEqual(f2.to_pairs(0),
+                (('x', ((0, None), (1, None), (2, None))), ('y', ((0, None), (1, None), (2, None))), ('z', ((0, None), (1, None), (2, None)))),
+                )
+
+    def test_frame_from_xlsx_g1(self) -> None:
         # isolate case of all None data, no index, no columns
         f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
 
@@ -6524,7 +6586,25 @@ class TestUnit(TestCase):
             with self.assertRaises(ErrorInitFrame):
                 f2 = Frame.from_xlsx(fp,
                         index_depth=0,
-                        columns_depth=0)
+                        columns_depth=0,
+                        trim_nadir=True,
+                        )
+
+    def test_frame_from_xlsx_g2(self) -> None:
+        # isolate case of all None data, no index, no columns
+        f1 = Frame.from_element(None, index=('a', 'b', 'c'), columns=('x', 'y', 'z'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False, include_columns=False)
+            f2 = Frame.from_xlsx(fp,
+                    index_depth=0,
+                    columns_depth=0,
+                    trim_nadir=False,
+                    )
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, None), (1, None), (2, None))), (1, ((0, None), (1, None), (2, None))), (2, ((0, None), (1, None), (2, None))))
+                )
 
 
     def test_frame_from_xlsx_h(self) -> None:

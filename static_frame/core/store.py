@@ -44,6 +44,7 @@ class StoreConfig(metaclass=InterfaceMeta):
             'consolidate_blocks',
             'skip_header',
             'skip_footer',
+            'trim_nadir',
             'include_index',
             'include_index_name',
             'include_columns',
@@ -76,8 +77,10 @@ class StoreConfig(metaclass=InterfaceMeta):
             columns_name_depth_level: tp.Optional[DepthLevelSpecifier] = None,
             dtypes: DtypesSpecifier = None,
             consolidate_blocks: bool = False,
+            # not used by all constructors
             skip_header: int = 0,
             skip_footer: int = 0,
+            trim_nadir: bool = True, # NOTE: set to False in 0.7
             # exporters
             include_index: bool = True,
             include_index_name: bool = True,
@@ -100,6 +103,7 @@ class StoreConfig(metaclass=InterfaceMeta):
         self.consolidate_blocks = consolidate_blocks
         self.skip_header = skip_header
         self.skip_footer = skip_footer
+        self.trim_nadir = trim_nadir
 
         # exporter
         self.include_index = include_index

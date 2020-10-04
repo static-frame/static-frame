@@ -1,6 +1,7 @@
 What is New in Static Frame
 ===============================
 
+<<<<<<< HEAD
 
 0.7.0
 ----------
@@ -12,6 +13,16 @@ API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
 API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent
+
+
+0.6.36
+----------
+
+Fixed issue in ``Frame.from_pandas`` when the columns have mixed types including integers.
+
+Improved ``dtype`` preservation in zero-sized ``Series`` extraction from ``Frame``.
+
+Added ``trim_nadir`` parameter to ``StoreConfig`` and ``Frame.from_xlsx``: permits removing all-None trailing rows and columns resulting from XLSX styles being applied to empty cells.
 
 
 0.6.35
