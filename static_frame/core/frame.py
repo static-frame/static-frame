@@ -3350,7 +3350,7 @@ class Frame(ContainerOperand):
         blocks_shape = blocks._shape
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
-            # return a 0-sized Series
+            # return a 0-sized Series, `blocks` is already extracted
             array = column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
             if axis_nm[0]: # if row not multi
                 return Series(array,

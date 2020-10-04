@@ -2245,6 +2245,23 @@ class TestUnit(TestCase):
         self.assertEqual(f.loc[target].dtypes.values.tolist(), [np.dtype('<U10')])
 
 
+    def test_frame_extract_f(self) -> None:
+        # examining cases where shape goes to zero in one dimension
+
+        self.assertEqual(
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 0].dtype,
+                np.dtype('float64')
+                )
+        self.assertEqual(
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 1].dtype,
+                np.dtype('O')
+                )
+        self.assertEqual(
+                sf.Frame.from_records(([3.1, None, 'foo'],)).loc[[], 2].dtype,
+                np.dtype('<U3')
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_loc_a(self) -> None:
