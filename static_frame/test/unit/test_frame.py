@@ -6676,6 +6676,31 @@ class TestUnit(TestCase):
                 list(range(6)))
         self.assertEqual(f2.index.values.tolist(), [0])
 
+    def test_frame_from_xlsx_j(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                (30, 73, 'd', True, True),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False)
+
+            f2 = Frame.from_xlsx(fp,
+                    columns_depth=1,
+                    index_depth=0,
+                    trim_nadir=True,
+                    )
+
+
+            import ipdb; ipdb.set_trace()
+
+
 
     #---------------------------------------------------------------------------
     def test_frame_from_sqlite_a(self) -> None:

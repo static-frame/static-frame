@@ -470,6 +470,7 @@ class StoreXLSX(Store):
         # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
 
         if trim_nadir:
+            import ipdb; ipdb.set_trace()
             row_mask = mask.all(axis=1)
             row_max_effective = max_row - columns_depth
             if row_mask.all():
