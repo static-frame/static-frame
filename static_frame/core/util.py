@@ -1489,7 +1489,7 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     # compare current to previous; do not compare first
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
 
-    transition_idx = np.nonzero(transitions)[0]
+    transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
     if not len(transition_idx):
         return length
     # if last segment is all True
