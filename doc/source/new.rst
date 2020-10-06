@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.6.37
+----------
+
+Fixed issue in implementation of ``trim_nadir`` when reading XLSX files.
+
+
 0.6.36
 ----------
 
