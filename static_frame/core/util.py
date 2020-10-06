@@ -1476,6 +1476,36 @@ def array2d_to_tuples(array: np.ndarray) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
     for row in array: # assuming 2d
         yield tuple(row)
 
+
+def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
+    '''
+    Given a Boolean array, return the start index where of the last range, through to the end, of contiguous True values.
+    '''
+    length = len(array)
+    if len(array) == 0:
+        return 1
+    if array[-1] == False: #pylint: disable=C0121
+        # if last values is False, no contiguous region
+        return length
+    if not array.any(): # if not any are true, no regions found
+        return length
+    if array.all(): # if all are true
+        return 0
+
+    transitions = np.empty(length, dtype=bool)
+    transitions[0] = False # first value not a transition
+    # compare current to previous; do not compare first
+    np.not_equal(array[:-1], array[1:], out=transitions[1:])
+
+    transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
+    if not len(transition_idx): # this may not ever happen
+        return length
+    # if last segment is all True
+    last_idx = transition_idx[-1]
+    if array[last_idx:].all():
+        return last_idx
+    return length
+
 #-------------------------------------------------------------------------------
 # extension to union and intersection handling
 

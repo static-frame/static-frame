@@ -6575,7 +6575,7 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth,
                     trim_nadir=True,
                     )
-        # with out the index, we only have columns, and drop all-empty rows
+        # drop all rows, keeps columns as we gave columns depth
         self.assertEqual(f2.shape, (0, 3))
 
     def test_frame_from_xlsx_f2(self) -> None:
@@ -6675,6 +6675,78 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.values.tolist(),
                 list(range(6)))
         self.assertEqual(f2.index.values.tolist(), [0])
+
+    def test_frame_from_xlsx_j(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                (30, 73, 'd', True, True),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False)
+
+            f2 = Frame.from_xlsx(fp,
+                    columns_depth=1,
+                    index_depth=0,
+                    trim_nadir=True,
+                    )
+            self.assertEqual(f2.shape, (6, 5))
+            self.assertEqual(f2.to_pairs(0),
+            (('p', ((0, 2), (1, None), (2, None), (3, 30), (4, 2), (5, 30))), ('q', ((0, 2), (1, None), (2, None), (3, 73), (4, 95), (5, 73))), ('r', ((0, 'a'), (1, None), (2, None), (3, 'd'), (4, 'c'), (5, 'd'))), ('s', ((0, False), (1, None), (2, None), (3, True), (4, False), (5, True))), ('t', ((0, False), (1, None), (2, None), (3, True), (4, False), (5, True)))))
+
+    def test_frame_from_xlsx_k(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False)
+
+            f2 = Frame.from_xlsx(fp,
+                    columns_depth=1,
+                    index_depth=0,
+                    trim_nadir=True,
+                    )
+            # we keep the last column (all None) because there is a valid label
+            self.assertEqual(f2.shape, (4, 5))
+
+
+    def test_frame_from_xlsx_m(self) -> None:
+        records = (
+                (2, 2, 'a', False, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                (30, 73, 'd', True, None),
+                (None, None, None, None, None),
+                (None, None, None, None, None),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'))
+
+        with temp_file('.xlsx') as fp:
+            f1.to_xlsx(fp, include_index=False, include_columns=False)
+
+            f2 = Frame.from_xlsx(fp,
+                    columns_depth=0,
+                    index_depth=0,
+                    trim_nadir=True,
+                    )
+            # we keep the last column (all None) because there is a valid label
+            self.assertEqual(f2.shape, (4, 4))
+
 
 
     #---------------------------------------------------------------------------

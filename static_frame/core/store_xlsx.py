@@ -27,6 +27,7 @@ from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import NUMERIC_TYPES
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
@@ -470,35 +471,22 @@ class StoreXLSX(Store):
         # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
 
         if trim_nadir:
+            # NOTE: `mask` is all data, while `data` is post index/columns extraction; this means that if a non-None label is found, the row/column will not be trimmed.
             row_mask = mask.all(axis=1)
-            row_max_effective = max_row - columns_depth
-            if row_mask.all():
-                row_first_invalid = 0
-            else:
-                row_mask_idxs = np.flatnonzero((row_mask != np.roll(row_mask, 1)))
-                row_first_invalid = (row_max_effective if not len(row_mask_idxs)
-                        else row_mask_idxs[-1] - columns_depth)
-
-            if row_first_invalid < row_max_effective:
-                data = data[:row_first_invalid]
-                if index_depth > 0: # handles depth 1 and greater
-                    index_values = index_values[:row_first_invalid]
+            row_trim_start = array1d_to_last_contiguous_to_edge(row_mask) - columns_depth
+            if row_trim_start < len(row_mask) - columns_depth:
+                data = data[:row_trim_start]
+                if index_depth > 0: # this handles depth 1 and greater
+                    index_values = index_values[:row_trim_start]
 
             col_mask = mask.all(axis=0)
-            col_max_effective = max_column - index_depth
-            if col_mask.all():
-                col_first_invalid = 0
-            else:
-                col_mask_idxs = np.flatnonzero((col_mask != np.roll(col_mask, 1)))
-                col_first_invalid = (col_max_effective if not len(col_mask_idxs)
-                        else col_mask_idxs[-1] - index_depth)
-
-            if col_first_invalid < col_max_effective:
-                data = (r[:col_first_invalid] for r in data) #type: ignore
+            col_trim_start = array1d_to_last_contiguous_to_edge(col_mask) - index_depth
+            if col_trim_start < len(col_mask) - index_depth:
+                data = (r[:col_trim_start] for r in data) #type: ignore
                 if columns_depth == 1:
-                    columns_values = columns_values[:col_first_invalid]
+                    columns_values = columns_values[:col_trim_start]
                 if columns_depth > 1:
-                    columns_values = (r[:col_first_invalid] for r in columns_values) #type: ignore
+                    columns_values = (r[:col_trim_start] for r in columns_values) #type: ignore
 
         #-----------------------------------------------------------------------
         # continue with Index and Frame creation

@@ -2081,7 +2081,7 @@ class TypeBlocks(ContainerOperand):
         NOTE: blocks are generated in reverse order when sided_leading is False.
 
         Args:
-            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailiing side.
+            sided_leading: True sets the side to fill is the leading side; False sets the side to fill to the trailing side.
 
         '''
         if isinstance(value, np.ndarray):
@@ -2103,7 +2103,7 @@ class TypeBlocks(ContainerOperand):
                 # for first block, model as all True
                 isna_exit_previous = np.full(sel.shape[0], True, dtype=bool)
 
-            # to contunue nan propagation, the exit previous musy be NaN, as well as this start
+            # to continue nan propagation, the exit previous must be NaN, as well as this start
             if ndim == 1:
                 isna_entry = sel & isna_exit_previous
             else:

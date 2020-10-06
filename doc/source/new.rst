@@ -1,8 +1,6 @@
 What is New in Static Frame
 ===============================
 
-<<<<<<< HEAD
-
 0.7.0
 ----------
 
@@ -13,6 +11,14 @@ API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
 API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
 
 API change: Container operands used with binary equality operators will raise if sizes are not equivalent
+
+API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
+
+
+0.6.37
+----------
+
+Fixed issue in implementation of ``trim_nadir`` when reading XLSX files.
 
 
 0.6.36

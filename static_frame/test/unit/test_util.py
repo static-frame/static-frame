@@ -19,6 +19,7 @@ from static_frame.core.util import argmax_1d
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_1d
 from static_frame.core.util import argmin_2d
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
@@ -2284,8 +2285,35 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             np.isnan(ufunc_all(np.array([False, None], dtype=object)))
 
+    #---------------------------------------------------------------------------
+    def test_array1d_to_last_contiguous_to_edge_a(self) -> None:
 
+        a1 = np.array([False, True, True, False, False, False, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a1), 6)
 
+        a2 = np.array([False, True, True, False, False, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a2), 5)
+
+        a3 = np.array([False, True, True, False, False, False, False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a3), 7)
+
+        a4 = np.array([False, True, True, False, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a4), 4)
+
+        a5 = np.array([False, True, True, True, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a5), 1)
+
+        a6 = np.array([True, True, True, True, True, True, True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a6), 0)
+
+        a7 = np.array([])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a7), 1)
+
+        a8 = np.array([True])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a8), 0)
+
+        a9 = np.array([False])
+        self.assertEqual(array1d_to_last_contiguous_to_edge(a9), 1)
 
 if __name__ == '__main__':
     unittest.main()
