@@ -1477,7 +1477,8 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     length = len(array)
     if len(array) == 0:
         return 1
-    if array[-1] == False: # if last values is False, no contiguous region
+    if array[-1] == False: #pylint: disable=C0121
+        # if last values is False, no contiguous region
         return length
     if not array.any(): # if not any are true, no regions found
         return length
@@ -1490,7 +1491,7 @@ def array1d_to_last_contiguous_to_edge(array: np.ndarray) -> int:
     np.not_equal(array[:-1], array[1:], out=transitions[1:])
 
     transition_idx: tp.Sequence[int] = np.nonzero(transitions)[0]
-    if not len(transition_idx):
+    if not len(transition_idx): # this may not ever happen
         return length
     # if last segment is all True
     last_idx = transition_idx[-1]
