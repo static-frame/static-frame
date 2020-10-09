@@ -1050,7 +1050,7 @@ class TestUnit(TestCase):
         self.assertEqualFrames(f1, f2, compare_dtype=False)
 
 
-    def test_frame_from_parquet_b(self) -> None:
+    def test_frame_from_parquet_b1(self) -> None:
         records = (
                 (1, 2, 'a', False),
                 (30, 34, 'b', True),
@@ -1081,6 +1081,30 @@ class TestUnit(TestCase):
                 )
 
         self.assertTrue(f2.index._map is None)
+
+
+    def test_frame_from_parquet_b2(self) -> None:
+        records = (
+                (1, 2, 'a', False),
+                (30, 34, 'b', True),
+                (54, 95, 'c', False),
+                (65, 73, 'd', True),
+                )
+        columns = ('a', 'b', 'c', 'd')
+        f1 = Frame.from_records(records,
+                columns=columns,
+                )
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp)
+
+            # proove we raise if columns_select as columns not found
+            with self.assertRaises(ErrorInitFrame):
+                f2 = Frame.from_parquet(fp,
+                        index_depth=0,
+                        columns_select=('d', 'foo'),
+                        columns_depth=1)
+
 
 
     def test_frame_from_parquet_c(self) -> None:
@@ -1204,6 +1228,7 @@ class TestUnit(TestCase):
                     ((0, ((0, 10.1), (1, -5.1), (2, 2000.1))), (1, ((0, 20.1), (1, 0.1), (2, 33.1))), (2, ((0, 'False'), (1, 'True'), (2, 'False'))), (3, ((0, dt64('2020')), (1, dt64('2000')), (2, dt64('2017')))))
                     )
 
+    #---------------------------------------------------------------------------
     def test_frame_from_msgpack_a(self) -> None:
         records = (
                 (2, 'a', False),

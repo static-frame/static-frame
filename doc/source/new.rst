@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.6.38
+----------
+
+``Frame`` now supports usage as a ``weakref``.
+
+``Frame.from_parquet`` now raises when ``columns_select`` names columns not found in the file.
+
 
 0.6.37
 ----------

@@ -2127,6 +2127,12 @@ class Frame(ContainerOperand):
                 columns=columns_select,
                 use_pandas_metadata=False,
                 )
+        if columns_select:
+            # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
+            if len(table.column_names) < len(columns_select):
+                missing = set(columns_select) - set(table.column_names)
+                raise ErrorInitFrame(f'cannot load all columns in columns_select: missing {missing}')
+
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
