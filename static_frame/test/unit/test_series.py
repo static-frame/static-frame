@@ -253,6 +253,16 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(), ((0, 3),))
 
 
+    def test_series_init_v(self) -> None:
+        f1 = Frame(np.arange(4).reshape(2,2))
+        f2 = Frame(np.arange(4).reshape(2,2))
+
+        s = Series((f1, f2))
+        self.assertEqual(len(s), 2)
+        self.assertTrue(s[0].equals(f1))
+        self.assertTrue(s[1].equals(f1))
+
+
     #---------------------------------------------------------------------------
 
     def test_series_slice_a(self) -> None:
