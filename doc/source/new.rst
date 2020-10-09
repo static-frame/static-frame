@@ -8,6 +8,8 @@ What is New in Static Frame
 
 ``Frame.from_parquet`` now raises when ``columns_select`` names columns not found in the file.
 
+``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
+
 
 0.6.37
 ----------

@@ -62,23 +62,28 @@ def get_col_dtype_factory(
     '''
     from static_frame.core.series import Series
 
-    # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
-
+    # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
     if isinstance(dtypes, (dict, Series)):
         is_map = True
-    else:
+        is_element = False
+    elif isinstance(dtypes, (str, np.dtype, type)):
         is_map = False
+        is_element = True
+    else: # an iterable of types
+        is_map = False
+        is_element = False
 
     if columns is None and is_map:
         raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
-        nonlocal dtypes
+        nonlocal dtypes # might mutate a generator into a tuple
+        if is_element:
+            return dtypes
         if is_map:
             return dtypes.get(columns[col_idx], None) #type: ignore
-
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here
         if not hasattr(dtypes, '__len__'):
             dtypes = tuple(dtypes) #type: ignore

@@ -202,8 +202,11 @@ PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterat
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
 # support an iterable of specifiers, or mapping based on column names
-DtypesSpecifier = tp.Optional[
-        tp.Union[tp.Iterable[DtypeSpecifier], tp.Dict[tp.Hashable, DtypeSpecifier]]]
+DtypesSpecifier = tp.Optional[tp.Union[
+        DtypeSpecifier,
+        tp.Iterable[DtypeSpecifier],
+        tp.Dict[tp.Hashable, DtypeSpecifier]
+        ]]
 
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}

@@ -1180,13 +1180,14 @@ class TestUnit(TestCase):
                         dtypes=(None, 'datetime64[Y]', str, bool)
                         )
 
-            # cannot take a single dtype argument
-            with self.assertRaises(TypeError):
-                f5 = Frame.from_parquet(fp,
-                        index_depth=1,
-                        columns_depth=1,
-                        dtypes=str
-                        )
+            # dtypes can take a single type
+            f5 = Frame.from_parquet(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    dtypes=str
+                    )
+            self.assertEqual(f5.dtypes.values.tolist(),
+                    [np.dtype('<U48'), np.dtype('<U3'), np.dtype('<U5'), np.dtype('<U21')])
 
     def test_frame_from_parquet_e(self) -> None:
         dt64 = np.datetime64
@@ -5714,6 +5715,26 @@ class TestUnit(TestCase):
             self.assertEqual(f.to_pairs(0),
                     (('A', (('a', True), ('b', False))), ('B', (('a', 20.2), ('b', 85.3)))))
 
+    def test_frame_from_delimited_b(self) -> None:
+
+        with temp_file('.txt', path=True) as fp:
+
+            with open(fp, 'w') as file:
+                file.write('\n'.join(('index|A|B', '0|0|1', '1|1|0')))
+                file.close()
+
+            # dtypes are applied to all columns, even those that will become index
+            f1 = Frame.from_delimited(fp,
+                    index_depth=1,
+                    columns_depth=1,
+                    delimiter='|',
+                    dtypes=bool,
+                    )
+
+            self.assertEqual(f1.to_pairs(0),
+                    (('A', ((False, False), (True, True))), ('B', ((False, True), (True, False)))))
+
+
     def test_frame_from_tsv_a(self) -> None:
 
         with temp_file('.txt', path=True) as fp:
@@ -8054,6 +8075,19 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('left', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('right', (('x', 3), ('y', 20), ('z', -34))))
                 )
+
+
+    def test_frame_from_records_s(self) -> None:
+
+        records = ((10, 20), (0, 2), (5, 399))
+        f1 = sf.Frame.from_records(records, dtypes=str)
+        self.assertEqual(f1.values.tolist(),
+                [['10', '20'], ['0', '2'], ['5', '399']])
+
+        f2 = sf.Frame.from_records(records, dtypes=bool)
+        self.assertEqual(f2.values.tolist(),
+                [[True, True], [False, True], [True, True]])
+
 
 
     #---------------------------------------------------------------------------

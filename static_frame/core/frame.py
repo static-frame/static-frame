@@ -1119,7 +1119,7 @@ class Frame(ContainerOperand):
                     array_final = store_filter.to_type_filter_array(array_final)
 
                 if get_col_dtype:
-                    # dtypes can refer to columns that will become part of the Index by name or iloc position
+                    # dtypes are applied to all columns and can refer to columns that will become part of the Index by name or iloc position: we need to be able to type these before creating Index obejcts
                     dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
