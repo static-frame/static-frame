@@ -148,6 +148,7 @@ class Frame(ContainerOperand):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
     '''
     __slots__ = (
+            '__weakref__',
             '_blocks',
             '_columns',
             '_index',
