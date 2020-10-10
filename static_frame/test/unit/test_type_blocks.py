@@ -2262,13 +2262,64 @@ class TestUnit(TestCase):
                 )
 
         tb3 = TypeBlocks.from_blocks(tb1._astype_blocks([0, 1], bool))
-
         self.assertTypeBlocksArrayEqual(tb3,
                 [[True, True, False, True],
                 [True, True, False, False],
                 [True, True, True, True]]
                 )
 
+
+    def test_type_blocks_astype_c(self) -> None:
+
+        a1 = np.array([1, 2, 3])
+        a2 = np.array([4, 5, 6])
+        a3 = np.array([False, False, True])
+        a4 = np.array([True, False, True])
+
+
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3, a4))
+
+        tb2 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
+                {0: str, 2: str})
+                )
+        self.assertEqual([d.kind for d in tb2.dtypes],
+                ['U', 'i', 'U', 'b'])
+        self.assertEqual(tb2.shapes.tolist(),
+                [(3,), (3,), (3,), (3,)])
+
+        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
+                (str, None, str, None))
+                )
+        self.assertEqual([d.kind for d in tb3.dtypes],
+                ['U', 'i', 'U', 'b'])
+
+
+    def test_type_blocks_astype_d(self) -> None:
+
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(
+                {2: str, 3: str, 5: str})
+                )
+        self.assertEqual([d.kind for d in tb2.dtypes],
+                ['i', 'i', 'U', 'U', 'b', 'U'])
+        self.assertEqual(tb2.shapes.tolist(),
+                [(3, 2), (3, 1), (3, 1), (3, 1), (3, 1)])
+
+        tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(str))
+
+        self.assertEqual([d.kind for d in tb3.dtypes],
+                ['U', 'U', 'U', 'U', 'U', 'U'])
+        self.assertEqual(tb3.shapes.tolist(),
+                [(3, 3), (3, 3)])
+
+        # import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_drop_blocks_a(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])

@@ -10,6 +10,8 @@ What is New in Static Frame
 
 ``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
 
+``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying all columns.
+
 
 0.6.37
 ----------

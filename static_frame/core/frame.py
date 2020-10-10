@@ -6441,7 +6441,15 @@ class FrameAsType:
         self.container = container
         self.column_key = column_key
 
-    def __call__(self, dtype, consolidate_blocks: bool = True) -> 'Frame':
+    def __call__(self,
+            dtype,
+            consolidate_blocks: bool = True,
+            ) -> 'Frame':
+
+        # dtype might be a mapping type with loc-style labels
+        if isinstance(dtype, (dict, Series)):
+            # convert to an iloc mapping?
+            pass
 
         blocks = self.container._blocks._astype_blocks(self.column_key, dtype)
 
