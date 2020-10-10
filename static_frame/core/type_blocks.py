@@ -1144,7 +1144,6 @@ class TypeBlocks(ContainerOperand):
         '''
         # use a range() of integers as columns labels
         get_col_dtype = get_col_dtype_factory(dtypes, range(self._shape[1]))
-        sentinel = object()
 
         iloc = 0
         for b in self._blocks:
@@ -1156,7 +1155,6 @@ class TypeBlocks(ContainerOperand):
                     yield b
                 iloc += 1
             else:
-                # parts = []
                 group_start = 0
                 for pos in range(b.shape[1]):
                     dtype = get_col_dtype(iloc)
