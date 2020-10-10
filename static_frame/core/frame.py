@@ -2494,7 +2494,7 @@ class Frame(ContainerOperand):
     @property
     def iter_array(self) -> IterNodeAxis:
         '''
-        Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
                 container=self,
@@ -2506,7 +2506,7 @@ class Frame(ContainerOperand):
     @property
     def iter_array_items(self) -> IterNodeAxis:
         '''
-        Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
                 container=self,
@@ -2517,6 +2517,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_tuple(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_tuple,
@@ -2526,6 +2529,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_tuple_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_tuple,
@@ -2535,6 +2541,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_series(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_series,
@@ -2544,6 +2553,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_series_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
                 container=self,
                 function_values=self._axis_series,
@@ -2555,7 +2567,7 @@ class Frame(ContainerOperand):
     @property
     def iter_group(self) -> IterNodeGroupAxis:
         '''
-        Iterate over Frames grouped by unique values in one or more rows or columns.
+        Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
         return IterNodeGroupAxis(
                 container=self,
@@ -2567,6 +2579,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_group_items(self) -> IterNodeGroupAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
+        '''
         return IterNodeGroupAxis(
                 container=self,
                 function_values=self._axis_group_loc,
@@ -2577,6 +2592,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_group_labels(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
                 container=self,
                 function_values=self._axis_group_labels,
@@ -2587,6 +2605,9 @@ class Frame(ContainerOperand):
 
     @property
     def iter_group_labels_items(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
                 container=self,
                 function_values=self._axis_group_labels,
@@ -2598,7 +2619,13 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
 
     @property
+    @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -2609,7 +2636,13 @@ class Frame(ContainerOperand):
                 )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
@@ -2620,7 +2653,13 @@ class Frame(ContainerOperand):
                 )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -2631,7 +2670,13 @@ class Frame(ContainerOperand):
                 )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
@@ -2644,6 +2689,8 @@ class Frame(ContainerOperand):
     #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArg:
+        '''Iterator of elements, ordered by row then column.
+        '''
         return IterNodeNoArg(
                 container=self,
                 function_values=self._iter_element_loc,
@@ -2654,6 +2701,8 @@ class Frame(ContainerOperand):
 
     @property
     def iter_element_items(self) -> IterNodeNoArg:
+        '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
+        '''
         return IterNodeNoArg(
                 container=self,
                 function_values=self._iter_element_loc,

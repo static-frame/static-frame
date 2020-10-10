@@ -426,18 +426,11 @@ def axis_window_items( *,
         as_array: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs pairs.
-
     Args:
-        size: integer greater than 0
-        step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
-        window_sized: if True, windows that do not meet the size are skipped.
-        window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
-        window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-        label_shift: shift, relative to the right-most data point contained in the window, to derive the label to be paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
-        start_shift: shift from 0 to determine where the collection of windows begins.
-        size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
     '''
+    # see doc_str window for docs
+
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 

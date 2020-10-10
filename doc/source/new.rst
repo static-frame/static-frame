@@ -1,16 +1,19 @@
 What is New in Static Frame
 ===============================
 
+
 0.6.38
 ----------
+
+``Frame.dtype`` interface now takes ``DtypesSpecifier``, permitting setting ``dtype`` by mapping, iterable, or single value.
+
+``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying ``dtype`` of all columns.
+
+``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
 
 ``Frame`` now supports usage as a ``weakref``.
 
 ``Frame.from_parquet`` now raises when ``columns_select`` names columns not found in the file.
-
-``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
-
-``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying all columns.
 
 
 0.6.37

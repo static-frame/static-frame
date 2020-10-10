@@ -312,11 +312,25 @@ class DOC_TEMPLATE:
 
     ufunc_skipna = dict(
             args = '''
-    Args:
-        axis: Axis, defaulting to axis 0.
-        skipna: Skip missing (NaN) values, defaulting to True.
-    ''')
-
+        Args:
+            axis: Axis, defaulting to axis 0.
+            skipna: Skip missing (NaN) values, defaulting to True.
+            '''
+            )
+    window = dict(
+            args = f'''
+        Args:
+            size: Elements per window, given as an integer greater than 0.
+            {AXIS}
+            step: Element shift per window, given as an integer greater than 0. Determines the step size between windows. A step of 1 shifts each window 1 element; a step equal to the ``size`` will result in non-overlapping windows.
+            window_sized: if True, windows with fewer elements than ``size`` are skipped.
+            window_func: Array processor of window values, executed before function application (if used): can be used for applying a weighting function to each window.
+            window_valid: Function that, given an array window, returns True if the window is valid; invalid windows are skipped.
+            label_shift: A shift, relative to the right-most element contained in the window, to derive the label to be paired with the window. For example, to label each window with the label found at the start of the window, ``label_shift`` can be set to one less than ``size``.
+            start_shift: A shift to determine the first element where window collection begins.
+            size_increment: A value to be added to ``size`` with each window after the first, so as to, in combination with setting ``step`` to 0, permit iterating over expanding windows.
+            '''
+            )
 
 # NOTE: F here should replace AnyCallable below
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
