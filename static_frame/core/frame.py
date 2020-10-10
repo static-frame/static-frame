@@ -2497,11 +2497,11 @@ class Frame(ContainerOperand):
         Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_array_items(self) -> IterNodeAxis:
@@ -2509,47 +2509,47 @@ class Frame(ContainerOperand):
         Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_tuple(self) -> IterNodeAxis:
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_tuple_items(self) -> IterNodeAxis:
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_series(self) -> IterNodeAxis:
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_series_items(self) -> IterNodeAxis:
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
@@ -2558,42 +2558,42 @@ class Frame(ContainerOperand):
         Iterate over Frames grouped by unique values in one or more rows or columns.
         '''
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_items(self) -> IterNodeGroupAxis:
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels(self) -> IterNodeDepthLevelAxis:
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels_items(self) -> IterNodeDepthLevelAxis:
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     #---------------------------------------------------------------------------
 
@@ -2602,65 +2602,65 @@ class Frame(ContainerOperand):
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_window_items(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_window_array(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_window_array_items(self) -> IterNodeWindow:
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArg:
         return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     @property
     def iter_element_items(self) -> IterNodeNoArg:
         return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     #---------------------------------------------------------------------------
     # index manipulation
