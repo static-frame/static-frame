@@ -37,6 +37,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
 
 from static_frame.core.exception import AxisInvalid
 
@@ -65,10 +67,10 @@ def get_col_dtype_factory(
     # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
-    if isinstance(dtypes, (dict, Series)):
+    if is_mapping(dtypes):
         is_map = True
         is_element = False
-    elif isinstance(dtypes, (str, np.dtype, type)):
+    elif is_dtype_specifier(dtypes):
         is_map = False
         is_element = True
     else: # an iterable of types

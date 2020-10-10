@@ -11,6 +11,7 @@ import numpy as np
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
+from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -1141,9 +1142,6 @@ class TypeBlocks(ContainerOperand):
         Args:
             dtypes: specify dtypes as single item, iterable, or mapping.
         '''
-        # block slices must be in ascending order, not key order
-        from static_frame.core.container_util import get_col_dtype_factory
-
         # use a range() of integers as columns labels
         get_col_dtype = get_col_dtype_factory(dtypes, range(self._shape[1]))
         sentinel = object()

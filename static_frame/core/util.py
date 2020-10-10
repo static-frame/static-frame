@@ -185,6 +185,11 @@ AnyCallable = tp.Callable[..., tp.Any]
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
+
+def is_mapping(value: tp.Any) -> bool:
+    from static_frame import Series
+    return isinstance(value, (dict, Series))
+
 def is_callable_or_mapping(value: CallableOrMapping) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
@@ -200,6 +205,11 @@ PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterat
 
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
+
+DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
+
+def is_dtype_specifier(value: tp.Any) -> bool:
+    return isinstance(value, DTYPE_SPECIFIER_TYPES)
 
 # support an iterable of specifiers, or mapping based on column names
 DtypesSpecifier = tp.Optional[tp.Union[

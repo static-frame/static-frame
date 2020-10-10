@@ -113,6 +113,8 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_hashable
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
@@ -2433,11 +2435,12 @@ class Frame(ContainerOperand):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType:
         '''
-        Retype one or more columns. Can be used as as function to retype the entire ``Frame``; alternatively, a ``__getitem__`` interface permits retyping selected columns.
+        Retype one or more columns. When used as a function, can provide  retype the entire ``Frame``;  Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
         Args:
             {dtype}
         '''
+        # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     #---------------------------------------------------------------------------
@@ -6442,16 +6445,21 @@ class FrameAsType:
         self.column_key = column_key
 
     def __call__(self,
-            dtype,
+            dtypes: DtypesSpecifier,
+            *,
             consolidate_blocks: bool = True,
             ) -> 'Frame':
 
-        # dtype might be a mapping type with loc-style labels
-        if isinstance(dtype, (dict, Series)):
-            # convert to an iloc mapping?
-            pass
-
-        blocks = self.container._blocks._astype_blocks(self.column_key, dtype)
+        if self.column_key == NULL_SLICE:
+            if is_mapping(dtypes):
+                # translate keys loc to iloc
+                dtypes = {self.container._columns.loc_to_iloc(k): v
+                        for k, v in dtypes.items()}
+            blocks = self.container._blocks._astype_blocks_from_dtypes(dtypes)
+        else:
+            if not is_dtype_specifier(dtypes):
+                raise RuntimeError('must supply a single dtype specifier if using a column selection other than the NULL slice')
+            blocks = self.container._blocks._astype_blocks(self.column_key, dtypes)
 
         if consolidate_blocks:
             blocks = TypeBlocks.consolidate_blocks(blocks)

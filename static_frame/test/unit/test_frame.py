@@ -8435,6 +8435,48 @@ class TestUnit(TestCase):
                 (('a', (('x', True), ('y', True), ('z', True))), ('b', (('x', True), ('y', True), ('z', True))), ('c', (('x', 'a'), ('y', 'b'), ('z', 'c'))), ('d', (('x', False), ('y', True), ('z', False))), ('e', (('x', True), ('y', False), ('z', False))))
                 )
 
+    def test_frame_astype_b(self) -> None:
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = f1.astype({'b':str, 'e':str})
+        self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                ['i', 'U', 'U', 'b', 'U'])
+
+        f3 = f1.astype[:]({'b':str, 'e':str})
+        self.assertEqual([dt.kind for dt in f3.dtypes.values],
+                ['i', 'U', 'U', 'b', 'U'])
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.astype['c':]({'b':str, 'e':str}) #type: ignore
+
+
+    def test_frame_astype_c(self) -> None:
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 34, 'b', True, False),
+                (54, 95, 'c', False, False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c', 'd', 'e'),
+                index=('x', 'y', 'z'))
+
+        f2 = f1.astype((float, float, None, int, int))
+        self.assertEqual([dt.kind for dt in f2.dtypes.values],
+                ['f', 'f', 'U', 'i', 'i'])
+
+        f3 = f1.astype(str)
+        self.assertEqual([dt.kind for dt in f3.dtypes.values],
+                ['U', 'U', 'U', 'U', 'U'])
+
+
+
 
     def test_frame_pickle_a(self) -> None:
 
