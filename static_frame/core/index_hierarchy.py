@@ -1365,7 +1365,7 @@ class IndexHierarchy(IndexBase):
         '''
         return self._INDEX_CONSTRUCTOR(self.__iter__())
 
-    def add_level(self: IH, level: tp.Hashable) -> IH:
+    def level_add(self: IH, level: tp.Hashable) -> IH:
         '''Return an IndexHierarchy with a new root (outer) level added.
         '''
         if self.STATIC: # can reuse levels
@@ -1391,7 +1391,7 @@ class IndexHierarchy(IndexBase):
 
         return self.__class__(levels, name=self._name)
 
-    def drop_level(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
+    def level_drop(self, count: int = 1) -> tp.Union[Index, 'IndexHierarchy']:
         '''Return an IndexHierarchy with one or more leaf levels removed. This might change the size of the resulting index if the resulting levels are not unique.
 
         Args:

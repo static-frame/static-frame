@@ -2895,8 +2895,8 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
-    @doc_inject(selector='relabel_add_level', class_name='Frame')
-    def relabel_add_level(self,
+    @doc_inject(selector='relabel_level_add', class_name='Frame')
+    def relabel_level_add(self,
             index: tp.Hashable = None,
             columns: tp.Hashable = None
             ) -> 'Frame':
@@ -2908,8 +2908,8 @@ class Frame(ContainerOperand):
             columns: {level}
         '''
 
-        index = self._index.add_level(index) if index else self._index
-        columns = self._columns.add_level(columns) if columns else self._columns.copy()
+        index = self._index.level_add(index) if index else self._index
+        columns = self._columns.level_add(columns) if columns else self._columns.copy()
 
 
         return self.__class__(
@@ -2921,8 +2921,8 @@ class Frame(ContainerOperand):
                 own_index=True,
                 own_columns=True)
 
-    @doc_inject(selector='relabel_drop_level', class_name='Frame')
-    def relabel_drop_level(self,
+    @doc_inject(selector='relabel_level_drop', class_name='Frame')
+    def relabel_level_drop(self,
             index: int = 0,
             columns: int = 0
             ) -> 'Frame':
@@ -2934,8 +2934,8 @@ class Frame(ContainerOperand):
             columns: {count} Default is zero.
         '''
 
-        index = self._index.drop_level(index) if index else self._index.copy()
-        columns = self._columns.drop_level(columns) if columns else self._columns.copy()
+        index = self._index.level_drop(index) if index else self._index.copy()
+        columns = self._columns.level_drop(columns) if columns else self._columns.copy()
 
         return self.__class__(
                 self._blocks.copy(), # does not copy arrays

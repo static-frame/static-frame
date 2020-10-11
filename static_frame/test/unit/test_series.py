@@ -1782,11 +1782,11 @@ class TestUnit(TestCase):
 
         s1 = Series(range(2), index=IndexHierarchy.from_labels(((10, 20), ('a', 'b'))))
 
-        s2 = s1.relabel_drop_level()
+        s2 = s1.relabel_level_drop()
         self.assertEqual(s2.to_pairs(), ((20, 0), ('b', 1)))
 
         with self.assertRaises(RuntimeError):
-            _ = s2.relabel_drop_level()
+            _ = s2.relabel_level_drop()
 
 
     #---------------------------------------------------------------------------
@@ -1981,7 +1981,7 @@ class TestUnit(TestCase):
     def test_series_reindex_add_level(self) -> None:
         s1 = Series(['a', 'b', 'c'])
 
-        s2 = s1.relabel_add_level('I')
+        s2 = s1.relabel_level_add('I')
         self.assertEqual(s2.index.depth, 2)
         self.assertEqual(s2.to_pairs(),
                 ((('I', 0), 'a'), (('I', 1), 'b'), (('I', 2), 'c')))
@@ -1995,7 +1995,7 @@ class TestUnit(TestCase):
     def test_series_drop_level_a(self) -> None:
         s1 = Series(['a', 'b', 'c'],
                 index=IndexHierarchy.from_labels([('A', 1), ('B', 1), ('C', 1)]))
-        s2 = s1.relabel_drop_level(-1)
+        s2 = s1.relabel_level_drop(-1)
         self.assertEqual(s2.to_pairs(),
                 (('A', 'a'), ('B', 'b'), ('C', 'c'))
                 )
@@ -2607,8 +2607,8 @@ class TestUnit(TestCase):
                 )
 
     def test_series_from_concat_d(self) -> None:
-        s1 = Series((2, 3, 0,), index=list('abc')).relabel_add_level('i')
-        s2 = Series(('10', '20', '100'), index=list('abc')).relabel_add_level('ii')
+        s1 = Series((2, 3, 0,), index=list('abc')).relabel_level_add('i')
+        s2 = Series(('10', '20', '100'), index=list('abc')).relabel_level_add('ii')
 
         s3 = Series.from_concat((s1, s2))
 

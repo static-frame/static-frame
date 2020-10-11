@@ -1818,7 +1818,7 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        ih2 = ih.add_level('b')
+        ih2 = ih.level_add('b')
 
         self.assertEqual(ih2.values.tolist(),
                 [['b', 'I', 'A'], ['b', 'I', 'B'], ['b', 'II', 'A'], ['b', 'II', 'B']])
@@ -1837,7 +1837,7 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchyGO.from_labels(labels)
         ih1.append(('III', 'A'))
-        ih2 = ih1.add_level('x')
+        ih2 = ih1.level_add('x')
 
         self.assertEqual(ih1.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B'], ['III', 'A']])
@@ -1858,7 +1858,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchyGO.from_labels(labels)
         # force TB creation
         part = ih1.iloc[1:]
-        ih2 = ih1.add_level('x')
+        ih2 = ih1.level_add('x')
         # proove we reused the underlying block arrays
         self.assertEqual(ih1._blocks.mloc.tolist(), ih2._blocks.mloc[1:].tolist())
 
@@ -1876,7 +1876,7 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        ih2 = ih.drop_level(-1)
+        ih2 = ih.level_drop(-1)
 
         self.assertEqual(ih2.values.tolist(),
                 [['I', 'A'], ['I', 'B'], ['II', 'A'], ['II', 'B']])
@@ -1892,13 +1892,13 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        ih2 = ih.drop_level(1)
+        ih2 = ih.level_drop(1)
         assert isinstance(ih2, IndexHierarchy)
         self.assertEqual(ih2.values.tolist(),
             [['A', 1], ['B', 1], ['C', 1], ['C', 2]])
 
         with self.assertRaises(ErrorInitIndex):
-            ih2.drop_level(1)
+            ih2.level_drop(1)
 
     def test_hierarchy_drop_level_c(self) -> None:
 
@@ -1910,7 +1910,7 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        self.assertEqual(ih.drop_level(1).values.tolist(),
+        self.assertEqual(ih.level_drop(1).values.tolist(),
                 [['A', 1], ['B', 2], ['C', 3], ['C', 4]])
 
     def test_hierarchy_drop_level_d(self) -> None:
@@ -1923,31 +1923,31 @@ class TestUnit(TestCase):
                 )
 
         ih = IndexHierarchy.from_labels(labels)
-        self.assertEqual(ih.drop_level(1).values.tolist(),
+        self.assertEqual(ih.level_drop(1).values.tolist(),
                 [1, 2, 3, 4])
 
 
     def test_hierarchy_drop_level_e(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x', 'y'))
-        self.assertEqual(ih.drop_level(2).values.tolist(),
+        self.assertEqual(ih.level_drop(2).values.tolist(),
                 ['x', 'y'])
 
-        self.assertEqual(ih.drop_level(1).values.tolist(),
+        self.assertEqual(ih.level_drop(1).values.tolist(),
                 [[1, 'x'], [1, 'y']])
 
 
     def test_hierarchy_drop_level_f(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
-        self.assertEqual(ih.drop_level(1).values.tolist(),
+        self.assertEqual(ih.level_drop(1).values.tolist(),
                 [[1, 'x']])
 
     def test_hierarchy_drop_level_g(self) -> None:
 
         ih = IndexHierarchy.from_product(('a',), (1,), ('x',))
         with self.assertRaises(NotImplementedError):
-            _ = ih.drop_level(0)
+            _ = ih.level_drop(0)
 
 
     def test_hierarchy_drop_level_h(self) -> None:
@@ -1963,17 +1963,17 @@ class TestUnit(TestCase):
 
         part = ih.iloc[1:] # force TB creation
 
-        post1 = ih.drop_level(-1)
+        post1 = ih.level_drop(-1)
         assert isinstance(post1, IndexHierarchy) # mypy
         self.assertEqual(ih._blocks.mloc[:-1].tolist(), post1._blocks.mloc.tolist())
         # we changed shape after dropping two depths
-        self.assertEqual(ih.drop_level(-2).shape, (3, 2))
+        self.assertEqual(ih.level_drop(-2).shape, (3, 2))
 
-        post2 = ih.drop_level(1)
+        post2 = ih.level_drop(1)
         assert isinstance(post2, IndexHierarchy) # mypy
         self.assertEqual(ih._blocks.mloc[1:].tolist(), post2._blocks.mloc.tolist())
 
-        post3 = ih.drop_level(2)
+        post3 = ih.level_drop(2)
         assert isinstance(post3, IndexHierarchy) # mypy
         self.assertEqual(ih._blocks.mloc[2:].tolist(), post3._blocks.mloc.tolist())
 

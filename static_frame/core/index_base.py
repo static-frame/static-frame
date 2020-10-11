@@ -199,7 +199,7 @@ class IndexBase(ContainerOperand):
     def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
         raise NotImplementedError() #pragma: no cover
 
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:

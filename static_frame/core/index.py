@@ -1214,7 +1214,7 @@ class Index(IndexBase):
         return Series(self.values, name=self._name)
 
 
-    def add_level(self, level: tp.Hashable) -> 'IndexHierarchy':
+    def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         '''Return an IndexHierarchy with an added root level.
         '''
         from static_frame import IndexHierarchy

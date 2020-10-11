@@ -691,7 +691,7 @@ The ``Series`` initializer no longer accepts dictionaries; ``Series.from_dict`` 
 
 ``IndexAutoFactory`` suport removed from ``Series.reindex`` and ``Frame.reindex`` and added to ``Series.relabel`` and ``Frame.relabel``.
 
-The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_drop_level``.
+The following ``Series`` and ``Frame`` methods are renamed: ``reindex_flat``, ``reindex_add_level``, and ``reindex_drop_level`` are now ``relabel_flat``, ``relabel_add_level``, and ``relabel_level_drop``.
 
 Implemented ``Frame.from_sql`` constructor.
 
@@ -805,7 +805,7 @@ Improvements to application of ellipsis when normalizing width in ``Display`` st
 0.3.2
 -----------
 
-``IndexHierarchy.drop_level()`` and related methods have been updated such that negative integers drop innermost levels, and postive integers drop outermost levels. This is an API breaking change.
+``IndexHierarchy.level_drop()`` and related methods have been updated such that negative integers drop innermost levels, and postive integers drop outermost levels. This is an API breaking change.
 
 Fixed missing handling for all-missing in ``Series.dropna``.
 

@@ -224,13 +224,13 @@ class DOC_TEMPLATE:
             ''',
             )
 
-    relabel_add_level = dict(
+    relabel_level_add = dict(
             doc='''Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
             ''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
             )
 
-    relabel_drop_level = dict(
+    relabel_level_drop = dict(
             doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',

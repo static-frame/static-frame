@@ -836,8 +836,8 @@ class Series(ContainerOperand):
                 index=self._index.flat(),
                 name=self._name)
 
-    @doc_inject(selector='relabel_add_level', class_name='Series')
-    def relabel_add_level(self,
+    @doc_inject(selector='relabel_level_add', class_name='Series')
+    def relabel_level_add(self,
             level: tp.Hashable
             ) -> 'Series':
         '''
@@ -847,11 +847,11 @@ class Series(ContainerOperand):
             level: {level}
         '''
         return self.__class__(self.values,
-                index=self._index.add_level(level),
+                index=self._index.level_add(level),
                 name=self._name)
 
-    @doc_inject(selector='relabel_drop_level', class_name='Series')
-    def relabel_drop_level(self,
+    @doc_inject(selector='relabel_level_drop', class_name='Series')
+    def relabel_level_drop(self,
             count: int = 1
             ) -> 'Series':
         '''
@@ -864,7 +864,7 @@ class Series(ContainerOperand):
             raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
 
         return self.__class__(self.values,
-                index=self._index.drop_level(count),
+                index=self._index.level_drop(count),
                 name=self._name)
 
 
