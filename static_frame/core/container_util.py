@@ -720,8 +720,14 @@ def apply_binary_operator(*,
         result = operator(values, other)
 
     if result is False or result is True:
-        raise ValueError('operands could not be broadcast together')
-        # in a number of situations due to dtype or unaligned shapes, NP returns a single Boolean; this is generally undesirable.
+        if not other_is_array and (
+                isinstance(other, str) or not hasattr(other, '__len__')
+                ):
+            # only expand to the size of the array operand if we are comparing to an element
+            result = np.full(len(values), result, dtype=DTYPE_BOOL)
+        else:
+            raise ValueError('operands could not be broadcast together')
+            # in a number of situations due to dtype or unaligned shapes, NP returns a single Boolean; this is generally undesirable.
 
     result.flags.writeable = False
     return result

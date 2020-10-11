@@ -544,6 +544,25 @@ class TestUnit(TestCase):
             _ = s1 == s2.index
 
 
+    def test_series_binary_operator_o(self) -> None:
+
+        s1 = Series([10, 20, 30])
+        s2 = s1 == ''
+        self.assertEqual(s2.values.tolist(),
+                [False, False, False])
+
+        # NOTE: numpy compares each value
+        s3 = s1 == (10, 20, 30)
+        self.assertEqual(s3.values.tolist(),
+                [True, True, True])
+
+        # we treat this as a single tuple
+        with self.assertRaises(ValueError):
+            _ = s1 == (10, 20)
+
+        with self.assertRaises(ValueError):
+            _ = s1 == [10, 20]
+
     #---------------------------------------------------------------------------
     def test_series_rename_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')

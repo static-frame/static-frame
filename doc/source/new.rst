@@ -1,6 +1,12 @@
 What is New in Static Frame
 ===============================
 
+0.7.1
+----------
+
+Refined application of binary equality operators to permit comparison with strings or elements that are not sequences.
+
+
 0.7.0
 ----------
 
