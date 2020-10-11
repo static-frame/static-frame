@@ -1221,7 +1221,7 @@ class Index(IndexBase):
         from static_frame import IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
-        return cls.from_tree({level: self.values})
+        return cls.from_tree({level: self.values}, name=self._name)
 
 
     def to_pandas(self) -> 'pandas.Index':
