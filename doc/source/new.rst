@@ -452,6 +452,7 @@ Added ``Index.head()``, ``Index.tail()``, ``IndexHierarchy.head()``, ``IndexHier
 
 ``Frame.from_records`` and related routines now do full type induction per column; all type induction on untyped iterables now examines all values.
 
+
 0.5.12
 ----------
 
