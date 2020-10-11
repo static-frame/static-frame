@@ -104,17 +104,6 @@ def is_static(value: IndexConstructor) -> bool:
     return getattr(value.__self__, STATIC_ATTR) #type: ignore
 
 
-# def is_dataclass(value: tp.Any) -> bool:
-#     '''Determine if dataclasses are available. Might be installed via a pip package.
-#     '''
-#     # introduced in Python 3.7; remove special handling when min req is 3.7
-#     try:
-#         import dataclasses
-#     except ImportError:
-#         return False
-#     return dataclasses.is_dataclass(value)
-
-
 def pandas_version_under_1() -> bool:
     import pandas
     return not hasattr(pandas, 'NA') # object introduced in 1.0
@@ -198,7 +187,6 @@ def pandas_to_numpy(
 
     array.flags.writeable = False
     return array
-
 
 
 def index_from_optional_constructor(
@@ -724,7 +712,7 @@ def apply_binary_operator(*,
                 isinstance(other, str) or not hasattr(other, '__len__')
                 ):
             # only expand to the size of the array operand if we are comparing to an element
-            result = np.full(len(values), result, dtype=DTYPE_BOOL)
+            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
         else:
             raise ValueError('operands could not be broadcast together')
             # in a number of situations due to dtype or unaligned shapes, NP returns a single Boolean; this is generally undesirable.
