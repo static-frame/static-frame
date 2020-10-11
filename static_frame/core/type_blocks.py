@@ -11,6 +11,7 @@ import numpy as np
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
+from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display_config import DisplayConfig
@@ -29,6 +30,7 @@ from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import DtypeSpecifier
+from static_frame.core.util import DtypesSpecifier
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import full_for_fill
@@ -1062,6 +1064,7 @@ class TypeBlocks(ContainerOperand):
             dtype: DtypeSpecifier
             ) -> tp.Iterator[np.ndarray]:
         '''
+        Give any column selection, apply a single dtype.
         Generator producer of np.ndarray.
         '''
         # block slices must be in ascending order, not key order
@@ -1112,22 +1115,66 @@ class TypeBlocks(ContainerOperand):
                 assert target_start is not None and target_stop is not None
                 if target_start > part_start_last:
                     # yield un changed components before and after
-                    parts.append(b[:, slice(part_start_last, target_start)])
+                    parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
 
-                parts.append(b[:, target_slice].astype(dtype))
+                parts.append(b[NULL_SLICE, target_slice].astype(dtype))
                 part_start_last = target_stop
 
                 target_block_idx = target_slice = None
 
             # if this is a 1D block, we either convert it or do not, and thus either have parts or not, and do not need to get other part pieces of the block
             if b.ndim != 1 and part_start_last < b.shape[1]:
-                parts.append(b[:, slice(part_start_last, None)])
+                parts.append(b[NULL_SLICE, slice(part_start_last, None)])
 
             if not parts:
                 yield b # no change for this block
             else:
                 yield from parts
 
+
+
+    def _astype_blocks_from_dtypes(self,
+            dtypes: DtypesSpecifier
+            ) -> tp.Iterator[np.ndarray]:
+        '''
+        Generator producer of np.ndarray.
+
+        Args:
+            dtypes: specify dtypes as single item, iterable, or mapping.
+        '''
+        # use a range() of integers as columns labels
+        get_col_dtype = get_col_dtype_factory(dtypes, range(self._shape[1]))
+
+        iloc = 0
+        for b in self._blocks:
+            if b.ndim == 1:
+                dtype = get_col_dtype(iloc)
+                if dtype is not None:
+                    yield b.astype(dtype)
+                else:
+                    yield b
+                iloc += 1
+            else:
+                group_start = 0
+                for pos in range(b.shape[1]):
+                    dtype = get_col_dtype(iloc)
+                    if pos == 0:
+                        dtype_last = dtype
+                    elif dtype != dtype_last:
+                        # this dtype is different, so need to cast all up to (but not including) this one
+                        if dtype_last is not None:
+                            yield b[NULL_SLICE, slice(group_start, pos)].astype(dtype_last)
+                        else:
+                            yield b[NULL_SLICE, slice(group_start, pos)]
+                        group_start = pos # this is the start of a new group
+                        dtype_last = dtype
+                    # else: dtype is the same
+                    iloc += 1
+                # there is always one more to yield
+                if dtype_last is not None:
+                    yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
+                else:
+                    yield b[NULL_SLICE, slice(group_start, None)]
 
     def _ufunc_blocks(self,
             column_key: GetItemKeyType,

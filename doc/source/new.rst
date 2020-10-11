@@ -15,6 +15,20 @@ API change: Container operands used with binary equality operators will raise if
 API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
 
 
+0.6.38
+----------
+
+``Frame.dtype`` interface now takes ``DtypesSpecifier``, permitting setting ``dtype`` by mapping, iterable, or single value.
+
+``dtypes`` can be given as a single ``DtypeSpecifier`` for specifying ``dtype`` of all columns.
+
+``Series`` of ``Frame`` can now be created without specifying ``dtype`` arguments.
+
+``Frame`` now supports usage as a ``weakref``.
+
+``Frame.from_parquet`` now raises when ``columns_select`` names columns not found in the file.
+
+
 0.6.37
 ----------
 

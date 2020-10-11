@@ -185,6 +185,11 @@ AnyCallable = tp.Callable[..., tp.Any]
 Mapping = tp.Union[tp.Mapping[tp.Hashable, tp.Any], 'Series']
 CallableOrMapping = tp.Union[AnyCallable, tp.Mapping[tp.Hashable, tp.Any], 'Series']
 
+
+def is_mapping(value: tp.Any) -> bool:
+    from static_frame import Series
+    return isinstance(value, (dict, Series))
+
 def is_callable_or_mapping(value: CallableOrMapping) -> bool:
     from static_frame import Series
     return callable(value) or isinstance(value, dict) or isinstance(value, Series)
@@ -201,9 +206,17 @@ PathSpecifierOrFileLikeOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterat
 
 DtypeSpecifier = tp.Optional[tp.Union[str, np.dtype, type]]
 
+DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
+
+def is_dtype_specifier(value: tp.Any) -> bool:
+    return isinstance(value, DTYPE_SPECIFIER_TYPES)
+
 # support an iterable of specifiers, or mapping based on column names
-DtypesSpecifier = tp.Optional[
-        tp.Union[tp.Iterable[DtypeSpecifier], tp.Dict[tp.Hashable, DtypeSpecifier]]]
+DtypesSpecifier = tp.Optional[tp.Union[
+        DtypeSpecifier,
+        tp.Iterable[DtypeSpecifier],
+        tp.Dict[tp.Hashable, DtypeSpecifier]
+        ]]
 
 # specifiers that are equivalent to object
 DTYPE_SPECIFIERS_OBJECT = {DTYPE_OBJECT, object, tuple}
@@ -812,13 +825,14 @@ def resolve_type_iter(
             value_type = type(v)
 
             # need to get tuple subclasses, like NamedTuple
-            if isinstance(v, (tuple, list)):
+            if isinstance(v, (tuple, list)) or hasattr(v, '__slots__'):
+                # identify SF types by if they have __slots__ defined; they also must be assigned after array creation, so we treat them like tuples
                 has_tuple = True
             elif isinstance(v, Enum):
                 # must check isinstance, as Enum types are always derived from Enum
                 has_enum = True
             elif value_type == str or value_type == np.str_:
-                # must compare to both sring types
+                # must compare to both string types
                 has_str = True
             else:
                 has_non_str = True
@@ -831,7 +845,6 @@ def resolve_type_iter(
                 resolved = object
             elif has_big_int and has_inexact:
                 resolved = object
-
         else: # resolved is object, can exit
             if copy_values:
                 values_post.extend(v_iter)
@@ -899,7 +912,6 @@ def iterable_to_array_1d(
             v = np.empty(0, dtype=dtype)
             v.flags.writeable = False
             return v, True
-
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
         has_tuple = dtype in DTYPE_SPECIFIERS_OBJECT
 
@@ -912,7 +924,7 @@ def iterable_to_array_1d(
     # construction
     if has_tuple:
         # this matches cases where dtype is given and dtype is an object specifier
-        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterabel), and is little slower than creating array directly
+        # this is the only way to assign from a sequence that contains a tuple; this does not work for dict or set (they must be copied into an iterable), and is little slower than creating array directly
         v = np.empty(len(values_for_construct), dtype=DTYPE_OBJECT)
         v[NULL_SLICE] = values_for_construct
     elif dtype == int:

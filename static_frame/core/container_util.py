@@ -37,6 +37,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NameType
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
 
 from static_frame.core.exception import AxisInvalid
 
@@ -62,23 +64,28 @@ def get_col_dtype_factory(
     '''
     from static_frame.core.series import Series
 
-    # dtypes are either mappable by name, or an ordered sequence; it might be possible to support a single dtype initializer applied to all columns, however, the types of dtype initialzers are so broad, it is hard to distinguish them from a list (i.e., str class).
-
+    # dtypes are either a dtype initializer, mappable by name, or an ordered sequence
     # NOTE: might verify that all keys in dtypes are in columns, though that might be slow
 
-    if isinstance(dtypes, (dict, Series)):
+    if is_mapping(dtypes):
         is_map = True
-    else:
+        is_element = False
+    elif is_dtype_specifier(dtypes):
         is_map = False
+        is_element = True
+    else: # an iterable of types
+        is_map = False
+        is_element = False
 
     if columns is None and is_map:
         raise RuntimeError('cannot lookup dtypes by name without supplied columns labels')
 
     def get_col_dtype(col_idx: int) -> DtypeSpecifier:
-        nonlocal dtypes
+        nonlocal dtypes # might mutate a generator into a tuple
+        if is_element:
+            return dtypes
         if is_map:
             return dtypes.get(columns[col_idx], None) #type: ignore
-
         # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here
         if not hasattr(dtypes, '__len__'):
             dtypes = tuple(dtypes) #type: ignore
@@ -419,18 +426,11 @@ def axis_window_items( *,
         as_array: bool = False,
         ) -> tp.Iterator[tp.Tuple[tp.Hashable, tp.Any]]:
     '''Generator of index, window pairs pairs.
-
     Args:
-        size: integer greater than 0
-        step: integer greater than 0 to determine the step size between windows. A step of 1 shifts the window 1 data point; a step equal to window size results in non-overlapping windows.
-        window_sized: if True, windows that do not meet the size are skipped.
-        window_func: Array processor of window values, pre-function application; useful for applying weighting to the window.
-        window_valid: Function that, given an array window, returns True if the window meets requirements and should be returned.
-        label_shift: shift, relative to the right-most data point contained in the window, to derive the label to be paired with the window; e.g., to return the first label of the window, the shift will be the size minus one.
-        start_shift: shift from 0 to determine where the collection of windows begins.
-        size_increment: value to be added to each window aftert the first, so as to, in combination with setting the step size to 0, permit expanding windows.
         as_array: if True, the window is returned as an array instead of a SF object.
     '''
+    # see doc_str window for docs
+
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 

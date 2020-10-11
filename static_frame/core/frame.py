@@ -113,6 +113,8 @@ from static_frame.core.util import IndexSpecifier
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_hashable
+from static_frame.core.util import is_dtype_specifier
+from static_frame.core.util import is_mapping
 from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
@@ -148,6 +150,7 @@ class Frame(ContainerOperand):
     '''A two-dimensional ordered, labelled collection, immutable and of fixed size.
     '''
     __slots__ = (
+            '__weakref__',
             '_blocks',
             '_columns',
             '_index',
@@ -1118,7 +1121,7 @@ class Frame(ContainerOperand):
                     array_final = store_filter.to_type_filter_array(array_final)
 
                 if get_col_dtype:
-                    # dtypes can refer to columns that will become part of the Index by name or iloc position
+                    # dtypes are applied to all columns and can refer to columns that will become part of the Index by name or iloc position: we need to be able to type these before creating Index obejcts
                     dtype = get_col_dtype(col_idx) #pylint: disable=E1102
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
@@ -2126,6 +2129,12 @@ class Frame(ContainerOperand):
                 columns=columns_select,
                 use_pandas_metadata=False,
                 )
+        if columns_select:
+            # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
+            if len(table.column_names) < len(columns_select):
+                missing = set(columns_select) - set(table.column_names)
+                raise ErrorInitFrame(f'cannot load all columns in columns_select: missing {missing}')
+
         return cls.from_arrow(table,
                 index_depth=index_depth,
                 columns_depth=columns_depth,
@@ -2426,11 +2435,12 @@ class Frame(ContainerOperand):
     @doc_inject(select='astype')
     def astype(self) -> InterfaceAsType:
         '''
-        Retype one or more columns. Can be used as as function to retype the entire ``Frame``; alternatively, a ``__getitem__`` interface permits retyping selected columns.
+        Retype one or more columns. When used as a function, can provide  retype the entire ``Frame``;  Alternatively, when used as a ``__getitem__`` interface, loc-style column selection can be used to type one or more coloumns.
 
         Args:
             {dtype}
         '''
+        # NOTE: this uses the same function for __call__ and __getitem__; call simply uses the NULL_SLICE and applys the dtype argument immediately
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     #---------------------------------------------------------------------------
@@ -2484,173 +2494,222 @@ class Frame(ContainerOperand):
     @property
     def iter_array(self) -> IterNodeAxis:
         '''
-        Iterator of 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_array_items(self) -> IterNodeAxis:
         '''
-        Iterator of pairs of label, 1D NumPy array, where arrays are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of pairs of label, :obj:`np.array`, where arrays are drawn from columns (axis=0) or rows (axis=1)
         '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_array,
-            function_items=self._axis_array_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_array,
+                function_items=self._axis_array_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_tuple(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_tuple_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_tuple,
-            function_items=self._axis_tuple_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_tuple,
+                function_items=self._axis_tuple_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
     def iter_series(self) -> IterNodeAxis:
+        '''
+        Iterator of :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
     def iter_series_items(self) -> IterNodeAxis:
+        '''
+        Iterator of pairs of label, :obj:`Series`, where :obj:`Series` are drawn from columns (axis=0) or rows (axis=1)
+        '''
         return IterNodeAxis(
-            container=self,
-            function_values=self._axis_series,
-            function_items=self._axis_series_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=self._axis_series,
+                function_items=self._axis_series_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroupAxis:
         '''
-        Iterate over Frames grouped by unique values in one or more rows or columns.
+        Iterator of :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
         '''
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_items(self) -> IterNodeGroupAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique values found in one or more columns (axis=0) or rows (axis=1).
+        '''
         return IterNodeGroupAxis(
-            container=self,
-            function_values=self._axis_group_loc,
-            function_items=self._axis_group_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_loc,
+                function_items=self._axis_group_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     @property
     def iter_group_labels_items(self) -> IterNodeDepthLevelAxis:
+        '''
+        Iterator of pairs of label, :obj:`Frame` grouped by unique labels found in one or more index depths (axis=0) or columns depths (axis=1).
+        '''
         return IterNodeDepthLevelAxis(
-            container=self,
-            function_values=self._axis_group_labels,
-            function_items=self._axis_group_labels_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
-            )
+                container=self,
+                function_values=self._axis_group_labels,
+                function_items=self._axis_group_labels_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.SERIES_ITEMS_FLAT,
+                )
 
     #---------------------------------------------------------------------------
 
     @property
+    @doc_inject(selector='window')
     def iter_window(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array(self) -> IterNodeWindow:
+        '''
+        Iterator of windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.VALUES
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.VALUES
+                )
 
     @property
+    @doc_inject(selector='window')
     def iter_window_array_items(self) -> IterNodeWindow:
+        '''
+        Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
+
+        {args}
+        '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
         return IterNodeWindow(
-            container=self,
-            function_values=function_values,
-            function_items=function_items,
-            yield_type=IterNodeType.ITEMS
-            )
+                container=self,
+                function_values=function_values,
+                function_items=function_items,
+                yield_type=IterNodeType.ITEMS
+                )
 
     #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArg:
+        '''Iterator of elements, ordered by row then column.
+        '''
         return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.VALUES,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.VALUES,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     @property
     def iter_element_items(self) -> IterNodeNoArg:
+        '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
+        '''
         return IterNodeNoArg(
-            container=self,
-            function_values=self._iter_element_loc,
-            function_items=self._iter_element_loc_items,
-            yield_type=IterNodeType.ITEMS,
-            apply_type=IterNodeApplyType.FRAME_ELEMENTS
-            )
+                container=self,
+                function_values=self._iter_element_loc,
+                function_items=self._iter_element_loc_items,
+                yield_type=IterNodeType.ITEMS,
+                apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
 
     #---------------------------------------------------------------------------
     # index manipulation
@@ -6433,9 +6492,22 @@ class FrameAsType:
         self.container = container
         self.column_key = column_key
 
-    def __call__(self, dtype, consolidate_blocks: bool = True) -> 'Frame':
+    def __call__(self,
+            dtypes: DtypesSpecifier,
+            *,
+            consolidate_blocks: bool = True,
+            ) -> 'Frame':
 
-        blocks = self.container._blocks._astype_blocks(self.column_key, dtype)
+        if self.column_key == NULL_SLICE:
+            if is_mapping(dtypes):
+                # translate keys loc to iloc
+                dtypes = {self.container._columns.loc_to_iloc(k): v
+                        for k, v in dtypes.items()}
+            blocks = self.container._blocks._astype_blocks_from_dtypes(dtypes)
+        else:
+            if not is_dtype_specifier(dtypes):
+                raise RuntimeError('must supply a single dtype specifier if using a column selection other than the NULL slice')
+            blocks = self.container._blocks._astype_blocks(self.column_key, dtypes)
 
         if consolidate_blocks:
             blocks = TypeBlocks.consolidate_blocks(blocks)
