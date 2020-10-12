@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.7.2
+----------
+
+Extended application of binary equality operators to permit comparison with arrays of single elements.
+
+
 0.7.1
 ----------
 
