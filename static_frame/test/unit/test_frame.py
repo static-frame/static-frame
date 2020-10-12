@@ -3738,7 +3738,6 @@ class TestUnit(TestCase):
                 )
 
 
-
     def test_frame_binary_operator_b(self) -> None:
 
         records = (
@@ -3954,6 +3953,33 @@ class TestUnit(TestCase):
         # should be all true of we do our array conversion right
         f2 = f1 == f1.values.tolist()
         self.assertTrue(f2.all().all())
+
+
+    def test_frame_binary_operator_m(self) -> None:
+        # reindex both axis
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        f2 = f1 == True
+        self.assertEqual(f2.to_pairs(0),
+                (('p', (('w', False), ('x', False), ('y', False), ('z', False))), ('q', (('w', False), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
+
+        f3 = f1 == 2
+        self.assertEqual(f3.to_pairs(0),
+                (('p', (('w', True), ('x', False), ('y', True), ('z', False))), ('q', (('w', True), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
+
+        f4 = f1 == None
+        self.assertFalse(f4.any().any())
+
 
     #---------------------------------------------------------------------------
     def test_frame_isin_a(self) -> None:

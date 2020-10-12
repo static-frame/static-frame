@@ -712,10 +712,15 @@ def apply_binary_operator(*,
                 isinstance(other, str) or not hasattr(other, '__len__')
                 ):
             # only expand to the size of the array operand if we are comparing to an element
+            # NOTE: might accept sequences of size 1, as that is simlar to what NP does when types are compatible
+            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
+        elif other_is_array and other.size == 1:
+            # elements in arrays of 0 or more dimensions are acceptable; this is what NP does when the types are compatible
+            # NOTE: while NP will return False when using == to an empty array, other binary operators raise with an empty array, so we only take size == 1
             result = np.full(values.shape, result, dtype=DTYPE_BOOL)
         else:
             raise ValueError('operands could not be broadcast together')
-            # in a number of situations due to dtype or unaligned shapes, NP returns a single Boolean; this is generally undesirable.
+            # raise on unaligned shapes as is done for arithmetic operators
 
     result.flags.writeable = False
     return result
