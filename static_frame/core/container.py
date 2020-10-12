@@ -107,7 +107,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''
         Raises ValueError to prohibit ambiguous use of truethy evaluation.
         '''
-        raise ValueError('The truth value of a container is ambiguous.')
+        raise ValueError('The truth value of a container is ambiguous. For a truthy indicator non-empty status, use the `size` attribute.')
 
 
 
