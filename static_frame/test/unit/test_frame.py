@@ -3969,7 +3969,7 @@ class TestUnit(TestCase):
                 index=('w', 'x', 'y', 'z'),
                 )
 
-        f2 = f1 == True
+        f2 = f1 == True #pylint: disable=C0121
         self.assertEqual(f2.to_pairs(0),
                 (('p', (('w', False), ('x', False), ('y', False), ('z', False))), ('q', (('w', False), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
 
@@ -3977,7 +3977,7 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('p', (('w', True), ('x', False), ('y', True), ('z', False))), ('q', (('w', True), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
 
-        f4 = f1 == None
+        f4 = f1 == None #pylint: disable=C0121
         self.assertFalse(f4.any().any())
 
 
