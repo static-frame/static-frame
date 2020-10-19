@@ -4570,6 +4570,7 @@ class Frame(ContainerOperand):
     def roll(self,
             index: int = 0,
             columns: int = 0,
+            *,
             include_index: bool = False,
             include_columns: bool = False) -> 'Frame':
         '''
