@@ -30,6 +30,10 @@
   :target: https://pypi.org/project/static-frame
 
 
+.. image:: https://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat-square
+  :target: https://investmentsystems.github.io/static-frame-benchmark
+
+
 
 static-frame
 =============
@@ -45,6 +49,8 @@ Code: https://github.com/InvestmentSystems/static-frame
 Docs: http://static-frame.readthedocs.io
 
 Packages: https://pypi.org/project/static-frame
+
+Benchmarks: https://investmentsystems.github.io/static-frame-benchmark
 
 Context: `Ten Reasons to Use StaticFrame instead of Pandas <https://dev.to/flexatone/ten-reasons-to-use-staticframe-instead-of-pandas-4aad>`_
 
