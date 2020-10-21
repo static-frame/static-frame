@@ -47,6 +47,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '_series',
         '_store',
         '_config',
+        '_last_accessed',
+        '_maxsize',
         )
 
     _series: Series
@@ -82,11 +84,14 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     @classmethod
     def _from_store(cls,
             store: Store,
-            config: StoreConfigMapInitializer = None
+            *,
+            config: StoreConfigMapInitializer = None,
+            maxsize: tp.Optional[int],
             ) -> 'Bus':
         return cls(cls._deferred_series(store.labels()),
                 store=store,
-                config=config
+                config=config,
+                maxsize=maxsize,
                 )
 
     #---------------------------------------------------------------------------
@@ -94,7 +99,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             series: Series,
             *,
             store: tp.Optional[Store] = None,
-            config: StoreConfigMapInitializer = None
+            config: StoreConfigMapInitializer = None,
+            maxsize: tp.Optional[int] = None,
             ):
         '''
         Args:
@@ -105,6 +111,9 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             raise ErrorInitBus(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
+        if maxsize is not None:
+            self._last_accessed = {}
+
         # do a one time iteration of series
         def gen() -> tp.Iterator[bool]:
             for label, value in series.items():
@@ -112,6 +121,8 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     raise ErrorInitBus(f'supplied label {label} is not a string.')
 
                 if isinstance(value, Frame):
+                    if maxsize is not None:
+                        self._last_accessed[label] = None
                     yield True
                 elif value is FrameDeferred:
                     yield False
@@ -122,6 +133,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._loaded_all = self._loaded.all()
         self._series = series
         self._store = store
+
+        # maxsize might be less than the number of Frames already loaded
+        if maxsize is not None:
+            self._maxsize = max(maxsize, self._loaded.sum())
+        else:
+            self._maxsize = None
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
@@ -160,16 +177,45 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             if self._store is None:
                 raise RuntimeError('no store defined')
 
-            labels = set(self._iloc_to_labels(key))
+            if self._maxsize is not None:
+                loaded_size = self._loaded.sum()
 
-            array = np.empty(shape=len(self._series._index), dtype=object)
-            for idx, (label, frame) in enumerate(self._series.items()):
-                if frame is FrameDeferred and label in labels:
+            # labels = set(self._iloc_to_labels(key))
+
+            # array = np.empty(shape=len(self._series._index), dtype=object)
+            index = self._series.index
+            array = self._series.values.copy()
+            targets = self._series.iloc[key] # key is iloc key
+            if not isinstance(targets, Series):
+                # element reduction; present as loc, targets pairs
+                targets = {index[key]: targets}
+
+            # for idx, (label, frame) in enumerate(self._series.items()):
+            for label, frame in targets.items():
+                idx = index.loc_to_iloc(label)
+
+                if frame is FrameDeferred:
                     frame = self._store.read(label, config=self._config[label])
                     self._loaded[idx] = True # update loaded status
-                array[idx] = frame
-            array.flags.writeable = False
 
+                    if self._maxsize is not None:
+                        if label in self._last_accessed:
+                            self._last_accessed.pop(label)
+                        self._last_accessed[label] = None
+
+                array[idx] = frame
+
+            if self._maxsize is not None:
+                diff = self._loaded.sum() - self._maxsize
+                if diff > 0:
+                    # get leading label from self._last_accessed
+                    for _, label in zip(range(diff), self._last_accessed):
+                        self._last_accessed.pop(label)
+                        idx = index.loc_to_iloc(label)
+                        self._loaded[idx] = False
+                        array[idx] = FrameDeferred
+
+            array.flags.writeable = False
             self._series = Series(array, index=self._series._index, dtype=object)
             self._loaded_all = self._loaded.all()
 

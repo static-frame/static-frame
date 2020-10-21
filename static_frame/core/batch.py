@@ -87,6 +87,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _from_store(cls,
             store: Store,
             config: StoreConfigMapInitializer = None,
+            maxsize: tp.Optional[int] = None, # not used
             ) -> 'Batch':
         config_map = StoreConfigMap.from_initializer(config)
         items = ((label, store.read(label, config=config_map[label]))

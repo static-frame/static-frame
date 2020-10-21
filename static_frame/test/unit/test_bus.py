@@ -2,6 +2,7 @@ import unittest
 from datetime import date
 from datetime import datetime
 # from io import StringIO
+import typing as tp
 import numpy as np
 
 from static_frame.core.frame import Frame
@@ -982,8 +983,29 @@ class TestUnit(TestCase):
             # parquet brings in characters as objects, thus forcing different dtypes
             self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
 
+    #---------------------------------------------------------------------------
+    def test_bus_maxlen_a(self):
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(20):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
 
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
 
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config, maxsize=3)
+            for i in b2.index:
+                _ = b2[i]
+                self.assertTrue(b2._loaded.sum() <= 3)
 
 
 if __name__ == '__main__':
