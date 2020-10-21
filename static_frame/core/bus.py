@@ -112,7 +112,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
         if maxsize is not None:
-            self._last_accessed = {}
+            self._last_accessed: tp.Dict[str, None] = {}
 
         # do a one time iteration of series
         def gen() -> tp.Iterator[bool]:

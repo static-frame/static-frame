@@ -46,10 +46,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipTSV(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -64,10 +64,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipCSV(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
     @classmethod
     @doc_inject(selector='bus_constructor')
@@ -82,10 +82,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipPickle(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
 
     @classmethod
@@ -101,10 +101,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreZipParquet(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
 
     @classmethod
@@ -121,10 +121,10 @@ class StoreClientMixin:
         '''
         # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
 
     @classmethod
@@ -140,10 +140,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreSQLite(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
 
     @classmethod
@@ -159,10 +159,10 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreHDF5(fp)
-        return cls._from_store(store,
+        return cls._from_store(store, #type: ignore
                 config=config,
                 maxsize=maxsize,
-                ) #type: ignore
+                )
 
 
     #---------------------------------------------------------------------------

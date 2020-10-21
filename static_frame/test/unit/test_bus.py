@@ -984,7 +984,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
 
     #---------------------------------------------------------------------------
-    def test_bus_maxlen_a(self):
+    def test_bus_maxsize_a(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(20):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
