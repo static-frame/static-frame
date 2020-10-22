@@ -48,7 +48,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '_store',
         '_config',
         '_last_accessed',
-        '_maxsize',
+        '_max_persist',
         )
 
     _series: Series
@@ -86,12 +86,12 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             store: Store,
             *,
             config: StoreConfigMapInitializer = None,
-            maxsize: tp.Optional[int],
+            max_persist: tp.Optional[int],
             ) -> 'Bus':
         return cls(cls._deferred_series(store.labels()),
                 store=store,
                 config=config,
-                maxsize=maxsize,
+                max_persist=max_persist,
                 )
 
     #---------------------------------------------------------------------------
@@ -100,18 +100,19 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             *,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
-            maxsize: tp.Optional[int] = None,
+            max_persist: tp.Optional[int] = None,
             ):
         '''
         Args:
-            config: StoreConfig for handling ``Frame`` construction and exporting from Store.
+            config: StoreConfig for handling :obj:`Frame` construction and exporting from Store.
+            max_persist: When loading :obj:`Frame` from a :obj:`Store`, optionally define the maximum number of :obj:`Frame` to remain in the :obj:`Bus`, regardless of the size of the :obj:`Bus`. If more than ``max_persist`` number of :obj:`Frame` are loaded, least-recently loaded :obj:`Frame` will be replaced by ``FrameDeferred``. A ``max_persist`` of 1, for example, permits reading one :obj:`Frame` at a time without ever holding in memory more than 1 :obj:`Frame`.
         '''
 
         if series.dtype != DTYPE_OBJECT:
             raise ErrorInitBus(
                     f'Series passed to initializer must have dtype object, not {series.dtype}')
 
-        if maxsize is not None:
+        if max_persist is not None:
             self._last_accessed: tp.Dict[str, None] = {}
 
         # do a one time iteration of series
@@ -121,7 +122,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     raise ErrorInitBus(f'supplied label {label} is not a string.')
 
                 if isinstance(value, Frame):
-                    if maxsize is not None:
+                    if max_persist is not None:
                         self._last_accessed[label] = None
                     yield True
                 elif value is FrameDeferred:
@@ -134,11 +135,11 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._series = series
         self._store = store
 
-        # maxsize might be less than the number of Frames already loaded
-        if maxsize is not None:
-            self._maxsize = max(maxsize, self._loaded.sum())
+        # max_persist might be less than the number of Frames already loaded
+        if max_persist is not None:
+            self._max_persist = max(max_persist, self._loaded.sum())
         else:
-            self._maxsize = None
+            self._max_persist = None
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
@@ -177,15 +178,13 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             if self._store is None:
                 raise RuntimeError('no store defined')
 
-            if self._maxsize is not None:
+            if self._max_persist is not None:
                 loaded_size = self._loaded.sum()
 
-            # labels = set(self._iloc_to_labels(key))
-
-            # array = np.empty(shape=len(self._series._index), dtype=object)
             index = self._series.index
-            array = self._series.values.copy()
+            array = self._series.values.copy() # not a deepcopy
             targets = self._series.iloc[key] # key is iloc key
+
             if not isinstance(targets, Series):
                 # element reduction; present as loc, targets pairs
                 targets = {index[key]: targets}
@@ -198,18 +197,19 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     frame = self._store.read(label, config=self._config[label])
                     self._loaded[idx] = True # update loaded status
 
-                    if self._maxsize is not None:
+                    if self._max_persist is not None:
                         if label in self._last_accessed:
                             self._last_accessed.pop(label)
                         self._last_accessed[label] = None
 
                 array[idx] = frame
 
-            if self._maxsize is not None:
-                diff = self._loaded.sum() - self._maxsize
+            if self._max_persist is not None:
+                diff = self._loaded.sum() - self._max_persist
                 if diff > 0:
-                    # get leading label from self._last_accessed
-                    for _, label in zip(range(diff), self._last_accessed):
+                    # get leading label from self._last_accessed; these are least recently used
+                    labels_drop = [label for _, label in zip(range(diff), self._last_accessed)]
+                    for label in labels_drop:
                         self._last_accessed.pop(label)
                         idx = index.loc_to_iloc(label)
                         self._loaded[idx] = False
@@ -243,6 +243,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
+                max_persist=self._max_persist,
                 )
 
     def _extract_loc(self, key: GetItemKeyType) -> 'Bus':
@@ -268,6 +269,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         return self.__class__(series=series,
                 store=self._store,
                 config=self._config,
+                max_persist=self._max_persist,
                 )
 
 

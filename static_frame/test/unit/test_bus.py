@@ -984,7 +984,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
 
     #---------------------------------------------------------------------------
-    def test_bus_maxsize_a(self) -> None:
+    def test_bus_max_persist_a(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
             for i in range(20):
                 yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
@@ -1002,10 +1002,33 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
 
-            b2 = Bus.from_zip_pickle(fp, config=config, maxsize=3)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
             for i in b2.index:
                 _ = b2[i]
                 self.assertTrue(b2._loaded.sum() <= 3)
+
+
+    def test_bus_max_persist_b(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(20):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+            b3 = b2.iloc[10:]
+            self.assertEqual(b3._loaded.sum(), 1)
 
 
 if __name__ == '__main__':
