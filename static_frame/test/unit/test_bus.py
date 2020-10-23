@@ -1094,6 +1094,58 @@ class TestUnit(TestCase):
 
 
 
+    def test_bus_max_persist_d(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(5):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
+
+            _ = b2.iloc[[0, 2, 4]]
+            self.assertEqual(b2._loaded.tolist(),
+                    [True, False, True, False, True])
+
+            _ = b2.iloc[[1, 2, 3]]
+            self.assertEqual(b2._loaded.tolist(),
+                    [False, True, True, True, False])
+
+            _ = b2.iloc[4]
+            self.assertEqual(b2._loaded.tolist(),
+                    [False, False, True, True, True])
+
+            _ = b2.iloc[0]
+            self.assertEqual(b2._loaded.tolist(),
+                    [True, False, False, True, True])
+
+            _ = b2.iloc[[2, 3, 4]]
+            self.assertEqual(b2._loaded.tolist(),
+                    [False, False, True, True, True])
+
+            _ = b2.iloc[[0, 1]]
+            self.assertEqual(b2._loaded.tolist(),
+                    [True, True, False, False, True])
+
+            _ = b2.iloc[0]
+            self.assertEqual(b2._loaded.tolist(),
+                    [True, True, False, False, True])
+
+            _ = b2.iloc[[3, 4]]
+            self.assertEqual(b2._loaded.tolist(),
+                    [True, False, False, True, True])
+
 
 if __name__ == '__main__':
 

@@ -24,6 +24,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import GetItemKeyType
 from static_frame.core.util import NameType
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import INT_TYPES
 
 #-------------------------------------------------------------------------------
 class FrameDefferedMeta(type):
@@ -171,14 +172,36 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
     def _update_series_cache_iloc(self, key: GetItemKeyType) -> None:
         '''
         Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
+
+        Args:
+            key: always an iloc key.
         '''
+
+        max_persist_active = self._max_persist is not None
+
         # do nothing if all loaded, or if the requested keys are already loaded
-        if not self._loaded_all and not self._loaded[key].all():
+        load: bool
+        if self._loaded_all:
+            load = False
+        else:
             if self._store is None:
+                # there has to be a Store defined if we are partially loaded
                 raise RuntimeError('no store defined')
+            load = not self._loaded[key].all() # works with elements
 
-            max_persist_active = self._max_persist is not None
+        if not load and max_persist_active:
+            # must update LRU position
+            if isinstance(key, INT_TYPES):
+                labels = (self._series.index.iloc[key],)
+            else:
+                labels = self._series.index.iloc[key].values
 
+            for label in labels:
+                if label in self._last_accessed:
+                    self._last_accessed.pop(label)
+                self._last_accessed[label] = None
+
+        if load:
             if max_persist_active:
                 loaded_count = self._loaded.sum()
                 assert loaded_count <= self._max_persist
@@ -194,7 +217,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 idx = index.loc_to_iloc(label)
 
                 if max_persist_active:
-                    # update position of last label
+                    # update LRU position
                     if label in self._last_accessed:
                         self._last_accessed.pop(label)
                     self._last_accessed[label] = None
