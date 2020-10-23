@@ -172,48 +172,55 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         '''
         Update the Series cache with the key specified, where key can be any iloc GetItemKeyType.
         '''
-
-        # do nothing if all loaded, or if the requested keys are already loadsed
+        # do nothing if all loaded, or if the requested keys are already loaded
         if not self._loaded_all and not self._loaded[key].all():
             if self._store is None:
                 raise RuntimeError('no store defined')
 
-            if self._max_persist is not None:
-                loaded_size = self._loaded.sum()
+            max_persist_active = self._max_persist is not None
+
+            if max_persist_active:
+                loaded_count = self._loaded.sum()
+                assert loaded_count <= self._max_persist
 
             index = self._series.index
             array = self._series.values.copy() # not a deepcopy
             targets = self._series.iloc[key] # key is iloc key
 
             if not isinstance(targets, Series):
-                # element reduction; present as loc, targets pairs
-                targets = {index[key]: targets}
+                targets = {index[key]: targets} # present element as items
 
-            # for idx, (label, frame) in enumerate(self._series.items()):
-            for label, frame in targets.items():
+            for label, frame in targets.items(): # this is a Series, not a Bus
                 idx = index.loc_to_iloc(label)
+
+                if max_persist_active:
+                    # update position of last label
+                    if label in self._last_accessed:
+                        self._last_accessed.pop(label)
+                    self._last_accessed[label] = None
 
                 if frame is FrameDeferred:
                     frame = self._store.read(label, config=self._config[label])
+
+                if not self._loaded[idx]:
+                    # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in the case we do not need to `read`, but we still need to update the new array
+                    array[idx] = frame
                     self._loaded[idx] = True # update loaded status
 
-                    if self._max_persist is not None:
-                        if label in self._last_accessed:
-                            self._last_accessed.pop(label)
-                        self._last_accessed[label] = None
+                    if max_persist_active:
+                        loaded_count += 1
 
-                array[idx] = frame
+                if max_persist_active:
+                    # print(label, 'lc   ', loaded_count)
+                    if loaded_count > self._max_persist:
+                        # should only ever be one more over
+                        label_remove = next(iter(self._last_accessed))
+                        self._last_accessed.pop(label_remove)
 
-            if self._max_persist is not None:
-                diff = self._loaded.sum() - self._max_persist
-                if diff > 0:
-                    # get leading label from self._last_accessed; these are least recently used
-                    labels_drop = [label for _, label in zip(range(diff), self._last_accessed)]
-                    for label in labels_drop:
-                        self._last_accessed.pop(label)
-                        idx = index.loc_to_iloc(label)
-                        self._loaded[idx] = False
-                        array[idx] = FrameDeferred
+                        idx_remove = index.loc_to_iloc(label_remove)
+                        self._loaded[idx_remove] = False
+                        array[idx_remove] = FrameDeferred
+                        loaded_count -= 1 # should not go negative
 
             array.flags.writeable = False
             self._series = Series(array, index=self._series._index, dtype=object)
