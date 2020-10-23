@@ -211,7 +211,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                         loaded_count += 1
 
                 if max_persist_active:
-                    # print(label, 'lc   ', loaded_count)
                     if loaded_count > self._max_persist:
                         # should only ever be one more over
                         label_remove = next(iter(self._last_accessed))
