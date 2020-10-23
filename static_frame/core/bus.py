@@ -184,9 +184,6 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         if self._loaded_all:
             load = False
         else:
-            if self._store is None:
-                # there has to be a Store defined if we are partially loaded
-                raise RuntimeError('no store defined')
             load = not self._loaded[key].all() # works with elements
 
         if not load and max_persist_active:
@@ -202,6 +199,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                 self._last_accessed[label] = None
 
         if load:
+            if self._store is None:
+                # there has to be a Store defined if we are partially loaded
+                raise RuntimeError('no store defined')
+
             if max_persist_active:
                 loaded_count = self._loaded.sum()
                 assert loaded_count <= self._max_persist
