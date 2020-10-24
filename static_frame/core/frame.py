@@ -3915,35 +3915,24 @@ class Frame(ContainerOperand):
                     own_data=True,
                     )
 
-        # TODO: optimize get_group by pre-extracting single column/row
+        if not self._blocks.size:
+            return
+
         if axis == 0:
-            max_iloc: int = len(self._index)
             index: Index = frame_sorted.index
-            def get_group(i: int) -> tp.Hashable:
-                return frame_sorted.iloc[i, iloc_key]
+            group_values = frame_sorted._blocks._extract_array(column_key=iloc_key)
         else:
-            max_iloc = len(self._columns)
             index = frame_sorted.columns
-            def get_group(i: int) -> tp.Hashable:
-                return frame_sorted.iloc[iloc_key, i]
+            group_values = frame_sorted._blocks._extract_array(row_key=iloc_key)
 
-        if max_iloc > 0: # might be size zero
-            group = get_group(0)
-            start = 0
-            i = 1 # already got iloc 0 as group
-            while i < max_iloc:
-                next_group = get_group(i)
-
-                if group != next_group:
-                    slc: slice = slice(start, i)
-                    sliced_index: Index = index[slc]
-                    yield group, extract_frame(slc, sliced_index)
-
-                    start = i
-                    group = next_group
-                i += 1
-
-            yield group, extract_frame(slice(start, None), index[start:])
+        # find where new value is not equal to previous; drop the first as roll wraps
+        transitions = np.flatnonzero(group_values != np.roll(group_values, 1))[1:]
+        start = 0
+        for t in transitions:
+            slc = slice(start, t)
+            yield group_values[start], extract_frame(slc, index[slc])
+            start = t
+        yield group_values[start], extract_frame(slice(start, None), index[start:])
 
 
     def _axis_group_loc_items(self,
