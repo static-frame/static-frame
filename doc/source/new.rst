@@ -8,6 +8,10 @@ What is New in Static Frame
 
 Added ``len()`` to ``via_str`` interfaces.
 
+Silenced ``NaturalNameWarning`` via ``tables`` in ``StoreHDF5``.
+
+Improved handling for iterating zero-sized ``Frame``.
+
 ``Frame.shift()`` ``file_value`` parameter is now key-word argument only.
 
 ``Frame.roll()`` ``include_index``, ``include_columns`` is now key-word argument only.
@@ -34,7 +38,7 @@ API change: ``IndexHierarchy.iter_label`` now iterates over realized labels.
 
 API change: ``IndexBase.union``, ``IndexBase.intersection`` no longer automatically unpack ``values`` from ``ContainerOperand`` subclasses.
 
-API change: Container operands used with binary equality operators will raise if sizes are not equivalent
+API change: Container operands used with binary equality operators will raise if sizes are not equivalent.
 
 API change: ``Frame.from_xlsx``, as well as ``StoreConfig`` now set ``trim_nadir`` to False by default.
 

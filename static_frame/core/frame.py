@@ -3861,7 +3861,8 @@ class Frame(ContainerOperand):
     def _axis_group_iloc_items(self,
             key: GetItemKeyType,
             *,
-            axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+            axis: int,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
 
         for group, selection, tb in self._blocks.group(axis=axis, key=key):
             if axis == 0:
@@ -3888,10 +3889,14 @@ class Frame(ContainerOperand):
             iloc_key: GetItemKeyType,
             axis: int
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Frame']]:
+        '''
+        Optimized grouping when key is an element.
+        '''
         # Create a sorted copy since we do not want to change the underlying data
         frame_sorted: Frame = self.sort_values(key, axis=not axis)
 
-        def extract_frame(key: GetItemKeyType,
+        def extract_frame(
+                key: GetItemKeyType,
                 index: IndexBase,
                 ) -> 'Frame':
             if axis == 0:
@@ -3910,6 +3915,7 @@ class Frame(ContainerOperand):
                     own_data=True,
                     )
 
+        # TODO: optimize get_group by pre-extracting single column/row
         if axis == 0:
             max_iloc: int = len(self._index)
             index: Index = frame_sorted.index
@@ -3921,23 +3927,23 @@ class Frame(ContainerOperand):
             def get_group(i: int) -> tp.Hashable:
                 return frame_sorted.iloc[iloc_key, i]
 
-        group: tp.Hashable = get_group(0)
-        start = 0
-        i = 0
+        if max_iloc > 0: # might be size zero
+            group = get_group(0)
+            start = 0
+            i = 1 # already got iloc 0 as group
+            while i < max_iloc:
+                next_group = get_group(i)
 
-        while i < max_iloc:
-            next_group: tp.Hashable = get_group(i)
+                if group != next_group:
+                    slc: slice = slice(start, i)
+                    sliced_index: Index = index[slc]
+                    yield group, extract_frame(slc, sliced_index)
 
-            if group != next_group:
-                slc: slice = slice(start, i)
-                sliced_index: Index = index[slc]
-                yield group, extract_frame(slc, sliced_index)
+                    start = i
+                    group = next_group
+                i += 1
 
-                start = i
-                group = next_group
-            i += 1
-
-        yield group, extract_frame(slice(start, None), index[start:])
+            yield group, extract_frame(slice(start, None), index[start:])
 
 
     def _axis_group_loc_items(self,

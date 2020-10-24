@@ -53,6 +53,7 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
+from static_frame.core.util import EMPTY_ARRAY
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -390,7 +391,9 @@ class TypeBlocks(ContainerOperand):
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
         '''
+
         if axis == 1: # iterate over rows
+            zero_size = not bool(self._blocks)
             unified = self.unified
             # iterate over rows; might be faster to create entire values
             if not reverse:
@@ -399,7 +402,9 @@ class TypeBlocks(ContainerOperand):
                 row_idx_iter = range(self._shape[0] - 1, -1, -1)
 
             for i in row_idx_iter:
-                if unified:
+                if zero_size:
+                    yield EMPTY_ARRAY
+                elif unified:
                     b = self._blocks[0]
                     if b.ndim == 1:
                         # single element slice to force array creation (not an element)
@@ -1837,7 +1842,7 @@ class TypeBlocks(ContainerOperand):
             iterable of integers: one or more non-contiguous and/or repeated selections
 
         Returns:
-            TypeBlocks, or a single element if both are coordinats
+            TypeBlocks, or a single element if both are coordinates
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if isinstance(column_key, INT_TYPES):
@@ -1856,7 +1861,7 @@ class TypeBlocks(ContainerOperand):
             if row_key_null:
                 return TypeBlocks.from_blocks(b[:, column])
             elif isinstance(row_key, INT_TYPES):
-                return b[row_key, column] # return single item
+                return b[row_key, column]
             return TypeBlocks.from_blocks(b[row_key, column])
 
         # pass a generator to from_block; will return a TypeBlocks or a single element

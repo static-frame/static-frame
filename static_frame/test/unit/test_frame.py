@@ -1612,8 +1612,14 @@ class TestUnit(TestCase):
                 ((np.datetime64('2020-01-01'), 6), (np.datetime64('2020-01-02'), 22), (np.datetime64('2020-01-03'), 38))
                 )
 
+    def test_frame_iter_array_g(self) -> None:
 
+        f = sf.FrameGO(index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
+        post = list(f.iter_array(0))
+        self.assertEqual(post, [])
 
+        post = list(f.iter_array(1))
+        self.assertEqual([x.tolist() for x in post], [[], [], []])
 
 
     #---------------------------------------------------------------------------
@@ -1634,6 +1640,13 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             post = tuple(sf.Frame.from_elements(range(5)).iter_tuple(axis=2))
 
+    def test_frame_iter_tuple_d(self) -> None:
+        f = sf.FrameGO(index=IndexDate.from_date_range('2020-01-01', '2020-01-03'))
+        post = list(f.iter_tuple(0))
+        self.assertEqual(post, [])
+
+        post = list(f.iter_tuple(1))
+        self.assertEqual([len(x) for x in post], [0, 0, 0])
 
     #---------------------------------------------------------------------------
 
@@ -4413,7 +4426,20 @@ class TestUnit(TestCase):
                 (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', 'a'), ('w', 'c'))), ('s', (('z', False), ('w', False))), ('t', (('z', False), ('w', False))))
                 )
 
+    def test_frame_iter_group_d(self) -> None:
+        f = sf.Frame.from_element(1, columns=[1,2,3], index=['a'])
+        empty = f.reindex([])
+        self.assertEqual(list(empty.iter_element()), [])
+        self.assertEqual(list(empty.iter_group(key=1)), [])
 
+    def test_frame_iter_group_e(self) -> None:
+        f = sf.Frame.from_element(None, columns=[1,2,3], index=['a'])
+        empty = f.reindex([])
+        self.assertEqual(list(empty.iter_element()), [])
+        self.assertEqual(list(empty.iter_group(key=1)), [])
+
+
+    #---------------------------------------------------------------------------
     def test_frame_iter_group_items_a(self) -> None:
 
         # testing a hierarchical index and columns, selecting column with a tuple
