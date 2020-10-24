@@ -1147,6 +1147,42 @@ class TestUnit(TestCase):
                     [True, False, False, True, True])
 
 
+    def test_bus_max_persist_3(self) -> None:
+        def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
+            for i in range(4):
+                yield str(i), Frame(np.arange(i, i+10).reshape(2, 5))
+
+        s = Series.from_items(items(), dtype=object)
+        b1 = Bus(s)
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=4)
+
+            _ = b2.iloc[[0, 1]]
+            _ = b2.iloc[[2, 3]]
+            self.assertTrue(b2._loaded_all)
+
+            _ = b2.iloc[[1, 0]]
+            self.assertEqual(list(b2._last_accessed.keys()),
+                    ['2', '3', '1', '0'])
+
+            _ = b2.iloc[3]
+            self.assertEqual(list(b2._last_accessed.keys()),
+                    ['2', '1', '0', '3'])
+
+            _ = b2.iloc[:3]
+            self.assertEqual(list(b2._last_accessed.keys()),
+                    ['3', '0', '1', '2'])
+
+
 if __name__ == '__main__':
 
     unittest.main()
