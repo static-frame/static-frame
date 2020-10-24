@@ -10034,6 +10034,16 @@ class TestUnit(TestCase):
         f2 = f1.via_str.count('BA')
         self.assertEqual(f2.to_pairs(0), (('x', (('a', 0), ('b', 0))), ('y', (('a', 1), ('b', 1)))))
 
+    def test_frame_str_count_a(self) -> None:
+
+        f1 = Frame(np.array([[1, 20], [500, 8332]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str.len()
+        self.assertEqual(f2.to_pairs(0), (('x', (('a', 1), ('b', 3))), ('y', (('a', 2), ('b', 4)))))
+
+
     #---------------------------------------------------------------------------
     def test_frame_as_dt_year_a(self) -> None:
 

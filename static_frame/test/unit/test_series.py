@@ -3143,6 +3143,13 @@ class TestUnit(TestCase):
             (('x', 'foo'), ('y', 'bar'))
             )
 
+    def test_series_str_len_a(self) -> None:
+        s1 = Series((100, 4), index=('x', 'y'))
+        s2 = s1.via_str.len()
+        self.assertEqual(s2.to_pairs(),
+                (('x', 3), ('y', 1)))
+
+
     def test_series_str_ljust_a(self) -> None:
         s1 = Series(('foo', 'bar'), index=('x', 'y'))
         s2 = s1.via_str.ljust(9, '-')

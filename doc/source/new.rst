@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``Bus`` now exposes ``max_persist`` parameter to define the maximum number of loaded ``Frame`` retained by the ``Bus``.
 
+Added ``len()`` to ``via_str`` interfaces.
+
 ``Frame.shift()`` ``file_value`` parameter is now key-word argument only.
 
 ``Frame.roll()`` ``include_index``, ``include_columns`` is now key-word argument only.
