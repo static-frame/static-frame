@@ -125,6 +125,26 @@ class TestUnit(TestCase):
             f3 = st1.read('foo', config=c2)
             self.assertEqual(f3._blocks.shapes.tolist(), [(4, 2)])
 
+    def test_store_hdf5_write_e(self) -> None:
+
+        # failure when including objects
+        f1 = Frame.from_dict(
+                {'0ax': (1,2,-5, 3), '3iv': (3,4,-5,-3000)},
+                name='foo',
+                )
+        frames = (f1,)
+
+        with temp_file('.hdf5') as fp:
+            st1 = StoreHDF5(fp)
+            st1.write(((f.name, f) for f in frames))
+
+            st2 = StoreHDF5(fp)
+            c1 = StoreConfig(index_depth=1)
+            f2 = st2.read('foo', config=c1)
+            self.assertEqual(f2.to_pairs(0),
+                    (('0ax', ((0, 1), (1, 2), (2, -5), (3, 3))),
+                    ('3iv', ((0, 3), (1, 4), (2, -5), (3, -3000)))))
+
 
 if __name__ == '__main__':
     unittest.main()

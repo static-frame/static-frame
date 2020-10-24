@@ -1,8 +1,7 @@
-
 import typing as tp
+import warnings
 
 import numpy as np
-
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
@@ -15,8 +14,6 @@ from static_frame.core.store import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_STR_KINDS
 
-# from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-# from static_frame.core.store_filter import StoreFilter
 
 class StoreHDF5(Store):
 
@@ -34,7 +31,10 @@ class StoreHDF5(Store):
 
         import tables
 
-        with tables.open_file(self._fp, mode='w') as file:
+        with tables.open_file(self._fp, mode='w') as file, warnings.catch_warnings():
+            # silence NaturalNameWarning: object name is not a valid Python identifier:
+            warnings.simplefilter("ignore")
+
             for label, frame in items:
                 c = config_map[label]
 
