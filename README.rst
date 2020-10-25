@@ -378,8 +378,7 @@ Element iteration and function application works the same way as for rows or col
 4997    via.placeholder.c... via.placeholder.c...
 4998    via.placeholder.c... via.placeholder.c...
 4999    via.placeholder.c... via.placeholder.c...
-<int64> <object>             <object>
-
+<int64> <<U30>               <<U30>
 
 
 Group-by functionality is exposed in a similar manner with ``Frame.iter_group_items()`` and ``Frame.iter_group()``.

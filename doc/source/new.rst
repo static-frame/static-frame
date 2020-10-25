@@ -14,6 +14,8 @@ Silenced ``NaturalNameWarning`` via ``tables`` in ``StoreHDF5``.
 
 Improved handling for iterating zero-sized ``Frame``.
 
+Improved type detection when performing operations on ``Frame.iter_element`` iterators.
+
 ``Frame.shift()`` ``file_value`` parameter is now key-word argument only.
 
 ``Frame.roll()`` ``include_index``, ``include_columns`` is now key-word argument only.

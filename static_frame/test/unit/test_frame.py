@@ -11245,6 +11245,39 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('b', (('y', 20.0), ('z', 43.0))), ('c', (('y', False), ('z', False)))))
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_fields_a(self) -> None:
+        f1 = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']))
+        self.assertEqual(f1.to_pairs(0),
+                ((0, ((0, 3), (1, 4))), (1, ((0, 3), (1, 'foo'))), (2, ((0, 'foo'), (1, 'bar'))))
+                )
+
+        with self.assertRaises(ErrorInitFrame):
+            _ = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']), columns=('a', 'b'))
+
+        f2 = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']), columns=('a', 'b', 'c'))
+        self.assertEqual(f2.to_pairs(0),
+                (('a', ((0, 3), (1, 4))), ('b', ((0, 3), (1, 'foo'))), ('c', ((0, 'foo'), (1, 'bar')))))
+
+        with self.assertRaises(ErrorInitFrame):
+            _ = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']), columns=('a', 'b', 'c'), index=('x',))
+
+        f3 = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']), columns=('a', 'b', 'c'), index=('x', 'y'))
+        self.assertEqual(f3.to_pairs(0),
+                (('a', (('x', 3), ('y', 4))), ('b', (('x', 3), ('y', 'foo'))), ('c', (('x', 'foo'), ('y', 'bar')))))
+
+        f4 = sf.Frame.from_fields(([3, 4], [3, 'foo'], ['foo', 'bar']),
+                columns=('a', 'b', 'c'),
+                index=('x', 'y'),
+                dtypes=str,
+                )
+        self.assertEqual(f4.to_pairs(0),
+                (('a', (('x', '3'), ('y', '4'))), ('b', (('x', '3'), ('y', 'foo'))), ('c', (('x', 'foo'), ('y', 'bar')))))
+
+    def test_frame_from_fields_b(self) -> None:
+        # test providing Series
+        pass
 
 if __name__ == '__main__':
     unittest.main()

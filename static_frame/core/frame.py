@@ -1069,7 +1069,7 @@ class Frame(ContainerOperand):
         get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
 
         def blocks() -> tp.Iterator[np.ndarray]:
-            for col_idx, v in enumerate(values):
+            for col_idx, v in enumerate(fields):
                 column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
 
                 if isinstance(v, np.ndarray):
@@ -1318,7 +1318,7 @@ class Frame(ContainerOperand):
                 )
 
     #---------------------------------------------------------------------------
-    # iloc/loc pairs constructors: these are not public, not sure if they should be
+    # NOTE: # remove from_element_iloc_items, rename from_element_loc_items to from_element_items
 
     @classmethod
     def from_element_iloc_items(cls,

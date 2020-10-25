@@ -1613,7 +1613,7 @@ Mercury nan       nan
 Earth   162715536   35.640899999999995
 Mars    46131264    0.41216400000000003
 Jupiter 20444424256 3602404.0
-<<U7>   <object>    <object>
+<<U7>   <int64>     <float64>
 
 #end_Frame-iter_element().apply()
 
