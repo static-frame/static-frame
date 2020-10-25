@@ -170,7 +170,7 @@ class TypeBlocks(ContainerOperand):
             dtype: np.dtype,
             fill_value: object = FILL_VALUE_DEFAULT
             ) -> 'TypeBlocks':
-        '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype.
+        '''Given a generator of pairs of iloc coords and values, return a TypeBlock of the desired shape and dtype. This permits only uniformly typed data, as we have to create a single empty array first, then populate it.
         '''
         fill_value = (fill_value if fill_value is not FILL_VALUE_DEFAULT
                 else dtype_to_fill_value(dtype))
@@ -446,11 +446,22 @@ class TypeBlocks(ContainerOperand):
             raise AxisInvalid(f'no support for axis: {axis}')
 
 
-    def element_items(self) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
+    def element_items(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
         '''
         Generator of pairs of iloc locations, values across entire TypeBlock. Used in creating a IndexHierarchy instance from a TypeBlocks.
+
+        Args:
+            axis: if 0, use row major iteration,  vary fastest along row.
         '''
-        for iloc in np.ndindex(self._shape):
+
+        shape = self._shape if axis == 0 else (self._shape[1], self._shape[0])
+
+        for iloc in np.ndindex(shape):
+            if axis != 0: # invert
+                iloc = (iloc[1], iloc[0])
+
             block_idx, column = self._index[iloc[1]]
             b = self._blocks[block_idx]
             if b.ndim == 1:

@@ -4160,7 +4160,7 @@ class TestUnit(TestCase):
         self.assertAlmostEqualItems(tuple(f2['y'].items()),
                 (('a', 0.5), ('b', nan)))
 
-
+    #---------------------------------------------------------------------------
     def test_frame_from_element_loc_items_a(self) -> None:
         items = ((('b', 'x'), 'g'), (('a','y'), 'q'))
 
@@ -4174,6 +4174,28 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('x', (('a', None), ('b', 'g'))), ('y', (('a', 'q'), ('b', None)))))
         self.assertEqual(f1.name, 'foo')
+
+    def test_frame_from_element_loc_items_b(self) -> None:
+        records = (
+                (2, 2, 'a', False,),
+                (30, 34, 'b', True,),
+                (2, 95, 'c', False,),
+                )
+
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's',),
+                index=('w', 'x', 'y'),
+                )
+
+        items = f1.iter_element_items(axis=0)
+
+        f2 = Frame.from_element_loc_items(items,
+                index=f1.index,
+                columns=f1.columns,
+                axis=0,
+                )
+
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     def test_frame_from_items_a(self) -> None:
@@ -4426,6 +4448,19 @@ class TestUnit(TestCase):
         # if we do not match the mapping, we keep the value.
         self.assertEqual(post.to_pairs(),
                 ((0, 67), (1, 28), (2, 'III')))
+
+
+    def test_frame_iter_element_e(self) -> None:
+        f1 = Frame.from_records(np.arange(9).reshape(3, 3))
+
+        self.assertEqual(list(f1.iter_element(1)),
+                [0, 3, 6, 1, 4, 7, 2, 5, 8])
+
+        mapping = {x: x*3 for x in range(9)}
+        f2 = f1.iter_element().map_all(mapping)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['i', 'i', 'i'])
+
 
     #---------------------------------------------------------------------------
 

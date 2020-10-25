@@ -58,7 +58,7 @@ from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeNoArg
+# from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceAssignQuartet
@@ -1002,7 +1002,7 @@ class Frame(ContainerOperand):
     def from_dict(cls,
             mapping: tp.Dict[tp.Hashable, tp.Iterable[tp.Any]],
             *,
-            index: IndexInitializer = None,
+            index: tp.Optional[IndexInitializer] = None,
             fill_value: object = np.nan,
             dtypes: DtypesSpecifier = None,
             name: tp.Hashable = None,
@@ -1028,6 +1028,90 @@ class Frame(ContainerOperand):
                 columns_constructor=columns_constructor,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+    @classmethod
+    @doc_inject(selector='constructor_frame')
+    def from_fields(cls,
+            fields: tp.Iterable[tp.Iterable[tp.Any]],
+            *,
+            index: tp.Optional[IndexInitializer] = None,
+            columns: tp.Optional[IndexInitializer] = None,
+            fill_value: object = np.nan,
+            dtypes: DtypesSpecifier = None,
+            name: tp.Hashable = None,
+            index_constructor: IndexConstructor = None,
+            columns_constructor: IndexConstructor = None,
+            consolidate_blocks: bool = False
+            ) -> 'Frame':
+        '''Frame constructor from an iterator of columsn, where where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
+
+        Args:
+            fields: Iterable of column values.
+            index: Iterable of values to create an Index.
+            fill_value: If pairs include Series, they will be reindexed with the provided index; reindexing will use this fill value.
+            {dtypes}
+            {name}
+            {consolidate_blocks}
+
+        Returns:
+            :obj:`static_frame.Frame`
+        '''
+        # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
+        own_index = False
+        if _index_initializer_needs_init(index):
+            index = index_from_optional_constructor(index,
+                    default_constructor=Index,
+                    explicit_constructor=index_constructor
+                    )
+            own_index = True
+
+        get_col_dtype = None if not dtypes else get_col_dtype_factory(dtypes, columns)
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for col_idx, v in enumerate(values):
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
+
+                if isinstance(v, np.ndarray):
+                    if column_type is not None:
+                        yield v.astype(column_type)
+                    else:
+                        yield v
+                elif isinstance(v, Series):
+                    if index is None:
+                        raise ErrorInitFrame('can only consume Series in Frame.from_columns if an Index is provided.')
+                    if not v.index.equals(index):
+                        v = v.reindex(index,
+                                fill_value=fill_value,
+                                check_equals=False,
+                                )
+                    if column_type is not None:
+                        yield v.values.astype(column_type)
+                    else:
+                        yield v.values
+                elif isinstance(v, Frame):
+                    raise ErrorInitFrame('Frames are not supported in from_items constructor.')
+                else: # returned array is immutable
+                    values, _ = iterable_to_array_1d(v, column_type)
+                    yield values
+
+        if consolidate_blocks:
+            block_gen = lambda: TypeBlocks.consolidate_blocks(blocks())
+        else:
+            block_gen = blocks
+
+        return cls(TypeBlocks.from_blocks(block_gen()),
+                index=index,
+                columns=columns,
+                name=name,
+                own_data=True,
+                own_index=own_index,
+                columns_constructor=columns_constructor
+                )
+
+
+
+
 
     @staticmethod
     def _structured_array_to_d_ia_cl(
@@ -1272,7 +1356,8 @@ class Frame(ContainerOperand):
             *,
             index: IndexInitializer,
             columns: IndexInitializer,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypesSpecifier = None,
+            axis: tp.Optional[int] = None,
             name: NameType = None,
             fill_value: object = FILL_VALUE_DEFAULT,
             index_constructor: IndexConstructor = None,
@@ -1285,6 +1370,7 @@ class Frame(ContainerOperand):
 
         Args:
             items: an iterable of pairs of 2-tuples of row, column loc labels and values.
+            axis: when None, items can be in an order; when 0, items must be well-formed and ordered row major; when 1, items must be well-formed and ordered columns major.
 
 
         Returns:
@@ -1295,32 +1381,86 @@ class Frame(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
+            own_index = True
 
         if not own_columns:
             columns = index_from_optional_constructor(columns,
                     default_constructor=cls._COLUMNS_CONSTRUCTOR,
                     explicit_constructor=columns_constructor
                     )
+            own_columns = True
 
-        items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
-                for k, v in items)
+        # if items are given i n
+        if axis is None:
+            if not is_dtype_specifier(dtype):
+                raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
 
-        dtype = dtype if dtype is not None else object
+            items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
+                    for k, v in items)
+            dtype = dtype if dtype is not None else object
+            tb = TypeBlocks.from_element_items(
+                    items,
+                    shape=(len(index), len(columns)),
+                    dtype=dtype,
+                    fill_value=fill_value)
+            return cls(tb,
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_data=True,
+                    own_index=own_index, # always true as either provided or created new
+                    own_columns=own_columns,
+                    )
 
-        tb = TypeBlocks.from_element_items(
-                items,
-                shape=(len(index), len(columns)),
-                dtype=dtype,
-                fill_value=fill_value)
+        elif axis == 0: # row wise, use from-records
+            def records() -> tp.Iterator[tp.List[tp.Any]]:
+                # do not need to convert loc to iloc
+                items_iter = iter(items)
+                first = next(items_iter)
+                (r_last, _), value = first
+                # r_last = first[0][0]
+                values = [value]
+                for (r, c), v in items_iter:
+                    if r != r_last:
+                        yield values
+                        r_last = r
+                        values = []
+                    values.append(v)
+                yield values
 
-        return cls(tb,
-                index=index,
-                columns=columns,
-                name=name,
-                own_data=True,
-                own_index=True, # always true as either provided or created new
-                own_columns=True
-                )
+            return cls.from_records(records(),
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_index=own_index,
+                    own_columns=own_columns,
+                    dtypes=dtype,
+                    )
+
+        elif axis == 1: # column wise, use from_items
+            def fields() -> tp.Iterator[tp.Tuple[tp.Hashable, tp.List[tp.Any]]]:
+                items_iter = iter(items)
+                first = next(items_iter)
+                (_, c_last), value = first
+                # c_last = first[0][1]
+                values = [value]
+                for (r, c), v in items_iter:
+                    if c != c_last:
+                        yield values
+                        c_last = c
+                        values = []
+                    values.append(v)
+                yield values
+
+            return cls.from_fields(fields(),
+                    index=index,
+                    columns=columns,
+                    name=name,
+                    own_index=own_index,
+                    own_columns=own_columns,
+                    dtypes=dtype,
+                    )
+
 
     #---------------------------------------------------------------------------
     # file, data format loaders
@@ -2688,10 +2828,10 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg:
+    def iter_element(self) -> IterNodeAxis:
         '''Iterator of elements, ordered by row then column.
         '''
-        return IterNodeNoArg(
+        return IterNodeAxis(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
@@ -2700,10 +2840,10 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg:
+    def iter_element_items(self) -> IterNodeAxis:
         '''Iterator of pairs of label, element, where labels are pairs of index, columns labels, ordered by row then column.
         '''
-        return IterNodeNoArg(
+        return IterNodeAxis(
                 container=self,
                 function_values=self._iter_element_loc,
                 function_items=self._iter_element_loc_items,
@@ -4086,25 +4226,30 @@ class Frame(ContainerOperand):
 
     #---------------------------------------------------------------------------
 
-    def _iter_element_iloc_items(self) -> tp.Iterator[
-            tp.Tuple[tp.Tuple[int, int], tp.Any]]:
-        yield from self._blocks.element_items()
+    def _iter_element_iloc_items(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]]:
+        yield from self._blocks.element_items(axis=axis)
 
     # def _iter_element_iloc(self):
     #     yield from (x for _, x in self._iter_element_iloc_items())
 
-    def _iter_element_loc_items(self) -> tp.Iterator[
-            tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
+    def _iter_element_loc_items(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Tuple[tp.Tuple[tp.Hashable, tp.Hashable], tp.Any]]:
         '''
-        Generator of pairs of (index, column), value.
+        Generator of pairs of (index, column), value. This is driven by ``np.ndindex``, and thus orders by row.
         '''
         yield from (
                 ((self._index[k[0]], self._columns[k[1]]), v)
-                for k, v in self._blocks.element_items()
+                for k, v in self._blocks.element_items(axis=axis)
                 )
 
-    def _iter_element_loc(self) -> tp.Iterator[tp.Any]:
-        yield from (x for _, x in self._iter_element_loc_items())
+    def _iter_element_loc(self,
+            axis: int = 0,
+            ) -> tp.Iterator[tp.Any]:
+        yield from (x for _, x in
+                self._iter_element_loc_items(axis=axis))
 
 
     #---------------------------------------------------------------------------

@@ -1569,7 +1569,7 @@ class TestUnit(TestCase):
                 [0, 0, 1, True, False, True, 'oe', 'od']])
 
 
-
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_elements_items_a(self) -> None:
 
@@ -1588,7 +1588,19 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_element_items(post, tb.shape, tb._row_dtype)
         self.assertTrue((tb.values == tb2.values).all())
 
+    def test_type_blocks_elements_items_b(self) -> None:
+        a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+        a2 = np.array([None, None, None])
+        tb = TypeBlocks.from_blocks((a1, a2))
 
+        post = [x for x in tb.element_items(axis=1)]
+
+        self.assertEqual(post,
+                [((0, 0), 1), ((1, 0), 4), ((2, 0), 0), ((0, 1), 2), ((1, 1), 5), ((2, 1), 0), ((0, 2), 3), ((1, 2), 6), ((2, 2), 1), ((0, 3), None), ((1, 3), None), ((2, 3), None)]
+)
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_reblock_signature_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]], dtype=np.int64)

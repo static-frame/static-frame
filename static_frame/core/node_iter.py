@@ -444,10 +444,12 @@ class IterNode(tp.Generic[FrameOrSeries]):
 
         elif self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
             assert isinstance(self._container, Frame) # for typing
+            # for element-wise function application, axis will always be 0 or 1, as we always do full iteration; from_element_loc_items accepts axis of None for incomplete specification, but that will never be used here.
             apply_constructor = partial(
                     self._container.__class__.from_element_loc_items,
                     index=self._container._index,
                     columns=self._container._columns,
+                    axis=kwargs['axis'],
                     index_constructor=self._container._index.from_labels,
                     columns_constructor=self._container._columns.from_labels
                     )
