@@ -1978,6 +1978,67 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             f1.extend('a')
 
+
+
+    def test_frame_extend_f(self) -> None:
+        records = (
+                ('a', 'c', False, True),
+                ('b', 'd', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('A', 'B'), (1, 2)),
+                index=('x','y'))
+
+        records = (
+                ('x', 'w', False, True),
+                ('y', 'q', True, False))
+        f2 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('C', 'D'), (1, 2)),
+                index=('x','y'))
+
+        f1.extend(f2)
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), (('x', 'a'), ('y', 'b'))), (('A', 2), (('x', 'c'), ('y', 'd'))), (('B', 1), (('x', False), ('y', True))), (('B', 2), (('x', True), ('y', False))), (('C', 1), (('x', 'x'), ('y', 'y'))), (('C', 2), (('x', 'w'), ('y', 'q'))), (('D', 1), (('x', False), ('y', True))), (('D', 2), (('x', True), ('y', False)))))
+
+
+    def test_frame_extend_g(self) -> None:
+        records = (
+                ('a', 'c', False, True),
+                ('b', 'd', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('A', 'B'), (1, 2)),
+                index=('x','y'))
+
+        # extending with a non GO frame into a GO
+        records = (
+                ('x', 'w', False, True),
+                ('y', 'q', True, False))
+        f2 = Frame.from_records(records,
+                columns=IndexHierarchy.from_product(('C', 'D'), (1, 2)),
+                index=('x','y'))
+
+        f1.extend(f2)
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), (('x', 'a'), ('y', 'b'))), (('A', 2), (('x', 'c'), ('y', 'd'))), (('B', 1), (('x', False), ('y', True))), (('B', 2), (('x', True), ('y', False))), (('C', 1), (('x', 'x'), ('y', 'y'))), (('C', 2), (('x', 'w'), ('y', 'q'))), (('D', 1), (('x', False), ('y', True))), (('D', 2), (('x', True), ('y', False)))))
+
+        self.assertEqual(f1.__class__, FrameGO)
+
+
+    def test_frame_extend_h(self) -> None:
+        records = (
+                ('a', 'c', False, True),
+                ('b', 'd', True, False))
+        f1 = FrameGO.from_records(records,
+                columns=IndexHierarchyGO.from_product(('A', 'B'), (1, 2)),
+                index=('x','y'))
+
+        s1 = sf.Series(('e', 'f'), index=('x', 'y'), name=('C', 1))
+        f1.extend(s1)
+
+        self.assertEqual(f1.to_pairs(0),
+                ((('A', 1), (('x', 'a'), ('y', 'b'))), (('A', 2), (('x', 'c'), ('y', 'd'))), (('B', 1), (('x', False), ('y', True))), (('B', 2), (('x', True), ('y', False))), (('C', 1), (('x', 'e'), ('y', 'f')))))
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:
