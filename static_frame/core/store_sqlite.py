@@ -1,8 +1,8 @@
-
+import os
 import sqlite3
 import typing as tp
 from fractions import Fraction
-
+from contextlib import suppress
 import numpy as np
 
 
@@ -123,6 +123,9 @@ class StoreSQLite(Store):
         sqlite3.register_adapter(Fraction, str)
         sqlite3.register_adapter(complex, lambda x: f'{x.real}:{x.imag}')
 
+        # SQLite will naturally try to update, no replace, a DB found at an FP; this is not how all other stores work, so best to remove the file first.
+        with suppress(FileNotFoundError):
+            os.remove(self._fp)
 
         # hierarchical columns might be stored as tuples
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
@@ -140,7 +143,6 @@ class StoreSQLite(Store):
 
             conn.commit()
             # conn.close()
-
 
 
     @doc_inject(selector='constructor_frame')

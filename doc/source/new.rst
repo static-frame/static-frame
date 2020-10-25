@@ -10,6 +10,8 @@ Added ``len()`` to ``via_str`` interfaces.
 
 Silenced ``NaturalNameWarning`` via ``tables`` in ``StoreHDF5``.
 
+``StoreSQLite`` will now re-write, rather than update, a file path where an SQLite DB already exists.
+
 Improved handling for iterating zero-sized ``Frame``.
 
 ``Frame.shift()`` ``file_value`` parameter is now key-word argument only.
