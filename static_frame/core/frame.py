@@ -1462,7 +1462,7 @@ class Frame(ContainerOperand):
                     own_columns=own_columns,
                     dtypes=dtype,
                     )
-
+        raise AxisInvalid(f'no support for axis: {axis}')
 
     #---------------------------------------------------------------------------
     # file, data format loaders
