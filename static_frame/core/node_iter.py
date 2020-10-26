@@ -156,7 +156,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_any(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None, # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -213,7 +213,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
             mapping: Mapping,
             *,
             fill_value: tp.Any = np.nan,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -264,7 +264,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def map_all(self,
             mapping: Mapping,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -313,7 +313,7 @@ class IterNodeDelegate(tp.Generic[FrameOrSeries]):
     def apply(self,
             func: AnyCallable,
             *,
-            dtype: DtypeSpecifier = None,
+            dtype: DtypeSpecifier = None,  # can be DtypesSpecifier in some contexts
             name: NameType = None,
             ) -> FrameOrSeries:
         '''
@@ -450,6 +450,7 @@ class IterNode(tp.Generic[FrameOrSeries]):
                     index=self._container._index,
                     columns=self._container._columns,
                     axis=kwargs['axis'],
+                    own_index=True,
                     index_constructor=self._container._index.from_labels,
                     columns_constructor=self._container._columns.from_labels
                     )

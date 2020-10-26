@@ -1368,12 +1368,13 @@ class Frame(ContainerOperand):
             own_columns: bool = False,
             ) -> 'Frame':
         '''
+        Create a :obj:`Frame` from an iterable of key, value, where key is a pair of row, column labels.
+
         This function is partialed (setting the index and columns) and used by ``IterNodeDelegate`` as the apply constructor for doing application on element iteration.
 
         Args:
             items: an iterable of pairs of 2-tuples of row, column loc labels and values.
             axis: when None, items can be in an order; when 0, items must be well-formed and ordered row major; when 1, items must be well-formed and ordered columns major.
-
 
         Returns:
             :obj:`static_frame.Frame`
@@ -1396,7 +1397,6 @@ class Frame(ContainerOperand):
         if axis is None:
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
-
             items = (((index.loc_to_iloc(k[0]), columns.loc_to_iloc(k[1])), v)
                     for k, v in items)
             dtype = dtype if dtype is not None else object
@@ -1420,7 +1420,6 @@ class Frame(ContainerOperand):
                 items_iter = iter(items)
                 first = next(items_iter)
                 (r_last, _), value = first
-                # r_last = first[0][0]
                 values = [value]
                 for (r, c), v in items_iter:
                     if r != r_last:
@@ -1444,7 +1443,6 @@ class Frame(ContainerOperand):
                 items_iter = iter(items)
                 first = next(items_iter)
                 (_, c_last), value = first
-                # c_last = first[0][1]
                 values = [value]
                 for (r, c), v in items_iter:
                     if c != c_last:
