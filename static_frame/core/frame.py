@@ -1042,6 +1042,8 @@ class Frame(ContainerOperand):
             name: tp.Hashable = None,
             index_constructor: IndexConstructor = None,
             columns_constructor: IndexConstructor = None,
+            own_index: bool = False,
+            own_columns: bool = False,
             consolidate_blocks: bool = False
             ) -> 'Frame':
         '''Frame constructor from an iterator of columsn, where where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
@@ -1058,8 +1060,7 @@ class Frame(ContainerOperand):
             :obj:`static_frame.Frame`
         '''
         # if an index initializer is passed, and we expect to get Series, we need to create the index in advance of iterating blocks
-        own_index = False
-        if _index_initializer_needs_init(index):
+        if not own_index and _index_initializer_needs_init(index):
             index = index_from_optional_constructor(index,
                     default_constructor=Index,
                     explicit_constructor=index_constructor
@@ -1106,6 +1107,7 @@ class Frame(ContainerOperand):
                 name=name,
                 own_data=True,
                 own_index=own_index,
+                own_columns=own_columns,
                 columns_constructor=columns_constructor
                 )
 

@@ -4377,13 +4377,21 @@ class TestUnit(TestCase):
                 [x for x in f1.iter_element()],
                 [2, 2, 'a', False, False, 30, 34, 'b', True, False, 2, 95, 'c', False, False, 30, 73, 'd', True, True])
 
+        self.assertEqual(list(f1.iter_element(1)),
+                [2, 30, 2, 30, 2, 34, 95, 73, 'a', 'b', 'c', 'd', False, True, False, True, False, False, False, True])
+
         self.assertEqual([x for x in f1.iter_element_items()],
                 [(('w', 'p'), 2), (('w', 'q'), 2), (('w', 'r'), 'a'), (('w', 's'), False), (('w', 't'), False), (('x', 'p'), 30), (('x', 'q'), 34), (('x', 'r'), 'b'), (('x', 's'), True), (('x', 't'), False), (('y', 'p'), 2), (('y', 'q'), 95), (('y', 'r'), 'c'), (('y', 's'), False), (('y', 't'), False), (('z', 'p'), 30), (('z', 'q'), 73), (('z', 'r'), 'd'), (('z', 's'), True), (('z', 't'), True)])
 
 
-        post = f1.iter_element().apply(lambda x: '_' + str(x) + '_')
+        post1 = f1.iter_element().apply(lambda x: '_' + str(x) + '_')
 
-        self.assertEqual(post.to_pairs(0),
+        self.assertEqual(post1.to_pairs(0),
+                (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
+
+        post2 = f1.iter_element(1).apply(lambda x: '_' + str(x) + '_')
+
+        self.assertEqual(post2.to_pairs(0),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
 
@@ -4457,7 +4465,7 @@ class TestUnit(TestCase):
                 [0, 3, 6, 1, 4, 7, 2, 5, 8])
 
         mapping = {x: x*3 for x in range(9)}
-        f2 = f1.iter_element().map_all(mapping)
+        f2 = f1.iter_element(1).map_all(mapping)
         self.assertEqual([d.kind for d in f2.dtypes.values],
                 ['i', 'i', 'i'])
 

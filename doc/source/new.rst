@@ -8,6 +8,8 @@ What is New in Static Frame
 
 Added ``len()`` to ``via_str`` interfaces.
 
+``Frame.iter_element`` now takes an ``axis`` argument, where 0 is row major, 1 is column major.
+
 Silenced ``NaturalNameWarning`` via ``tables`` in ``StoreHDF5``.
 
 ``StoreSQLite`` will now re-write, rather than update, a file path where an SQLite DB already exists.
