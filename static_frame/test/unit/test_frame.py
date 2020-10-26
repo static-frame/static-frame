@@ -11285,7 +11285,14 @@ class TestUnit(TestCase):
 
     def test_frame_from_fields_b(self) -> None:
         # test providing Series
-        pass
+        s1 = Series((3, 4, 5), index=('a', 'b', 'c'))
+        s2 = Series((33, 54), index=('a', 'b'))
+        s3 = Series((400, 300), index=('b', 'a'))
+
+        f1 = Frame.from_fields((s1, s2, s3), index=('b', 'a'))
+
+        self.assertEqual(f1.to_pairs(0),
+                ((0, (('b', 4), ('a', 3))), (1, (('b', 54), ('a', 33))), (2, (('b', 400), ('a', 300)))))
 
 if __name__ == '__main__':
     unittest.main()
