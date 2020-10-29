@@ -131,7 +131,7 @@ def buss_batch_demo() -> None:
     # limit in that the index has to be strings: need to use as labels in output formats
 
     b1['2018-08']
-    b1['2018-08':]
+    b1['2018-08':] #type: ignore
     b1.iloc[[0, 5, 10]]
     b1[b1.index.isin(('2018-01', '2018-09'))]
 
@@ -142,7 +142,7 @@ def buss_batch_demo() -> None:
 
     b2 = sf.Bus.from_zip_pickle('/tmp/sp_2018.zip')
 
-    # [TALK]: notice that we have FrameDeferred
+    # notice that we have FrameDeferred
     # when access Frames, the simply get loaded as the are selected:
 
     b2['2018-08']
@@ -152,7 +152,7 @@ def buss_batch_demo() -> None:
     b2 # show we have loaded additional frames
 
 
-    # [TALK]: what if you have 600 Frames and you do not want the stored frames to all load
+    # what if you have 600 Frames and you do not want the stored frames to all load
     b3 = sf.Bus.from_zip_pickle('/tmp/sp_2018.zip', max_persist=2)
 
     for label in b3.index:
@@ -161,13 +161,13 @@ def buss_batch_demo() -> None:
 
 
     #---------------------------------------------------------------------------
-    # [TALK]: there are other situations where we need to deal with multiple Frames at as as single unit
+    # there are other situations where we need to deal with multiple Frames at as as single unit
 
-
+    import pandas as pd
     df = pd.read_csv('/tmp/san_pedro.txt', sep='\t')
     df['year_mo'] = df['datetime'].apply(lambda d: d[:7])
 
-    # [TALK]: what happens when we do a group-by in Pandas
+    # what happens when we do a group-by in Pandas
 
     df.groupby('year_mo')
     # <pandas.core.groupby.generic.DataFrameGroupBy object at 0x7fb3263e7090>
@@ -177,21 +177,7 @@ def buss_batch_demo() -> None:
 # ['2018-01', '2018-02', '2018-03', '2018-04', '2018-05', '2018-06', '2018-07', '2018-08', '2018-09', '2018-10', '2018-11', '2018-12']
 
     # can take the max of each group in one line
-     df.groupby('year_mo')['WVHT'].max()
-    # year_mo
-    # 2018-01    2.97
-    # 2018-02    3.46
-    # 2018-03    2.24
-    # 2018-04    2.58
-    # 2018-05    2.02
-    # 2018-06    1.91
-    # 2018-07    1.41
-    # 2018-08    1.92
-    # 2018-09    1.34
-    # 2018-10    2.27
-    # 2018-11    3.83
-    # 2018-12    3.40
-    # Name: WVHT, dtype: float64
+    df.groupby('year_mo')['WVHT'].max()
 
     # how does this work: some operations are deferred, some result in containers
     df.groupby('year_mo')['WVHT']
@@ -203,41 +189,41 @@ def buss_batch_demo() -> None:
     #---------------------------------------------------------------------------
     # the Batch
 
-    b1 = sf.Batch.from_frames(sp_per_month)
+    batch1 = sf.Batch.from_frames(sp_per_month)
 
-    # [TALK]: can call to_frame to realize all data with a hierarchical index:
+    # can call to_frame to realize all data with a hierarchical index:
     sf.Batch.from_frames(sp_per_month).to_frame()
 
 
-    # [TALK]: can do the same thing as pandas, but have to explicitly call to_frame() to get a result
-    b1['WVHT'].max().to_frame()
+    # can do the same thing as pandas, but have to explicitly call to_frame() to get a result
+    batch1['WVHT'].max().to_frame()
 
 
-    # [TALK]: Batch are like generators: one-time use, one-time iteration. If we look at b1 again, we see it is empty
-    b1
+    # Batch are like generators: one-time use, one-time iteration. If we look at batch1 again, we see it is empty
+    batch1
 
-    # [TALK]: the reason we have to explicitly call to_frame as that there is no limit on how many operations you can do on the Batch; all are deferred until final iteration or `to_frame` call
+    # the reason we have to explicitly call to_frame as that there is no limit on how many operations you can do on the Batch; all are deferred until final iteration or `to_frame` call
     # here, we convert meters to feet before printing getting result
 
     (sf.Batch.from_frames(sp_per_month)['WVHT'].max() * 3.28084).to_frame()
 
 
-    # [TALK]: what if we want to do this on a group by?
+    # what if we want to do this on a group by?
     # SF's iter_group is simply an iterator of groups, we can feed it into a Batch
 
 
-    # [TALK]: lets create a fresh FrameGO and add a year mo column
+    # lets create a fresh FrameGO and add a year mo column
     sp2018 = sf.FrameGO.from_tsv('/tmp/san_pedro.txt', dtypes={'datetime': 'datetime64[m]'})
     sp2018 = sp2018.set_index('datetime', index_constructor=sf.IndexMinute, drop=False)
-    sp2018['year_mo'] = sp2018['datetime'].astype('datetime64[M]')
+    sp2018['year_mo'] = sp2018['datetime'].astype('datetime64[M]') #type: ignore
 
     sp2018.iter_group_items('year_mo')
 
-    # [TALK]: we can feed the iterator of pairs of label, frame to Batch, then process
-    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame()
+    # we can feed the iterator of pairs of label, frame to Batch, then process
+    sf.Batch(sp2018.iter_group_items('year_mo'))['WVHT'].max().to_frame() #type: ignore
 
 
-    # [TALK]: any time we have iterators of pairs of label, Frame, we can use a Batch
+    # any time we have iterators of pairs of label, Frame, we can use a Batch
     # for example, what if we want to iterate on windows
 
     tuple(sp2018.iter_window_items(size=100))[0]
@@ -255,11 +241,11 @@ def buss_batch_demo() -> None:
     (sf.Batch(sp2018.iter_window_items(size=100), max_workers=6, use_threads=True)['WVHT'].mean() * 3.28084).to_frame()
 
 
-    # [TALK]: there is also a generic apply method to perform arbitrary functions
+    # there is also a generic apply method to perform arbitrary functions
     sf.Batch(sp2018.iter_window_items(size=100, step=100)).apply(lambda f: f.loc[f['DPD'].loc_max(), ['WVHT', 'DPD']]).to_frame()
 
 
-    # [TALK]: what if we want to write read or write from a multi-table format
+    # what if we want to write read or write from a multi-table format
     # because the Batch is a lazy sequential processor, this is actually a pipeline that is processing one table at time
     # memory overhead is one table at a time
 
