@@ -1,6 +1,15 @@
 What is New in Static Frame
 ===============================
 
+0.7.4
+----------
+
+``Series.from_element`` now works correctly with tuples
+
+``Batch.apply()`` does not reduce to elements
+
+
+
 0.7.3
 ----------
 
