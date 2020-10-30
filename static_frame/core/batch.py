@@ -35,15 +35,26 @@ FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
+
+def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]) -> FrameOrSeries:
+    container, func = bundle
+    post = func(container)
+    # post might be an element
+    if not isinstance(post, (Frame, Series)):
+        # promote to a Series to permit concatenation
+        return Series.from_element(post, index=(container.name,))
+
+    return post
+
 def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSeries:
     # process pool requires a single argument
-    frame, attr, args, kwargs = bundle
-    func = getattr(frame, attr)
+    container, attr, args, kwargs = bundle
+    func = getattr(container, attr)
     post = func(*args, **kwargs)
     # post might be an element
     if not isinstance(post, (Frame, Series)):
         # promote to a Series to permit concatenation
-        return Series.from_element(post, index=(frame.name,))
+        return Series.from_element(post, index=(container.name,))
     return post
 
 
@@ -215,7 +226,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
                 for label, frame in self._items:
-                    yield label, func(frame)
+                    yield label, call_func((frame, func))
             return self._derive(gen)
 
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
@@ -224,12 +235,12 @@ class Batch(ContainerOperand, StoreClientMixin):
         def arg_gen() -> tp.Iterator[FrameOrSeries]:
             for label, frame in self._items:
                 labels.append(label)
-                yield frame
+                yield frame, func
 
         def gen_pool() -> IteratorFrameItems:
             with pool_executor(max_workers=self._max_workers) as executor:
                 yield from zip(labels,
-                        executor.map(func, arg_gen(), chunksize=self._chunksize)
+                        executor.map(call_func, arg_gen(), chunksize=self._chunksize)
                         )
 
         return self._derive(gen_pool)

@@ -225,10 +225,24 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8)
         b2 = b1.apply(lambda x: x.shape)
-        self.assertEqual(dict(b2.items()),
-                {'f1': (2, 2), 'f2': (3, 2), 'f3': (2, 2)}
-)
+        # results in diagonal values
+        self.assertEqual(b2.to_frame(fill_value=0).to_pairs(0),
+                (('f1', (('f1', (2, 2)), ('f2', 0), ('f3', 0))), ('f2', (('f1', 0), ('f2', (3, 2)), ('f3', 0))), ('f3', (('f1', 0), ('f2', 0), ('f3', (2, 2)))))
+                )
+    #     self.assertEqual(dict(b2.items()),
+    #             {'f1': (2, 2), 'f2': (3, 2), 'f3': (2, 2)}
+    #             )
 
+    # def test_batch_apply_c(self) -> None:
+    #     f1 = Frame(np.arange(4).reshape(2, 2), name='f1')
+        f2 = Frame(np.arange(4).reshape(2, 2), name='f2')
+        post = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[1, 1]).to_frame(fill_value=0.0)
+
+        # results in diagonal values
+        self.assertEqual(
+                post.to_pairs(0),
+                (('f1', (('f1', 3.0), ('f2', 0.0))), ('f2', (('f1', 0.0), ('f2', 3.0))))
+                )
 
     #---------------------------------------------------------------------------
     def test_batch_name_a(self) -> None:

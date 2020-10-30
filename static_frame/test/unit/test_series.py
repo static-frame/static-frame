@@ -1075,11 +1075,16 @@ class TestUnit(TestCase):
 
 
     def test_series_from_element_b(self) -> None:
-        s1 = Series.from_element('a', index=Index((3, 4, 5)), own_index=True)
+        s1 = Series.from_element('foo', index=Index((3, 4, 5)), own_index=True)
         self.assertEqual(s1.to_pairs(),
-                ((3, 'a'), (4, 'a'), (5, 'a'))
+                ((3, 'foo'), (4, 'foo'), (5, 'foo'))
                 )
 
+    def test_series_from_element_c(self) -> None:
+        s1 = Series.from_element(('a', 'b'), index=Index((3, 4, 5)), own_index=True)
+        self.assertEqual(s1.to_pairs(),
+                ((3, ('a', 'b')), (4, ('a', 'b')), (5, ('a', 'b')))
+                )
 
     #---------------------------------------------------------------------------
     def test_series_from_items_a(self) -> None:

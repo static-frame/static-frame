@@ -88,6 +88,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import UFunc
 from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_OBJECT
 
 
 if tp.TYPE_CHECKING:
@@ -140,10 +141,18 @@ class Series(ContainerOperand):
                     default_constructor=Index,
                     explicit_constructor=index_constructor
                     )
-        array = np.full(
-                len(index_final), #type: ignore
-                fill_value=element,
-                dtype=dtype)
+
+        length = len(index_final)
+        if isinstance(element, tuple):
+            array = np.empty(length, dtype=DTYPE_OBJECT)
+            # this is the only way to insert tuples
+            for i in range(length):
+                array[i] = element
+        else:
+            array = np.full(
+                    length, #type: ignore
+                    fill_value=element,
+                    dtype=dtype)
         array.flags.writeable = False
         return cls(array,
                 index=index_final,
