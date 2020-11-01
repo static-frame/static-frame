@@ -8,6 +8,8 @@ What is New in Static Frame
 
 ``Batch`` element handling now avoids diagonal formations; ``Batch.apply()`` now handles elements correctly
 
+``dtypes`` parameters can now be provided with ``dict_values`` instances.
+
 
 0.7.3
 ----------

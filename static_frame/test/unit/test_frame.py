@@ -1027,7 +1027,80 @@ class TestUnit(TestCase):
                 )
         self.assertTrue(f2.index._map is None)
 
+    def test_frame_to_parquet_d(self) -> None:
+        # pyarrow.lib.ArrowNotImplementedError: Unsupported datetime64 time unit
 
+
+        f1 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[ns]').reshape(2, 2))
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=True)
+            f2 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-17T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-16T00:00:00.000000000')), (1, np.datetime64('2017-12-18T00:00:00.000000000'))))))
+
+        f3 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[D]').reshape(2, 2))
+        with temp_file('.parquet') as fp:
+            f3.to_parquet(fp, include_index=False, include_columns=True)
+            f4 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f4.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-17T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-16T00:00:00.000000000')), (1, np.datetime64('2017-12-18T00:00:00.000000000'))))))
+
+        f5 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[s]').reshape(2, 2))
+        with temp_file('.parquet') as fp:
+            f5.to_parquet(fp, include_index=False, include_columns=True)
+            f6 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f6.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-17T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-16T00:00:00.000000000')), (1, np.datetime64('2017-12-18T00:00:00.000000000'))))))
+
+
+    def test_frame_to_parquet_e(self) -> None:
+        # pyarrow.lib.ArrowNotImplementedError: Unsupported datetime64 time unit
+
+        f7 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[m]').reshape(2, 2))
+        with temp_file('.parquet') as fp:
+            f7.to_parquet(fp, include_index=False, include_columns=True)
+            f8 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f8.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-17T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-16T00:00:00.000000000')), (1, np.datetime64('2017-12-18T00:00:00.000000000'))))))
+
+
+        f5 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[h]').reshape(2, 2))
+
+        with temp_file('.parquet') as fp:
+            f5.to_parquet(fp, include_index=False, include_columns=True)
+            f6 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f6.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-15T00:00:00.000000000')), (1, np.datetime64('2017-12-17T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-16T00:00:00.000000000')), (1, np.datetime64('2017-12-18T00:00:00.000000000'))))))
+
+
+        f3 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[M]').reshape(2, 2))
+
+        with temp_file('.parquet') as fp:
+            f3.to_parquet(fp, include_index=False, include_columns=True)
+            f4 = Frame.from_parquet(fp, columns_depth=1)
+
+        # import ipdb; ipdb.set_trace()
+        self.assertEqual(f4.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-12-01T00:00:00.000000000')), (1, np.datetime64('2017-12-01T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-12-01T00:00:00.000000000')), (1, np.datetime64('2017-12-01T00:00:00.000000000'))))))
+
+
+        f1 = Frame(IndexDate.from_date_range('2017-12-15', '2017-12-18').values.astype('datetime64[Y]').reshape(2, 2))
+
+        with temp_file('.parquet') as fp:
+            f1.to_parquet(fp, include_index=False, include_columns=True)
+            f2 = Frame.from_parquet(fp, columns_depth=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('0', ((0, np.datetime64('2017-01-01T00:00:00.000000000')), (1, np.datetime64('2017-01-01T00:00:00.000000000')))), ('1', ((0, np.datetime64('2017-01-01T00:00:00.000000000')), (1, np.datetime64('2017-01-01T00:00:00.000000000'))))))
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_from_parquet_a(self) -> None:
         records = (
                 (1, 2, 'a', False),
@@ -8242,6 +8315,16 @@ class TestUnit(TestCase):
         f2 = sf.Frame.from_records(records, dtypes=bool)
         self.assertEqual(f2.values.tolist(),
                 [[True, True], [False, True], [True, True]])
+
+
+    def test_frame_from_records_t(self) -> None:
+
+        kv = {'x': int, 'y': str}
+        f1 = sf.Frame.from_records([('10', 5), ('3', 20)],
+                columns=kv.keys(),
+                dtypes=kv.values())
+        self.assertEqual(f1.to_pairs(0),
+                (('x', ((0, 10), (1, 3))), ('y', ((0, '5'), (1, '20')))))
 
 
 

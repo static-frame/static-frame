@@ -86,10 +86,11 @@ def get_col_dtype_factory(
             return dtypes
         if is_map:
             return dtypes.get(columns[col_idx], None) #type: ignore
-        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here
-        if not hasattr(dtypes, '__len__'):
+        # NOTE: dtypes might be a generator deferred until this function is called; if so, realize here; INVALID_ITERABLE_FOR_ARRAY (dict_values, etc) do not have __getitem__,
+        if not hasattr(dtypes, '__len__') or not hasattr(dtypes, '__getitem__'):
             dtypes = tuple(dtypes) #type: ignore
         return dtypes[col_idx] #type: ignore
+
 
     return get_col_dtype
 

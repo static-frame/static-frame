@@ -254,7 +254,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         if not include_index:
-            dtypes = frame._blocks.dtypes
+            dtypes = frame._blocks.dtypes.tolist()
             if include_columns:
                 field_names = columns_values
             else: # name fields with integers?
@@ -268,7 +268,7 @@ class Store:
             # Get a list to mutate.
             field_names = list(index.names)
 
-            # add fram dtypes tp those from index
+            # add frame dtypes t0 those from index
             dtypes.extend(frame._blocks.dtypes)
 
             # add index names in front of column names
@@ -318,17 +318,16 @@ class Store:
             include_index: bool
             ) -> tp.Iterator[np.ndarray]:
         if include_index:
-            index_values = frame._index.values
             index_depth = frame._index.depth
 
             if index_depth == 1:
+                index_values = frame._index.values
                 return chain(
                         (index_values,),
                         frame._blocks.axis_values(0)
                         )
-            # this approach is the same as IndexHierarchy.values_at_depth
             return chain(
-                    (index_values[:, d] for d in range(index_depth)),
+                    (frame._index.values_at_depth(d) for d in range(index_depth)),
                     frame._blocks.axis_values(0)
                     )
         # avoid creating a Series per column by going to blocks

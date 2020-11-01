@@ -139,6 +139,9 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import write_optional_file
 from static_frame.core.util import dtype_kind_to_na
+from static_frame.core.util import DTYPE_DATETIME_KIND
+from static_frame.core.util import DTU_PYARROW
+from static_frame.core.util import DT64_NS
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -5866,18 +5869,26 @@ class Frame(ContainerOperand):
         import pyarrow
         from static_frame.core.store import Store
 
-        field_names, _ = Store.get_field_names_and_dtypes(
+        field_names, dtypes = Store.get_field_names_and_dtypes(
                 frame=self,
                 include_index=include_index,
                 include_columns=include_columns,
                 force_str_names=True
                 )
-        arrays = tuple(Store.get_column_iterator(
-                frame=self,
-                include_index=include_index)
-                )
+
+        def arrays() -> tp.Iterator[np.ndarray]:
+            for array, dtype in zip(
+                    Store.get_column_iterator(frame=self, include_index=include_index),
+                    dtypes,
+                    ):
+                if (dtype.kind == DTYPE_DATETIME_KIND
+                        and np.datetime_data(dtype)[0] not in DTU_PYARROW):
+                    yield array.astype(DT64_NS)
+                else:
+                    yield array
+
         # field_names have to be strings
-        return pyarrow.Table.from_arrays(arrays, names=field_names)
+        return pyarrow.Table.from_arrays(tuple(arrays()), names=field_names)
 
 
     def to_parquet(self,
