@@ -1,6 +1,7 @@
 What is New in Static Frame
 ===============================
 
+
 0.7.4
 ----------
 
@@ -9,6 +10,8 @@ What is New in Static Frame
 ``Batch`` element handling now avoids diagonal formations; ``Batch.apply()`` now handles elements correctly
 
 ``dtypes`` parameters can now be provided with ``dict_values`` instances.
+
+``Frame.to_parquet``, ``Frame.to_arrow`` now convert ``np.datetime64`` units to nanosecond if not supported by PyArrow.
 
 
 0.7.3
