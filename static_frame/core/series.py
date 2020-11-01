@@ -142,7 +142,7 @@ class Series(ContainerOperand):
                     explicit_constructor=index_constructor
                     )
 
-        length = len(index_final)
+        length = len(index_final) #type: ignore
         if isinstance(element, tuple):
             array = np.empty(length, dtype=DTYPE_OBJECT)
             # this is the only way to insert tuples
@@ -150,7 +150,7 @@ class Series(ContainerOperand):
                 array[i] = element
         else:
             array = np.full(
-                    length, #type: ignore
+                    length,
                     fill_value=element,
                     dtype=dtype)
         array.flags.writeable = False

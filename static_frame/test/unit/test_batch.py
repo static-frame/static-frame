@@ -53,7 +53,7 @@ class TestUnit(TestCase):
 
         b1 = Batch(f1.iter_group_items('group'))
         self.assertEqual(b1['b'].sum().to_frame().to_pairs(0),
-                (('b', (('x', 6), ('z', 387))),)
+                ((None, (('x', 6), ('z', 387))),)
                 )
 
 
@@ -125,9 +125,9 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
 
-        f2 = Batch(f1.iter_group_items('group'))['b'].sum()
-        self.assertEqual(f2.to_frame().to_pairs(0),
-                (('b', (('x', 2), ('z', 10))),)
+        f2 = Batch(f1.iter_group_items('group'))['b'].sum().to_frame()
+        self.assertEqual(f2.to_pairs(0),
+                ((None, (('x', 2), ('z', 10))),)
                 )
 
     def test_batch_e(self) -> None:
@@ -152,7 +152,22 @@ class TestUnit(TestCase):
 
         f2 = Batch(f1.iter_group_items('group')).loc[:, 'b'].sum().to_frame()
         self.assertEqual(f2.to_pairs(0),
-                (('b', (('x', 2), ('z', 10))),))
+                ((None, (('x', 2), ('z', 10))),))
+
+
+    def test_batch_g(self) -> None:
+        f1 = Frame(np.arange(6).reshape(2,3), index=(('a', 'b')), columns=(('x', 'y', 'z')), name='f1')
+        f2 = Frame(np.arange(6).reshape(2,3) * 30.5, index=(('a', 'b')), columns=(('x', 'y', 'z')), name='f2')
+
+        # this results in two rows. one column labelled None
+        f3 = Batch.from_frames((f1, f2)).sum().sum().to_frame()
+        self.assertEqual(f3.to_pairs(0),
+                ((None, (('f1', 15.0), ('f2', 457.5))),))
+
+        f4 = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[0, 0]).to_frame()
+        self.assertEqual(f4.to_pairs(0),
+                ((None, (('f1', 0.0), ('f2', 0.0))),))
+
 
     #---------------------------------------------------------------------------
     def test_batch_display_a(self) -> None:
@@ -223,25 +238,17 @@ class TestUnit(TestCase):
                 index=('x', 'q'),
                 name='f3')
 
-        b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8)
-        b2 = b1.apply(lambda x: x.shape)
-        # results in diagonal values
-        self.assertEqual(b2.to_frame(fill_value=0).to_pairs(0),
-                (('f1', (('f1', (2, 2)), ('f2', 0), ('f3', 0))), ('f2', (('f1', 0), ('f2', (3, 2)), ('f3', 0))), ('f3', (('f1', 0), ('f2', 0), ('f3', (2, 2)))))
+        b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply(lambda x: x.shape)
+        self.assertEqual(b1.to_frame().to_pairs(0),
+                ((None, (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))),)
                 )
-    #     self.assertEqual(dict(b2.items()),
-    #             {'f1': (2, 2), 'f2': (3, 2), 'f3': (2, 2)}
-    #             )
 
-    # def test_batch_apply_c(self) -> None:
-    #     f1 = Frame(np.arange(4).reshape(2, 2), name='f1')
         f2 = Frame(np.arange(4).reshape(2, 2), name='f2')
         post = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[1, 1]).to_frame(fill_value=0.0)
 
-        # results in diagonal values
         self.assertEqual(
                 post.to_pairs(0),
-                (('f1', (('f1', 3.0), ('f2', 0.0))), ('f2', (('f1', 0.0), ('f2', 3.0))))
+                ((None, (('f1', 4), ('f2', 3))),)
                 )
 
     #---------------------------------------------------------------------------

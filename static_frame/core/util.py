@@ -89,6 +89,8 @@ SLICE_ATTRS = (SLICE_START_ATTR, SLICE_STOP_ATTR, SLICE_STEP_ATTR)
 
 STATIC_ATTR = 'STATIC'
 
+ELEMENT_TUPLE = (None,)
+
 EMPTY_TUPLE = ()
 EMPTY_SET: tp.FrozenSet[tp.Any] = frozenset()
 
@@ -2212,7 +2214,7 @@ def slices_from_targets(
         target_slices = (
                 slice((start+1 if start is not None else 0), stop)
                 for start, stop in
-                zip(chain((None,), target_index[:-1]), target_index)
+                zip(chain(ELEMENT_TUPLE, target_index[:-1]), target_index)
                 )
 
     for target_slice, value in zip(target_slices, target_values):

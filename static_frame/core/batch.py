@@ -30,6 +30,7 @@ from static_frame.core.util import IndexInitializer
 from static_frame.core.util import KeyOrKeys as KeyOrKeys
 from static_frame.core.util import NameType
 from static_frame.core.util import UFunc
+from static_frame.core.util import ELEMENT_TUPLE
 
 FrameOrSeries = tp.Union[Frame, Series]
 IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
@@ -39,11 +40,10 @@ GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]) -> FrameOrSeries:
     container, func = bundle
     post = func(container)
-    # post might be an element
+    # post might be an element, promote to a Series to permit concatenation
+    # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
     if not isinstance(post, (Frame, Series)):
-        # promote to a Series to permit concatenation
-        return Series.from_element(post, index=(container.name,))
-
+        return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
     return post
 
 def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSeries:
@@ -51,10 +51,8 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSe
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
     post = func(*args, **kwargs)
-    # post might be an element
     if not isinstance(post, (Frame, Series)):
-        # promote to a Series to permit concatenation
-        return Series.from_element(post, index=(container.name,))
+        return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
     return post
 
 
@@ -232,7 +230,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
 
         labels = []
-        def arg_gen() -> tp.Iterator[FrameOrSeries]:
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, func
@@ -723,7 +721,7 @@ class Batch(ContainerOperand, StoreClientMixin):
                 index = labels
             if axis == 1 and columns is None:
                 columns = labels
-
+            # import ipdb; ipdb.set_trace()
             return Frame.from_concat( #type: ignore
                     containers,
                     axis=axis,
