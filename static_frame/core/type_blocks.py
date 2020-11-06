@@ -2035,12 +2035,15 @@ class TypeBlocks(ContainerOperand):
         '''Return a new Boolean TypeBlocks that returns True if an element is in `other`.
         '''
         if hasattr(other, '__len__') and len(other) == 0:
-            return self.from_blocks(self._blocks)
+            array = np.full(self._shape, False, dtype=bool)
+            array.flags.writeable = False
+            return self.from_blocks(array)
 
         other, other_is_unique = iterable_to_array_1d(other)
 
         def blocks() -> tp.Iterator[np.ndarray]:
             for b in self._blocks:
+                # yields immutable arrays
                 yield isin_array(array=b,
                         array_is_unique=False, # expensive to determine
                         other=other,
@@ -2060,9 +2063,9 @@ class TypeBlocks(ContainerOperand):
                 b = b.astype(self._row_dtype)
             blocks.append(b)
 
-        a = np.concatenate(blocks)
-        a.flags.writeable = False # keep this array
-        return self.from_blocks(a)
+        array = np.concatenate(blocks)
+        array.flags.writeable = False # keep this array
+        return self.from_blocks(array)
 
 
     def isna(self, include_none: bool = True) -> 'TypeBlocks':

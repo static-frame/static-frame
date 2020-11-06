@@ -4159,9 +4159,14 @@ class TestUnit(TestCase):
                 [np.datetime64('2012'), np.datetime64('2020')],
                 ))
 
-        post = f1.isin((np.datetime64('2020'),))
-        self.assertEqual(post.to_pairs(0),
+        post1 = f1.isin((np.datetime64('2020'),))
+        self.assertEqual(post1.to_pairs(0),
                 ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, True))))
+                )
+
+        post2 = f1.isin(())
+        self.assertEqual(post2.to_pairs(0),
+                ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, False))))
                 )
 
 

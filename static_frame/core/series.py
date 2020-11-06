@@ -1748,6 +1748,7 @@ class Series(ContainerOperand):
         Returns:
             :obj:`Series`
         '''
+        # returns an immutable array
         array = isin(self.values, other)
         return self.__class__(array, index=self._index, name=self._name)
 

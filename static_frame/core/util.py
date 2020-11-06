@@ -1933,6 +1933,7 @@ def isin_array(*,
     '''Core isin processing after other has been converted to an array.
     '''
     if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+        # both funcs return immutable arrays
         func = _isin_1d if array.ndim == 1 else _isin_2d
         try:
             return func(array, frozenset(other))
