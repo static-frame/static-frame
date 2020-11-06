@@ -4151,6 +4151,18 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(0),
                 (('p', (('w', False), ('x', True), ('y', False), ('z', True))), ('q', (('w', False), ('x', False), ('y', False), ('z', True))), ('r', (('w', True), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
 
+    def test_frame_isin_b(self) -> None:
+
+        f1 = Frame.from_fields((
+                ['a', 'b'],
+                [True, False],
+                [np.datetime64('2012'), np.datetime64('2020')],
+                ))
+
+        post = f1.isin((np.datetime64('2020'),))
+        self.assertEqual(post.to_pairs(0),
+                ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, True))))
+                )
 
 
 

@@ -54,6 +54,8 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
+from static_frame.core.util import isin_array
+from static_frame.core.util import iterable_to_array_1d
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -2029,6 +2031,25 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def isin(self, other: tp.Any) -> 'TypeBlocks':
+        '''Return a new Boolean TypeBlocks that returns True if an element is in `other`.
+        '''
+        if hasattr(other, '__len__') and len(other) == 0:
+            return self.from_blocks(self._blocks)
+
+        other, other_is_unique = iterable_to_array_1d(other)
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                yield isin_array(array=b,
+                        array_is_unique=False, # expensive to determine
+                        other=other,
+                        other_is_unique=other_is_unique,
+                        )
+
+        return self.from_blocks(blocks())
+
+
     def transpose(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that transposes and concatenates all blocks.
         '''
@@ -2038,6 +2059,7 @@ class TypeBlocks(ContainerOperand):
             if b.dtype != self._row_dtype:
                 b = b.astype(self._row_dtype)
             blocks.append(b)
+
         a = np.concatenate(blocks)
         a.flags.writeable = False # keep this array
         return self.from_blocks(a)

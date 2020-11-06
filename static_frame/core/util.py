@@ -1900,6 +1900,7 @@ def _isin_1d(
     for i, element in enumerate(array):
         result[i] = element in other
 
+    result.flags.writeable = False
     return result
 
 
@@ -1918,6 +1919,31 @@ def _isin_2d(
 
     for (i, j), v in np.ndenumerate(array):
         result[i, j] = v in other
+
+    result.flags.writeable = False
+    return result
+
+
+def isin_array(*,
+        array: np.ndarray,
+        array_is_unique: bool,
+        other: np.ndarray,
+        other_is_unique: bool,
+        ) -> np.ndarray:
+    '''Core isin processing after other has been converted to an array.
+    '''
+    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+        func = _isin_1d if array.ndim == 1 else _isin_2d
+        try:
+            return func(array, frozenset(other))
+        except TypeError: # only occur when something is unhashable.
+            pass
+
+    assume_unique = array_is_unique and other_is_unique
+    func = np.in1d if array.ndim == 1 else np.isin
+
+    result = func(array, other, assume_unique=assume_unique) #type: ignore
+    result.flags.writeable = False
 
     return result
 
@@ -1947,27 +1973,11 @@ def isin(
 
     other, other_is_unique = iterable_to_array_1d(other)
 
-    if array.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT: # type: ignore
-        try:
-            if array.ndim == 1:
-                result = _isin_1d(array, frozenset(other))
-            else:
-                result = _isin_2d(array, frozenset(other))
-        except TypeError:
-            # TypeErrors *should* only occur when something is unhashable, hence the inability to use sets. Fall back to numpy's isin.
-            pass
-
-    if result is None:
-        assume_unique = array_is_unique and other_is_unique
-        if array.ndim == 1:
-            result = np.in1d(array, other, assume_unique=assume_unique)
-        else:
-            # NOTE: likely faster to do this at the block level
-            result = np.isin(array, other, assume_unique=assume_unique)
-
-    result.flags.writeable = False
-    return result
-
+    return isin_array(array=array,
+            array_is_unique=array_is_unique,
+            other=other,
+            other_is_unique=other_is_unique,
+            )
 
 #-------------------------------------------------------------------------------
 def _ufunc_logical_skipna(

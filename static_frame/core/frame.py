@@ -115,7 +115,6 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_hashable
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
-from static_frame.core.util import isin
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import Join
@@ -1049,7 +1048,7 @@ class Frame(ContainerOperand):
             own_columns: bool = False,
             consolidate_blocks: bool = False
             ) -> 'Frame':
-        '''Frame constructor from an iterator of columsn, where where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
+        '''Frame constructor from an iterator of columns, where columns are iterables. :obj:`Series` can be provided as values if an ``index`` argument is supplied.
 
         Args:
             fields: Iterable of column values.
@@ -4402,8 +4401,14 @@ class Frame(ContainerOperand):
         '''
         Return a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         '''
-        array = isin(self.values, other)
-        return self.__class__(array, columns=self._columns, index=self._index)
+        return self.__class__(
+                self._blocks.isin(other),
+                index=self._index,
+                columns=self._columns,
+                own_data=True,
+                name=self._name,
+                )
+
 
     @doc_inject(class_name='Frame')
     def clip(self, *,
