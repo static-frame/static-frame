@@ -1199,7 +1199,7 @@ class TypeBlocks(ContainerOperand):
             func: UFunc
             ) -> tp.Iterator[np.ndarray]:
         '''
-        Return a new blocks after processing each columnar block with the passed ufunc. It is assumed the ufunc will retain the shape of the input 1D or 2D array. All blocks must be processed, which is different than _astype_blocks, which can check the type and skip procesing some blocks.
+        Return a new blocks after processing each columnar block with the passed ufunc. It is assumed the ufunc will retain the shape of the input 1D or 2D array. All blocks must be processed, which is different than _astype_blocks, which can check the type and skip processing some blocks.
 
         Generator producer of np.ndarray.
         '''
@@ -2090,6 +2090,33 @@ class TypeBlocks(ContainerOperand):
                 yield bool_block
 
         return self.from_blocks(blocks())
+
+
+    def clip(self,
+            lower: tp.Union[float, tp.Iterable[np.ndarray]],
+            upper: tp.Union[float, tp.Iterable[np.ndarray]],
+            ) -> 'TypeBlocks':
+        '''
+        Apply clip to blocks. If clipping is not supported for a dtype, we will raise instead of silently returning the block unchanged.
+
+        Args:
+            lower, upper: a float, or iterable of array of aggregate shape equal to that of this TypeBlocks
+        '''
+        lower_is_element = not hasattr(lower, '__len__')
+        upper_is_element = not hasattr(upper, '__len__')
+
+        def blocks() -> tp.Iterator[np.ndarray]:
+            for b in self._blocks:
+                if lower_is_element:
+                    lb = lower
+                if upper_is_element:
+                    ub = upper
+                yield np.clip(b, lb, ub)
+
+        return self.from_blocks(blocks())
+
+
+
 
     #---------------------------------------------------------------------------
     # fillna sided

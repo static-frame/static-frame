@@ -4446,6 +4446,7 @@ class Frame(ContainerOperand):
                 else:
                     args[idx] = np.vstack([values] * self.shape[0])
             elif isinstance(arg, Frame):
+                # NOTE: we are taking values; better to extract blocks
                 args[idx] = arg.reindex(
                         index=self._index,
                         columns=self._columns).fillna(bound).values

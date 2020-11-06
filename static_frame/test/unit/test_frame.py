@@ -4169,8 +4169,6 @@ class TestUnit(TestCase):
                 ((0, ((0, False), (1, False))), (1, ((0, False), (1, False))), (2, ((0, False), (1, False))))
                 )
 
-
-
     #---------------------------------------------------------------------------
     def test_frame_transpose_a(self) -> None:
         # reindex both axis

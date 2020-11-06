@@ -1648,8 +1648,7 @@ class TestUnit(TestCase):
                 [[0, 0, 1, True, False, True, None, 'oe', 'od']])
 
 
-
-
+    #---------------------------------------------------------------------------
     def test_type_blocks_isna_a(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, np.nan, 6], [0, 0, 1]], dtype=object)
@@ -1664,6 +1663,25 @@ class TestUnit(TestCase):
         self.assertEqual(tb1.notna().values.tolist(),
                 [[True, True, True, True, True, True, False, True, True], [True, False, True, True, True, True, False, True, True], [True, True, True, True, True, True, False, True, True]])
 
+    #---------------------------------------------------------------------------
+
+    def test_type_blocks_clip_a(self) -> None:
+
+        a1 = np.array([[-10, 2], [30, 6], [1, 200]], dtype=float)
+        a2 = np.array([[False, False], [True, False], [True, False]])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.clip(1, 4)
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['f', 'f', 'i', 'i'])
+        self.assertEqual(tb2.values.tolist(),
+                [[1.0, 2.0, 1.0, 1.0],
+                [4.0, 4.0, 1.0, 1.0],
+                [1.0, 4.0, 1.0, 1.0]])
+
+        # import ipdb; ipdb.set_trace()
+
+    #---------------------------------------------------------------------------
 
     def test_type_blocks_dropna_to_slices(self) -> None:
 
