@@ -24,6 +24,7 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import binary_transition
+from static_frame.core.util import column_1d_filter
 from static_frame.core.util import column_2d_filter
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
@@ -56,6 +57,7 @@ from static_frame.core.util import UNIT_SLICE
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import isin_array
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import concat_resolved
 
 #-------------------------------------------------------------------------------
 class TypeBlocks(ContainerOperand):
@@ -2105,13 +2107,94 @@ class TypeBlocks(ContainerOperand):
         lower_is_element = not hasattr(lower, '__len__')
         upper_is_element = not hasattr(upper, '__len__')
 
+        lower_is_array = isinstance(lower, np.ndarray)
+        upper_is_array = isinstance(upper, np.ndarray)
+
+        # from collections import deque
+        # get a mutable list in reverse order for pop/pushing
+        if not lower_is_element and not lower_is_array:
+            lower_source = list(reversed(lower))
+        else:
+            lower_source = lower
+
+        if not upper_is_element and not upper_is_array:
+            upper_source = list(reversed(upper))
+        else:
+            upper_source = upper
+
+        def get_block_match(
+                start: int, # relative to total size
+                end: int, # exclusive
+                ndim: int,
+                source: tp.Union[float, np.ndarray, tp.List[np.ndarray]],
+                is_element: bool,
+                is_array: bool,
+                ) -> np.ndarray:
+            '''
+            Handle extraction of clip boundaries from multiple different types of sources. NOTE: ndim is the target ndim, and is only relevant when width is 1
+            '''
+            if is_element:
+                return source
+            if is_array: # if we have a homogenous 2D array
+                return source[NULL_SLICE, start:end]
+
+            width_target = end - start # 1 is lowest value
+            block = source.pop()
+            width = shape_filter(block)[1]
+
+            if width_target == 1:
+                if width > 1: # 2d array with more than one column
+                    source.append(block[NULL_SLICE, 1:])
+                    block = block[NULL_SLICE, 0]
+                func = column_1d_filter if ndim == 1 else column_2d_filter
+                return func(block)
+
+            # width_target is > 1
+            if width == width_target:
+                return block
+            elif width > width_target:
+                source.append(block[NULL_SLICE, width_target:])
+                return block[NULL_SLICE, :width_target]
+
+            # width < width_target, accumulate multiple blocks
+            parts = [column_2d_filter(block)]
+            while width < width_target:
+                block = column_2d_filter(source.pop())
+                width += block.shape[1]
+                if width == width_target:
+                    parts.append(block)
+                    return concat_resolved(parts, axis=1)
+                if width > width_target:
+                    diff = width - width_target
+                    trim = block.shape[1] - diff
+                    parts.append(block[NULL_SLICE, :trim])
+                    source.append(block[NULL_SLICE, trim:])
+                    return concat_resolved(parts, axis=1)
+                # width < width_target
+                parts.append(block)
+
         def blocks() -> tp.Iterator[np.ndarray]:
+            start = end = 0
             for b in self._blocks:
-                if lower_is_element:
-                    lb = lower
-                if upper_is_element:
-                    ub = upper
+                end += shape_filter(b)[1]
+                lb = get_block_match(
+                        start,
+                        end,
+                        b.ndim,
+                        lower_source,
+                        is_element=lower_is_element,
+                        is_array=lower_is_array,
+                        )
+                ub = get_block_match(
+                        start,
+                        end,
+                        b.ndim,
+                        upper_source,
+                        is_element=upper_is_element,
+                        is_array=upper_is_array,
+                        )
                 yield np.clip(b, lb, ub)
+                start = end
 
         return self.from_blocks(blocks())
 
@@ -2602,7 +2685,7 @@ class TypeBlocks(ContainerOperand):
     def dropna_to_keep_locations(self,
             axis: int = 0,
             condition: tp.Callable[..., bool] = np.all,
-    ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
+            ) -> tp.Tuple[tp.Optional[np.ndarray], tp.Optional[np.ndarray]]:
         '''
         Return the row and column slices to extract the new TypeBlock. This is to be used by Frame, where the slices will be needed on the indices as well.
 

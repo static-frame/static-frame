@@ -1679,7 +1679,110 @@ class TestUnit(TestCase):
                 [4.0, 4.0, 1.0, 1.0],
                 [1.0, 4.0, 1.0, 1.0]])
 
-        # import ipdb; ipdb.set_trace()
+    def test_type_blocks_clip_b(self) -> None:
+
+        a1 = np.array([[-10, 2], [30, 6], [1, 200]], dtype=float)
+        a2 = np.array([[False, False], [True, False], [True, False]])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        tb2 = tb1.clip(np.full(tb1.shape, 1), np.full(tb1.shape, 4))
+
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['f', 'f', 'i', 'i'])
+        self.assertEqual(tb2.values.tolist(),
+                [[1.0, 2.0, 1.0, 1.0],
+                [4.0, 4.0, 1.0, 1.0],
+                [1.0, 4.0, 1.0, 1.0]])
+
+    def test_type_blocks_clip_c(self) -> None:
+
+        a1 = np.array([[-10, 2], [30, 6], [1, 200]], dtype=float)
+        a2 = np.array([[False, False], [True, False], [True, False]])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        lb = (np.array((2, 2, -1)),
+                np.array((2, 2, -1)),
+                np.array((2, 2, -1)),
+                np.array((2, 2, -1)))
+
+        tb2 = tb1.clip(lb, np.full(tb1.shape, 4))
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['f', 'f', 'i', 'i'])
+
+        self.assertEqual(tb2.values.tolist(),
+                [[2.0, 2.0, 2.0, 2.0],
+                [4.0, 4.0, 2.0, 2.0],
+                [1.0, 4.0, 1.0, 0.0]])
+
+
+    def test_type_blocks_clip_d(self) -> None:
+
+        a1 = np.array([[10, 2], [10, 2], [10, 2]], dtype=float)
+        a2 = np.array([[True, False], [True, False], [True, False]])
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+
+        ub = (np.array((8, 6, 8)),
+                np.array((2, 0, 2)),
+                np.array((2, 0, 2)),
+                np.array((0, 1, 0)))
+
+        tb2 = tb1.clip(None, ub)
+        self.assertEqual([dt.kind for dt in tb2.dtypes],
+                ['f', 'f', 'i', 'i'])
+
+        self.assertEqual(tb2.values.tolist(),
+                [[8.0, 2.0, 1.0, 0.0],
+                [6.0, 0.0, 0.0, 0.0],
+                [8.0, 2.0, 1.0, 0.0]])
+
+
+    def test_type_blocks_clip_e(self) -> None:
+
+        a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        ub = (np.full((3, 2), 5), np.full((3, 2), 0))
+        tb2 = tb1.clip(None, ub)
+        self.assertEqual(tb2.values.tolist(),
+                [[5.0, 2.0, 0.0, 0.0],
+                [5.0, 2.0, 0.0, 0.0],
+                [5.0, 2.0, 0.0, 0.0]])
+
+        a1 = np.array([[10, 2, 10], [10, 2, 10], [10, 2, 10]], dtype=float)
+        a2 = np.array([2, 2, 2])
+        tb3 = TypeBlocks.from_blocks((a1, a2))
+
+        tb4 = tb3.clip(None, ub)
+        self.assertEqual(tb4.values.tolist(),
+                [[5.0, 2.0, 0.0, 0.0],
+                [5.0, 2.0, 0.0, 0.0],
+                [5.0, 2.0, 0.0, 0.0]])
+
+    def test_type_blocks_clip_f(self) -> None:
+
+        a1 = np.array([[10, 2, 10, 2], [10, 2, 10, 2], [10, 2, 10, 2]], dtype=float)
+        tb1 = TypeBlocks.from_blocks((a1,))
+
+        ub = (np.full((3, 1), 5), np.full((3, 3), 0))
+        tb2 = tb1.clip(None, ub)
+
+        self.assertEqual(tb2.values.tolist(),
+                [[5.0, 0.0, 0.0, 0.0],
+                [5.0, 0.0, 0.0, 0.0],
+                [5.0, 0.0, 0.0, 0.0]])
+
+        a1 = np.array([[10, 2, 10], [10, 2, 10], [10, 2, 10]], dtype=float)
+        a2 = np.array([2, 2, 2])
+        tb3 = TypeBlocks.from_blocks((a1, a2))
+
+        tb4 = tb3.clip(None, ub)
+        self.assertEqual(tb4.values.tolist(),
+                [[5.0, 0.0, 0.0, 0.0],
+                [5.0, 0.0, 0.0, 0.0],
+                [5.0, 0.0, 0.0, 0.0]])
+
+
 
     #---------------------------------------------------------------------------
 
