@@ -2095,8 +2095,8 @@ class TypeBlocks(ContainerOperand):
 
 
     def clip(self,
-            lower: tp.Union[float, tp.Iterable[np.ndarray]],
-            upper: tp.Union[float, tp.Iterable[np.ndarray]],
+            lower: tp.Union[None, float, tp.Iterable[np.ndarray]],
+            upper: tp.Union[None, float, tp.Iterable[np.ndarray]],
             ) -> 'TypeBlocks':
         '''
         Apply clip to blocks. If clipping is not supported for a dtype, we will raise instead of silently returning the block unchanged.
@@ -2112,21 +2112,21 @@ class TypeBlocks(ContainerOperand):
 
         # from collections import deque
         # get a mutable list in reverse order for pop/pushing
-        if not lower_is_element and not lower_is_array:
-            lower_source = list(reversed(lower))
-        else:
+        if lower_is_element or lower_is_array:
             lower_source = lower
-
-        if not upper_is_element and not upper_is_array:
-            upper_source = list(reversed(upper))
         else:
+            lower_source = list(reversed(lower)) #type: ignore
+
+        if upper_is_element or upper_is_array:
             upper_source = upper
+        else:
+            upper_source = list(reversed(upper)) #type: ignore
 
         def get_block_match(
                 start: int, # relative to total size
                 end: int, # exclusive
                 ndim: int,
-                source: tp.Union[float, np.ndarray, tp.List[np.ndarray]],
+                source: tp.Union[None, float, np.ndarray, tp.List[np.ndarray]],
                 is_element: bool,
                 is_array: bool,
                 ) -> np.ndarray:
@@ -2136,8 +2136,9 @@ class TypeBlocks(ContainerOperand):
             if is_element:
                 return source
             if is_array: # if we have a homogenous 2D array
-                return source[NULL_SLICE, start:end]
+                return source[NULL_SLICE, start:end] # type: ignore
 
+            assert isinstance(source, list)
             width_target = end - start # 1 is lowest value
             block = source.pop()
             width = shape_filter(block)[1]
