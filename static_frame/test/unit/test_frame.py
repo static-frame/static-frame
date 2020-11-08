@@ -9285,6 +9285,7 @@ class TestUnit(TestCase):
                 )
 
         f2 = f1.clip(lower=Series((10, dt64('2001')), index=('a', 'b')), axis=1)
+        self.assertEqual([d.kind for d in f2.dtypes.values], ['i', 'M'])
 
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 10), ('y', 30), ('z', 22))), ('b', (('x', dt64('2020')), ('y', dt64('2001')), ('z', dt64('2001')))))
