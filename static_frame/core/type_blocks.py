@@ -2135,11 +2135,15 @@ class TypeBlocks(ContainerOperand):
             '''
             if is_element:
                 return source
+
+            width_target = end - start # 1 is lowest value
+
             if is_array: # if we have a homogenous 2D array
-                return source[NULL_SLICE, start:end] # type: ignore
+                block = source[NULL_SLICE, start:end] # type: ignore
+                func = column_1d_filter if ndim == 1 else column_2d_filter
+                return func(block)
 
             assert isinstance(source, list)
-            width_target = end - start # 1 is lowest value
             block = source.pop()
             width = shape_filter(block)[1]
 

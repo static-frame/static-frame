@@ -9272,6 +9272,83 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(0),
                 (('a', (('x', 2.0), ('y', 30.0), ('z', 22.0))), ('b', (('x', 1.0), ('y', 1.0), ('z', 1.0)))))
 
+    def test_frame_clip_h(self) -> None:
+        dt64 = np.datetime64
+        records = (
+                (2, dt64('2020')),
+                (30, dt64('1995')),
+                (22, dt64('1980')),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        f2 = f1.clip(lower=Series((10, dt64('2001')), index=('a', 'b')), axis=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 10), ('y', 30), ('z', 22))), ('b', (('x', dt64('2020')), ('y', dt64('2001')), ('z', dt64('2001')))))
+                )
+
+    def test_frame_clip_i(self) -> None:
+        dt64 = np.datetime64
+        records = (
+                (2, dt64('2020')),
+                (30, dt64('1995')),
+                (22, dt64('1980')),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        lb = Frame.from_fields(
+                ((25, 25, 25), (dt64('2001'), dt64('2001'), dt64('2001'))),
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        f2 = f1.clip(lower=lb, axis=1)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 25), ('y', 30), ('z', 25))), ('b', (('x', np.datetime64('2020')), ('y', np.datetime64('2001')), ('z', np.datetime64('2001')))))
+                )
+
+
+    def test_frame_clip_j(self) -> None:
+
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (False, True, False),
+                (True, False, True)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                consolidate_blocks=True,
+                )
+        f2 = f1.clip(lower=f1*2)
+        self.assertEqual([d.kind for d in f2.dtypes.values],
+                ['i', 'i', 'i', 'i'])
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 20), ('y', 40), ('z', 60))), ('b', (('x', 80), ('y', 40), ('z', 60))), ('c', (('x', 0), ('y', 2), ('z', 0))), ('d', (('x', 2), ('y', 0), ('z', 2)))))
+
+
+    def test_frame_clip_k(self) -> None:
+
+        f1 = Frame.from_fields(
+                ((10, 20, 30),
+                (40, 20, 30),
+                (False, True, False),
+                (True, False, True)),
+                columns=('a', 'b', 'c', 'd'),
+                index=('x', 'y', 'z'),
+                )
+        lb = Frame.from_element(20, columns=f1.columns, index=f1.index)
+        f2 = f1.clip(lower=lb)
+
+        self.assertEqual(f2.to_pairs(0),
+                (('a', (('x', 20), ('y', 20), ('z', 30))), ('b', (('x', 40), ('y', 20), ('z', 30))), ('c', (('x', 20), ('y', 20), ('z', 20))), ('d', (('x', 20), ('y', 20), ('z', 20)))))
+
 
     #---------------------------------------------------------------------------
 

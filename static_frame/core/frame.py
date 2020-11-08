@@ -4436,31 +4436,36 @@ class Frame(ContainerOperand):
             if arg is None:
                 continue
             bound = -np.inf if idx == 0 else np.inf
+
             if isinstance(arg, Series):
                 if axis is None:
                     raise RuntimeError('cannot use a Series argument without specifying an axis')
                 target = self._index if axis == 0 else self._columns
                 values = arg.reindex(target).fillna(bound).values
                 if axis == 0: # duplicate the same column over the width
-                    args[idx] = np.vstack([values] * self.shape[1]).T
+                    # NOTE: extracting array, then scaling in a list, assuming we are just multiply references, not creating copies
+                    args[idx] = [values] * self.shape[1]
                 else:
-                    args[idx] = np.vstack([values] * self.shape[0])
+                    # create a list of row-length arrays for maximal type preservation
+                    args[idx] = [np.full(self.shape[0], v) for v in values]
+
             elif isinstance(arg, Frame):
-                # NOTE: we are taking values; better to extract blocks
                 args[idx] = arg.reindex(
                         index=self._index,
-                        columns=self._columns).fillna(bound).values
+                        columns=self._columns).fillna(bound)._blocks._blocks
+
             elif hasattr(arg, '__iter__'):
                 raise RuntimeError('only Series or Frame are supported as iterable lower/upper arguments')
             # assume single value otherwise, no change necessary
 
-        array = np.clip(self.values, *args)
-        array.flags.writeable = False
+        blocks = self._blocks.clip(*args)
 
-        return self.__class__(array,
+        return self.__class__(blocks,
                 columns=self._columns,
                 index=self._index,
-                name=self._name
+                name=self._name,
+                own_data=True,
+                own_index=True,
                 )
 
 

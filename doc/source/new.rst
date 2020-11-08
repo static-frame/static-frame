@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+0.7.5
+----------
+
+Implemented ``Frame.isin`` on ``TypeBlocks``.
+
+Implemented ``Frame.clip`` on ``TypeBlocks``.
+
 
 0.7.4
 ----------
