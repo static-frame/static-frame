@@ -2111,7 +2111,28 @@ class TestUnit(TestCase):
                 ((('A', 1), (('x', 'a'), ('y', 'b'))), (('A', 2), (('x', 'c'), ('y', 'd'))), (('B', 1), (('x', False), ('y', True))), (('B', 2), (('x', True), ('y', False))), (('C', 1), (('x', 'e'), ('y', 'f')))))
 
 
+    def test_frame_extend_i(self) -> None:
+        f1 = FrameGO(index=('x', 'y'))
+        records = (
+                ('a', False, True),
+                ('b', True, False))
+        f2 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('x','y'))
 
+        f1.extend(f2)
+
+        self.assertEqual(f1.to_pairs(0),
+                (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False)))))
+
+
+    def test_frame_extend_i(self) -> None:
+        f1 = FrameGO(columns=('p', 'q'))
+        f2 = Frame(columns=('r', 's'))
+
+        f1.extend(f2)
+        # TODO
+        # import ipdb; ipdb.set_trace()
     #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:
