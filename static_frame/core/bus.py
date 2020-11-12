@@ -27,11 +27,11 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import INT_TYPES
 
 #-------------------------------------------------------------------------------
-class FrameDefferedMeta(type):
+class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
         return f'<{cls.__name__}>'
 
-class FrameDeferred(metaclass=FrameDefferedMeta):
+class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
@@ -153,7 +153,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return getattr(self._series, name)
         except AttributeError:
             # fix the attribute error to reference the Bus
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'") from None
 
     #---------------------------------------------------------------------------
     # cache management
