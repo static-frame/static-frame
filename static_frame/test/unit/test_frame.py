@@ -2126,7 +2126,7 @@ class TestUnit(TestCase):
                 (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False)))))
 
 
-    def test_frame_extend_i(self) -> None:
+    def test_frame_extend_j(self) -> None:
         f1 = FrameGO(columns=('p', 'q'))
         f2 = Frame(columns=('r', 's'))
 

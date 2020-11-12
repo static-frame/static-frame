@@ -226,7 +226,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
                     loaded_count += 1
 
             if max_persist_active and loaded_count > self._max_persist:
-                assert loaded_count == self._max_persist + 1
+                assert loaded_count == self._max_persist + 1 # type: ignore
 
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
