@@ -2125,17 +2125,6 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(0),
                 (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False)))))
 
-
-    def test_frame_extend_j(self) -> None:
-        f1 = FrameGO(columns=('p', 'q'))
-        f2 = Frame(columns=('r', 's'))
-
-        f1.extend(f2)
-        self.assertEqual(f1.to_pairs(0),
-                (('p', ()), ('q', ()), ('r', ()), ('s', ()))
-                )
-
-
     #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:
@@ -2226,6 +2215,22 @@ class TestUnit(TestCase):
         f2.extend(f1)
         # as we align on the caller's index, if that index is empty, there is nothing to take from the passed Frame; however, since we observe columns, we add those (empty columns). this falls out of lower-level implementations: could be done differently if desirable.
         self.assertEqual(f2.shape, (0, 5))
+
+
+    def test_frame_extend_empty_f(self) -> None:
+        f1 = FrameGO(columns=('p', 'q'))
+        f2 = Frame(columns=('r', 's'))
+
+        f1.extend(f2)
+        self.assertEqual(f1.to_pairs(0),
+                (('p', ()), ('q', ()), ('r', ()), ('s', ()))
+                )
+
+        s1 = sf.Series((), name='t')
+        f1.extend(s1)
+        self.assertEqual(f1.to_pairs(0),
+                (('p', ()), ('q', ()), ('r', ()), ('s', ()), ('t', ()))
+                )
 
 
     #---------------------------------------------------------------------------

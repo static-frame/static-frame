@@ -1336,3 +1336,5 @@ class FrameFrame_clip(PerfTest):
     def np(cls) -> None:
         np_frame = SampleData.get('npf_float_10k')
         np.clip(np_frame, 0, 1)
+
+
