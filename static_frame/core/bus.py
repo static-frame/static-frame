@@ -136,11 +136,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._series = series
         self._store = store
 
-        # max_persist might be less than the number of Frames already loaded
-        if max_persist is not None:
-            self._max_persist = max(max_persist, self._loaded.sum())
-        else:
-            self._max_persist = None
+        # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
+        if max_persist is not None and max_persist < self._loaded.sum():
+            raise ErrorInitBus('max_persis cannot be less than the number of already loaded Frames')
+        self._max_persist = max_persist
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
