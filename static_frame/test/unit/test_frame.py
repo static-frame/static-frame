@@ -2131,8 +2131,11 @@ class TestUnit(TestCase):
         f2 = Frame(columns=('r', 's'))
 
         f1.extend(f2)
-        # TODO
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(f1.to_pairs(0),
+                (('p', ()), ('q', ()), ('r', ()), ('s', ()))
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:

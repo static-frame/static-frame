@@ -6502,9 +6502,6 @@ class FrameGO(Frame):
             raise NotImplementedError(
                     f'no support for extending with {type(container)}')
 
-        if not len(container.index): # must be empty data, empty index container
-            return
-
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):
             container = container.reindex(self._index,
