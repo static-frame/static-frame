@@ -1,6 +1,11 @@
 What is New in Static Frame
 ===============================
 
+0.7.6
+----------
+
+Fixed issue in using ``Frame.extend`` with zero-length ``Frame``.
+
 
 0.7.5
 ----------

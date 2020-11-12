@@ -1280,14 +1280,6 @@ class FrameObj_isin(PerfTest):
             lookup_arr = np.array([str(i) for i in range(10 ** i)], dtype=object)
             sf_frame.isin(lookup_arr)
 
-    # @classmethod
-    # def np(cls) -> None:
-    #     np_frame = SampleData.get('npf_mixed_10k')
-    #     for i in range(cls._lower, cls._upper):
-    #         lookup_arr = np.array([str(i) for i in range(10 ** i)])
-    #         np.isin(np_frame, lookup_arr)
-
-
 class FrameFloat_isin(PerfTest):
     '''isin with floats. As n gets large, pandas outperformance significantly drops:
 
@@ -1305,7 +1297,7 @@ class FrameFloat_isin(PerfTest):
 
     @classmethod
     def pd(cls) -> None:
-        pd_frame = SampleData.get('pdf_float_10k')
+        pd_frame = SampleData.get('sff_float_10k')
         for i in range(cls._lower, cls._upper):
             lookup_arr = np.array([i / 100 for i in range(10 ** i)])
             pd_frame.isin(lookup_arr)
@@ -1323,3 +1315,24 @@ class FrameFloat_isin(PerfTest):
         for i in range(cls._lower, cls._upper):
             lookup_arr = np.array([i / 100 for i in range(10 ** i)])
             np.isin(np_frame, lookup_arr)
+
+
+class FrameFrame_clip(PerfTest):
+    '''isin with objects.
+    Will noticeably underperform pandas due to pandas' use of C at a constant rate
+    Numpy's performance as the lookup array grows deteriorates at an exponential rate.
+    '''
+    @classmethod
+    def pd(cls) -> None:
+        pd_frame = SampleData.get('sff_float_10k')
+        pd_frame.clip(lower=0, upper=1)
+
+    @classmethod
+    def sf(cls) -> None:
+        sf_frame = SampleData.get('sff_float_10k')
+        sf_frame.clip(lower=0, upper=1)
+
+    @classmethod
+    def np(cls) -> None:
+        np_frame = SampleData.get('npf_float_10k')
+        np.clip(np_frame, 0, 1)
