@@ -56,6 +56,41 @@ index_4 = Index.from_labels(('orange', 'apple', 'banana'))
 index_5 = Index.from_labels(('grape', 'banana'))
 ic = IndexCorrespondence.from_correspondence(index_4, index_5)
 
+a1 = np.array([1, 2, 3])
+a2 = np.array([False, True, False])
+a3 = np.array(['b', 'c', 'd'])
+tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+a1 = np.array([1, 2, 3])
+a2 = np.array([10,50,30])
+a3 = np.array([1345,2234,3345])
+a4 = np.array([False, True, False])
+a5 = np.array([False, False, False])
+a6 = np.array(['g', 'd', 'e'])
+tb2 = TypeBlocks.from_blocks((a1, a2, a3, a4, a5, a6))
+
+a1 = np.array([[1, 2, 3],[10,50,30],[1345,2234,3345]])
+a4 = np.array([False, True, False])
+a5 = np.array([False, False, False])
+a6 = np.array(['g', 'd', 'e'])
+tb21 = TypeBlocks.from_blocks((a1, a4, a5, a6))
+
+# can show that with tb2, a6 remains unchanged
+
+a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+a3 = np.array([['a', 'b'], ['c', 'd'], ['oe', 'od']])
+tb3 = TypeBlocks.from_blocks((a1, a2, a3))
+tbfruit = TypeBlocks.from_blocks(np.random.random(6).reshape(3,2))
+
 
 def main():
-    pass
+    print('hello')
+    print(f1._blocks)
+    print(tb2)
+    print(tb21)
+
+
+
+if __name__ == "__main__":
+    main()
