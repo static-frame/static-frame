@@ -27,11 +27,11 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import INT_TYPES
 
 #-------------------------------------------------------------------------------
-class FrameDefferedMeta(type):
+class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
         return f'<{cls.__name__}>'
 
-class FrameDeferred(metaclass=FrameDefferedMeta):
+class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
@@ -136,11 +136,10 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         self._series = series
         self._store = store
 
-        # max_persist might be less than the number of Frames already loaded
-        if max_persist is not None:
-            self._max_persist = max(max_persist, self._loaded.sum())
-        else:
-            self._max_persist = None
+        # Not handling cases of max_persist being greater than the length of the Series (might floor to length)
+        if max_persist is not None and max_persist < self._loaded.sum():
+            raise ErrorInitBus('max_persis cannot be less than the number of already loaded Frames')
+        self._max_persist = max_persist
 
         # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
         self._config = StoreConfigMap.from_initializer(config)
@@ -153,7 +152,7 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
             return getattr(self._series, name)
         except AttributeError:
             # fix the attribute error to reference the Bus
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'") from None
 
     #---------------------------------------------------------------------------
     # cache management
@@ -184,69 +183,66 @@ class Bus(ContainerBase, StoreClientMixin): # not a ContainerOperand
         else:
             load = not self._loaded[key].all() # works with elements
 
-        if not load and max_persist_active:
-            # must update LRU position
+        if not load and not max_persist_active:
+            return
+
+        if not load and max_persist_active: # must update LRU position
             if isinstance(key, INT_TYPES):
                 labels = (self._series.index.iloc[key],)
             else:
                 labels = self._series.index.iloc[key].values
+            for label in labels: # update LRU position
+                self._last_accessed[label] = self._last_accessed.pop(label, None)
+            return
 
-            for label in labels:
-                # update LRU position
-                if label in self._last_accessed:
-                    self._last_accessed.pop(label)
-                self._last_accessed[label] = None
+        # load and max_persist_active True or False
+        if self._store is None:
+            # there has to be a Store defined if we are partially loaded
+            raise RuntimeError('no store defined')
 
-        if load:
-            if self._store is None:
-                # there has to be a Store defined if we are partially loaded
-                raise RuntimeError('no store defined')
+        if max_persist_active:
+            loaded_count = self._loaded.sum()
 
-            if max_persist_active:
-                loaded_count = self._loaded.sum()
+        index = self._series.index
+        array = self._series.values.copy() # not a deepcopy
+        targets = self._series.iloc[key] # key is iloc key
+        if not isinstance(targets, Series):
+            targets = {index[key]: targets} # present element as items
 
-            index = self._series.index
-            array = self._series.values.copy() # not a deepcopy
-            targets = self._series.iloc[key] # key is iloc key
+        for label, frame in targets.items(): # this is a Series, not a Bus
+            idx = index.loc_to_iloc(label)
 
-            if not isinstance(targets, Series):
-                targets = {index[key]: targets} # present element as items
+            if max_persist_active: # update LRU position
+                self._last_accessed[label] = self._last_accessed.pop(label, None)
 
-            for label, frame in targets.items(): # this is a Series, not a Bus
-                idx = index.loc_to_iloc(label)
+            if frame is FrameDeferred:
+                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
+                frame = self._store.read(label, config=self._config[label])
 
+            if not self._loaded[idx]:
+                array[idx] = frame
+                self._loaded[idx] = True # update loaded status
                 if max_persist_active:
-                    # update LRU position
-                    if label in self._last_accessed:
-                        self._last_accessed.pop(label)
-                    self._last_accessed[label] = None
+                    loaded_count += 1
 
-                if frame is FrameDeferred:
-                    # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
-                    frame = self._store.read(label, config=self._config[label])
+            if max_persist_active and loaded_count > self._max_persist:
+                assert loaded_count == self._max_persist + 1 # type: ignore
 
-                if not self._loaded[idx]:
-                    array[idx] = frame
-                    self._loaded[idx] = True # update loaded status
-                    if max_persist_active:
-                        loaded_count += 1
+                label_remove = next(iter(self._last_accessed))
+                del self._last_accessed[label_remove]
+                idx_remove = index.loc_to_iloc(label_remove)
+                self._loaded[idx_remove] = False
+                array[idx_remove] = FrameDeferred
+                loaded_count -= 1
+                assert loaded_count >= 0
 
-                if max_persist_active and loaded_count > self._max_persist:
-                    # should only ever be one more over
-                    label_remove = next(iter(self._last_accessed))
-                    self._last_accessed.pop(label_remove)
-                    idx_remove = index.loc_to_iloc(label_remove)
-                    self._loaded[idx_remove] = False
-                    array[idx_remove] = FrameDeferred
-                    loaded_count -= 1 # should not go negative
-
-            array.flags.writeable = False
-            self._series = Series(array,
-                    index=self._series._index,
-                    dtype=object,
-                    own_index=True,
-                    )
-            self._loaded_all = self._loaded.all()
+        array.flags.writeable = False
+        self._series = Series(array,
+                index=self._series._index,
+                dtype=object,
+                own_index=True,
+                )
+        self._loaded_all = self._loaded.all()
 
     def _update_series_cache_all(self) -> None:
         '''Load all Tables contained in this Bus.
