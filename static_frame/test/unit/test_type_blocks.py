@@ -2328,7 +2328,7 @@ class TestUnit(TestCase):
                 is_subset=True,
                 iloc_src=np.array((1, 2)),
                 iloc_dst=np.array((0, 2)),
-                size=3) # ASK: If dst is size 3 but iloc_dst only has 2 vals, doesn't that mean that is_subset couldn't be true?
+                size=2)
 
         tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
@@ -2345,7 +2345,7 @@ class TestUnit(TestCase):
         # reverse rows
         index_ic = IndexCorrespondence(has_common=True,
                 is_subset=True,
-                iloc_src=np.array((2, 1, 0)), # ASK: why can't I reverse the dst instead?
+                iloc_src=np.array((2, 1, 0)),
                 iloc_dst=np.array((0, 1, 2)),
                 size=3)
 
@@ -2422,7 +2422,6 @@ class TestUnit(TestCase):
 
         result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0, 5]), np.array([ 0, 10]), np.array([ 1, 11])]
-        # ASK: Is there a way to keep the 2nd block unified here?
         # [[0,  0,  1],
         #  [5, 10, 11]]
         for r,e in zip_longest(result, expected):
