@@ -2359,7 +2359,7 @@ class TestUnit(TestCase):
         result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([[5], [3], [1]])]
         for r,e in zip_longest(result, expected):
-                self.assertTrue(np.array_equal(r, e))
+            self.assertTrue(np.array_equal(r, e))
 
     def test_type_blocks_resize_blocks_c(self) -> None:
 
@@ -2382,7 +2382,7 @@ class TestUnit(TestCase):
         result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,5])]
         for r,e in zip_longest(result, expected):
-                self.assertTrue(np.array_equal(r, e))
+            self.assertTrue(np.array_equal(r, e))
 
     def test_type_blocks_resize_blocks_d(self) -> None:
 
@@ -2399,7 +2399,7 @@ class TestUnit(TestCase):
         result = tb1.resize_blocks(index_ic=None, columns_ic=columns_ic, fill_value=None)
         expected = [np.array([0,1,2,3,4,5])]
         for r,e in zip_longest(result, expected):
-                self.assertTrue(np.array_equal(r, e))
+            self.assertTrue(np.array_equal(r, e))
 
     def test_type_blocks_resize_blocks_e(self) -> None:
 
@@ -2425,7 +2425,7 @@ class TestUnit(TestCase):
         # [[0,  0,  1],
         #  [5, 10, 11]]
         for r,e in zip_longest(result, expected):
-                self.assertTrue(np.array_equal(r, e))
+            self.assertTrue(np.array_equal(r, e))
 
     def test_type_blocks_astype_a(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
