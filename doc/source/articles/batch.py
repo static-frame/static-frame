@@ -120,7 +120,8 @@ def buss_batch_streaming() -> None:
     # J        36.999629999999996
     # <<U1>    <float64>
 
-    # if we have family of functions that process items pairs that do not need random access, we can chain the together without writing to an intermediary
+    # if we have family of functions that process items pairs that do not need random access, we can chain them together without writing to an intermediary
+
     def proc_data_alt(items: TypeIterFrameItems) -> TypeIterFrameItems:
         for label, f in items:
             f_post = f * .00001
@@ -132,11 +133,23 @@ def buss_batch_streaming() -> None:
                 yield label, f.mean().mean()
         return sf.Series.from_items(gen())
 
-    # now we can use a Batch to get sequential processing
+    # now we can use a Batch to get sequential processing, and start with the origin data set
     batch = sf.Batch.from_zip_parquet('/tmp/pq-stg-01.zip', config=config)
     print(derive_characteristic_alt(proc_data_alt(batch.items())))
 
-
+    # <Series>
+    # <Index>
+    # A        32.499674999999996
+    # B        32.99967
+    # C        33.49966500000001
+    # D        33.999660000000006
+    # E        34.499655000000004
+    # F        34.99965
+    # G        35.49964500000001
+    # H        35.99964000000001
+    # I        36.499635000000005
+    # J        36.999629999999996
+    # <<U1>    <float64>
 
 
 def buss_batch_demo() -> None:
