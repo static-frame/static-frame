@@ -60,7 +60,7 @@ import static_frame as sf
     # b2()
 
 
-def buss_batch_streaming() -> None:
+def bus_batch_streaming() -> None:
 
     TypeIterFrameItems = tp.Iterator[tp.Tuple[str, sf.Frame]]
 
