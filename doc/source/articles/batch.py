@@ -1,6 +1,6 @@
 
 
-
+import typing as tp
 
 import numpy as np
 
@@ -58,6 +58,84 @@ import static_frame as sf
 
 #     # b1()
     # b2()
+
+
+def buss_batch_streaming() -> None:
+
+    TypeIterFrameItems = tp.Iterator[tp.Tuple[str, sf.Frame]]
+
+    # do a bunch of processing on large Frames while maintaining single frame overhead
+
+    def origin_data() -> TypeIterFrameItems:
+        for label, i in ((chr(i), i) for i in range(65, 75)): # A, B, ...
+            f = sf.Frame(np.arange(100000).reshape(1000, 100) * i, name=label)
+            yield label, f
+
+    # a StoreConfig is bundle of read/write config in a single object
+    config = sf.StoreConfig(include_index=True,
+            include_columns=True,
+            index_depth=1,
+            columns_depth=1)
+
+    # incrementally generate and write data one Frame at at ime
+    sf.Batch(origin_data()).to_zip_parquet('/tmp/pq-stg-01.zip', config=config)
+
+    # we can read the same data store into Bus
+    # settting max_persist to 1 keeps only 1 frame in memory
+    src_bus = sf.Bus.from_zip_parquet('/tmp/pq-stg-01.zip', max_persist=1, config=config)
+
+    def proc_data(bus: sf.Bus) -> TypeIterFrameItems:
+        for label in bus.keys():
+            f = bus[label]
+            f_post = f * .00001
+            yield label, f_post
+
+    # incrementally read, process data, and write data
+    # note that we do not necessarily need to write this intermediate step; we might chain a number of processors together
+    sf.Batch(proc_data(src_bus)).to_zip_parquet('/tmp/pq-stg-02.zip', config=config)
+
+    # a function that reads through the derived data and produces single in-memory result
+    def derive_characteristic(bus: sf.Bus) -> sf.Series:
+        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+            for label in bus.keys():
+                f = bus[label]
+                yield label, f.mean().mean()
+
+        return sf.Series.from_items(gen())
+
+    post_bus = sf.Bus.from_zip_parquet('/tmp/pq-stg-02.zip', max_persist=1, config=config)
+    print(derive_characteristic(post_bus))
+
+    # <Series>
+    # <Index>
+    # A        32.499674999999996
+    # B        32.99967
+    # C        33.49966500000001
+    # D        33.999660000000006
+    # E        34.499655000000004
+    # F        34.99965
+    # G        35.49964500000001
+    # H        35.99964000000001
+    # I        36.499635000000005
+    # J        36.999629999999996
+    # <<U1>    <float64>
+
+    # if we have family of functions that process items pairs that do not need random access, we can chain the together without writing to an intermediary
+    def proc_data_alt(items: TypeIterFrameItems) -> TypeIterFrameItems:
+        for label, f in items:
+            f_post = f * .00001
+            yield label, f_post
+
+    def derive_characteristic_alt(items: TypeIterFrameItems) -> sf.Series:
+        def gen() -> tp.Iterator[tp.Tuple[str, float]]:
+            for label, f in items:
+                yield label, f.mean().mean()
+        return sf.Series.from_items(gen())
+
+    # now we can use a Batch to get sequential processing
+    batch = sf.Batch.from_zip_parquet('/tmp/pq-stg-01.zip', config=config)
+    print(derive_characteristic_alt(proc_data_alt(batch.items())))
+
 
 
 
@@ -256,4 +334,4 @@ def buss_batch_demo() -> None:
 
 
 if __name__ == '__main__':
-    pass
+    buss_batch_streaming()
