@@ -152,7 +152,7 @@ def bus_batch_streaming() -> None:
     # <<U1>    <float64>
 
 
-def buss_batch_demo() -> None:
+def bus_batch_demo() -> None:
     # field definitions
     # https://www.ndbc.noaa.gov/measdes.shtml
 
@@ -347,4 +347,4 @@ def buss_batch_demo() -> None:
 
 
 if __name__ == '__main__':
-    buss_batch_streaming()
+    bus_batch_streaming()
