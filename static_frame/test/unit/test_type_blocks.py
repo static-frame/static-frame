@@ -1,5 +1,6 @@
 import unittest
 import pickle
+from itertools import zip_longest
 
 import numpy as np
 
@@ -2327,12 +2328,104 @@ class TestUnit(TestCase):
                 is_subset=True,
                 iloc_src=np.array((1, 2)),
                 iloc_dst=np.array((0, 2)),
-                size=3)
+                size=2)
 
         tb2 = TypeBlocks.from_blocks(tb1.resize_blocks(index_ic=index_ic, columns_ic=None, fill_value=None))
         self.assertEqual(tb2.shape, (2, 3))
 
 
+    def test_type_blocks_resize_blocks_b(self) -> None:
+
+        a1 = np.arange(6).reshape(3, 2)
+        # [[0, 1],
+        #  [2, 3],
+        #  [4, 5]]
+        tb1 = TypeBlocks.from_blocks((a1))
+
+        # reverse rows
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((2, 1, 0)),
+                iloc_dst=np.array((0, 1, 2)),
+                size=3)
+
+        # only column 2
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((1)),
+                iloc_dst=np.array((0)),
+                size=1)
+
+        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        expected = [np.array([[5], [3], [1]])]
+        for r,e in zip_longest(result, expected):
+            self.assertTrue(np.array_equal(r, e))
+
+    def test_type_blocks_resize_blocks_c(self) -> None:
+
+        a1 = np.arange(6)
+        tb1 = TypeBlocks.from_blocks((a1))
+        # only first and last value
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,5)),
+                iloc_dst=np.array((0, 1)),
+                size=2)
+
+        # keep col
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0)),
+                iloc_dst=np.array((0)),
+                size=1)
+
+        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        expected = [np.array([0,5])]
+        for r,e in zip_longest(result, expected):
+            self.assertTrue(np.array_equal(r, e))
+
+    def test_type_blocks_resize_blocks_d(self) -> None:
+
+        a1 = np.arange(6)
+        tb1 = TypeBlocks.from_blocks((a1))
+
+        # no change
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0)),
+                iloc_dst=np.array((0)),
+                size=1)
+
+        result = tb1.resize_blocks(index_ic=None, columns_ic=columns_ic, fill_value=None)
+        expected = [np.array([0,1,2,3,4,5])]
+        for r,e in zip_longest(result, expected):
+            self.assertTrue(np.array_equal(r, e))
+
+    def test_type_blocks_resize_blocks_e(self) -> None:
+
+        a1 = np.arange(6)
+        a2 = np.arange(12).reshape(6,2)
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        # only first and last value
+        index_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0, 5)),
+                iloc_dst=np.array((0, 1)),
+                size=2)
+
+        # keep all cols
+        columns_ic = IndexCorrespondence(has_common=True,
+                is_subset=True,
+                iloc_src=np.array((0,1,2)),
+                iloc_dst=np.array((0,1,2)),
+                size=3)
+
+        result = tb1.resize_blocks(index_ic=index_ic, columns_ic=columns_ic, fill_value=None)
+        expected = [np.array([0, 5]), np.array([ 0, 10]), np.array([ 1, 11])]
+        # [[0,  0,  1],
+        #  [5, 10, 11]]
+        for r,e in zip_longest(result, expected):
+            self.assertTrue(np.array_equal(r, e))
 
     def test_type_blocks_astype_a(self) -> None:
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
