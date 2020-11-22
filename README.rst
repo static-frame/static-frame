@@ -2,35 +2,47 @@
    :align: center
 
 
-.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/pyversions/static-frame.svg
   :target: https://pypi.org/project/static-frame
 
-.. image:: https://img.shields.io/pypi/v/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/v/static-frame.svg
   :target: https://pypi.org/project/static-frame
 
-.. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/conda/vn/conda-forge/static-frame.svg
   :target: https://anaconda.org/conda-forge/static-frame
 
 
-.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg?style=flat-square
+
+.. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
 
-.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg?style=flat-square
+
+
+.. image:: https://github.com/InvestmentSystems/static-frame/workflows/Test/badge.svg
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATest
+
+.. image:: https://github.com/InvestmentSystems/static-frame/workflows/Quality/badge.svg
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3AQuality
+
+
+
+.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg
   :target: https://travis-ci.org/InvestmentSystems/static-frame/branches
 
-.. image:: https://img.shields.io/readthedocs/static-frame.svg?style=flat-square
+
+
+
+.. image:: https://img.shields.io/readthedocs/static-frame.svg
   :target: https://static-frame.readthedocs.io/en/latest
 
-
-.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg?style=flat-square
+.. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg
   :target: https://hypothesis.readthedocs.io
 
-.. image:: https://img.shields.io/pypi/status/static-frame.svg?style=flat-square
+.. image:: https://img.shields.io/pypi/status/static-frame.svg
   :target: https://pypi.org/project/static-frame
 
-
-.. image:: https://img.shields.io/badge/benchmarked%20by-asv-blue.svg?style=flat-square
+.. image:: https://img.shields.io/badge/benchmarked%20by-asv-blue.svg
   :target: https://investmentsystems.github.io/static-frame-benchmark
 
 
