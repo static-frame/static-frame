@@ -2688,6 +2688,17 @@ class TestUnit(TestCase):
                 [('I', 1), ('I', 2), ('I', 1), ('I', 2), ('II', 1), ('II', 2), ('II', 1), ('II', 2)])
 
 
+    def test_hierarchy_iter_label_c(self) -> None:
+
+        idx = IndexHierarchy.from_product(('I', 'II'), ('A', 'B'), (1, 2))
+        post = list(idx.iter_label())
+        self.assertEqual(post,
+                [('I', 'A', 1), ('I', 'A', 2), ('I', 'B', 1), ('I', 'B', 2), ('II', 'A', 1), ('II', 'A', 2), ('II', 'B', 1), ('II', 'B', 2)]
+                )
+        # this returns a Series; probably should just be an array?
+        self.assertEqual(idx.iter_label().apply(lambda x: x[:2]).values.tolist(),
+                [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
+                )
 
 
 if __name__ == '__main__':

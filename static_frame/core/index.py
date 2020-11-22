@@ -521,12 +521,12 @@ class Index(IndexBase):
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc
 
     def _iter_label(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Hashable]:
         yield from self._labels
 
     def _iter_label_items(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
         yield from zip(self._positions, self._labels)
 

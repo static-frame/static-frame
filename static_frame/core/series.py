@@ -1529,8 +1529,11 @@ class Series(ContainerOperand):
 
 
     def _axis_group_labels_items(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[tp.Hashable, 'Series']]:
+
+        if depth_level is None:
+            depth_level = 0
 
         values = self.index.values_at_depth(depth_level)
         group_to_tuple = values.ndim == 2

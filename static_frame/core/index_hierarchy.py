@@ -544,8 +544,11 @@ class IndexHierarchy(IndexBase):
 
 
     def _iter_label(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Hashable]:
+
+        if depth_level is None: # default to full labels
+            depth_level = list(range(self.depth))
 
         # if no type blocks, use a levels
         if self._recache:
@@ -564,8 +567,9 @@ class IndexHierarchy(IndexBase):
                         )
 
     def _iter_label_items(self,
-            depth_level: DepthLevelSpecifier = 0,
+            depth_level: tp.Optional[DepthLevelSpecifier] = None,
             ) -> tp.Iterator[tp.Tuple[int, tp.Hashable]]:
+
         yield from enumerate(self._iter_label(depth_level=depth_level))
 
 

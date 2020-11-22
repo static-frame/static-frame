@@ -523,7 +523,7 @@ class IterNodeDepthLevel(IterNode[FrameOrSeries]):
     __slots__ = _ITER_NODE_SLOTS
 
     def __call__(self,
-            depth_level: DepthLevelSpecifier = 0
+            depth_level: tp.Optional[DepthLevelSpecifier] = None
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self, depth_level=depth_level)
 
