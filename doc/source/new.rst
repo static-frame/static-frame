@@ -1,6 +1,13 @@
 What is New in Static Frame
 ===============================
 
+
+0.7.7
+----------
+
+``IndexHiearchy.iter_label`` now defaults to iterating full depth labels.
+
+
 0.7.6
 ----------
 
