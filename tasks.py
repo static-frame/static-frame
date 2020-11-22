@@ -136,9 +136,9 @@ def lint(context):
     '''
     context.run('pylint static_frame')
 
-@invoke.task(pre=(test, mypy, lint))
-def integrate(context):
-    '''Perform all continuous integration.
+@invoke.task(pre=(mypy, lint))
+def quality(context):
+    '''Perform all quality checks.
     '''
 
 #-------------------------------------------------------------------------------
