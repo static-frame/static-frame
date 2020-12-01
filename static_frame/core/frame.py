@@ -3977,7 +3977,9 @@ class Frame(ContainerOperand):
                 raise AxisInvalid(f'no support for axis {axis}')
             # uses _make method to call with iterable
             constructor = get_tuple_constructor(labels)
-        elif issubclass(constructor, tuple) and hasattr(constructor, '_make'):
+        elif (isinstance(constructor, type) and
+                issubclass(constructor, tuple) and
+                hasattr(constructor, '_make')):
             constructor = constructor._make
 
         for axis_values in self._blocks.axis_values(axis):
