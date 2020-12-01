@@ -1,6 +1,10 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
 
 env:
   CFLAGS: -Wno-error=implicit-function-declaration
@@ -29,7 +33,7 @@ jobs:
       with:
         path: ~/.cache/pip
         key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-#         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (MacOS)
       uses: actions/cache@v2
@@ -37,7 +41,7 @@ jobs:
       with:
         path: ~/Library/Caches/pip
         key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-#         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (Windows)
       uses: actions/cache@v2
@@ -45,7 +49,7 @@ jobs:
       with:
         path: ~\AppData\Local\pip\Cache
         key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-#         restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
