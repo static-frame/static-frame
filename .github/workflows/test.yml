@@ -27,7 +27,7 @@ jobs:
         pip install numpy==1.16.5
         pip install Cython==0.29.13
         pip install setuptools==41.2.0
-        pip install -r requirements-test.txt
+        pip install -r requirements-test.txt --no-binary pandas
 
     - name: Invoke Test
       run: inv test
