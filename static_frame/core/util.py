@@ -177,6 +177,7 @@ GetItemKeyTypeCompound = tp.Union[
 
 KeyTransformType = tp.Optional[tp.Callable[[GetItemKeyType], GetItemKeyType]]
 NameType = tp.Optional[tp.Hashable]
+TupleConstructorType = tp.Callable[[tp.Iterator[tp.Any]], tp.Tuple[tp.Any, ...]]
 
 Bloc2DKeyType = tp.Union['Frame', np.ndarray]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
@@ -2314,17 +2315,16 @@ def write_optional_file(
 #-------------------------------------------------------------------------------
 # trivial, non NP util
 
-def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple[tp.Any, ...]]:
+def get_tuple_constructor(
+        fields: np.ndarray,
+        ) -> TupleConstructorType:
     '''
     Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
     '''
     try:
-        return namedtuple('Axis', fields)._make
+        return namedtuple('Axis', fields)._make #type: ignore
     except ValueError:
-        # take positiona args
-        return tuple # type: ignore
-
-
+        return tuple
 
 
 def key_normalize(key: KeyOrKeys) -> tp.List[tp.Hashable]:

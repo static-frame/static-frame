@@ -9,6 +9,8 @@ What is New in Static Frame
 
 ``Batch.__repr__()`` is no longer a display that exhausts the stored generator.
 
+``Frame.iter_tuple()`` now exposes a ``constructor`` argument to control creation of axis containers.
+
 
 0.7.6
 ----------

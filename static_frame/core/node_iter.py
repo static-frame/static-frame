@@ -17,6 +17,7 @@ from static_frame.core.util import DtypeSpecifier
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import Mapping
 from static_frame.core.util import NameType
+from static_frame.core.util import TupleConstructorType
 
 
 if tp.TYPE_CHECKING:
@@ -497,7 +498,7 @@ class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
     def __call__(self,
             axis: int = 0, # make both kwarg only
             *,
-            constructor: tp.Optional[tp.Type[tuple]] = None,
+            constructor: tp.Optional[TupleConstructorType] = None,
             ) -> IterNodeDelegate[FrameOrSeries]:
         return IterNode.get_delegate(self,
                 axis=axis,
