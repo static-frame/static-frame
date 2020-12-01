@@ -7,6 +7,8 @@ What is New in Static Frame
 
 ``IndexHierarchy.iter_label`` now defaults to iterating full depth labels.
 
+``Batch.__repr__()`` is no longer a display that exhausts the stored generator.
+
 
 0.7.6
 ----------

@@ -185,6 +185,21 @@ class TestUnit(TestCase):
             '<<U1>   <object>'
             ])
 
+    def test_batch_repr_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        b1 = Batch.from_frames((f1, f2))
+        self.assertTrue(repr(b1).startswith('<Batch at '))
+
+        b2 = b1.rename('foo')
+        self.assertTrue(repr(b2).startswith('<Batch: foo at '))
+
     #---------------------------------------------------------------------------
     def test_batch_shapes_a(self) -> None:
 
@@ -197,7 +212,6 @@ class TestUnit(TestCase):
                 (('x', (1, 2)), ('z', (2, 2)))
                 )
         # import ipdb; ipdb.set_trace()
-
 
     #---------------------------------------------------------------------------
     def test_batch_apply_a(self) -> None:

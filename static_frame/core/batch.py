@@ -123,12 +123,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         self._use_threads = use_threads
 
     #---------------------------------------------------------------------------
-
-    # def _realize(self) -> None:
-    #     # realize generator
-    #     if not hasattr(self._items, '__len__'):
-    #         self._items = tuple(self._items) #type: ignore
-
     def _derive(self,
             gen: GeneratorFrameItems,
             name: NameType = None,
@@ -175,6 +169,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def display(self,
             config: tp.Optional[DisplayConfig] = None
             ) -> Display:
+        '''Provide a :obj:`Series`-style display of the :obj:`Batch`. Note that if the held iterator is a generator, this display will exhaust the generator.
+        '''
         config = config or DisplayActive.get()
 
         items = ((label, f.__class__) for label, f in self._items)
@@ -185,6 +181,14 @@ class Batch(ContainerOperand, StoreClientMixin):
                 config=config)
         return series._display(config, display_cls)
 
+    def __repr__(self) -> str:
+        '''Provide a display of the :obj:`Batch` that does not exhaust the generator.
+        '''
+        if self._name:
+            header = f'Batch: {self._name}'
+        else:
+            header = 'Batch'
+        return f'<{header} at {hex(id(self))}>'
 
     #---------------------------------------------------------------------------
     # core function application routines
