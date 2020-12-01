@@ -2319,10 +2319,10 @@ def get_tuple_constructor(fields: np.ndarray) -> tp.Type[tp.Tuple[tp.Any, ...]]:
     Given fields, try to create a Namedtuple; if that fails, return a normal tuple.
     '''
     try:
-        return namedtuple('Axis', fields)
+        return namedtuple('Axis', fields)._make
     except ValueError:
         # take positiona args
-        return lambda *args: tuple(args) # type: ignore
+        return tuple # type: ignore
 
 
 

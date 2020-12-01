@@ -490,6 +490,20 @@ class IterNodeAxis(IterNode[FrameOrSeries]):
         return IterNode.get_delegate(self, axis=axis)
 
 
+class IterNodeConstructorAxis(IterNode[FrameOrSeries]):
+
+    __slots__ = _ITER_NODE_SLOTS
+
+    def __call__(self,
+            axis: int = 0, # make both kwarg only
+            *,
+            constructor: tp.Optional[tp.Type[tuple]] = None,
+            ) -> IterNodeDelegate[FrameOrSeries]:
+        return IterNode.get_delegate(self,
+                axis=axis,
+                constructor=constructor,
+                )
+
 class IterNodeGroup(IterNode[FrameOrSeries]):
     '''
     Iterator on 1D groupings where no args are required (but axis is retained for compatibility)

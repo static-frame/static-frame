@@ -56,6 +56,7 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
+from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
 # from static_frame.core.node_iter import IterNodeNoArg
@@ -2660,9 +2661,9 @@ class Frame(ContainerOperand):
     @property
     def iter_tuple(self) -> IterNodeAxis:
         '''
-        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
+        Iterator of :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1). An optional ``constructor`` callable can be used to provide a :obj:`NamedTuple` class (or any other constructor called with a single iterable) to be used to create each yielded axis value.
         '''
-        return IterNodeAxis(
+        return IterNodeConstructorAxis(
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
@@ -3958,25 +3959,37 @@ class Frame(ContainerOperand):
         yield from zip(keys, self._blocks.axis_values(axis))
 
 
-    def _axis_tuple(self, axis: int) -> tp.NamedTuple:
+    def _axis_tuple(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.NamedTuple:
         '''Generator of named tuples across an axis.
 
         Args:
             axis: 0 iterates over columns (index axis), 1 iterates over rows (column axis)
         '''
-        if axis == 1:
-            Tuple = get_tuple_constructor(self._columns.values)
-        elif axis == 0:
-            Tuple = get_tuple_constructor(self._index.values)
-        else:
-            raise AxisInvalid(f'no support for axis {axis}')
+        if constructor is None:
+            if axis == 1:
+                labels = self._columns.values
+            elif axis == 0:
+                labels = self._index.values
+            else:
+                raise AxisInvalid(f'no support for axis {axis}')
+            # uses _make method to call with iterable
+            constructor = get_tuple_constructor(labels)
+        elif issubclass(constructor, tuple) and hasattr(constructor, '_make'):
+            constructor = constructor._make
 
         for axis_values in self._blocks.axis_values(axis):
-            yield Tuple(*axis_values)
+            # import ipdb; ipdb.set_trace()
+            yield constructor(axis_values)
 
-    def _axis_tuple_items(self, axis: int) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
+    def _axis_tuple_items(self, *,
+            axis: int,
+            constructor: tp.Type[tuple] = None,
+            ) -> tp.Iterator[tp.Tuple[tp.Hashable, np.ndarray]]:
         keys = self._index if axis == 1 else self._columns
-        yield from zip(keys, self._axis_tuple(axis=axis))
+        yield from zip(keys, self._axis_tuple(axis=axis, constructor=constructor))
 
 
     def _axis_series(self, axis: int) -> tp.Iterator[Series]:
