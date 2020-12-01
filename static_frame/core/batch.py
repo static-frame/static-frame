@@ -185,9 +185,9 @@ class Batch(ContainerOperand, StoreClientMixin):
         '''Provide a display of the :obj:`Batch` that does not exhaust the generator.
         '''
         if self._name:
-            header = f'Batch: {self._name}'
+            header = f'{self.__class__.__name__}: {self._name}'
         else:
-            header = 'Batch'
+            header = self.__class__.__name__
         return f'<{header} at {hex(id(self))}>'
 
     #---------------------------------------------------------------------------
