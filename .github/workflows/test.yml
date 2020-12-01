@@ -28,24 +28,24 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu-')
       with:
         path: ~/.cache/pip
-        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (MacOS)
       uses: actions/cache@v2
       if: startsWith(matrix.os, 'macos-')
       with:
         path: ~/Library/Caches/pip
-        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Restore cache (Windows)
       uses: actions/cache@v2
       if: startsWith(matrix.os, 'windows-')
       with:
         path: ~\AppData\Local\pip\Cache
-        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
-        restore-keys: test-pip-${{ matrix.os }}-
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
