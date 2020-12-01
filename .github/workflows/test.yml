@@ -36,7 +36,7 @@ jobs:
       if: startsWith(matrix.os, 'macos-')
       with:
         path: ~/Library/Caches/pip
-        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml) }}
+        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
         restore-keys: test-pip-${{ matrix.os }}-
 
     - name: Restore cache (Windows)
@@ -44,7 +44,7 @@ jobs:
       if: startsWith(matrix.os, 'windows-')
       with:
         path: ~\AppData\Local\pip\Cache
-        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml) }}
+        key: test-pip-${{ matrix.os }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
         restore-keys: test-pip-${{ matrix.os }}-
 
     - name: Install dependencies
