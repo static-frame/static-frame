@@ -2,8 +2,8 @@ name: Test
 
 on: [push, pull_request]
 
-# env:
-#   CFLAGS: -Wno-error=implicit-function-declaration
+env:
+  CFLAGS: -Wno-error=implicit-function-declaration
 
 jobs:
   build:
