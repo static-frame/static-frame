@@ -12,11 +12,8 @@
   :target: https://anaconda.org/conda-forge/static-frame
 
 
-
 .. image:: https://img.shields.io/codecov/c/github/InvestmentSystems/static-frame.svg
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
-
-
 
 
 .. image:: https://github.com/InvestmentSystems/static-frame/workflows/Test/badge.svg
@@ -24,13 +21,6 @@
 
 .. image:: https://github.com/InvestmentSystems/static-frame/workflows/Quality/badge.svg
   :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3AQuality
-
-
-
-.. image:: https://img.shields.io/travis/InvestmentSystems/static-frame/master.svg
-  :target: https://travis-ci.org/InvestmentSystems/static-frame/branches
-
-
 
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg
