@@ -1,6 +1,10 @@
 name: Quality
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
 
 jobs:
   build:
@@ -14,6 +18,13 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
+    
+    - name: Restore cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: quality-pip-${{ hashFiles('requirements-test.txt', '.github/workflows/quality.yml') }}
+#         restore-keys: quality-pip-
 
     - name: Install dependencies
       run: |
