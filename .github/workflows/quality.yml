@@ -24,7 +24,7 @@ jobs:
       with:
         path: ~/.cache/pip
         key: quality-pip-${{ hashFiles('requirements-test.txt', '.github/workflows/quality.yml') }}
-#         restore-keys: quality-pip-
+        restore-keys: quality-pip-
 
     - name: Install dependencies
       run: |
