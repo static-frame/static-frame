@@ -1,6 +1,13 @@
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+env:
+  CFLAGS: -Wno-error=implicit-function-declaration
 
 jobs:
   build:
@@ -8,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-18.04', 'windows-2019', 'macos-10.15']
-        python-version: [3.6, 3.7] # 3.8 / pandas does not work on macos yet
+        python-version: [3.6, 3.7, 3.8]
 
     runs-on: ${{ matrix.os }}
 
@@ -19,6 +26,30 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    
+    - name: Restore cache (Ubuntu)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'ubuntu-')
+      with:
+        path: ~/.cache/pip
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+
+    - name: Restore cache (MacOS)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'macos-')
+      with:
+        path: ~/Library/Caches/pip
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
+
+    - name: Restore cache (Windows)
+      uses: actions/cache@v2
+      if: startsWith(matrix.os, 'windows-')
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements-test.txt', '.github/workflows/test.yml') }}
+        restore-keys: test-pip-${{ matrix.os }}-${{ matrix.python-version }}-
 
     - name: Install dependencies
       run: |
