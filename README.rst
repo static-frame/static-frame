@@ -16,11 +16,13 @@
   :target: https://codecov.io/gh/InvestmentSystems/static-frame
 
 
-.. image:: https://github.com/InvestmentSystems/static-frame/workflows/Test/badge.svg
+
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Test?label=test&logo=Github
   :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATest
 
-.. image:: https://github.com/InvestmentSystems/static-frame/workflows/Quality/badge.svg
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Quality?label=quality&logo=Github
   :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3AQuality
+
 
 
 .. image:: https://img.shields.io/readthedocs/static-frame.svg
