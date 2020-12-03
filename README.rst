@@ -20,6 +20,9 @@
 .. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Test?label=test&logo=Github
   :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATest
 
+.. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/TestForward?label=test-forward&logo=Github
+  :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3ATestForward
+
 .. image:: https://img.shields.io/github/workflow/status/InvestmentSystems/static-frame/Quality?label=quality&logo=Github
   :target: https://github.com/InvestmentSystems/static-frame/actions?query=workflow%3AQuality
 
