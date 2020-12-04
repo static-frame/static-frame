@@ -1742,6 +1742,21 @@ class TestUnit(TestCase):
                 [(1, 30), (2, 50), ('a', 'b'), (False, True), (True, False)])
 
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_iter_tuple_items_a(self) -> None:
+        records = (
+                (1, 2, 'a', False, True),
+                (30, 50, 'b', True, False))
+
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('x','y'))
+
+        post1 = list(f1.iter_tuple_items(constructor=list))
+        self.assertEqual(post1, [('p', [1, 30]), ('q', [2, 50]), ('r', ['a', 'b']), ('s', [False, True]), ('t', [True, False])])
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_setitem_a(self) -> None:

@@ -2675,7 +2675,7 @@ class Frame(ContainerOperand):
         '''
         Iterator of pairs of label, :obj:`NamedTuple`, where tuples are drawn from columns (axis=0) or rows (axis=1)
         '''
-        return IterNodeAxis(
+        return IterNodeConstructorAxis(
                 container=self,
                 function_values=self._axis_tuple,
                 function_items=self._axis_tuple_items,
