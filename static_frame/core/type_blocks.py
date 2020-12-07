@@ -2002,8 +2002,7 @@ class TypeBlocks(ContainerOperand):
                     other_operands = other._reblock()
             else: # raise same error as NP
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
-        else:
-            # process other as an array
+        else: # process other as an array
             self_operands = self._blocks
             if not isinstance(other, np.ndarray):
                 other = iterable_to_array_nd(other)

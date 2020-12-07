@@ -4,28 +4,15 @@ from itertools import zip_longest
 
 import numpy as np
 
-
-# assuming located in the same directory
-# from static_frame import Index
-# from static_frame import IndexGO
-# from static_frame import Series
-# from static_frame import Frame
-# from static_frame import FrameGO
-from static_frame import TypeBlocks
-# from static_frame import Display
 from static_frame import mloc
-# from static_frame import DisplayConfig
-
-
+from static_frame import TypeBlocks
+from static_frame.core.exception import AxisInvalid
+from static_frame.core.exception import ErrorInitTypeBlocks
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.util import immutable_filter
 from static_frame.core.util import NULL_SLICE
-
-from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
-
-from static_frame.core.exception import ErrorInitTypeBlocks
-from static_frame.core.exception import AxisInvalid
+from static_frame.test.test_case import TestCase
 
 nan = np.nan
 
@@ -689,7 +676,6 @@ class TestUnit(TestCase):
                 [  0. ,   0. ,   2. ,   0. ,   0.1]])
 
 
-#     @unittest.skip('implement operators for same sized but differently typed blocks')
     def test_type_blocks_binary_operator_e(self) -> None:
 
         a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
@@ -721,6 +707,18 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = tb1 + tb2.values
+
+    # def test_type_blocks_binary_operator_e(self) -> None:
+
+    #     a1 = np.array([[1, 2, 3], [4, 5, 6], [0, 0, 1]])
+    #     a2 = np.array([[False, False, True], [True, False, True], [True, False, True]])
+    #     tb = TypeBlocks.from_blocks((a1, a2))
+
+    #     # this applies row-wise, NPs default:
+    #     # tb * [2, 2, 2, 2, 2, 2]
+    #     # if this can be assumed to be an axis 0 operation
+    #     import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
