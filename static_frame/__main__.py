@@ -16,12 +16,19 @@ from static_frame.core.display_color import HexColor
 
 imports = {'np': np, 'sf': sf}
 
-try: # Import pandas, if it's installed:
+try:
     import pandas as pd
 except ImportError: #pragma: no cover
     pass #pragma: no cover
 else:
     imports['pd'] = pd
+
+try:
+    import frame_fixtures as ff
+except ImportError: #pragma: no cover
+    pass #pragma: no cover
+else:
+    imports['ff'] = ff
 
 commands = sorted(
         f'import {package.__name__} as {name} # {package.__version__}'
