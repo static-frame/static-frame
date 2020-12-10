@@ -2109,7 +2109,6 @@ def ufunc_nanany(array: np.ndarray,
 
 #-------------------------------------------------------------------------------
 
-
 def array_from_element_attr(*,
         array: np.ndarray,
         attr_name: str,
@@ -2191,7 +2190,23 @@ def array_from_element_method(*,
     post.flags.writeable = False
     return post
 
+def array_sample(
+        array: np.ndarray,
+        count: int,
+        seed: tp.Optional[int] = None,
+        ) -> np.ndarray:
+    '''
+    Given an array, randomly sample ``count`` components of that array. Sampling is always done "without replacment", meaning that the resulting array will never have duplicates.
+    '''
+    state = np.random.get_state()
+    if seed is not None:
+        np.random.seed(seed)
 
+    post = np.random.choice(array, size=count, replace=False)
+    post.flags.writeable = False
+
+    np.random.set_state(state)
+    return post
 
 
 #-------------------------------------------------------------------------------

@@ -22,6 +22,7 @@ from static_frame.core.util import argmin_2d
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import array_from_element_method
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_sample
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import binary_transition
 from static_frame.core.util import column_1d_filter
@@ -2314,6 +2315,28 @@ class TestUnit(TestCase):
 
         a9 = np.array([False])
         self.assertEqual(array1d_to_last_contiguous_to_edge(a9), 1)
+
+    #---------------------------------------------------------------------------
+    def test_array_sample_a(self) -> None:
+        a1 = np.arange(10)
+        self.assertEqual(array_sample(a1, 2, seed=0).tolist(), [2, 8])
+        self.assertEqual(array_sample(a1, 4, seed=0).tolist(), [2, 8, 4, 9])
+        self.assertEqual(array_sample(a1, 2, seed=0).tolist(), [2, 8])
+
+    def test_array_sample_b(self) -> None:
+        a1 = np.arange(4)
+        self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
+        self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
+
+        with self.assertRaises(ValueError):
+            # raises if count is greater than size of array
+            self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
+
+    def test_array_sample_c(self) -> None:
+        a1 = np.arange(8).reshape(4, 2)
+        post = array_sample(a1, 2)
+
+
 
 if __name__ == '__main__':
     unittest.main()
