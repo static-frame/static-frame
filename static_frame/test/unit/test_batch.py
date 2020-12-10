@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import frame_fixtures as ff
 
 nan = np.nan
 
@@ -420,6 +421,23 @@ class TestUnit(TestCase):
 
         self.assertEqual(f3.to_pairs(0),
                 (('a', ((0, 20), (1, 0), (2, 0), (3, 0))), ('b', ((0, 40), (1, 50), (2, 5), (3, 6))), ('c', ((0, 0), (1, 0), (2, 2), (3, 3)))))
+
+
+    def test_batch_to_frame_c(self) -> None:
+        f1 = ff.parse('s(20,4)|v(bool,bool,int,float)|c(I,str)|i(I,str)')
+
+        f2 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[0]).to_frame(index=IndexAutoFactory)
+        self.assertEqual(f2.to_pairs(0),
+                (('zZbu', ((0, False), (1, False), (2, True), (3, True))), ('ztsv', ((0, False), (1, True), (2, False), (3, True))), ('zUvW', ((0, -3648), (1, 197228), (2, 54020), (3, 194224))), ('zkuW', ((0, 1080.4), (1, 3884.48), (2, 3338.48), (3, -1760.34))))
+                )
+
+        f3 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[:2]).to_frame()
+        self.assertEqual(f3.to_pairs(0),
+                (('zZbu', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), False), (((False, True), 'zmhG'), False), (((True, False), 'zkuW'), True), (((True, False), 'z2Oo'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), True), (((False, True), 'zmhG'), True), (((True, False), 'zkuW'), False), (((True, False), 'z2Oo'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, False), 'ztsv'), 91301), (((False, True), 'zr4u'), 197228), (((False, True), 'zmhG'), 96520), (((True, False), 'zkuW'), 54020), (((True, False), 'z2Oo'), 35021), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, False), 'ztsv'), 2580.34), (((False, True), 'zr4u'), 3884.48), (((False, True), 'zmhG'), 1699.34), (((True, False), 'zkuW'), 3338.48), (((True, False), 'z2Oo'), 3944.56), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34))))
+                )
+
+
+
 
     #---------------------------------------------------------------------------
     def test_batch_drop_a(self) -> None:
