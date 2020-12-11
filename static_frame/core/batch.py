@@ -225,6 +225,9 @@ class Batch(ContainerOperand, StoreClientMixin):
 
 
     def apply(self, func: AnyCallable) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
+        '''
         if self._max_workers is None:
             def gen() -> IteratorFrameItems:
                 for label, frame in self._items:
@@ -246,6 +249,12 @@ class Batch(ContainerOperand, StoreClientMixin):
                         )
 
         return self._derive(gen_pool)
+
+    def apply_items(self, func: AnyCallable) -> 'Batch':
+        '''
+        Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
+        '''
+        pass
 
 
     #---------------------------------------------------------------------------
@@ -324,7 +333,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def keys(self) -> tp.Iterator[tp.Hashable]:
         '''
-        Iterator of :obj:`Frame` labels/
+        Iterator of :obj:`Frame` labels.
         '''
         for k, _ in self._items:
             yield k
