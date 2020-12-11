@@ -9479,7 +9479,48 @@ class TestUnit(TestCase):
                 ((0, (('0000', ''), ('0001', 'a'), ('0002', 'aa'))), (1, (('0000', ''), ('0001', 'b'), ('0002', 'bb'))))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_count_a(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, -95),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
 
+        self.assertEqual(f1.count(axis=0).to_pairs(), (('a', 2), ('b', 3)))
+        self.assertEqual(f1.count(axis=1).to_pairs(), (('x', 2), ('y', 1), ('z', 2)))
+
+        # can reuse index instance on both axis
+        self.assertEqual(id(f1.index), id(f1.count(axis=1).index))
+        self.assertEqual(id(f1.columns), id(f1.count(axis=0).index))
+
+    def test_frame_count_b(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, -95),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.count(axis=0).to_pairs(), (('a', 2), ('b', 3)))
+        self.assertEqual(f1.count(axis=1).to_pairs(), (('x', 2), ('y', 1), ('z', 2)))
+
+        # for axis 1, can reuse index instance from FrameGO
+        self.assertEqual(id(f1.index), id(f1.count(axis=1).index))
+        # for axis 0, cannot reuse columns instance as is mutable
+        self.assertNotEqual(id(f1.columns), id(f1.count(axis=0).index))
+
+
+
+
+    #---------------------------------------------------------------------------
     def test_frame_loc_min_a(self) -> None:
 
         records = (

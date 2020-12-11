@@ -116,6 +116,7 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import is_hashable
 from static_frame.core.util import is_dtype_specifier
 from static_frame.core.util import is_mapping
+from static_frame.core.util import isna_array
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import iterable_to_array_nd
 from static_frame.core.util import Join
@@ -142,6 +143,8 @@ from static_frame.core.util import dtype_kind_to_na
 from static_frame.core.util import DTYPE_DATETIME_KIND
 from static_frame.core.util import DTU_PYARROW
 from static_frame.core.util import DT64_NS
+from static_frame.core.util import DTYPE_INT_DEFAULT
+
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -4829,6 +4832,27 @@ class Frame(ContainerOperand):
             {count}
         '''
         return self.iloc[-count:]
+
+
+    def count(self, *,
+            axis: int = 0,
+            ) -> Series:
+        '''
+        Return the count of non-NA values along the provided ``axis``, where 0 provides counts per column, 1 provides counts per row.
+
+        Args:
+            axis
+        '''
+        labels = self._columns if axis == 0 else self._index
+
+        array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
+        for i, v in enumerate(self._blocks.axis_values(axis=axis)):
+            array[i] = len(v) - isna_array(v).sum()
+        array.flags.writeable = False
+
+        return Series(array, index=labels)
+
+
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,

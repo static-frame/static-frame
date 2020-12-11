@@ -599,6 +599,12 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
 
+    def count(self, axis: int = 0) -> 'Batch':
+        return self._apply_attr(
+                attr='count',
+                axis=axis,
+                )
+
     @doc_inject(selector='head', class_name='Batch')
     def head(self, count: int = 5) -> 'Batch':
         '''{doc}

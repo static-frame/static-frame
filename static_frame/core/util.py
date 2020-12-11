@@ -1200,7 +1200,7 @@ def isna_element(value: tp.Any) -> bool:
 def isna_array(array: np.ndarray,
         include_none: bool = True,
         ) -> np.ndarray:
-    '''Given an np.ndarray, return a bolean array setting True for missing values.
+    '''Given an np.ndarray, return a Boolean array setting True for missing values.
 
     Note: the returned array is not made immutable.
     '''

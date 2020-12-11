@@ -754,6 +754,19 @@ class TestUnit(TestCase):
             (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
             )
 
+    #---------------------------------------------------------------------------
+    # def test_batch_count_a(self) -> None:
+    #     f1 = Frame.from_dict(
+    #             dict(b=(20,20,0), a=(20,20,50)),
+    #             index=('z', 'y', 'x'),
+    #             name='f1')
+    #     f2 = Frame.from_dict(
+    #             dict(b=(1,20,1), a=(1,50,1)),
+    #             index=('y', 'z', 'x'),
+    #             name='f2')
+
+    #     b1 = Batch.from_frames((f1, f2))
+    #     import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
     def test_batch_to_zip_pickle_a(self) -> None:
