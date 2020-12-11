@@ -2372,7 +2372,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.head(2).to_pairs(),
                 ((99, 0), (98, 1)))
 
-
+    #---------------------------------------------------------------------------
     def test_series_tail_a(self) -> None:
         s1 = Series(range(100), index=reversed(range(100)))
 
@@ -2382,7 +2382,15 @@ class TestUnit(TestCase):
         self.assertEqual(s1.tail(2).to_pairs(),
                 ((1, 98), (0, 99)))
 
+    #---------------------------------------------------------------------------
+    def test_series_count_a(self) -> None:
+        s1 = Series((2, 3, 0, np.nan, 8, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(), 5)
 
+        s2 = Series((2, None, 0, np.nan, 8, 6), index=list('abcdef'))
+        self.assertEqual(s2.count(), 4)
+
+    #---------------------------------------------------------------------------
     def test_series_roll_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
 

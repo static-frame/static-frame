@@ -6,6 +6,8 @@ What is New in Static Frame
 
 ``Frame.iter_tuple_items()`` now exposes a ``constructor`` argument to control creation of axis containers.
 
+Added ``Frame.count``, ``Series.count``, ``Batch.count``.
+
 
 0.7.7
 ----------

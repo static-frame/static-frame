@@ -1973,6 +1973,12 @@ class Series(ContainerOperand):
         '''
         return self.iloc[-count:]
 
+    def count(self) -> int:
+        '''
+        Return the count of non-NA elements.
+        '''
+        return len(self.values) - isna_array(self.values).sum() #type: ignore
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True

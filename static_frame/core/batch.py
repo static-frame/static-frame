@@ -600,6 +600,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     # transformations resulting in changed dimensionality
 
     def count(self, axis: int = 0) -> 'Batch':
+        '''Apply count on contained Frames.
+        '''
         return self._apply_attr(
                 attr='count',
                 axis=axis,
