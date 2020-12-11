@@ -4853,7 +4853,6 @@ class Frame(ContainerOperand):
         return Series(array, index=labels)
 
 
-
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
