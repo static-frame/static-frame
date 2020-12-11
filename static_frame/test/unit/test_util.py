@@ -2334,8 +2334,9 @@ class TestUnit(TestCase):
 
     def test_array_sample_c(self) -> None:
         a1 = np.arange(8).reshape(4, 2)
-        post = array_sample(a1, 2)
-
+        self.assertEqual(array_sample(a1, 2, seed=2).tolist(), [[4, 5], [6, 7]])
+        self.assertEqual(array_sample(a1, 2, seed=2).tolist(), [[4, 5], [6, 7]])
+        self.assertEqual(array_sample(a1, 1, seed=2).tolist(), [[4, 5]])
 
 
 if __name__ == '__main__':
