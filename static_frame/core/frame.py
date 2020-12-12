@@ -4845,6 +4845,7 @@ class Frame(ContainerOperand):
         labels = self._columns if axis == 0 else self._index
 
         if skipna:
+            # NOTE: this could be more efficient if implemetned on TypeBlocks
             array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
             for i, v in enumerate(self._blocks.axis_values(axis=axis)):
                 array[i] = len(v) - isna_array(v).sum()

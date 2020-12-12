@@ -1986,6 +1986,24 @@ class Series(ContainerOperand):
             return len(self.values)
         return len(self.values) - isna_array(self.values).sum() #type: ignore
 
+    @doc_inject(selector='sample')
+    def sample(self,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> 'Series':
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        index, key = self._index._sample_and_key(count=count, seed=seed)
+        values = self.values[key]
+        values.flags.writeable = False
+        return self.__class__(values, index=index, name=self._name)
+
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True

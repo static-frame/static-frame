@@ -1318,32 +1318,26 @@ class IndexHierarchy(IndexBase):
                 )
 
 
-    @doc_inject(selector='sample')
-    def sample(self,
+    def _sample_and_key(self,
             count: int = 1,
+            *,
             seed: tp.Optional[int] = None,
-            ) -> 'IndexHierarchy':
-        '''{doc}
-
-        Args:
-            {count}
-            {seed}
-        '''
+            ) -> tp.Tuple['IndexHierarchy', np.ndarray]:
         if self._recache:
             self._update_array_cache()
 
         # sort to ensure hierarchability
-        row_key = array_sample(self.positions, count=count, seed=seed, sort=True)
-        blocks = self._blocks._extract(row_key=row_key)
+        key = array_sample(self.positions, count=count, seed=seed, sort=True)
+        blocks = self._blocks._extract(row_key=key)
 
         index_constructors = tuple(self._levels.index_types())
 
-        return self.__class__._from_type_blocks(blocks,
+        container = self.__class__._from_type_blocks(blocks,
                 index_constructors=index_constructors,
                 name=self._name,
                 own_blocks=True
                 )
-
+        return container, key
 
     #---------------------------------------------------------------------------
     # export

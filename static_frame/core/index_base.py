@@ -202,14 +202,28 @@ class IndexBase(ContainerOperand):
     def fillna(self: I, value: tp.Any) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def sample(self: I, count: int = 1, seed: tp.Optional[int] = None) -> I:
-        raise NotImplementedError() #pragma: no cover
 
     def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
 
     def display(self, config: tp.Optional[DisplayConfig] = None) -> Display:
         raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+    @doc_inject(selector='sample')
+    def sample(self: I,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> I:
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        container, _ = self._sample_and_key(count=count, seed=seed)
+        return container
 
     #---------------------------------------------------------------------------
 

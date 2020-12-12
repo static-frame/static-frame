@@ -1187,24 +1187,19 @@ class Index(IndexBase):
 
         return self.__class__(assigned, name=self._name)
 
-    @doc_inject(selector='sample')
-    def sample(self,
+    def _sample_and_key(self,
             count: int = 1,
+            *,
             seed: tp.Optional[int] = None,
-            ) -> 'Index':
-        '''{doc}
-
-        Args:
-            {count}
-            {seed}
-        '''
+            ) -> tp.Tuple['Index', np.ndarray]:
+        # NOTE: base class defines pubic method
         # force usage of property for cache update
         # sort positions to avoid uncomparable objects
         key = array_sample(self.positions, count=count, seed=seed, sort=True)
 
         values = self.values[key]
         values.flags.writeable = False
-        return self.__class__(values, name=self._name)
+        return self.__class__(values, name=self._name), key
 
 
     #---------------------------------------------------------------------------

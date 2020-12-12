@@ -3850,6 +3850,19 @@ class TestUnit(TestCase):
         self.assertEqual(s4.dtype.kind, 'f')
 
 
+    #---------------------------------------------------------------------------
+    def test_series_sample_a(self) -> None:
+        s1 = Series(('io', 'tw', 'wf', 'ge'), index=('a', 'b', 'c', 'd'))
+        self.assertEqual(s1.sample(2, seed=8).to_pairs(),
+                (('b', 'tw'), ('c', 'wf')))
+
+    def test_series_sample_b(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), ('x', 'y')))
+        self.assertEqual(s1.sample(3, seed=19).to_pairs(),
+                ((('a', 'x'), 0), (('b', 'x'), 2), (('b', 'y'), 3))
+                )
+
+
 
 if __name__ == '__main__':
     unittest.main()
