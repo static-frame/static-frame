@@ -2390,6 +2390,10 @@ class TestUnit(TestCase):
         s2 = Series((2, None, 0, np.nan, 8, 6), index=list('abcdef'))
         self.assertEqual(s2.count(), 4)
 
+    def test_series_count_b(self) -> None:
+        s1 = Series((2, 3, 0, np.nan, 8, 6), index=list('abcdef'))
+        self.assertEqual(s1.count(skipna=False), 6)
+
     #---------------------------------------------------------------------------
     def test_series_roll_a(self) -> None:
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))

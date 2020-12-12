@@ -4833,6 +4833,7 @@ class Frame(ContainerOperand):
 
 
     def count(self, *,
+            skipna: bool = True,
             axis: int = 0,
             ) -> Series:
         '''
@@ -4843,11 +4844,16 @@ class Frame(ContainerOperand):
         '''
         labels = self._columns if axis == 0 else self._index
 
-        array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
-        for i, v in enumerate(self._blocks.axis_values(axis=axis)):
-            array[i] = len(v) - isna_array(v).sum()
+        if skipna:
+            array = np.empty(len(labels), dtype=DTYPE_INT_DEFAULT)
+            for i, v in enumerate(self._blocks.axis_values(axis=axis)):
+                array[i] = len(v) - isna_array(v).sum()
+        else:
+            array = np.full(len(labels),
+                    self._blocks._shape[axis],
+                    dtype=DTYPE_INT_DEFAULT,
+                    )
         array.flags.writeable = False
-
         return Series(array, index=labels)
 
     @doc_inject()

@@ -9517,6 +9517,20 @@ class TestUnit(TestCase):
         # for axis 0, cannot reuse columns instance as is mutable
         self.assertNotEqual(id(f1.columns), id(f1.count(axis=0).index))
 
+    def test_frame_count_c(self) -> None:
+        records = (
+                (2, 2),
+                (np.nan, 34),
+                (2, -95),
+                )
+        f1 = FrameGO.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z')
+                )
+
+        self.assertEqual(f1.count(axis=0, skipna=False).to_pairs(), (('a', 3), ('b', 3)))
+        self.assertEqual(f1.count(axis=1, skipna=False).to_pairs(), (('x', 2), ('y', 2), ('z', 2)))
+
 
 
 

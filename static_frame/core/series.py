@@ -1973,10 +1973,17 @@ class Series(ContainerOperand):
         '''
         return self.iloc[-count:]
 
-    def count(self) -> int:
+    def count(self, *,
+            skipna: bool = True
+            ) -> int:
         '''
         Return the count of non-NA elements.
+
+        Args:
+            skipna
         '''
+        if not skipna:
+            return len(self.values)
         return len(self.values) - isna_array(self.values).sum() #type: ignore
 
     @doc_inject(selector='argminmax')
