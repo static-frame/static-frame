@@ -239,8 +239,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return self._apply_pool(labels, arg_gen(), call_attr)
 
-
-
     def apply(self, func: AnyCallable) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
@@ -259,7 +257,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         return self._apply_pool(labels, arg_gen(), call_func)
 
-
     def apply_items(self, func: AnyCallable) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
@@ -277,8 +274,6 @@ class Batch(ContainerOperand, StoreClientMixin):
                 yield frame, func, label
 
         return self._apply_pool(labels, arg_gen(), call_func_items)
-
-
 
     #---------------------------------------------------------------------------
     # extraction
