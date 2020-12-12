@@ -8,6 +8,9 @@ What is New in Static Frame
 
 Added ``Frame.count``, ``Series.count``, ``Batch.count``.
 
+Added ``Frame.sample``, ``Series.sample``, ``Index.sample``, ``IndexHierarchy.sample``.
+
+
 
 0.7.7
 ----------

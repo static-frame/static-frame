@@ -202,6 +202,12 @@ class IndexBase(ContainerOperand):
     def fillna(self: I, value: tp.Any) -> I:
         raise NotImplementedError() #pragma: no cover
 
+    def _sample_and_key(self: I,
+            count: int = 1,
+            *,
+            seed: tp.Optional[int] = None,
+            ) -> tp.Tuple[I, np.ndarray]:
+        raise NotImplementedError() #pragma: no cover
 
     def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
         raise NotImplementedError() #pragma: no cover
