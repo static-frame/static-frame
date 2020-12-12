@@ -267,6 +267,47 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
+    def test_batch_apply_items_a(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(d=(10,20), b=(50,60)),
+                index=('x', 'q'),
+                name='f3')
+
+        b1 = Batch.from_frames((f1, f2, f3)).apply_items(
+                lambda k, x: (k, x['b'].mean()))
+
+        self.assertEqual(b1.to_frame().to_pairs(0),
+                ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
+)
+        b2 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply_items(
+                lambda k, x: (k, x['b'].mean()))
+
+        self.assertEqual(b2.to_frame().to_pairs(0),
+                ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
+                )
+
+    def test_batch_apply_items_b(self) -> None:
+
+        f1 = ff.parse('s(20,4)|v(bool,bool,int,float)|c(I,str)|i(I,str)')
+
+        b1 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply_items(lambda k, f: f.iloc[:1] if k != (True, True) else f.iloc[:3]).to_frame()
+
+        self.assertEqual(b1.to_pairs(0),
+            (('zZbu', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), False), (((True, False), 'zkuW'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), True), (((True, False), 'zkuW'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, True), 'zr4u'), 197228), (((True, False), 'zkuW'), 54020), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133), (((True, True), 'zo2Q'), -88017))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, True), 'zr4u'), 3884.48), (((True, False), 'zkuW'), 3338.48), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34), (((True, True), 'zo2Q'), 268.96))))
+            )
+
+
+
+    #---------------------------------------------------------------------------
     def test_batch_name_a(self) -> None:
 
         f1 = Frame.from_dict(

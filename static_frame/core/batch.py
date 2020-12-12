@@ -37,25 +37,35 @@ IteratorFrameItems = tp.Iterator[tp.Tuple[tp.Hashable, FrameOrSeries]]
 GeneratorFrameItems = tp.Callable[..., IteratorFrameItems]
 
 
-def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]) -> FrameOrSeries:
-    container, func = bundle
-    post = func(container)
+#-------------------------------------------------------------------------------
+# family of executor functions normalized in signature (taking a single tuple of args) for usage in processor pool calls
+
+def normalize_container(post: tp.Any
+        ) -> FrameOrSeries:
     # post might be an element, promote to a Series to permit concatenation
     # NOTE: do not set index as (container.name,), as this can lead to diagonal formations; will already be paired with stored labels
     if not isinstance(post, (Frame, Series)):
         return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
     return post
 
-def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]) -> FrameOrSeries:
-    # process pool requires a single argument
+def call_func(bundle: tp.Tuple[FrameOrSeries, AnyCallable]
+        ) -> FrameOrSeries:
+    container, func = bundle
+    return normalize_container(func(container))
+
+def call_func_items(bundle: tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]
+        ) -> FrameOrSeries:
+    container, func, label = bundle
+    return normalize_container(func(label, container))
+
+def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
+        ) -> FrameOrSeries:
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
-    post = func(*args, **kwargs)
-    if not isinstance(post, (Frame, Series)):
-        return Series.from_element(post, index=ELEMENT_TUPLE) #type: ignore
-    return post
+    return normalize_container(func(*args, **kwargs))
 
 
+#-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
     '''
     A lazy, sequentially evaluated container of :obj:`Frame` that broadcasts operations on contained :obj:`Frame` by return new :obj:`Batch` instances. Full evaluation of operations only occurs when iterating or calling an exporter.
@@ -193,6 +203,21 @@ class Batch(ContainerOperand, StoreClientMixin):
     #---------------------------------------------------------------------------
     # core function application routines
 
+    def _apply_pool(self,
+            labels: tp.List[tp.Hashable],
+            arg_iter: tp.Iterator[tp.Tuple[tp.Any, ...]],
+            caller: tp.Callable[..., FrameOrSeries],
+            ) -> 'Batch':
+
+        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
+
+        def gen_pool() -> IteratorFrameItems:
+            with pool_executor(max_workers=self._max_workers) as executor:
+                yield from zip(labels,
+                        executor.map(caller, arg_iter, chunksize=self._chunksize)
+                        )
+        return self._derive(gen_pool)
+
     def _apply_attr(self,
             *args: tp.Any,
             attr: str,
@@ -207,21 +232,14 @@ class Batch(ContainerOperand, StoreClientMixin):
                     yield label, call_attr((frame, attr, args, kwargs))
             return self._derive(gen)
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, attr, args, kwargs
 
-        def gen_pool() -> IteratorFrameItems:
-            with pool_executor(max_workers=self._max_workers) as executor:
-                yield from zip(labels,
-                        executor.map(call_attr, arg_gen(), chunksize=self._chunksize)
-                        )
+        return self._apply_pool(labels, arg_gen(), call_attr)
 
-        return self._derive(gen_pool)
 
 
     def apply(self, func: AnyCallable) -> 'Batch':
@@ -234,27 +252,33 @@ class Batch(ContainerOperand, StoreClientMixin):
                     yield label, call_func((frame, func))
             return self._derive(gen)
 
-        pool_executor = ThreadPoolExecutor if self._use_threads else ProcessPoolExecutor
-
         labels = []
         def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable]]:
             for label, frame in self._items:
                 labels.append(label)
                 yield frame, func
 
-        def gen_pool() -> IteratorFrameItems:
-            with pool_executor(max_workers=self._max_workers) as executor:
-                yield from zip(labels,
-                        executor.map(call_func, arg_gen(), chunksize=self._chunksize)
-                        )
+        return self._apply_pool(labels, arg_gen(), call_func)
 
-        return self._derive(gen_pool)
 
     def apply_items(self, func: AnyCallable) -> 'Batch':
         '''
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
         '''
-        pass
+        if self._max_workers is None:
+            def gen() -> IteratorFrameItems:
+                for label, frame in self._items:
+                    yield label, call_func_items((frame, func, label))
+            return self._derive(gen)
+
+        labels = []
+        def arg_gen() -> tp.Iterator[tp.Tuple[FrameOrSeries, AnyCallable, tp.Hashable]]:
+            for label, frame in self._items:
+                labels.append(label)
+                yield frame, func, label
+
+        return self._apply_pool(labels, arg_gen(), call_func_items)
+
 
 
     #---------------------------------------------------------------------------
