@@ -4857,10 +4857,11 @@ class Frame(ContainerOperand):
         array.flags.writeable = False
         return Series(array, index=labels)
 
-    @doc_inject()
+    @doc_inject(selector='sample')
     def sample(self,
             index: tp.Optional[int] = None,
             columns: tp.Optional[int] = None,
+            *,
             seed: tp.Optional[int] = None,
             ) -> 'Frame':
         '''
@@ -4871,9 +4872,35 @@ class Frame(ContainerOperand):
             {columns}
             {seed}
         '''
-        pass
+        if index is not None:
+            index, index_key = self._index._sample_and_key(count=index, seed=seed)
+            own_index = True
+        else:
+            index = self._index
+            index_key = None
+            own_index = True
 
+        if columns is not None:
+            columns, columns_key = self._columns._sample_and_key(count=columns, seed=seed)
+            own_columns = True
+        else:
+            columns = self._columns
+            columns_key = None
+            own_columns = False # might be GO
 
+        if index_key is not None or columns_key is not None:
+            blocks = self._blocks._extract(row_key=index_key, column_key=columns_key)
+        else:
+            blocks = self._blocks.copy()
+
+        return self.__class__(blocks,
+                columns=columns,
+                index=index,
+                name=self._name,
+                own_data=True,
+                own_index=own_index,
+                own_columns=own_columns,
+                )
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
