@@ -24,7 +24,7 @@ from static_frame.core.index import ILoc
 
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index import PositionsAllocator
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.index import mutable_immutable_index_filter
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_level import IndexLevel

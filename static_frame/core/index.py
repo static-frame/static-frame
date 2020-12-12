@@ -75,6 +75,7 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import UFunc
 from static_frame.core.util import ufunc_axis_skipna
 from static_frame.core.util import union1d
+from static_frame.core.util import PositionsAllocator
 
 if tp.TYPE_CHECKING:
     import pandas #pylint: disable=W0611 #pragma: no cover
@@ -276,23 +277,6 @@ def mutable_immutable_index_filter(
     if index.STATIC:
         return index._MUTABLE_CONSTRUCTOR(index)
     return index.__class__(index) # create new instance
-
-#-------------------------------------------------------------------------------
-
-class PositionsAllocator:
-
-    _size: int = 0
-    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
-    _array.flags.writeable = False
-
-    @classmethod
-    def get(cls, size: int) -> np.ndarray:
-        if size > cls._size:
-            cls._size = size * 2
-            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
-            cls._array.flags.writeable = False
-        # slices of immutable arrays are immutable
-        return cls._array[:size]
 
 #-------------------------------------------------------------------------------
 _INDEX_SLOTS = (

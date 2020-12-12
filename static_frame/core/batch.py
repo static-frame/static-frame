@@ -64,7 +64,6 @@ def call_attr(bundle: tp.Tuple[FrameOrSeries, str, tp.Any, tp.Any]
     func = getattr(container, attr)
     return normalize_container(func(*args, **kwargs))
 
-
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
     '''

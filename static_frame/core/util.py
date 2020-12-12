@@ -2190,6 +2190,26 @@ def array_from_element_method(*,
     post.flags.writeable = False
     return post
 
+#-------------------------------------------------------------------------------
+
+class PositionsAllocator:
+    '''Resource for re-using a single array of contiguous ascending integers for common applications in IndexBase.
+    '''
+
+    _size: int = 0
+    _array: np.ndarray = np.arange(_size, dtype=DTYPE_INT_DEFAULT)
+    _array.flags.writeable = False
+
+    @classmethod
+    def get(cls, size: int) -> np.ndarray:
+        if size > cls._size:
+            cls._size = size * 2
+            cls._array = np.arange(cls._size, dtype=DTYPE_INT_DEFAULT)
+            cls._array.flags.writeable = False
+        # slices of immutable arrays are immutable
+        return cls._array[:size]
+
+
 def array_sample(
         array: np.ndarray,
         count: int,
@@ -2206,7 +2226,7 @@ def array_sample(
         post = np.random.choice(array, size=count, replace=False)
     elif array.ndim == 2:
         select = np.random.choice(
-                np.arange(len(array)),
+                PositionsAllocator.get(len(array)),
                 size=count,
                 replace=False,
                 )

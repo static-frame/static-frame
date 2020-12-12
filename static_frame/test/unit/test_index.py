@@ -18,7 +18,7 @@ from static_frame import ILoc
 from static_frame.test.test_case import TestCase
 from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.index import PositionsAllocator
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import mloc
 
 
