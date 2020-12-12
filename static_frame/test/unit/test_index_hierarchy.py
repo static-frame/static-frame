@@ -2700,6 +2700,21 @@ class TestUnit(TestCase):
                 [('I', 'A'), ('I', 'A'), ('I', 'B'), ('I', 'B'), ('II', 'A'), ('II', 'A'), ('II', 'B'), ('II', 'B')]
                 )
 
+    #---------------------------------------------------------------------------
+    def test_index_hierarchy_dtypes_a(self) -> None:
+        idx1 = Index(('A', 'B'))
+        idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
+        idx3 = Index((1, 2))
+        hidx = IndexHierarchy.from_product(idx1, idx2, idx3)
+
+        self.assertEqual(hidx.sample(3, seed=4).values.tolist(),
+                [['A', datetime.date(2019, 1, 5), 1], ['A', datetime.date(2019, 1, 8), 1], ['B', datetime.date(2019, 1, 7), 1]])
+
+        self.assertEqual(hidx.sample(3, seed=4).index_types.values.tolist(),
+                [Index, IndexDate, Index])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

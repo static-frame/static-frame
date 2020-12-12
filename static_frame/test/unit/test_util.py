@@ -2327,16 +2327,14 @@ class TestUnit(TestCase):
         a1 = np.arange(4)
         self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
         self.assertEqual(array_sample(a1, 4, seed=1).tolist(), [3, 2, 0, 1])
+        self.assertEqual(array_sample(a1, 4, seed=1, sort=True).tolist(), [0, 1, 2, 3])
+
 
         with self.assertRaises(ValueError):
             # raises if count is greater than size of array
             self.assertEqual(array_sample(a1, 6, seed=1).tolist(), [3, 2, 0, 1])
 
-    def test_array_sample_c(self) -> None:
-        a1 = np.arange(8).reshape(4, 2)
-        self.assertEqual(array_sample(a1, 2, seed=2).tolist(), [[4, 5], [6, 7]])
-        self.assertEqual(array_sample(a1, 2, seed=2).tolist(), [[4, 5], [6, 7]])
-        self.assertEqual(array_sample(a1, 1, seed=2).tolist(), [[4, 5]])
+
 
 
 if __name__ == '__main__':

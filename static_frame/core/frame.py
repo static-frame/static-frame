@@ -59,14 +59,12 @@ from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
-# from static_frame.core.node_iter import IterNodeNoArg
 from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
-# from static_frame.core.node_selector import InterfaceBatchQuartet
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -4851,6 +4849,23 @@ class Frame(ContainerOperand):
         array.flags.writeable = False
 
         return Series(array, index=labels)
+
+    @doc_inject()
+    def sample(self,
+            index: tp.Optional[int] = None,
+            columns: tp.Optional[int] = None,
+            seed: tp.Optional[int] = None,
+            ) -> 'Frame':
+        '''
+        {doc}
+
+        Args:
+            {index}
+            {columns}
+            {seed}
+        '''
+        pass
+
 
 
     @doc_inject(selector='argminmax')

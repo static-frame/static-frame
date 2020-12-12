@@ -1279,6 +1279,13 @@ class TestUnit(TestCase):
         b.append(4)
         self.assertFalse(a.equals(b))
 
+    #---------------------------------------------------------------------------
+    def test_index_sample_a(self) -> None:
+        a = IndexGO([1, 2, 3])
+        a.append(None)
+        b = a.sample(2, seed=3)
+
+        self.assertEqual(b.values.tolist(), [2, None])
 
 
 if __name__ == '__main__':

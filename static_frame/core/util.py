@@ -2214,25 +2214,21 @@ def array_sample(
         array: np.ndarray,
         count: int,
         seed: tp.Optional[int] = None,
+        sort: bool = False,
         ) -> np.ndarray:
     '''
     Given an array 1D or 2D array, randomly sample ``count`` components of that array. Sampling is always done "without replacment", meaning that the resulting array will never have duplicates. For 2D array, selection happens along axis 0.
     '''
+    if array.ndim != 1:
+        raise NotImplementedError(f'no handling for axis {array.ndim}')
+
     if seed is not None:
         state = np.random.get_state()
         np.random.seed(seed)
 
-    if array.ndim == 1:
-        post = np.random.choice(array, size=count, replace=False)
-    elif array.ndim == 2:
-        select = np.random.choice(
-                PositionsAllocator.get(len(array)),
-                size=count,
-                replace=False,
-                )
-        post = array[select]
-    else:
-        raise NotImplementedError(f'no handling for axis {array.ndim}')
+    post = np.random.choice(array, size=count, replace=False)
+    if sort:
+        post.sort(kind=DEFAULT_SORT_KIND)
 
     if seed is not None:
         np.random.set_state(state)

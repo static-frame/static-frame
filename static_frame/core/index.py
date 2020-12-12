@@ -35,6 +35,7 @@ from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
 
 from static_frame.core.util import array_shift
+from static_frame.core.util import array_sample
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import CallableOrMapping
@@ -1185,6 +1186,25 @@ class Index(IndexBase):
         assigned.flags.writeable = False
 
         return self.__class__(assigned, name=self._name)
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            count: int = 1,
+            seed: tp.Optional[int] = None,
+            ) -> 'Index':
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        # force usage of property for cache update
+        # sort positions to avoid uncomparable objects
+        key = array_sample(self.positions, count=count, seed=seed, sort=True)
+
+        values = self.values[key]
+        values.flags.writeable = False
+        return self.__class__(values, name=self._name)
 
 
     #---------------------------------------------------------------------------

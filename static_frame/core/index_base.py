@@ -193,10 +193,16 @@ class IndexBase(ContainerOperand):
     def _drop_iloc(self: I, key: GetItemKeyType) -> I:
         raise NotImplementedError() #pragma: no cover
 
+    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+        raise NotImplementedError() #pragma: no cover
+
     def roll(self: I, shift: int) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> np.ndarray:
+    def fillna(self: I, value: tp.Any) -> I:
+        raise NotImplementedError() #pragma: no cover
+
+    def sample(self: I, count: int = 1, seed: tp.Optional[int] = None) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def level_add(self, level: tp.Hashable) -> 'IndexHierarchy':
@@ -345,8 +351,6 @@ class IndexBase(ContainerOperand):
                 dtypes=dtypes,
                 size_one_unity=size_one_unity
                 )
-
-
 
     #---------------------------------------------------------------------------
     # exporters

@@ -63,7 +63,7 @@ from static_frame.core.util import concat_resolved
 class TypeBlocks(ContainerOperand):
     '''An ordered collection of type-heterogenous, immutable NumPy arrays, providing an external array-like interface of a single, 2D array. Used by :obj:`Frame` for core, unindexed array management.
 
-    A TypeBlocks instance can have a zero size shape (where the length of one axis is zero). Internally, when axis 0 (rows) is of size 0, we store similarly sized arrays. When axis 1 (columns) is of size 0, we do not store arrays, as such arrays do not define a type (as tyupes are defined by columns).
+    A TypeBlocks instance can have a zero size shape (where the length of one axis is zero). Internally, when axis 0 (rows) is of size 0, we store similarly sized arrays. When axis 1 (columns) is of size 0, we do not store arrays, as such arrays do not define a type (as types are defined by columns).
     '''
     # related to Pandas BlockManager
     __slots__ = (
@@ -2201,9 +2201,6 @@ class TypeBlocks(ContainerOperand):
                 start = end
 
         return self.from_blocks(blocks())
-
-
-
 
     #---------------------------------------------------------------------------
     # fillna sided

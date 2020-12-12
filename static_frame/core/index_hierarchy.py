@@ -63,6 +63,7 @@ from static_frame.core.util import UFunc
 from static_frame.core.util import union2d
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import iterable_to_array_2d
+from static_frame.core.util import array_sample
 
 if tp.TYPE_CHECKING:
     from pandas import DataFrame #pylint: disable=W0611 #pragma: no cover
@@ -1308,6 +1309,33 @@ class IndexHierarchy(IndexBase):
             self._update_array_cache()
 
         blocks = self._blocks.fillna(value, None)
+        index_constructors = tuple(self._levels.index_types())
+
+        return self.__class__._from_type_blocks(blocks,
+                index_constructors=index_constructors,
+                name=self._name,
+                own_blocks=True
+                )
+
+
+    @doc_inject(selector='sample')
+    def sample(self,
+            count: int = 1,
+            seed: tp.Optional[int] = None,
+            ) -> 'IndexHierarchy':
+        '''{doc}
+
+        Args:
+            {count}
+            {seed}
+        '''
+        if self._recache:
+            self._update_array_cache()
+
+        # sort to ensure hierarchability
+        row_key = array_sample(self.positions, count=count, seed=seed, sort=True)
+        blocks = self._blocks._extract(row_key=row_key)
+
         index_constructors = tuple(self._levels.index_types())
 
         return self.__class__._from_type_blocks(blocks,

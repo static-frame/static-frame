@@ -235,6 +235,13 @@ class DOC_TEMPLATE:
             ''',
             count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
             )
+    sample = dict(
+            doc='''Randomly (optionally made deterministic with a fixed seed) extract items from the container to return a subset of the container.''',
+            count='''Number of elements to select.''',
+            index='''Number of labels to select from the index.''',
+            columns='''Number of labels to select from the columns.''',
+            seed='''Initial state of random selection.''',
+            )
     selector = dict(
             key_loc=LOC_SELECTOR,
             key_iloc=ILOC_SELECTOR,
