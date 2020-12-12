@@ -2701,7 +2701,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_index_hierarchy_dtypes_a(self) -> None:
+    def test_index_hierarchy_sample_a(self) -> None:
         idx1 = Index(('A', 'B'))
         idx2 = IndexDate.from_date_range('2019-01-05', '2019-01-08')
         idx3 = Index((1, 2))

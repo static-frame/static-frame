@@ -1282,7 +1282,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_index_sample_a(self) -> None:
         a = IndexGO([1, 2, 3])
-        a.append(None)
+        a.append(None) #type: ignore
         b = a.sample(2, seed=3)
 
         self.assertEqual(b.values.tolist(), [2, None])
