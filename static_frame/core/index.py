@@ -985,10 +985,16 @@ class Index(IndexBase):
             other: tp.Any
             ) -> np.ndarray:
         '''
-        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
+        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
+        from static_frame.core.series import Series
+        from static_frame.core.frame import Frame
+
         if self._recache:
             self._update_array_cache()
+
+        if isinstance(other, (Series, Frame)):
+            raise ValueError('cannot use labelled container as an operand.')
 
         values = self._labels
         other_is_array = False

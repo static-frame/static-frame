@@ -1633,7 +1633,6 @@ class TestUnit(TestCase):
                 )
 
 
-
     def test_hierarchy_binary_operators_c(self) -> None:
 
         labels = (
@@ -1644,11 +1643,13 @@ class TestUnit(TestCase):
                 )
         ih1 = IndexHierarchyGO.from_labels(labels)
 
-        a1 = ih1 * Index((1, 2, 3, 4))
-        self.assertEqual(a1.tolist(), [[1, 1], [2, 4], [6, 3], [8, 8]])
+        # by default, 1D multiplies by row (label)
+        a1 = ih1 * Index((3, 4))
+        self.assertEqual(a1.tolist(), [[3, 4], [3, 8], [6, 4], [6, 8]])
 
         a2 = ih1 + ih1
         self.assertEqual(a2.tolist(), [[2, 2], [2, 4], [4, 2], [4, 4]])
+
 
 
     def test_hierarchy_binary_operators_d(self) -> None:
@@ -1685,6 +1686,7 @@ class TestUnit(TestCase):
         ih2 = IndexHierarchy.from_labels(labels)
 
         a1 = ih1 == ih2
+        # import ipdb; ipdb.set_trace()s
         self.assertEqual(a1.tolist(), [[True, True, True], [True, True, True]])
 
 
@@ -1758,10 +1760,10 @@ class TestUnit(TestCase):
                 )
         ih2 = IndexHierarchy.from_labels(labels2)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NotImplementedError):
             _ = ih1 != ih2
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NotImplementedError):
             _ = ih1 == ih2
 
         self.assertFalse(ih1.equals(ih2))

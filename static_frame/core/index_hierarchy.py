@@ -1098,39 +1098,39 @@ class IndexHierarchy(IndexBase):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
             ) -> np.ndarray:
         '''
-        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multipling an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
+        Binary operators applied to an index always return an NP array. This deviates from Pandas, where some operations (multiplying an int index by an int) result in a new Index, while other operations result in a np.array (using == on two Index).
         '''
+        from static_frame.core.series import Series
+        from static_frame.core.frame import Frame
+
         if self._recache:
             self._update_array_cache()
 
-        # NOTE: might use TypeBlocks._ufunc_binary_operator
-        values = self._blocks.values
-
-        other_is_array = False
-        if isinstance(other, Index):
-            # if this is a 1D index, must rotate labels before using an operator
-            other = other.values.reshape((len(other), 1)) # operate on labels to labels
-            other_is_array = True
-        elif isinstance(other, IndexHierarchy):
-            # already 2D
-            other = other.values # operate on labels to labels
-            other_is_array = True
-        elif isinstance(other, np.ndarray):
-            other_is_array = True
+        if isinstance(other, (Series, Frame)):
+            raise ValueError('cannot use labelled container as an operand.')
 
         if operator.__name__ == 'matmul':
-            return matmul(values, other)
+            return matmul(self._blocks.values, other)
         elif operator.__name__ == 'rmatmul':
-            return matmul(other, values)
+            return matmul(other, self._blocks.values)
 
-        return apply_binary_operator(
-                values=values,
-                other=other,
-                other_is_array=other_is_array,
+        if isinstance(other, Index):
+            other = other.values
+        elif isinstance(other, IndexHierarchy):
+            if other._recache:
+                other._update_array_cache()
+            other = other._blocks
+
+        tb = self._blocks._ufunc_binary_operator(
                 operator=operator,
+                other=other,
+                axis=axis,
                 )
+        return tb.values
+
 
     def _ufunc_axis_skipna(self, *,
             axis: int,
