@@ -20,7 +20,15 @@ if tp.TYPE_CHECKING:
 
 #-------------------------------------------------------------------------------
 
-TContainer = tp.TypeVar('TContainer', 'Index', 'Series', 'Frame', 'TypeBlocks', 'Bus', 'Batch', 'IndexHierarchy')
+TContainer = tp.TypeVar('TContainer',
+        'Index',
+        'Series',
+        'Frame',
+        'TypeBlocks',
+        'Bus',
+        'Batch',
+        'IndexHierarchy',
+        )
 GetItemFunc = tp.TypeVar('GetItemFunc',
         bound=tp.Callable[[GetItemKeyType], TContainer]
         )
