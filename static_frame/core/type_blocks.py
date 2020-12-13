@@ -11,6 +11,7 @@ import numpy as np
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
+from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 from static_frame.core.container_util import get_col_dtype_factory
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
@@ -1965,7 +1966,7 @@ class TypeBlocks(ContainerOperand):
     #---------------------------------------------------------------------------
 
     def _block_shape_slices(self) -> tp.Iterator[slice]:
-        '''Generator of slices necessary to slice a 1d array of length equal to the number of columns into a lenght suitable for each block.
+        '''Generator of slices necessary to slice a 1d array of length equal to the number of columns into a length suitable for each block.
         '''
         start = 0
         for b in self._blocks:
@@ -1975,15 +1976,19 @@ class TypeBlocks(ContainerOperand):
 
     def _ufunc_binary_operator(self, *,
             operator: tp.Callable[[np.ndarray, np.ndarray], np.ndarray],
-            other: tp.Iterable[tp.Any]
+            other: tp.Iterable[tp.Any],
+            axis: int = 0,
             ) -> 'TypeBlocks':
-
+        '''Axis is only relevant in the application of a 1D array to a 2D TypeBlocks, where axis 0 (the default) will apply the array per row, while axis 1 will apply the array per column.
+        '''
         self_operands: tp.Iterable[np.ndarray]
         other_operands: tp.Iterable[np.ndarray]
 
         if operator.__name__ == 'matmul' or operator.__name__ == 'rmatmul':
             # this could be implemented but would force block consolidation
             raise NotImplementedError('matrix multiplication not supported')
+
+        columnar = False
 
         if isinstance(other, TypeBlocks):
             apply_column_2d_filter = True
@@ -2006,21 +2011,33 @@ class TypeBlocks(ContainerOperand):
             self_operands = self._blocks
             if not isinstance(other, np.ndarray):
                 other = iterable_to_array_nd(other)
+
             # handle dimensions
             if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks)))
-            elif other.ndim == 1 and len(other) == self._shape[1]:
-                apply_column_2d_filter = False
-                # if given a 1d array, we apply it to the rows
-                # one dimensional array of same size: chop to block width
-                other_operands = (other[s] for s in self._block_shape_slices())
+            elif other.ndim == 1:
+                if axis == 0 and len(other) == self._shape[1]:
+                    # 1d array applied to the rows: chop to block width
+                    apply_column_2d_filter = False
+                    other_operands = (other[s] for s in self._block_shape_slices())
+                elif axis == 1 and len(other) == self._shape[0]:
+                    columnar = True
+                else:
+                    raise NotImplementedError(f'cannot apply binary operators with a 1D array along axis {axis}: {self._shape}, {other.shape}.')
             elif other.ndim == 2 and other.shape == self._shape:
                 apply_column_2d_filter = True
                 other_operands = (other[NULL_SLICE, s] for s in self._block_shape_slices())
             else:
                 raise NotImplementedError(f'cannot apply binary operators to arrays without alignable shapes: {self._shape}, {other.shape}.')
+
+        if columnar:
+            return self.from_blocks(apply_binary_operator_blocks_columnar(
+                    values=self_operands,
+                    other=other,
+                    operator=operator,
+                    ))
 
         return self.from_blocks(apply_binary_operator_blocks(
                 values=self_operands,

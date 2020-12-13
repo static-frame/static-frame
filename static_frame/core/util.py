@@ -982,7 +982,7 @@ def iterable_to_array_nd(
         values: tp.Any,
         ) -> np.ndarray:
     '''
-    Attempt to determiine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
+    Attempt to determine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
     '''
     if hasattr(values, '__iter__') and not isinstance(values, str):
 

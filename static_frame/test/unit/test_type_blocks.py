@@ -3168,6 +3168,30 @@ class TestUnit(TestCase):
         self.assertFalse(tb1.equals(tb2))
 
 
+    #---------------------------------------------------------------------------
+    def test_type_blocks_equals_a(self) -> None:
+        a1 = np.array([10, 20, 30])
+        a2 = np.arange(10, 16).reshape(3, 2)
+        a3 = np.array([False, True, False])
+        tb1 = TypeBlocks.from_blocks((a1, a2, a3))
+
+        tb2 = tb1._ufunc_binary_operator(
+                operator=lambda x, y: x * y,
+                other = np.array([1, 0, 1]),
+                axis=1,
+                )
+        self.assertEqual(tb2.shapes.tolist(), [(3,), (3,), (3,), (3,)])
+        self.assertEqual(tb2.values.tolist(),
+                [[10, 10, 11, 0], [0, 0, 0, 0], [30, 14, 15, 0]]
+                )
+
+        with self.assertRaises(NotImplementedError):
+            tb2 = tb1._ufunc_binary_operator(
+                    operator=lambda x, y: x * y,
+                    other = np.array([1, 0, 1]),
+                    axis=0,
+                    )
+
 
 if __name__ == '__main__':
     unittest.main()

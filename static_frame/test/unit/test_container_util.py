@@ -15,6 +15,7 @@ from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
 from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apex_to_name
+from static_frame.core.container_util import apply_binary_operator_blocks_columnar
 
 from static_frame.test.test_case import TestCase
 
@@ -611,7 +612,17 @@ class TestUnit(TestCase):
             _ = apex_to_name([['foo']], depth_level=-1, axis=3, axis_depth=1)
 
 
-
+    #---------------------------------------------------------------------------
+    def test_apply_binary_operator_blocks_by_column_a(self) -> None:
+        blocks = (np.arange(3), np.arange(6).reshape(3, 2), np.arange(3) * 10)
+        other = np.array([1, 0, 1])
+        post = tuple(apply_binary_operator_blocks_columnar(
+                    values=blocks, other=other, operator=lambda x, y: x * y)
+                    )
+        self.assertEqual(len(post), 4)
+        self.assertTrue(all(p.ndim == 1 for p in post))
+        self.assertEqual(np.stack(post, axis=1).tolist(),
+                [[0, 0, 1, 0], [0, 0, 0, 0], [2, 4, 5, 20]])
 
 
 if __name__ == '__main__':

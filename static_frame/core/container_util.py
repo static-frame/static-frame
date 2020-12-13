@@ -682,6 +682,8 @@ def array_from_value_iter(
                 )
     return values
 
+#-------------------------------------------------------------------------------
+# utilities for binary operator applications with type blocks
 
 def apply_binary_operator(*,
         values: np.ndarray,
@@ -692,7 +694,6 @@ def apply_binary_operator(*,
     '''
     Utility to handle binary operator application.
     '''
-
     if (values.dtype.kind in DTYPE_STR_KINDS or
             (other_is_array and other.dtype.kind in DTYPE_STR_KINDS)):
         operator_name = operator.__name__
@@ -724,7 +725,6 @@ def apply_binary_operator(*,
     result.flags.writeable = False
     return result
 
-
 def apply_binary_operator_blocks(*,
         values: tp.Iterable[np.ndarray],
         other: tp.Iterable[np.ndarray],
@@ -734,7 +734,6 @@ def apply_binary_operator_blocks(*,
     '''
     Application from iterators of arrays, to iterators of arrays.
     '''
-
     if apply_column_2d_filter:
         values = (column_2d_filter(op) for op in values)
         other = (column_2d_filter(op) for op in other)
@@ -747,6 +746,36 @@ def apply_binary_operator_blocks(*,
                 operator=operator,
                 )
 
+def apply_binary_operator_blocks_columnar(*,
+        values: tp.Iterable[np.ndarray],
+        other: np.ndarray,
+        operator: UFunc,
+    ) -> tp.Iterator[np.ndarray]:
+    '''
+    Application from iterators of arrays, to iterators of arrays. Will return iterator of all 1D arrays, as we will break down larger blocks in values into 1D arrays.
+
+    Args:
+        other: 1D array to be applied to each column of the blocks.
+    '''
+    assert other.ndim == 1
+    for block in values:
+        if block.ndim == 1:
+            yield apply_binary_operator(
+                    values=block,
+                    other=other,
+                    other_is_array=True,
+                    operator=operator,
+                    )
+        else:
+            for i in range(block.shape[1]):
+                yield apply_binary_operator(
+                        values=block[NULL_SLICE, i],
+                        other=other,
+                        other_is_array=True,
+                        operator=operator,
+                        )
+
+#-------------------------------------------------------------------------------
 
 def arrays_from_index_frame(
         container: 'Frame',
@@ -800,7 +829,6 @@ def key_from_container_key(
     # detect and fail on Frame?
 
     return key
-
 
 
 #---------------------------------------------------------------------------

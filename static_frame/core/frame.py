@@ -3810,6 +3810,7 @@ class Frame(ContainerOperand):
     def _ufunc_binary_operator(self, *,
             operator: UFunc,
             other: tp.Any,
+            axis: int = 0,
             ) -> 'Frame':
 
         if operator.__name__ == 'matmul':
@@ -3848,18 +3849,40 @@ class Frame(ContainerOperand):
                     )
         elif isinstance(other, Series):
             name = None
-            # when operating on a Series, we treat it as a row-wise operation, and thus take the union of the Series.index and Frame.columns
-            columns = self._columns.union(other._index)
-            self_tb = self.reindex(columns=columns, own_columns=True)._blocks
-            other_array = other.reindex(columns, own_index=True).values
-            return self.__class__(self_tb._ufunc_binary_operator(
-                            operator=operator,
-                            other=other_array),
-                    index=self._index,
-                    columns=columns,
-                    own_data=True,
-                    own_index=True,
-                    )
+            if axis == 0:
+                # when operating on a Series, we treat axis 0 as a row-wise operation, and thus take the union of the Series.index and Frame.columns
+                columns = self._columns.union(other._index)
+                self_tb = self.reindex(columns=columns, own_columns=True)._blocks
+                other_array = other.reindex(columns, own_index=True).values
+                blocks = self_tb._ufunc_binary_operator(
+                        operator=operator,
+                        other=other_array,
+                        axis=axis,
+                        )
+                return self.__class__(blocks,
+                        index=self._index,
+                        columns=columns,
+                        own_data=True,
+                        own_index=True,
+                        )
+            elif axis == 1:
+                # column-wise operation, take union of Series.index and Frame.index
+                index = self._index.union(other._index)
+                self_tb = self.reindex(index=index, own_index=True)._blocks
+                other_array = other.reindex(index, own_index=True).values
+                blocks = self_tb._ufunc_binary_operator(
+                        operator=operator,
+                        other=other_array,
+                        axis=axis,
+                        )
+                return self.__class__(blocks,
+                        index=index,
+                        columns=self._columns,
+                        own_data=True,
+                        own_index=True,
+                        )
+            else:
+                raise AxisInvalid(f'invalid axis: {axis}')
         elif isinstance(other, np.ndarray):
             name = None
         else:
@@ -3870,9 +3893,12 @@ class Frame(ContainerOperand):
                 name = None
 
         # assume we will keep dimensionality
-        return self.__class__(self._blocks._ufunc_binary_operator(
-                        operator=operator,
-                        other=other),
+        blocks = self._blocks._ufunc_binary_operator(
+                operator=operator,
+                other=other,
+                axis=axis,
+                )
+        return self.__class__(blocks,
                 index=self._index,
                 columns=self._columns,
                 own_data=True,
