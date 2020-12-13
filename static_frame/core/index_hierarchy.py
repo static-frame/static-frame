@@ -39,6 +39,7 @@ from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import TContainer
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 
 from static_frame.core.type_blocks import TypeBlocks
 
@@ -628,6 +629,16 @@ class IndexHierarchy(IndexBase):
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                )
+
+
+    @property
+    def via_T(self) -> InterfaceTranspose:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceTranspose(
+                container=self,
                 )
 
 

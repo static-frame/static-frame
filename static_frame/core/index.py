@@ -745,7 +745,6 @@ class Index(IndexBase):
                 blocks_to_container=blocks_to_container,
                 )
 
-
     #---------------------------------------------------------------------------
 
     def _update_array_cache(self) -> None:
