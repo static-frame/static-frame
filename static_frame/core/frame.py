@@ -66,6 +66,7 @@ from static_frame.core.node_selector import InterfaceAsType
 from static_frame.core.node_selector import InterfaceGetItem
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_str import InterfaceString
+from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.series import Series
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.store_filter import StoreFilter
@@ -2588,6 +2589,8 @@ class Frame(ContainerOperand):
         return InterfaceAsType(func_getitem=self._extract_getitem_astype)
 
     #---------------------------------------------------------------------------
+    # via interfaces
+
     @property
     def via_str(self) -> InterfaceString['Frame']:
         '''
@@ -2631,6 +2634,15 @@ class Frame(ContainerOperand):
         return InterfaceDatetime(
                 blocks=self._blocks._blocks,
                 blocks_to_container=blocks_to_container,
+                )
+
+    @property
+    def via_T(self) -> InterfaceDatetime['Frame']:
+        '''
+        Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
+        '''
+        return InterfaceTranspose(
+                container=self,
                 )
 
     #---------------------------------------------------------------------------
@@ -3818,11 +3830,10 @@ class Frame(ContainerOperand):
         elif operator.__name__ == 'rmatmul':
             return matmul(other, self)
 
-        #TODO: use equals on columns, index before calling reindex
-
         if isinstance(other, Frame):
             name = None
             # reindex both dimensions to union indices
+            # NOTE: union and reindexing check equals first
             columns = self._columns.union(other._columns)
             index = self._index.union(other._index)
 

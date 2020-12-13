@@ -11613,6 +11613,13 @@ class TestUnit(TestCase):
                 )
 
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_via_T_a(self) -> None:
+        f = ff.parse('s(6,2)|v(int)')
+        import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     unittest.main()
 

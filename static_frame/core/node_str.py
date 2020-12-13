@@ -29,8 +29,8 @@ class InterfaceString(Interface[TContainer]):
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 
     __slots__ = (
-            '_blocks', # function that returns array of strings
-            '_blocks_to_container', # partialed function that will return a new container
+            '_blocks',
+            '_blocks_to_container',
             )
     INTERFACE = (
             'capitalize',
