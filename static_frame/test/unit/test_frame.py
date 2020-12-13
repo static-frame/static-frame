@@ -11615,9 +11615,148 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_via_T_a(self) -> None:
-        f = ff.parse('s(6,2)|v(int)')
-        import ipdb; ipdb.set_trace()
+    def test_frame_via_T_add_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T + (10,10,0,10,10,0)
+        self.assertEqual(f2.to_pairs(0),
+            ((0, ((0, -88007), (1, 92877), (2, 84967), (3, 13458), (4, 175589), (5, 58768))), (1, ((0, 162207), (1, -41147), (2, 5729), (3, -168377), (4, 140637), (5, 66269))), (2, ((0, -3638), (1, 91311), (2, 30205), (3, 54030), (4, 129027), (5, 35021))))
+            )
+
+    def test_frame_via_T_sub_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T - (10,10,0,10,10,0)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -88027), (1, 92857), (2, 84967), (3, 13438), (4, 175569), (5, 58768))), (1, ((0, 162187), (1, -41167), (2, 5729), (3, -168397), (4, 140617), (5, 66269))), (2, ((0, -3658), (1, 91291), (2, 30205), (3, 54010), (4, 129007), (5, 35021))))
+                )
+
+    def test_frame_via_T_mul_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T * (1,0,0,1,0,0)
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -88017), (1, 0), (2, 0), (3, 13448), (4, 0), (5, 0))), (1, ((0, 162197), (1, 0), (2, 0), (3, -168387), (4, 0), (5, 0))), (2, ((0, -3648), (1, 0), (2, 0), (3, 54020), (4, 0), (5, 0))))
+                )
+
+
+    def test_frame_via_T_truediv_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T / (1,2,2,2,2,1)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -88017.0), (1, 46433.5), (2, 42483.5), (3, 6724.0), (4, 87789.5), (5, 58768.0))), (1, ((0, 162197.0), (1, -20578.5), (2, 2864.5), (3, -84193.5), (4, 70313.5), (5, 66269.0))), (2, ((0, -3648.0), (1, 45650.5), (2, 15102.5), (3, 27010.0), (4, 64508.5), (5, 35021.0))))
+                )
+
+    def test_frame_via_T_floordiv_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T // (2,2,2,2,2,2)
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -44009), (1, 46433), (2, 42483), (3, 6724), (4, 87789), (5, 29384))), (1, ((0, 81098), (1, -20579), (2, 2864), (3, -84194), (4, 70313), (5, 33134))), (2, ((0, -1824), (1, 45650), (2, 15102), (3, 27010), (4, 64508), (5, 17510))))
+                )
+
+    def test_frame_via_T_mod_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T % (2,2,3,4,8,9)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1), (1, 1), (2, 1), (3, 0), (4, 3), (5, 7))), (1, ((0, 1), (1, 1), (2, 2), (3, 1), (4, 3), (5, 2))), (2, ((0, 0), (1, 1), (2, 1), (3, 0), (4, 1), (5, 2))))
+                )
+
+    def test_frame_via_T_pow_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T ** (2,2,1,1,2,2)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 7746992289), (1, 8624279689), (2, 84967), (3, 13448), (4, 30827985241), (5, 3453677824))), (1, ((0, 26307866809), (1, 1693898649), (2, 5729), (3, -168387), (4, 19775953129), (5, 4391580361))), (2, ((0, 13307904), (1, 8335872601), (2, 30205), (3, 54020), (4, 16645386289), (5, 1226470441))))
+                )
+
+    def test_frame_via_T_lshift_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T << (2,2,2,2,2,2)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -352068), (1, 371468), (2, 339868), (3, 53792), (4, 702316), (5, 235072))), (1, ((0, 648788), (1, -164628), (2, 22916), (3, -673548), (4, 562508), (5, 265076))), (2, ((0, -14592), (1, 365204), (2, 120820), (3, 216080), (4, 516068), (5, 140084))))
+                )
+
+
+    def test_frame_via_T_rshift_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T >> (2,2,2,2,2,2)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, -22005), (1, 23216), (2, 21241), (3, 3362), (4, 43894), (5, 14692))), (1, ((0, 40549), (1, -10290), (2, 1432), (3, -42097), (4, 35156), (5, 16567))), (2, ((0, -912), (1, 22825), (2, 7551), (3, 13505), (4, 32254), (5, 8755))))
+                )
+
+    def test_frame_via_T_and_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T & (1,0,0,1,0,0)
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, 1), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0))), (1, ((0, 1), (1, 0), (2, 0), (3, 1), (4, 0), (5, 0))), (2, ((0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0))))
+                )
+
+    def test_frame_via_T_xor_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = (f1 > 0).via_T ^ (True,False,True,False,False,False)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, True), (2, False), (3, True), (4, True), (5, True))), (1, ((0, False), (1, False), (2, False), (3, False), (4, True), (5, True))), (2, ((0, True), (1, True), (2, False), (3, True), (4, True), (5, True))))
+                )
+
+    def test_frame_via_T_or_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = (f1 < 0).via_T | (True, False, False, False, False, True)
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))
+                )
+
+    def test_frame_via_T_lt_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T < f1[1]
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (2, ((0, True), (1, False), (2, False), (3, False), (4, True), (5, True))))
+                )
+
+    def test_frame_via_T_le_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T <= f1[1]
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, True), (5, True))))
+                )
+
+    def test_frame_via_T_gt_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T > f1[1]
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, False), (1, True), (2, True), (3, True), (4, True), (5, False))), (1, ((0, False), (1, False), (2, False), (3, False), (4, False), (5, False))), (2, ((0, False), (1, True), (2, True), (3, True), (4, False), (5, False))))
+                )
+
+    def test_frame_via_T_ge_a(self) -> None:
+        f1 = ff.parse('s(6,3)|v(int)')
+
+        f2 = f1.via_T >= f1[1]
+
+        self.assertEqual(f2.to_pairs(0),
+                ((0, ((0, False), (1, True), (2, True), (3, True), (4, True), (5, False))), (1, ((0, True), (1, True), (2, True), (3, True), (4, True), (5, True))), (2, ((0, False), (1, True), (2, True), (3, True), (4, False), (5, False)))))
+
+    #---------------------------------------------------------------------------
 
 
 if __name__ == '__main__':

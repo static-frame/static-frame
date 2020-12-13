@@ -1,16 +1,11 @@
 import operator as operator_mod
 
 import typing as tp
-import numpy as np
-
+# import numpy as np
 
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import TContainer
-# from static_frame.core.util import array_from_element_method
-# from static_frame.core.util import DTYPE_STR
-# from static_frame.core.util import DTYPE_STR_KINDS
-# from static_frame.core.util import EMPTY_TUPLE
-# from static_frame.core.util import UFunc
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  #pylint: disable = W0611 #pragma: no cover
@@ -62,115 +57,134 @@ class InterfaceTranspose(Interface[TContainer]):
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__add__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__add__,
                 other=other,
                 axis=1,
                 )
 
     def __sub__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__sub__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__sub__,
                 other=other,
                 axis=1,
                 )
 
     def __mul__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__mul__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__mul__,
                 other=other,
                 axis=1,
                 )
 
     # def __matmul__(self, other: tp.Any) -> tp.Any:
-    #     return self._ufunc_binary_operator(operator=operator_mod.__matmul__,
+    #     return self._container._ufunc_binary_operator(
+    #             operator=operator_mod.__matmul__,
     #             other=other,
     #             axis=1,
     #             )
 
     def __truediv__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__truediv__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__truediv__,
                 other=other,
                 axis=1,
                 )
 
     def __floordiv__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__floordiv__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__floordiv__,
                 other=other,
                 axis=1,
                 )
 
     def __mod__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__mod__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__mod__,
                 other=other,
                 axis=1,
                 )
 
     def __pow__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__pow__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__pow__,
                 other=other,
                 axis=1,
                 )
 
     def __lshift__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__lshift__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__lshift__,
                 other=other,
                 axis=1,
                 )
 
     def __rshift__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__rshift__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__rshift__,
                 other=other,
                 axis=1,
                 )
 
     def __and__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__and__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__and__,
                 other=other,
                 axis=1,
                 )
 
     def __xor__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__xor__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__xor__,
                 other=other,
                 axis=1,
                 )
 
     def __or__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__or__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__or__,
                 other=other,
                 axis=1,
                 )
 
     def __lt__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__lt__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__lt__,
                 other=other,
                 axis=1,
                 )
 
     def __le__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__le__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__le__,
                 other=other,
                 axis=1,
                 )
 
     def __eq__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__eq__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__eq__,
                 other=other,
                 axis=1,
                 )
 
     def __ne__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__ne__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__ne__,
                 other=other,
                 axis=1,
                 )
 
     def __gt__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__gt__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__gt__,
                 other=other,
                 axis=1,
                 )
 
     def __ge__(self, other: tp.Any) -> tp.Any:
-        return self._ufunc_binary_operator(operator=operator_mod.__ge__,
+        return self._container._ufunc_binary_operator(
+                operator=operator_mod.__ge__,
                 other=other,
                 axis=1,
                 )
@@ -179,7 +193,8 @@ class InterfaceTranspose(Interface[TContainer]):
     def __radd__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__add__(lhs, rhs)
         operator.__name__ = 'r' + operator_mod.__add__.__name__
-        return self._ufunc_binary_operator(operator=operator,
+        return self._container._ufunc_binary_operator(
+                operator=operator,
                 other=other,
                 axis=1,
                 )
@@ -187,7 +202,8 @@ class InterfaceTranspose(Interface[TContainer]):
     def __rsub__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__sub__(lhs, rhs)
         operator.__name__ = 'r' + operator_mod.__sub__.__name__
-        return self._ufunc_binary_operator(operator=operator,
+        return self._container._ufunc_binary_operator(
+                operator=operator,
                 other=other,
                 axis=1,
                 )
@@ -195,7 +211,8 @@ class InterfaceTranspose(Interface[TContainer]):
     def __rmul__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__mul__(lhs, rhs)
         operator.__name__ = 'r' + operator_mod.__mul__.__name__
-        return self._ufunc_binary_operator(operator=operator,
+        return self._container._ufunc_binary_operator(
+                operator=operator,
                 other=other,
                 axis=1,
                 )
@@ -203,7 +220,8 @@ class InterfaceTranspose(Interface[TContainer]):
     # def __rmatmul__(self, other: tp.Any) -> tp.Any:
     #     operator = lambda rhs, lhs: operator_mod.__matmul__(lhs, rhs)
     #     operator.__name__ = 'r' + operator_mod.__matmul__.__name__
-    #     return self._ufunc_binary_operator(operator=operator,
+    #     return self._container._ufunc_binary_operator(
+    #             operator=operator,
     #             other=other,
     #             axis=1,
     #             )
@@ -211,7 +229,8 @@ class InterfaceTranspose(Interface[TContainer]):
     def __rtruediv__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__truediv__(lhs, rhs)
         operator.__name__ = 'r' + operator_mod.__truediv__.__name__
-        return self._ufunc_binary_operator(operator=operator,
+        return self._container._ufunc_binary_operator(
+                operator=operator,
                 other=other,
                 axis=1,
                 )
@@ -219,7 +238,8 @@ class InterfaceTranspose(Interface[TContainer]):
     def __rfloordiv__(self, other: tp.Any) -> tp.Any:
         operator = lambda rhs, lhs: operator_mod.__floordiv__(lhs, rhs)
         operator.__name__ = 'r' + operator_mod.__floordiv__.__name__
-        return self._ufunc_binary_operator(operator=operator,
+        return self._container._ufunc_binary_operator(
+                operator=operator,
                 other=other,
                 axis=1,
                 )
