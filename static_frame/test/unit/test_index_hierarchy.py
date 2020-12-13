@@ -1650,7 +1650,8 @@ class TestUnit(TestCase):
         a2 = ih1 + ih1
         self.assertEqual(a2.tolist(), [[2, 2], [2, 4], [4, 2], [4, 4]])
 
-
+        a3 = ih1.via_T * Index((1, 2, 3, 4))
+        self.assertEqual(a3.tolist(), [[1, 1], [2, 4], [6, 3], [8, 8]])
 
     def test_hierarchy_binary_operators_d(self) -> None:
 
