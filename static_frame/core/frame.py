@@ -2637,7 +2637,7 @@ class Frame(ContainerOperand):
                 )
 
     @property
-    def via_T(self) -> InterfaceTranspose:
+    def via_T(self) -> InterfaceTranspose['Frame']:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''

@@ -6,7 +6,6 @@ import numpy as np
 
 
 from static_frame.core.array_go import ArrayGO
-from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -633,7 +632,7 @@ class IndexHierarchy(IndexBase):
 
 
     @property
-    def via_T(self) -> InterfaceTranspose:
+    def via_T(self) -> InterfaceTranspose['IndexHierarchy']:
         '''
         Interface for using binary operators with one-dimensional sequences, where the opperand is applied column-wise.
         '''
