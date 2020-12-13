@@ -3169,7 +3169,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_type_blocks_equals_a(self) -> None:
+    def test_type_blocks_ufunc_binary_operator_a(self) -> None:
         a1 = np.array([10, 20, 30])
         a2 = np.arange(10, 16).reshape(3, 2)
         a3 = np.array([False, True, False])
