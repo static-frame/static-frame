@@ -1290,7 +1290,7 @@ d'Arrest 6.51           1.346
 sort_columns(*, ascending, kind)     Frame    Method Return a new Fram...
 sort_index(*, ascending, kind)       Frame    Method Return a new Fram...
 sort_values(key, *, ascending, ax... Frame    Method Return a new Fram...
-<<U94>                               <<U5>    <<U17> <<U83>
+<<U94>                               <<U5>    <<U18> <<U83>
 
 #end_Frame-interface
 
@@ -2403,7 +2403,7 @@ dropna(axis, condition)              FrameGO  Method   Return a new Fram...
 drop[key]                            FrameGO  Selector Label-based selec...
 drop.iloc[key]                       FrameGO  Selector
 drop.loc[key]                        FrameGO  Selector
-<<U94>                               <<U7>    <<U17>   <<U83>
+<<U94>                               <<U7>    <<U18>   <<U83>
 
 #end_FrameGO-interface
 

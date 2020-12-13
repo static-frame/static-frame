@@ -4,7 +4,6 @@ import typing as tp
 # import numpy as np
 
 from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import TContainer
 
 
 if tp.TYPE_CHECKING:
@@ -15,7 +14,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  #pylint: disable = W0611 #pragma: no cover
 
 
-class InterfaceTranspose(Interface[TContainer]):
+class InterfaceTranspose(Interface['Frame']):
 
 
     __slots__ = (
@@ -51,9 +50,9 @@ class InterfaceTranspose(Interface[TContainer]):
 
 
     def __init__(self,
-            container: TContainer,
+            container: 'Frame',
             ) -> None:
-        self._container: TContainer = container
+        self._container: 'Frame' = container
 
     #---------------------------------------------------------------------------
     def __add__(self, other: tp.Any) -> tp.Any:
